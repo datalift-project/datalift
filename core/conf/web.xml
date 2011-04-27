@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<web-app version="2.4"
+    xmlns="http://java.sun.com/xml/ns/j2ee"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+        http://java.sun.com/xml/ns/j2ee
+          http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
+
+  <display-name>@app.name@</display-name>
+  <description>@app.long.name@</description>
+
+  <!-- ===== Lifecycle event listeners ===== -->
+
+  <!-- DataLift application initialisation and shutdown listener -->
+  <listener>
+    <listener-class>
+      org.datalift.core.ApplicationLoader
+    </listener-class>
+  </listener>
+
+ <context-param>
+    <param-name>velocity.templates.path</param-name>
+    <param-value>WEB-INF/templates</param-value>
+  </context-param>
+  <context-param>
+    <param-name>velocity.templates.encoding</param-name>
+    <param-value>UTF-8</param-value>
+  </context-param>
+  <context-param>
+    <param-name>velocity.templates.update.check</param-name>
+    <param-value>-1</param-value>
+  </context-param>
+
+  <!-- ===== Filter definitions & URL mappings ===== -->
+
+  <!-- Log context initialization and clean-up filter -->
+  <filter>
+    <filter-name>LogContextFilter</filter-name>
+    <filter-class>
+      org.datalift.core.log.web.LogContextFilter
+    </filter-class>
+  </filter>
+  <!-- Apply log context filter to all resources -->
+  <filter-mapping>
+    <filter-name>LogContextFilter</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
+
+  <!-- Jersey (JAS-RS framework) entry point configuration -->
+  <!-- Note: Using Jersey as a filter is required as:
+              1. There is no way to have the Jersey servlet not handling the
+                 requests passed on to it (for example /css/...)
+              2. It is not possible to use several servlet-mappings as
+                 any prefix declared in a servlet-mapping (e.g. /resource)
+                 directly impacts the URI of the deployed resources.
+   -->
+  <filter>
+    <filter-name>Jersey</filter-name>
+    <filter-class>
+      com.sun.jersey.spi.container.servlet.ServletContainer
+    </filter-class>
+    <!-- Configuration of the JAX-RS application -->
+    <init-param>
+      <param-name>javax.ws.rs.Application</param-name>
+      <param-value>org.datalift.core.DataliftApplication</param-value>
+    </init-param>
+    <!-- Prevent Jersey from serving static files -->
+    <init-param>
+      <param-name>com.sun.jersey.config.property.WebPageContentRegex</param-name>
+      <param-value>(/(images|css|js|(WEB-INF/jsp))/.*)|(.*\.html)</param-value>
+    </init-param>
+    <!-- Support GZip content encoding in requests -->
+    <init-param>
+      <param-name>com.sun.jersey.spi.container.ContainerRequestFilters</param-name>
+      <param-value>com.sun.jersey.api.container.filter.GZIPContentEncodingFilter</param-value>
+    </init-param>
+    <!-- Honor GZip accepted encoding in response -->
+    <init-param>
+      <param-name>com.sun.jersey.spi.container.ContainerResponseFilters</param-name>
+      <param-value>com.sun.jersey.api.container.filter.GZIPContentEncodingFilter</param-value>
+    </init-param>
+  </filter>
+  <!-- Route all service calls to Jersey -->
+  <filter-mapping>
+    <filter-name>Jersey</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
+
+  <!-- Client-side cache management filter -->
+  <filter>
+    <filter-name>CacheForWeek</filter-name>
+    <filter-class>
+      org.datalift.core.util.web.ResponseHeaderFilter
+    </filter-class>
+    <init-param>
+      <param-name>Cache-Control</param-name>
+      <param-value>public, max-age=604800</param-value>
+    </init-param>
+  </filter>
+
+  <!-- Cache all static resource for a week -->
+  <filter-mapping>
+    <filter-name>CacheForWeek</filter-name>
+    <url-pattern>*.css</url-pattern>
+  </filter-mapping>
+  <filter-mapping>
+    <filter-name>CacheForWeek</filter-name>
+    <url-pattern>*.js</url-pattern>
+  </filter-mapping>
+  <filter-mapping>
+    <filter-name>CacheForWeek</filter-name>
+    <url-pattern>*.gif</url-pattern>
+  </filter-mapping>
+  <filter-mapping>
+    <filter-name>CacheForWeek</filter-name>
+    <url-pattern>*.jpg</url-pattern>
+  </filter-mapping>
+  <filter-mapping>
+    <filter-name>CacheForWeek</filter-name>
+    <url-pattern>*.png</url-pattern>
+  </filter-mapping>
+
+  <!-- ===== Servlets definition & URL mapping ===== -->
+
+  <!-- None. Tomcat default servlet will take care of static files. -->
+
+  <!-- ===== Security constraints ===== -->
+
+  <!-- Coming sonn... -->
+
+</web-app>

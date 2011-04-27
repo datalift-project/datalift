@@ -1,0 +1,65 @@
+package org.datalift.fwk.sparql;
+
+
+import java.util.List;
+
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Request;
+import javax.ws.rs.core.UriInfo;
+import javax.ws.rs.core.Response.ResponseBuilder;
+
+import org.datalift.fwk.Module;
+
+
+/**
+ * The Java interface for in-VM invocation of the SPARQL endpoint.
+ *
+ * @author lbihanic
+ */
+public interface SparqlEndpoint extends Module
+{
+    /** The SPARQL endpoint module name. */
+    public final static String MODULE_NAME = "sparql";
+
+    /**
+     * Executes a SPARQL query and returns the results directly to
+     * the client.
+     * @param  query       The SPARQL query string.
+     * @param  uriInfo     the request URI data.
+     * @param  request     The JAX-RS Request object, for content
+     *                     negotiation.
+     * @param  acceptHdr   The HTTP Accept header, for content
+     *                     negotiation.
+     *
+     * @return a JAX-RS response with the SPARQL result formatted
+     *         according to the negotiated format.
+     * @throws WebApplicationException if any error occurred processing
+     *         the SPARQL query.
+     */
+    public ResponseBuilder executeQuery(String query,
+                            UriInfo uriInfo, Request request, String acceptHdr)
+                                                throws WebApplicationException;
+
+    /**
+     * Executes a SPARQL query and returns the results directly to
+     * the client.
+     * @param  defaultGraphUris   the target default graphs, or
+     *                            <code>null</code>.
+     * @param  namedGraphUris     named graph definitions for query.
+     * @param  query              The SPARQL query string.
+     * @param  uriInfo            the request URI data.
+     * @param  request            The JAX-RS Request object, for content
+     *                            negotiation.
+     * @param  acceptHdr          The HTTP Accept header, for content
+     *                            negotiation.
+     *
+     * @return a JAX-RS response with the SPARQL result formatted
+     *         according to the negotiated format.
+     * @throws WebApplicationException if any error occurred processing
+     *         the SPARQL query.
+     */
+    public ResponseBuilder executeQuery(List<String> defaultGraphUris,
+                            List<String> namedGraphUris, String query,
+                            UriInfo uriInfo, Request request, String acceptHdr)
+                                                throws WebApplicationException;
+}

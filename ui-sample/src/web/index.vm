@@ -1,0 +1,45 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+#header_links
+  </head>
+  <body>
+    <script>
+	$(function() {
+		$("a[class=widget_link]").click(function(e) {
+			jQuery.ajax({
+				url: "${baseUri}/ui/widget/" + $(this).attr("value"),
+				success: successfulQuery,
+	  			error: unsuccessfulQuery
+			});
+			
+			function successfulQuery(response){
+				$("#demo_widget").empty();
+				$("#demo_widget").append(response);
+			}
+			
+			function unsuccessfulQuery(XMLHttpRequest){
+				alert("Error while requesting Widget");
+			}
+		});
+	});
+  </script>
+#banner
+    <div id="demo">
+      <div id="widget_list">
+        <ul>
+          <li><a class="widget_link" href="#draggable" value="draggable">Draggable widget</a></li>
+          <li><a class="widget_link" href="#dropable" value="dropable">Dropable widget</a></li>
+          <li><a class="widget_link" href="#resizable" value="resizable">Resizable widget</a></li>
+          <li><a class="widget_link" href="#sortable" value="sortable">Sortable widget</a></li>
+          <li><a class="widget_link" href="#autocomplete" value="autocomplete">Autocomplete widget</a></li>
+          <li><a class="widget_link" href="#button" value="button">Button widget</a></li>
+          <li><a class="widget_link" href="#datepicker" value="datepicker">Datepicker widget</a></li>
+          <li><a class="widget_link" href="#dialog" value="dialog">Dialog widget</a></li>
+        </ul>
+      </div>
+      <div id="demo_widget"></div>
+    </div>
+  </body>
+</html>

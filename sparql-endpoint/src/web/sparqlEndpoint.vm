@@ -1,0 +1,190 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<title>SPARQL Endpoint - DataLift</title>
+#header_links
+</head>
+<body>
+#banner
+	<script>
+		var gridData = new Array();
+		var searchData = new Array();
+		
+		$(function() {
+			$("#result-format").buttonset();
+			$("#query_submit").button();
+			$("#query_form").submit(function(e){
+				e.preventDefault(); // Prevent the navigator from sending the form
+				jQuery.ajax({
+					beforeSend: function(req) {
+						req.setRequestHeader("Accept", $("input[name=format]:checked").val());
+						$("#format_save").val($("input[name=format]:checked").val());
+					},
+					url: $(this).attr("action")
+						+ "?" + $("#query").serialize()
+						+ "&" + $("#default-graph-uri").serialize(),
+					type:"GET",
+					success: successfulQuery,
+					error: unsuccessfulQuery
+				});
+				return false;
+			});
+		});
+
+		function successfulQuery(obj){
+			$("#table_results").GridUnload(); 
+			if ($("#format_save").val() == "application/json") {
+				$("#results").empty();
+				$("#results").append('<table id="table_results"></table><div id="pagernav"/>');
+				var myColModel = new Array();
+				var options = $('#searchColumn').attr('options');
+				options.length = 0;			
+				options[options.length] = new Option("all", "all", true, true);
+				for (var i = 0; i < obj.head.vars.length; i++ ) {
+					// generating data Array for jqGrid
+					myColModel[i] = new Array();					
+					myColModel[i].name = obj.head.vars[i];
+					// generation options for select column in search
+					options[options.length] = new Option(obj.head.vars[i], obj.head.vars[i], false, false);
+				}
+				gridData = [];
+				for ( var i = 0; i < obj.results.bindings.length; i++) {
+					var objdata = "{";
+					for (var j= 0; j < obj.head.vars.length; j++) { 
+						var key = obj.head.vars[j];
+						var value = eval("obj.results.bindings[i]." + key + ".value"); 
+						objdata +=  key + ":'" + value + "'";
+						if (j != obj.head.vars.length - 1) {
+							objdata += ',';
+						}
+					}
+					objdata += "}";
+					gridData[i] = eval("("+ objdata + ")");
+				}
+				$("#table_results").jqGrid({
+					datatype: "local",
+					colNames: obj.head.vars,
+					colModel: myColModel,
+					pager: $('#pagernav'),
+					data: gridData,
+					caption: $("#searchnav").html()
+				});
+				$("#navgrid").jqGrid('navGrid','#pagernav',
+					{edit:false,add:false,del:false });
+					
+				// Function called when modifying search text
+				$("#gridsearch").keyup(function () {
+					gridSearch(obj, $(this).val().toLowerCase());
+				});
+				// Function called when modifying search Column
+				$("#searchColumn").change(function() {
+					gridSearch(obj, $("#gridsearch").val().toLowerCase());
+				});
+				
+				$("#results").show();
+				$("#table_results").setGridWidth($("#results").width());
+			}
+			else if ($("#format_save").val() == "application/rdf+xml"){
+				var xmlString = (new XMLSerializer()).serializeToString(obj);
+				$("#results").text(xmlString);
+				$("#results").show();
+			}
+			else {
+				$("#results").empty();
+				$("#results").append(obj);
+				$("#results").show();
+			}
+		}
+		
+		function gridSearch(obj, searchString) {
+			searchData = [];
+			if ($("#searchColumn").val() == "all") {
+				searchAllColumns(obj, searchString);
+			}
+			else {
+				searchOneColumn(obj, searchString, $("#searchColumn").val());
+			}
+			$("#table_results").jqGrid('clearGridData', true);
+			$("#table_results").jqGrid('setGridParam',{data:searchData}).trigger("reloadGrid");
+		}		
+
+		function searchAllColumns(obj, searchString) {
+			var c = 0;
+			for (var i = 0; i < gridData.length; i++) {
+				for (var k = 0; k < obj.head.vars.length; k++) {
+					var toCmp = eval("gridData[i]." + obj.head.vars[k]);
+					if (toCmp.toLowerCase().indexOf(searchString) != -1) {
+						searchData[c] = gridData[i];
+						c++;
+						k = obj.head.vars.length;
+					}
+				}
+			}
+		}
+		
+		function searchOneColumn(obj, searchString, searchColumn) {
+			var c = 0;
+			for (var i = 0; i < gridData.length; i++) {
+				var toCmp = eval("gridData[i]." + searchColumn);
+				console.log("searching in Column " + searchColumn);
+				if (toCmp.toLowerCase().indexOf(searchString) != -1) {
+					searchData[c] = gridData[i];
+					c++;
+				}
+			}
+		}
+		
+		function unsuccessfulQuery(XMLHttpRequest){
+			alert("An error occured while processing your request:\n["
+				+ XMLHttpRequest.status + "] "
+				+ XMLHttpRequest.responseText
+				+ "\nPlease correct your query before retrying.");
+		}
+	</script>
+
+	<div id="content" class="ui-widget-content dl-main-panel">
+		<h3 class="ui-widget-header dl-widget-header">SPARQL Query</h3>
+		<div class="dl-panel">
+		    <form id="query_form" action="${baseUri}/sparql" method="get">
+			<div class="dl-form-elt">
+				<label for="default-graph-uri">Repository: </label>
+				<select id="default-graph-uri" name="default-graph-uri">
+#foreach( $item in $it )
+#if( $foreach.count == 1 )
+					<option value="$esc.html($!{item.name})" selected="true">$esc.html($!{item.label})</option>
+#else
+					<option value="$esc.html($!{item.name})">$esc.html($!{item.label})</option>
+#end
+#end
+				</select>
+			</div>
+			<div id="result-format" class="dl-form-elt">
+				<label>Format: </label>
+				<input type="radio" id="html_format" name="format" value="text/html" checked="checked"/><label for="html_format">HTML</label>
+				<input type="radio" id="rdf_format" name="format" value="application/rdf+xml"/><label for="rdf_format">RDF/XML</label>
+				<input type="radio" id="turtle_format" name="format" value="text/turtle"/><label for="turtle_format">Turtle</label>
+				<input type="hidden" id="format_save" />
+			</div>
+			<div class="dl-form-elt">
+				<label for="query">Requête: </label><br />
+				<textarea id="query" name="query" style="width:600px; height:150px;">$esc.html("SELECT * WHERE {
+  ?s ?p ?o .
+}
+")</textarea>
+			</div>
+			<div class="dl-form-buttons">
+				<input type="submit" value="Exécuter la requête" id="query_submit" />
+			</div>
+		    </form>
+	    	</div>
+		<div id="results" class="dl-result-panel">
+		</div>
+		<div id="searchnav" style="display:none">
+			Column: <select id="searchColumn"></select>
+			Search: <input type="search" id="gridsearch" placeholder="Search" results="0" class="gridsearch" />
+		</div>
+	</div>
+#footer
+</body>
+</html>

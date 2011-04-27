@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Check for configuration updates every minute (60 seconds). -->
+<configuration updateWatchdog="60"
+               xmlns="http://jakarta.apache.org/log4j/">
+
+  <!-- load externalized logger definitions from classpath -->
+  <xi:include xmlns:xi="http://www.w3.org/2001/XInclude"
+              href="classpath:datalift-log4j.xml">
+    <xi:fallback>
+
+      <appender name="defaultLog" class="org.apache.log4j.ConsoleAppender">
+        <layout class="org.apache.log4j.PatternLayout">
+          <param name="conversionPattern"
+                 value="%d{ISO8601}|%p|%X{Timer}|%X{User}|%X{Module}|%X{Resource}|%c{1}|%m%n"/>
+        </layout>
+      </appender>
+
+    </xi:fallback>
+  </xi:include>
+
+  <root>
+    <level value="info"/>
+    <appender-ref ref="defaultLog"/>
+  </root>
+
+</configuration>

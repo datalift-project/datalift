@@ -1,0 +1,41 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<title>Datalift - Project Source Upload</title>
+#header_links
+</head>
+
+<body>
+#banner
+<form method="post" action="$it.getRdfId()/csvupload" enctype="multipart/form-data">
+	Upload a CSV source for Project : $esc.html($it.getTitle())
+	<input type="file" name="source"/>
+	<label for="title_row">Activate title row</label>
+	<input type="checkbox" id="title_row" name="title_row"/>
+	<label for="separator">Separator :</label>
+	<select id="separator" name="separator">
+#foreach($s in $sep)
+#if( $foreach.count == 1 )
+	<option value="$esc.html($s.name())" selected="true">$esc.html($s.toString())</option>
+#else
+	<option value="$esc.html($s.name())">$esc.html($s.toString())</option>
+#end
+#end
+	</select>
+	<input type="submit"/>
+</form>
+
+<form method="post" action="$it.getRdfId()/rdfupload" enctype="multipart/form-data">
+	Upload a RDF source for Project : $esc.html($it.getTitle())
+	<input type="file" name="source"/>
+	<label for="mime_type">Data format: </label>
+	<select id="mime_type" name="mime_type">
+		<option id="rdfxml" value="application/rdf+xml">RDF/XML</option>
+		<option id="turtle"	value="text/n3">NTriple</option>
+	</select>
+	<input type="submit"/>
+</form>
+#footer
+</body>
+</html>

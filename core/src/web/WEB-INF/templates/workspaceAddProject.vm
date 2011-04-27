@@ -1,0 +1,27 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<title>Datalift - Workspace - New Project</title>
+#header_links
+</head>
+
+<body>
+#banner
+<a href="${baseUri}/project">Back to workspace</a>
+<form method="post" action="${baseUri}/project">
+
+<label for="title">Nom du projet: </label>
+<input type="text" id="title" name="title"></input>
+
+<label for="owner">Propriétaire du projet: </label>
+<input type="text" id="owner" name="owner"></input>
+
+<label for="description">Description: </label>
+<input type="text" id="description" name="description"></input>
+<input type="submit" value="Valider"/>
+</form>
+<div id="project_desc"></div>
+#footer
+</body>
+</html>

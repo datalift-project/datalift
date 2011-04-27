@@ -1,0 +1,80 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<title>Datalift - Workspace</title>
+#header_links
+</head>
+
+<body>
+
+<script>
+
+	$(function() {
+		// Ajax Request to get Project description
+		$(".dl-project-button").click(function() {
+				makeFocus(this);
+				jQuery.ajax({
+					beforeSend: function(req) {
+						req.setRequestHeader("Accept", "text/html");
+					},
+					url: $(this).attr("value"),
+					type:"GET",
+					success: successfulQuery,
+					error: unsuccessfulQuery
+				});
+				return false;
+		});
+		
+		function makeFocus(clicked) {
+			var button = $(".dl-project-button");
+			for (var i =0; i < button.length; i++) {
+				if (button[i] === clicked) {
+					$(button[i]).addClass("ui-state-focus");
+					console.log("Setting ui-state-focus on button["+i+"]");
+				}
+				else {
+					$(button[i]).removeClass("ui-state-focus");
+					console.log("Removing ui-state-focus on button["+i+"]");
+				}
+			}
+		}
+		
+		function successfulQuery(response) {
+			$("#workspace_main_panel").empty();
+			$("#workspace_main_panel").append(response);
+		}
+
+		function unsuccessfulQuery(XMLHttpRequest){
+			alert("An error occured when trying to get project description.");
+		}
+	});
+
+</script>
+
+#banner
+<div id="workspace" class="ui-widget-content">
+<h3 class="ui-widget-header dl-widget-header"><a href="${baseUri}/project">Workspace</a></h3>
+
+<div id="projects_panel" class="ui-widget-content">
+<h3 class="ui-widget-header dl-widget-header">Projects available</h3>
+<div id="project_scroll">
+#foreach( $item in $it )
+<span class="ui-state-default dl-project-button" value="$item.rdfId">$item.title</span><br/>
+#end
+
+</div>
+<a href="${baseUri}/project/add">New Project</a>
+</div>
+
+<div id="workspace_main_panel" class="ui-widget-content">
+<p style="text-align:center">
+This is the workspace index page. <br/>
+To start lifting your data sets, please choose a project or create a new one. <br/>
+</p>
+
+</div>
+</div>
+#footer
+</body>
+</html>

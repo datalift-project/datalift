@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	    xmlns:log4j="http://jakarta.apache.org/log4j/"
+	    targetNamespace="http://jakarta.apache.org/log4j/"
+	    elementFormDefault="qualified"
+	    attributeFormDefault="unqualified">
+
+  <xsd:element name="configuration" type="log4j:ConfigurationType"/>
+
+  <xsd:complexType name="ConfigurationType">
+    <xsd:sequence>
+      <xsd:choice minOccurs="0" maxOccurs="unbounded">
+        <xsd:element name="variable"      type="log4j:ParameterType"/>
+        <xsd:element name="renderer"      type="log4j:RendererType"/>
+        <xsd:element name="appender"      type="log4j:AppenderType"/>
+<!--
+        <xsd:element name="plugin"        type="log4j:PlugInType"/>
+ -->
+        <xsd:element name="categoryFactory"
+                                          type="log4j:ParameterizedClassType"/>
+        <xsd:element name="loggerFactory" type="log4j:ParameterizedClassType"/>
+        <xsd:element name="category"      type="log4j:CategoryType"/>
+        <xsd:element name="logger"        type="log4j:LoggerType"/>
+        <xsd:element name="configuration" type="log4j:ConfigurationType"/>
+        <xsd:any namespace="##other" processContents="lax"/>
+      </xsd:choice>
+      <xsd:element name="throwableRenderer"
+                   type="log4j:ParameterizedClassType" minOccurs="0"/>
+      <xsd:element name="root" type="log4j:RootLoggerType" minOccurs="0"/>
+    </xsd:sequence>
+
+    <xsd:attribute name="name"            type="log4j:NameType"/>
+    <xsd:attribute name="threshold"       type="log4j:LevelEnumType"/>
+    <xsd:attribute name="debug"           type="xsd:boolean"/>
+    <xsd:attribute name="reset"           type="xsd:boolean"/>
+    <xsd:attribute name="updateWatchdog"  type="xsd:int"/>
+    <xsd:anyAttribute namespace="##other" processContents="lax"/>
+  </xsd:complexType>
+
+  <xsd:complexType name="RendererType">
+    <xsd:sequence>
+      <xsd:element name="renderedClass"  type="log4j:ClassNameType"/>
+      <xsd:element name="renderingClass" type="log4j:ClassNameType"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="AppenderType">
+    <xsd:complexContent>
+      <xsd:extension base="log4j:NamedItemType">
+        <xsd:sequence>
+          <xsd:element name="errorHandler" type="log4j:ErrorHandlerType"
+                                        minOccurs="0"/>
+          <xsd:element name="param"     type="log4j:ParameterType"
+                                        minOccurs="0" maxOccurs="unbounded"/>
+          <xsd:element name="rollingPolicy" type="log4j:RollingPolicyType"
+                                        minOccurs="0"/>
+          <xsd:element name="triggeringPolicy" type="log4j:TriggeringPolicyType"
+                                        minOccurs="0"/>
+<!--
+          <xsd:element name="connectionSource" type="log4j:ConnectionSourceType"
+                                        minOccurs="0"/>
+ -->
+          <xsd:element name="layout"    type="log4j:ParameterizedClassType"
+                                        minOccurs="0"/>
+          <xsd:element name="filter"    type="log4j:ParameterizedClassType"
+                                        minOccurs="0" maxOccurs="unbounded"/>
+          <xsd:element name="appender-ref" type="log4j:ReferenceType"
+                                        minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
+
+        <xsd:attribute name="class" type="log4j:ClassNameType" use="required"/>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="RootLoggerType">
+    <xsd:complexContent>
+      <xsd:extension base="log4j:ParameterizedType">
+        <xsd:sequence>
+          <xsd:choice minOccurs="0">
+            <xsd:element name="priority" type="log4j:LevelType"/>
+            <xsd:element name="level"    type="log4j:LevelType"/>
+          </xsd:choice>
+          <xsd:element name="appender-ref" type="log4j:ReferenceType"
+                                        minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="CategoryType">
+    <xsd:complexContent>
+      <xsd:extension base="log4j:RootLoggerType">
+        <xsd:attributeGroup ref="log4j:LoggerAttributes"/>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="LoggerType">
+    <xsd:complexContent>
+      <xsd:extension base="log4j:ParameterizedType">
+        <xsd:sequence>
+          <xsd:element name="level" type="log4j:LevelType" minOccurs="0"/>
+          <xsd:element name="appender-ref" type="log4j:ReferenceType"
+                                           minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
+
+        <xsd:attributeGroup ref="log4j:LoggerAttributes"/>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:attributeGroup name="LoggerAttributes">
+    <xsd:attribute name="name"       type="log4j:NameType" use="required"/>
+    <xsd:attribute name="class"      type="log4j:ClassNameType"/>
+    <xsd:attribute name="additivity" type="xsd:boolean" default="true"/>
+  </xsd:attributeGroup>
+
+  <xsd:complexType name="LevelType">
+    <xsd:complexContent>
+      <xsd:extension base="log4j:ParameterizedType">
+        <xsd:attribute name="class" type="log4j:ClassNameType"/>
+        <xsd:attribute name="value" type="log4j:LevelValueType" use="required"/>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="ReferenceType">
+    <xsd:attribute name="ref" type="log4j:NameType" use="required"/>
+  </xsd:complexType>
+
+  <xsd:complexType name="ErrorHandlerType">
+    <xsd:complexContent>
+      <xsd:extension base="log4j:ParameterizedClassType">
+        <xsd:sequence>
+          <xsd:element name="root-ref" minOccurs="0">
+            <xsd:complexType/>
+          </xsd:element>
+          <xsd:element name="logger-ref" type="log4j:ReferenceType"
+                                         minOccurs="0" maxOccurs="unbounded"/>
+          <xsd:element name="appender-ref" type="log4j:ReferenceType"
+                                         minOccurs="0"/>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="TriggeringPolicyType">
+    <xsd:complexContent>
+      <xsd:extension base="log4j:ParameterizedClassType">
+        <xsd:sequence>
+          <xsd:element name="filter" type="log4j:ParameterizedClassType"
+                                     minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
+
+        <xsd:attribute name="name" type="log4j:NameType"/>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="RollingPolicyType">
+    <xsd:complexContent>
+      <xsd:extension base="log4j:ParameterizedClassType">
+        <xsd:attribute name="name" type="log4j:NameType"/>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+
+
+  <xsd:complexType name="ParameterizedClassType">
+    <xsd:complexContent>
+      <xsd:extension base="log4j:ParameterizedType">
+        <xsd:attribute name="class" type="log4j:ClassNameType" use="required"/>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="ParameterizedType">
+    <xsd:sequence>
+      <xsd:element name="param" type="log4j:ParameterType"
+                                minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+  </xsd:complexType>
+
+
+  <xsd:complexType name="ParameterType">
+    <xsd:complexContent>
+      <xsd:extension base="log4j:NamedItemType">
+        <xsd:attribute name="value" type="log4j:AnyValueType" use="required"/>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+
+  <xsd:complexType name="NamedItemType">
+    <xsd:attribute name="name"  type="log4j:NameType" use="required"/>
+  </xsd:complexType>
+
+  <xsd:simpleType name="LevelEnumType">
+    <xsd:restriction base="log4j:LevelValueType">
+     <xsd:enumeration value="all"/>
+     <xsd:enumeration value="fatal"/>
+     <xsd:enumeration value="error"/>
+     <xsd:enumeration value="warn"/>
+     <xsd:enumeration value="info"/>
+     <xsd:enumeration value="debug"/>
+     <xsd:enumeration value="trace"/>
+     <xsd:enumeration value="off"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+
+  <xsd:simpleType name="LevelValueType">
+    <xsd:restriction base="log4j:NameOrVariableType"/>
+  </xsd:simpleType>
+
+  <xsd:simpleType name="ClassNameType">
+    <xsd:restriction base="log4j:NameOrVariableType"/>
+  </xsd:simpleType>
+
+  <xsd:simpleType name="NameType">
+    <xsd:restriction base="log4j:NameOrVariableType"/>
+  </xsd:simpleType>
+
+  <xsd:simpleType name="NameOrVariableType">
+    <xsd:restriction base="xsd:string"/>
+  </xsd:simpleType>
+
+  <xsd:simpleType name="AnyValueType">
+    <xsd:restriction base="xsd:string"/>
+  </xsd:simpleType>
+
+</xsd:schema>

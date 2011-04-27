@@ -1,0 +1,232 @@
+package org.datalift.core.rdf;
+
+
+import java.net.URI;
+import java.net.URL;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import org.openrdf.OpenRDFException;
+import org.openrdf.model.Value;
+import org.openrdf.model.ValueFactory;
+import org.openrdf.query.BooleanQuery;
+import org.openrdf.query.Dataset;
+import org.openrdf.query.GraphQuery;
+import org.openrdf.query.Query;
+import org.openrdf.query.TupleQuery;
+import org.openrdf.query.TupleQueryResultHandler;
+import org.openrdf.query.TupleQueryResultHandlerException;
+import org.openrdf.repository.RepositoryConnection;
+import org.openrdf.repository.RepositoryException;
+import org.openrdf.repository.http.HTTPRepository;
+import org.openrdf.rio.RDFHandler;
+import org.openrdf.rio.RDFHandlerException;
+
+import static org.openrdf.query.QueryLanguage.SPARQL;
+
+import org.datalift.core.TechnicalException;
+import org.datalift.fwk.log.Logger;
+import org.datalift.fwk.rdf.RdfException;
+import org.datalift.fwk.rdf.Repository;
+
+
+/**
+ * A Repository implementation to access remote repositories over
+ * HTTP using the
+ * <a href="http://www.openrdf.org/">Open RDF Sesame 2</a> API.
+ *
+ * @author hdevos
+ */
+public final class HttpRepository extends Repository
+{
+    //-------------------------------------------------------------------------
+    // Class members
+    //-------------------------------------------------------------------------
+
+    private final static Logger log = Logger.getLogger();
+
+    //-------------------------------------------------------------------------
+    // Instance members
+    //-------------------------------------------------------------------------
+
+    /** The native repository. */
+    private final org.openrdf.repository.Repository target;
+    /** The value factory to map initial bindings. */
+    private final ValueFactory valueFactory;
+
+    //-------------------------------------------------------------------------
+    // Constructors
+    //-------------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    public HttpRepository(String name, URL url,
+                          String username, String password, String label) {
+        super(name, url, username, password, label);
+
+        try {
+            this.target = new HTTPRepository(url.toString());
+            this.target.initialize();
+            this.valueFactory = this.target.getValueFactory();
+        }
+        catch (RepositoryException e) {
+            throw new TechnicalException("repository.connect.error", e,
+                                         name, url, e.getMessage());
+        }
+    }
+
+    //-------------------------------------------------------------------------
+    // Repository contract support
+    //-------------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    @Override
+    public RepositoryConnection newConnection() {
+        try {
+            return this.target.getConnection();
+        }
+        catch (RepositoryException e) {
+            throw new TechnicalException("repository.connect.error", e,
+                                         this.name, this.url, e.getMessage());
+        }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean ask(String query, Map<String,Object> bindings,
+                                     Dataset dataset, String baseUri) {
+        RepositoryConnection cnx = this.newConnection();
+        try {
+            BooleanQuery q = cnx.prepareBooleanQuery(SPARQL, query, baseUri);
+            this.setBindings(q, bindings);
+            if (dataset != null) {
+                q.setDataset(dataset);
+            }
+            boolean result = q.evaluate();
+            if (log.isTraceEnabled()) {
+                log.trace("{} {} -> {}", query, bindings,
+                                         Boolean.valueOf(result));
+            }
+            return result;
+        }
+        catch (OpenRDFException e) {
+            throw new QueryException(query, e).populate(
+                                                    bindings, dataset, baseUri);
+        }
+        finally {
+            try { cnx.close(); } catch (Exception e) { /* Ignore... */ }
+        }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void construct(String query, Map<String,Object> bindings,
+                          RDFHandler handler,
+                          Dataset dataset, String baseUri) throws RdfException {
+        RepositoryConnection cnx = this.newConnection();
+        try {
+            GraphQuery q = cnx.prepareGraphQuery(SPARQL, query, baseUri);
+            this.setBindings(q, bindings);
+            if (dataset != null) {
+                q.setDataset(dataset);
+            }
+            q.evaluate(handler);
+        }
+        catch (RDFHandlerException e) {
+            throw new QueryException(query, e).populate(
+                                                    bindings, dataset, baseUri);
+        }
+        catch (OpenRDFException e) {
+            throw new QueryException(query, e).populate(
+                                                    bindings, dataset, baseUri);
+        }
+        finally {
+            try { cnx.close(); } catch (Exception e) { /* Ignore... */ }
+        }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void select(String query, Map<String,Object> bindings,
+                       TupleQueryResultHandler handler,
+                       Dataset dataset, String baseUri) throws RdfException {
+        RepositoryConnection cnx = this.newConnection();
+        try {
+            TupleQuery q = cnx.prepareTupleQuery(SPARQL, query, baseUri);
+            this.setBindings(q, bindings);
+            if (dataset != null) {
+                q.setDataset(dataset);
+            }
+            q.evaluate(handler);
+        }
+        catch (TupleQueryResultHandlerException e) {
+            throw new QueryException(query, e).populate(
+                                                    bindings, dataset, baseUri);
+        }
+        catch (OpenRDFException e) {
+            throw new QueryException(query, e).populate(
+                                                    bindings, dataset, baseUri);
+        }
+        finally {
+            try { cnx.close(); } catch (Exception e) { /* Ignore... */ }
+        }
+    }
+
+    //-------------------------------------------------------------------------
+    // Specific implementation
+    //-------------------------------------------------------------------------
+
+    /**
+     * Sets the initial variable bindings for a query, performing Java
+     * to RDF type mapping.
+     * @param  query      the query.
+     * @param  bindings   the initial bindings.
+     */
+    private void setBindings(Query query, Map<String,Object> bindings) {
+        if (bindings != null) {
+            for (Entry<String,Object> e : bindings.entrySet()) {
+                query.setBinding(e.getKey(), this.mapBinding(e.getValue()));
+            }
+        }
+    }
+
+    /**
+     * Maps a Java object to an RDF data type.
+     * @param  o   the Java object to map.
+     *
+     * @return the corresponding RDF type object.
+     * @throws UnsupportedOperationException if no valid mapping can
+     *         be found the Java type.
+     */
+    private Value mapBinding(Object o) {
+        Value v = null;
+
+        if (o instanceof URI) {
+            v = this.valueFactory.createURI(o.toString());
+        }
+        else if (o instanceof String) {
+            v = this.valueFactory.createLiteral(o.toString());
+        }
+        else if (o instanceof Integer) {
+            v = this.valueFactory.createLiteral(((Integer)o).intValue());
+        }
+        else if (o instanceof Long) {
+            v = this.valueFactory.createLiteral(((Long)o).longValue());
+        }
+        else if (o instanceof Boolean) {
+            v = this.valueFactory.createLiteral(((Boolean)o).booleanValue());
+        }
+        else if (o instanceof Double) {
+            v = this.valueFactory.createLiteral(((Double)o).doubleValue());
+        }
+        else if (o instanceof Byte) {
+            v = this.valueFactory.createLiteral(((Byte)o).byteValue());
+        }
+        else if (o instanceof URL) {
+            v = this.valueFactory.createURI(o.toString());
+        }
+        else {
+            throw new UnsupportedOperationException(o.getClass().getName());
+        }
+        return v;
+    }
+}

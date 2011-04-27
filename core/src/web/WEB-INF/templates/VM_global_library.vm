@@ -1,0 +1,35 @@
+## Global library to centralize templates macros
+
+#macro ( header_links )
+	#maincss
+	#mainscripts
+#end
+
+#macro ( banner )
+	<div id="banner" class="dl-banner">
+		<img id="datalift-logo" src="${baseUri}/images/datalift-logo.png"/>
+		<span id="datalift-title">DataLift</span>	
+	</div>
+#end
+
+#macro ( maincss )
+	<meta http-equiv="content-type" content="text/html;charset=utf-8" />
+	<link rel="stylesheet" href="${baseUri}/css/datalift.css" type="text/css" />
+	<link rel="stylesheet" href="${baseUri}/css/jquery/jquery-ui.css" type="text/css" />
+	<link rel="stylesheet" href="${baseUri}/css/jquery/jquery.jqGrid.css" type="text/css" />
+#end
+
+#macro ( mainscripts )
+	<!-- JQuery + JQuery UI -->
+	<script language="javascript" src="${baseUri}/js/jquery/jquery.js"></script>
+	<script language="javascript" src="${baseUri}/js/jquery/jquery-ui.js"></script>
+	<!-- Jquery Plugins -->
+	<script language="javascript" src="${baseUri}/js/jquery/jquery.jqGrid.locale-en.js"></script>
+	<script language="javascript" src="${baseUri}/js/jquery/jquery.jqGrid.js"></script>	
+#end
+
+#macro ( footer )
+<div id="footer" class="dl-footer">
+<span id="more_info">Get more information about DataLift on <a href="http://www.datalift.org">http://www.datalift.org</a></span>
+</div>
+#end

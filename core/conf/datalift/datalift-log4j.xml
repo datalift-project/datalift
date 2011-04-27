@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration xmlns="http://jakarta.apache.org/log4j/">
+
+  <appender name="defaultLog" class="org.apache.log4j.FileAppender">
+    <param name="file"   value="${datalift.home}/logs/datalift.log"/>
+    <param name="append" value="false"/>
+
+    <layout class="org.apache.log4j.PatternLayout">
+      <param name="conversionPattern"
+             value="%d{ISO8601}|%p|%X{Timer}|%X{User}|%X{Module}|%X{Resource}|%c{1}|%m%n"/>
+    </layout>
+  </appender>
+
+  <!-- DataLift framework classes -->
+  <logger name="org.datalift">
+    <level value="debug"/>
+  </logger>
+  <!-- Apache Velocity template engine -->
+  <logger name="org.datalift.jersey">
+    <level value="info"/>
+  </logger>
+
+</configuration>

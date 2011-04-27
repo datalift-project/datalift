@@ -1,0 +1,108 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<title>SPARQL Endpoint - Query results</title>
+#header_links
+</head>
+<body>
+#banner
+#set($columnWidth = 100 / $it.Columns.size())
+	<script>
+		var gridData = new Array();
+		var searchData = new Array();
+		
+		$(function(){
+			
+			jQuery.extend(jQuery.jgrid.defaults, {
+				pager: $('#pagernav'),
+				caption: $('#searchnav').html()
+				
+			});
+			tableToGrid("#queryresults", {});
+			$("#queryresults").trigger("reloadGrid");
+			gridData = $("#queryresults").getRowData();
+			// Add options to search select
+			var options = $('#searchColumn').attr('options');
+			options.length = 0;						
+			options[options.length] = new Option("all", "all", true, true);
+			if (gridData[0]) {
+				for (property in gridData[0]) {
+					options[options.length] = new Option(property, property, false, false);
+				}
+			}
+			// Function called when modifying search text
+			$("#gridsearch").keyup(function () {
+				gridSearch($(this).val().toLowerCase());
+			});
+			// Function called when modifying search Column
+			$("#searchColumn").change(function() {
+				gridSearch($("#gridsearch").val().toLowerCase());
+			});
+		});
+		
+		function gridSearch(searchString) {
+			searchData = [];
+			if ($("#searchColumn").val() == "all") {
+				searchAllColumns(searchString);
+			}
+			else {
+				searchOneColumn(searchString, $("#searchColumn").val());
+			}
+			$("#queryresults").jqGrid('clearGridData', true);
+			$("#queryresults").jqGrid('setGridParam',{data:searchData}).trigger("reloadGrid");
+		}		
+		
+		function searchAllColumns(searchString) {
+			var c = 0;
+			for (var i = 0; i < gridData.length; i++) {
+				var found = false;
+				for (property in gridData[0]) {
+					var toCmp = eval("gridData[i]." + property);
+					if (!found && toCmp.toLowerCase().indexOf(searchString) != -1) {
+						searchData[c] = gridData[i];
+						c++;
+						found = true;
+					}
+				}
+			}
+		}
+		
+		function searchOneColumn(searchString, searchColumn) {
+			var c = 0;
+			for (var i = 0; i < gridData.length; i++) {
+				var toCmp = eval("gridData[i]." + searchColumn);
+				if (toCmp.toLowerCase().indexOf(searchString) != -1) {
+					searchData[c] = gridData[i];
+					c++;
+				}
+			}
+		}
+	</script>
+
+	<table id="queryresults" style="width:100%">
+		<thead>
+			<tr>
+#foreach( $c in $it.Columns )
+				<th>$esc.html($c)</th>
+#end
+			</tr>
+		</thead>
+		<tbody>
+#foreach( $item in $it )
+			<tr>
+#foreach( $c in $it.Columns )
+				<td>$esc.html($!{item.getValue($c)})</td>
+#end
+			</tr>
+#end
+		</tbody>
+	</table>
+	<div id="pagernav"/>
+	<div id="searchnav" style="display:none">
+		Column: <select id="searchColumn"></select>
+		Search: <input type="search" id="gridsearch" placeholder="Search" results="0" class="gridsearch" />
+	</div>
+#footer
+</body>
+</html>
