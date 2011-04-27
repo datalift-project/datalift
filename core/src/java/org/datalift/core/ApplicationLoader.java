@@ -105,7 +105,7 @@ public class ApplicationLoader extends LogServletContextListener
             resources = Collections.unmodifiableSet(rsc);
             log.info("DataLift application initialized");
         }
-        catch (Exception e) {
+        catch (Throwable e) {
             TechnicalException error = new TechnicalException(
                                 "configuration.load.error", e, e.getMessage());
             log.fatal(error.getMessage(), e);

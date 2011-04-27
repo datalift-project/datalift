@@ -36,6 +36,30 @@
 	</select>
 	<input type="submit"/>
 </form>
+
+
+<form method="post" action="$it.getRdfId()/dbupload">
+	<label for="source_url">Source url:</label>
+	<input type="text" name="source_url" id="source_url" />
+	
+	<label for="user">User:</label>
+	<input type="text" id="user" name="user"/>
+	
+	<label for="password">Password:</label>
+	<input type="password" name="password" id="password"/>
+	
+	<label for="database">Database:</label>
+	<input type="text" name="database" id="database" />
+	
+	<label for="title">Source name:</label>
+	<input type="text" id="title" name="title" />
+	
+	<label for="request">Request:</label>
+	<input type="text" id="request" name="request" />
+	
+
+	<input type="submit"/>
+</form>
 #footer
 </body>
 </html>

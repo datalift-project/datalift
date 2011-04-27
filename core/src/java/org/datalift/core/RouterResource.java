@@ -3,7 +3,6 @@ package org.datalift.core;
 
 import java.io.File;
 import java.io.FileFilter;
-import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -419,30 +418,22 @@ public class RouterResource implements LifeCycle
                 // => Try to resolve resource as a module static resource.
                 String rsc = MODULE_PUBLIC_DIR
                                         + path.substring(module.name.length());
-                InputStream in = null;
-                long lastModified = -1L;
-                if (module.isJarPackage()) {
-                    // Single JAR module.
-                    in = module.classLoader.getResourceAsStream(rsc);
-                    lastModified = module.root.lastModified();
-                }
-                else {
-                    // Module deployed as a directory.
-                    URL u = module.classLoader.getResource(rsc);
-                    if (u != null) {
-                        in = u.openStream();
-                        lastModified = new File(u.getFile()).lastModified();
+                URL src = module.classLoader.getResource(rsc);
+                if (src != null) {
+                    // Module static resource found.
+                    // => Check whether data shall be returned.
+                    Date lastModified = new Date((module.isJarPackage())?
+                                    module.root.lastModified():
+                                    new File(src.getFile()).lastModified());
+                    ResponseBuilder b = request.evaluatePreconditions(lastModified);
+                    if (b == null) {
+                        // Get MIME type from file extension.
+                        String mt = new MimetypesFileTypeMap().getContentType(rsc);
+                        log.debug("Serving module public resource: {}/{} ({})",
+                                        module, rsc, mt);
+                        b = Response.ok(src.openStream(), mt);
                     }
-                }
-                if (in != null) {
-                    // Get MIME type from file extension.
-                    String mt = new MimetypesFileTypeMap().getContentType(rsc);
-                    log.debug("Serving module public resource: {}/{} ({})",
-                                                            module, rsc, mt);
-                    response = this.addCacheDirectives(
-                                        Response.ok(in, mt),
-                                        (lastModified > 0L)?
-                                                new Date(lastModified): null)
+                    response = this.addCacheDirectives(b, lastModified)
                                    .build();
                 }
             }
@@ -512,9 +503,9 @@ public class RouterResource implements LifeCycle
                 // Get MIME type from file extension.
                 String mt = new MimetypesFileTypeMap().getContentType(f);
                 log.debug("Serving static resource: {} ({})", f, mt);
-                b = this.addCacheDirectives(Response.ok(f, mt), lastModified);
+                b = Response.ok(f, mt);
             }
-            response = b.build();
+            response = this.addCacheDirectives(b, lastModified).build();
         }
         return response;
     }
@@ -563,10 +554,9 @@ public class RouterResource implements LifeCycle
                 b = this.sparqlEndpoint.executeQuery(
                                                 "DESCRIBE <" + uri + '>',
                                                 uriInfo, request, acceptHdr);
-                b = this.addCacheDirectives(b, result.lastModified);
             }
             // Else: Client already has an up-to-date copy of the data.
-            response = b.build();
+            response = this.addCacheDirectives(b, result.lastModified).build();
         }
         // Else: No matching RDF resource.
 

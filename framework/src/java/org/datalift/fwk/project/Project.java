@@ -14,7 +14,8 @@ public interface Project
 
     public String getDescription();
     public void setDescription(String d);
-    
+
     public void addSource(Source s);
-	public Collection<Source> getSources();
+
+    public Collection<Source> getSources();
 }

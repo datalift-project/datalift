@@ -1,8 +1,3 @@
-// Decompiled by Jad v1.5.8g. Copyright 2001 Pavel Kouznetsov.
-// Jad home page: http://www.kpdus.com/jad.html
-// Decompiler options: packimports(3) braces fieldsfirst space 
-// Source File Name:   FileSource.java
-
 package org.datalift.core.project;
 
 import java.io.FileNotFoundException;
@@ -10,30 +5,22 @@ import java.io.FileReader;
 
 import javax.persistence.Entity;
 
-import com.clarkparsia.empire.annotation.Namespaces;
 import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.RdfsClass;
 
 
-// Referenced classes of package org.datalift.project:
-//            BaseSource
-
 @Entity
-@Namespaces({"datalift", "http://www.datalift.org/core#"})
 @RdfsClass("datalift:fileSource")
 public class FileSource extends BaseSource
 {
-	@RdfProperty("datalift:url")
+
+    @RdfProperty("datalift:url")
     private String url;
-	@RdfProperty("datalift:mimeType")
+    @RdfProperty("datalift:mimeType")
     private String mimeType;
 
-	private FileReader freader;
-	
-    public FileSource()
-    {
-    }
-    
+    private FileReader freader;
+
     public void	init(String storagePath) throws FileNotFoundException {
     	try {
 			freader = new FileReader(storagePath);

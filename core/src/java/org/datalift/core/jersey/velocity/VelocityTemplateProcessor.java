@@ -138,6 +138,7 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
      *         <code>null</code> if the template name can not be
      *         resolved.
      */
+    @Override
     public Template resolve(String name) {
         Template template = null;
 
@@ -171,6 +172,7 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
      *
      * @throws IOException if there was an error processing the template.
      */
+    @Override
     public void writeTo(Template t, Viewable viewable,
                                     OutputStream out) throws IOException {
         // Commit the status and headers to the HttpServletResponse

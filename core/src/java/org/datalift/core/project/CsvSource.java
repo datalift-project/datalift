@@ -1,54 +1,39 @@
-// Decompiled by Jad v1.5.8g. Copyright 2001 Pavel Kouznetsov.
-// Jad home page: http://www.kpdus.com/jad.html
-// Decompiler options: packimports(3) braces fieldsfirst space 
-// Source File Name:   CsvSource.java
-
 package org.datalift.core.project;
 
 import au.com.bytecode.opencsv.CSVReader;
 
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
 
 import javax.persistence.Entity;
 
-import com.clarkparsia.empire.annotation.Namespaces;
 import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.RdfsClass;
 
-// Referenced classes of package org.datalift.project:
-//            FileSource
 
 @Entity
-@Namespaces({"datalift", "http://www.datalift.org/core#"})
 @RdfsClass("datalift:csvSource")
-public class CsvSource extends FileSource
-    implements Iterable<String[]>
+public class CsvSource extends FileSource implements Iterable<String[]>
 {
-
-    private List<String[]> 	grid;
+    private List<String[]> grid;
 
     private Collection<String> header = new ArrayList<String>();
+
     @RdfProperty("datalift:separator")
     private String separator;
     @RdfProperty("datalift:titleRow")
     private boolean titleRow = false;
 
-
-    public boolean hasTitleRow()
-    {
+    public boolean hasTitleRow() {
         return titleRow;
     }
 
-    public void setTitleRow(boolean titleRow)
-    {
+    public void setTitleRow(boolean titleRow) {
         this.titleRow = titleRow;
     }
 
-    public void init(String storagePath)
-    {
+    public void init(String storagePath) {
     	try {
 			super.init(storagePath);
 		} 
@@ -83,19 +68,16 @@ public class CsvSource extends FileSource
         }
     }
 
-    public static String getRowName(int n)
-    {
+    public static String getRowName(int n) {
         String s = "";
         for (; n >= 0; n = n / 26 - 1)
         {
             s = (new StringBuilder()).append((char)(n % 26 + 65)).append(s).toString();
         }
-
         return s;
     }
 
-    public Iterator<String[]> iterator()
-    {
+    public Iterator<String[]> iterator() {
     	Iterator<String[]> i = Collections.unmodifiableList(grid).iterator();
     	if ((this.titleRow) && (i.hasNext())) {
     		// Skip title row.
@@ -104,8 +86,7 @@ public class CsvSource extends FileSource
     	return i;
     }
 
-    public int getColumnsSize()
-    {
+    public int getColumnsSize() {
     	Iterator<String[]> it = grid.iterator();
         if (it.hasNext())
         {
@@ -116,32 +97,29 @@ public class CsvSource extends FileSource
         }
     }
 
-    public Collection<String> getColumnsHeader()
-    {
+    public Collection<String> getColumnsHeader() {
         return header;
     }
 
-    public void setSeparator(String separator)
-    {
+    public void setSeparator(String separator) {
         this.separator = separator;
     }
 
-    public String getSeparator()
-    {
+    public String getSeparator() {
         return separator;
     }
     
     public enum Separator {
-    	comma(','), semicolon(';'), tab('\t');
-    	
-    	protected char value;
-    	
-    	Separator(char s) {
-    		this.value = s;
-    	}
-    	
-    	public char getValue() {
-    		return value;
-    	}
+        comma(','), semicolon(';'), tab('\t');
+
+        protected final char value;
+
+        Separator(char s) {
+            this.value = s;
+        }
+
+        public char getValue() {
+            return value;
+        }
     }
 }

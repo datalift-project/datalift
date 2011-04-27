@@ -45,11 +45,16 @@ public class ModuleResourceLoader extends ResourceLoader
         // Load module descriptions from loader configuration.
         // The path property format: module1: "path1, module2: path2, ..."
         for (String m : configuration.getStringArray(LOADER_PATH)) {
-            String[] desc = m.split("\\s*:\\s*");
-            if ((desc.length == 2) && (desc[0].length() != 0)) {
+            // Don't split() on ':' but look for first occurrence as absolute
+            // paths on Windoze have a colon character after the drive name.
+            int i = m.indexOf(':');
+            if ((i > 0) && (i < (m.length() -1))) {
+                String name = m.substring(0, i).trim();
+                String path = m.substring(i + 1).trim();
+
                 ResourceLoader loader = null;
                 // Allocate resource loader for module.
-                File f = new File(desc[1]);
+                File f = new File(path);
                 ExtendedProperties p = new ExtendedProperties();
                 p.addProperty(LOADER_UPD_INTERVAL,
                         String.valueOf(this.getModificationCheckInterval()));
@@ -69,8 +74,8 @@ public class ModuleResourceLoader extends ResourceLoader
                 loader.commonInit(rsvc, p);
                 loader.init(p);
 
-                log.debug("ModuleResourceLoader: adding module '" + desc[0] + '\'');
-                this.modules.put(desc[0], loader);
+                log.debug("ModuleResourceLoader: adding module '" + name + '\'');
+                this.modules.put(name, loader);
             }
             else {
                 log.warn("ModuleResourceLoader: Ignoring invalid module definition: \""

@@ -1,0 +1,123 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<title>Datalift - Source Grid</title>
+#header_links
+</head>
+
+<body>
+	<script>
+		var gridData = new Array();
+		var searchData = new Array();
+		var	gridHeader = new Array();
+		
+		$(function(){
+			getHeaderColumns();
+			jQuery.extend(jQuery.jgrid.defaults, {
+				caption: $('#searchnav').html(),
+				rowNum: 1000000
+			});
+			tableToGrid("#grid", { datatype: "local" });
+			$("#grid").trigger("reloadGrid");
+			gridData = $("#grid").getRowData();
+			// Function called when modifying search text
+			$("#gridsearch").keyup(function () {
+				gridSearch($(this).val().toLowerCase());
+			});
+			// Function called when modifying search Column
+			$("#searchColumn").change(function() {
+				gridSearch($("#gridsearch").val().toLowerCase());
+			});
+		});
+		
+		function getHeaderColumns() {
+			var cols = $(".dl-grid-header-column");
+			for (var i = 0; cols[i]; i++) {
+				gridHeader[i] = cols[i].innerHTML;
+			}
+		}
+		
+		function gridSearch(searchString) {
+			searchData = [];
+			if ($("#searchColumn").val() == "all") {
+				searchAllColumns(searchString);
+			}
+			else {
+				searchOneColumn(searchString, $("#searchColumn").val());
+			}
+			$("#grid").jqGrid('clearGridData', true);
+			$("#grid").jqGrid('setGridParam',{data:searchData}).trigger("reloadGrid");
+
+		}		
+		
+		function searchAllColumns(searchString) {
+			if (searchString != "") {
+				var c = 0;
+				var obj = gridHeader;
+				for (var i = 0; i < gridData.length; i++) {
+					for (var k = 0; k < obj.length; k++) {
+						obj[k] = obj[k].replace(" ", "_");
+						var toCmp = eval("gridData[i]." + obj[k]);
+						if (toCmp.toLowerCase().indexOf(searchString) != -1) {
+							searchData[c] = gridData[i];
+							c++;
+							k = obj.length;
+						}
+					}
+				}
+			}
+			else
+				searchData = gridData;
+		}
+	
+		function searchOneColumn(searchString, searchColumn) {
+			if (searchString != "") {
+				var c = 0;
+				for (var i = 0; i < gridData.length; i++) {
+					searchColumn = searchColumn.replace(" ", "_");
+					var toCmp = eval("gridData[i]." + searchColumn);
+					if (toCmp.toLowerCase().indexOf(searchString) != -1) {
+						searchData[c] = gridData[i];
+						c++;
+					}
+				}
+			}
+			else
+			searchData = gridData;
+		}
+		
+	</script>
+	
+#banner
+$it.getTitle()
+	<table id="grid">
+		<thead>
+			<tr>
+#foreach ($i in $it.getColumnsName())	
+				<th class="dl-grid-header-column">$i</th>
+#end
+			</tr>
+	</thead>
+	<tbody>
+#foreach($row in $it)
+	<tr>
+#foreach( $colNbr in [1..$it.getColumnCount()] )
+	<td>$row.getColumnObject($colNbr)</td>
+#end
+	</tr>
+#end 
+	</tbody>
+	</table>
+	<div id="pagernav"></div>
+	<div id="searchnav" style="display:none">
+		Column: <select id="searchColumn">
+		<option id="all">all</option>
+#foreach ($i in $it.getColumnsName())	
+		<option id="$i">$i</option>
+#end
+		</select>
+		Search: <input type="search" id="gridsearch" placeholder="Search" results="0" class="gridsearch" />
+	</div>
+</body>
+</html>

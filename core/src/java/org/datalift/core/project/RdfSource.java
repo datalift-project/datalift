@@ -9,7 +9,6 @@ import java.util.LinkedList;
 import javax.persistence.Entity;
 
 import org.datalift.fwk.MediaTypes;
-import org.datalift.fwk.log.Logger;
 import org.openrdf.model.Statement;
 import org.openrdf.rio.RDFParser;
 import org.openrdf.rio.helpers.StatementCollector;
@@ -20,17 +19,13 @@ import com.clarkparsia.empire.annotation.RdfsClass;
 
 @Entity
 @RdfsClass("datalift:rdfSource")
-public class RdfSource extends FileSource implements Iterable<Statement> {
+public class RdfSource extends FileSource implements Iterable<Statement>
+{
+	private Collection<Statement> content = new LinkedList<Statement>();
 
-	private Collection<Statement>		content;
-		
 	@Override
 	public Iterator<Statement> iterator() {
 		return Collections.unmodifiableCollection(this.content).iterator();
-	}
-	
-	public RdfSource() {
-		content = new LinkedList<Statement>();
 	}
 	
 	public void init(String storagePath) {

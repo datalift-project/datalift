@@ -13,7 +13,9 @@ public enum RdfNamespace
     FOAF        ("foaf",        "http://xmlns.com/foaf/0.1/"),
     RDF         ("rdf",         "http://www.w3.org/1999/02/22-rdf-syntax-ns#"),
     RDFS        ("rdfs",        "http://www.w3.org/2000/01/rdf-schema#"),
-    OWL         ("owl",         "http://www.w3.org/2002/07/owl#");
+    OWL         ("owl",         "http://www.w3.org/2002/07/owl#"),
+    VOID        ("void",        "http://rdfs.org/ns/void#"),
+    DOAP        ("doap",        "http://usefulinc.com/ns/doap#");
 
     //-------------------------------------------------------------------------
     // Instance members

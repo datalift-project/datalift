@@ -1,8 +1,6 @@
 package org.datalift.core.project;
 
-
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -36,6 +34,7 @@ import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.core.Response.Status;
 
 import com.clarkparsia.empire.Empire;
+import com.clarkparsia.empire.SupportsRdfId.RdfKey;
 import com.clarkparsia.empire.annotation.RdfGenerator;
 import com.clarkparsia.empire.config.EmpireConfiguration;
 import com.clarkparsia.empire.sesametwo.OpenRdfEmpireModule;
@@ -46,7 +45,6 @@ import com.sun.jersey.api.view.Viewable;
 import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.FormDataParam;
 
-import org.datalift.core.project.CsvSource.Separator;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.LifeCycle;
 import org.datalift.fwk.MediaTypes;
@@ -106,7 +104,8 @@ public class WorkspaceResource implements LifeCycle
         		BaseSource.class, 
         		FileSource.class, 
         		CsvSource.class,
-        		RdfSource.class);
+        		RdfSource.class,
+        		DbSource.class);
         // Register application namespaces to Empire.
         this.registerRdfNamespaces();
         // Create Data Access Object for Projects.
@@ -237,7 +236,7 @@ public class WorkspaceResource implements LifeCycle
 		Project p = this.projectDao.get(uri);
 		Map<String, Object>	args = new HashMap<String, Object>();
 		args.put("it", p);
-		args.put("sep", Separator.values());
+		args.put("sep", CsvSource.Separator.values());
      	return Response.ok(new Viewable("/projectSourceUpload.vm", args),
                 MediaType.TEXT_HTML)
             .build();
@@ -280,7 +279,7 @@ public class WorkspaceResource implements LifeCycle
 		src.setTitle(fileDisposition.getFileName());
 		src.setUrl(storageUrl);
 		src.setMimeType("application/octet-stream");
-		src.setSeparator(Separator.valueOf(separator).toString());
+		src.setSeparator(CsvSource.Separator.valueOf(separator).toString());
 		if (titleRow != null && titleRow.equals("on"))
 			src.setTitleRow(true);
 		((ProjectImpl)p).addSource(src);
@@ -322,7 +321,7 @@ public class WorkspaceResource implements LifeCycle
 		File dest = new File(storagePath);
 		try{
 			this.fileCopy(file, dest);
-		} catch (IOException e){
+		} catch (IOException e) { 
 			throw new WebApplicationException(e, Response.Status.INTERNAL_SERVER_ERROR);
 		}
 		// Add new source to persistent project
@@ -339,6 +338,45 @@ public class WorkspaceResource implements LifeCycle
 		catch (Exception e) {
 			throw new WebApplicationException(e, Response.Status.INTERNAL_SERVER_ERROR);
 		}
+    }
+    
+    @POST
+    @Path("{id}/dbupload")
+    public Response dbUpload(@PathParam("id") String id,
+    						@Context UriInfo uriInfo,
+    						@FormParam("database") String	database,
+    						@FormParam("source_url") String srcUrl, 
+    						@FormParam("title") String title,
+    						@FormParam("user") String user, 
+    						@FormParam("request") String request,
+    						@FormParam("password") String password) {
+    	URI projectUri = null;
+    	URI sourceUri = null;
+    	try {
+			projectUri = new URI(uriInfo.getBaseUri() + "project/" + id);
+    		sourceUri = new URI(projectUri + "/source/" + title);
+    	} catch (Exception e) {
+			throw new WebApplicationException(e, Response.Status.INTERNAL_SERVER_ERROR);
+		}
+		Project p = this.projectDao.get(projectUri);
+		// Add new source to persistent project
+		DbSource src = new DbSource();
+		src.setTitle(title);
+		src.setUrl("project/" + id + "/source/" + title);
+		src.setDatabase(database);
+		src.setConnectionUrl(srcUrl);
+		src.setUser(user);
+		src.setPassword(password);
+		src.setRequest(request);
+		((ProjectImpl)p).addSource(src);
+		this.projectDao.save(p);
+		try {
+			return Response.created(sourceUri).entity(
+				new Viewable("/workspace.vm", this.projectDao.getAll())).build();
+		}
+		catch (Exception e) {
+			throw new WebApplicationException(e, Response.Status.INTERNAL_SERVER_ERROR);
+		}    	
     }
     
     public void	fileCopy(InputStream src, File dest) throws IOException {
@@ -402,6 +440,10 @@ public class WorkspaceResource implements LifeCycle
 				return Response.ok(new Viewable("/CsvSourceGrid.vm", src)).build();
 			else if (src instanceof RdfSource)
 				return Response.ok(new Viewable("/RdfSourceGrid.vm", src)).build();
+		}
+		else if (src != null && src instanceof DbSource) {
+			((DbSource)src).init();
+			return Response.ok(new Viewable("/DbSourceGrid.vm", src)).build();
 		}
 		return null;
     }
