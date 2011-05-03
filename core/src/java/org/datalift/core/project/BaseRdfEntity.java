@@ -10,6 +10,12 @@ public abstract class BaseRdfEntity implements SupportsRdfId
     private SupportsRdfId rdfId = new SupportsRdfIdImpl();
 
     //-------------------------------------------------------------------------
+    // BaseRdfEntity contract definition
+    //-------------------------------------------------------------------------
+
+    abstract protected void setId(String id);
+
+    //-------------------------------------------------------------------------
     // SupportsRdfId contract support
     //-------------------------------------------------------------------------
 
@@ -21,7 +27,8 @@ public abstract class BaseRdfEntity implements SupportsRdfId
 
     /** {@inheritDoc} */
     @Override @SuppressWarnings("unchecked")
-    public void setRdfId(RdfKey theId) {
-        this.rdfId.setRdfId(theId);
+    public void setRdfId(RdfKey id) {
+        this.rdfId.setRdfId(id);
+        this.setId(String.valueOf(id));
     }
 }

@@ -8,138 +8,152 @@
 <body>
 #banner
 	<script>
-		var gridData = new Array();
+		var rowNumber = 10;
+		var grid = false;
 		var searchData = new Array();
+		var responsePtr;
 		
 		$(function() {
+			
 			$("#result-format").buttonset();
 			$("#query_submit").button();
 			$("#query_form").submit(function(e){
+				//var requestMin = 0;
+				//var requestMax = 500000;
+#if( ${securityCtx.isAuthenticated()} )
+				var requestUrl = $("#query_form").attr("action")
+							+ "?" + $("#query").serialize()
+							+ "&" + $("#default-graph-uri").serialize()
+							//+ "&min=" + requestMin + "&max=" + requestMax
+							+ "&grid=on";
+#else
+				var requestUrl = $("#query_form").attr("action")
+							+ "?" + $("#query").serialize()							
+							+ "&grid=on";
+#end
 				e.preventDefault(); // Prevent the navigator from sending the form
 				jQuery.ajax({
 					beforeSend: function(req) {
 						req.setRequestHeader("Accept", $("input[name=format]:checked").val());
 						$("#format_save").val($("input[name=format]:checked").val());
 					},
-					url: $(this).attr("action")
-						+ "?" + $("#query").serialize()
-						+ "&" + $("#default-graph-uri").serialize(),
-					type:"GET",
+					type: "GET",
+					cache: false,
+					url: requestUrl,
 					success: successfulQuery,
-					error: unsuccessfulQuery
+					error: unsuccessfulQuery,
 				});
-				return false;
 			});
 		});
-
-		function successfulQuery(obj){
-			$("#table_results").GridUnload(); 
+	
+		function successfulQuery(response){
 			if ($("#format_save").val() == "application/json") {
+				jsonGridSuccessRequest(response);
+			}
+			// Function called when modifying search text
+			$("#gridsearch").keyup(function () {
+				gridSearch(response, $(this).val().toLowerCase());
+			});
+			
+			// Function called when modifying search Column
+			$("#searchColumn").change(function() {
+				gridSearch(response, $("#gridsearch").val().toLowerCase());
+			});
+		}
+		function jsonGridSuccessRequest(response) {
+			if (responsePtr) {
+				delete responsePtr;
+			}
+			responsePtr = response;
+			// initialize search select
+			var options = $('#searchColumn').attr('options');
+			options.length = 0;			
+			options[options.length] = new Option("all", "all", true, true);
+			// generating Column Model for jqGrid
+			var myColModel = [];						
+			for (var i = 0; i < response.head.length; i++ ) {
+				myColModel[i] = [];					
+				myColModel[i].name = response.head[i];
+				// add row to search select
+				options[options.length] = new Option(response.head[i], response.head[i], false, false);
+			}
+			if (grid == false ) {
+				// initializing empty table in result div
+				$("#table_results").GridUnload();
 				$("#results").empty();
 				$("#results").append('<table id="table_results"></table><div id="pagernav"/>');
-				var myColModel = new Array();
-				var options = $('#searchColumn').attr('options');
-				options.length = 0;			
-				options[options.length] = new Option("all", "all", true, true);
-				for (var i = 0; i < obj.head.vars.length; i++ ) {
-					// generating data Array for jqGrid
-					myColModel[i] = new Array();					
-					myColModel[i].name = obj.head.vars[i];
-					// generation options for select column in search
-					options[options.length] = new Option(obj.head.vars[i], obj.head.vars[i], false, false);
-				}
-				gridData = [];
-				for ( var i = 0; i < obj.results.bindings.length; i++) {
-					var objdata = "{";
-					for (var j= 0; j < obj.head.vars.length; j++) { 
-						var key = obj.head.vars[j];
-						var value = eval("obj.results.bindings[i]." + key + ".value"); 
-						objdata +=  key + ":'" + value + "'";
-						if (j != obj.head.vars.length - 1) {
-							objdata += ',';
-						}
-					}
-					objdata += "}";
-					gridData[i] = eval("("+ objdata + ")");
-				}
+							
+				// initializing jqGrid
 				$("#table_results").jqGrid({
 					datatype: "local",
-					colNames: obj.head.vars,
+					colNames: response.head,
 					colModel: myColModel,
 					pager: $('#pagernav'),
-					data: gridData,
-					caption: $("#searchnav").html()
-				});
-				$("#navgrid").jqGrid('navGrid','#pagernav',
-					{edit:false,add:false,del:false });
-					
-				// Function called when modifying search text
-				$("#gridsearch").keyup(function () {
-					gridSearch(obj, $(this).val().toLowerCase());
-				});
-				// Function called when modifying search Column
-				$("#searchColumn").change(function() {
-					gridSearch(obj, $("#gridsearch").val().toLowerCase());
+					data: response.rows,
+					caption: $("#searchnav").html(),
+					rowNum: 10,
+					rowList: [10,25,50,100,200],
+					deepempty:true
 				});
 				
 				$("#results").show();
 				$("#table_results").setGridWidth($("#results").width());
-			}
-			else if ($("#format_save").val() == "application/rdf+xml"){
-				var xmlString = (new XMLSerializer()).serializeToString(obj);
-				$("#results").text(xmlString);
-				$("#results").show();
+				grid = true;
 			}
 			else {
-				$("#results").empty();
-				$("#results").append(obj);
-				$("#results").show();
+				$("#table_results").clearGridData();
+				$("#table_results").setGridParam({
+					colNames: response.head,
+					colModel: myColModel,
+					data: response.rows,
+				});
+				$("#table_results").trigger("reloadGrid");
 			}
 		}
 		
-		function gridSearch(obj, searchString) {
+		function unsuccessfulQuery(XMLHttpRequest, strError){
+			alert("An error occured while processing your request:\n[" 
+				+ XMLHttpRequest.readyState + "]["
+				+ XMLHttpRequest.status + "]"
+				+ "\nPlease correct your query before retrying.\nError ["
+				+ strError+ "]");
+		}		
+		
+		function gridSearch(gridData, searchString) {
 			searchData = [];
 			if ($("#searchColumn").val() == "all") {
-				searchAllColumns(obj, searchString);
+				searchAllColumns(gridData, searchString);
 			}
 			else {
-				searchOneColumn(obj, searchString, $("#searchColumn").val());
+				searchOneColumn(gridData, searchString, $("#searchColumn").val());
 			}
 			$("#table_results").jqGrid('clearGridData', true);
 			$("#table_results").jqGrid('setGridParam',{data:searchData}).trigger("reloadGrid");
 		}		
 
-		function searchAllColumns(obj, searchString) {
+		function searchAllColumns(gridData, searchString) {
 			var c = 0;
-			for (var i = 0; i < gridData.length; i++) {
-				for (var k = 0; k < obj.head.vars.length; k++) {
-					var toCmp = eval("gridData[i]." + obj.head.vars[k]);
+			for (var i = 0; i < gridData.rows.length; i++) {
+				for (var k = 0; k < gridData.head.length; k++) {
+					var toCmp = eval("gridData.rows[i]." + gridData.head[k]);
 					if (toCmp.toLowerCase().indexOf(searchString) != -1) {
-						searchData[c] = gridData[i];
+						searchData[c] = gridData.rows[i];
 						c++;
-						k = obj.head.vars.length;
+						k = gridData.head.length;
 					}
 				}
 			}
 		}
 		
-		function searchOneColumn(obj, searchString, searchColumn) {
+		function searchOneColumn(gridData, searchString, searchColumn) {
 			var c = 0;
-			for (var i = 0; i < gridData.length; i++) {
-				var toCmp = eval("gridData[i]." + searchColumn);
-				console.log("searching in Column " + searchColumn);
+			for (var i = 0; i < gridData.rows.length; i++) {
+				var toCmp = eval("gridData.rows[i]." + searchColumn);
 				if (toCmp.toLowerCase().indexOf(searchString) != -1) {
-					searchData[c] = gridData[i];
+					searchData[c] = gridData.rows[i];
 					c++;
 				}
 			}
-		}
-		
-		function unsuccessfulQuery(XMLHttpRequest){
-			alert("An error occured while processing your request:\n["
-				+ XMLHttpRequest.status + "] "
-				+ XMLHttpRequest.responseText
-				+ "\nPlease correct your query before retrying.");
 		}
 	</script>
 
@@ -147,6 +161,7 @@
 		<h3 class="ui-widget-header dl-widget-header">SPARQL Query</h3>
 		<div class="dl-panel">
 		    <form id="query_form" action="${baseUri}/sparql" method="get">
+#if( ${securityCtx.isAuthenticated()} )
 			<div class="dl-form-elt">
 				<label for="default-graph-uri">Repository: </label>
 				<select id="default-graph-uri" name="default-graph-uri">
@@ -159,9 +174,10 @@
 #end
 				</select>
 			</div>
+#end
 			<div id="result-format" class="dl-form-elt">
 				<label>Format: </label>
-				<input type="radio" id="html_format" name="format" value="text/html" checked="checked"/><label for="html_format">HTML</label>
+				<input type="radio" id="html_format" name="format" value="application/json" checked="checked"/><label for="html_format">HTML</label>
 				<input type="radio" id="rdf_format" name="format" value="application/rdf+xml"/><label for="rdf_format">RDF/XML</label>
 				<input type="radio" id="turtle_format" name="format" value="text/turtle"/><label for="turtle_format">Turtle</label>
 				<input type="hidden" id="format_save" />

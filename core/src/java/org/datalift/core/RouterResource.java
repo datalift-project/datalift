@@ -44,17 +44,19 @@ import org.openrdf.query.TupleQueryResultHandlerBase;
 
 import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 
-import org.datalift.core.jersey.velocity.VelocityTemplateProcessor;
 import org.datalift.core.log.LogContext;
+import org.datalift.core.velocity.jersey.VelocityTemplateProcessor;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.LifeCycle;
 import org.datalift.fwk.MediaTypes;
 import org.datalift.fwk.Module;
+import org.datalift.fwk.ResourceResolver;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.sparql.SparqlEndpoint;
 import org.datalift.fwk.sparql.SparqlQueries;
-import org.datalift.fwk.util.StringUtils;
+
+import static org.datalift.fwk.util.StringUtils.*;
 
 
 /**
@@ -81,7 +83,7 @@ import org.datalift.fwk.util.StringUtils;
  * @author hdevos
  */
 @Path("/")
-public class RouterResource implements LifeCycle
+public class RouterResource implements LifeCycle, ResourceResolver
 {
     //-------------------------------------------------------------------------
     // Constants
@@ -106,6 +108,8 @@ public class RouterResource implements LifeCycle
     /** The business day opening hours. */
     public final static String BUSINESS_DAY_PROPERTY =
                                                 "datalift.cache.businessDay";
+
+    private final static String MODULE_NAME = "RouterResource";
 
     //-------------------------------------------------------------------------
     // Class members
@@ -163,7 +167,49 @@ public class RouterResource implements LifeCycle
         }
         this.configuration = config;
 
-        // Load available modules.
+        // Step #1: Load configuration.
+        // Cache: duration
+        String s = config.getProperty(CACHE_DURATION_PROPERTY);
+        if (! isBlank(s)) {
+            try {
+                this.cacheDuration = Integer.parseInt(s);
+            }
+            catch (Exception e) {
+                log.warn("Invalid cache duration: {}. Using default: {}",
+                                        s, Integer.valueOf(this.cacheDuration));
+            }
+        }
+        // Cache: business day hours
+        s = config.getProperty(BUSINESS_DAY_PROPERTY);
+        if (! isBlank(s)) {
+            if ("-".equals(s.trim())) {
+                // Not business day hours specified.
+                this.businessDay[0] = 0;
+                this.businessDay[1] = 23;
+            }
+            else {
+                String[] v = s.split("\\s*-\\s*", -1);
+                try {
+                    int openingHour = Integer.parseInt(v[0]);
+                    int closingHour = Integer.parseInt(v[1]);
+                    if ((openingHour < 0) || (openingHour > 23) ||
+                        (closingHour < 0) || (closingHour > 23)) {
+                        throw new IllegalArgumentException(BUSINESS_DAY_PROPERTY);
+                    }
+                    this.businessDay[0] = Math.min(openingHour, closingHour);
+                    this.businessDay[1] = Math.max(openingHour, closingHour);
+                }
+                catch (Exception e) {
+                    log.warn("Invalid business day hours: {}. Using default: {}", s,
+                             "" + this.businessDay[0] + '-' + this.businessDay[1]);
+                }
+            }
+        }
+
+        // Step #2: Register this object in configuration.
+        this.configuration.registerBean(this);
+
+        // Step #3: Load available modules.
         this.modules.clear();
         // Load modules embedded in web application first (if any).
         this.loadModules(this.getClass().getClassLoader(), null);
@@ -189,50 +235,12 @@ public class RouterResource implements LifeCycle
                 }
             }
         }
-        // Check whether SPARQL endpoint module is available.
+        // Step #4: Check whether SPARQL endpoint module is available.
         try {
             this.sparqlEndpoint = config.getBean(SparqlEndpoint.class);
         }
         catch (Exception e) {
             log.warn("No SPARQL endpoint module available");
-        }
-        // Load cache directive configuration.
-        // Cache duration
-        String s = config.getProperty(CACHE_DURATION_PROPERTY);
-        if (! StringUtils.isBlank(s)) {
-            try {
-                this.cacheDuration = Integer.parseInt(s);
-            }
-            catch (Exception e) {
-                log.warn("Invalid cache duration: {}. Using default: {}",
-                                        s, Integer.valueOf(this.cacheDuration));
-            }
-        }
-        // Business day hours
-        s = config.getProperty(BUSINESS_DAY_PROPERTY);
-        if (! StringUtils.isBlank(s)) {
-            if ("-".equals(s.trim())) {
-                // Not business day hours specified.
-                this.businessDay[0] = 0;
-                this.businessDay[1] = 23;
-            }
-            else {
-                String[] v = s.split("\\s*-\\s*", -1);
-                try {
-                    int openingHour = Integer.parseInt(v[0]);
-                    int closingHour = Integer.parseInt(v[1]);
-                    if ((openingHour < 0) || (openingHour > 23) ||
-                        (closingHour < 0) || (closingHour > 23)) {
-                        throw new IllegalArgumentException(BUSINESS_DAY_PROPERTY);
-                    }
-                    this.businessDay[0] = Math.min(openingHour, closingHour);
-                    this.businessDay[1] = Math.max(openingHour, closingHour);
-                }
-                catch (Exception e) {
-                    log.warn("Invalid business day hours: {}. Using default: {}", s,
-                             "" + this.businessDay[0] + '-' + this.businessDay[1]);
-                }
-            }
         }
     }
 
@@ -259,12 +267,75 @@ public class RouterResource implements LifeCycle
     }
 
     //-------------------------------------------------------------------------
+    // ResourceResolver contract support
+    //-------------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    @Override
+    public Response resolveStaticResource(String path, Request request)
+                                                throws WebApplicationException {
+        return this.resolveStaticResource(
+                                    this.configuration.getPublicStorage(),
+                                    path, request);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Response resolveRdfResource(UriInfo uriInfo, Request request,
+                                       String acceptHdr)
+                                                throws WebApplicationException {
+        if (uriInfo == null) {
+            throw new IllegalArgumentException("uriInfo");
+        }
+        if (request == null) {
+            throw new IllegalArgumentException("request");
+        }
+        Response response = null;
+
+        URI uri = uriInfo.getAbsolutePath();
+        // Check that target subject exists in published data store.
+        Repository data = this.configuration.getDataRepository();
+        String query = this.queries.get("checkExists");
+        ExistsQueryResultHandler result = new ExistsQueryResultHandler();
+        try {
+            Map<String,Object> bindings = new HashMap<String,Object>();
+            bindings.put("s", uri);
+            data.select(query, bindings, result);
+        }
+        catch (Exception e) {
+            throw new RuntimeException("Failed to execute query \""
+                                       + query + "\" for \"" + uri + '"', e);
+        }
+
+        if (result.subject != null) {
+            // Subject found in RDF store.
+            // => Check whether data shall be returned.
+            ResponseBuilder b = null;
+            if (result.lastModified != null) {
+                b = request.evaluatePreconditions(result.lastModified);
+            }
+            if (b == null) {
+                // Forward request to SPARQL endpoint.
+                log.trace("Resolved request as RDF resource {}", uri);
+                b = this.sparqlEndpoint.executeQuery(
+                                                "DESCRIBE <" + uri + '>',
+                                                uriInfo, request, acceptHdr);
+            }
+            // Else: Client already has an up-to-date copy of the data.
+            response = this.addCacheDirectives(b, result.lastModified).build();
+        }
+        // Else: No matching RDF resource.
+
+        return response;
+    }
+
+    //-------------------------------------------------------------------------
     // Resource web services
     //-------------------------------------------------------------------------
 
     /**
-     * Forwards a web service call to the module specified in the
-     * request path.
+     * <i>[Resource method]</i> Forwards a web service call to the
+     * module specified in the request path.
      * <p>
      * If the module is unknown or is not itself a
      * {@link Module#isResource() JAX-RS resource}, the methods
@@ -296,7 +367,7 @@ public class RouterResource implements LifeCycle
             // Matching module found.
             LogContext.setContexts(module, null);
             target = m.module;
-            log.debug("Forwarding request on \"{}\" to module {}",
+            log.debug("Forwarding request on \"{}\" to module \"{}\"",
                                                     uriInfo.getPath(), m.name);
         }
         else {
@@ -309,8 +380,9 @@ public class RouterResource implements LifeCycle
     }
 
     /**
-     * Forwards a web service call to the module and resource specified
-     * in the request path, allocating the resource instance.
+     * <i>[Resource method]</i> Forwards a web service call to the
+     * module and resource specified in the request path, allocating
+     * the resource instance.
      * <p>
      * If either the module or the resource name is unknown, the methods
      * tries to resolve the call against a public local file or a RDF
@@ -411,7 +483,9 @@ public class RouterResource implements LifeCycle
         if (path.startsWith("/")) {
             path = path.substring(1);
         }
+        LogContext.setContexts(MODULE_NAME, path);
         log.trace("Resolving unmapped resource: {}", path);
+
         try {
             if (module != null) {
                 // Path prefix was resolved as a module name.
@@ -484,10 +558,16 @@ public class RouterResource implements LifeCycle
     private Response resolveStaticResource(File root, String path,
                                            Request request)
                                                 throws WebApplicationException {
+        if (root == null) {
+            throw new IllegalArgumentException("root");
+        }
+        if (! isSet(path)) {
+            throw new IllegalArgumentException("path");
+        }
         Response response = null;
 
         File f = new File(root, path);
-        if ((root != null) && (f.isFile()) && (f.canRead())) {
+        if ((f != null) && (f.isFile()) && (f.canRead())) {
             // Path resolved as an existing file.
             // => Check path validity.
             if (! f.getAbsolutePath().startsWith(root.getAbsolutePath())) {
@@ -507,59 +587,6 @@ public class RouterResource implements LifeCycle
             }
             response = this.addCacheDirectives(b, lastModified).build();
         }
-        return response;
-    }
-
-    /**
-     * Attempts to resolve a request as a RDF resource from the default
-     * (lifted data) triple store.
-     * @param  uriInfo     the request URI data.
-     * @param  request     the JAX-RS request object.
-     * @param  acceptHdr   the HTTP "Accept" header value.
-     *
-     * @return a {@link Response service response} with the result of
-     *         the SPARQL DESCRIBE query on the RDF resource or
-     *         <code>null</code> if the request resource was not found
-     *         in the RDF store.
-     */
-    private Response resolveRdfResource(UriInfo uriInfo, Request request,
-                                        String acceptHdr) {
-        Response response = null;
-
-        URI uri = uriInfo.getAbsolutePath();
-        // Check that target subject exists in published data store.
-        Repository data = this.configuration.getDataRepository();
-        String query = this.queries.get("checkExists");
-        ExistsQueryResultHandler result = new ExistsQueryResultHandler();
-        try {
-            Map<String,Object> bindings = new HashMap<String,Object>();
-            bindings.put("s", uri);
-            data.select(query, bindings, result);
-        }
-        catch (Exception e) {
-            throw new RuntimeException("Failed to execute query \""
-                                       + query + "\" for \"" + uri + '"', e);
-        }
-
-        if (result.subject != null) {
-            // Subject found in RDF store.
-            // => Check whether data shall be returned.
-            ResponseBuilder b = null;
-            if (result.lastModified != null) {
-                b = request.evaluatePreconditions(result.lastModified);
-            }
-            if (b == null) {
-                // Forward request to SPARQL endpoint.
-                log.trace("Resolved request as RDF resource {}", uri);
-                b = this.sparqlEndpoint.executeQuery(
-                                                "DESCRIBE <" + uri + '>',
-                                                uriInfo, request, acceptHdr);
-            }
-            // Else: Client already has an up-to-date copy of the data.
-            response = this.addCacheDirectives(b, result.lastModified).build();
-        }
-        // Else: No matching RDF resource.
-
         return response;
     }
 

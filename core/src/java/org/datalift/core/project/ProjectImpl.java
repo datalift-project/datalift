@@ -1,7 +1,10 @@
 package org.datalift.core.project;
 
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Collection;
+import java.util.Date;
 import java.util.LinkedList;
 
 import javax.persistence.CascadeType;
@@ -9,14 +12,15 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.OneToMany;
 
-import com.clarkparsia.empire.annotation.Namespaces;
 import com.clarkparsia.empire.annotation.RdfId;
 import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.RdfsClass;
 
+import org.datalift.fwk.project.Ontology;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.Source;
 
+import static org.datalift.fwk.rdf.RdfNamespace.VDPP;
 
 /**
  * An implementation of {@link Project} that relies on Empire RDF JPA
@@ -37,8 +41,7 @@ import org.datalift.fwk.project.Source;
  * @author hdevos
  */
 @Entity
-@Namespaces({"rdfs", "http://rdfs.org/ns/void#"})
-@RdfsClass("rdfs:Dataset")
+@RdfsClass("vdpp:Project")
 public class ProjectImpl extends BaseRdfEntity implements Project
 {
     //-------------------------------------------------------------------------
@@ -55,9 +58,21 @@ public class ProjectImpl extends BaseRdfEntity implements Project
     private String description;
 
     @RdfProperty("datalift:source")
-	@OneToMany(fetch = FetchType.EAGER, cascade = { CascadeType.ALL })
-	private Collection<Source> sources = new LinkedList<Source>();
+    @OneToMany(fetch = FetchType.EAGER, cascade = { CascadeType.ALL })
+    private Collection<Source> sources = new LinkedList<Source>();
+
+    @RdfProperty("dcterms:issued")
+    private Date dateCreated;
+    @RdfProperty("dcterms:modified")
+    private Date dateModified;
+    @RdfProperty("dcterms:license")
+    private URI license;
+    @RdfProperty("prv:Execution")
+    private URI execution;
     
+    @RdfProperty("void:vocabulary")
+    @OneToMany(fetch = FetchType.EAGER, cascade = { CascadeType.ALL })
+    private Collection<Ontology> ontologies = new LinkedList<Ontology>();
     //-------------------------------------------------------------------------
     // Constructors
     //-------------------------------------------------------------------------
@@ -113,27 +128,95 @@ public class ProjectImpl extends BaseRdfEntity implements Project
         description = d;
     }
 
+    @Override
+    public void addSource(Source s) {
+        sources.add(s);		
+    }
+
+    @Override
+    public Collection<Source> getSources() {
+        return sources;
+    }
+
 	@Override
-	public void addSource(Source s) {
-		sources.add(s);		
+	public Date getDateCreation() {
+		return dateCreated;
+	}
+	
+	@Override
+	public void setDateCreation(Date date) {
+		dateCreated = date;
 	}
 
 	@Override
-	public Collection<Source> getSources() {
-		return sources;
+	public Date getDateModification() {
+			return dateModified;
 	}
 
+	@Override
+	public void setDateModification(Date date) {
+		this.dateModified = date;
+	}
+
+	@Override
+	public URI getLicense() {
+		return license;
+	}
+
+	@Override
+	public void setLicense(URI license) {
+		this.license = license;
+	}
+	
+
+	@Override
+	public void addOntology(Ontology src) {
+		ontologies.add(src);
+	}
+	
+	@Override
+	public Collection<Ontology> getOntologies() {
+		return ontologies;
+	}
+
+	
+	@Override
+	public URI getExecution() {
+		return this.execution;
+	}
+
+	@Override
+	public void setExecution(URI execution) {
+		this.execution = execution;
+	}
+
+	
     //-------------------------------------------------------------------------
-    // Specific implementation
+    // BaseRdfEntity contract support
     //-------------------------------------------------------------------------
 
-//    public final static String newId(URI baseUri) {
-//        try {
-//            URL u = new URL(baseUri.toURL(), "project/" + UUID.randomUUID());
-//            return u.toString();
-//        }
-//        catch (Exception e) {
-//            throw new RuntimeException("Invalid base URI: " + baseUri); 
-//        }
-//    }
+    protected void setId(String id) {
+        this.uri = id;
+    }
+
+    public enum Execution {
+    	Selection(VDPP.uri + "Selection"), 
+    	Publication(VDPP.uri + "Publication"), 
+    	Interlinking(VDPP.uri + "Interlinking"),
+    	Convertion(VDPP.uri + "Convertion");
+
+        public final URI uri;
+
+        Execution(String s) {
+            try {
+            	this.uri = new URI(s);
+            }
+            catch(URISyntaxException e)
+            {
+            	throw new IllegalArgumentException(e);
+            }
+        }
+    }
 }
+
+

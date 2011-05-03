@@ -1,27 +1,51 @@
+#load("resources")
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-	<title>Datalift - Workspace - New Project</title>
+	<title>Datalift - Workspace - #i18n("project.title.new_project")</title>
 #header_links
 </head>
 
 <body>
+<script>
+	$(function() {
+	
+		$("input:submit").button();
+		$("#accordion").accordion({
+			autoHeight: false,
+			navigation: true
+		});
+	});
+</script>
+
 #banner
-<a href="${baseUri}/project">Back to workspace</a>
-<form method="post" action="${baseUri}/project">
 
-<label for="title">Nom du projet: </label>
-<input type="text" id="title" name="title"></input>
+<div id="content" class="ui-widget-content dl-main-panel">
+<h3 class="ui-widget-header dl-widget-header">#i18n("project.title.new_project")</h3>
+<div class="dl-panel">
 
-<label for="owner">Propriétaire du projet: </label>
-<input type="text" id="owner" name="owner"></input>
+	<a href="${baseUri}/project">#i18n("back")</a>
+	<form method="post" action="${baseUri}/project" class="form_formated">
+	
+	<p><label for="title" class="medium">#i18n("project.name") :</label>
+	<input type="text" id="title" name="title"></input></p>
+	
+	<p><label for="description" class="medium">#i18n("project.description") : </label>
+	<input type="text" id="description" name="description"></input></p>
+	
+	<p><label for="license" class="medium">#i18n("project.license") : </label>
+	
+	<select id="license" name="license">
+	#foreach($li in $licenses)
+		<option value="$esc.html($li.name())">$esc.html($li.name())</option>
+	#end
+	</select></p>
+	<input type="submit" value="#i18n("submit")"/>
+	</form>
 
-<label for="description">Description: </label>
-<input type="text" id="description" name="description"></input>
-<input type="submit" value="Valider"/>
-</form>
-<div id="project_desc"></div>
+	
+</div></div>
 #footer
 </body>
 </html>

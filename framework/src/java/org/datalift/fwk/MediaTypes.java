@@ -31,7 +31,7 @@ public class MediaTypes extends MediaType
     public final static MediaType APPLICATION_TURTLE_TYPE =
                                     new MediaType(APPL_TYPE, "x-turtle");
     /** "application/x-turtle" */
-    public final static String cTURTLE =
+    public final static String APPLICATION_TURTLE =
                                     APPLICATION_TURTLE_TYPE.toString();
 
     /** "text/n3" */
@@ -49,6 +49,13 @@ public class MediaTypes extends MediaType
     /** "application/n3" */
     public final static String APPLICATION_N3 = APPLICATION_N3_TYPE.toString();
 
+    /** "application/n-triples" */
+    public final static MediaType APPLICATION_NTRIPLES_TYPE =
+                                    new MediaType(APPL_TYPE, "n-triples");
+    /** "application/n-triples" */
+    public final static String APPLICATION_NTRIPLES =
+                                    APPLICATION_NTRIPLES_TYPE.toString();
+
     /** "application/sparql-query" */
     public final static MediaType APPLICATION_SPARQL_QUERY_TYPE =
                                     new MediaType(APPL_TYPE, "sparql-query");
@@ -56,9 +63,15 @@ public class MediaTypes extends MediaType
     public final static String APPLICATION_SPARQL_QUERY =
                                     APPLICATION_SPARQL_QUERY_TYPE.toString();
     /** "application/sparql-results+xml" */
-    public final static MediaType APPLICATION_SPARQL_RESULT_TYPE =
+    public final static MediaType APPLICATION_SPARQL_RESULT_XML_TYPE =
                             new MediaType(APPL_TYPE, "sparql-results+xml");
     /** "application/sparql-results+xml" */
-    public final static String APPLICATION_SPARQL_RESULT =
-                                    APPLICATION_SPARQL_RESULT_TYPE.toString();
+    public final static String APPLICATION_SPARQL_RESULT_XML =
+                            APPLICATION_SPARQL_RESULT_XML_TYPE.toString();
+    /** "application/sparql-results+xml" */
+    public final static MediaType APPLICATION_SPARQL_RESULT_JSON_TYPE =
+                            new MediaType(APPL_TYPE, "sparql-results+json");
+    /** "application/sparql-results+xml" */
+    public final static String APPLICATION_SPARQL_RESULT_JSON =
+                            APPLICATION_SPARQL_RESULT_JSON_TYPE.toString();
 }

@@ -1,4 +1,4 @@
-package org.datalift.core.jersey.velocity;
+package org.datalift.core.velocity.jersey;
 
 
 import java.io.File;
@@ -13,17 +13,39 @@ import org.apache.velocity.runtime.resource.loader.FileResourceLoader;
 import org.apache.velocity.runtime.resource.loader.JarResourceLoader;
 import org.apache.velocity.runtime.resource.loader.ResourceLoader;
 
-import static org.datalift.core.jersey.velocity.VelocityTemplateProcessor.*;
+import static org.datalift.core.velocity.jersey.VelocityTemplateProcessor.*;
 
 
 /**
  * A {@link ResourceLoader} to load Velocity templates from the static
  * resources of DataLift modules.
+ * <p>
+ * The Datalift module shall prefix the name of the Velocity templates
+ * with the module name in order to avoid conflicts between modules.
+ * The module name prefix is used to select the module JAR or directory
+ * and is removed from the template name when searching for the
+ * template file.</p>
+ * <p>
+ * For example, for the module named <code>my-module</code> to render
+ * a template the path of which is
+ * <code>/templates/myTemplate.vm</code> in the module JAR /
+ * directory, the name of the template in the Jersey Viewable object
+ * shall be: <code>/my-module/templates/myTemplate.vm</code>.</p>
+ * <p>
+ * Note: the heading slash (&quot;/&quot;) character is also required
+ * as it notifies Jersey not to prefix the template name with name of
+ * the JAX-RS resource class.</p>
  *
  * @author lbihanic
  */
 public class ModuleResourceLoader extends ResourceLoader
 {
+    //-------------------------------------------------------------------------
+    // Constants
+    //-------------------------------------------------------------------------
+
+    private final static String JAR_URL_SCHEME = "jar:file:";
+
     //-------------------------------------------------------------------------
     // Instance members
     //-------------------------------------------------------------------------
@@ -68,7 +90,7 @@ public class ModuleResourceLoader extends ResourceLoader
                 else {
                     // Load module resources from a JAR file.
                     p.addProperty(LOADER_PATH,
-                                  "jar:file:" + f.getAbsolutePath());
+                                  JAR_URL_SCHEME + f.getAbsolutePath());
                     loader = new JarResourceLoader();
                 }
                 loader.commonInit(rsvc, p);

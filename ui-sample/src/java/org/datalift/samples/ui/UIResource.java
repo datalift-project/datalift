@@ -14,12 +14,23 @@ public class UIResource
 {
     private final static Logger log = Logger.getLogger();
 
+    /** The parent module. */
     private final UIModule m;
 
+    /**
+     * Creates a new resource instance.
+     * @param  module   the parent module.
+     */
     public UIResource(UIModule module) {
     	m = module;
     }
 
+    /**
+     * <i>[Resource method]</i> Returns the page to display the
+     * specified widget.
+     * @param  widget   the widget name (request path element).
+     * @return the widget page.
+     */
     @Path("{widget}")
     @GET
     public Viewable getWidget(@PathParam("widget") String widget) {

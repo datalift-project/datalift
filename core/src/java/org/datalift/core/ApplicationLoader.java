@@ -15,6 +15,8 @@ import org.datalift.fwk.LifeCycle;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.log.web.LogServletContextListener;
 
+import static org.datalift.core.DefaultConfiguration.DATALIFT_HOME;
+
 
 /**
  * A Servlet context listener to initialize and shutdown the DataLift
@@ -42,10 +44,13 @@ public class ApplicationLoader extends LogServletContextListener
     /** {@inheritDoc} */
     @Override
     public void contextInitialized(ServletContextEvent event) {
+        ServletContext ctx = event.getServletContext();
+        // Initialize system properties from env. variables if need be.
+        this.setupEnvironment(ctx);
         // Initialize log service.
         super.contextInitialized(event);
         // Initialize DataLift application.
-        this.init(event.getServletContext());
+        this.init(ctx);
     }
 
     /** {@inheritDoc} */
@@ -81,6 +86,25 @@ public class ApplicationLoader extends LogServletContextListener
     //------------------------------------------------------------------------
     // Specific implementation
     //------------------------------------------------------------------------
+
+    /**
+     * Attempts to set the <code>datalift.home</code> system property
+     * from the corresponding environment variable (DATALIFT_HOME) if
+     * not set
+     */
+    private void setupEnvironment(ServletContext ctx) {
+        if (System.getProperty(DATALIFT_HOME) == null) {
+            // Try to define datalift.home system property from environment.
+            String homePath = System.getenv(
+                                DATALIFT_HOME.replace('.', '_').toUpperCase());
+            if (homePath != null) {
+                System.setProperty(DATALIFT_HOME, homePath);
+            }
+            // Else: All configuration files are assumed to be present in
+            //       JVM classpath or be configured with absolute paths.
+        }
+    }
+
 
     /**
      * Loads the DataLift configuration and initializes the application

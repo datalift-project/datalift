@@ -15,7 +15,9 @@ public enum RdfNamespace
     RDFS        ("rdfs",        "http://www.w3.org/2000/01/rdf-schema#"),
     OWL         ("owl",         "http://www.w3.org/2002/07/owl#"),
     VOID        ("void",        "http://rdfs.org/ns/void#"),
-    DOAP        ("doap",        "http://usefulinc.com/ns/doap#");
+    DOAP        ("doap",        "http://usefulinc.com/ns/doap#"),
+    VDPP		("vdpp", 		"http://data.lirmm.fr/ontologies/vdpp#"),
+    PRV			("prv", 		"http://purl.org/net/provenance/ns#");
 
     //-------------------------------------------------------------------------
     // Instance members

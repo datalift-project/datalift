@@ -190,14 +190,18 @@ public abstract class Configuration
 
     /**
      * Loads a third-party properties file.
-     * @param  path   the path of the properties file, absolute or
-     *                relative to the DataLift configuration file
+     * @param  path    the path of the properties file, absolute or
+     *                 relative to the DataLift configuration file.
+     * @param  owner   the class on behalf of which loading the file
+     *                 or <code>null</code> if the file is not part
+     *                 of a DataLift module.
      *
      * @return the loaded properties.
      * @throws IOException if <code>path</code> does not exist, can
      *         not be accessed or is not a valid properties file.
      */
-    abstract public Properties loadProperties(String path) throws IOException;
+    abstract public Properties loadProperties(String path, Class<?> owner)
+                                                            throws IOException;
 
     /**
      * Retrieves a registered bean by its key.

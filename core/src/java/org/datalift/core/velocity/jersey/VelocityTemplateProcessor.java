@@ -1,4 +1,4 @@
-package org.datalift.core.jersey.velocity;
+package org.datalift.core.velocity.jersey;
 
 
 import java.io.File;
@@ -8,9 +8,10 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
-import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Properties;
 import java.util.Map;
 import java.util.TreeMap;
@@ -32,12 +33,18 @@ import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.exception.ResourceNotFoundException;
 import org.apache.velocity.runtime.log.Log4JLogChute;
 import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
+import org.apache.velocity.tools.generic.DateTool;
 import org.apache.velocity.tools.generic.EscapeTool;
 
 import static org.apache.velocity.app.VelocityEngine.*;
 import static org.apache.velocity.runtime.log.Log4JLogChute.*;
 
+import org.datalift.core.velocity.i18n.I18nDirective;
+import org.datalift.core.velocity.i18n.LoadDirective;
 import org.datalift.fwk.log.Logger;
+import org.datalift.fwk.security.SecurityContext;
+
+import static org.datalift.fwk.util.StringUtils.join;
 
 
 /**
@@ -54,28 +61,50 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
     // Constants
     //-------------------------------------------------------------------------
 
+    /** The default context key for the application model object. */
+    public final static String CTX_MODEL            = "it";
+    /** The context key for Velocity Escape tool. */
+    public final static String CTX_ESCAPE_TOOL      = "esc";
+    /** The context key for Velocity Date tool. */
+    public final static String CTX_DATE_TOOL      	= "date";
+    /** The context key for the HTTP servlet request object. */
+    public final static String CTX_HTTP_REQUEST     = "request";
+    /** The context key for the HTTP servlet response object. */
+    public final static String CTX_HTTP_RESPONSE    = "response";
+    /** The context key for JAX-RS {@link UriInfo} object. */
+    public final static String CTX_URI_INFO         = "uriInfo";
+    /** The context key for the application base URI (a.k.a. context path). */
+    public final static String CTX_BASE_URI         = "baseUri";
+    /** The context key for DataLift {@link SecurityContext}. */
+    public final static String CTX_SECURITY_CONTEXT = "securityCtx";
+
+    /** The init-param defining the Velocity template search path. */
     public final static String TEMPLATES_BASE_PATH =
                                         "velocity.templates.path";
+    /** The init-param defining the default encoding for Velocity template. */
     public final static String TEMPLATES_ENCODING =
                                         "velocity.templates.encoding";
+    /** The init-param defining the template cache duration. */
     public final static String TEMPLATES_CACHE_DURATION =
                                         "velocity.templates.update.check";
+    /** The default file extension for Velocity templates. */
     public final static String TEMPLATES_DEFAULT_EXTENSION = ".vm";
 
-    public final static String DEFAULT_VELOCITY_CONFIG = "velocity.properties";
-    public final static String VELOCITY_LOG4J_LOGGER   = "org.apache.velocity";
-
-    public final static String LOADER_CLASS        = "class";
-    public final static String LOADER_DESC         = "description";
-    public final static String LOADER_CACHE        = "cache";
-    public final static String LOADER_PATH         = "path";
-    public final static String LOADER_BOM_CHECK    = "unicode";
-    public final static String LOADER_UPD_INTERVAL =
+    protected final static String LOADER_CLASS        = "class";
+    protected final static String LOADER_DESC         = "description";
+    protected final static String LOADER_CACHE        = "cache";
+    protected final static String LOADER_PATH         = "path";
+    protected final static String LOADER_BOM_CHECK    = "unicode";
+    protected final static String LOADER_UPD_INTERVAL =
                                                 "modificationCheckInterval";
+    protected final static String USER_DIRECTIVES     = "userdirective";
 
     private final static String FILE_LOADER         = "file";
     private final static String CLASSPATH_LOADER    = "class";
     private final static String MODULE_LOADER       = "module";
+
+    private final static String DEFAULT_VELOCITY_CONFIG = "velocity.properties";
+    private final static String VELOCITY_LOG4J_LOGGER   = "org.apache.velocity";
 
     private final static String LOADER_PROPS_PREFIX = ".resource.loader.";
 
@@ -149,10 +178,13 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
             template = engine.getTemplate(name);
         }
         catch (ResourceNotFoundException e) {
-            // Not found.
+            // Not found. => Return null.
             log.debug("Failed to resolve template \"{}\"", name);
         }
         catch (Exception e) {
+            // A .vm file was found but could not be parsed.
+            // => Notify error but return null in case another
+            //    ViewProcessor can handle it.
             log.error("Error loading template \"{}\": {}", e,
                                                         name, e.getMessage());
         }
@@ -194,27 +226,44 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
             }
             else {
                 // Single object model (may be null).
-                ctx.put("it", m);
+                ctx.put(CTX_MODEL, m);
             }
             // Add Velocity string escaping tool.
-            if (ctx.get("esc") == null) {
-                ctx.put("esc", new EscapeTool());
+            if (ctx.get(CTX_ESCAPE_TOOL) == null) {
+                ctx.put(CTX_ESCAPE_TOOL, new EscapeTool());
+            }
+            // Add Velocity date tool.
+            if (ctx.get(CTX_DATE_TOOL) == null) {
+                List<Locale> l = this.httpContext.getRequest().getAcceptableLanguages();
+                Locale locale = (l != null && !l.isEmpty())? l.get(0): Locale.getDefault();
+                Map<String, Object> config = new HashMap<String, Object>();
+                config.put(DateTool.DEFAULT_LOCALE_KEY, locale);
+                
+                DateTool dateTool = new DateTool();
+                dateTool.configure(config);
+                
+                ctx.put(CTX_DATE_TOOL, dateTool);
             }
             // Add predefined variables, the JSP way.
-            if (ctx.get("request") == null) {
-                ctx.put("request", this.httpContext.getRequest());
+            if (ctx.get(CTX_HTTP_REQUEST) == null) {
+                ctx.put(CTX_HTTP_REQUEST, this.httpContext.getRequest());
             }
-            if (ctx.get("response") == null) {
-                ctx.put("response", this.httpContext.getResponse());
+            if (ctx.get(CTX_HTTP_RESPONSE) == null) {
+                ctx.put(CTX_HTTP_RESPONSE, this.httpContext.getResponse());
             }
-            if (ctx.get("uriInfo") == null) {
-                UriInfo uriInfo = this.httpContext.getUriInfo();
+            UriInfo uriInfo = this.httpContext.getUriInfo();
+            if (ctx.get(CTX_URI_INFO) == null) {
+                ctx.put(CTX_URI_INFO, uriInfo);
+            }
+            if (ctx.get(CTX_BASE_URI) == null) {
                 String baseUri = uriInfo.getBaseUri().toString();
                 if (baseUri.endsWith("/")) {
                     baseUri = baseUri.substring(0, baseUri.length() - 1);
                 }
-                ctx.put("uriInfo", uriInfo);
-                ctx.put("baseUri", baseUri);
+                ctx.put(CTX_BASE_URI, baseUri);
+            }
+            if (ctx.get(CTX_SECURITY_CONTEXT) == null) {
+                ctx.put(CTX_SECURITY_CONTEXT, SecurityContext.getContext());
             }
             // Apply Velocity template, using encoding from in HTTP request.
             Writer w = new OutputStreamWriter(out, this.getCharset());
@@ -233,11 +282,11 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
     //-------------------------------------------------------------------------
 
     /**
-     * Returns the preferred charset for the being processed HTTP
+     * Returns the preferred character set for the being processed HTTP
      * request (accessed through Jersey's HttpContext).
      *
-     * @return the preferred charset name or <code>UTF-8</code> if
-     *         no charset information can be retrieved.
+     * @return the preferred character set name or <code>UTF-8</code>
+     *         if no character set information can be retrieved.
      */
     private String getCharset() {
         MediaType m = this.httpContext.getRequest().getMediaType();
@@ -337,7 +386,7 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
                 // Force Unicode BOM detection in template files.
                 config.setProperty(getPropName(FILE_LOADER, LOADER_BOM_CHECK),
                                    Boolean.TRUE.toString());
-                // Configue template cache activation.
+                // Configure template cache activation.
                 if (updateInterval > 0L) {
                     config.setProperty(
                             getPropName(FILE_LOADER, LOADER_UPD_INTERVAL),
@@ -367,7 +416,7 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
                                    "DataLift Module Resource Loader");
                 config.setProperty(getPropName(MODULE_LOADER, LOADER_PATH),
                                    modules);
-                // Configue template cache activation.
+                // Configure template cache activation.
                 if (updateInterval > 0L) {
                     config.setProperty(
                             getPropName(MODULE_LOADER, LOADER_UPD_INTERVAL),
@@ -392,9 +441,13 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
             if (encoding != null) {
                 config.setProperty(INPUT_ENCODING, encoding);
             }
-            log.trace("Starting Velocity with configuration: {}", config);
+            // Configure custom Directives for Velocity
+            config.setProperty(USER_DIRECTIVES,
+                                    LoadDirective.class.getName() + ',' +
+                                    I18nDirective.class.getName());
 
             // Start a new Velocity engine.
+            log.trace("Starting Velocity with configuration: {}", config);
             engine = new VelocityEngine(config);
             engine.init();
         }
@@ -452,21 +505,5 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
 
     private static String getPropName(String loader, String prop) {
         return loader + LOADER_PROPS_PREFIX + prop;
-    }
-
-    private static String join(Collection<?> c, String separator) {
-        if (separator == null) {
-            throw new IllegalArgumentException("separator");
-        }
-        if ((c == null) || (c.isEmpty())) {
-            return "";
-        }
-        StringBuilder buf = new StringBuilder();
-        for (Object o : c) {
-            buf.append((o != null)? o.toString(): "").append(separator);
-        }
-        // Remove last separator
-        buf.setLength(buf.length() - separator.length());
-        return buf.toString();
     }
 }

@@ -1,32 +1,68 @@
 package org.datalift.core.project;
 
-import javax.persistence.Entity;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+
 import javax.persistence.MappedSuperclass;
 
 import org.datalift.fwk.project.Source;
 
+import com.clarkparsia.empire.annotation.RdfId;
 import com.clarkparsia.empire.annotation.RdfProperty;
-import com.clarkparsia.empire.annotation.RdfsClass;
 
 
-@Entity
 @MappedSuperclass
-@RdfsClass("datalift:source")
-public abstract class BaseSource extends BaseRdfEntity
-    implements Source
+public abstract class BaseSource extends BaseRdfEntity implements Source
 {
+    @RdfId
+    private String uri;
     @RdfProperty("dc:title")
     private String title;
 
-    public BaseSource() {
-        super();
+    //-------------------------------------------------------------------------
+    // Constructors
+    //-------------------------------------------------------------------------
+
+    protected BaseSource() {
+        // NOP
     }
 
-    public void setTitle(String title) {
-        this.title = title;
+    protected BaseSource(String uri) {
+        this.uri = uri;
     }
 
-    public String getTitle() {
+    //-------------------------------------------------------------------------
+    // Source contract support
+    //-------------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    @Override
+    public String getTitle(){
         return title;
     }
+    /** {@inheritDoc} */
+    @Override
+    public void setTitle(String t) {
+        title = t;
+    }
+
+    //-------------------------------------------------------------------------
+    // BaseRdfEntity contract support
+    //-------------------------------------------------------------------------
+
+    protected void setId(String id) {
+        this.uri = id;
+    }
+
+    //-------------------------------------------------------------------------
+    // BaseSource contract definition
+    //-------------------------------------------------------------------------
+
+    public String getUri() {
+        return this.uri;
+    }
+
+    abstract public void init(File docRoot, URI baseUri) throws IOException;
 }

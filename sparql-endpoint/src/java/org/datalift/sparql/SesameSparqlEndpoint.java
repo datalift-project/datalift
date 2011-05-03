@@ -72,7 +72,8 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
     public final static String BASE_URI_PROPERTY = "datalift.rdf.base.uri";
 
     private final static List<Variant> SELECT_RESPONSE_TYPES = Arrays.asList(
-                    new Variant(APPLICATION_SPARQL_RESULT_TYPE, null, null),
+                    new Variant(APPLICATION_SPARQL_RESULT_XML_TYPE, null, null),
+                    new Variant(APPLICATION_SPARQL_RESULT_JSON_TYPE, null, null),
                     new Variant(APPLICATION_JSON_TYPE, null, null),
                     new Variant(TEXT_HTML_TYPE, null, null),
                     new Variant(APPLICATION_XHTML_XML_TYPE, null, null),
@@ -84,6 +85,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                     new Variant(TEXT_N3_TYPE, null, null),
                     new Variant(TEXT_RDF_N3_TYPE, null, null),
                     new Variant(APPLICATION_N3_TYPE, null, null),
+                    new Variant(APPLICATION_NTRIPLES_TYPE, null, null),
                     new Variant(TEXT_HTML_TYPE, null, null),
                     new Variant(APPLICATION_XHTML_XML_TYPE, null, null),
                     new Variant(APPLICATION_XML_TYPE, null, null));
@@ -112,10 +114,11 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
     //-------------------------------------------------------------------------
 
     /** {@inheritDoc} */
+    @Override
     protected ResponseBuilder doExecute(List<String> defaultGraphUris,
                                         List<String> namedGraphUris,
-                                        String query, UriInfo uriInfo,
-                                        Request request, String acceptHdr)
+                                        String query, String min, String max, String grid, 
+                                        UriInfo uriInfo, Request request, String acceptHdr)
                                                 throws WebApplicationException {
         log.trace("Processing SPARQL query: \"{}\"", query);
         // Build base URI from request if none was enforced in configuration.
@@ -179,13 +182,17 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                     this.executeSelectQuery(repo, query, baseUri, dataset)));
             }
             else {
-                StreamingOutput out = this.getResultHandlerOutput(repo, query,
+                StreamingOutput out = this.getResultHandlerOutput(repo, query, min, max, grid,
                                                 baseUri, dataset, responseType);
                 response = Response.ok(out, responseType);
             }
         }
         return response;
     }
+
+    //-------------------------------------------------------------------------
+    // Specific implementation
+    //-------------------------------------------------------------------------
 
     private Dataset buildDataset(List<String> defaultGraphUris,
                                  List<String> namedGraphUris) {
@@ -274,11 +281,12 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
         StreamingOutput handler = null;
 
         MediaType mediaType = v.getMediaType();
-        if (mediaType.isCompatible(TEXT_TURTLE_TYPE) ||
-            mediaType.isCompatible(APPLICATION_TURTLE_TYPE) ||
-            mediaType.isCompatible(TEXT_N3_TYPE) ||
-            mediaType.isCompatible(TEXT_RDF_N3_TYPE) ||
-            mediaType.isCompatible(APPLICATION_N3_TYPE)) {
+        if ((mediaType.isCompatible(TEXT_TURTLE_TYPE)) ||
+            (mediaType.isCompatible(APPLICATION_TURTLE_TYPE)) ||
+            (mediaType.isCompatible(TEXT_N3_TYPE)) ||
+            (mediaType.isCompatible(TEXT_RDF_N3_TYPE)) ||
+            (mediaType.isCompatible(APPLICATION_N3_TYPE)) ||
+            (mediaType.isCompatible(APPLICATION_NTRIPLES_TYPE))) {
             handler = new ConstructStreamingOutput(repository, query,
                                                             baseUri, dataset)
                 {
@@ -301,23 +309,37 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
     }
 
     private StreamingOutput getResultHandlerOutput(Repository repository,
-                                            final String query, String baseUri,
+                                            final String query, String min, String max,
+                                            String grid, String baseUri,
                                             Dataset dataset, Variant v) {
         StreamingOutput handler = null;
 
         MediaType mediaType = v.getMediaType();
-        if (mediaType.isCompatible(APPLICATION_JSON_TYPE)) {
-            handler = new SelectStreamingOutput(repository, query,
+        if ((mediaType.isCompatible(APPLICATION_JSON_TYPE)) ||
+            (mediaType.isCompatible(APPLICATION_SPARQL_RESULT_JSON_TYPE))) {
+            if (grid != null && grid.equals("on")) {
+            	handler = new SelectStreamingOutput(repository, query, min, max,
                                                             baseUri, dataset)
                 {
                     protected TupleQueryResultHandler newHandler(OutputStream out) {
-                        return new SPARQLResultsJSONWriter(out);
+                        return new GridJSONWriter(out);
                     }
+            		
                 };
+            }
+            else {
+            	handler = new SelectStreamingOutput(repository, query, min, max,
+                        baseUri, dataset)
+            	{
+            		protected TupleQueryResultHandler newHandler(OutputStream out) {
+            			return new SPARQLResultsJSONWriter(out);
+            		}
+            	};
+            }
         }
         else {
             // Assume SPARQL Results/XML...
-            handler = new SelectStreamingOutput(repository, query,
+            handler = new SelectStreamingOutput(repository, query, min, max,
                                                             baseUri, dataset)
                 {
                     protected TupleQueryResultHandler newHandler(OutputStream out) {
@@ -389,13 +411,22 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
     {
         protected final Repository repository;
         protected final String query;
-        protected final String baseUri;
+        protected final	int		min;
+        protected final int		max;
+        protected final String 	baseUri;
         protected final Dataset dataset;
 
-        public SelectStreamingOutput(Repository repository, String query,
-                                     String baseUri, Dataset dataset) {
+        public SelectStreamingOutput(Repository repository, String query, String min, String max, String baseUri, Dataset dataset) {
             this.repository = repository;
             this.query      = query;
+            if (min != null)
+            	this.min	= new Integer(min).intValue();
+            else
+            	this.min 	= -1;
+            if (max != null)
+            	this.max	= new Integer(max).intValue();
+            else
+            	this.max	= -1;
             this.baseUri    = baseUri;
             this.dataset    = dataset;
         }
@@ -410,11 +441,16 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                 if (dataset != null) {
                     q.setDataset(this.dataset);
                 }
-                q.evaluate(this.getHandler(out));
+                if (min == -1 && max == -1)
+                	q.evaluate(this.getHandler(out));
+                else
+                	q.evaluate(this.getHandler(out, min, max));
             }
             catch (OpenRDFException e) {
                 handleError(query, e);
-            }
+            } catch (Exception e) {
+				// End of query, do nothing
+			}
             finally {
                 try { cnx.close(); } catch (Exception e) { /* Ignore... */ }
             }
@@ -442,6 +478,50 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                         log.debug("Processed {} binding sets for: {}",
                                     Integer.valueOf(this.consumed),
                                     new QueryDescription(query));
+                    }
+                };
+        }
+        
+        private TupleQueryResultHandler getHandler(OutputStream out, final int resultMin, final int resultMax) {
+            final TupleQueryResultHandler handler = this.newHandler(out);
+            return new TupleQueryResultHandler() {
+                    private int consumed = 0;
+                    private int	min = resultMin;
+                    private int max = resultMax;
+                    @Override
+                    public void startQueryResult(List<String> bindingNames)
+                            throws TupleQueryResultHandlerException {
+                        handler.startQueryResult(bindingNames);
+                    }
+                    @Override
+                    public void handleSolution(BindingSet b)
+                            throws TupleQueryResultHandlerException {
+                        if (this.consumed < min)
+                        	this.consumed++;
+                        else if (this.consumed >= min && this.consumed < max) {
+                        	handler.handleSolution(b);
+                        	this.consumed++;
+                        }
+                        else {
+                        	handler.endQueryResult();
+                        	throw new TupleQueryResultHandlerException(new QueryDoneException());
+                        }
+                    }
+                    
+                    @Override
+                    public void endQueryResult()
+                            throws TupleQueryResultHandlerException {
+                        handler.endQueryResult();
+                        if (min != -1) {
+                        	log.debug("Processed {} binding sets for: {}",
+                                    Integer.valueOf(this.consumed - this.min),
+                                    new QueryDescription(query));
+                        }
+                        else {
+                        	log.debug("Processed {} binding sets for: {}",
+                                    Integer.valueOf(this.consumed),
+                                    new QueryDescription(query));
+                        }
                     }
                 };
         }

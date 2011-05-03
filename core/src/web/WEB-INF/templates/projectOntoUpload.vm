@@ -1,0 +1,47 @@
+#load("resources")
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<title>Datalift - #i18n("project.add_dataset")</title>
+#header_links
+</head>
+
+<body>
+
+<script>
+	$(function() {
+	
+		$("input:submit").button();
+		$("#accordion").accordion({
+			autoHeight: false,
+			navigation: true
+		});
+	});
+</script>
+
+#banner
+
+<div id="content" class="ui-widget-content dl-main-panel">
+<h3 class="ui-widget-header dl-widget-header">#i18n("project.add_dataset")</h3>
+<div class="dl-panel">
+<a href="$it.uri">#i18n("back")</a>
+
+<div id="accordion">
+	
+	<h3><a href="#">Ontology</a></h3>
+	<div>
+	<form method="post" action="$it.getRdfId()/ontologyUpload" class="form_formated">
+		<p>#i18n("project.upload_ontology") : $esc.html($it.getTitle())</p>
+		<p><input type="text" name="source_url" id="source_url" /></p>
+		<p><input type="submit"/></p>
+	</form>
+	</div>
+	
+	
+</div>
+</div>
+</div>
+#footer
+</body>
+</html>

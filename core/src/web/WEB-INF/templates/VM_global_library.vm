@@ -25,11 +25,18 @@
 	<script language="javascript" src="${baseUri}/js/jquery/jquery-ui.js"></script>
 	<!-- Jquery Plugins -->
 	<script language="javascript" src="${baseUri}/js/jquery/jquery.jqGrid.locale-en.js"></script>
-	<script language="javascript" src="${baseUri}/js/jquery/jquery.jqGrid.js"></script>	
+	<script language="javascript" src="${baseUri}/js/jquery/jquery.jqGrid.js"></script>		
+	<!-- History Plugins (https://github.com/balupton/history.js) -->
+	<script>if ( typeof window.JSON === 'undefined' ) { 
+		document.write('<script src="${baseUri}/js/history.js/json2.js"><\/script>'); }
+	</script>
+	<script language="javascript" src="${baseUri}/js/history.js/amplify.store.js"></script>
+	<script language="javascript" src="${baseUri}/js/history.js/history.js"></script>
+	<script language="javascript" src="${baseUri}/js/history.js/history.adapter.jquery.js"></script>
 #end
 
 #macro ( footer )
 <div id="footer" class="dl-footer">
-<span id="more_info">Get more information about DataLift on <a href="http://www.datalift.org">http://www.datalift.org</a></span>
+<span id="more_info">#i18n("footer.more_info") <a href="http://www.datalift.org">http://www.datalift.org</a></span>
 </div>
 #end

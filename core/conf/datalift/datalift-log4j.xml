@@ -2,22 +2,43 @@
 
 <configuration xmlns="http://jakarta.apache.org/log4j/">
 
-  <appender name="defaultLog" class="org.apache.log4j.FileAppender">
-    <param name="file"   value="${datalift.home}/logs/datalift.log"/>
-    <param name="append" value="false"/>
+  <!-- ===== Appenders ===== -->
+  <!-- Default appender: log file -->
+  <appender name="defaultLog"
+            class="org.datalift.core.log.log4j.DailyRollingFileAppender">
+    <param name="file" value="${datalift.home}/logs/datalift.log"/>
 
     <layout class="org.apache.log4j.PatternLayout">
       <param name="conversionPattern"
-             value="%d{ISO8601}|%p|%X{Timer}|%X{User}|%X{Module}|%X{Resource}|%c{1}|%m%n"/>
+             value="%d{ISO8601}|%-5p|%X{Timer}|%X{User}|%X{Module}|%X{Resource}|%c{1}|%m%n"/>
     </layout>
   </appender>
 
+  <!-- ===== Loggers ===== -->
   <!-- DataLift framework classes -->
   <logger name="org.datalift">
     <level value="debug"/>
   </logger>
-  <!-- Apache Velocity template engine -->
-  <logger name="org.datalift.jersey">
+  <!-- Jersey & JAX-RS -->
+  <logger name="javax.ws.rs">
+    <level value="info"/>
+  </logger>
+  <logger name="com.sun.jersey">
+    <level value="info"/>
+  </logger>
+  <!-- Apache Velocity template engine and view processor -->
+  <logger name="org.datalift.velocity.jersey">
+    <level value="info"/>
+  </logger>
+  <logger name="org.apache.velocity">
+    <level value="warn"/>
+  </logger>
+  <!-- Apache Shiro security framework -->
+  <logger name="org.apache.shiro">
+    <level value="warn"/>
+  </logger>
+  <!-- Empire RDF JPA provider -->
+  <logger name="com.clarkparsia.empire">
     <level value="info"/>
   </logger>
 

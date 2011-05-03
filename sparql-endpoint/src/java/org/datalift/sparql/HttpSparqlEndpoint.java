@@ -10,6 +10,7 @@ import java.net.HttpURLConnection;
 import java.util.List;
 
 import javax.ws.rs.Path;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
@@ -35,7 +36,8 @@ public class HttpSparqlEndpoint extends AbstractSparqlEndpoint
     @Override
     protected ResponseBuilder doExecute(List<String> defaultGraphUris,
                                         List<String> namedGraphUris,
-                                        String query, UriInfo uriInfo,
+                                        String query, String min, String max, String grid, 
+                                        UriInfo uriInfo,
                                         Request request, String acceptHdr)
                                         throws IOException, URISyntaxException {
         log.trace("Processing SPARQL query: \"{}\"", query);
@@ -68,4 +70,14 @@ public class HttpSparqlEndpoint extends AbstractSparqlEndpoint
                        .type(MediaTypes.APPLICATION_XML)
                        .entity(data);
     }
+
+	@Override
+	public ResponseBuilder executeQuery(List<String> defaultGraphUris,
+			List<String> namedGraphUris, String query, UriInfo uriInfo,
+			Request request, String acceptHdr) throws WebApplicationException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	
 }

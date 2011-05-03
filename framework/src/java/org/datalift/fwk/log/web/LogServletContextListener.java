@@ -1,6 +1,10 @@
 package org.datalift.fwk.log.web;
 
 
+import java.util.Enumeration;
+import java.util.Properties;
+
+import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
@@ -22,8 +26,16 @@ public class LogServletContextListener implements ServletContextListener
     /** {@inheritDoc} */
     @Override
     public void contextInitialized(ServletContextEvent event) {
+        ServletContext ctx = event.getServletContext();
+        // Make application init parameters available for log configuration.
+        Properties props = new Properties(System.getProperties());
+        for (Enumeration<?> e = ctx.getInitParameterNames();
+             e.hasMoreElements(); ) {
+            String name = (String)(e.nextElement());
+            props.setProperty(name, ctx.getInitParameter(name));
+        }
         // Initialize log service.
-        LogService.getInstance();
+        LogService.selectAndConfigure(props);
     }
 
     /** {@inheritDoc} */

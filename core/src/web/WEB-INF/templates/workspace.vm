@@ -1,3 +1,4 @@
+#load("resources")
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -9,71 +10,146 @@
 <body>
 
 <script>
+	var History = window.History;
+	
+#if ($current)
+	var currentProject = "$current.uri";
+#end
 
 	$(function() {
-		// Ajax Request to get Project description
-		$(".dl-project-button").click(function() {
-				makeFocus(this);
-				jQuery.ajax({
+	
+		$("input:submit, .button").button();
+		$("#tabs").tabs();
+	
+		if (typeof(currentProject) != 'undefined') {
+			makeFocus(currentProject);
+			if (window.location.hash == "")
+    			History.replaceState(null, null, window.location.href + "#description");
+		}
+		
+		
+    	$(window).bind('popstate', function() {
+    		if (History.getHash() == "" && typeof(currentProject) != 'undefined')
+    			$("#tabs").tabs('select', "#description");
+    		else if (typeof(currentProject) != 'undefined')
+    			$("#tabs").tabs('select', "#"+History.getHash());
+    	});
+    	
+    	function makeFocus(projectUrl) {
+			var button = $(".dl-project-button");
+			for (var i =0; i < button.length; i++) {
+				if (button[i].href == projectUrl)
+					$(button[i]).addClass("ui-state-focus");
+				else
+					$(button[i]).removeClass("ui-state-focus");
+			}
+		}
+		
+    	function ajaxRequest(reqUrl) {
+			jQuery.ajax({
 					beforeSend: function(req) {
 						req.setRequestHeader("Accept", "text/html");
 					},
-					url: $(this).attr("value"),
+					url: reqUrl,
 					type:"GET",
 					success: successfulQuery,
 					error: unsuccessfulQuery
 				});
-				return false;
-		});
-		
-		function makeFocus(clicked) {
-			var button = $(".dl-project-button");
-			for (var i =0; i < button.length; i++) {
-				if (button[i] === clicked) {
-					$(button[i]).addClass("ui-state-focus");
-					console.log("Setting ui-state-focus on button["+i+"]");
-				}
-				else {
-					$(button[i]).removeClass("ui-state-focus");
-					console.log("Removing ui-state-focus on button["+i+"]");
-				}
-			}
-		}
+    	}
 		
 		function successfulQuery(response) {
-			$("#workspace_main_panel").empty();
-			$("#workspace_main_panel").append(response);
+			$("#workspace-main-panel").empty();
+			$("#workspace-main-panel").append(response);
 		}
 
 		function unsuccessfulQuery(XMLHttpRequest){
 			alert("An error occured when trying to get project description.");
 		}
 	});
-
+		
+	function historyPush(url) {
+   		History.pushState(null, null, url);
+    }
+    	
 </script>
 
 #banner
 <div id="workspace" class="ui-widget-content">
-<h3 class="ui-widget-header dl-widget-header"><a href="${baseUri}/project">Workspace</a></h3>
+<h3 class="ui-widget-header dl-widget-header">Workspace</h3>
 
 <div id="projects_panel" class="ui-widget-content">
-<h3 class="ui-widget-header dl-widget-header">Projects available</h3>
+<h3 class="ui-widget-header dl-widget-header">#i18n("project.title.available")</h3>
 <div id="project_scroll">
 #foreach( $item in $it )
-<span class="ui-state-default dl-project-button" value="$item.rdfId">$item.title</span><br/>
+	<a class="ui-state-default dl-project-button" onclick="makeFocus(this);" href="${item.uri}">$!esc.html($item.title)</a><br/>
 #end
-
 </div>
-<a href="${baseUri}/project/add">New Project</a>
+<a href="${baseUri}/project/add.html">#i18n("project.title.new_project")</a>
 </div>
-
-<div id="workspace_main_panel" class="ui-widget-content">
-<p style="text-align:center">
-This is the workspace index page. <br/>
-To start lifting your data sets, please choose a project or create a new one. <br/>
-</p>
-
-</div>
+<div id="workspace-main-panel" class="ui-widget-content">
+#if ($current)
+	<div id="tabs">
+		<ul>
+			<li><a onclick="historyPush('${current.uri}#description');" href="#description">Description</a></li>
+			<li><a onclick="historyPush('${current.uri}#source');" href="#source">Sources</a></li>
+			<li><a onclick="historyPush('${current.uri}#ontology');" href="#ontology">#i18n("project.title.ontology")</a></li>
+		</ul>
+		<div id="description">
+			#i18n("project.owner_s") : $!esc.html($current.owner)<br/>
+			#i18n("project.description") : $!esc.html($current.description)<br/>
+			#i18n("project.creation_s") : $date.format("medium", $current.dateCreation)<br/>
+			#i18n("project.modification_s") : $date.format("medium", $current.dateModification)<br/>
+			#i18n("project.license") : <a href="$current.getLicense()">$esc.html($!current.license)</a>
+			
+			<div id="module_can_handle">
+				<p>#i18n("project.module_available")</p>
+				<ol id="selectable_module">
+					#foreach ($curModule in $canHandle)
+					<li>
+						<a href="${baseUri}/$curModule.canHandle($current)"
+						class="module_can_handle" id="$curModule.name">
+						$esc.html($curModule.getName())</a>
+					</li>
+					#end
+				</ol>
+			</div>
+			<form method="post" action="$current.getUri()" class="form_formated">
+				<a href="${current.uri}/modify.html" class="button">#i18n("modify")</a>
+				<input type="hidden" id="delete" name="delete" value="true" />
+				<input type="submit" value="#i18n("delete")"/>
+			</form>
+		</div>
+	
+		<div id="source">
+			<p>#i18n("project.source_available") :</p>
+			<ol id="selectable_source">
+				#foreach($curSrc in $current.getSources())
+				<li><a href="$curSrc.uri">$esc.html($curSrc.title)</a></li>
+				#end
+			</ol>
+			<br/>
+			<a href="$current.getRdfId()/srcupload.html">#i18n("project.add_dataset")</a>
+		</div>
+		
+		<div id="ontology">
+			<p>#i18n("project.ontology_available") :</p>
+			<ol id="selectable_ontologies">
+				#foreach($curOnto in $current.getOntologies())
+				<li><a href="$esc.html($curOnto.title)">$esc.html($curOnto.title)</a> <br/>
+				#i18n("project.ontology_date_submitted") : $date.format("medium", $curOnto.dateSubmitted)<br/>
+				#i18n("project.ontology_operator") : $curOnto.operator </li>
+				#end
+			</ol>
+			<br/>
+			<a href="$current.getRdfId()/ontologyUpload.html">#i18n("project.add_ontology")</a>
+		</div>
+	</div>
+	
+#else
+	<p style='text-align:center'>
+		#i18n("welcome")
+	</p>
+#end
 </div>
 #footer
 </body>

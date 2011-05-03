@@ -8,6 +8,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -41,6 +42,8 @@ public class DefaultConfiguration extends Configuration
     // Constants
     //-------------------------------------------------------------------------
 
+    /** The DataLift working directory system property/environment variable. */
+    public final static String DATALIFT_HOME = "datalift.home";
     /** The DataLift properties configuration file. */
     public final static String CONFIGURATION_FILE =
                                             "datalift-application.properties";
@@ -78,8 +81,13 @@ public class DefaultConfiguration extends Configuration
     // Instance members
     //-------------------------------------------------------------------------
 
-    /** The configuration data as a properties object. */
-    private final VersatileProperties props;
+    /**
+     * The configuration data as a properties object. It is initialized
+     * to an empty properties map to allow {@link #getProperty(String)}
+     * to always resolve system properties and environment variables,
+     * even when the loading of the DataLift configuration fails.
+     */
+    private VersatileProperties props = new VersatileProperties();
     /** The configured repositories. */
     private final Map<String,Repository> repositories;
     /** The private (i.e. accessible to server modules only) file storage. */
@@ -195,11 +203,12 @@ public class DefaultConfiguration extends Configuration
 
     /** {@inheritDoc} */
     @Override
-    public Properties loadProperties(String path) throws IOException {
+    public Properties loadProperties(String path, Class<?> owner)
+                                                            throws IOException {
         if ((path == null) || (path.length() == 0)) {
             throw new IllegalArgumentException("path");
         }
-        return this.loadFromClasspath(path, this.props);
+        return this.loadFromClasspath(path, this.props, owner);
     }
 
     /** {@inheritDoc} */
@@ -294,8 +303,26 @@ public class DefaultConfiguration extends Configuration
     //-------------------------------------------------------------------------
 
     private VersatileProperties loadConfiguration(ServletContext ctx) {
+        VersatileProperties props = null;
         try {
-            return this.loadFromClasspath(CONFIGURATION_FILE, null);
+            String cfgFilePath = CONFIGURATION_FILE;
+            String homePath = this.getProperty(DATALIFT_HOME);
+            if (homePath != null) {
+                File f = new File(new File(homePath), "conf/" + cfgFilePath);
+                if ((f.isFile()) && (f.canRead())) {
+                    cfgFilePath = f.getPath();
+                }
+            }
+            // Use application init parameters as defaults for configuration.
+            Properties def = new Properties(System.getProperties());
+            for (Enumeration<?> e = ctx.getInitParameterNames();
+                 e.hasMoreElements(); ) {
+                String name = (String)(e.nextElement());
+                def.setProperty(name, ctx.getInitParameter(name));
+            }
+            // Load configuration.
+            props = this.loadFromClasspath(cfgFilePath, def, null);
+            log.info("DataLift configuration loaded from {}", cfgFilePath);
         }
         catch (IOException e) {
             TechnicalException error = new TechnicalException(
@@ -303,6 +330,7 @@ public class DefaultConfiguration extends Configuration
             log.fatal(error.getMessage(), e);
             throw error;
         }
+        return props;
     }
 
     private Map<String,Repository> initRepositories() {
@@ -362,19 +390,22 @@ public class DefaultConfiguration extends Configuration
     }
 
     private VersatileProperties loadFromClasspath(String filePath,
-                                                  Properties defaults)
+                                        Properties defaults, Class<?> owner)
                                                             throws IOException {
         VersatileProperties p = (defaults != null)?
                                         new VersatileProperties(defaults):
                                         new VersatileProperties();
         InputStream in = null;
         try {
-            in = this.getClass().getClassLoader().getResourceAsStream(filePath);
+            if (owner == null) {
+                // No owner specified. => Use default classloader.
+                owner = this.getClass();
+            }
+            in = owner.getClassLoader().getResourceAsStream(filePath);
             if (in == null) {
                 in = new FileInputStream(filePath);
             }
             p.load(in);
-            log.info("DataLift configuration loaded from {}", filePath);
         }
         finally {
             if (in != null) {

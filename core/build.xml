@@ -120,7 +120,11 @@
   <property name="tests.conf.home"      location="${tests.home}/conf"/>
   <property name="tests.src.home"       location="${tests.home}/src/java"/>
 
-  <property name="tests.build.home"     location="${build.home}/tests"/>
+  <property name="run-env.dir"          value="datalift-home"/>
+  <property name="run-env.home"         location="${build.home}/${run-env.dir}"/>
+
+  <property name="tests.build.dir"      value="tests"/>
+  <property name="tests.build.home"     location="${build.home}/${tests.build.dir}"/>
   <property name="tests.classes.dir"    location="${tests.build.home}/classes"/>
   <property name="tests.logs.dir"       location="${tests.build.home}/logs"/>
 
@@ -212,7 +216,7 @@
     by the "dist" target (to force a complete recompile and packaging).
    -->
 
-  <target name="all" depends="clean,dist"
+  <target name="all" depends="clean,dist,package"
    description="Cleans build and dist directories, then rebuilds distribution"/>
 
 
@@ -318,7 +322,8 @@
 
   <!--
     The "dist" target creates a binary distribution of your application
-    in a directory structure ready to be archived in a tar.gz or zip file.
+    in a directory structure ready to be archived in a jar, war, ear,
+    tar.gz or zip file.
     Note that this target depends on two other targets:
       - "compile" to build the the entire web application (including
         external dependencies);
@@ -330,9 +335,38 @@
                       description="Create binary distribution">
     <!-- Create application WAR file -->
     <jar jarfile="${war.path}"
-         basedir="${build.home}" excludes="tests/**"/>
+         basedir="${build.home}"
+        excludes="${tests.build.dir}/**,${run-env.dir}/**"/>
   </target>
 
+  <!--
+   The "package" target creates the runtime environment of the application
+   and packages it as a tar.gz or zip file, ready for deployment on the
+   target platform.
+   -->
+
+  <target name="package" depends="prepare"
+                         description="Create runtime environment">
+    <!-- Create build directories as needed -->
+    <mkdir dir="${run-env.home}"/>
+    <mkdir dir="${dist.home}"/>
+
+    <!-- Create directory structure -->
+    <mkdir dir="${run-env.home}/conf"/>
+    <mkdir dir="${run-env.home}/logs"/>
+    <mkdir dir="${run-env.home}/modules"/>
+    <mkdir dir="${run-env.home}/storage"/>
+    <mkdir dir="${run-env.home}/storage/public"/>
+
+    <!-- Copy default configuration -->
+    <copy todir="${run-env.home}/conf" preservelastmodified="true">
+      <fileset dir="${conf.home}/datalift"/>
+    </copy>
+
+    <!-- Create package -->
+    <zip destfile="${dist.home}/${run-env.dir}.zip" basedir="${run-env.home}"/>
+
+   </target>
 
   <!-- ================ Test targets ====================================== -->
 

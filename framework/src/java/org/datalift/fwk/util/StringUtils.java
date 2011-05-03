@@ -181,12 +181,16 @@ public class StringUtils
         // Remove punctuation characters and convert multiple spaces/hyphens
         // into a single space.
         u = u.replaceAll("[\\s-./'\"]+", " ").trim()
-             .replaceAll("[\\p{Punct}]", "");
+             .replaceAll("[\\p{Punct}§()]", "");
         // Cut if requested.
         if (maxLength > 0) {
             u = u.substring(0, Math.min(u.length(), maxLength)).trim();
         }
         // Replace spaces with hyphens.
-        return u.replace(' ', '-');
+        u = u.replace(' ', '-');
+        if ((u.length() == 0) || (u.charAt(0) == '-')) {
+            throw new IllegalArgumentException(s);
+        }
+        return u;
     }
 }

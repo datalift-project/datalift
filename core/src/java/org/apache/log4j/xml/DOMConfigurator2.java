@@ -1370,7 +1370,18 @@ public class DOMConfigurator2 extends DOMConfigurator
 
             String localId = null;
             boolean configFile = false;
-
+            // Substitute variable references if any. Check out for
+            // URL escape sequences in replacement of curly braces.
+            String vars = systemId.replace("%7B", "{").replace("%7D", "}");
+            if (! vars.equals(systemId)) {
+                // Try to resolve variables.
+                String resolved = subst(vars);
+                if (! resolved.equals(vars)) {
+                    // Substitutions occurred. => Use resolved system id.
+                    systemId = resolved;
+                }
+            }
+            // Check for Log4J DTD and schema first. 
             if (LOG4J_XSD_PATTERN.matcher(systemId).matches()) {
                 // Log4J configuration schema.
                 localId = LOG4J_XSD_PATH;
@@ -1380,6 +1391,7 @@ public class DOMConfigurator2 extends DOMConfigurator
                 // Log4J configuration schema.
                 localId = "org/apache/log4j/xml/log4j.dtd";
             }
+            // Check for URLs.
             else if (systemId.startsWith(CLASSPATH_URI_SCHEME)) {
                 // Classpath URI, not handled by XInclude processors.
                 configFile = true;
@@ -1390,6 +1402,12 @@ public class DOMConfigurator2 extends DOMConfigurator
                 configFile = true;
                 localId = systemId.substring(FILE_URI_SCHEME.length());
             }
+            else {
+                // Assume local file.
+                configFile = true;
+                localId = systemId;
+            }
+            // Try to resolve resource. 
             if (localId != null) {
                 URL resolved = findResource(localId);
                 if (configFile) {

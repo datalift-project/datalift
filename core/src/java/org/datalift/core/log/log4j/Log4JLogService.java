@@ -1,9 +1,7 @@
 package org.datalift.core.log.log4j;
 
 
-import java.io.InputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.net.URL;
 import java.text.MessageFormat;
 import java.util.MissingResourceException;
 import java.util.Properties;
@@ -14,7 +12,7 @@ import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.MDC;
 import org.apache.log4j.Priority;
-import org.apache.log4j.PropertyConfigurator;
+import org.apache.log4j.spi.DefaultRepositorySelector;
 import org.apache.log4j.spi.RootLogger;
 import org.apache.log4j.xml.DOMConfigurator2;
 
@@ -23,7 +21,7 @@ import org.datalift.fwk.log.LogService;
 
 
 /**
- * An implementation of the {@link LogService} that relies on Apache's
+ * An implementation of {@link LogService} that relies on Apache's
  * <a href="http://logging.apache.org/log4j/">Log4J</a> framework for
  * the actual logging.
  * <p>
@@ -39,7 +37,7 @@ import org.datalift.fwk.log.LogService;
  *   org.datalift.fwk.log.log4j.Log4JLogService
  * </pre></blockquote>
  *
- * @author  Laurent Bihanic
+ * @author  lbihanic
  */
 public final class Log4JLogService extends LogService
 {
@@ -52,30 +50,15 @@ public final class Log4JLogService extends LogService
     public final static PromotedLevel PROMOTED_TRACE =
                                 new PromotedLevel(Level.TRACE_INT, "TRACE");
 
+    private static final String LOG4J_INIT_OVERRIDE_KEY = 
+                                                 "log4j.defaultInitOverride";
+
     //-------------------------------------------------------------------------
     // Instance members
     //-------------------------------------------------------------------------
 
     /** The Log4J logger repository. */
     private Hierarchy loggerRepository = null;
-
-    //-------------------------------------------------------------------------
-    // Constructors
-    //-------------------------------------------------------------------------
-
-    /**
-     * Default constructor.
-     */
-    public Log4JLogService() {
-        super();
-        // Force usage of new XML configurator supporting XML includes.
-        System.setProperty("log4j.configuratorClass",
-                           DOMConfigurator2.class.getName());
-        // Initialize Log4J
-        this.loggerRepository = (Hierarchy)(LogManager.getLoggerRepository());
-        // Capture all java.util.logging requests and redirect them to Log4J.
-        JulToLog4jHandler.install(this.loggerRepository);
-    }
 
     //-------------------------------------------------------------------------
     // LogService contract support
@@ -123,95 +106,52 @@ public final class Log4JLogService extends LogService
     }
 
     /** {@inheritDoc} */
+    @Override
+    public void init(Properties props) {
+        // Try to install a specific logger factory.
+        try {
+            Hierarchy h = new Hierarchy(new RootLogger(Level.DEBUG));
+            // Configure Log4J, forcing usage of an XML configurator
+            // supporting XML schemas and includes.
+            URL u = this.getClass().getClassLoader().getResource("log4j.xml");
+            DOMConfigurator2 cfg = new DOMConfigurator2();
+            if (props != null) {
+                cfg.setProperties(props);
+            }
+            cfg.doConfigure(u, h);
+
+            // Install configured Logger factory as default.
+            // 1. Prevent loading of default Log4J configuration.
+            String oldOverride = System.setProperty(LOG4J_INIT_OVERRIDE_KEY,
+                                                    String.valueOf(true));
+            // 2. Install configured Logger factory.
+            LogManager.setRepositorySelector(
+                                    new DefaultRepositorySelector(h), this);
+            // 3. Restore previous Log4J system configuration.
+            if (oldOverride != null) {
+                System.setProperty(LOG4J_INIT_OVERRIDE_KEY, oldOverride);
+            }
+            else {
+                System.getProperties().remove(LOG4J_INIT_OVERRIDE_KEY);
+            }
+        }
+        catch (IllegalArgumentException e) {
+            // Oops! Another non default Logger factory has already been
+            // installed => Use it...
+        }
+        this.loggerRepository = (Hierarchy)(LogManager.getLoggerRepository());
+        
+        // Capture all java.util.logging requests and redirect them to Log4J.
+        JulToLog4jHandler.install(this.loggerRepository);
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public void shutdown() {
         // Remove redirection of java.util.logging requests to Log4J.
         JulToLog4jHandler.uninstall();
         // Shutdown log service.
         this.loggerRepository.shutdown();
-    }
-
-    //-------------------------------------------------------------------------
-    // Specific implementation
-    //-------------------------------------------------------------------------
-
-    /**
-     * Sets the XML or properties file to use for Log4J configuration.
-     *
-     * @param  fileName   the configuration file path.
-     *
-     * @throws IOException   if any error occurred while reading the
-     *                       specified configuration.
-     */
-    public void setConfiguration(String fileName) throws IOException {
-        if ((fileName == null) || (fileName.length() == 0)) {
-            throw new IllegalArgumentException("fileName");
-        }
-        Hierarchy hierarchy = new Hierarchy(
-                                new RootLogger(org.apache.log4j.Level.DEBUG));
-        if (fileName.endsWith(".xml")) {
-            new DOMConfigurator2().doConfigure(fileName, hierarchy);
-        }
-        else if (fileName.endsWith(".properties")) {
-            new PropertyConfigurator().doConfigure(
-                                this.loadProperties(fileName), hierarchy);
-        }
-        else {
-            throw new IllegalArgumentException(
-                                "fileName: Please specify an \"xml\" or " +
-                                "\"properties\" file for configuring Log4J.");
-        }
-        this.loggerRepository = hierarchy;
-    }
-
-    /**
-     * Loads a properties file.
-     *
-     * @param  fileName   the properties file path.
-     */
-    private Properties loadProperties(String fileName) throws IOException {
-        InputStream is = null;
-
-        try {
-            Properties props = new Properties()
-                {
-                    @Override
-                    public String getProperty(String key) {
-                        String value = System.getProperty(key);
-                        if (value == null) {
-                            value = super.getProperty(key);
-                        }
-                        return value;
-                    }
-
-                    @Override
-                    public Object get(Object key) {
-                        Object value = null;
-
-                        if (key instanceof String) {
-                            value = System.getProperty((String)key);
-                        }
-                        if (value == null) {
-                            value = super.get(key);
-                        }
-                        return value;
-                    }
-                };
-
-            if ((fileName != null) && (fileName.length() != 0)) {
-                is = this.getClass().getClassLoader().
-                                     getResourceAsStream(fileName);
-                if (is == null) {
-                    throw new FileNotFoundException(fileName);
-                }
-                props.load(is);
-            }
-            return props;
-        }
-        finally {
-            if (is != null) {
-                try { is.close(); } catch (IOException e) { /* Ignore... */ }
-            }
-        }
     }
 
     //-------------------------------------------------------------------------
@@ -319,6 +259,14 @@ public final class Log4JLogService extends LogService
         }
     }
 
+    //-------------------------------------------------------------------------
+    // PromotedLevel implementation nested class
+    //-------------------------------------------------------------------------
+
+    /**
+     * A specialization of Log4J Level to support promoted debug traces
+     * log levels.
+     */
     private static class PromotedLevel extends Level
     {
         protected PromotedLevel(int level, String levelStr) {

@@ -26,6 +26,7 @@ import org.datalift.fwk.Configuration;
 import org.datalift.fwk.MediaTypes;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.rdf.Repository;
+import org.datalift.fwk.security.SecurityContext;
 import org.datalift.fwk.sparql.SparqlEndpoint;
 
 
@@ -82,10 +83,36 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     public ResponseBuilder executeQuery(String query, UriInfo uriInfo,
                                         Request request, String acceptHdr)
                                                 throws WebApplicationException {
-        return this.executeQuery(null, null, query,
-                                             uriInfo, request, acceptHdr);
+        return this.executeQuery(null, null, query, null, null, null,
+                                 uriInfo, request, acceptHdr);
+    }
+    
+    public ResponseBuilder executeQuery(String query, UriInfo uriInfo,
+            String min, String max, String grid, Request request, String acceptHdr)
+                    throws WebApplicationException {
+    	return this.executeQuery(null, null, query, min, max, grid,
+    			uriInfo, request, acceptHdr);
     }
 
+    /** {@inheritDoc} */
+    @Override
+    public ResponseBuilder executeQuery(List<String> defaultGraphUris,
+                                        List<String> namedGraphUris,
+                                        String query, String min, String max, String grid, 
+                                        UriInfo uriInfo, Request request, String acceptHdr)
+                                                throws WebApplicationException {
+        ResponseBuilder response = null;
+        try {
+            response = this.doExecute(defaultGraphUris, namedGraphUris,
+                                      query, min, max, grid, uriInfo, request,
+                                      acceptHdr);
+        }
+        catch (Exception e) {
+            this.handleError(query, e);
+        }
+        return response;
+    }
+    
     /** {@inheritDoc} */
     @Override
     public ResponseBuilder executeQuery(List<String> defaultGraphUris,
@@ -96,7 +123,8 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         ResponseBuilder response = null;
         try {
             response = this.doExecute(defaultGraphUris, namedGraphUris,
-                                      query, uriInfo, request, acceptHdr);
+                                      query, null, null, null, uriInfo, request,
+                                      acceptHdr);
         }
         catch (Exception e) {
             this.handleError(query, e);
@@ -108,29 +136,77 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     // JAX-RS root resource contract support
     //-------------------------------------------------------------------------
 
+    /**
+     * <i>[Resource method]</i> Process a SPARQL query sent as an HTTP
+     * GET request.
+     * @param  defaultGraphUris   the <code>default-graph-uri</code>
+     *                            parameter of the SPARQL query.
+     * @param  namedGraphUris     the <code>named-graph-uri</code>
+     *                            parameter of the SPARQL query.
+     * @param  query              the <code>query</code>
+     *                            parameter of the SPARQL query.
+     * @param  uriInfo            the request URI data.
+     * @param  request            the JAX-RS Request object, for content
+     *                            negotiation.
+     * @param  acceptHdr          the HTTP Accept header, for content
+     *                            negotiation.
+     *
+     * @return the SPARQL query result, formatted according to the
+     *         negotiated content type.
+     * @throws WebApplicationException if the SPARQL request is invalid
+     *         or a processing error occurred or the user is not allowed
+     *         to execute the specified query.
+     */
     @GET
     public Response getQuery(
                 @QueryParam("default-graph-uri") List<String> defaultGraphUris,
                 @QueryParam("named-graph-uri") List<String> namedGraphUris,
                 @QueryParam("query") String query,
+                @QueryParam("min") String min,
+                @QueryParam("max") String max,
+                @QueryParam("grid") String grid,
                 @Context UriInfo uriInfo,
                 @Context Request request,
                 @HeaderParam("Accept") String acceptHdr)
                                                 throws WebApplicationException {
-        return this.dispatchQuery(defaultGraphUris, namedGraphUris, query,
+        return this.dispatchQuery(defaultGraphUris, namedGraphUris, query, min, max, grid,
                                   uriInfo, request, acceptHdr);
     }
-
+    
+    /**
+     * <i>[Resource method]</i> Process a SPARQL query sent as an HTTP
+     * POST request.
+     * @param  defaultGraphUris   the <code>default-graph-uri</code>
+     *                            parameter of the SPARQL query.
+     * @param  namedGraphUris     the <code>named-graph-uri</code>
+     *                            parameter of the SPARQL query.
+     * @param  query              the <code>query</code>
+     *                            parameter of the SPARQL query.
+     * @param  uriInfo            the request URI data.
+     * @param  request            the JAX-RS Request object, for content
+     *                            negotiation.
+     * @param  acceptHdr          the HTTP Accept header, for content
+     *                            negotiation.
+     *
+     * @return the SPARQL query result, formatted according to the
+     *         negotiated content type.
+     * @throws WebApplicationException if the SPARQL request is invalid
+     *         or a processing error occurred or the user is not allowed
+     *         to execute the specified query.
+     */
     @POST
     public final Response postQuery(
                 @QueryParam("default-graph-uri") List<String> defaultGraphUris,
                 @QueryParam("named-graph-uri") List<String> namedGraphUris,
                 @QueryParam("query") String query,
+                @QueryParam("min") String min,
+                @QueryParam("max") String max,
+                @QueryParam("grid") String grid,
                 @Context UriInfo uriInfo,
                 @Context Request request,
                 @HeaderParam("Accept") String acceptHdr)
                                                 throws WebApplicationException {
-        return this.dispatchQuery(defaultGraphUris, namedGraphUris, query,
+        return this.dispatchQuery(defaultGraphUris, namedGraphUris, query, min, max, grid,
                                   uriInfo, request, acceptHdr);
     }
 
@@ -139,8 +215,9 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     //-------------------------------------------------------------------------
 
     private final Response dispatchQuery(List<String> defaultGraphUris,
-                            List<String> namedGraphUris, String query,
-                            UriInfo uriInfo, Request request, String acceptHdr)
+                                List<String> namedGraphUris, String query, String min, String max,
+                                String grid, UriInfo uriInfo, Request request,
+                                String acceptHdr)
                                                 throws WebApplicationException {
         ResponseBuilder response = null;
 
@@ -154,7 +231,8 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         else {
             try {
                 response = this.executeQuery(defaultGraphUris, namedGraphUris,
-                                            query, uriInfo, request, acceptHdr);
+                                             query, min, max, grid, uriInfo, request,
+                                             acceptHdr);
             }
             catch (Exception e) {
                 this.handleError(query, e);
@@ -162,15 +240,17 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         }
         return response.build();
     }
-
+    
     abstract protected ResponseBuilder doExecute(
                                           List<String> defaultGraphUris,
                                           List<String> namedGraphUris,
-                                          String query, UriInfo uriInfo,
-                                          Request request, String acceptHdr)
+                                          String query, String min, String max, String grid,
+                                          UriInfo uriInfo, Request request, String acceptHdr)
                                                             throws Exception;
 
-    protected final Repository getTargetRepository(List<String> defaultGraphUris) {
+    protected final Repository getTargetRepository(
+                                            List<String> defaultGraphUris)
+                                                    throws SecurityException {
         String targetRepo = null;
         if ((defaultGraphUris != null) && (! defaultGraphUris.isEmpty())) {
             targetRepo = defaultGraphUris.remove(0);
@@ -181,6 +261,14 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
             // => Use default repository: public data.
             defaultGraphUris.add(0, targetRepo);
             repo = this.configuration.getDataRepository();
+        }
+        else {
+            if ((repo != this.configuration.getDefaultRepository()) &&
+                (! SecurityContext.isUserAuthenticated())) {
+                // Unauthenticated user are not allowed to access
+                // any repository but the public one.
+                throw new java.lang.SecurityException();
+            }
         }
         return repo;
     }
@@ -230,6 +318,12 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                                                 throws WebApplicationException {
         if (e instanceof WebApplicationException) {
             throw (WebApplicationException)e;
+        }
+        else if (e instanceof SecurityException) {
+            throw new WebApplicationException(Status.FORBIDDEN);
+        }
+        else if (e.getCause() instanceof QueryDoneException) {
+        	; // Do Nothing
         }
         else {
             log.error("Query processing failed: \"{}\" for: \"{}\"",

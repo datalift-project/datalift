@@ -1,7 +1,7 @@
 package org.datalift.fwk.log;
 
 
-import java.util.Iterator;
+import java.util.Properties;
 import java.util.ServiceLoader;
 
 
@@ -102,6 +102,12 @@ public abstract class LogService
     abstract public void clearDiagnosticContexts();
 
     /**
+     * Initializes this log service.
+     * @param  props   configuration data or <code>null</code>.
+     */
+    abstract public void init(Properties props);
+
+    /**
      * Shuts this log service down.
      */
     abstract public void shutdown();
@@ -117,22 +123,33 @@ public abstract class LogService
      * mechanism to discover the LogService implementation. The
      * implementation selected is the first listed in the first file
      * named
-     * <code>META-INF/services/com.atosorigin.fwk.log.LogService</code>
+     * <code>META-INF/services/org.datalift.fwk.log.LogService</code>
      * found in the classpath.</p>
      *
      * @return an instance of <code>LogService</code>.
      */
     public static LogService getInstance() {
         if (instance == null) {
-            Iterator<LogService> i =
-                            ServiceLoader.load(LogService.class).iterator();
-            if (i.hasNext()) {
-                instance = i.next();
+            selectAndConfigure(null);
+        }
+        return instance;
+    }
+
+    public static LogService selectAndConfigure(Properties props) {
+        for (LogService s : ServiceLoader.load(LogService.class)) {
+            try {
+                s.init(props);
+                instance = s;
+                break;
             }
-            else {
-                throw new IllegalStateException(
+            catch (Exception e) {
+                System.err.println("Failed to initialize LogService provider "
+                                   + s.toString());
+            }
+        }
+        if (instance == null) {
+            throw new IllegalStateException(
                         "No provider found for " + LogService.class.getName());
-            }
         }
         return instance;
     }

@@ -6,7 +6,7 @@ import java.util.Set;
 
 import javax.ws.rs.core.Application;
 
-import org.datalift.core.jersey.velocity.VelocityTemplateProcessor;
+import org.datalift.core.velocity.jersey.VelocityTemplateProcessor;
 import org.datalift.fwk.log.Logger;
 
 
