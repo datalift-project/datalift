@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
@@ -83,34 +84,8 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     public ResponseBuilder executeQuery(String query, UriInfo uriInfo,
                                         Request request, String acceptHdr)
                                                 throws WebApplicationException {
-        return this.executeQuery(null, null, query, null, null, null,
+        return this.executeQuery(null, null, query, -1, -1, false,
                                  uriInfo, request, acceptHdr);
-    }
-    
-    public ResponseBuilder executeQuery(String query, UriInfo uriInfo,
-            String min, String max, String grid, Request request, String acceptHdr)
-                    throws WebApplicationException {
-    	return this.executeQuery(null, null, query, min, max, grid,
-    			uriInfo, request, acceptHdr);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public ResponseBuilder executeQuery(List<String> defaultGraphUris,
-                                        List<String> namedGraphUris,
-                                        String query, String min, String max, String grid, 
-                                        UriInfo uriInfo, Request request, String acceptHdr)
-                                                throws WebApplicationException {
-        ResponseBuilder response = null;
-        try {
-            response = this.doExecute(defaultGraphUris, namedGraphUris,
-                                      query, min, max, grid, uriInfo, request,
-                                      acceptHdr);
-        }
-        catch (Exception e) {
-            this.handleError(query, e);
-        }
-        return response;
     }
     
     /** {@inheritDoc} */
@@ -120,11 +95,22 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                                         String query, UriInfo uriInfo,
                                         Request request, String acceptHdr)
                                                 throws WebApplicationException {
+        return this.executeQuery(defaultGraphUris, namedGraphUris, query,
+                                 -1, -1, false, uriInfo, request, acceptHdr);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public ResponseBuilder executeQuery(List<String> defaultGraphUris,
+                            List<String> namedGraphUris, String query,
+                            int startOffset, int endOffset, boolean gridJson,
+                            UriInfo uriInfo, Request request, String acceptHdr)
+                                                throws WebApplicationException {
         ResponseBuilder response = null;
         try {
-            response = this.doExecute(defaultGraphUris, namedGraphUris,
-                                      query, null, null, null, uriInfo, request,
-                                      acceptHdr);
+            response = this.doExecute(defaultGraphUris, namedGraphUris, query,
+                                      startOffset, endOffset, gridJson,
+                                      uriInfo, request, acceptHdr);
         }
         catch (Exception e) {
             this.handleError(query, e);
@@ -162,14 +148,15 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                 @QueryParam("default-graph-uri") List<String> defaultGraphUris,
                 @QueryParam("named-graph-uri") List<String> namedGraphUris,
                 @QueryParam("query") String query,
-                @QueryParam("min") String min,
-                @QueryParam("max") String max,
-                @QueryParam("grid") String grid,
+                @QueryParam("min") @DefaultValue("-1") int startOffset,
+                @QueryParam("max") @DefaultValue("-1") int endOffset,
+                @QueryParam("grid") @DefaultValue("false") boolean gridJson,
                 @Context UriInfo uriInfo,
                 @Context Request request,
                 @HeaderParam("Accept") String acceptHdr)
                                                 throws WebApplicationException {
-        return this.dispatchQuery(defaultGraphUris, namedGraphUris, query, min, max, grid,
+        return this.dispatchQuery(defaultGraphUris, namedGraphUris, query,
+                                  startOffset, endOffset, gridJson,
                                   uriInfo, request, acceptHdr);
     }
     
@@ -199,14 +186,15 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                 @QueryParam("default-graph-uri") List<String> defaultGraphUris,
                 @QueryParam("named-graph-uri") List<String> namedGraphUris,
                 @QueryParam("query") String query,
-                @QueryParam("min") String min,
-                @QueryParam("max") String max,
-                @QueryParam("grid") String grid,
+                @QueryParam("min") @DefaultValue("-1") int startOffset,
+                @QueryParam("max") @DefaultValue("-1") int endOffset,
+                @QueryParam("grid") @DefaultValue("false") boolean gridJson,
                 @Context UriInfo uriInfo,
                 @Context Request request,
                 @HeaderParam("Accept") String acceptHdr)
                                                 throws WebApplicationException {
-        return this.dispatchQuery(defaultGraphUris, namedGraphUris, query, min, max, grid,
+        return this.dispatchQuery(defaultGraphUris, namedGraphUris, query,
+                                  startOffset, endOffset, gridJson,
                                   uriInfo, request, acceptHdr);
     }
 
@@ -215,9 +203,10 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     //-------------------------------------------------------------------------
 
     private final Response dispatchQuery(List<String> defaultGraphUris,
-                                List<String> namedGraphUris, String query, String min, String max,
-                                String grid, UriInfo uriInfo, Request request,
-                                String acceptHdr)
+                                List<String> namedGraphUris, String query,
+                                int startOffset, int endOffset,
+                                boolean gridJson, UriInfo uriInfo,
+                                Request request, String acceptHdr)
                                                 throws WebApplicationException {
         ResponseBuilder response = null;
 
@@ -231,8 +220,8 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         else {
             try {
                 response = this.executeQuery(defaultGraphUris, namedGraphUris,
-                                             query, min, max, grid, uriInfo, request,
-                                             acceptHdr);
+                                        query, startOffset, endOffset, gridJson,
+                                        uriInfo, request, acceptHdr);
             }
             catch (Exception e) {
                 this.handleError(query, e);
@@ -244,8 +233,10 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     abstract protected ResponseBuilder doExecute(
                                           List<String> defaultGraphUris,
                                           List<String> namedGraphUris,
-                                          String query, String min, String max, String grid,
-                                          UriInfo uriInfo, Request request, String acceptHdr)
+                                          String query,
+                                          int startOffset, int endOffset,
+                                          boolean gridJson, UriInfo uriInfo,
+                                          Request request, String acceptHdr)
                                                             throws Exception;
 
     protected final Repository getTargetRepository(
@@ -323,7 +314,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
             throw new WebApplicationException(Status.FORBIDDEN);
         }
         else if (e.getCause() instanceof QueryDoneException) {
-        	; // Do Nothing
+            // End of requested range (start/end offset) successfully reached.
         }
         else {
             log.error("Query processing failed: \"{}\" for: \"{}\"",
