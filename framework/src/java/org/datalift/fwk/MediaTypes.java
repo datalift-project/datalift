@@ -68,10 +68,10 @@ public class MediaTypes extends MediaType
     /** "application/sparql-results+xml" */
     public final static String APPLICATION_SPARQL_RESULT_XML =
                             APPLICATION_SPARQL_RESULT_XML_TYPE.toString();
-    /** "application/sparql-results+xml" */
+    /** "application/sparql-results+json" */
     public final static MediaType APPLICATION_SPARQL_RESULT_JSON_TYPE =
                             new MediaType(APPL_TYPE, "sparql-results+json");
-    /** "application/sparql-results+xml" */
+    /** "application/sparql-results+json" */
     public final static String APPLICATION_SPARQL_RESULT_JSON =
                             APPLICATION_SPARQL_RESULT_JSON_TYPE.toString();
 }
