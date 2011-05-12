@@ -250,7 +250,7 @@ public class RouterResource implements LifeCycle, ResourceResolver
         // Shutdown each module, ignoring errors.
         for (ModuleDesc desc : this.modules.values()) {
             Module m = desc.module;
-            Object[] prevCtx = LogContext.setContexts(m.getName(), "shutdown");
+            Object[] prevCtx = LogContext.pushContexts(m.getName(), "shutdown");
             try {
                 m.shutdown(configuration);
             }
@@ -260,10 +260,10 @@ public class RouterResource implements LifeCycle, ResourceResolver
                 // Continue with next module.
             }
             finally {
-                LogContext.setContexts(prevCtx[0], prevCtx[1]);
+                LogContext.pushContexts(prevCtx[0], prevCtx[1]);
             }
         }
-        LogContext.setContexts(null, null);
+        LogContext.pushContexts(null, null);
     }
 
     //-------------------------------------------------------------------------
@@ -657,12 +657,12 @@ public class RouterResource implements LifeCycle, ResourceResolver
         for (Module m : ServiceLoader.load(Module.class, cl)) {
             String name = m.getName();
             // Initialize module.
-            Object[] prevCtx = LogContext.setContexts(name, "init");
+            Object[] prevCtx = LogContext.pushContexts(name, "init");
             try {
                 m.init(this.configuration);
             }
             finally {
-                LogContext.setContexts(prevCtx[0], prevCtx[1]);
+                LogContext.pushContexts(prevCtx[0], prevCtx[1]);
             }
             // Register module root (directory or JAR file) as
             // a Velocity template source, if available.
@@ -814,7 +814,7 @@ public class RouterResource implements LifeCycle, ResourceResolver
             // Should never happen...
             throw new UnsupportedOperationException(e.getMessage(), e);
         }
-        log.debug("Added {} to module classpath", u);
+        log.debug("Added resource \"{}\" to module classpath", u);
         return u;
     }
 
