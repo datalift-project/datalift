@@ -18,6 +18,7 @@ import java.util.TreeMap;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.EntityNotFoundException;
 import javax.persistence.spi.PersistenceProvider;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -36,6 +37,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
+import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 
 import com.clarkparsia.empire.Empire;
@@ -48,6 +50,7 @@ import com.sun.jersey.api.view.Viewable;
 import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.FormDataParam;
 
+import static javax.ws.rs.core.MediaType.TEXT_HTML;
 
 import org.datalift.core.TechnicalException;
 import org.datalift.core.log.LogContext;
@@ -189,14 +192,10 @@ public class WorkspaceResource implements LifeCycle, ProjectManager
     //-------------------------------------------------------------------------
 
     @GET
-    @Produces(MediaType.TEXT_HTML)
+    @Produces(TEXT_HTML)
     public Response getIndex() {
         LogContext.setContexts(MODULE_NAME, "project");
-        
-        return Response.ok(new Viewable("/workspace.vm",
-                                        this.projectDao.getAll()),
-                           MediaType.TEXT_HTML)
-                       .build();
+        return this.displayIndexPage(Response.ok(), null).build();
     }
 
     @GET
@@ -212,7 +211,9 @@ public class WorkspaceResource implements LifeCycle, ProjectManager
                                 @FormParam("description") String description,
                                 @FormParam("license") String license,
                                 @Context UriInfo uriInfo) {
-        LogContext.setContexts(MODULE_NAME, "project");
+        LogContext.setContexts(MODULE_NAME, urlify(title));
+
+        Response response = null;
         // Check that project is unique.
         URI projectId = this.newProjectId(uriInfo.getBaseUri(), title);
         if (this.projectDao.find(projectId) == null) {
@@ -220,11 +221,11 @@ public class WorkspaceResource implements LifeCycle, ProjectManager
             Project p = new ProjectImpl(projectId.toString());
             p.setTitle(title);
 
-    		p.setOwner(SecurityContext.getUserPrincipal());
+            p.setOwner(SecurityContext.getUserPrincipal());
             p.setDescription(description);
-			p.setLicense(License.valueOf(license).uri);
-            
-			Date date = new Date();
+            p.setLicense(License.valueOf(license).uri);
+
+            Date date = new Date();
             p.setDateCreation(date);
             p.setDateModification(date);
             
@@ -237,75 +238,78 @@ public class WorkspaceResource implements LifeCycle, ProjectManager
                                             this.getProjectFilePath(id, null));
                 projectStorage.mkdirs();
 
-                return Response.created(new URI(p.getUri())).entity(
-                        new Viewable("/workspace.vm",this.projectDao.getAll())
-                        ).build();
+                String uri = p.getUri();
+                response = Response.created(new URI(uri))
+                                   .entity(new Viewable("/redirect.vm", uri))
+                                   .type(TEXT_HTML)
+                                   .build();
             }
             catch (Exception e) {
-                log.fatal("Failed to persist project {}", e, title);
-               /* TechnicalException error = new TechnicalException(
-                                        "ws.internal.error", e, e.getMessage()); */
-                throw new WebApplicationException(
-                                Response.status(Status.INTERNAL_SERVER_ERROR)
-                                        .type(MediaTypes.TEXT_PLAIN_TYPE)
-                                        .entity(e.getMessage()).build());
+                this.handleInternalError(e, "Failed to persist project");
             }
         }
         else {
-            /*TechnicalException error = new TechnicalException(
-                                                "duplicate.identifier", title);*/
-            throw new ConflictException();
+            log.fatal("Duplicate identifier \"{}\" for new project \"{}\"",
+                                                        urlify(title), title);
+            TechnicalException error = new TechnicalException(
+                                                "duplicate.identifier", title);
+            throw new ConflictException(error.getMessage());
         }
-        
+        return response;
     }
 
     @GET
     @Path("add.html")
-    public Response getNewProjectPage() {
-        LogContext.setContexts(MODULE_NAME, "add");
+    public Response getNewProjectPage(@Context UriInfo uriInfo)
+                                                throws WebApplicationException {
+        LogContext.setContexts(MODULE_NAME, "add.html");
 
-        Map<String, Object> args = new TreeMap<String, Object>();
-        args.put("licenses", License.values());
-        return Response.ok(new Viewable("/workspaceAddProject.vm", args),
-                           MediaType.TEXT_HTML)
-                       .build();
+        return this.getModifyProjectPage(null, uriInfo);
     }
     
     @GET
     @Path("{id}/modify.html")
-    @Produces(MediaType.TEXT_HTML)
-    public Response getModifyProjectPage(
-            @PathParam("id") String id,
-            @Context UriInfo uriInfo) {
-        LogContext.setContexts(MODULE_NAME, "modify");
-        
-        URI projectUri  = this.newProjectId(uriInfo.getBaseUri(), id);
-        Project p = this.projectDao.get(projectUri);
-        
-        Map<String, Object> args = new TreeMap<String, Object>();
-        args.put("licenses", License.values());
-        args.put("it", p);
-        return Response.ok(new Viewable("/workspaceModifyProject.vm",
-                                        args),
-                           MediaType.TEXT_HTML)
-                       .build();
+    @Produces(TEXT_HTML)
+    public Response getModifyProjectPage(@PathParam("id") String id,
+                                         @Context UriInfo uriInfo)
+                                                throws WebApplicationException {
+        if (id != null) {
+            LogContext.setContexts(MODULE_NAME, id + "/modify.html");
+        }
+
+        Response response = null;
+        try {
+            Map<String, Object> args = new TreeMap<String, Object>();
+            if (id != null) {
+                URI projectUri  = this.newProjectId(uriInfo.getBaseUri(), id);
+                args.put("it", this.projectDao.get(projectUri));
+            }
+            args.put("licenses", License.values());
+            response = Response.ok(
+                            new Viewable("/workspaceModifyProject.vm", args),
+                            TEXT_HTML).build();
+        }
+        catch (Exception e) {
+            this.handleInternalError(e, "Failed to load project");
+        }
+        return response;
     }
     
     @POST
     @Path("{id}")
     public Response modifyProject(
-            @PathParam("id") String id,
-            @FormParam("title") String title,
-            @FormParam("description") String description,
-            @FormParam("license") String license,
-            @FormParam("delete") @DefaultValue("false") boolean delete ,
-            @Context UriInfo uriInfo)
-    		throws WebApplicationException {
+                    @PathParam("id") String id,
+                    @FormParam("title") String title,
+                    @FormParam("description") String description,
+                    @FormParam("license") String license,
+                    @FormParam("delete") @DefaultValue("false") boolean delete,
+                    @Context UriInfo uriInfo) throws WebApplicationException {
         LogContext.setContexts(MODULE_NAME, id);
-        
-        if(delete) {
-        	this.deleteProject(id, uriInfo);
-        	return getIndex();
+
+        Response response = null;
+        if (delete) {
+            this.deleteProject(id, uriInfo);
+            response = this.getIndex();
         }
     	try {
             URI projectUri  = this.newProjectId(uriInfo.getBaseUri(), id);
@@ -325,49 +329,38 @@ public class WorkspaceResource implements LifeCycle, ProjectManager
             	p.setLicense(li);
             	modified = true;
             }
-            if(modified) {
-	            p.setDateModification(new Date());
-	            this.projectDao.save(p);
+            if (modified) {
+                p.setDateModification(new Date());
+                this.projectDao.save(p);
             }
-            return Response.seeOther(projectUri).build();
-
+            response = Response.seeOther(projectUri).build();
     	}
         catch (Exception e) {
-            log.fatal("Failed to modified project {}", e);
-           /* TechnicalException error = new TechnicalException(
-                                    "ws.internal.error", e, e.getMessage()); */
-            throw new WebApplicationException(
-                            Response.status(Status.INTERNAL_SERVER_ERROR)
-                                    .type(MediaTypes.TEXT_PLAIN_TYPE)
-                                    .entity(e.getMessage()).build());
+            this.handleInternalError(e, "Failed to update project");
         }
+        return response;
     }
     
     @DELETE
     @Path("{id}")
-    public Response deleteProject(
-            @PathParam("id") String id,
-            @Context UriInfo uriInfo)
-    		throws WebApplicationException {
-        LogContext.setContexts(MODULE_NAME, id + "/modifyProject");
-    	try {
+    public Response deleteProject(@PathParam("id") String id,
+                                  @Context UriInfo uriInfo)
+    		                                throws WebApplicationException {
+        LogContext.setContexts(MODULE_NAME, id);
+
+        Response response = null;
+        try {
             URI projectUri  = this.newProjectId(uriInfo.getBaseUri(), id);
             Project p = this.projectDao.get(projectUri);
-            
-            this.projectDao.delete(p);
-            
-            return Response.ok().build();
 
+            this.projectDao.delete(p);
+
+            response = Response.ok().build();
     	}
         catch (Exception e) {
-            log.fatal("Failed to delete project {}", e);
-           /* TechnicalException error = new TechnicalException(
-                                    "ws.internal.error", e, e.getMessage()); */
-            throw new WebApplicationException(
-                            Response.status(Status.INTERNAL_SERVER_ERROR)
-                                    .type(MediaTypes.TEXT_PLAIN_TYPE)
-                                    .entity(e.getMessage()).build());
+            this.handleInternalError(e, "Failed to delete project");
         }
+        return response;
     }
     
     
@@ -383,26 +376,10 @@ public class WorkspaceResource implements LifeCycle, ProjectManager
         Response response = null;
         // Check that projects exists in internal data store.
         Project p = this.projectDao.find(uriInfo.getAbsolutePath());
-        
         if (p != null) {
-        	// Search for modules which can handle project
-        	Collection<ProjectModule> modules = new LinkedList<ProjectModule>();
-        	for (ProjectModule m : this.configuration.getBeans(ProjectModule.class)) {
-        		if (m.canHandle(p) != null) {
-        			modules.add(m);
-        		}
-        	}
-        	// Build	 arguments and response
-            Map<String, Object> args = new TreeMap<String, Object>();
-        	args.put("it", this.projectDao.getAll());
-        	args.put("current", p);
-        	args.put("canHandle", modules);
-        		response = Response.ok(new Viewable("/workspace.vm", args),
-        				MediaType.TEXT_HTML)
-        				.build();
+            response = this.displayIndexPage(Response.ok(), p).build();
         }
-        // Else: Can't query project information.
-        if (response == null) {
+        else {
             throw new NotFoundException();
         }
         return response;
@@ -411,17 +388,26 @@ public class WorkspaceResource implements LifeCycle, ProjectManager
     @GET
     @Path("{id}/srcupload.html")
     public Object srcUpload(@PathParam("id") String id,
-                            @Context UriInfo uriInfo) {
-        LogContext.setContexts(MODULE_NAME, id + "/srcupload");
+                            @Context UriInfo uriInfo)
+                                                throws WebApplicationException {
+        LogContext.setContexts(MODULE_NAME, id + "/srcupload.html");
 
-        URI projectUri  = this.newProjectId(uriInfo.getBaseUri(), id);
-        Project p = this.projectDao.get(projectUri);
-        Map<String, Object> args = new HashMap<String, Object>();
-        args.put("it", p);
-        args.put("sep", CsvSourceImpl.Separator.values());
-        return Response.ok(new Viewable("/projectSourceUpload.vm", args),
-                MediaType.TEXT_HTML)
-            .build();
+        Response response = null;
+        try {
+            URI projectUri  = this.newProjectId(uriInfo.getBaseUri(), id);
+            Project p = this.projectDao.get(projectUri);
+    
+            Map<String, Object> args = new HashMap<String, Object>();
+            args.put("it", p);
+            args.put("sep", CsvSourceImpl.Separator.values());
+            response = Response.ok(new Viewable("/projectSourceUpload.vm", args),
+                                   TEXT_HTML)
+                               .build();
+        }
+        catch (Exception e) {
+            this.handleInternalError(e, "Failed to load project");
+        }
+        return response;
     }
     
     @POST
@@ -441,8 +427,10 @@ public class WorkspaceResource implements LifeCycle, ProjectManager
         if (! isSet(separator)) {
             this.throwInvalidParamError("separator", separator);
         }
+        Response response = null;
+
+        String fileName = fileDisposition.getFileName();
         try {
-            String fileName = fileDisposition.getFileName();
             URI projectUri  = this.newProjectId(uriInfo.getBaseUri(), id);
             URI sourceUri   = new URI(projectUri.getScheme(), null,
                                     projectUri.getHost(), projectUri.getPort(),
@@ -466,19 +454,17 @@ public class WorkspaceResource implements LifeCycle, ProjectManager
             ((ProjectImpl)p).addSource(src);
             this.projectDao.save(p);
 
-            return Response.created(sourceUri).entity(
-                    new Viewable("/workspace.vm", this.projectDao.getAll()))
-                           .build();
+            String redirectUrl = projectUri.toString() + "#source";
+            response = Response.created(sourceUri)
+                               .entity(new Viewable("/redirect.vm", redirectUrl))
+                               .type(TEXT_HTML)
+                               .build();
         }
         catch (Exception e) {
-            TechnicalException error = new TechnicalException(
-                                        "ws.internal.error", e, e.getMessage());
-            log.error(error.getMessage(), e);
-            throw new WebApplicationException(
-                                Response.status(Status.INTERNAL_SERVER_ERROR)
-                                        .type(MediaTypes.TEXT_PLAIN_TYPE)
-                                        .entity(error.getMessage()).build());
+            this.handleInternalError(e,
+                            "Failed to create CVS source for {}", fileName);
         }
+        return response;
     }
     
     @POST
@@ -502,10 +488,11 @@ public class WorkspaceResource implements LifeCycle, ProjectManager
         catch (Exception e) {
             this.throwInvalidParamError("mime_type", mimeType);
         }
+        String fileName = fileDisposition.getFileName();
+        Response response = null;
         try {
-            String fileName = fileDisposition.getFileName();
-            URI projectUri  = this.newProjectId(uriInfo.getBaseUri(), id);
-            URI sourceUri   = new URI(projectUri.getScheme(), null,
+            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
+            URI sourceUri  = new URI(projectUri.getScheme(), null,
                                     projectUri.getHost(), projectUri.getPort(),
                                     projectUri.getPath()
                                         + this.getRelativeSourceId(fileName),
@@ -523,100 +510,100 @@ public class WorkspaceResource implements LifeCycle, ProjectManager
             ((ProjectImpl)p).addSource(src);
             this.projectDao.save(p);
 
-            return Response.created(sourceUri).entity(
-                    new Viewable("/workspace.vm", this.projectDao.getAll()))
-                           .build();
-        
+            String redirectUrl = projectUri.toString() + "#source";
+            response = Response.created(sourceUri)
+                               .entity(new Viewable("/redirect.vm", redirectUrl))
+                               .type(TEXT_HTML)
+                               .build();
         }
         catch (Exception e) {
-            TechnicalException error = new TechnicalException(
-                                        "ws.internal.error", e, e.getMessage());
-            log.error(error.getMessage(), e);
-            throw new WebApplicationException(
-                                Response.status(Status.INTERNAL_SERVER_ERROR)
-                                        .type(MediaTypes.TEXT_PLAIN_TYPE)
-                                        .entity(error.getMessage()).build());
+            this.handleInternalError(e,
+                            "Failed to create RDF source for {}", fileName);
         }
+        return response;
     }
     
     @POST
     @Path("{id}/dbupload")
     public Response dbUpload(@PathParam("id") String id,
-    						@Context UriInfo uriInfo,
-    						@FormParam("database") String	database,
-    						@FormParam("source_url") String srcUrl, 
-    						@FormParam("title") String title,
-    						@FormParam("user") String user, 
-    						@FormParam("request") String request,
-    						@FormParam("password") String password, 
-    						@FormParam("cache_duration") String cacheDuration) {
-    	URI projectUri = null;
-    	URI sourceUri = null;
+                             @Context UriInfo uriInfo,
+                             @FormParam("database") String database,
+                             @FormParam("source_url") String srcUrl, 
+                             @FormParam("title") String title,
+                             @FormParam("user") String user, 
+                             @FormParam("request") String request,
+                             @FormParam("password") String password, 
+                             @FormParam("cache_duration") String cacheDuration)
+                                                throws WebApplicationException {
+        LogContext.setContexts(MODULE_NAME, id + "/dbupload");
+        Response response = null;
     	try {
-			projectUri = new URI(uriInfo.getBaseUri() + "project/" + id);
-    		sourceUri = new URI(projectUri + "/source/" + title);
-    	} catch (Exception e) {
-			throw new WebApplicationException(e, Response.Status.INTERNAL_SERVER_ERROR);
-		}
-		Project p = this.projectDao.get(projectUri);
-		// Add new source to persistent project
-		DbSource src = new DbSource(sourceUri.toString());
-		src.setTitle(title);
-		src.setDatabase(database);
-		src.setConnectionUrl(srcUrl);
-		src.setUser(user);
-		src.setPassword(password);
-		src.setRequest(request);
-		src.setCacheDuration(new Integer(cacheDuration).intValue());
-		((ProjectImpl)p).addSource(src);
-		this.projectDao.save(p);
-		try {
-			return Response.created(sourceUri).entity(
-				new Viewable("/workspace.vm", this.projectDao.getAll())).build();
-		}
-		catch (Exception e) {
-			throw new WebApplicationException(e, Response.Status.INTERNAL_SERVER_ERROR);
-		}    	
+            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
+            URI sourceUri  = new URI(projectUri.getScheme(), null,
+                                    projectUri.getHost(), projectUri.getPort(),
+                                    projectUri.getPath()
+                                        + this.getRelativeSourceId(title),
+                                    null, null);
+    	    Project p = this.projectDao.get(projectUri);
+
+            // Add new source to persistent project
+    	    DbSource src = new DbSource(sourceUri.toString());
+    	    src.setTitle(title);
+    	    src.setDatabase(database);
+    	    src.setConnectionUrl(srcUrl);
+    	    src.setUser(user);
+    	    src.setPassword(password);
+    	    src.setRequest(request);
+    	    src.setCacheDuration(new Integer(cacheDuration).intValue());
+    	    ((ProjectImpl)p).addSource(src);
+    	    this.projectDao.save(p);
+
+            String redirectUrl = projectUri.toString() + "#source";
+            response = Response.created(sourceUri)
+                               .entity(new Viewable("/redirect.vm", redirectUrl))
+                               .type(TEXT_HTML)
+                               .build();
+        }
+        catch (Exception e) {
+            this.handleInternalError(e,
+                            "Failed to create SQL source for {}", title);
+        }
+        return response;
     }
 
     @GET
-    @Path("{project}/{filename}")
-    public Response getSourceData(@PathParam("project") String projectId,
+    @Path("{id}/{filename}")
+    public Response getSourceData(@PathParam("id") String id,
                                   @PathParam("filename") String fileName,
                                   @Context UriInfo uriInfo,
                                   @Context Request request)
                                                 throws WebApplicationException {
-        LogContext.setContexts(MODULE_NAME, projectId + '/' + fileName);
+        LogContext.setContexts(MODULE_NAME, id + '/' + fileName);
 
-        String filePath = this.getProjectFilePath(projectId, fileName);
+        String filePath = this.getProjectFilePath(id, fileName);
         Response response = this.configuration.getBean(ResourceResolver.class)
-                                 .resolveStaticResource(filePath, request);
+                                .resolveStaticResource(filePath, request);
         if (response == null) {
-        	throw new WebApplicationException(Response.Status.NOT_FOUND);
+            throw new NotFoundException();
         }
         return response;
     }
 
     @GET
     @Path("{id}/source")
-    public Response	getSources(@PathParam("id") String id, @Context UriInfo uriInfo) {
-    	 // Get persistent project by its Id
-        URI uri = null;
+    public Response getSources(@PathParam("id") String id,
+                               @Context UriInfo uriInfo) {
+        LogContext.setContexts(MODULE_NAME, id + "/source");
+
+        Response response = null;
         try {
-            uri = new URI(uriInfo.getBaseUri() + "project/" + id);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
+            Project p = this.projectDao.get(projectUri);
+
+            response = this.displayIndexPage(Response.ok(), p).build();
         }
-        Project p = this.projectDao.get(uri);
-        Map<String, Object> args = new TreeMap<String, Object>();
-        args.put("it", this.projectDao.getAll());
-        args.put("current", p);
-        args.put("sources", p.getSources());
-        Response response = Response.ok(new Viewable("/workspace.vm", args),
-                MediaType.TEXT_HTML)
-            .build();
-        if (response == null) {
-        	throw new NotFoundException();
+        catch (Exception e) {
+            this.handleInternalError(e, null);
         }
         return response;
     }
@@ -627,94 +614,96 @@ public class WorkspaceResource implements LifeCycle, ProjectManager
                               @PathParam("srcid") String srcId,
                               @Context UriInfo uriInfo) {
         LogContext.setContexts(MODULE_NAME, id + "/source/" + srcId);
-        // Get persistent project by its Id
-        URI uri = null;
+        Response response = null;
         try {
-            uri = new URI(uriInfo.getBaseUri() + "project/" + id);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-        Project p = this.projectDao.get(uri);
-        // Search for source in project
-        Source src = null;
-        String url = uriInfo.getRequestUri().toString();
-        for (Source s : p.getSources()) {
-            if (url.equals(s.getUri())) {
-                src = s;
-                break;
+            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
+            Project p = this.projectDao.get(projectUri);
+
+            // Search for requested source in project
+            Source src = null;
+            String url = uriInfo.getRequestUri().toString();
+            for (Source s : p.getSources()) {
+                if (url.equals(s.getUri())) {
+                    src = s;
+                    break;
+                }
             }
-        }
-        // initialize source and return grid View
-        if (src != null && src instanceof BaseFileSource<?>) {
-            try {
-                ((BaseFileSource<?>)src).init(configuration.getPublicStorage(), uriInfo.getBaseUri());
-            } catch (Exception e) {
-                log.error("Failed to initialize source {}: {}", e, src.getTitle(), e.getMessage());
-                throw new WebApplicationException(e, Response.Status.NOT_FOUND);
+            // initialize source and return grid View
+            if (src != null && src instanceof BaseFileSource<?>) {
+                ((BaseFileSource<?>)src).init(configuration.getPublicStorage(),
+                                              uriInfo.getBaseUri());
             }
-            if (src instanceof CsvSourceImpl)
-                return Response.ok(new Viewable("/CsvSourceGrid.vm", src)).build();
-            else if (src instanceof RdfSourceImpl)
-                return Response.ok(new Viewable("/RdfSourceGrid.vm", src)).build();
+            String template = null;
+            if (src instanceof CsvSource) {
+                template = "/CsvSourceGrid.vm";
+            }
+            else if (src instanceof RdfSource) {
+                template = "/RdfSourceGrid.vm";
+            }
+            else if (src instanceof DbSource) {
+                ((DbSource)src).init(this.getFileStorage(this.getProjectFilePath(id, srcId)));
+                template = "/DbSourceGrid.vm";
+            }
+            response = Response.ok(new Viewable(template, src)).build();
         }
-        else if (src != null && src instanceof DbSource) {
-            ((DbSource)src).init(this.getFileStorage(this.getProjectFilePath(id, srcId)));
-            return Response.ok(new Viewable("/DbSourceGrid.vm", src)).build();
+        catch (Exception e) {
+            this.handleInternalError(e, "Failed to load source {}", srcId);
         }
-        return null;
+        return response;
     }
     
     @GET
     @Path("{id}/ontologyUpload.html")
     public Object ontologyUpload(@PathParam("id") String id,
                             @Context UriInfo uriInfo) {
-        LogContext.setContexts(MODULE_NAME, id + "/ontoupload");
+        LogContext.setContexts(MODULE_NAME, id + "/ontologyUpload.html");
 
-        URI uri = null;
+        Response response = null;
         try {
-            uri = new URI(uriInfo.getBaseUri() + "project/" + id);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
+            Project p = this.projectDao.get(projectUri);
+
+            response = Response.ok(new Viewable("/projectOntoUpload.vm", p),
+                                   TEXT_HTML)
+                               .build();
         }
-        Project p = this.projectDao.get(uri);
-        Map<String, Object> args = new HashMap<String, Object>();
-        args.put("it", p);
-        return Response.ok(new Viewable("/projectOntoUpload.vm", args),
-                MediaType.TEXT_HTML)
-            .build();
+        catch (Exception e) {
+            this.handleInternalError(e, "Failed to load project");
+        }
+        return response;
     }
 
     @POST
     @Path("{id}/ontologyUpload")
     public Response ontologyUpload(@PathParam("id") String id,
-			@Context UriInfo uriInfo,
-			@FormParam("source_url") String srcUrl) {
-    	URI projectUri = null;
-    	try {
-			projectUri = new URI(uriInfo.getBaseUri() + "project/" + id);
-    	} catch (Exception e) {
-			throw new WebApplicationException(e, Response.Status.INTERNAL_SERVER_ERROR);
-		}
-		Project p = this.projectDao.get(projectUri);
-		//Add new source to persistent project
-		OntologyImpl src = new OntologyImpl();
-		
-		src.setTitle(srcUrl);
-		src.setDateSubmitted(new Date());
-		src.setOperator(SecurityContext.getUserPrincipal());
+                                   @FormParam("source_url") String srcUrl,
+                                   @Context UriInfo uriInfo)
+                                                throws WebApplicationException {
+        LogContext.setContexts(MODULE_NAME, id + "/ontologyUpload");
 
-		((ProjectImpl)p).addOntology(src);
-		
-		this.projectDao.save(p);
-		
-		try {
-	        return Response.ok(new Viewable("/workspace.vm",this.projectDao.getAll()),
-	                MediaType.TEXT_HTML)
-	            .build();
-		}
-		catch (Exception e) {
-			throw new WebApplicationException(e, Response.Status.INTERNAL_SERVER_ERROR);
-		}    	
+        Response response = null;
+        try {
+            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
+            Project p = this.projectDao.get(projectUri);
+
+            // Add ontology to persistent project
+            OntologyImpl src = new OntologyImpl();
+            src.setTitle(srcUrl);
+            src.setDateSubmitted(new Date());
+            src.setOperator(SecurityContext.getUserPrincipal());
+            ((ProjectImpl)p).addOntology(src);
+
+            this.projectDao.save(p);
+
+            String redirectUrl = projectUri.toString() + "#ontology";
+            response = Response.ok(new Viewable("/redirect.vm", redirectUrl))
+                               .type(TEXT_HTML)
+                               .build();
+        }
+        catch (Exception e) {
+            this.handleInternalError(e, "Failed to add ontology {}", srcUrl);
+        }
+        return response;
     }
     
     //-------------------------------------------------------------------------
@@ -771,6 +760,27 @@ public class WorkspaceResource implements LifeCycle, ProjectManager
         }
     }
 
+    private ResponseBuilder displayIndexPage(ResponseBuilder response,
+                                             Project p) {
+        Map<String, Object> args = new TreeMap<String, Object>();
+        // Populate project list.
+        args.put("it", this.projectDao.getAll());
+        // Display selected project.
+        if (p != null) {
+            // Search for modules accepting the selected project.
+            Collection<ProjectModule> modules = new LinkedList<ProjectModule>();
+            for (ProjectModule m : this.configuration.getBeans(ProjectModule.class)) {
+                if (m.canHandle(p) != null) {
+                    modules.add(m);
+                }
+            }
+            args.put("current", p);
+            args.put("canHandle", modules);
+        }
+        return response.entity(new Viewable("/workspace.vm", args))
+                       .type(TEXT_HTML);
+    }
+
     private void throwInvalidParamError(String name, Object value) {
         TechnicalException error = new TechnicalException(
                                         "ws.invalid.param.error", name, value);
@@ -778,6 +788,28 @@ public class WorkspaceResource implements LifeCycle, ProjectManager
                                 Response.status(Status.BAD_REQUEST)
                                         .type(MediaTypes.TEXT_PLAIN_TYPE)
                                         .entity(error.getMessage()).build());
+    }
+
+    private void handleInternalError(Exception e,
+                                     String logMsg, Object... logArgs)
+                                                throws WebApplicationException {
+        if (e instanceof EntityNotFoundException) {
+            throw new NotFoundException();
+        }
+        else {
+            if (StringUtils.isSet(logMsg)) {
+                log.fatal(logMsg, e, logArgs);
+            }
+            else {
+                log.fatal(e.getMessage(), e);
+            }
+            TechnicalException error = new TechnicalException(
+                                    "ws.internal.error", e, e.getMessage());
+            throw new WebApplicationException(
+                            Response.status(Status.INTERNAL_SERVER_ERROR)
+                                    .type(MediaTypes.TEXT_PLAIN_TYPE)
+                                    .entity(error.getMessage()).build());
+        }
     }
 
     /**
@@ -860,11 +892,5 @@ public class WorkspaceResource implements LifeCycle, ProjectManager
         public ProjectJpaDao(EntityManager em) {
             super(ProjectImpl.class, em);
         }
-
-//        public Project findByTitle(String title) {
-//            List<Project> l = executeQuery(
-//                            "where { ?result dc:title \"" + title + "\" . }");
-//            return ((! l.isEmpty())? l.get(0): null);
-//        }
     }    
 }

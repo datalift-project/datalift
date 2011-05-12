@@ -8,7 +8,7 @@
 #macro ( banner )
 	<div id="banner" class="dl-banner">
 		<img id="datalift-logo" src="${baseUri}/images/datalift-logo.png"/>
-		<span id="datalift-title">DataLift</span>	
+		<span id="datalift-title">DataLift</span>
 	</div>
 #end
 
@@ -25,11 +25,9 @@
 	<script language="javascript" src="${baseUri}/js/jquery/jquery-ui.js"></script>
 	<!-- Jquery Plugins -->
 	<script language="javascript" src="${baseUri}/js/jquery/jquery.jqGrid.locale-en.js"></script>
-	<script language="javascript" src="${baseUri}/js/jquery/jquery.jqGrid.js"></script>		
+	<script language="javascript" src="${baseUri}/js/jquery/jquery.jqGrid.js"></script>
 	<!-- History Plugins (https://github.com/balupton/history.js) -->
-	<script>if ( typeof window.JSON === 'undefined' ) { 
-		document.write('<script src="${baseUri}/js/history.js/json2.js"><\/script>'); }
-	</script>
+	<script type="text/javascript">if ( typeof window.JSON === 'undefined' ) { document.write('<script language="javascript" src="${baseUri}/js/history.js/json2.js"><\/script>'); }</script>
 	<script language="javascript" src="${baseUri}/js/history.js/amplify.store.js"></script>
 	<script language="javascript" src="${baseUri}/js/history.js/history.js"></script>
 	<script language="javascript" src="${baseUri}/js/history.js/history.adapter.jquery.js"></script>

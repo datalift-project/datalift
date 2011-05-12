@@ -1,76 +1,71 @@
-#load("resources")
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
+#load("resources")
 	<title>Datalift - Workspace</title>
 #header_links
 </head>
-
 <body>
-
-<script>
+<script type="text/javascript">
 	var History = window.History;
-	
 #if ($current)
 	var currentProject = "$current.uri";
 #end
-
 	$(function() {
-	
 		$("input:submit, .button").button();
 		$("#tabs").tabs();
-	
+
 		if (typeof(currentProject) != 'undefined') {
 			makeFocus(currentProject);
 			if (window.location.hash == "")
-    			History.replaceState(null, null, window.location.href + "#description");
-		}
-		
-		
-    	$(window).bind('popstate', function() {
-    		if (History.getHash() == "" && typeof(currentProject) != 'undefined')
-    			$("#tabs").tabs('select', "#description");
-    		else if (typeof(currentProject) != 'undefined')
-    			$("#tabs").tabs('select', "#"+History.getHash());
-    	});
-    	
-    	function makeFocus(projectUrl) {
-			var button = $(".dl-project-button");
-			for (var i =0; i < button.length; i++) {
-				if (button[i].href == projectUrl)
-					$(button[i]).addClass("ui-state-focus");
-				else
-					$(button[i]).removeClass("ui-state-focus");
-			}
-		}
-		
-    	function ajaxRequest(reqUrl) {
-			jQuery.ajax({
-					beforeSend: function(req) {
-						req.setRequestHeader("Accept", "text/html");
-					},
-					url: reqUrl,
-					type:"GET",
-					success: successfulQuery,
-					error: unsuccessfulQuery
-				});
-    	}
-		
-		function successfulQuery(response) {
-			$("#workspace-main-panel").empty();
-			$("#workspace-main-panel").append(response);
+				History.replaceState(null, null, window.location.href + "#description");
 		}
 
-		function unsuccessfulQuery(XMLHttpRequest){
-			alert("An error occured when trying to get project description.");
-		}
+		$(window).bind('popstate', function() {
+			if (typeof(currentProject) != 'undefined') {
+				if (History.getHash() == "")
+					$("#tabs").tabs('select', "#description");
+				else
+					$("#tabs").tabs('select', "#"+History.getHash());
+			}
+		});
 	});
-		
+
+	function makeFocus(projectUrl) {
+		var buttons = $(".dl-project-button");
+		for (var i=0; i < buttons.length; i++) {
+			if (buttons[i].href == projectUrl)
+				$(buttons[i]).addClass("ui-state-focus");
+			else
+				$(buttons[i]).removeClass("ui-state-focus");
+		}
+	}
+
+	function ajaxRequest(reqUrl) {
+		jQuery.ajax({
+			beforeSend: function(req) {
+				req.setRequestHeader("Accept", "text/html");
+			},
+			url: reqUrl,
+			type:"GET",
+			success: successfulQuery,
+			error: unsuccessfulQuery
+		});
+	}
+
+	function successfulQuery(response) {
+		$("#workspace-main-panel").empty();
+		$("#workspace-main-panel").append(response);
+	}
+
+	function unsuccessfulQuery(XMLHttpRequest){
+		alert("An error occured when trying to get project description.");
+	}
+
 	function historyPush(url) {
-   		History.pushState(null, null, url);
-    }
-    	
+		History.pushState(null, null, url);
+	}
 </script>
 
 #banner
@@ -78,13 +73,13 @@
 <h3 class="ui-widget-header dl-widget-header">Workspace</h3>
 
 <div id="projects_panel" class="ui-widget-content">
-<h3 class="ui-widget-header dl-widget-header">#i18n("project.title.available")</h3>
-<div id="project_scroll">
+	<h3 class="ui-widget-header dl-widget-header">#i18n("project.title.available")</h3>
+	<div id="project_scroll">
 #foreach( $item in $it )
-	<a class="ui-state-default dl-project-button" onclick="makeFocus(this);" href="${item.uri}">$!esc.html($item.title)</a><br/>
+		<a class="ui-state-default dl-project-button" onclick="makeFocus(this);" href="${item.uri}">$!esc.html($item.title)</a><br/>
 #end
-</div>
-<a href="${baseUri}/project/add.html">#i18n("project.title.new_project")</a>
+	</div>
+	<a href="${baseUri}/project/add.html">#i18n("project.title.new_project")</a>
 </div>
 <div id="workspace-main-panel" class="ui-widget-content">
 #if ($current)
@@ -95,22 +90,22 @@
 			<li><a onclick="historyPush('${current.uri}#ontology');" href="#ontology">#i18n("project.title.ontology")</a></li>
 		</ul>
 		<div id="description">
-			#i18n("project.owner_s") : $!esc.html($current.owner)<br/>
-			#i18n("project.description") : $!esc.html($current.description)<br/>
-			#i18n("project.creation_s") : $date.format("medium", $current.dateCreation)<br/>
-			#i18n("project.modification_s") : $date.format("medium", $current.dateModification)<br/>
-			#i18n("project.license") : <a href="$current.getLicense()">$esc.html($!current.license)</a>
-			
+			#i18n("project.owner_s"): $!esc.html($current.owner)<br/>
+			#i18n("project.description"): $!esc.html($current.description)<br/>
+			#i18n("project.creation_s"): $date.format("medium", $current.dateCreation)<br/>
+			#i18n("project.modification_s"): $date.format("medium", $current.dateModification)<br/>
+			#i18n("project.license"): <a href="$current.getLicense()">$esc.html($!current.license)</a>
+
 			<div id="module_can_handle">
-				<p>#i18n("project.module_available")</p>
+				<p>#i18n("project.module_available"):</p>
 				<ol id="selectable_module">
-					#foreach ($curModule in $canHandle)
+#foreach ($curModule in $canHandle)
 					<li>
 						<a href="${baseUri}/$curModule.canHandle($current)"
 						class="module_can_handle" id="$curModule.name">
 						$esc.html($curModule.getName())</a>
 					</li>
-					#end
+#end
 				</ol>
 			</div>
 			<form method="post" action="$current.getUri()" class="form_formated">
@@ -119,32 +114,31 @@
 				<input type="submit" value="#i18n("delete")"/>
 			</form>
 		</div>
-	
+
 		<div id="source">
-			<p>#i18n("project.source_available") :</p>
+			<p>#i18n("project.source_available"):</p>
 			<ol id="selectable_source">
-				#foreach($curSrc in $current.getSources())
+#foreach($curSrc in $current.getSources())
 				<li><a href="$curSrc.uri">$esc.html($curSrc.title)</a></li>
-				#end
+#end
 			</ol>
 			<br/>
 			<a href="$current.getRdfId()/srcupload.html">#i18n("project.add_dataset")</a>
 		</div>
-		
+
 		<div id="ontology">
-			<p>#i18n("project.ontology_available") :</p>
+			<p>#i18n("project.ontology_available"):</p>
 			<ol id="selectable_ontologies">
-				#foreach($curOnto in $current.getOntologies())
+#foreach($curOnto in $current.getOntologies())
 				<li><a href="$esc.html($curOnto.title)">$esc.html($curOnto.title)</a> <br/>
-				#i18n("project.ontology_date_submitted") : $date.format("medium", $curOnto.dateSubmitted)<br/>
-				#i18n("project.ontology_operator") : $curOnto.operator </li>
-				#end
+				#i18n("project.ontology_date_submitted"): $date.format("medium", $curOnto.dateSubmitted)<br/>
+				#i18n("project.ontology_operator"): $curOnto.operator </li>
+#end
 			</ol>
 			<br/>
 			<a href="$current.getRdfId()/ontologyUpload.html">#i18n("project.add_ontology")</a>
 		</div>
 	</div>
-	
 #else
 	<p style='text-align:center'>
 		#i18n("welcome")

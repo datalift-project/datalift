@@ -1,16 +1,23 @@
-#load("resources")
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-	<title>Datalift - Workspace - #i18n("project.title.modify_project")</title>
+#load("resources")
+#if( $it )
+	#set( $title  = "project.title.modify_project" )
+	#set( $submit = "modify" )
+        #set( $target = $it.uri )
+#else
+	#set( $title = "project.title.new_project" )
+	#set( $submit = "create" )
+        #set( $target = "${baseUri}/project" )
+#end
+	<title>Datalift - Workspace - #i18n($title)</title>
 #header_links
 </head>
-
 <body>
-<script>
+<script type="text/javascript">
 	$(function() {
-	
 		$("input:submit").button();
 		$("#accordion").accordion({
 			autoHeight: false,
@@ -22,29 +29,26 @@
 #banner
 
 <div id="content" class="ui-widget-content dl-main-panel">
-<h3 class="ui-widget-header dl-widget-header">#i18n("project.title.modify_project")</h3>
+<h3 class="ui-widget-header dl-widget-header">#i18n($title)</h3>
 <div class="dl-panel">
-
 	<a href="${baseUri}/project">#i18n("back")</a>
-	<form method="post" action="$it.uri" class="form_formated">
+	<form method="post" action="$target" class="form_formated">
+		<p><label for="title" class="medium">#i18n("project.name"):</label>
+		<input type="text" id="title" name="title" value="$!esc.html($it.title)"/></p>
 	
-	<p><label for="title" class="medium">#i18n("project.name") :</label>
-	<input type="text" id="title" name="title" value="$!esc.html($it.title)"/></p>
+		<p><label for="description" class="medium">#i18n("project.description"): </label>
+		<input type="text" id="description" name="description" value="$!esc.html($it.description)" /></p>
 	
-	<p><label for="description" class="medium">#i18n("project.description") : </label>
-	<input type="text" id="description" name="description" value="$!esc.html($it.description)" /></p>
+		<p><label for="license" class="medium">#i18n("project.license"): </label>
 	
-	<p><label for="license" class="medium">#i18n("project.license") : </label>
-	
-	<select id="license" name="license">
-	#foreach($li in $licenses)
-		<option value="$esc.html($li.name())" #if($li.uri == $it.license) selected="selected" #end>
-		$esc.html($li.name())</option>
-	#end
-	</select></p>
-	<input type="submit" value="#i18n("submit")"/>
+		<select id="license" name="license">
+#foreach($li in $licenses)
+			<option value="$esc.html($li.name())" #if($li.uri == $it.license) selected="selected" #end>
+			$esc.html($li.name())</option>
+#end
+		</select></p>
+		<input type="submit" value="#i18n($submit)"/>
 	</form>
-	
 </div></div>
 #footer
 </body>

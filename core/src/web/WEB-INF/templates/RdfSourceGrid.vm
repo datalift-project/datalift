@@ -10,7 +10,7 @@
 	<script>
 		var gridData = new Array();
 		var searchData = new Array();
-		var	gridHeader = new Array();
+		var gridHeader = new Array();
 		
 		$(function(){
 			getHeaderColumns();
@@ -90,29 +90,29 @@
 	</script>
 	
 #banner
-$it.getTitle()
+	<p>$!esc.html($it.title)</p>
 	<table id="grid">
-	<thead>
+		<thead>
 			<tr>
 				<th>Subject</th>
 				<th>Predicate</th>
 				<th>Object</th>
 			</tr>
-	</thead>
-	<tbody>
+		</thead>
+		<tbody>
 #foreach ($item in $it)
-	<tr>
-		<td>$item.getSubject()</td>
-		<td>$item.getPredicate()</td>
-		<td>$item.getObject()</td>
-	</tr>
+			<tr>
+				<td>$!esc.html($item.subject)</td>
+				<td>$!esc.html($item.predicate)</td>
+				<td>$!esc.html($item.object)</td>
+			</tr>
 #end 
-	</tbody>
+		</tbody>
 	</table>
 	<div id="pagernav"></div>
 	<div id="searchnav" style="display:none">
 		Column: <select id="searchColumn">
-		<option id="all">all</option>
+			<option id="all">all</option>
 			<option id="Subject">Subject</option>
 			<option id="Predicate">Predicate</option>
 			<option id="Object">Object</option>
