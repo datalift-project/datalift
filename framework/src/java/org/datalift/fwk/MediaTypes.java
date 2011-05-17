@@ -19,59 +19,56 @@ public class MediaTypes extends MediaType
     public final static MediaType APPLICATION_RDF_XML_TYPE =
                                     new MediaType(APPL_TYPE, "rdf+xml");
     /** "application/rdf+xml" */
-    public final static String APPLICATION_RDF_XML =
-                                    APPLICATION_RDF_XML_TYPE.toString();
+    public final static String APPLICATION_RDF_XML = "application/rdf+xml";
 
     /** "text/turtle" */
     public final static MediaType TEXT_TURTLE_TYPE =
                                     new MediaType(TEXT_TYPE, "turtle");
     /** "text/turtle" */
-    public final static String TEXT_TURTLE = TEXT_TURTLE_TYPE.toString();
+    public final static String TEXT_TURTLE = "text/turtle";
     /** "application/x-turtle" */
     public final static MediaType APPLICATION_TURTLE_TYPE =
                                     new MediaType(APPL_TYPE, "x-turtle");
     /** "application/x-turtle" */
-    public final static String APPLICATION_TURTLE =
-                                    APPLICATION_TURTLE_TYPE.toString();
+    public final static String APPLICATION_TURTLE = "application/x-turtle";
 
     /** "text/n3" */
     public final static MediaType TEXT_N3_TYPE = new MediaType(TEXT_TYPE, "n3");
     /** "text/n3" */
-    public final static String TEXT_N3 = TEXT_N3_TYPE.toString();
+    public final static String TEXT_N3 = "text/n3";
     /** "text/rdf+n3" */
     public final static MediaType TEXT_RDF_N3_TYPE =
                                     new MediaType(TEXT_TYPE, "rdf+n3");
     /** "text/rdf+n3" */
-    public final static String TEXT_RDF_N3 = TEXT_RDF_N3_TYPE.toString();
+    public final static String TEXT_RDF_N3 = "text/rdf+n3";
     /** "application/n3" */
     public final static MediaType APPLICATION_N3_TYPE =
                                     new MediaType(APPL_TYPE, "n3");
     /** "application/n3" */
-    public final static String APPLICATION_N3 = APPLICATION_N3_TYPE.toString();
+    public final static String APPLICATION_N3 = "application/n3";
 
     /** "application/n-triples" */
     public final static MediaType APPLICATION_NTRIPLES_TYPE =
                                     new MediaType(APPL_TYPE, "n-triples");
     /** "application/n-triples" */
-    public final static String APPLICATION_NTRIPLES =
-                                    APPLICATION_NTRIPLES_TYPE.toString();
+    public final static String APPLICATION_NTRIPLES = "application/n-triples";
 
     /** "application/sparql-query" */
     public final static MediaType APPLICATION_SPARQL_QUERY_TYPE =
                                     new MediaType(APPL_TYPE, "sparql-query");
     /** "application/sparql-query" */
     public final static String APPLICATION_SPARQL_QUERY =
-                                    APPLICATION_SPARQL_QUERY_TYPE.toString();
+                                                    "application/sparql-query";
     /** "application/sparql-results+xml" */
     public final static MediaType APPLICATION_SPARQL_RESULT_XML_TYPE =
                             new MediaType(APPL_TYPE, "sparql-results+xml");
     /** "application/sparql-results+xml" */
     public final static String APPLICATION_SPARQL_RESULT_XML =
-                            APPLICATION_SPARQL_RESULT_XML_TYPE.toString();
+                                            "application/sparql-results+xml";
     /** "application/sparql-results+json" */
     public final static MediaType APPLICATION_SPARQL_RESULT_JSON_TYPE =
                             new MediaType(APPL_TYPE, "sparql-results+json");
     /** "application/sparql-results+json" */
     public final static String APPLICATION_SPARQL_RESULT_JSON =
-                            APPLICATION_SPARQL_RESULT_JSON_TYPE.toString();
+                                            "application/sparql-results+json";
 }
