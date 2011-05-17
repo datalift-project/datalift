@@ -292,7 +292,7 @@ public class RouterResource implements LifeCycle, ResourceResolver
         }
         Response response = null;
 
-        URI uri = uriInfo.getAbsolutePath();
+        URI uri = uriInfo.getRequestUri();
         // Check that target subject exists in published data store.
         Repository data = this.configuration.getDataRepository();
         String query = this.queries.get("checkExists");
