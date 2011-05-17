@@ -133,7 +133,7 @@ public class WorkspaceResource implements LifeCycle, ProjectManager
     }
 
     //-------------------------------------------------------------------------
-    // ProkectManager contract support
+    // ProjectManager contract support
     //-------------------------------------------------------------------------
 
     /** {@inheritDoc} */
@@ -676,7 +676,7 @@ public class WorkspaceResource implements LifeCycle, ProjectManager
     @POST
     @Path("{id}/ontologyUpload")
     public Response ontologyUpload(@PathParam("id") String id,
-                                   @FormParam("source_url") String srcUrl,
+                                   @FormParam("source_url") URL srcUrl,
                                    @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
         LogContext.setContexts(MODULE_NAME, id + "/ontologyUpload");
@@ -688,7 +688,7 @@ public class WorkspaceResource implements LifeCycle, ProjectManager
 
             // Add ontology to persistent project
             OntologyImpl src = new OntologyImpl();
-            src.setTitle(srcUrl);
+            src.setTitle(srcUrl.toString());
             src.setDateSubmitted(new Date());
             src.setOperator(SecurityContext.getUserPrincipal());
             ((ProjectImpl)p).addOntology(src);
