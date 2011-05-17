@@ -13,6 +13,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -25,6 +26,7 @@ import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -32,7 +34,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
@@ -50,8 +51,6 @@ import com.sun.jersey.api.view.Viewable;
 import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.FormDataParam;
 
-import static javax.ws.rs.core.MediaType.TEXT_HTML;
-
 import org.datalift.core.TechnicalException;
 import org.datalift.core.log.LogContext;
 import org.datalift.core.project.CsvSourceImpl.Separator;
@@ -68,8 +67,10 @@ import org.datalift.fwk.project.RdfSource;
 import org.datalift.fwk.project.Source;
 import org.datalift.fwk.rdf.RdfNamespace;
 import org.datalift.fwk.security.SecurityContext;
+import org.datalift.fwk.sparql.SparqlEndpoint;
 import org.datalift.fwk.util.StringUtils;
 
+import static org.datalift.fwk.MediaTypes.*;
 import static org.datalift.fwk.util.StringUtils.*;
 
 
@@ -192,16 +193,16 @@ public class WorkspaceResource implements LifeCycle, ProjectManager
     //-------------------------------------------------------------------------
 
     @GET
-    @Produces(TEXT_HTML)
+    @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
     public Response getIndex() {
         LogContext.setContexts(MODULE_NAME, "project");
         return this.displayIndexPage(Response.ok(), null).build();
     }
 
     @GET
-    @Produces(MediaType.APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
     public Collection<Project> getIndexJSON() {
-    	LogContext.setContexts(MODULE_NAME, "project");
+        LogContext.setContexts(MODULE_NAME, "project");
         return this.projectDao.getAll();
     }
 
@@ -228,7 +229,7 @@ public class WorkspaceResource implements LifeCycle, ProjectManager
             Date date = new Date();
             p.setDateCreation(date);
             p.setDateModification(date);
-            
+
             // Persist project to RDF store.
             try {
                 this.projectDao.persist(p);
@@ -260,16 +261,17 @@ public class WorkspaceResource implements LifeCycle, ProjectManager
 
     @GET
     @Path("add.html")
+    @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
     public Response getNewProjectPage(@Context UriInfo uriInfo)
                                                 throws WebApplicationException {
         LogContext.setContexts(MODULE_NAME, "add.html");
 
         return this.getModifyProjectPage(null, uriInfo);
     }
-    
+
     @GET
     @Path("{id}/modify.html")
-    @Produces(TEXT_HTML)
+    @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
     public Response getModifyProjectPage(@PathParam("id") String id,
                                          @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
@@ -294,7 +296,7 @@ public class WorkspaceResource implements LifeCycle, ProjectManager
         }
         return response;
     }
-    
+
     @POST
     @Path("{id}")
     public Response modifyProject(
@@ -311,41 +313,41 @@ public class WorkspaceResource implements LifeCycle, ProjectManager
             this.deleteProject(id, uriInfo);
             response = this.getIndex();
         }
-    	try {
+        try {
             URI projectUri  = this.newProjectId(uriInfo.getBaseUri(), id);
             Project p = this.projectDao.get(projectUri);
 
             boolean modified = false;
             if(!StringUtils.isBlank(title)) {
-            	p.setTitle(title);
-            	modified = true;
+                p.setTitle(title);
+                modified = true;
             }
             if(!StringUtils.isBlank(description)) {
-            	p.setDescription(description);
-            	modified = true;
+                p.setDescription(description);
+                modified = true;
             }
             URI li = License.valueOf(license).uri;
             if(!p.getLicense().equals(li)) {
-            	p.setLicense(li);
-            	modified = true;
+                p.setLicense(li);
+                modified = true;
             }
             if (modified) {
                 p.setDateModification(new Date());
                 this.projectDao.save(p);
             }
             response = Response.seeOther(projectUri).build();
-    	}
+        }
         catch (Exception e) {
             this.handleInternalError(e, "Failed to update project");
         }
         return response;
     }
-    
+
     @DELETE
     @Path("{id}")
     public Response deleteProject(@PathParam("id") String id,
                                   @Context UriInfo uriInfo)
-    		                                throws WebApplicationException {
+                                            throws WebApplicationException {
         LogContext.setContexts(MODULE_NAME, id);
 
         Response response = null;
@@ -356,39 +358,55 @@ public class WorkspaceResource implements LifeCycle, ProjectManager
             this.projectDao.delete(p);
 
             response = Response.ok().build();
-    	}
+        }
         catch (Exception e) {
             this.handleInternalError(e, "Failed to delete project");
         }
         return response;
     }
-    
-    
+
     @GET
     @Path("{id}")
-    public Response getProject(@PathParam("id") String id,
-                               @Context UriInfo uriInfo,
-                               @Context Request request,
-                               @Context HttpHeaders hh)
+    @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
+    public Response getProjectPage(@PathParam("id") String id,
+                                   @Context UriInfo uriInfo,
+                                   @Context Request request)
                                                 throws WebApplicationException {
         LogContext.setContexts(MODULE_NAME, id);
 
-        Response response = null;
+        Project p = this.projectDao.get(uriInfo.getAbsolutePath());
+        return this.displayIndexPage(Response.ok(), p).build();
+    }
+
+    @GET
+    @Path("{id}")
+    @Produces({ APPLICATION_RDF_XML, TEXT_TURTLE, APPLICATION_TURTLE,
+                TEXT_N3, TEXT_RDF_N3, APPLICATION_N3, APPLICATION_NTRIPLES,
+                APPLICATION_JSON })
+    public Response getProjectDesc(@PathParam("id") String id,
+                                   @Context UriInfo uriInfo,
+                                   @Context Request request,
+                                   @HeaderParam("Accept") String acceptHdr)
+                                                throws WebApplicationException {
+        LogContext.setContexts(MODULE_NAME, id);
+
         // Check that projects exists in internal data store.
-        Project p = this.projectDao.find(uriInfo.getAbsolutePath());
-        if (p != null) {
-            response = this.displayIndexPage(Response.ok(), p).build();
-        }
-        else {
-            throw new NotFoundException();
-        }
-        return response;
+        URI uri = uriInfo.getAbsolutePath();
+        this.projectDao.find(uri);
+        // Forward request for project RDF description to the SPARQL endpoint.
+        List<String> defGraph = Arrays.asList(
+                            this.configuration.getInternalRepository().name);
+        return this.configuration.getBean(SparqlEndpoint.class)
+                   .executeQuery(defGraph, null,
+                                 "DESCRIBE <" + uri + '>',
+                                 uriInfo, request, acceptHdr).build();
     }
 
     @GET
     @Path("{id}/srcupload.html")
-    public Object srcUpload(@PathParam("id") String id,
-                            @Context UriInfo uriInfo)
+    @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
+    public Object getSourceUploadPage(@PathParam("id") String id,
+                                      @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
         LogContext.setContexts(MODULE_NAME, id + "/srcupload.html");
 
@@ -396,7 +414,7 @@ public class WorkspaceResource implements LifeCycle, ProjectManager
         try {
             URI projectUri  = this.newProjectId(uriInfo.getBaseUri(), id);
             Project p = this.projectDao.get(projectUri);
-    
+
             Map<String, Object> args = new HashMap<String, Object>();
             args.put("it", p);
             args.put("sep", CsvSourceImpl.Separator.values());
@@ -409,7 +427,7 @@ public class WorkspaceResource implements LifeCycle, ProjectManager
         }
         return response;
     }
-    
+
     @POST
     @Path("{id}/csvupload")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
@@ -448,10 +466,10 @@ public class WorkspaceResource implements LifeCycle, ProjectManager
             Separator sep = CsvSourceImpl.Separator.valueOf(separator);
             boolean hasTitleRow = ((titleRow != null) &&
                                    (titleRow.toLowerCase().equals("on")));
-    
+
             CsvSource src = this.newCsvSource(sourceUri, fileName, filePath,
                                               sep.value, hasTitleRow);
-            ((ProjectImpl)p).addSource(src);
+            p.addSource(src);
             this.projectDao.save(p);
 
             String redirectUrl = projectUri.toString() + "#source";
@@ -466,7 +484,7 @@ public class WorkspaceResource implements LifeCycle, ProjectManager
         }
         return response;
     }
-    
+
     @POST
     @Path("{id}/rdfupload")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
@@ -507,7 +525,7 @@ public class WorkspaceResource implements LifeCycle, ProjectManager
             // Add new source to persistent project
             RdfSource src = this.newRdfSource(sourceUri, fileName, filePath,
                                               mappedType.toString());
-            ((ProjectImpl)p).addSource(src);
+            p.addSource(src);
             this.projectDao.save(p);
 
             String redirectUrl = projectUri.toString() + "#source";
@@ -522,41 +540,41 @@ public class WorkspaceResource implements LifeCycle, ProjectManager
         }
         return response;
     }
-    
+
     @POST
     @Path("{id}/dbupload")
     public Response dbUpload(@PathParam("id") String id,
                              @Context UriInfo uriInfo,
                              @FormParam("database") String database,
-                             @FormParam("source_url") String srcUrl, 
+                             @FormParam("source_url") String srcUrl,
                              @FormParam("title") String title,
-                             @FormParam("user") String user, 
+                             @FormParam("user") String user,
                              @FormParam("request") String request,
-                             @FormParam("password") String password, 
+                             @FormParam("password") String password,
                              @FormParam("cache_duration") String cacheDuration)
                                                 throws WebApplicationException {
         LogContext.setContexts(MODULE_NAME, id + "/dbupload");
         Response response = null;
-    	try {
+        try {
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
             URI sourceUri  = new URI(projectUri.getScheme(), null,
                                     projectUri.getHost(), projectUri.getPort(),
                                     projectUri.getPath()
                                         + this.getRelativeSourceId(title),
                                     null, null);
-    	    Project p = this.projectDao.get(projectUri);
+            Project p = this.projectDao.get(projectUri);
 
             // Add new source to persistent project
-    	    DbSource src = new DbSource(sourceUri.toString());
-    	    src.setTitle(title);
-    	    src.setDatabase(database);
-    	    src.setConnectionUrl(srcUrl);
-    	    src.setUser(user);
-    	    src.setPassword(password);
-    	    src.setRequest(request);
-    	    src.setCacheDuration(new Integer(cacheDuration).intValue());
-    	    ((ProjectImpl)p).addSource(src);
-    	    this.projectDao.save(p);
+            DbSource src = new DbSource(sourceUri.toString());
+            src.setTitle(title);
+            src.setDatabase(database);
+            src.setConnectionUrl(srcUrl);
+            src.setUser(user);
+            src.setPassword(password);
+            src.setRequest(request);
+            src.setCacheDuration(new Integer(cacheDuration).intValue());
+            p.addSource(src);
+            this.projectDao.save(p);
 
             String redirectUrl = projectUri.toString() + "#source";
             response = Response.created(sourceUri)
@@ -591,8 +609,10 @@ public class WorkspaceResource implements LifeCycle, ProjectManager
 
     @GET
     @Path("{id}/source")
+    @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
     public Response getSources(@PathParam("id") String id,
-                               @Context UriInfo uriInfo) {
+                               @Context UriInfo uriInfo)
+                                                throws WebApplicationException {
         LogContext.setContexts(MODULE_NAME, id + "/source");
 
         Response response = null;
@@ -607,29 +627,36 @@ public class WorkspaceResource implements LifeCycle, ProjectManager
         }
         return response;
     }
-    
+
     @GET
     @Path("{id}/source/{srcid}")
-    public Response getSource(@PathParam("id") String id,
-                              @PathParam("srcid") String srcId,
-                              @Context UriInfo uriInfo) {
+    @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
+    public Response getSourcePage(@PathParam("id") String id,
+                                  @PathParam("srcid") String srcId,
+                                  @Context UriInfo uriInfo)
+                                                throws WebApplicationException {
         LogContext.setContexts(MODULE_NAME, id + "/source/" + srcId);
+
         Response response = null;
         try {
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
             Project p = this.projectDao.get(projectUri);
 
-            // Search for requested source in project
+            // Search for requested source in project.
             Source src = null;
-            String url = uriInfo.getRequestUri().toString();
+            String url = uriInfo.getAbsolutePath().toString();
             for (Source s : p.getSources()) {
                 if (url.equals(s.getUri())) {
                     src = s;
                     break;
                 }
             }
+            if (src == null) {
+                // Not found.
+                throw new NotFoundException();
+            }
             // initialize source and return grid View
-            if (src != null && src instanceof BaseFileSource<?>) {
+            if (src instanceof BaseFileSource<?>) {
                 ((BaseFileSource<?>)src).init(configuration.getPublicStorage(),
                                               uriInfo.getBaseUri());
             }
@@ -644,6 +671,10 @@ public class WorkspaceResource implements LifeCycle, ProjectManager
                 ((DbSource)src).init(this.getFileStorage(this.getProjectFilePath(id, srcId)));
                 template = "/DbSourceGrid.vm";
             }
+            else {
+                throw new TechnicalException("Unknown source type: {1}",
+                                             src.getClass());
+            }
             response = Response.ok(new Viewable(template, src)).build();
         }
         catch (Exception e) {
@@ -651,11 +682,38 @@ public class WorkspaceResource implements LifeCycle, ProjectManager
         }
         return response;
     }
-    
+
+    @GET
+    @Path("{id}/source/{srcid}")
+    @Produces({ APPLICATION_RDF_XML, TEXT_TURTLE, APPLICATION_TURTLE,
+                TEXT_N3, TEXT_RDF_N3, APPLICATION_N3, APPLICATION_NTRIPLES,
+                APPLICATION_JSON })
+    public Response getSourceDesc(@PathParam("id") String id,
+                                  @PathParam("srcid") String srcId,
+                                  @Context UriInfo uriInfo,
+                                  @Context Request request,
+                                  @HeaderParam("Accept") String acceptHdr)
+                                                throws WebApplicationException {
+        LogContext.setContexts(MODULE_NAME, id);
+
+        // Check that projects exists in internal data store.
+        this.projectDao.get(this.newProjectId(uriInfo.getBaseUri(), id));
+        // Forward request for source RDF description to the SPARQL endpoint.
+        URI uri = uriInfo.getAbsolutePath();
+        List<String> defGraph = Arrays.asList(
+                            this.configuration.getInternalRepository().name);
+        return this.configuration.getBean(SparqlEndpoint.class)
+                   .executeQuery(defGraph, null,
+                                 "DESCRIBE <" + uri + '>',
+                                 uriInfo, request, acceptHdr).build();
+    }
+
     @GET
     @Path("{id}/ontologyUpload.html")
-    public Object ontologyUpload(@PathParam("id") String id,
-                            @Context UriInfo uriInfo) {
+    @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
+    public Object getOntologyUploadPage(@PathParam("id") String id,
+                                        @Context UriInfo uriInfo)
+                                                throws WebApplicationException {
         LogContext.setContexts(MODULE_NAME, id + "/ontologyUpload.html");
 
         Response response = null;
@@ -691,7 +749,7 @@ public class WorkspaceResource implements LifeCycle, ProjectManager
             src.setTitle(srcUrl.toString());
             src.setDateSubmitted(new Date());
             src.setOperator(SecurityContext.getUserPrincipal());
-            ((ProjectImpl)p).addOntology(src);
+            p.addOntology(src);
 
             this.projectDao.save(p);
 
@@ -705,7 +763,7 @@ public class WorkspaceResource implements LifeCycle, ProjectManager
         }
         return response;
     }
-    
+
     //-------------------------------------------------------------------------
     // Specific implementation
     //-------------------------------------------------------------------------
@@ -715,7 +773,7 @@ public class WorkspaceResource implements LifeCycle, ProjectManager
             return new URL(baseUri.toURL(), "project/" + urlify(name)).toURI();
         }
         catch (Exception e) {
-            throw new RuntimeException("Invalid base URI: " + baseUri); 
+            throw new RuntimeException("Invalid base URI: " + baseUri);
         }
     }
 
@@ -793,6 +851,9 @@ public class WorkspaceResource implements LifeCycle, ProjectManager
     private void handleInternalError(Exception e,
                                      String logMsg, Object... logArgs)
                                                 throws WebApplicationException {
+        if (e instanceof WebApplicationException) {
+            throw (WebApplicationException)e;
+        }
         if (e instanceof EntityNotFoundException) {
             throw new NotFoundException();
         }
@@ -842,7 +903,7 @@ public class WorkspaceResource implements LifeCycle, ProjectManager
 
     /**
      * Returns the list of persistent classes to be handled by Empire
-     * JPA provider. 
+     * JPA provider.
      * @return the list of persistent classes.
      */
     @SuppressWarnings("unchecked")
@@ -892,5 +953,5 @@ public class WorkspaceResource implements LifeCycle, ProjectManager
         public ProjectJpaDao(EntityManager em) {
             super(ProjectImpl.class, em);
         }
-    }    
+    }
 }
