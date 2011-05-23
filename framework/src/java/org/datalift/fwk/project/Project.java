@@ -20,6 +20,8 @@ public interface Project
 
     public void addSource(Source s);
     public Collection<Source> getSources();
+    public Source getSource(URI uri);
+	public void deleteSource(URI uri);
     
     public Date getDateCreation();
     public void setDateCreation(Date date);
@@ -32,8 +34,14 @@ public interface Project
     
     public Collection<Ontology> getOntologies();
     public void addOntology(Ontology vocabulary);
+	public Ontology getOntology(String title);
+	public void deleteOntology(String title);
     
     public URI getExecution();
     public void setExecution(URI execution);
+
+
+
+
   
 }

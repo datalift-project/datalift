@@ -34,17 +34,19 @@ public class RdfSourceImpl extends BaseFileSource<Statement>
                            implements RdfSource
 {
     private transient Collection<Statement> content = null;
-
+    private final TypeSource type;
     //-------------------------------------------------------------------------
     // Constructors
     //-------------------------------------------------------------------------
 
     public RdfSourceImpl() {
         super();
+        this.type = TypeSource.RdfSource;
     }
 
     public RdfSourceImpl(String uri) {
         super(uri);
+        this.type = TypeSource.RdfSource;
     }
 
     //-------------------------------------------------------------------------
@@ -90,6 +92,7 @@ public class RdfSourceImpl extends BaseFileSource<Statement>
         super.setMimeType(parseMimeType(mimeType).toString());
     }
     
+
     //-------------------------------------------------------------------------
     // RdfSource contract support
     //-------------------------------------------------------------------------
@@ -126,4 +129,10 @@ public class RdfSourceImpl extends BaseFileSource<Statement>
         }
         return mimeType;
     }
+    
+    @Override
+    public TypeSource getTypeSource() {
+    	return type;
+    }
+
 }

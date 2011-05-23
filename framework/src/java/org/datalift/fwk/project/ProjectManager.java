@@ -61,4 +61,26 @@ public interface ProjectManager
      */
     public RdfSource newRdfSource(URI uri, String title, String filePath,
                                   String mimeType) throws IOException;
+    
+    /**
+     * Creates a new Database source object.
+     * @param  uri           the source URI.
+     * @param  title         the source label.
+     * @param  database      the name of the Database	
+     * @param  srcUrl	 	 the connection string of the Database	
+     * @param  user			 username for connection
+     * @param  password		 password for connection
+     * @param  request		 request executed 
+     * @param  cacheDuration Duration of the cache
+     *  supported databases are : Mysql, PostegreSql, Oracle Thin and OCI
+     *
+     * @return a new Database source, ready to be
+     *         {@link Project#addSource(Source) associated} to a
+     *         Project.
+     * @throws IOException if any error occurred creating the source
+     *         or accessing the specified file.
+     */
+    public DbSource newDbSource(URI uri, String title, String database, 
+			String srcUrl, String user, String password, 
+			String request, Integer cacheDuration) throws IOException;
 }
