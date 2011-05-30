@@ -1,9 +1,24 @@
 #load_core_resources
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-	<title>Datalift - #i18n("project.add_dataset")</title>
+#load("resources")
+#if( $current )
+	#set( $title  = "project.title.modify_dataset" )
+	#set( $submit = "modify" )
+       #set( $target_csv = "$it.getRdfId()/csvuploadModify" )
+       #set( $target_rdf = "$it.getRdfId()/rdfuploadModify" )
+       #set( $target_db = "$it.getRdfId()/dbuploadModify" )
+#else
+	#set( $title = "project.title.add_dataset" )
+	#set( $submit = "create" )
+       #set( $target_csv = "$it.getRdfId()/csvupload" )
+       #set( $target_rdf = "$it.getRdfId()/rdfupload" )
+       #set( $target_db = "$it.getRdfId()/dbupload" )
+#end
+	<title>Datalift - #i18n($title)</title>
 #header_links
 </head>
 
@@ -15,44 +30,76 @@
 		$("input:submit").button();
 		$("#accordion").accordion({
 			autoHeight: false,
-			navigation: true
+			navigation: true,
+			collapsible:true,
+			#if($current)
+			event: ""
+			#end
 		});
+		
+		/** 	Selection of the right panel	**/
+		#if($current) 
+
+			var select_panel = 0;
+	
+			#if($current.getTypeSource() == $field.CSVSource)
+			 	select_panel = 0;
+			#elseif($current.getTypeSource() == $field.RdfSource)
+				select_panel = 1;
+			#elseif($current.getTypeSource() == $field.DbSource)
+			 	select_panel = 2;
+			#end
+			
+			if(select_panel != 0) {
+		 	 	$("#accordion").accordion("option", "active", select_panel);
+			}
+			$("#accordion h3").click(function() {
+				var idx = $("#accordion h3").index(this);
+			if (idx == select_panel) {
+				$("#accordion").accordion("activate", idx);
+			}
+			});
+		#end
 	});
 </script>
 
 #banner
 
 <div id="content" class="ui-widget-content dl-main-panel">
-<h3 class="ui-widget-header dl-widget-header">#i18n("project.add_dataset")</h3>
+<h3 class="ui-widget-header dl-widget-header">#i18n($title)</h3>
 <div class="dl-panel">
-<a href="$it.uri">#i18n("back")</a>
+<a href="$it.uri#source">#i18n("back")</a>
 
 <div id="accordion">
 
 	<h3><a href="#">CSV</a></h3>
 	<div>
-	<form method="post" action="$it.getRdfId()/csvupload" enctype="multipart/form-data" class="form_formated">
+	#if($current)
+	#end
+	<form method="post" action="$target_csv" enctype="multipart/form-data" class="form_formated">
+		<input type="hidden" id="current_source" name="current_source" value="$current.uri">
 		<p>#i18n("project.upload_csv") : $esc.html($it.getTitle())</p>
 		<p><input type="file" name="source"/></p>
 		<p><label for="title_row">#i18n("project.upload_csv_activate") : </label>
 		<input type="checkbox" id="title_row" name="title_row"/></p>
 		<p><label for="separator">#i18n("project.upload_csv_separator") :</label>
 		<select id="separator" name="separator"></p>
-	#foreach($s in $sep)
-	#if( $foreach.count == 1 )
-		<option value="$esc.html($s.name())" selected="true">$esc.html($s.toString())</option>
-	#else
-		<option value="$esc.html($s.name())">$esc.html($s.toString())</option>
-	#end
-	#end
+		#foreach($s in $sep)
+			#if( $foreach.count == 1 )
+				<option value="$esc.html($s.name())" selected="true">$esc.html($s.toString())</option>
+			#else
+				<option value="$esc.html($s.name())">$esc.html($s.toString())</option>
+			#end
+		#end
 		</select>
-		<p><input type="submit"/></p>
+		<p><input type="submit" value="#i18n("$submit")"/></p>
 	</form>
 	</div>
 	
 	<h3><a href="#">RDF</a></h3>
 	<div>
-	<form method="post" action="$it.getRdfId()/rdfupload" enctype="multipart/form-data" class="form_formated">
+	<form method="post" action="$target_rdf" enctype="multipart/form-data" class="form_formated">
+		<input type="hidden" id="current_source" name="current_source" value="$current.uri">
 		<p>#i18n("project.upload_rdf") : $esc.html($it.getTitle())</p>
 		<p><input type="file" name="source"/></p>
 		<p><label for="mime_type">#i18n("project.upload_rdf_format") : </label>
@@ -64,28 +111,29 @@
 			<option id="trig"		value="application/x-trig">TriG</option>
 			<option id="trix"		value="application/trix">TriX</option>
 		</select></p>
-		<p><input type="submit"/></p>
+		<p><input type="submit" value="#i18n("$submit")"/></p>
 	</form>
 	</div>
 	
 	<h3><a href="#">#i18n("project.upload_db.title")</a></h3>
 	<div>
-	<form method="post" action="$it.getRdfId()/dbupload" class="form_formated">
+	<form method="post" action="$target_db" class="form_formated">
+		<input type="hidden" id="current_source" name="current_source" value="$current.uri">
+		<p><label for="title">#i18n("project.upload_db.source_name") :</label>
+		<input type="text" id="title" name="title" value="$!esc.html($current.title)" /></p>
 		<p><label for="source_url">#i18n("project.upload_db.source_url") :</label>
-		<input type="text" name="source_url" id="source_url" /></p>
+		<input type="text" name="source_url" id="source_url" value="$!esc.html($current.connectionUrl)" /></p>
 		<p><label for="user">#i18n("project.upload_db.user") :</label>
-		<input type="text" id="user" name="user"/></p>
+		<input type="text" id="user" name="user" value="$!esc.html($current.user)"/></p>
 		<p><label for="password">#i18n("project.upload_db.password") :</label>
-		<input type="password" name="password" id="password"/></p>
-		<p><label for="database">#i18n("project.upload_db.source_name") :</label>
-		<input type="text" name="database" id="database" /></p>
-		<p><label for="title">#i18n("project.upload_db.db") :</label>
-		<input type="text" id="title" name="title" /></p>
+		<input type="password" name="password" id="password" value="$!esc.html($current.password)"/></p>
+		<p><label for="database">#i18n("project.upload_db.db") :</label>
+		<input type="text" name="database" id="database" value="$!esc.html($current.database)" /></p>
 		<p><label for="request">#i18n("project.upload_db.request") :</label>
-		<input type="text" id="request" name="request" /></p>
+		<input type="text" id="request" name="request" value="$!esc.html($current.request)" /></p>
 		<p><label for="cache_duration">#i18n("project.upload_db.cache_duration") :</label></p>
-		<p><input type="text" id="cache_duration" name="cache_duration" /></p>
-		<p><input type="submit"/></p>
+		<p><input type="text" id="cache_duration" name="cache_duration" value="$!esc.html($current.cacheDuration)"/></p>
+		<p><input type="submit" value="#i18n("$submit")"/></p>
 	</form>
 	</div>
 	

@@ -48,6 +48,8 @@ public class CsvSourceImpl extends BaseFileSource<String[]>
 
     private transient List<String[]> grid = null;
     private transient List<String> headers = null;
+    
+    private final TypeSource type;
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -55,10 +57,12 @@ public class CsvSourceImpl extends BaseFileSource<String[]>
 
     public CsvSourceImpl() {
         super();
+        this.type = TypeSource.CsvSource;
     }
 
     public CsvSourceImpl(String uri) {
         super(uri);
+        this.type = TypeSource.CsvSource;
     }
 
     //-------------------------------------------------------------------------
@@ -94,7 +98,7 @@ public class CsvSourceImpl extends BaseFileSource<String[]>
             // Else: empty file.
         }
     }
-
+    
     //-------------------------------------------------------------------------
     // FileSource contract support
     //-------------------------------------------------------------------------
@@ -150,4 +154,9 @@ public class CsvSourceImpl extends BaseFileSource<String[]>
         }
         return s.toString();
     }
+    
+    public TypeSource getTypeSource() {
+    	return type;
+    }
+
 }

@@ -1,9 +1,20 @@
 #load_core_resources
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-	<title>Datalift - #i18n("project.add_dataset")</title>
+#load("resources")
+#if( $current )
+	#set( $title  = "project.title.modify_ontology" )
+	#set( $submit = "modify" )
+		#set ( $target = "ontology/$current.title/modify")
+#else
+	#set( $title = "project.title.add_ontology" )
+	#set( $submit = "create" )
+	 	#set ( $target = "ontologyUpload")
+#end
+	<title>Datalift - #i18n($title)</title>
 #header_links
 </head>
 
@@ -23,18 +34,22 @@
 #banner
 
 <div id="content" class="ui-widget-content dl-main-panel">
-<h3 class="ui-widget-header dl-widget-header">#i18n("project.add_dataset")</h3>
+<h3 class="ui-widget-header dl-widget-header">#i18n("$title")</h3>
 <div class="dl-panel">
-<a href="$it.uri">#i18n("back")</a>
+<a href="$it.uri#ontology">#i18n("back")</a>
 
 <div id="accordion">
 	
 	<h3><a href="#">Ontology</a></h3>
 	<div>
-	<form method="post" action="$it.getRdfId()/ontologyUpload" class="form_formated">
+	<form method="post" action="$it.getRdfId()/$target" class="form_formated">
+		<input type="hidden" name="oldTitle" id="oldTitle" value="$current.title" />
 		<p>#i18n("project.upload_ontology") : $esc.html($it.getTitle())</p>
-		<p><input type="text" name="source_url" id="source_url" /></p>
-		<p><input type="submit"/></p>
+		<p><label for="title">#i18n("project.upload_ontology.title") :</label>
+		<input type="text" id="title" name="title" value="$!esc.html($current.title)" /></p>
+		<p><label for="source_url">#i18n("project.upload_ontology.source") :</label>
+		<input type="text" id="source_url" name="source_url" value="$!esc.html($current.source)" /></p>
+		<p><input type="submit" value="#i18n("$submit")"/></p>
 	</form>
 	</div>
 	

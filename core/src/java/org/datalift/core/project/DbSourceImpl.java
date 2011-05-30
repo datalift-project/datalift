@@ -17,13 +17,22 @@ import javax.sql.rowset.WebRowSet;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 
+import org.datalift.fwk.project.DbSource;
 import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.RdfsClass;
 import com.sun.rowset.WebRowSetImpl;
 
+/**
+ * @author A507173
+ *
+ */
+/**
+ * @author A507173
+ *
+ */
 @Entity
 @RdfsClass("datalift:dbSource")
-public class DbSource extends BaseSource implements Iterable<Object>
+public class DbSourceImpl extends BaseSource implements DbSource
 {
 	@RdfProperty("datalift:connectionUrl")
 	private String connectionUrl;
@@ -39,48 +48,25 @@ public class DbSource extends BaseSource implements Iterable<Object>
 	private int	cacheDuration;
 	
 	private transient WebRowSet wrset;
+	private final TypeSource type; 
+	
+    //-------------------------------------------------------------------------
+    // Constructors
+    //-------------------------------------------------------------------------
 
-	public DbSource() {
+	
+	public DbSourceImpl() {
 		// NOP
+		this.type = TypeSource.DbSource;
 	}
-        
-	public DbSource(String uri) {
+	
+	public DbSourceImpl(String uri) {
 		super(uri);
-	}
-       
-	public String getConnectionUrl() {
-		return connectionUrl;
+		this.type = TypeSource.DbSource;
 	}
 
-	public void setConnectionUrl(String connectionUrl) {
-		this.connectionUrl = connectionUrl;
-	}
-	
+    /** {@inheritDoc} */
 	@Override
-	public Iterator<Object> iterator() {
-		try {
-			return Collections.unmodifiableCollection(wrset.toCollection()).iterator();
-		} catch (SQLException e) {
-			throw new WebApplicationException(e, Response.Status.INTERNAL_SERVER_ERROR);
-		}
-	}
-
-	public void setUser(String user) {
-		this.user = user;
-	}
-
-	public String getUser() {
-		return user;
-	}
-
-	public void setPassword(String password) {
-		this.password = password;
-	}
-
-	public String getPassword() {
-		return password;
-	}
-	
 	public void init(File cacheFile) {
 		try {
 			wrset = new WebRowSetImpl();
@@ -88,6 +74,7 @@ public class DbSource extends BaseSource implements Iterable<Object>
 			if ((in = this.getCacheStream(cacheFile)) == null) {
 				// Get table to grid
 				Class.forName(DatabaseType.valueOf(this.getDatabaseType()).getValue()).newInstance();
+				
 				wrset.setCommand(request);
 				wrset.setUrl(connectionUrl);
 				wrset.setUsername(user);
@@ -106,7 +93,62 @@ public class DbSource extends BaseSource implements Iterable<Object>
 		
 	}
 	
-	public InputStream		getCacheStream(File cacheFile) throws FileNotFoundException {
+	public void init(File docRoot, URI baseUri) throws IOException {
+		// NOP		
+	}
+	
+    //-------------------------------------------------------------------------
+    // DbSource contract support
+    //-------------------------------------------------------------------------
+
+	
+	@Override
+	public String getConnectionUrl() {
+		return connectionUrl;
+	}
+
+	@Override
+	public void setConnectionUrl(String connectionUrl) {
+		this.connectionUrl = connectionUrl;
+	}
+
+	@Override
+	public String getUser() {
+		return user;
+	}
+	
+	@Override
+	public void setUser(String user) {
+		this.user = user;
+	}
+
+	@Override
+	public String getPassword() {
+		return password;
+	}
+	
+	@Override
+	public void setPassword(String password) {
+		this.password = password;
+	}
+
+	@Override
+	public int getCacheDuration() {
+		return cacheDuration;
+	}
+	
+	@Override
+	public void setCacheDuration(int cacheDuration) {
+		this.cacheDuration = cacheDuration;
+	}
+	
+	/**
+	 * Get the data of the database in cache if it had to be used.  
+	 * @param cacheFile
+	 * @return File in cache if it's valid 
+	 * @throws FileNotFoundException
+	 */
+	private InputStream getCacheStream(File cacheFile) throws FileNotFoundException {
 		if (this.cacheDuration > 0) {
 			Date cur = new Date();
 			if (cacheFile.exists() && cacheFile.lastModified() < cur.getTime() + cacheDuration) {
@@ -115,16 +157,18 @@ public class DbSource extends BaseSource implements Iterable<Object>
 		} 
 		return null;
 	}
-	
-	public int getCacheDuration() {
-		return cacheDuration;
-	}
 
-	public void setCacheDuration(int cacheDuration) {
-		this.cacheDuration = cacheDuration;
+	@Override
+	public String getDatabase() {
+		return database;
 	}
 	
-	public String	getDatabaseType() {
+	@Override
+	public void setDatabase(String database) {
+		this.database = database;
+	}
+	
+	public String getDatabaseType() {
 		if (connectionUrl.startsWith("jdbc:")) {
 			String[] arrayUrl = connectionUrl.split(":");
 			if (arrayUrl[1] != null) {
@@ -136,23 +180,18 @@ public class DbSource extends BaseSource implements Iterable<Object>
 			throw new RuntimeException();
 		}
 	}
+
+	@Override
+	public String getRequest() {
+		return request;
+	}
 	
-	public void setDatabase(String database) {
-		this.database = database;
-	}
-
-	public String getDatabase() {
-		return database;
-	}
-
+	@Override
 	public void setRequest(String request) {
 		this.request = request;
 	}
 
-	public String getRequest() {
-		return request;
-	}
-
+	@Override
 	public int getColumnCount(){
 		try {
 			return wrset.getMetaData().getColumnCount();
@@ -161,7 +200,7 @@ public class DbSource extends BaseSource implements Iterable<Object>
 		}
 	}
 	
-
+	@Override
 	public String[] getColumnsName() {
 	   String[] noms = new String[this.getColumnCount()];
 	   try {
@@ -174,23 +213,19 @@ public class DbSource extends BaseSource implements Iterable<Object>
 	   }
 	   return noms;
 	}
-
-	public enum DatabaseType {
-		mysql("com.mysql.jdbc.Driver");
-		
-		protected String value;
-		
-		DatabaseType(String val) {
-			this.value = val;
-		}
-		
-		public String getValue() {
-			return value;
-		}
-	}
-
+	
 	@Override
-	public void init(File docRoot, URI baseUri) throws IOException {
-		// NOP		
+	public Iterator<Object> iterator() {
+		try {
+			return Collections.unmodifiableCollection(wrset.toCollection()).iterator();
+		} catch (SQLException e) {
+			throw new WebApplicationException(e, Response.Status.INTERNAL_SERVER_ERROR);
+		}
 	}
+	
+    public TypeSource getTypeSource() {
+    	return type;
+    }
+
+	
 }

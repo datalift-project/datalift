@@ -1,5 +1,6 @@
 package org.datalift.core.project;
 
+import java.net.URI;
 import java.util.Date;
 
 import javax.persistence.Entity;
@@ -16,6 +17,8 @@ public class OntologyImpl extends BaseRdfEntity implements Ontology
 {
     @RdfProperty("dc:title")
     private String title;
+    @RdfProperty("dcterms:source")
+    private URI source;
     @RdfProperty("void:dateSubmitted")
     private Date dateSubmitted;
     @RdfProperty("dc:publisher")
@@ -37,6 +40,16 @@ public class OntologyImpl extends BaseRdfEntity implements Ontology
 	@Override
 	public String getTitle() {
 		return title;
+	}
+	
+	@Override
+	public URI getSource() {
+		return source; 
+	}
+
+	@Override
+	public void setSource(URI source) {
+		this.source = source;
 	}
 	
 	@Override
@@ -63,4 +76,12 @@ public class OntologyImpl extends BaseRdfEntity implements Ontology
 	protected void setId(String id) {
 	    // NOP
 	}
+
+	@Override
+	public String getUri() {
+		return this.getRdfId().toString();
+	}
+
+
+	
 }

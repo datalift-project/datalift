@@ -35,6 +35,7 @@ import org.apache.velocity.runtime.log.Log4JLogChute;
 import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
 import org.apache.velocity.tools.generic.DateTool;
 import org.apache.velocity.tools.generic.EscapeTool;
+import org.apache.velocity.tools.generic.FieldTool;
 
 import static org.apache.velocity.app.VelocityEngine.*;
 import static org.apache.velocity.runtime.log.Log4JLogChute.*;
@@ -109,7 +110,9 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
     private final static String LOADER_PROPS_PREFIX = ".resource.loader.";
 
     private final static String CONFIG_ELTS_SEPARATOR = ", ";
-
+    
+    private final static String FIELD_TOOL = "field";
+    
     //-------------------------------------------------------------------------
     // Class members
     //-------------------------------------------------------------------------
@@ -264,6 +267,9 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
             }
             if (ctx.get(CTX_SECURITY_CONTEXT) == null) {
                 ctx.put(CTX_SECURITY_CONTEXT, SecurityContext.getContext());
+            }
+            if(ctx.get(FIELD_TOOL) == null) {
+            	ctx.put(FIELD_TOOL, new FieldTool().in(org.datalift.fwk.project.Source.TypeSource.class));
             }
             // Apply Velocity template, using encoding from in HTTP request.
             Writer w = new OutputStreamWriter(out, this.getCharset());
