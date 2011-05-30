@@ -5,6 +5,10 @@
 	#mainscripts
 #end
 
+#macro ( load_core_resources )
+       #load("core/resources")
+#end
+
 #macro ( banner )
 	<div id="banner" class="dl-banner">
 		<img id="datalift-logo" src="${baseUri}/images/datalift-logo.png"/>
@@ -31,6 +35,8 @@
 	<script language="javascript" src="${baseUri}/js/history.js/amplify.store.js"></script>
 	<script language="javascript" src="${baseUri}/js/history.js/history.js"></script>
 	<script language="javascript" src="${baseUri}/js/history.js/history.adapter.jquery.js"></script>
+	 <!-- Datalift common javascript -->
+        <script language="javascript" src="${baseUri}/js/common.js"></script>
 #end
 
 #macro ( footer )

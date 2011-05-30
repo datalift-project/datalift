@@ -1,3 +1,5 @@
+#load_core_resources
+#load("sparql/resources")
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -69,7 +71,7 @@
 			// initialize search select
 			var options = $('#searchColumn').attr('options');
 			options.length = 0;			
-			options[options.length] = new Option("all", "all", true, true);
+			options[options.length] = new Option("#i18n("sparql.search.all_columns")", "#i18n("sparql.search.all_columns")", true, true);
 			// generating Column Model for jqGrid
 			var myColModel = [];						
 			for (var i = 0; i < response.head.length; i++ ) {
@@ -94,7 +96,10 @@
 					caption: $("#searchnav").html(),
 					rowNum: 50,
 					rowList: [50,100,200,500],
-					deepempty:true
+					search: {
+                                            caption: "#i18n("sparql.search.title")"
+                                        }
+		
 				});
 				
 				$("#results").show();
@@ -113,10 +118,10 @@
 		}
 		
 		function unsuccessfulQuery(XMLHttpRequest, strError){
-			alert("An error occured while processing your request:\n[" 
+			alert("#i18n("sparql.ajax.query.requesterror")\n[" 
 				+ XMLHttpRequest.readyState + "]["
 				+ XMLHttpRequest.status + "]"
-				+ "\nPlease correct your query before retrying.\nError ["
+				+ "\n#i18n("sparql.ajax.query.invalidQuery")#i18n("sparql.ajax.query.error") ["
 				+ strError+ "]");
 		}		
 		
@@ -159,47 +164,47 @@
 	</script>
 
 	<div id="content" class="ui-widget-content dl-main-panel">
-		<h3 class="ui-widget-header dl-widget-header">SPARQL Query</h3>
+	  <h3 class="ui-widget-header dl-widget-header">#i18n("sparql.query.full")</h3>
 		<div class="dl-panel">
 		    <form id="query_form" action="${baseUri}/sparql" method="get">
 #if( ${securityCtx.isAuthenticated()} )
 			<div class="dl-form-elt">
-				<label for="default-graph-uri">Repository: </label>
-				<select id="default-graph-uri" name="default-graph-uri">
+			  <label for="default-graph-uri">#i18n("sparql.repository") </label>		
+			  <select id="default-graph-uri" name="default-graph-uri">
 #foreach( $item in $it )
 #if( $foreach.count == 1 )
-					<option value="$esc.html($!{item.name})" selected="true">$esc.html($!{item.label})</option>
+					<option value="$esc.html($!{item.name})" selected="true">#i18n($!{item.label})</option>
 #else
-					<option value="$esc.html($!{item.name})">$esc.html($!{item.label})</option>
+					<option value="$esc.html($!{item.name})">#i18n($!{item.label})</option>
 #end
 #end
 				</select>
 			</div>
 #end
 			<div id="result-format" class="dl-form-elt">
-				<label>Format: </label>
+				<label>#i18n("sparql.parameter.format")</label>
 				<input type="radio" id="html_format" name="format" value="application/json" checked="checked"/><label for="html_format">HTML</label>
 				<input type="radio" id="rdf_format" name="format" value="application/rdf+xml"/><label for="rdf_format">RDF/XML</label>
 				<input type="radio" id="turtle_format" name="format" value="text/turtle"/><label for="turtle_format">Turtle</label>
 				<input type="hidden" id="format_save" />
 			</div>
 			<div class="dl-form-elt">
-				<label for="query">Requête: </label><br />
+				<label for="query">#i18n("sparql.query.light")</label><br />
 				<textarea id="query" name="query" style="width:600px; height:150px;">$esc.html("SELECT * WHERE {
   ?s ?p ?o .
 }
 ")</textarea>
 			</div>
 			<div class="dl-form-buttons">
-				<input type="submit" value="Exécuter la requête" id="query_submit" />
+				<input type="submit" value="#i18n("sparql.query.execute")" id="query_submit" />
 			</div>
 		    </form>
 	    	</div>
 		<div id="results" class="dl-result-panel">
 		</div>
 		<div id="searchnav" style="display:none">
-			Column: <select id="searchColumn"></select>
-			Search: <input type="search" id="gridsearch" placeholder="Search" results="0" class="gridsearch" />
+			#i18n("sparql.search.column") <select id="searchColumn"></select>
+			#i18n("sparql.search.title") <input type="search" id="gridsearch" placeholder="" results="0" class="gridsearch" />
 		</div>
 	</div>
 #footer

@@ -60,7 +60,7 @@ public class LoadDirective extends Directive
                                 (HttpRequestContext)(context.get("request"));
         if (httpRequest != null) {
             // Get acceptable locales from HTTP request.
-            locales =  httpRequest.getAcceptableLanguages();
+            locales = new ArrayList<Locale>(httpRequest.getAcceptableLanguages());
         }
         if ((locales == null) || (! locales.isEmpty())) {
             // Not processing an HTTP request. => Get user locales from JVM.

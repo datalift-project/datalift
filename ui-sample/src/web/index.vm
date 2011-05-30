@@ -6,24 +6,41 @@
   </head>
   <body>
     <script>
-	$(function() {
-		$("a[class=widget_link]").click(function(e) {
-			jQuery.ajax({
-				url: "${baseUri}/ui/widget/" + $(this).attr("value"),
-				success: successfulQuery,
-	  			error: unsuccessfulQuery
-			});
-			
-			function successfulQuery(response){
-				$("#demo_widget").empty();
-				$("#demo_widget").append(response);
-			}
-			
-			function unsuccessfulQuery(XMLHttpRequest){
-				alert("Error while requesting Widget");
-			}
+    
+    // First page loading
+   	loadHistorizedWidget();
+    
+    // State change when using page
+    $(window).bind('popstate', function() {
+    	loadHistorizedWidget();
+    });
+    
+    function loadHistorizedWidget() {
+    	if (History.getHash() != "") {
+    		widgetRequest(History.getHash());
+    	}
+    	else {
+    		$("#demo_widget").empty();
+    	}
+    }
+	
+	function widgetRequest(widgetName) {
+		jQuery.ajax({
+			url: "${baseUri}/sample-ui/widget/" + widgetName,
+			success: successfulQuery,
+	  		error: unsuccessfulQuery
 		});
-	});
+	}
+		
+	function successfulQuery(response){
+		$("#demo_widget").empty();
+		$("#demo_widget").append(response);
+	}
+	
+	function unsuccessfulQuery(XMLHttpRequest){
+		alert("Error while requesting Widget");
+	}
+	
   </script>
 #banner
     <div id="demo">
@@ -39,7 +56,7 @@
           <li><a class="widget_link" href="#dialog" value="dialog">Dialog widget</a></li>
         </ul>
       </div>
-      <div id="demo_widget"></div>
     </div>
+     <div id="demo_widget"></div>
   </body>
 </html>

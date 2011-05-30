@@ -1,8 +1,10 @@
+#load_core_resources
+#load("sparql/resources")
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-	<title>SPARQL Endpoint - Query results</title>
+	<title>SPARQL Endpoint - #i18n("sparql.query.results")</title>
 #header_links
 </head>
 <body>
@@ -17,7 +19,11 @@
 			jQuery.extend(jQuery.jgrid.defaults, {
 				pager: $('#pagernav'),
 				caption: $('#searchnav').html()
-				
+				rowNum: 50,
+				rowList:[50,100,200,500],
+				search: {
+					caption: #i18n("sparql.search.title")
+				}
 			});
 			tableToGrid("#queryresults", {});
 			$("#queryresults").trigger("reloadGrid");
@@ -25,7 +31,7 @@
 			// Add options to search select
 			var options = $('#searchColumn').attr('options');
 			options.length = 0;						
-			options[options.length] = new Option("all", "all", true, true);
+			options[options.length] = new Option("#i18n("sparql.search.all_columns")", "#i18n("sparql.search.all_columns")", true, true);
 			if (gridData[0]) {
 				for (property in gridData[0]) {
 					options[options.length] = new Option(property, property, false, false);
@@ -106,8 +112,8 @@
 	</table>
 	<div id="pagernav"/>
 	<div id="searchnav" style="display:none">
-		Column: <select id="searchColumn"></select>
-		Search: <input type="search" id="gridsearch" placeholder="Search" results="0" class="gridsearch" />
+		#i18n("sparql.search.column") <select id="searchColumn"></select>
+		#i18n("sparql.search.title") <input type="search" id="gridsearch" placeholder="Search" results="0" class="gridsearch" />
 	</div>
 #footer
 </body>

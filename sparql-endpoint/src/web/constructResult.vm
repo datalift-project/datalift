@@ -1,8 +1,11 @@
+#load_core_resources
+#load("sparql/resources")
+
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-	<title>SPARQL Endpoint - Query results</title>
+	<title>SPARQL Endpoint - #i18n("sparql.query.results")</title>
 #header_links
 </head>
 <body>
@@ -15,8 +18,12 @@
 		$(function(){
 			jQuery.extend(jQuery.jgrid.defaults, {
 				pager: $('#pagernav'),
-				caption: $('#searchnav').html()
-				
+				caption: $('#searchnav').html(),
+				rowNum: 50,
+				rowList:[50,100,200,500],
+				search:{
+					caption: #i18n("sparql.search.title")
+				}
 			});
 			tableToGrid("#queryresults", {});
 			$("#queryresults").trigger("reloadGrid");
@@ -34,7 +41,7 @@
 		
 		function gridSearch(searchString) {
 			searchData = [];
-			if ($("#searchColumn").val() == "all") {
+			if ($("#searchColumn").val() == "#i18n("sparql.search.all_columns")") {
 				searchAllColumns(searchString);
 			}
 			else {
@@ -46,7 +53,9 @@
 		
 		function searchAllColumns(searchString) {
 			var c = 0;
-			var obj = ["Subject", "Predicate", "Object"];
+			var obj = ["#i18n("sparql.subject")", 
+				   "#i18n("sparql.predicate")", 
+				   "#i18n("sparql.object")"];
 			for (var i = 0; i < gridData.length; i++) {
 				for (var k = 0; k < obj.length; k++) {
 					var toCmp = eval("gridData[i]." + obj[k]);
@@ -75,9 +84,9 @@
 	<table id="queryresults" style="width:100%">
 		<thead>
 			<tr>
-				<th>Subject</th>
-				<th>Predicate</th>
-				<th>Object</th>
+				<th>#i18n("sparql.subject")</th>
+				<th>#i18n("sparql.predicate")</th>
+				<th>#i18n("sparql.object")</th>
 			</tr>
 		</thead>
 		<tbody>
@@ -100,13 +109,13 @@
 	</table>
 	<div id="pagernav"></div>
 	<div id="searchnav" style="display:none">
-		Column: <select id="searchColumn">
-		<option id="all">all</option>
-		<option id="Subject">Subject</option>
-		<option id="Predicate">Predicate</option>
-		<option id="Object">Object</option>
+		#i18n("sparql.search.column") <select id="searchColumn">
+		<option id="#i18n("sparql.search.column")">#i18n("sparql.search.column")</option>
+		<option id="#i18n("sparql.subject")">#i18n("sparql.subject")</option>
+		<option id="#i18n("sparql.predicate")">#i18n("sparql.predicate")</option>
+		<option id="#i18n("sparql.object")">#i18n("sparql.object")</option>
 		</select>
-		Search: <input type="search" id="gridsearch" placeholder="Search" results="0" class="gridsearch" />
+		#i18n("sparql.search.title") <input type="search" id="gridsearch" placeholder="Search" results="0" class="gridsearch" />
 	</div>
 #footer
 </body>

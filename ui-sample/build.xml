@@ -246,6 +246,14 @@
     and makes then ready for deployment.
    -->
 
+  <!-- Copy default locale resource file -->
+  <target name="resource-copy" if="locale.exists">
+    <copy todir="${build.home}/WEB-INF/templates/core">
+	  <fileset dir="${web.home}/WEB-INF/templates/core" includes="*_${locale.default}.properties"/>
+	  <mapper type="glob" from="*_${locale.default}.properties" to="*.properties"/>
+    </copy>
+  </target>
+	
   <target name="prepare-dist" depends="prepare">
     <!-- Copy web application page templates and resources -->
     <copy todir="${classes.dir}" includeEmptyDirs="false"
