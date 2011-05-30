@@ -1,4 +1,4 @@
-#load("resources")
+#load_core_resources
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -57,8 +57,12 @@
 		<p><input type="file" name="source"/></p>
 		<p><label for="mime_type">#i18n("project.upload_rdf_format") : </label>
 		<select id="mime_type" name="mime_type">
-			<option id="rdfxml" value="application/rdf+xml">RDF/XML</option>
-			<option id="turtle"	value="text/n3">NTriple</option>
+			<option id="rdfxml" 	value="application/rdf+xml">RDF/XML</option>
+			<option id="ntriple"	value="application/n-triples">NTriples</option>
+			<option id="turtle"		value="text/turtle">Turtle</option>
+			<option id="n3"			value="text/rdf+n3">N3</option>
+			<option id="trig"		value="application/x-trig">TriG</option>
+			<option id="trix"		value="application/trix">TriX</option>
 		</select></p>
 		<p><input type="submit"/></p>
 	</form>

@@ -13,15 +13,19 @@ import javax.persistence.Entity;
 import javax.ws.rs.core.MediaType;
 
 import org.openrdf.model.Statement;
+import org.openrdf.rio.RDFFormat;
 import org.openrdf.rio.RDFParser;
 import org.openrdf.rio.helpers.StatementCollector;
 import org.openrdf.rio.ntriples.NTriplesParser;
 import org.openrdf.rio.rdfxml.RDFXMLParser;
+import org.openrdf.rio.trig.TriGParser;
+import org.openrdf.rio.trix.TriXParser;
 import org.openrdf.rio.turtle.TurtleParser;
 
 import com.clarkparsia.empire.annotation.RdfsClass;
 
 import org.datalift.fwk.MediaTypes;
+import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.RdfSource;
 import org.datalift.fwk.util.StringUtils;
 
@@ -51,22 +55,24 @@ public class RdfSourceImpl extends BaseFileSource<Statement>
     // FileSource contract support
     //-------------------------------------------------------------------------
 
+    private final static Logger log = Logger.getLogger();
     @Override
     public void init(File docRoot, URI baseUri) throws IOException {
         super.init(docRoot, baseUri);
-
         InputStream in = this.getInputStream();
         if (in != null) {
             RDFParser parser = null;
-            if (this.getMimeType().equals(MediaTypes.APPLICATION_RDF_XML)) {
-                parser = new RDFXMLParser();
-            }
-            else if (this.getMimeType().equals(MediaTypes.TEXT_N3)) {
-                parser = new NTriplesParser();
-            }
-            else if (this.getMimeType().equals(MediaTypes.TEXT_TURTLE)) {
-                parser = new TurtleParser();
-            }
+        	if ((this.getMimeType().equals(MediaTypes.TEXT_TURTLE)) ||
+        			(this.getMimeType().equals(MediaTypes.TEXT_N3)))
+        		parser = new TurtleParser();
+        	else if (this.getMimeType().equals(MediaTypes.APPLICATION_NTRIPLES))
+        		parser = new NTriplesParser();
+        	else if (this.getMimeType().equals(MediaTypes.APPLICATION_TRIG))
+        		parser = new TriGParser();
+        	else if (this.getMimeType().equals(MediaTypes.APPLICATION_TRIX))
+        		parser = new TriXParser();
+        	else if (this.getMimeType().equals(MediaTypes.APPLICATION_RDF_XML))
+        		parser = new RDFXMLParser();
             else {
                 throw new IllegalStateException(
                                 "Unsupported MIME type: " + this.getMimeType());
@@ -84,7 +90,7 @@ public class RdfSourceImpl extends BaseFileSource<Statement>
             this.content = Collections.unmodifiableCollection(l);
         }
     }
-
+    
     @Override
     public void setMimeType(String mimeType) {
         super.setMimeType(parseMimeType(mimeType).toString());
@@ -120,10 +126,20 @@ public class RdfSourceImpl extends BaseFileSource<Statement>
                      (APPLICATION_XML.equals(typeDesc))) {
                 mimeType = APPLICATION_RDF_XML_TYPE;
             }
+            else if (APPLICATION_TRIG.equals(typeDesc)) {
+            	mimeType = APPLICATION_TRIG_TYPE;
+            }
+            else if (APPLICATION_TRIX.equals(typeDesc)) {
+            	mimeType = APPLICATION_TRIX_TYPE;
+            }
+            else if (APPLICATION_NTRIPLES.equals(typeDesc)) {
+        		mimeType = APPLICATION_NTRIPLES_TYPE;
+        	}
         }
         if (mimeType == null) {
             throw new IllegalArgumentException(typeDesc);
         }
         return mimeType;
     }
+    
 }

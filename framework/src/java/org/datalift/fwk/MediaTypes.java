@@ -70,5 +70,14 @@ public class MediaTypes extends MediaType
                             new MediaType(APPL_TYPE, "sparql-results+json");
     /** "application/sparql-results+json" */
     public final static String APPLICATION_SPARQL_RESULT_JSON =
-                                            "application/sparql-results+json";
+                                            "application/sparql-results+json";    
+    /** "application/trix" */
+    public final static MediaType APPLICATION_TRIX_TYPE = new MediaType(APPL_TYPE, "trix");
+    /** "application/trix" */
+    public final static String APPLICATION_TRIX = "application/trix";
+
+    /** "application/x-trig" */
+    public final static MediaType APPLICATION_TRIG_TYPE = new MediaType(APPL_TYPE, "x-trig");
+    /** "application/x-trig" */
+    public final static String APPLICATION_TRIG = "application/x-trig";
 }
