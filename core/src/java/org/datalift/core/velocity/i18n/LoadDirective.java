@@ -62,7 +62,7 @@ public class LoadDirective extends Directive
             // Get acceptable locales from HTTP request.
             locales = new ArrayList<Locale>(httpRequest.getAcceptableLanguages());
         }
-        if ((locales == null) || (! locales.isEmpty())) {
+        if ((locales == null) || (locales.isEmpty())) {
             // Not processing an HTTP request. => Get user locales from JVM.
             locales = new ArrayList<Locale>();
             Locale l = Locale.getDefault();
@@ -85,7 +85,6 @@ public class LoadDirective extends Directive
         locales.add(Locale.ROOT);
         // Reverse locale list to get least wanted locales first.
         Collections.reverse(locales);
-
         // Get existing bundle list, to add new bundles.
         BundleList bundleList = (BundleList)(context.get(BundleList.KEY));
         if (bundleList == null) {

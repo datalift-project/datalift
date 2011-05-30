@@ -71,10 +71,6 @@
 	function unsuccessfulQuery(XMLHttpRequest){
 		alert("An error occured when trying to get project description.");
 	}
-
-	function historyPush(url) {
-		History.pushState(null, null, url);
-	}
 	
 	function loadGridSources() {
 		/*	Sources */
