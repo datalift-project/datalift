@@ -31,16 +31,17 @@ public class EmpireFactory {
 	
 	private EntityManagerFactory	emf = null;
 	
+	private Collection<Class<?>> 	classes = null;
+	
 	private final static String REPOSITORY_URL_PARSER = "/repositories/";
 	
-	private EmpireFactory(Configuration configuration) {
-		emf = this.createEntityManagerFactory(configuration
-					.getInternalRepository().url);
+	private EmpireFactory() {
+		
 	}
 	
-	public static EmpireFactory	getInstance(Configuration configuration) {
+	public static EmpireFactory	getInstance() {
 		if (instance == null)
-			instance = new EmpireFactory(configuration);
+			instance = new EmpireFactory();
 		return instance;
 	}
 	
@@ -53,6 +54,13 @@ public class EmpireFactory {
 	 * 
 	 * @return a configured Empire EntityManagerFactory.
 	 */
+	
+	public void	init(Configuration configuration) {
+		emf = this.createEntityManagerFactory(configuration
+				.getInternalRepository().url);
+		classes = new LinkedList<Class<?>>();
+	}
+	
 	private EntityManagerFactory createEntityManagerFactory(URL repository) {
 		// Build Empire configuration.
 		EmpireConfiguration empireCfg = new EmpireConfiguration();
@@ -65,7 +73,7 @@ public class EmpireFactory {
 		// Set persistent classes and associated (custom) annotation provider.
 		empireCfg.setAnnotationProvider(CustomAnnotationProvider.class);
 		props.put(CustomAnnotationProvider.ANNOTATED_CLASSES_PROP,
-				join(this.getPersistentClasses(), ",").replace("class ", ""));
+				join(classes, ",").replace("class ", ""));
 		// Initialize Empire.
 		Empire.init(empireCfg, new OpenRdfEmpireModule());
 		// Create Empire JPA persistence provider.
@@ -74,21 +82,23 @@ public class EmpireFactory {
 				new HashMap<Object, Object>());
 	}
 	
-	/**
-	 * Returns the list of persistent classes to be handled by Empire JPA
-	 * provider.
-	 * 
-	 * @return the list of persistent classes.
-	 */
-	@SuppressWarnings("unchecked")
-	private Collection<Class<?>> getPersistentClasses() {
-		Collection<Class<?>> classes = new LinkedList<Class<?>>();
-		classes.addAll(Arrays.asList(ProjectImpl.class, CsvSourceImpl.class,
-				RdfSourceImpl.class, DbSourceImpl.class, OntologyImpl.class));
-		return classes;
+	
+	
+	public void addPersistentClass(Class<?> cl) {
+		classes.add(cl);
+	}
+	
+	public void addPersistentClasses(Collection<Class<?>> classes) {
+		this.classes.addAll(classes);
 	}
 	
 	public EntityManager	createEntityManager() {
 		return this.emf.createEntityManager();
+	}
+	
+	public void shutdown() {
+		this.emf.close();
+		this.emf = null;
+		instance = null;
 	}
 }
