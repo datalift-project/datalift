@@ -1,4 +1,4 @@
-package org.datalift.core.project;
+package org.datalift.projectmanager;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,7 +13,6 @@ import javax.persistence.Entity;
 import javax.ws.rs.core.MediaType;
 
 import org.openrdf.model.Statement;
-import org.openrdf.rio.RDFFormat;
 import org.openrdf.rio.RDFParser;
 import org.openrdf.rio.helpers.StatementCollector;
 import org.openrdf.rio.ntriples.NTriplesParser;

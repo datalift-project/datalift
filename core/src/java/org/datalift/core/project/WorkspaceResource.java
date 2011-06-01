@@ -506,7 +506,7 @@ public class WorkspaceResource implements LifeCycle, ProjectManager {
 					.entity(new Viewable("/redirect.vm", redirectUrl))
 					.type(TEXT_HTML).build();
 		} catch (Exception e) {
-			this.handleInternalError(e, "Failed to create CVS source for {}",
+			this.handleInternalError(e, "Failed to create CSV source for {}",
 					fileName);
 		}
 		return response;
@@ -523,7 +523,7 @@ public class WorkspaceResource implements LifeCycle, ProjectManager {
 			@FormDataParam("title_row") String titleRow,
 			@FormDataParam("current_source") URI currentSourceUri,
 			@Context UriInfo uriInfo) throws WebApplicationException {
-		LogContext.setContexts(MODULE_NAME, id + "/csvupload");
+		LogContext.setContexts(MODULE_NAME, id + "/csvuploadModify");
 		if (file == null) {
 			this.throwInvalidParamError("source", null);
 		}
@@ -570,7 +570,7 @@ public class WorkspaceResource implements LifeCycle, ProjectManager {
 					.entity(new Viewable("/redirect.vm", redirectUrl))
 					.type(TEXT_HTML).build();
 		} catch (Exception e) {
-			this.handleInternalError(e, "Failed to create CVS source for {}",
+			this.handleInternalError(e, "Failed to create CSV source for {}",
 					fileName);
 		}
 		return response;
@@ -614,6 +614,9 @@ public class WorkspaceResource implements LifeCycle, ProjectManager {
 			// Add new source to persistent project
 			RdfSource src = this.newRdfSource(sourceUri, fileName, filePath,
 					mappedType.toString());
+			
+			((RdfSourceImpl)src).init(configuration.getPublicStorage(), uriInfo.getBaseUri());
+			
 			p.addSource(src);
 			this.projectDao.save(p);
 
