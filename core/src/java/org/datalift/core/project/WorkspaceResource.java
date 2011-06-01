@@ -1,11 +1,7 @@
 package org.datalift.core.project;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.URI;
 import java.net.URL;
 import java.util.Arrays;
@@ -17,10 +13,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
+
 import javax.persistence.EntityNotFoundException;
-import javax.persistence.spi.PersistenceProvider;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -41,9 +35,6 @@ import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 
-import com.clarkparsia.empire.Empire;
-import com.clarkparsia.empire.config.EmpireConfiguration;
-import com.clarkparsia.empire.sesametwo.OpenRdfEmpireModule;
 import com.clarkparsia.utils.NamespaceUtils;
 import com.sun.jersey.api.ConflictException;
 import com.sun.jersey.api.NotFoundException;
@@ -53,7 +44,6 @@ import com.sun.jersey.multipart.FormDataParam;
 
 import org.datalift.core.TechnicalException;
 import org.datalift.core.log.LogContext;
-import org.datalift.core.project.CsvSourceImpl.Separator;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.LifeCycle;
 import org.datalift.fwk.MediaTypes;
@@ -61,14 +51,15 @@ import org.datalift.fwk.ResourceResolver;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.CsvSource;
 import org.datalift.fwk.project.DbSource;
+import org.datalift.fwk.project.FileSource;
 import org.datalift.fwk.project.Ontology;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectManager;
 import org.datalift.fwk.project.ProjectModule;
 import org.datalift.fwk.project.RdfSource;
 import org.datalift.fwk.project.Source;
+import org.datalift.fwk.project.CsvSource.Separator;
 import org.datalift.fwk.rdf.RdfNamespace;
-import org.datalift.fwk.security.SecurityContext;
 import org.datalift.fwk.sparql.SparqlEndpoint;
 import org.datalift.fwk.util.StringUtils;
 
@@ -76,12 +67,11 @@ import static org.datalift.fwk.MediaTypes.*;
 import static org.datalift.fwk.util.StringUtils.*;
 
 @Path("/project")
-public class WorkspaceResource implements LifeCycle, ProjectManager {
+public class WorkspaceResource implements LifeCycle {
 	// -------------------------------------------------------------------------
 	// Constants
 	// -------------------------------------------------------------------------
 
-	private final static String REPOSITORY_URL_PARSER = "/repositories/";
 	private final static String MODULE_NAME = "Project";
 
 	// -------------------------------------------------------------------------
@@ -96,10 +86,8 @@ public class WorkspaceResource implements LifeCycle, ProjectManager {
 
 	/** The DataLift configuration. */
 	private Configuration configuration = null;
-
-	private EntityManagerFactory emf = null;
-	private EntityManager entityMgr = null;
-	private ProjectJpaDao projectDao = null;
+	
+	private	ProjectManager	projectManager = null;
 
 	// -------------------------------------------------------------------------
 	// LifeCycle contract support
@@ -111,96 +99,20 @@ public class WorkspaceResource implements LifeCycle, ProjectManager {
 		this.configuration = configuration;
 		// Register application namespaces to Empire.
 		this.registerRdfNamespaces();
-		// Create Empire JPA persistence provider.
-		this.emf = this.createEntityManagerFactory(configuration
-				.getInternalRepository().url);
-		this.entityMgr = this.emf.createEntityManager();
-		log.debug("JPA persistence provider initialized for repository \"{}\"",
-				configuration.getInternalRepository().name);
-		// Create Data Access Object for Projects.
-		this.projectDao = new ProjectJpaDao(this.entityMgr);
+		
+		
+	}
+	
+	@Override
+	public void postInit() {
+		// TODO Auto-generated method stub
+		log.debug("WorkspaceResource : adding persistent classes to Project Manager");
+		this.projectManager = configuration.getBean(ProjectManager.class);
 	}
 
 	/** {@inheritDoc} */
 	@Override
 	public void shutdown(Configuration configuration) {
-		// Shutdown JPA persistence provider.
-		if (this.emf != null) {
-			if (this.entityMgr != null) {
-				this.entityMgr.close();
-			}
-			this.emf.close();
-		}
-	}
-
-	// -------------------------------------------------------------------------
-	// ProjectManager contract support
-	// -------------------------------------------------------------------------
-
-	/** {@inheritDoc} */
-	@Override
-	public Project findProject(URI uri) {
-		return this.projectDao.find(uri);
-	}
-
-	/** {@inheritDoc} */
-	@Override
-	public Collection<Project> listProjects() {
-		return this.projectDao.getAll();
-	}
-
-	/** {@inheritDoc} */
-	@Override
-	public CsvSource newCsvSource(URI uri, String title, String filePath,
-			char separator, boolean hasTitleRow) throws IOException {
-		CsvSourceImpl src = new CsvSourceImpl(uri.toString());
-		src.setTitle(title);
-		File f = this.getFileStorage(filePath);
-		if (!f.isFile()) {
-			throw new FileNotFoundException(filePath);
-		}
-		src.setFilePath(filePath);
-		src.setMimeType("text/csv");
-		src.setSeparator(String.valueOf(separator));
-		for (Separator s : Separator.values()) {
-			if (s.value == separator) {
-				src.setSeparator(s.name());
-				break;
-			}
-		}
-		src.init(this.configuration.getPublicStorage(), uri);
-		return src;
-	}
-
-	/** {@inheritDoc} */
-	@Override
-	public RdfSource newRdfSource(URI uri, String title, String filePath,
-			String mimeType) throws IOException {
-		RdfSourceImpl src = new RdfSourceImpl(uri.toString());
-		src.setTitle(title);
-		File f = this.getFileStorage(filePath);
-		if (!f.isFile()) {
-			throw new FileNotFoundException(filePath);
-		}
-		src.setFilePath(filePath);
-		src.setMimeType(mimeType);
-		return src;
-	}
-
-	/** {@inheritDoc} */
-	@Override
-	public DbSource newDbSource(URI uri, String title, String database,
-			String srcUrl, String user, String password, String request,
-			Integer cacheDuration) {
-		DbSourceImpl src = new DbSourceImpl(uri.toString());
-		src.setTitle(title);
-		src.setDatabase(database);
-		src.setConnectionUrl(srcUrl);
-		src.setUser(user);
-		src.setPassword(password);
-		src.setRequest(request);
-		src.setCacheDuration(cacheDuration);
-		return src;
 	}
 
 	// -------------------------------------------------------------------------
@@ -218,7 +130,7 @@ public class WorkspaceResource implements LifeCycle, ProjectManager {
 	@Produces(APPLICATION_JSON)
 	public Collection<Project> getIndexJSON() {
 		LogContext.setContexts(MODULE_NAME, "project");
-		return this.projectDao.getAll();
+		return this.projectManager.getAllProjects();
 	}
 
 	@POST
@@ -230,29 +142,13 @@ public class WorkspaceResource implements LifeCycle, ProjectManager {
 		Response response = null;
 		// Check that project is unique.
 		URI projectId = this.newProjectId(uriInfo.getBaseUri(), title);
-		if (this.projectDao.find(projectId) == null) {
+		if (this.projectManager.findProject(projectId) == null) {
 			// Create new project.
-			Project p = new ProjectImpl(projectId.toString());
-			p.setTitle(title);
-
-			p.setOwner(SecurityContext.getUserPrincipal());
-			p.setDescription(description);
-			p.setLicense(License.valueOf(license).uri);
-
-			Date date = new Date();
-			p.setDateCreation(date);
-			p.setDateModification(date);
-
+			Project p = this.projectManager.newProject(
+					projectId, title, description, license);
 			// Persist project to RDF store.
 			try {
-				this.projectDao.persist(p);
-				// create Project directory in public storage
-				String id = p.getUri().substring(
-						p.getUri().lastIndexOf("/") + 1);
-				File projectStorage = this.getFileStorage(this
-						.getProjectFilePath(id, null));
-				projectStorage.mkdirs();
-
+				this.projectManager.persistProject(p);
 				String uri = p.getUri();
 				response = Response.created(new URI(uri))
 						.entity(new Viewable("/redirect.vm", uri))
@@ -294,7 +190,7 @@ public class WorkspaceResource implements LifeCycle, ProjectManager {
 			Map<String, Object> args = new TreeMap<String, Object>();
 			if (id != null) {
 				URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
-				args.put("it", this.projectDao.get(projectUri));
+				args.put("it", this.projectManager.getProject(projectUri));
 			}
 			args.put("licenses", License.values());
 			response = Response
@@ -323,7 +219,7 @@ public class WorkspaceResource implements LifeCycle, ProjectManager {
 		}
 		try {
 			URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
-			Project p = this.projectDao.get(projectUri);
+			Project p = this.projectManager.getProject(projectUri);
 
 			boolean modified = false;
 			if (!StringUtils.isBlank(title)) {
@@ -341,7 +237,7 @@ public class WorkspaceResource implements LifeCycle, ProjectManager {
 			}
 			if (modified) {
 				p.setDateModification(new Date());
-				this.projectDao.save(p);
+				this.projectManager.saveProject(p);
 			}
 			response = Response.seeOther(projectUri).build();
 		} catch (Exception e) {
@@ -359,9 +255,9 @@ public class WorkspaceResource implements LifeCycle, ProjectManager {
 		Response response = null;
 		try {
 			URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
-			Project p = this.projectDao.get(projectUri);
+			Project p = this.projectManager.getProject(projectUri);
 
-			this.projectDao.delete(p);
+			this.projectManager.deleteProject(p);
 
 			response = Response.ok().build();
 		} catch (Exception e) {
@@ -378,7 +274,7 @@ public class WorkspaceResource implements LifeCycle, ProjectManager {
 			throws WebApplicationException {
 		LogContext.setContexts(MODULE_NAME, id);
 
-		Project p = this.projectDao.get(uriInfo.getAbsolutePath());
+		Project p = this.projectManager.getProject(uriInfo.getAbsolutePath());
 		return this.displayIndexPage(Response.ok(), p).build();
 	}
 
@@ -394,7 +290,7 @@ public class WorkspaceResource implements LifeCycle, ProjectManager {
 
 		// Check that projects exists in internal data store.
 		URI uri = uriInfo.getAbsolutePath();
-		this.projectDao.find(uri);
+		this.projectManager.findProject(uri);
 		// Forward request for project RDF description to the SPARQL endpoint.
 		List<String> defGraph = Arrays.asList(this.configuration
 				.getInternalRepository().name);
@@ -414,11 +310,11 @@ public class WorkspaceResource implements LifeCycle, ProjectManager {
 		Response response = null;
 		try {
 			URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
-			Project p = this.projectDao.get(projectUri);
+			Project p = this.projectManager.getProject(projectUri);
 
 			Map<String, Object> args = new HashMap<String, Object>();
 			args.put("it", p);
-			args.put("sep", CsvSourceImpl.Separator.values());
+			args.put("sep", Separator.values());
 			response = Response.ok(
 					new Viewable("/projectSourceUpload.vm", args), TEXT_HTML)
 					.build();
@@ -436,7 +332,7 @@ public class WorkspaceResource implements LifeCycle, ProjectManager {
 		Response response = null;
 		try {
 			URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
-			Project p = this.projectDao.get(projectUri);
+			Project p = this.projectManager.getProject(projectUri);
 
 			// Search for requested source in project
 			URI urlSource = new URI(uriInfo.getRequestUri().toString()
@@ -449,7 +345,7 @@ public class WorkspaceResource implements LifeCycle, ProjectManager {
 			Map<String, Object> args = new HashMap<String, Object>();
 			args.put("it", p);
 			args.put("current", src);
-			args.put("sep", CsvSourceImpl.Separator.values());
+			args.put("sep", Separator.values());
 			response = Response.ok(
 					new Viewable("/projectSourceUpload.vm", args)).build();
 		} catch (Exception e) {
@@ -484,23 +380,7 @@ public class WorkspaceResource implements LifeCycle, ProjectManager {
 					projectUri.getHost(), projectUri.getPort(),
 					projectUri.getPath() + this.getRelativeSourceId(fileName),
 					null, null);
-			Project p = this.projectDao.get(projectUri);
-
-			// Save new source to public project storage
-			String filePath = this.getProjectFilePath(id, fileName);
-			File storagePath = this.getFileStorage(filePath);
-			fileCopy(file, storagePath);
-
-			// Add new source to persistent project
-			Separator sep = CsvSourceImpl.Separator.valueOf(separator);
-			boolean hasTitleRow = ((titleRow != null) && (titleRow
-					.toLowerCase().equals("on")));
-
-			CsvSource src = this.newCsvSource(sourceUri, fileName, filePath,
-					sep.value, hasTitleRow);
-			p.addSource(src);
-			this.projectDao.save(p);
-
+			this.projectManager.addCsvSource(projectUri, sourceUri, id, fileName, file, titleRow, separator);
 			String redirectUrl = projectUri.toString() + "#source";
 			response = Response.created(sourceUri)
 					.entity(new Viewable("/redirect.vm", redirectUrl))
@@ -535,36 +415,9 @@ public class WorkspaceResource implements LifeCycle, ProjectManager {
 		String fileName = fileDisposition.getFileName();
 		try {
 			URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
-			Project p = this.projectDao.get(projectUri);
+			Project p = this.projectManager.getProject(projectUri);
 
-			// Get source of project
-			CsvSourceImpl source = (CsvSourceImpl) p
-					.getSource(currentSourceUri);
-			if (source == null) {
-				// Not found.
-				throw new NotFoundException();
-			}
-
-			// Delete old source
-			File oldStoragePath = this.getFileStorage(source.getFilePath());
-			oldStoragePath.delete();
-
-			// Save new source to public project storage
-			String filePath = this.getProjectFilePath(id, fileName);
-			File storagePath = this.getFileStorage(filePath);
-
-			fileCopy(file, storagePath);
-
-			// Save infos to persistent project
-			boolean hasTitleRow = ((titleRow != null) && (titleRow
-					.toLowerCase().equals("on")));
-			source.setFilePath(filePath);
-			source.setTitle(fileName);
-			source.setMimeType("text/csv");
-			source.setSeparator(String.valueOf(separator));
-			source.setTitleRow(hasTitleRow);
-			this.projectDao.save(p);
-
+			this.projectManager.updateCsvSource(p, currentSourceUri, id, fileName, file, titleRow, separator);
 			String redirectUrl = projectUri.toString() + "#source";
 			response = Response.ok(currentSourceUri)
 					.entity(new Viewable("/redirect.vm", redirectUrl))
@@ -590,40 +443,11 @@ public class WorkspaceResource implements LifeCycle, ProjectManager {
 		if (file == null) {
 			this.throwInvalidParamError("source", null);
 		}
-		MediaType mappedType = null;
-		try {
-			mappedType = RdfSourceImpl.parseMimeType(mimeType);
-		} catch (Exception e) {
-			this.throwInvalidParamError("mime_type", mimeType);
-		}
 		String fileName = fileDisposition.getFileName();
 		Response response = null;
 		try {
-			URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
-			URI sourceUri = new URI(projectUri.getScheme(), null,
-					projectUri.getHost(), projectUri.getPort(),
-					projectUri.getPath() + this.getRelativeSourceId(fileName),
-					null, null);
-			Project p = this.projectDao.get(projectUri);
-
-			// Save new source to public project storage
-			String filePath = this.getProjectFilePath(id, fileName);
-			File storagePath = this.getFileStorage(filePath);
-			fileCopy(file, storagePath);
-
-			// Add new source to persistent project
-			RdfSource src = this.newRdfSource(sourceUri, fileName, filePath,
-					mappedType.toString());
-			
-			((RdfSourceImpl)src).init(configuration.getPublicStorage(), uriInfo.getBaseUri());
-			
-			p.addSource(src);
-			this.projectDao.save(p);
-
-			String redirectUrl = projectUri.toString() + "#source";
-			response = Response.created(sourceUri)
-					.entity(new Viewable("/redirect.vm", redirectUrl))
-					.type(TEXT_HTML).build();
+			this.projectManager.addRdfSource(uriInfo.getBaseUri(), id,
+					fileName, mimeType, file);
 		} catch (Exception e) {
 			this.handleInternalError(e, "Failed to create RDF source for {}",
 					fileName);
@@ -646,40 +470,13 @@ public class WorkspaceResource implements LifeCycle, ProjectManager {
 		if (file == null) {
 			this.throwInvalidParamError("source", null);
 		}
-		MediaType mappedType = null;
-		try {
-			mappedType = RdfSourceImpl.parseMimeType(mimeType);
-		} catch (Exception e) {
-			this.throwInvalidParamError("mime_type", mimeType);
-		}
 		String fileName = fileDisposition.getFileName();
 		Response response = null;
 		try {
 
 			URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
-			Project p = this.projectDao.get(projectUri);
-
-			// Get source to persistent project
-			RdfSourceImpl src = (RdfSourceImpl) p.getSource(currentSourceUri);
-			if (src == null) {
-				// Not found.
-				throw new NotFoundException();
-			}
-
-			// Delete old source
-			File oldStoragePath = this.getFileStorage(src.getFilePath());
-			oldStoragePath.delete();
-
-			// Save new source to public project storage
-			String filePath = this.getProjectFilePath(id, fileName);
-			File storagePath = this.getFileStorage(filePath);
-			fileCopy(file, storagePath);
-
-			// Save infos
-			src.setTitle(fileName);
-			src.setMimeType(mappedType.toString());
-			this.projectDao.save(p);
-
+			this.projectManager.updateRdfSource(projectUri, currentSourceUri, 
+					id, mimeType, fileName, file);
 			String redirectUrl = projectUri.toString() + "#source";
 			response = Response.ok()
 					.entity(new Viewable("/redirect.vm", redirectUrl))
@@ -709,14 +506,8 @@ public class WorkspaceResource implements LifeCycle, ProjectManager {
 					projectUri.getHost(), projectUri.getPort(),
 					projectUri.getPath() + this.getRelativeSourceId(title),
 					null, null);
-			Project p = this.projectDao.get(projectUri);
-
-			// Add new source to persistent project
-			DbSource src = newDbSource(sourceUri, title, database, srcUrl,
-					user, password, request, new Integer(cacheDuration));
-			p.addSource(src);
-			this.projectDao.save(p);
-
+			this.projectManager.addDbSource(projectUri, sourceUri, title, database, 
+					srcUrl, request, user, password, new Integer(cacheDuration));
 			String redirectUrl = projectUri.toString() + "#source";
 			response = Response.created(sourceUri)
 					.entity(new Viewable("/redirect.vm", redirectUrl))
@@ -743,25 +534,9 @@ public class WorkspaceResource implements LifeCycle, ProjectManager {
 		Response response = null;
 		try {
 			URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
-
-			Project p = this.projectDao.get(projectUri);
-
-			// Get source to persistent project
-			DbSource src = (DbSource) p.getSource(currentSourceUri);
-			if (src == null) {
-				// Not found.
-				throw new NotFoundException();
-			}
-
-			// Save informations
-			src.setTitle(title);
-			src.setDatabase(database);
-			src.setUser(user);
-			src.setPassword(password);
-			src.setRequest(request);
-			src.setCacheDuration(new Integer(cacheDuration));
-			this.projectDao.save(p);
-
+			
+			this.projectManager.updateDbSource(projectUri, currentSourceUri, title, database,
+						user, password, request, new Integer(cacheDuration));
 			String redirectUrl = projectUri.toString() + "#source";
 			response = Response.ok()
 					.entity(new Viewable("/redirect.vm", redirectUrl))
@@ -780,7 +555,7 @@ public class WorkspaceResource implements LifeCycle, ProjectManager {
 			@Context Request request) throws WebApplicationException {
 		LogContext.setContexts(MODULE_NAME, id + '/' + fileName);
 
-		String filePath = this.getProjectFilePath(id, fileName);
+		String filePath = this.projectManager.getProjectFilePath(id, fileName);
 		Response response = this.configuration.getBean(ResourceResolver.class)
 				.resolveStaticResource(filePath, request);
 		if (response == null) {
@@ -799,7 +574,7 @@ public class WorkspaceResource implements LifeCycle, ProjectManager {
 		Response response = null;
 		try {
 			URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
-			Project p = this.projectDao.get(projectUri);
+			Project p = this.projectManager.getProject(projectUri);
 
 			response = this.displayIndexPage(Response.ok(), p).build();
 		} catch (Exception e) {
@@ -819,7 +594,7 @@ public class WorkspaceResource implements LifeCycle, ProjectManager {
 		Response response = null;
 		try {
 			URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
-			Project p = this.projectDao.get(projectUri);
+			Project p = this.projectManager.getProject(projectUri);
 
 			// Search for requested source in project.
 			Source src = p.getSource(uriInfo.getAbsolutePath());
@@ -829,8 +604,8 @@ public class WorkspaceResource implements LifeCycle, ProjectManager {
 				throw new NotFoundException();
 			}
 			// initialize source and return grid View
-			if (src instanceof BaseFileSource<?>) {
-				((BaseFileSource<?>) src).init(
+			if (src instanceof FileSource<?>) {
+				((FileSource<?>) src).init(
 						configuration.getPublicStorage(), uriInfo.getBaseUri());
 			}
 			String template = null;
@@ -840,7 +615,7 @@ public class WorkspaceResource implements LifeCycle, ProjectManager {
 				template = "/RdfSourceGrid.vm";
 			} else if (src instanceof DbSource) {
 				((DbSource) src).init(this.getFileStorage(this
-						.getProjectFilePath(id, srcId)));
+						.projectManager.getProjectFilePath(id, srcId)));
 				template = "/DbSourceGrid.vm";
 			} else {
 				throw new TechnicalException("Unknown source type: {1}",
@@ -864,12 +639,12 @@ public class WorkspaceResource implements LifeCycle, ProjectManager {
 		Response response = null;
 		try {
 			URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
-			Project p = this.projectDao.get(projectUri);
+			Project p = this.projectManager.getProject(projectUri);
 			String url = uriInfo.getAbsolutePath().toString()
 					.replace("/delete", "");
 			// Delete
 			p.deleteSource(new URI(url));
-			this.projectDao.save(p);
+			this.projectManager.saveProject(p);
 			String redirectUrl = projectUri.toString() + "#source";
 			response = Response.ok()
 					.entity(new Viewable("/redirect.vm", redirectUrl))
@@ -891,7 +666,7 @@ public class WorkspaceResource implements LifeCycle, ProjectManager {
 		LogContext.setContexts(MODULE_NAME, id);
 
 		// Check that projects exists in internal data store.
-		this.projectDao.get(this.newProjectId(uriInfo.getBaseUri(), id));
+		this.projectManager.getProject(this.newProjectId(uriInfo.getBaseUri(), id));
 		// Forward request for source RDF description to the SPARQL endpoint.
 		URI uri = uriInfo.getAbsolutePath();
 		List<String> defGraph = Arrays.asList(this.configuration
@@ -912,7 +687,7 @@ public class WorkspaceResource implements LifeCycle, ProjectManager {
 		Response response = null;
 		try {
 			URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
-			Project p = this.projectDao.get(projectUri);
+			Project p = this.projectManager.getProject(projectUri);
 
 			response = Response.ok(new Viewable("/projectOntoUpload.vm", p),
 					TEXT_HTML).build();
@@ -933,17 +708,7 @@ public class WorkspaceResource implements LifeCycle, ProjectManager {
 		Response response = null;
 		try {
 			URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
-			Project p = this.projectDao.get(projectUri);
-
-			// Add ontology to persistent project
-			OntologyImpl ontology = new OntologyImpl();
-			ontology.setTitle(title);
-			ontology.setSource(srcUrl);
-			ontology.setDateSubmitted(new Date());
-			ontology.setOperator(SecurityContext.getUserPrincipal());
-			p.addOntology(ontology);
-
-			this.projectDao.save(p);
+			this.projectManager.addOntology(projectUri, srcUrl, title);
 
 			String redirectUrl = projectUri.toString() + "#ontology";
 			response = Response.ok(new Viewable("/redirect.vm", redirectUrl))
@@ -965,7 +730,7 @@ public class WorkspaceResource implements LifeCycle, ProjectManager {
 		Response response = null;
 		try {
 			URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
-			Project p = this.projectDao.get(projectUri);
+			Project p = this.projectManager.getProject(projectUri);
 
 			// Search for requested ontology in project.
 			Ontology ontology = p.getOntology(ontologyTitle);
@@ -998,7 +763,7 @@ public class WorkspaceResource implements LifeCycle, ProjectManager {
 		Response response = null;
 		try {
 			URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
-			Project p = this.projectDao.get(projectUri);
+			Project p = this.projectManager.getProject(projectUri);
 
 			// Get ontology to persistent project
 			Ontology ontology = p.getOntology(currentOntologyTitle);
@@ -1010,7 +775,7 @@ public class WorkspaceResource implements LifeCycle, ProjectManager {
 			// Save informations
 			ontology.setTitle(title);
 			ontology.setSource(source);
-			this.projectDao.save(p);
+			this.projectManager.saveProject(p);
 
 			String redirectUrl = projectUri.toString() + "#ontology";
 			response = Response.ok()
@@ -1034,10 +799,10 @@ public class WorkspaceResource implements LifeCycle, ProjectManager {
 		Response response = null;
 		try {
 			URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
-			Project p = this.projectDao.get(projectUri);
+			Project p = this.projectManager.getProject(projectUri);
 			// Delete
 			p.deleteOntology(ontologyTitle);
-			this.projectDao.save(p);
+			this.projectManager.saveProject(p);
 			String redirectUrl = projectUri.toString() + "#ontology";
 			response = Response.ok()
 					.entity(new Viewable("/redirect.vm", redirectUrl))
@@ -1065,51 +830,18 @@ public class WorkspaceResource implements LifeCycle, ProjectManager {
 		return new File(this.configuration.getPublicStorage(), path);
 	}
 
-	private String getProjectFilePath(String projectId, String fileName) {
-		String path = "project/" + projectId;
-		if (isSet(fileName)) {
-			path += "/" + fileName;
-		}
-		return path;
-	}
+	
 
 	private String getRelativeSourceId(String sourceName) {
 		return "/source/" + urlify(sourceName);
 	}
 
-	private static void fileCopy(InputStream src, File dest) throws IOException {
-		OutputStream out = null;
-		try {
-			dest.createNewFile();
-			out = new FileOutputStream(dest);
-
-			byte buffer[] = new byte[4096];
-			int l;
-			while ((l = src.read(buffer)) != -1) {
-				out.write(buffer, 0, l);
-			}
-			out.flush();
-		} catch (IOException e) {
-			dest.delete();
-			throw e;
-		} finally {
-			try {
-				src.close();
-			} catch (Exception e) { /* Ignore... */
-			}
-			if (out != null) {
-				try {
-					out.close();
-				} catch (Exception e) { /* Ignore... */
-				}
-			}
-		}
-	}
+	
 
 	private ResponseBuilder displayIndexPage(ResponseBuilder response, Project p) {
 		Map<String, Object> args = new TreeMap<String, Object>();
 		// Populate project list.
-		args.put("it", this.projectDao.getAll());
+		args.put("it", this.projectManager.getAllProjects());
 		// Display selected project.
 		if (p != null) {
 			// Search for modules accepting the selected project.
@@ -1158,50 +890,6 @@ public class WorkspaceResource implements LifeCycle, ProjectManager {
 	}
 
 	/**
-	 * Creates and configures a new Empire JPA EntityManagerFactory to persist
-	 * objects into the specified RDF repository.
-	 * 
-	 * @param repository
-	 *            the RDF repository to persist objects into.
-	 * 
-	 * @return a configured Empire EntityManagerFactory.
-	 */
-	private EntityManagerFactory createEntityManagerFactory(URL repository) {
-		// Build Empire configuration.
-		EmpireConfiguration empireCfg = new EmpireConfiguration();
-		// Configure target repository.
-		Map<String, String> props = empireCfg.getGlobalConfig();
-		String[] repo = repository.toString().split(REPOSITORY_URL_PARSER);
-		props.put("factory", "sesame");
-		props.put("url", repo[0]);
-		props.put("repo", repo[1]);
-		// Set persistent classes and associated (custom) annotation provider.
-		empireCfg.setAnnotationProvider(CustomAnnotationProvider.class);
-		props.put(CustomAnnotationProvider.ANNOTATED_CLASSES_PROP,
-				join(this.getPersistentClasses(), ",").replace("class ", ""));
-		// Initialize Empire.
-		Empire.init(empireCfg, new OpenRdfEmpireModule());
-		// Create Empire JPA persistence provider.
-		PersistenceProvider provider = Empire.get().persistenceProvider();
-		return provider.createEntityManagerFactory("",
-				new HashMap<Object, Object>());
-	}
-
-	/**
-	 * Returns the list of persistent classes to be handled by Empire JPA
-	 * provider.
-	 * 
-	 * @return the list of persistent classes.
-	 */
-	@SuppressWarnings("unchecked")
-	private Collection<Class<?>> getPersistentClasses() {
-		Collection<Class<?>> classes = new LinkedList<Class<?>>();
-		classes.addAll(Arrays.asList(ProjectImpl.class, CsvSourceImpl.class,
-				RdfSourceImpl.class, DbSourceImpl.class, OntologyImpl.class));
-		return classes;
-	}
-
-	/**
 	 * Register application namespaces to Empire.
 	 * <p>
 	 * Yes, Empire's Namespaces and RdfProperty annotations suck too as they use
@@ -1225,24 +913,5 @@ public class WorkspaceResource implements LifeCycle, ProjectManager {
 	public String toString() {
 		return this.getClass().getSimpleName() + " ("
 				+ this.configuration.getInternalRepository().url + ')';
-	}
-
-	// -------------------------------------------------------------------------
-	// ProjectJpaDao nested class
-	// -------------------------------------------------------------------------
-
-	/**
-	 * A JPA DAO implementation for persisting ProjectImpl objects.
-	 */
-	private final static class ProjectJpaDao extends GenericRdfJpaDao<Project> {
-		public ProjectJpaDao(EntityManager em) {
-			super(ProjectImpl.class, em);
-		}
-
-		@Override
-		public Project save(Project entity) {
-			entity.setDateModification(new Date());
-			return super.save(entity);
-		}
 	}
 }

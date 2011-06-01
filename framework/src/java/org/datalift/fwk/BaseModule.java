@@ -89,6 +89,15 @@ public abstract class BaseModule implements Module
         // NOP
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>This implementation is empty.</p>
+     */
+    @Override
+    public void postInit() {
+        // NOP
+    }
+    
     @Override
     /**
      * {@inheritDoc}

@@ -232,6 +232,9 @@ public class DefaultConfiguration extends Configuration
         }
         T bean = null;
         Object o = this.beansByType.get(clazz);
+        if (o != null) {
+        	log.debug("beansByType sent back an Object : {}", o);
+        }
         if ((o != null) && (clazz.isAssignableFrom(o.getClass()))) {
             bean = clazz.cast(o);
         }

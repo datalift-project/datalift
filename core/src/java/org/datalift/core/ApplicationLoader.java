@@ -51,6 +51,7 @@ public class ApplicationLoader extends LogServletContextListener
         super.contextInitialized(event);
         // Initialize DataLift application.
         this.init(ctx);
+        this.postInit();
     }
 
     /** {@inheritDoc} */
@@ -125,6 +126,7 @@ public class ApplicationLoader extends LogServletContextListener
             Set<Object> rsc = new HashSet<Object>();
             rsc.add(this.initResource(new RouterResource()));
             rsc.add(this.initResource(new WorkspaceResource()));
+
             // So far, so good. => Install singletons
             resources = Collections.unmodifiableSet(rsc);
             log.info("DataLift application initialized");
@@ -140,6 +142,24 @@ public class ApplicationLoader extends LogServletContextListener
         }
     }
 
+    private void	postInit() {
+    	try {
+    	log.debug("Modules post initialization");
+    	for (Object r : resources) {
+    		log.debug("Module !");
+    		if (r instanceof LifeCycle)
+    			((LifeCycle)r).postInit();
+    		else
+    			log.debug("Module not instance of LifeCycle");
+    	}
+    	log.debug("Modules post initialization done");
+    	}
+    	catch(Exception e) {
+    		log.debug(e);
+    	}
+    	log.debug("End of modules post initialization");
+    }
+    
     /**
      * Initializes a resource object.
      * @param  r   the resource to configure.

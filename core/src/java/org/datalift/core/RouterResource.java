@@ -243,6 +243,12 @@ public class RouterResource implements LifeCycle, ResourceResolver
             log.warn("No SPARQL endpoint module available");
         }
     }
+    
+    @Override
+	public void postInit() {
+		// TODO Auto-generated method stub
+		
+	}
 
     /** {@inheritDoc} */
     @Override
@@ -636,6 +642,7 @@ public class RouterResource implements LifeCycle, ResourceResolver
         try {
             this.loadModules(new URLClassLoader(this.getModulePaths(f),
                                         this.getClass().getClassLoader()), f);
+            this.postInitModules();
         }
         catch (Exception e) {
             TechnicalException error = new TechnicalException(
@@ -680,6 +687,19 @@ public class RouterResource implements LifeCycle, ResourceResolver
         }
     }
 
+    private void	postInitModules() {
+    	log.debug("postInitModules");
+    	log.debug("Number of modules : {}",  this.configuration.getBeans(Module.class).size());
+    	for (Object m : this.configuration.getBeans(Module.class)) {
+    		try {
+    			((Module) m).postInit();
+    		}
+    		catch (Exception e) {
+    			log.error("Exception wile module postInit", e);
+    		}
+    	}
+    }
+    
     /**
      * Analyzes a module structure to match the expected elements and
      * returns the paths to be added to the module classpath.

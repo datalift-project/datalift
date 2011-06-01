@@ -113,7 +113,6 @@
   <property name="jar.name"             value="${app.name}.jar"/>
   <property name="jar.path"             location="${dist.home}/${jar.name}"/>
 
-
   <!-- ================ Compilation Control Options ======================= -->
 
   <!--
