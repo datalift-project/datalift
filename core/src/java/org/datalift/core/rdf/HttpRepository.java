@@ -58,7 +58,22 @@ public final class HttpRepository extends Repository
     // Constructors
     //-------------------------------------------------------------------------
 
-    /** {@inheritDoc} */
+    /**
+     * Build a new repository.
+     * @param  name       the repository name in DataLift configuration.
+     * @param  url        the repository URL.
+     * @param  username   the login or <code>null</code> if no
+     *                    authentication is required.
+     * @param  password   the password or <code>null</code> if no
+     *                    authentication is required.
+     * @param  label      the repository display label. If
+     *                    <code>null</code>, <code>name</code> is used.
+     *
+     * @throws IllegalArgumentException if either <code>name</code> or
+     *         <code>url</code> is null.
+     * @throws RuntimeException if any error occurred connecting the
+     *         repository.
+     */
     public HttpRepository(String name, URL url,
                           String username, String password, String label) {
         super(name, url, username, password, label);

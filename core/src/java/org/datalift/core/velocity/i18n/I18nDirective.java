@@ -32,7 +32,7 @@ public class I18nDirective extends Directive
 
     /**
      * {@inheritDoc}
-     * @return The directive type: {@link LINE}.
+     * @return The directive type: {@link #LINE}.
      */
     public int getType() {
         return LINE;

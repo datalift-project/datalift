@@ -7,8 +7,17 @@ import java.util.Arrays;
 import java.util.Collection;
 
 
+/**
+ * A set of utility methods for manipulating strings.
+ *
+ * @author lbihanic
+ */
 public class StringUtils
 {
+    /**
+     * Default constructor, private on purpose.
+     * @throws UnsupportedOperationException always.
+     */
     private StringUtils() {
         throw new UnsupportedOperationException();
     }

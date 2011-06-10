@@ -11,7 +11,9 @@ import org.datalift.fwk.util.Base64;
 
 /**
  * An enhanced version of {@link java.util.Properties Properties}
- * that provides the following additional features:
+ * that provides the following additional features.
+ * <p>
+ * Enhanced features include:</p>
  * <ul>
  *  <li><em>Variables substitution</em>: any occurrence of
  *   "<code>${<em>property-name</em>}</code>" in a property value is

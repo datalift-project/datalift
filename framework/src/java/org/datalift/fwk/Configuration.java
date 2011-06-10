@@ -22,12 +22,13 @@ import org.datalift.fwk.rdf.Repository;
  * <ul>
  *  <li>{@link #getProperty(String) Named configuration data},</li>
  *  <li>{@link #getRepository(String) Repositories},</li>
- *  <li>{@link #getLocalStorage() Local file storage}</li>
+ *  <li>{@link #getPublicStorage() Local HTTP-accessible file storage}</li>
+ *  <li>{@link #getPrivateStorage() Local private file storage}</li>
  * </ul>
  * <p>
  * This class also allows loading of third-party
- * {@link #loadProperties(String) properties files} and acts as an
- * object directory where DataLift components can
+ * {@link #loadProperties(String, Class) properties files} and acts as
+ * an object directory where DataLift components can
  * register and retrieve objects both by {@link #getBean(Class) class}
  * and by {@link #getBean(String) name}.</p>
  *
