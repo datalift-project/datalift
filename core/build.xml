@@ -87,7 +87,7 @@
    -->
 
   <property name="app.name"             value="datalift"/>
-  <property name="app.version"          value="0.1"/>
+  <property name="app.version"          value="0.3"/>
   <property name="app.path"             value="/${app.name}"/>
   <property name="app.long.name"        value="DataLift"/>
 
@@ -104,6 +104,7 @@
 
   <property name="fwk.home"             location="${basedir}/../framework"/>
   <property name="fwk.version"          value="${app.version}"/>
+  <property name="fwk.src.home"         location="${fwk.home}/src/java"/>
   <property name="fwk.web.home"         location="${fwk.home}/src/web"/>
   <property name="fwk.lib.home"         location="${fwk.home}/lib"/>
   <property name="fwk.dist.home"        location="${fwk.home}/dist"/>
@@ -377,7 +378,49 @@
     <!-- Create package -->
     <zip destfile="${dist.home}/${run-env.dir}.zip" basedir="${run-env.home}"/>
 
-   </target>
+  </target>
+
+
+  <!-- ================ Javadoc Target ==================================== -->
+
+  <!--
+    The "javadoc" target creates Javadoc API documentation for the Java
+    classes included in your application.  Normally, this is only required
+    when preparing a distribution release, but is available as a separate
+    target in case the developer wants to create Javadocs independently.
+   -->
+
+  <target name="javadoc" depends="compile"
+                         description="Create Javadoc API documentation">
+
+    <mkdir dir="${docs.dir}/api"/>
+
+    <javadoc destdir="${docs.dir}/api"
+              author="false"
+             version="true"
+                 use="true"
+          splitindex="true"
+             noindex="false"
+         windowtitle="${app.long.name} v${app.version}"
+            doctitle="${app.long.name} v${app.version}&lt;br&gt;API Specification"
+              header="&lt;b&gt;${app.name}&lt;br&gt;&lt;font size='-1'&gt;${app.version}&lt;/font&gt;&lt;/b&gt;"
+              bottom="Copyright &#169; 2010-2011 The DataLift project. All Rights Reserved.">
+      <fileset dir="${fwk.src.home}"/>
+      <fileset dir="${src.home}"/>
+      <classpath refid="compile.classpath"/>
+
+      <group title="DataLift Franework Packages"
+          packages="org.datalift.fwk*"/>
+      <group title="DataLift Core Packages"
+          packages="org.datalift.core*"/>
+
+      <link href="http://java.sun.com/javase/6/docs/api/"/>
+      <link href="http://java.sun.com/javaee/5/docs/api/"/>
+      <link href="http://www.openrdf.org/doc/sesame2/api/"/>
+      <link href="http://jersey.java.net/nonav/apidocs/latest/jersey/"/>
+    </javadoc>
+  </target>
+
 
   <!-- ================ Test targets ====================================== -->
 
