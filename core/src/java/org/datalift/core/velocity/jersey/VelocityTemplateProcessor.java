@@ -33,6 +33,7 @@ import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.exception.ResourceNotFoundException;
 import org.apache.velocity.runtime.log.Log4JLogChute;
 import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
+import org.apache.velocity.tools.ToolContext;
 import org.apache.velocity.tools.generic.DateTool;
 import org.apache.velocity.tools.generic.EscapeTool;
 import org.apache.velocity.tools.generic.FieldTool;
@@ -237,14 +238,14 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
             }
             // Add Velocity date tool.
             if (ctx.get(CTX_DATE_TOOL) == null) {
-                List<Locale> l = this.httpContext.getRequest().getAcceptableLanguages();
-                Locale locale = (l != null && !l.isEmpty())? l.get(0): Locale.getDefault();
                 Map<String, Object> config = new HashMap<String, Object>();
-                config.put(DateTool.DEFAULT_LOCALE_KEY, locale);
 
+                List<Locale> l = this.httpContext.getRequest().getAcceptableLanguages();
+                if ((l != null) && (! l.isEmpty())) {
+                    config.put(ToolContext.LOCALE_KEY, l.get(0));
+                }
                 DateTool dateTool = new DateTool();
                 dateTool.configure(config);
-
                 ctx.put(CTX_DATE_TOOL, dateTool);
             }
             // Add predefined variables, the JSP way.
