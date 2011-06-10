@@ -13,7 +13,6 @@ import javax.persistence.Entity;
 import javax.ws.rs.core.MediaType;
 
 import org.openrdf.model.Statement;
-import org.openrdf.rio.RDFFormat;
 import org.openrdf.rio.RDFParser;
 import org.openrdf.rio.helpers.StatementCollector;
 import org.openrdf.rio.ntriples.NTriplesParser;
@@ -25,7 +24,6 @@ import org.openrdf.rio.turtle.TurtleParser;
 import com.clarkparsia.empire.annotation.RdfsClass;
 
 import org.datalift.fwk.MediaTypes;
-import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.RdfSource;
 import org.datalift.fwk.util.StringUtils;
 
@@ -57,7 +55,6 @@ public class RdfSourceImpl extends BaseFileSource<Statement>
     // FileSource contract support
     //-------------------------------------------------------------------------
 
-    private final static Logger log = Logger.getLogger();
     @Override
     public void init(File docRoot, URI baseUri) throws IOException {
         super.init(docRoot, baseUri);

@@ -191,7 +191,7 @@ public class WorkspaceResource implements LifeCycle, ProjectManager {
 	@Override
 	public DbSource newDbSource(URI uri, String title, String database,
 			String srcUrl, String user, String password, String request,
-			Integer cacheDuration) {
+			int cacheDuration) {
 		DbSourceImpl src = new DbSourceImpl(uri.toString());
 		src.setTitle(title);
 		src.setDatabase(database);
@@ -696,7 +696,7 @@ public class WorkspaceResource implements LifeCycle, ProjectManager {
 			@FormParam("title") String title, @FormParam("user") String user,
 			@FormParam("request") String request,
 			@FormParam("password") String password,
-			@FormParam("cache_duration") String cacheDuration)
+			@FormParam("cache_duration") int cacheDuration)
 			throws WebApplicationException {
 		LogContext.setContexts(MODULE_NAME, id + "/dbupload");
 		Response response = null;
@@ -710,7 +710,7 @@ public class WorkspaceResource implements LifeCycle, ProjectManager {
 
 			// Add new source to persistent project
 			DbSource src = newDbSource(sourceUri, title, database, srcUrl,
-					user, password, request, new Integer(cacheDuration));
+					user, password, request, cacheDuration);
 			p.addSource(src);
 			this.projectDao.save(p);
 
@@ -733,7 +733,7 @@ public class WorkspaceResource implements LifeCycle, ProjectManager {
 			@FormParam("title") String title, @FormParam("user") String user,
 			@FormParam("request") String request,
 			@FormParam("password") String password,
-			@FormParam("cache_duration") String cacheDuration,
+			@FormParam("cache_duration") int cacheDuration,
 			@FormParam("current_source") URI currentSourceUri)
 			throws WebApplicationException {
 		LogContext.setContexts(MODULE_NAME, id + "/dbupload");
@@ -756,7 +756,7 @@ public class WorkspaceResource implements LifeCycle, ProjectManager {
 			src.setUser(user);
 			src.setPassword(password);
 			src.setRequest(request);
-			src.setCacheDuration(new Integer(cacheDuration));
+			src.setCacheDuration(cacheDuration);
 			this.projectDao.save(p);
 
 			String redirectUrl = projectUri.toString() + "#source";
