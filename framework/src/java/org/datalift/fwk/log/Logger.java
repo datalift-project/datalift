@@ -25,8 +25,8 @@ import java.util.regex.Pattern;
  *  <li>The Log4J MDC (<em>Mapped Diagnostic Context</em>) class
  *      features (<code>put()</code> and <code>remove()</code>
  *      methods) are part of the Logger interface (see the
- *      {@link #setDiagnosticContext} and
- *      {@link #removeDiagnosticContext} methods)</li>
+ *      {@link #setContext(Object, Object)} and
+ *      {@link #removeContext(Object)} methods)</li>
  *  <li>The log methods (<code>fatal()</code>, <code>error()</code>,
  *      <code>warning()</code>, <code>info()</code>,
  *      <code>trace()</code> and <code>debug()</code> support parameter
@@ -318,7 +318,7 @@ public abstract class Logger
      * @return the previous value for the context or <code>null</code>
      *         if the context was not set.
      *
-     * @see    #removeContext()
+     * @see    #removeContext(Object)
      */
     public static Object setContext(Object key, Object context) {
         return LogService.getInstance()
@@ -483,7 +483,7 @@ public abstract class Logger
      * Prior formatting and {@link #doLog logging} of the message, this
      * method checks for
      * {@link #promoteDebugTraces debug/trace message promotion} and
-     * {@link #getActualLevel(LogLevel) maps} the log level.</p>
+     * {@link #getActualLevel(LogLevel, boolean) maps} the log level.</p>
      * @param  level     the log level for the message.
      * @param  message   the message object to log.
      * @param  t         the exception to log.

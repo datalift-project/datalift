@@ -41,7 +41,7 @@ public class LoadDirective extends Directive
 
     /**
      * {@inheritDoc}
-     * @return The directive type: {@link LINE}.
+     * @return The directive type: {@link #LINE}.
      */
     @Override
     public int getType() {

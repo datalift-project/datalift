@@ -68,12 +68,11 @@ public interface ProjectManager
      * @param  uri           the source URI.
      * @param  title         the source label.
      * @param  database      the name of the Database	
-     * @param  srcUrl	 	 the connection string of the Database	
-     * @param  user			 username for connection
-     * @param  password		 password for connection
-     * @param  request		 request executed 
-     * @param  cacheDuration Duration of the cache
-     *  supported databases are : Mysql, PostegreSql, Oracle Thin and OCI
+     * @param  srcUrl        the connection string of the Database	
+     * @param  user          username for connection
+     * @param  password      password for connection
+     * @param  request       SQL query to extract data
+     * @param  cacheDuration duration of local data cache
      *
      * @return a new Database source, ready to be
      *         {@link Project#addSource(Source) associated} to a
@@ -83,7 +82,7 @@ public interface ProjectManager
      */
     public DbSource newDbSource(URI uri, String title, String database, 
 			String srcUrl, String user, String password, 
-			String request, Integer cacheDuration) throws IOException;
+			String request, int cacheDuration) throws IOException;
     
     public void addPersistentClasses(Collection<Class<?>> classes);
     
@@ -120,5 +119,4 @@ public interface ProjectManager
 	public void persistProject(Project p);
 	
 	public Collection<Project> getAllProjects();
-
 }

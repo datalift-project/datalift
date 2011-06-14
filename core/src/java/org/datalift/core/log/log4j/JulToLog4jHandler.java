@@ -19,7 +19,7 @@ import static org.apache.log4j.Level.*;
  * java.util.logging messages to Log4J.
  * <p>
  * Adapted from
- * <code>{@link http://yajul.sourceforge.net/ JuliToLog4jHandler}</code>.</p>
+ * <a href="http://yajul.sourceforge.net/">JuliToLog4jHandler</a>.</p>
  */
 public class JulToLog4jHandler extends Handler
 {

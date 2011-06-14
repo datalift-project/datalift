@@ -31,7 +31,7 @@ public class LogContextFilter implements Filter
 
     /** {@inheritDoc} */
     @Override
-    public void init(FilterConfig arg0) throws ServletException {
+    public void init(FilterConfig filterConfig) throws ServletException {
         // NOP
     }
 

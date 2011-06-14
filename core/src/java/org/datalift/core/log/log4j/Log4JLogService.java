@@ -25,10 +25,6 @@ import org.datalift.fwk.log.LogService;
  * <a href="http://logging.apache.org/log4j/">Log4J</a> framework for
  * the actual logging.
  * <p>
- * The Log4J configuration may be specified using the
- * {@link #setConfiguration configuration} property that supports both
- * XML and property type Log4J configurations.</p>
- * <p>
  * To use this implementation, specify the following provider
  * definition for the <code>org.datalift.fwk.log.LogService</code>
  * service in the corresponding service provider configuration

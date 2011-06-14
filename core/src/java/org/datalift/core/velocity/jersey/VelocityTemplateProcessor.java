@@ -50,7 +50,7 @@ import static org.datalift.fwk.util.StringUtils.join;
 
 /**
  * A Jersey template processor relying on Apache
- * {@link http://velocity.apache.org/engine/ Velocity} templating
+ * <a href="http://velocity.apache.org/engine/">Velocity</a> templating
  * engine.
  *
  * @author lbihanic
@@ -67,7 +67,7 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
     /** The context key for Velocity Escape tool. */
     public final static String CTX_ESCAPE_TOOL      = "esc";
     /** The context key for Velocity Date tool. */
-    public final static String CTX_DATE_TOOL      	= "date";
+    public final static String CTX_DATE_TOOL        = "date";
     /** The context key for the HTTP servlet request object. */
     public final static String CTX_HTTP_REQUEST     = "request";
     /** The context key for the HTTP servlet response object. */
@@ -241,10 +241,10 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
                 Locale locale = (l != null && !l.isEmpty())? l.get(0): Locale.getDefault();
                 Map<String, Object> config = new HashMap<String, Object>();
                 config.put(DateTool.DEFAULT_LOCALE_KEY, locale);
-                
+
                 DateTool dateTool = new DateTool();
                 dateTool.configure(config);
-                
+
                 ctx.put(CTX_DATE_TOOL, dateTool);
             }
             // Add predefined variables, the JSP way.
@@ -268,7 +268,8 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
             if (ctx.get(CTX_SECURITY_CONTEXT) == null) {
                 ctx.put(CTX_SECURITY_CONTEXT, SecurityContext.getContext());
             }
-            if(ctx.get(FIELD_TOOL) == null) {
+            if (ctx.get(FIELD_TOOL) == null) {
+                // TODO: TypeSource???
             	ctx.put(FIELD_TOOL, new FieldTool().in(org.datalift.fwk.project.Source.TypeSource.class));
             }
             // Apply Velocity template, using encoding from in HTTP request.
