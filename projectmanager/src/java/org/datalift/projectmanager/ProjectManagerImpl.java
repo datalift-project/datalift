@@ -26,7 +26,7 @@ import javax.persistence.spi.PersistenceProvider;
 import javax.ws.rs.core.MediaType;
 
 import org.datalift.fwk.Configuration;
-import org.datalift.fwk.Module;
+import org.datalift.fwk.LifeCycle;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.CsvSource;
 import org.datalift.fwk.project.DbSource;
@@ -34,18 +34,18 @@ import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectManager;
 import org.datalift.fwk.project.RdfSource;
 import org.datalift.fwk.project.CsvSource.Separator;
+import org.datalift.fwk.rdf.RdfNamespace;
 import org.datalift.fwk.security.SecurityContext;
 
 import com.clarkparsia.empire.Empire;
 import com.clarkparsia.empire.config.EmpireConfiguration;
 import com.clarkparsia.empire.sesametwo.OpenRdfEmpireModule;
+import com.clarkparsia.utils.NamespaceUtils;
 import com.sun.jersey.api.NotFoundException;
 
-public class ProjectManagerImpl implements ProjectManager, Module {
+public class ProjectManagerImpl implements ProjectManager, LifeCycle {
 
 	private final static String REPOSITORY_URL_PARSER = "/repositories/";
-
-	private static	String	MODULE_NAME = "projectmanager";
 	
 	private Configuration	configuration;
 	
@@ -65,31 +65,32 @@ public class ProjectManagerImpl implements ProjectManager, Module {
 	public void init(Configuration configuration) {
 		this.configuration = configuration;
 		this.classes = new LinkedList<Class<?>>();
-		this.classes.addAll(this.getPersistentClasses());
 	}
 	
 	@Override
 	public void postInit() {
-		log.debug("Post initialization projectManager");
+		this.classes.addAll(this.getPersistentClasses());
+		this.registerRdfNamespaces();
 		this.emf = this.createEntityManagerFactory(configuration
 				.getInternalRepository().url);
 		this.entityMgr = this.emf.createEntityManager();
-		log.debug("JPA persistence provider initialized for repository \"{}\"",
-				configuration.getInternalRepository().name);
 		// Create Data Access Object for Projects.
 		this.projectDao = new ProjectJpaDao(this.entityMgr);
-		log.debug("End of post initialization projectManager");
 	}
 
 	@Override
-	public String getName() {
-		return MODULE_NAME;
+	public void shutdown(Configuration configuration) {
+		
 	}
-
-	@Override
-	public Map<String, Class<?>> getResources() {
-		// TODO Auto-generated method stub
-		return null;
+	
+	public void	registerRdfNamespace(RdfNamespace ns) {
+		NamespaceUtils.addNamespace(ns.prefix, ns.uri);
+	}
+	
+	private void registerRdfNamespaces() {
+		for (RdfNamespace ns : RdfNamespace.values()) {
+			NamespaceUtils.addNamespace(ns.prefix, ns.uri);
+		}
 	}
 
 	/**
@@ -104,19 +105,6 @@ public class ProjectManagerImpl implements ProjectManager, Module {
 		classes.addAll(Arrays.asList(ProjectImpl.class, CsvSourceImpl.class,
 				RdfSourceImpl.class, DbSourceImpl.class, OntologyImpl.class));
 		return classes;
-	}
-	
-	@Override
-	public boolean isResource() {
-		return true;
-	}
-
-	
-
-	@Override
-	public void shutdown(Configuration configuration) {
-		// TODO Auto-generated method stub
-		
 	}
 
 	/** {@inheritDoc} */
@@ -141,6 +129,7 @@ public class ProjectManagerImpl implements ProjectManager, Module {
 		if (!f.isFile()) {
 			throw new FileNotFoundException(filePath);
 		}
+		src.setTitleRow(hasTitleRow);
 		src.setFilePath(filePath);
 		src.setMimeType("text/csv");
 		src.setSeparator(String.valueOf(separator));
@@ -209,11 +198,6 @@ public class ProjectManagerImpl implements ProjectManager, Module {
 		props.put("repo", repo[1]);
 		// Set persistent classes and associated (custom) annotation provider.
 		empireCfg.setAnnotationProvider(CustomAnnotationProvider.class);
-		if (this.classes.isEmpty())
-			log.debug("CLASSES EMPTY");
-		for(Class<?> c : this.classes) {
-			log.debug("Registering class : {}", c.getCanonicalName());
-		}
 		props.put(CustomAnnotationProvider.ANNOTATED_CLASSES_PROP,
 				join(this.classes, ",").replace("class ", ""));
 		// Initialize Empire.
@@ -225,7 +209,6 @@ public class ProjectManagerImpl implements ProjectManager, Module {
 	}
 	
 	public void addPersistentClasses(Collection<Class<?>> classes) {
-		log.debug("Goin to add persitent classes to Empire !");
 		this.classes.addAll(classes);
 	}
 	// -------------------------------------------------------------------------
@@ -247,10 +230,6 @@ public class ProjectManagerImpl implements ProjectManager, Module {
 		}
 	}
 	
-	public ProjectJpaDao	getProjectDAO(){
-		return this.projectDao;
-	}
-	
 	public Project newProject(URI projectId, String title, String description, String license) {
 		// Create new project.
 		Project p = new ProjectImpl(projectId.toString());
@@ -269,22 +248,23 @@ public class ProjectManagerImpl implements ProjectManager, Module {
 	public void addCsvSource(URI projectUri, URI sourceUri, String id, String fileName, InputStream file, 
 			String titleRow, String separator) throws Exception {
 		try {
-			Project p = this.getProjectDAO().get(projectUri);
-			
-			// Save new source to public project storage
-			String filePath = this.getProjectFilePath(id, fileName);
-			File storagePath = this.getFileStorage(filePath);
-			fileCopy(file, storagePath);
-			
-			// Add new source to persistent project
-			Separator sep = CsvSource.Separator.valueOf(separator);
-			boolean hasTitleRow = ((titleRow != null) && (titleRow
-					.toLowerCase().equals("on")));
-			
-			CsvSource src = this.newCsvSource(sourceUri, fileName, filePath,
-					sep.getValue(), hasTitleRow);
-			p.addSource(src);
-			this.getProjectDAO().save(p);
+			Project p = this.projectDao.get(projectUri);
+			if (p.getSource(sourceUri) == null) {
+				// Save new source to public project storage
+				String filePath = this.getProjectFilePath(id, fileName);
+				File storagePath = this.getFileStorage(filePath);
+				fileCopy(file, storagePath);
+				
+				// Add new source to persistent project
+				Separator sep = Separator.valueOf(separator);
+				boolean hasTitleRow = ((titleRow != null) && (titleRow
+						.toLowerCase().equals("on")));
+				CsvSource src = this.newCsvSource(sourceUri, fileName, filePath,
+						sep.getValue(), hasTitleRow);
+				p.addSource(src);
+				this.projectDao.save(p);
+			}
+			// Else : source already exist
 		}
 		catch (Exception e) {
 			throw e;
@@ -305,7 +285,7 @@ public class ProjectManagerImpl implements ProjectManager, Module {
 					projectUri.getHost(), projectUri.getPort(),
 					projectUri.getPath() + this.getRelativeSourceId(fileName),
 					null, null);
-			Project p = this.getProjectDAO().get(projectUri);
+			Project p = this.projectDao.get(projectUri);
 
 			// Save new source to public project storage
 			String filePath = this.getProjectFilePath(id, fileName);
@@ -319,7 +299,7 @@ public class ProjectManagerImpl implements ProjectManager, Module {
 			((RdfSourceImpl)src).init(configuration.getPublicStorage(), baseUri);
 			
 			p.addSource(src);
-			this.getProjectDAO().save(p);
+			this.projectDao.save(p);
 		}
 		catch (Exception e) {
 			throw e;
@@ -328,17 +308,17 @@ public class ProjectManagerImpl implements ProjectManager, Module {
 	
 	public void addDbSource(URI projectUri, URI sourceUri, String title, String database, 
 			String srcUrl, String request, String user, String password, int cacheDuration) {
-		Project p = this.getProjectDAO().get(projectUri);
+		Project p = this.projectDao.get(projectUri);
 
 		// Add new source to persistent project
 		DbSource src = newDbSource(sourceUri, title, database, srcUrl,
 				user, password, request, cacheDuration);
 		p.addSource(src);
-		this.getProjectDAO().save(p);
+		this.projectDao.save(p);
 	}
 	
 	public void addOntology(URI projectUri, URI srcUrl, String title) {
-		Project p = this.getProjectDAO().get(projectUri);
+		Project p = this.projectDao.get(projectUri);
 
 		// Add ontology to persistent project
 		OntologyImpl ontology = new OntologyImpl();
@@ -347,12 +327,12 @@ public class ProjectManagerImpl implements ProjectManager, Module {
 		ontology.setDateSubmitted(new Date());
 		ontology.setOperator(SecurityContext.getUserPrincipal());
 		p.addOntology(ontology);
-
-		this.getProjectDAO().save(p);
+		//log.debug("PROJECT MANAGER | Add Ontology {}", ontology.getTitle());
+		this.projectDao.save(p);
 	}
 	
-	public void	updateCsvSource(Project p, URI sourceUri, String id, String fileName, 
-			InputStream file, String titleRow, String separator) throws Exception {
+	public void	updateCsvSource(Project p, URI sourceUri, String id,
+			String titleRow, String separator) throws Exception {
 		try {
 			// Get source of project
 			CsvSourceImpl source = (CsvSourceImpl) p.getSource(sourceUri);
@@ -360,26 +340,12 @@ public class ProjectManagerImpl implements ProjectManager, Module {
 				// Not found.
 				throw new NotFoundException();
 			}
-			
-			// Delete old source
-			File oldStoragePath = this.getFileStorage(source.getFilePath());
-			oldStoragePath.delete();
-			
-			// Save new source to public project storage
-			String filePath = this.getProjectFilePath(id, fileName);
-			File storagePath = this.getFileStorage(filePath);
-			
-			fileCopy(file, storagePath);
-			
 			// Save infos to persistent project
 			boolean hasTitleRow = ((titleRow != null) && (titleRow
 			.toLowerCase().equals("on")));
-			source.setFilePath(filePath);
-			source.setTitle(fileName);
-			source.setMimeType("text/csv");
 			source.setSeparator(String.valueOf(separator));
 			source.setTitleRow(hasTitleRow);
-			this.getProjectDAO().save(p);
+			this.projectDao.save(p);
 		}
 		catch (Exception e) {
 			throw e;
@@ -387,9 +353,9 @@ public class ProjectManagerImpl implements ProjectManager, Module {
 	}
 	
 	public void	updateRdfSource(URI projectUri, URI sourceUri, String id, 
-			String mimeType, String fileName, InputStream file) throws Exception {
+			String mimeType) throws Exception {
 		try {
-			Project p = this.getProjectDAO().get(projectUri);
+			Project p = this.projectDao.get(projectUri);
 			MediaType mappedType = null;
 			try {
 				mappedType = RdfSourceImpl.parseMimeType(mimeType);
@@ -403,20 +369,10 @@ public class ProjectManagerImpl implements ProjectManager, Module {
 				// Not found.
 				throw new NotFoundException();
 			}
-
-			// Delete old source
-			File oldStoragePath = this.getFileStorage(src.getFilePath());
-			oldStoragePath.delete();
-
-			// Save new source to public project storage
-			String filePath = this.getProjectFilePath(id, fileName);
-			File storagePath = this.getFileStorage(filePath);
-			fileCopy(file, storagePath);
-
+			
 			// Save infos
-			src.setTitle(fileName);
 			src.setMimeType(mappedType.toString());
-			this.getProjectDAO().save(p);
+			this.projectDao.save(p);
 		}
 		catch (Exception e) {
 			throw e;
@@ -425,7 +381,7 @@ public class ProjectManagerImpl implements ProjectManager, Module {
 	
 	public void updateDbSource(URI projectUri, URI sourceUri, String title, String database, 
 			String user, String password, String request, int cacheDuration) {
-		Project p = this.getProjectDAO().get(projectUri);
+		Project p = this.projectDao.get(projectUri);
 		// Get source to persistent project
 		DbSource src = (DbSource) p.getSource(sourceUri);
 		if (src == null) {
@@ -439,7 +395,7 @@ public class ProjectManagerImpl implements ProjectManager, Module {
 		src.setPassword(password);
 		src.setRequest(request);
 		src.setCacheDuration(cacheDuration);
-		this.getProjectDAO().save(p);
+		this.projectDao.save(p);
 	}
 	
 	public String getProjectFilePath(String projectId, String fileName) {
@@ -481,7 +437,7 @@ public class ProjectManagerImpl implements ProjectManager, Module {
 	
 	private URI newProjectId(URI baseUri, String name) {
 		try {
-			return new URL(baseUri.toURL(), "project/" + urlify(name)).toURI();
+			return new URL(baseUri.toURL(), "workspace/project/" + urlify(name)).toURI();
 		} catch (Exception e) {
 			throw new RuntimeException("Invalid base URI: " + baseUri);
 		}
@@ -517,4 +473,6 @@ public class ProjectManagerImpl implements ProjectManager, Module {
 	public Collection<Project> getAllProjects() {
 		return this.projectDao.getAll();
 	}
+
+	
 }

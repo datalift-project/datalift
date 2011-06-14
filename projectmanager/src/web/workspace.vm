@@ -91,7 +91,7 @@
 		#foreach($curSrc in $current.getSources())
 		{
 			uri:"$curSrc.uri",
-			title:"<a href='$esc.html($curSrc.uri)'>$esc.html($curSrc.title)</a>",
+			title:"<a href='$curSrc.uri'>$esc.html($curSrc.title)</a>",
 			#if($curSrc.getTypeSource() == $field.DbSource)
 				infos: "#i18n("project.upload_db.source_url"): $!esc.html($curSrc.connectionUrl)  <br/>#i18n("project.upload_db.request"): $!esc.html($curSrc.request)  <br/>#i18n("project.upload_db.cache_duration"): $!esc.html($curSrc.cacheDuration)"
 			#elseif($curSrc.getTypeSource() == $field.RdfSource)
@@ -112,7 +112,7 @@
 			caption:"",
 			buttonicon:"ui-icon-plus",
 			onClickButton:function(){
-				window.location = "$current.uri/srcupload.html"					
+				window.location = currentProject + "/srcupload.html"					
 			} 
 		}).navButtonAdd(
 			'#selectable_sources_toolbar',
@@ -188,7 +188,7 @@
 				caption:"",
 				buttonicon:"ui-icon-plus",
 				onClickButton:function(){
-				window.location = "$current.uri/ontologyUpload.html"					
+				window.location = currentProject + "/ontologyUpload.html"					
 			} 
 			}).navButtonAdd('#selectable_ontologies_toolbar',
 				
@@ -198,7 +198,7 @@
 					var id = jQuery("#selectable_ontologies").getGridParam('selrow');
 					if(id){
 						var ret = jQuery("#selectable_ontologies").getRowData(id);
-						window.location = "$current.uri/ontology/"+ret.title+"/modify.html";
+						window.location = currentProject + "/ontology/"+ret.title+"/modify.html";
 					} else {
 						alert('#i18n("project.msg.select_row")');
 					}							
@@ -212,7 +212,7 @@
 				var id = jQuery("#selectable_ontologies").getGridParam('selrow');
 				if(id){
 					var ret = jQuery("#selectable_ontologies").getRowData(id);
-					window.location = "$current.uri/ontology/"+ret.title+"/delete";
+					window.location = currentProject + "/ontology/"+ret.title+"/delete";
 				} else {
 					alert('#i18n("project.msg.select_row")');
 				}	
@@ -233,7 +233,7 @@
 		<a class="ui-state-default dl-project-button" onclick="makeFocus(this);" href="${item.uri}">$!esc.html($item.title)</a><br/>
 #end
 	</div>
-	<a href="${baseUri}/project/add.html">#i18n("project.title.new_project")</a>
+	<a href="${baseUri}/workspace/project/add.html">#i18n("project.title.new_project")</a>
 </div>
 <div id="workspace-main-panel" class="ui-widget-content">
 #if ($current)
@@ -262,7 +262,7 @@
 #end
 				</ol>
 			</div>
-			<form method="post" action="$current.getUri()" class="form_formated">
+			<form method="post" action="$current.uri" class="form_formated">
 				<a href="${current.uri}/modify.html" class="button">#i18n("modify")</a>
 				<input type="hidden" id="delete" name="delete" value="true" />
 				<input type="submit" value="#i18n("delete")"/>
@@ -277,7 +277,7 @@
 			<div id="selectable_sources_toolbar"></div>
 			</form> 
 			<br/>
-			<a href="$current.getRdfId()/srcupload.html">#i18n("project.add_dataset")</a>
+			<a href="${current.uri}/srcupload.html">#i18n("project.add_dataset")</a>
 		</div>
 
 		<div id="ontology">
@@ -288,9 +288,10 @@
 			<div id="selectable_ontologies_toolbar"></div>
 			</form> 
 			<br/>
-			<a href="$current.getRdfId()/ontologyUpload.html">#i18n("project.add_ontology")</a>
+			<a href="${current.uri}/ontologyUpload.html">#i18n("project.add_ontology")</a>
 		</div>
 	</div>
+	
 #else
 	<p style='text-align:center'>
 		#i18n("welcome")

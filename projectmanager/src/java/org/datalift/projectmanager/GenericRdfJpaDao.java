@@ -10,8 +10,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.Query;
 
-import org.datalift.fwk.log.Logger;
-
 import com.clarkparsia.empire.annotation.RdfsClass;
 import com.clarkparsia.empire.impl.RdfQuery;
 
@@ -23,11 +21,9 @@ public abstract class GenericRdfJpaDao<T>
 
     protected final EntityManager entityMgr;
 
-    private Logger	log = null;
     
     public GenericRdfJpaDao(final Class<? extends T> persistentClass,
                             final EntityManager entityMgr) {
-    	log = Logger.getLogger();
         if (persistentClass == null) {
             throw new IllegalArgumentException("persistentClass");
         }
@@ -58,8 +54,6 @@ public abstract class GenericRdfJpaDao<T>
     }
 
     public T get(URI id) {
-    	log.debug("Goin to get : {} with URI {}", this.persistentClass.toString()
-    			, id.toString());
         T entity = this.entityMgr.find(this.persistentClass, id);
         if (entity == null) {
             throw new EntityNotFoundException(id.toString());

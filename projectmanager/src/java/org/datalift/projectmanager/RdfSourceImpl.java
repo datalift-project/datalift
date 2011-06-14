@@ -24,7 +24,6 @@ import org.openrdf.rio.turtle.TurtleParser;
 import com.clarkparsia.empire.annotation.RdfsClass;
 
 import org.datalift.fwk.MediaTypes;
-import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.RdfSource;
 import org.datalift.fwk.util.StringUtils;
 
@@ -56,7 +55,6 @@ public class RdfSourceImpl extends BaseFileSource<Statement>
     // FileSource contract support
     //-------------------------------------------------------------------------
 
-    private final static Logger log = Logger.getLogger();
     @Override
     public void init(File docRoot, URI baseUri) throws IOException {
         super.init(docRoot, baseUri);
@@ -90,7 +88,6 @@ public class RdfSourceImpl extends BaseFileSource<Statement>
             }
             this.content = Collections.unmodifiableCollection(l);
         }
-        log.debug("RDF source initialized");
     }
     
     @Override

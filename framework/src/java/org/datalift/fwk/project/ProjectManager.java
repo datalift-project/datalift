@@ -89,11 +89,11 @@ public interface ProjectManager
     
 	public Project newProject(URI projectId, String title, String description, String license);
 	
-	public void updateCsvSource(Project p, URI sourceUri, String id, String fileName, 
-			InputStream file, String titleRow, String separator) throws Exception;
+	public void updateCsvSource(Project p, URI sourceUri, String id,
+			String titleRow, String separator) throws Exception;
 	
 	public void	updateRdfSource(URI projectUri, URI sourceUri, String id, 
-			String mimeType, String fileName, InputStream file) throws Exception;
+			String mimeType) throws Exception;
 
 	public void updateDbSource(URI projectUri, URI sourceUri, String title, String database, 
 			String user, String password, String request, int cacheDuration);
@@ -120,4 +120,5 @@ public interface ProjectManager
 	public void persistProject(Project p);
 	
 	public Collection<Project> getAllProjects();
+
 }
