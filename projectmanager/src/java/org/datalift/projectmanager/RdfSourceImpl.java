@@ -75,7 +75,7 @@ public class RdfSourceImpl extends BaseFileSource<Statement>
         	else if (this.getMimeType().equals(MediaTypes.APPLICATION_RDF_XML))
         		parser = new RDFXMLParser();
             else {
-                throw new IllegalStateException(
+                throw new IllegalArgumentException(
                                 "Unsupported MIME type: " + this.getMimeType());
             }
             Collection<Statement> l = new LinkedList<Statement>();
