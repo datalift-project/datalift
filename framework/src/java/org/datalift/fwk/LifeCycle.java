@@ -17,6 +17,11 @@ public interface LifeCycle
     public void init(Configuration configuration);
 
     /**
+     * Inter-module initialization
+     */
+    public void postInit();
+    
+    /**
      * Component shutdown.
      * @param  configuration   the DataLift configuration.
      */

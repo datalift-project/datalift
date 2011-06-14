@@ -1,4 +1,4 @@
-package org.datalift.core.project;
+package org.datalift.projectmanager;
 
 
 import java.io.File;
@@ -27,19 +27,6 @@ import org.datalift.fwk.util.StringUtils;
 public class CsvSourceImpl extends BaseFileSource<String[]>
                            implements CsvSource
 {
-    public enum Separator {
-        comma(','), semicolon(';'), tab('\t');
-
-        protected final char value;
-
-        Separator(char s) {
-            this.value = s;
-        }
-
-        public char getValue() {
-            return value;
-        }
-    }
 
     @RdfProperty("datalift:separator")
     private String separator;

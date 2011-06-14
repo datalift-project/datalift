@@ -1,4 +1,4 @@
-package org.datalift.core.project;
+package org.datalift.projectmanager;
 
 import java.net.URI;
 import java.net.URISyntaxException;

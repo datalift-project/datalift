@@ -4,19 +4,18 @@
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-#load("resources")
 #if( $current )
 	#set( $title  = "project.title.modify_dataset" )
 	#set( $submit = "modify" )
-       #set( $target_csv = "$it.getRdfId()/csvuploadModify" )
-       #set( $target_rdf = "$it.getRdfId()/rdfuploadModify" )
-       #set( $target_db = "$it.getRdfId()/dbuploadModify" )
+       #set( $target_csv = "${it.uri}/csvuploadModify" )
+       #set( $target_rdf = "${it.uri}/rdfuploadModify" )
+       #set( $target_db = "${it.uri}/dbuploadModify" )
 #else
 	#set( $title = "project.title.add_dataset" )
 	#set( $submit = "create" )
-       #set( $target_csv = "$it.getRdfId()/csvupload" )
-       #set( $target_rdf = "$it.getRdfId()/rdfupload" )
-       #set( $target_db = "$it.getRdfId()/dbupload" )
+       #set( $target_csv = "${it.uri}/csvupload" )
+       #set( $target_rdf = "${it.uri}/rdfupload" )
+       #set( $target_db = "${it.uri}/dbupload" )
 #end
 	<title>Datalift - #i18n($title)</title>
 #header_links
@@ -68,30 +67,35 @@
 <div id="content" class="ui-widget-content dl-main-panel">
 <h3 class="ui-widget-header dl-widget-header">#i18n($title)</h3>
 <div class="dl-panel">
-<a href="$it.uri#source">#i18n("back")</a>
+<a href="${it.uri}#source">#i18n("back")</a>
 
 <div id="accordion">
 
 	<h3><a href="#">CSV</a></h3>
 	<div>
-	#if($current)
-	#end
 	<form method="post" action="$target_csv" enctype="multipart/form-data" class="form_formated">
-		<input type="hidden" id="current_source" name="current_source" value="$current.uri">
+#if(!$current)		
 		<p>#i18n("project.upload_csv") : $esc.html($it.getTitle())</p>
 		<p><input type="file" name="source"/></p>
+#else
+		<input type="hidden" name="current_source" value="$current.uri"/>
+#end
 		<p><label for="title_row">#i18n("project.upload_csv_activate") : </label>
+#if($current && $current.hasTitleRow() == true)
+		<input type="checkbox" id="title_row" name="title_row" checked="on"/></p>
+#else
 		<input type="checkbox" id="title_row" name="title_row"/></p>
+#end		
 		<p><label for="separator">#i18n("project.upload_csv_separator") :</label>
-		<select id="separator" name="separator"></p>
+		<select id="separator" name="separator">
 		#foreach($s in $sep)
-			#if( $foreach.count == 1 )
+			#if(($foreach.count == 1 && !$current) || $current.getSeparator().equals($s.toString()))
 				<option value="$esc.html($s.name())" selected="true">$esc.html($s.toString())</option>
-			#else
+			#else 
 				<option value="$esc.html($s.name())">$esc.html($s.toString())</option>
 			#end
 		#end
-		</select>
+		</select></p>
 		<p><input type="submit" value="#i18n("$submit")"/></p>
 	</form>
 	</div>
@@ -99,17 +103,21 @@
 	<h3><a href="#">RDF</a></h3>
 	<div>
 	<form method="post" action="$target_rdf" enctype="multipart/form-data" class="form_formated">
-		<input type="hidden" id="current_source" name="current_source" value="$current.uri">
+#if (!$current)		
 		<p>#i18n("project.upload_rdf") : $esc.html($it.getTitle())</p>
 		<p><input type="file" name="source"/></p>
+#else
+		<input type="hidden" id="current_source" name="current_source" value="$current.uri"/>
+#end
+		
 		<p><label for="mime_type">#i18n("project.upload_rdf_format") : </label>
 		<select id="mime_type" name="mime_type">
-			<option id="rdfxml" 	value="application/rdf+xml">RDF/XML</option>
-			<option id="ntriple"	value="application/n-triples">NTriples</option>
-			<option id="turtle"		value="text/turtle">Turtle</option>
-			<option id="n3"			value="text/rdf+n3">N3</option>
-			<option id="trig"		value="application/x-trig">TriG</option>
-			<option id="trix"		value="application/trix">TriX</option>
+			<option id="rdfxml" 	value="application/rdf+xml" #if($current.getMimeType().equals("application/rdf+xml")) selected="true" #end>RDF/XML</option>
+			<option id="ntriple"	value="application/n-triples" #if($current.getMimeType().equals("application/n-triples")) selected="true" #end>NTriples</option>
+			<option id="turtle"		value="text/turtle" #if($current.getMimeType().equals("text/turtle")) selected="true" #end>Turtle</option>
+			<option id="n3"			value="text/n3" #if($current.getMimeType().equals("text/n3")) selected="true" #end>N3</option>
+			<option id="trig"		value="application/x-trig" #if($current.getMimeType().equals("application/x-trig")) selected="true" #end>TriG</option>
+			<option id="trix"		value="application/trix" #if($current.getMimeType().equals("application/trix")) selected="true" #end>TriX</option>
 		</select></p>
 		<p><input type="submit" value="#i18n("$submit")"/></p>
 	</form>
@@ -118,7 +126,7 @@
 	<h3><a href="#">#i18n("project.upload_db.title")</a></h3>
 	<div>
 	<form method="post" action="$target_db" class="form_formated">
-		<input type="hidden" id="current_source" name="current_source" value="$current.uri">
+		<input type="hidden" id="current_source" name="current_source" value="$current.uri"/>
 		<p><label for="title">#i18n("project.upload_db.source_name") :</label>
 		<input type="text" id="title" name="title" value="$!esc.html($current.title)" /></p>
 		<p><label for="source_url">#i18n("project.upload_db.source_url") :</label>

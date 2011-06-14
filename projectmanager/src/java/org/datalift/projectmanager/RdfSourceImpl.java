@@ -1,4 +1,4 @@
-package org.datalift.core.project;
+package org.datalift.projectmanager;
 
 import java.io.File;
 import java.io.IOException;
@@ -83,7 +83,7 @@ public class RdfSourceImpl extends BaseFileSource<Statement>
                     parser.setRDFHandler(collector);
                     parser.parse(in, (baseUri != null)? baseUri.toString(): "");
                 } catch (Exception e) {
-                    throw new IOException(e);
+                    throw new IOException("Error while parsing RDF source");
                 }
             }
             this.content = Collections.unmodifiableCollection(l);

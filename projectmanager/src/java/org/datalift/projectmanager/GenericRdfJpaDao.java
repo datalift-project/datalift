@@ -1,4 +1,4 @@
-package org.datalift.core.project;
+package org.datalift.projectmanager;
 
 
 import java.net.URI;
@@ -21,7 +21,7 @@ public abstract class GenericRdfJpaDao<T>
 
     protected final EntityManager entityMgr;
 
-
+    
     public GenericRdfJpaDao(final Class<? extends T> persistentClass,
                             final EntityManager entityMgr) {
         if (persistentClass == null) {

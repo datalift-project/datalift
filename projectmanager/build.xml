@@ -30,7 +30,7 @@
   set to the current working directory.
 -->
 
-<project name="datalift-sparql" default="dist" basedir=".">
+<project name="datalift-projectmanager" default="dist" basedir=".">
 
   <!-- ================ Property Definitions ============================== -->
 
@@ -59,7 +59,6 @@
 
   <property file="${user.home}/datalift-build.properties"/>
   <property file="build.properties"/>
-  <property file="../core/build.properties"/>
 
 
   <!-- ================ File and Directory Names ========================== -->
@@ -87,10 +86,10 @@
                         Defaults to "dist".
    -->
 
-  <property name="app.name"             value="sparqlEndpoint"/>
+  <property name="app.name"             value="projectManager"/>
   <property name="app.version"          value="0.1"/>
   <property name="app.path"             value="/${app.name}"/>
-  <property name="app.long.name"        value="DataLift SPARQL Endpoint"/>
+  <property name="app.long.name"        value="DataLift Project Manager"/>
 
   <property name="build.home"           location="${basedir}/build"/>
   <property name="dist.home"            location="${basedir}/dist"/>
@@ -111,16 +110,16 @@
   <property name="classes.dir"          location="${build.home}/classes"/>
   <property name="docs.dir"             location="${dist.home}/docs"/>
 
-  <property name="jar.name"             value="00-${app.name}.jar"/>
+  <property name="jar.name"             value="${app.name}.jar"/>
   <property name="jar.path"             location="${dist.home}/${jar.name}"/>
 
   <property name="locale.default"		value="en"/>
   <property name="locale.default_resources" 	
-	value="${web.home}/resources_${locale.default}.properties"/>
+		value="${web.home}/resources_${locale.default}.properties"/>
 
   <available property="locale.exists" file="${locale.default_resources}">
   </available>
-	
+
   <!-- ================ Compilation Control Options ======================= -->
 
   <!--
@@ -261,13 +260,14 @@
 		</copy>
   </target>
 	
+	
   <target name="prepare-dist" depends="prepare">
     <!-- Copy web application page templates and resources -->
     <copy todir="${classes.dir}" includeEmptyDirs="false"
   		preservelastmodified="true">
       <fileset dir="${web.home}" excludes="**/.*"/>
     </copy>
-  	
+	
     <!-- Create build directories as needed -->
     <mkdir dir="${dist.home}"/>
   </target>
@@ -288,7 +288,7 @@
     <jar jarfile="${jar.path}">
       <fileset dir="${classes.dir}"/>
       <service type="org.datalift.fwk.Module"
-               provider="org.datalift.sparql.SesameSparqlEndpoint"/>
+               provider="org.datalift.projectmanager.WorkspaceModule"/>
     </jar>
   </target>
 

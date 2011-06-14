@@ -31,10 +31,9 @@
 	<script language="javascript" src="${baseUri}/js/jquery/jquery.jqGrid.locale-en.js"></script>
 	<script language="javascript" src="${baseUri}/js/jquery/jquery.jqGrid.js"></script>
 	<!-- History Plugins (https://github.com/balupton/history.js) -->
-	<script type="text/javascript">if ( typeof window.JSON === 'undefined' ) { document.write('<script language="javascript" src="${baseUri}/js/history.js/json2.js"><\/script>'); }</script>
 	<script language="javascript" src="${baseUri}/js/history.js/amplify.store.js"></script>
-	<script language="javascript" src="${baseUri}/js/history.js/history.js"></script>
 	<script language="javascript" src="${baseUri}/js/history.js/history.adapter.jquery.js"></script>
+	<script language="javascript" src="${baseUri}/js/history.js/history.js"></script>
 	 <!-- Datalift common javascript -->
         <script language="javascript" src="${baseUri}/js/common.js"></script>
 #end

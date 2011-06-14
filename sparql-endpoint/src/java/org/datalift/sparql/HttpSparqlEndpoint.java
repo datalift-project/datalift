@@ -70,4 +70,10 @@ public class HttpSparqlEndpoint extends AbstractSparqlEndpoint
                        .type(MediaTypes.APPLICATION_XML)
                        .entity(data);
     }
+
+	@Override
+	public void postInit() {
+		// TODO Auto-generated method stub
+		
+	}
 }

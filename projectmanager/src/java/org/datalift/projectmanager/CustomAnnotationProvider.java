@@ -1,4 +1,4 @@
-package org.datalift.core.project;
+package org.datalift.projectmanager;
 
 import java.lang.annotation.Annotation;
 import java.util.Collection;

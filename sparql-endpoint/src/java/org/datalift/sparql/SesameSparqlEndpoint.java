@@ -584,4 +584,10 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
             return this.columns;
         }
     }
+
+	@Override
+	public void postInit() {
+		// TODO Auto-generated method stub
+		
+	}
 }
