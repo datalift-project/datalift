@@ -21,6 +21,7 @@ import org.datalift.fwk.project.Source;
 
 import static org.datalift.fwk.rdf.RdfNamespace.VDPP;
 
+
 /**
  * An implementation of {@link Project} that relies on Empire RDF JPA provider
  * for persistence.
@@ -45,58 +46,59 @@ import static org.datalift.fwk.rdf.RdfNamespace.VDPP;
  */
 @Entity
 @RdfsClass("vdpp:Project")
-public class ProjectImpl extends BaseRdfEntity implements Project {
-	// -------------------------------------------------------------------------
-	// Instance members
-	// -------------------------------------------------------------------------
+public class ProjectImpl extends BaseRdfEntity implements Project
+{
+    // -------------------------------------------------------------------------
+    // Instance members
+    // -------------------------------------------------------------------------
 
-	@RdfId
-	private String uri;
-	@RdfProperty("dc:title")
-	private String title;
-	@RdfProperty("dc:creator")
-	private String owner;
-	@RdfProperty("dc:description")
-	private String description;
+    @RdfId
+    private String uri;
+    @RdfProperty("dc:title")
+    private String title;
+    @RdfProperty("dc:creator")
+    private String owner;
+    @RdfProperty("dc:description")
+    private String description;
 
-	@RdfProperty("datalift:source")
-	@OneToMany(fetch = FetchType.EAGER, cascade = { CascadeType.ALL })
-	private Collection<Source> sources = new LinkedList<Source>();
+    @RdfProperty("datalift:source")
+    @OneToMany(fetch = FetchType.EAGER, cascade = { CascadeType.ALL })
+    private Collection<Source> sources = new LinkedList<Source>();
 
-	@RdfProperty("dcterms:issued")
-	private Date dateCreated;
-	@RdfProperty("dcterms:modified")
-	private Date dateModified;
-	@RdfProperty("dcterms:license")
-	private URI license;
-	@RdfProperty("prv:Execution")
-	private URI execution;
+    @RdfProperty("dcterms:issued")
+    private Date dateCreated;
+    @RdfProperty("dcterms:modified")
+    private Date dateModified;
+    @RdfProperty("dcterms:license")
+    private URI license;
+    @RdfProperty("prv:Execution")
+    private URI execution;
 
-	@RdfProperty("void:vocabulary")
-	@OneToMany(fetch = FetchType.EAGER, cascade = { CascadeType.ALL })
-	private Collection<Ontology> ontologies = new LinkedList<Ontology>();
+    @RdfProperty("void:vocabulary")
+    @OneToMany(fetch = FetchType.EAGER, cascade = { CascadeType.ALL })
+    private Collection<Ontology> ontologies = new LinkedList<Ontology>();
 
-	// -------------------------------------------------------------------------
-	// Constructors
-	// -------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // Constructors
+    // -------------------------------------------------------------------------
 
-	public ProjectImpl() {
-		// NOP
-	}
+    public ProjectImpl() {
+        // NOP
+    }
 
-	public ProjectImpl(String uri) {
-		this.uri = uri;
-	}
+    public ProjectImpl(String uri) {
+        this.uri = uri;
+    }
 
-	// -------------------------------------------------------------------------
-	// Project contract support
-	// -------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // Project contract support
+    // -------------------------------------------------------------------------
 
-	/** {@inheritDoc} */
-	@Override
-	public String getUri() {
-		return this.uri;
-	}
+    /** {@inheritDoc} */
+    @Override
+    public String getUri() {
+        return this.uri;
+    }
 
 	/** {@inheritDoc} */
 	@Override
@@ -239,8 +241,10 @@ public class ProjectImpl extends BaseRdfEntity implements Project {
 	}
 
 	public enum Execution {
-		Selection(VDPP.uri + "Selection"), Publication(VDPP.uri + "Publication"), Interlinking(
-				VDPP.uri + "Interlinking"), Convertion(VDPP.uri + "Convertion");
+		Selection(VDPP.uri + "Selection"),
+		Publication(VDPP.uri + "Publication"),
+		Interlinking(VDPP.uri + "Interlinking"),
+		Convertion(VDPP.uri + "Convertion");
 
 		public final URI uri;
 

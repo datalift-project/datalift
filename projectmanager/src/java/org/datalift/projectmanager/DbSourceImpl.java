@@ -1,5 +1,6 @@
 package org.datalift.projectmanager;
 
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -17,53 +18,47 @@ import javax.sql.rowset.WebRowSet;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 
-import org.datalift.fwk.project.DbSource;
 import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.RdfsClass;
 import com.sun.rowset.WebRowSetImpl;
 
-/**
- * @author A507173
- *
- */
-/**
- * @author A507173
- *
- */
+import org.datalift.fwk.project.DbSource;
+
+
 @Entity
 @RdfsClass("datalift:dbSource")
 public class DbSourceImpl extends BaseSource implements DbSource
 {
-	@RdfProperty("datalift:connectionUrl")
-	private String connectionUrl;
-	@RdfProperty("datalift:user")
-	private String user;
-	@RdfProperty("datalift:password")
-	private String password;
-	@RdfProperty("datalift:database")
-	private String database;
-	@RdfProperty("datalift:request")
-	private String request;
-	@RdfProperty("datalift:cacheDuration")
-	private int	cacheDuration;
-	
-	private transient WebRowSet wrset;
-	private final TypeSource type; 
-	
+    //-------------------------------------------------------------------------
+    // Instance members
+    //-------------------------------------------------------------------------
+
+    @RdfProperty("datalift:connectionUrl")
+    private String connectionUrl;
+    @RdfProperty("datalift:user")
+    private String user;
+    @RdfProperty("datalift:password")
+    private String password;
+    @RdfProperty("datalift:database")
+    private String database;
+    @RdfProperty("datalift:request")
+    private String request;
+    @RdfProperty("datalift:cacheDuration")
+    private int	cacheDuration;
+
+    private transient WebRowSet wrset;
+
     //-------------------------------------------------------------------------
     // Constructors
     //-------------------------------------------------------------------------
 
-	
-	public DbSourceImpl() {
-		// NOP
-		this.type = TypeSource.DbSource;
-	}
-	
-	public DbSourceImpl(String uri) {
-		super(uri);
-		this.type = TypeSource.DbSource;
-	}
+    public DbSourceImpl() {
+        super(SourceType.DbSource);
+    }
+
+    public DbSourceImpl(String uri) {
+        super(SourceType.DbSource, uri);
+    }
 
     /** {@inheritDoc} */
 	@Override
@@ -101,7 +96,6 @@ public class DbSourceImpl extends BaseSource implements DbSource
     // DbSource contract support
     //-------------------------------------------------------------------------
 
-	
 	@Override
 	public String getConnectionUrl() {
 		return connectionUrl;
@@ -222,10 +216,4 @@ public class DbSourceImpl extends BaseSource implements DbSource
 			throw new WebApplicationException(e, Response.Status.INTERNAL_SERVER_ERROR);
 		}
 	}
-	
-    public TypeSource getTypeSource() {
-    	return type;
-    }
-
-	
 }

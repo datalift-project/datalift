@@ -271,7 +271,7 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
             }
             if (ctx.get(FIELD_TOOL) == null) {
                 // TODO: TypeSource???
-            	ctx.put(FIELD_TOOL, new FieldTool().in(org.datalift.fwk.project.Source.TypeSource.class));
+            	ctx.put(FIELD_TOOL, new FieldTool().in(org.datalift.fwk.project.Source.SourceType.class));
             }
             // Apply Velocity template, using encoding from in HTTP request.
             Writer w = new OutputStreamWriter(out, this.getCharset());

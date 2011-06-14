@@ -30,12 +30,12 @@ public abstract class BaseFileSource<T> extends BaseSource
     // Constructors
     //-------------------------------------------------------------------------
 
-    protected BaseFileSource() {
-        super();
+    protected BaseFileSource(SourceType type) {
+        super(type);
     }
 
-    protected BaseFileSource(String uri) {
-        super(uri);
+    protected BaseFileSource(SourceType type, String uri) {
+        super(type, uri);
     }
 
     //-------------------------------------------------------------------------

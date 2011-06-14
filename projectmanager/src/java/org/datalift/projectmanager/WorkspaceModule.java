@@ -1,15 +1,17 @@
 package org.datalift.projectmanager;
 
+
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.ws.rs.Path;
 
+import com.sun.jersey.api.view.Viewable;
+
 import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.project.ProjectManager;
 
-import com.sun.jersey.api.view.Viewable;
 
 @Path("/workspace")
 public class WorkspaceModule extends BaseModule

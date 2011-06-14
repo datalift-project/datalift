@@ -16,21 +16,31 @@ import com.clarkparsia.empire.annotation.RdfProperty;
 @MappedSuperclass
 public abstract class BaseSource extends BaseRdfEntity implements Source
 {
+    //-------------------------------------------------------------------------
+    // Instance members
+    //-------------------------------------------------------------------------
+
     @RdfId
     private String uri;
     @RdfProperty("dc:title")
     private String title;
 
+    private final SourceType type;
+
     //-------------------------------------------------------------------------
     // Constructors
     //-------------------------------------------------------------------------
 
-    protected BaseSource() {
-        // NOP
+    protected BaseSource(SourceType type) {
+        this(type, null);
     }
 
-    protected BaseSource(String uri) {
-        this.uri = uri;
+    protected BaseSource(SourceType type, String uri) {
+        if (type == null) {
+            throw new IllegalArgumentException("type");
+        }
+        this.type = type;
+        this.uri  = uri;
     }
 
     //-------------------------------------------------------------------------
@@ -47,11 +57,18 @@ public abstract class BaseSource extends BaseRdfEntity implements Source
     public void setTitle(String t) {
         title = t;
     }
+    /** {@inheritDoc} */
+    @Override
+    public SourceType getType() {
+        return this.type;
+    }
 
     //-------------------------------------------------------------------------
     // BaseRdfEntity contract support
     //-------------------------------------------------------------------------
 
+    /** {@inheritDoc} */
+    @Override
     protected void setId(String id) {
         this.uri = id;
     }

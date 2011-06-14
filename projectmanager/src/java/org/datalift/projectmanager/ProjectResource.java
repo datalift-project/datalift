@@ -1,9 +1,5 @@
 package org.datalift.projectmanager;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_XHTML_XML;
-import static javax.ws.rs.core.MediaType.TEXT_HTML;
-import static org.datalift.fwk.util.StringUtils.isSet;
-import static org.datalift.fwk.util.StringUtils.urlify;
 
 import java.io.File;
 import java.io.InputStream;
@@ -35,6 +31,11 @@ import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 
+import com.sun.jersey.api.ConflictException;
+import com.sun.jersey.api.NotFoundException;
+import com.sun.jersey.core.header.FormDataContentDisposition;
+import com.sun.jersey.multipart.FormDataParam;
+
 import org.datalift.fwk.MediaTypes;
 import org.datalift.fwk.ResourceResolver;
 import org.datalift.fwk.log.Logger;
@@ -49,10 +50,9 @@ import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.CsvSource.Separator;
 import org.datalift.fwk.util.StringUtils;
 
-import com.sun.jersey.api.ConflictException;
-import com.sun.jersey.api.NotFoundException;
-import com.sun.jersey.core.header.FormDataContentDisposition;
-import com.sun.jersey.multipart.FormDataParam;
+import static org.datalift.fwk.MediaTypes.*;
+import static org.datalift.fwk.util.StringUtils.*;
+
 
 public class ProjectResource
 {

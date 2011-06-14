@@ -35,20 +35,22 @@ import static org.datalift.fwk.MediaTypes.*;
 public class RdfSourceImpl extends BaseFileSource<Statement>
                            implements RdfSource
 {
+    //-------------------------------------------------------------------------
+    // Instance members
+    //-------------------------------------------------------------------------
+
     private transient Collection<Statement> content = null;
-    private final TypeSource type;
+
     //-------------------------------------------------------------------------
     // Constructors
     //-------------------------------------------------------------------------
 
     public RdfSourceImpl() {
-        super();
-        this.type = TypeSource.RdfSource;
+        super(SourceType.RdfSource);
     }
 
     public RdfSourceImpl(String uri) {
-        super(uri);
-        this.type = TypeSource.RdfSource;
+        super(SourceType.RdfSource, uri);
     }
 
     //-------------------------------------------------------------------------
@@ -89,12 +91,11 @@ public class RdfSourceImpl extends BaseFileSource<Statement>
             this.content = Collections.unmodifiableCollection(l);
         }
     }
-    
+
     @Override
     public void setMimeType(String mimeType) {
         super.setMimeType(parseMimeType(mimeType).toString());
     }
-    
 
     //-------------------------------------------------------------------------
     // RdfSource contract support
@@ -140,10 +141,5 @@ public class RdfSourceImpl extends BaseFileSource<Statement>
             throw new IllegalArgumentException(typeDesc);
         }
         return mimeType;
-    }
-    
-    @Override
-    public TypeSource getTypeSource() {
-    	return type;
     }
 }
