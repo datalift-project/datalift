@@ -16,83 +16,84 @@ import org.datalift.fwk.project.ProjectManager;
 @Path("/workspace")
 public class WorkspaceModule extends BaseModule
 {
-	// -------------------------------------------------------------------------
-	// Constants
-	// -------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    // Constants
+    //-------------------------------------------------------------------------
 
-	private final static String MODULE_NAME = "workspace";
+    private final static String MODULE_NAME = "workspace";
 
-	// -------------------------------------------------------------------------
-	// Instance members
-	// -------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
+    // Instance members
+    //-------------------------------------------------------------------------
 
-	/** The DataLift configuration. */
-	private Configuration configuration = null;
-	
-	private	ProjectManagerImpl projectManager = null;
+    /** The DataLift configuration. */
+    private Configuration configuration = null;
 
-	//-------------------------------------------------------------------------
-	// Constructors
-	//-------------------------------------------------------------------------
+    private ProjectManagerImpl projectManager = null;
 
-	public WorkspaceModule() {
-		super(MODULE_NAME);
-	}
+    //-------------------------------------------------------------------------
+    // Constructors
+    //-------------------------------------------------------------------------
 
-	// -------------------------------------------------------------------------
-	// LifeCycle contract support
-	// -------------------------------------------------------------------------
+    public WorkspaceModule() {
+        super(MODULE_NAME);
+    }
 
-	/** {@inheritDoc} */
-	@Override
-	public void init(Configuration configuration) {
-	    this.configuration = configuration;
-	    this.projectManager = new ProjectManagerImpl();
-	    // Register application namespaces to Empire.
-	    this.projectManager.init(this.configuration);
-	    this.configuration.registerBean(this.projectManager);
-	}
-	
-        /** {@inheritDoc} */
-	@Override
-	public void postInit(Configuration configuration) {
-	    this.projectManager.postInit(configuration);
-	}
+    //-------------------------------------------------------------------------
+    // LifeCycle contract support
+    //-------------------------------------------------------------------------
 
-	/** {@inheritDoc} */
-	@Override
-	public void shutdown(Configuration configuration) {
-	    this.projectManager.shutdown(configuration);
-	}
-	
-	@Override
-	public Map<String, Class<?>> getResources() {
-		Map<String, Class<?>> rsc = new HashMap<String, Class<?>>();
-		rsc.put("project", ProjectResource.class);
-		
-		return rsc;
-	}
+    /** {@inheritDoc} */
+    @Override
+    public void init(Configuration configuration) {
+        this.configuration = configuration;
+        this.projectManager = new ProjectManagerImpl();
+        // Register application namespaces to Empire.
+        this.projectManager.init(this.configuration);
+        this.configuration.registerBean(this.projectManager);
+    }
 
-	public ProjectManager getProjectManager() {
-		return this.projectManager;
-	}
+    /** {@inheritDoc} */
+    @Override
+    public void postInit(Configuration configuration) {
+        this.projectManager.postInit(configuration);
+    }
 
-	public Configuration getConfiguration() {
-		return this.configuration;
-	}
+    /** {@inheritDoc} */
+    @Override
+    public void shutdown(Configuration configuration) {
+        this.projectManager.shutdown(configuration);
+    }
 
-	// -------------------------------------------------------------------------
-	// Object contract support
-	// -------------------------------------------------------------------------
+    /** {@inheritDoc} */
+    @Override
+    public Map<String, Class<?>> getResources() {
+        Map<String, Class<?>> rsc = new HashMap<String, Class<?>>();
+        rsc.put("project", ProjectResource.class);
 
-	/** {@inheritDoc} */
-	@Override
-	public String toString() {
-		return this.getClass().getSimpleName() + " ("
-				+ this.configuration.getInternalRepository().url + ')';
-	}
-	
-	/**
+        return rsc;
+    }
+
+    public ProjectManager getProjectManager() {
+        return this.projectManager;
+    }
+
+    public Configuration getConfiguration() {
+        return this.configuration;
+    }
+
+    //-------------------------------------------------------------------------
+    // Object contract support
+    //-------------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    @Override
+    public String toString() {
+        return this.getClass().getSimpleName() +
+                    " (" + this.configuration.getInternalRepository().url + ')';
+    }
+
+    /**
      * Return a viewable for the specified template, populated with the
      * specified model object.
      * <p>
