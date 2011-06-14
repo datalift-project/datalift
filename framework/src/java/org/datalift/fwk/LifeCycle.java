@@ -11,15 +11,16 @@ package org.datalift.fwk;
 public interface LifeCycle
 {
     /**
-     * Component initialization.
+     * Component initialization, first step.
      * @param  configuration   the DataLift configuration.
      */
     public void init(Configuration configuration);
 
     /**
-     * Inter-module initialization
+     * Component initialization, second step
+     * @param  configuration   the DataLift configuration.
      */
-    public void postInit();
+    public void postInit(Configuration configuration);
     
     /**
      * Component shutdown.

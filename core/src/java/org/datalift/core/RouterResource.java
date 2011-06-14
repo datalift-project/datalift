@@ -245,10 +245,25 @@ public class RouterResource implements LifeCycle, ResourceResolver
     }
     
     @Override
-	public void postInit() {
-		// TODO Auto-generated method stub
-		
-	}
+    public void postInit(Configuration config) {
+        // Post-init each module, ignoring errors.
+        for (ModuleDesc desc : this.modules.values()) {
+            Module m = desc.module;
+            Object[] prevCtx = LogContext.pushContexts(m.getName(), "postInit");
+            try {
+                m.postInit(configuration);
+            }
+            catch (Exception e) {
+                log.error("Post-init failed for module {}: {}", e,
+                          m.getName(), e.getMessage());
+                // Continue with next module.
+            }
+            finally {
+                LogContext.pushContexts(prevCtx[0], prevCtx[1]);
+            }
+        }
+        LogContext.pushContexts(null, null);
+    }
 
     /** {@inheritDoc} */
     @Override
@@ -642,7 +657,6 @@ public class RouterResource implements LifeCycle, ResourceResolver
         try {
             this.loadModules(new URLClassLoader(this.getModulePaths(f),
                                         this.getClass().getClassLoader()), f);
-            this.postInitModules();
         }
         catch (Exception e) {
             TechnicalException error = new TechnicalException(
@@ -687,19 +701,6 @@ public class RouterResource implements LifeCycle, ResourceResolver
         }
     }
 
-    private void	postInitModules() {
-    	log.debug("postInitModules");
-    	log.debug("Number of modules : {}",  this.configuration.getBeans(Module.class).size());
-    	for (Object m : this.configuration.getBeans(Module.class)) {
-    		try {
-    			((Module) m).postInit();
-    		}
-    		catch (Exception e) {
-    			log.error("Exception wile module postInit", e);
-    		}
-    	}
-    }
-    
     /**
      * Analyzes a module structure to match the expected elements and
      * returns the paths to be added to the module classpath.

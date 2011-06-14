@@ -27,7 +27,6 @@ import javax.ws.rs.core.MediaType;
 
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.LifeCycle;
-import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.CsvSource;
 import org.datalift.fwk.project.DbSource;
 import org.datalift.fwk.project.Project;
@@ -43,36 +42,37 @@ import com.clarkparsia.empire.sesametwo.OpenRdfEmpireModule;
 import com.clarkparsia.utils.NamespaceUtils;
 import com.sun.jersey.api.NotFoundException;
 
-public class ProjectManagerImpl implements ProjectManager, LifeCycle {
+public class ProjectManagerImpl implements ProjectManager, LifeCycle
+{
+        // -------------------------------------------------------------------------
+        // Constants
+        // -------------------------------------------------------------------------
 
 	private final static String REPOSITORY_URL_PARSER = "/repositories/";
-	
-	private Configuration	configuration;
+
+        // -------------------------------------------------------------------------
+        // Instance members
+        // -------------------------------------------------------------------------
+
+	private Configuration configuration;
 	
 	private EntityManagerFactory emf = null;
 	private EntityManager entityMgr = null;
 	private ProjectJpaDao projectDao = null;
 	
-	private Collection<Class<?>>	classes = null;
-	
-	private Logger	log = null;
-	
-	public ProjectManagerImpl() {
-		log = Logger.getLogger();
-	}
-	
+	private final Collection<Class<?>> classes = new LinkedList<Class<?>>();
+
 	@Override
 	public void init(Configuration configuration) {
 		this.configuration = configuration;
-		this.classes = new LinkedList<Class<?>>();
+		this.classes.addAll(this.getPersistentClasses());
+		this.registerRdfNamespaces();
 	}
 	
 	@Override
-	public void postInit() {
-		this.classes.addAll(this.getPersistentClasses());
-		this.registerRdfNamespaces();
-		this.emf = this.createEntityManagerFactory(configuration
-				.getInternalRepository().url);
+	public void postInit(Configuration configuration) {
+		this.emf = this.createEntityManagerFactory(
+		                    configuration.getInternalRepository().url);
 		this.entityMgr = this.emf.createEntityManager();
 		// Create Data Access Object for Projects.
 		this.projectDao = new ProjectJpaDao(this.entityMgr);
@@ -80,10 +80,16 @@ public class ProjectManagerImpl implements ProjectManager, LifeCycle {
 
 	@Override
 	public void shutdown(Configuration configuration) {
-		
-	}
+                // Shutdown JPA persistence provider.
+                if (this.emf != null) {
+                        if (this.entityMgr != null) {
+                                this.entityMgr.close();
+                        }
+                        this.emf.close();
+                }
+        }
 	
-	public void	registerRdfNamespace(RdfNamespace ns) {
+	public void registerRdfNamespace(RdfNamespace ns) {
 		NamespaceUtils.addNamespace(ns.prefix, ns.uri);
 	}
 	
@@ -162,7 +168,7 @@ public class ProjectManagerImpl implements ProjectManager, LifeCycle {
 	@Override
 	public DbSource newDbSource(URI uri, String title, String database,
 			String srcUrl, String user, String password, String request,
-			Integer cacheDuration) {
+			int cacheDuration) {
 		DbSourceImpl src = new DbSourceImpl(uri.toString());
 		src.setTitle(title);
 		src.setDatabase(database);

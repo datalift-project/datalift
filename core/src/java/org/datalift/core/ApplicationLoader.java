@@ -9,7 +9,6 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 
 import org.datalift.core.log.LogContext;
-import org.datalift.core.project.WorkspaceResource;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.LifeCycle;
 import org.datalift.fwk.log.Logger;
@@ -51,7 +50,6 @@ public class ApplicationLoader extends LogServletContextListener
         super.contextInitialized(event);
         // Initialize DataLift application.
         this.init(ctx);
-        this.postInit();
     }
 
     /** {@inheritDoc} */
@@ -121,14 +119,14 @@ public class ApplicationLoader extends LogServletContextListener
         try {
             // Load application configuration.
             configuration = new DefaultConfiguration(ctx);
-
             // Initialize resources.
+            // First initialization step.
             Set<Object> rsc = new HashSet<Object>();
             rsc.add(this.initResource(new RouterResource()));
-            rsc.add(this.initResource(new WorkspaceResource()));
-
             // So far, so good. => Install singletons
             resources = Collections.unmodifiableSet(rsc);
+            // Second initialization step.
+            this.postInit();
             log.info("DataLift application initialized");
         }
         catch (Throwable e) {
@@ -142,22 +140,20 @@ public class ApplicationLoader extends LogServletContextListener
         }
     }
 
-    private void	postInit() {
-    	try {
-    	log.debug("Modules post initialization");
+    private void postInit() {
     	for (Object r : resources) {
-    		log.debug("Module !");
-    		if (r instanceof LifeCycle)
-    			((LifeCycle)r).postInit();
-    		else
-    			log.debug("Module not instance of LifeCycle");
+            if (r instanceof LifeCycle) {
+                try {
+                    ((LifeCycle)r).postInit(configuration);
+                }
+                catch (Exception e) {
+                    TechnicalException error = new TechnicalException(
+                                "resource.init.error", e, r, e.getMessage());
+                    log.error(error.getMessage(), e);
+                    throw error;
+                }
+            }
     	}
-    	log.debug("Modules post initialization done");
-    	}
-    	catch(Exception e) {
-    		log.debug(e);
-    	}
-    	log.debug("End of modules post initialization");
     }
     
     /**

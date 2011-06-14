@@ -54,8 +54,8 @@ import com.sun.jersey.api.NotFoundException;
 import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.FormDataParam;
 
-public class ProjectResource {
-	
+public class ProjectResource
+{
 	private WorkspaceModule	m;
 	
 	private Logger	log;
@@ -419,7 +419,7 @@ public class ProjectResource {
 			@FormParam("title") String title, @FormParam("user") String user,
 			@FormParam("request") String request,
 			@FormParam("password") String password,
-			@FormParam("cache_duration") String cacheDuration)
+			@FormParam("cache_duration") int cacheDuration)
 			throws WebApplicationException {
 		Response response = null;
 		try {
@@ -429,7 +429,7 @@ public class ProjectResource {
 					projectUri.getPath() + this.getRelativeSourceId(title),
 					null, null);
 			this.m.getProjectManager().addDbSource(projectUri, sourceUri, title, database, 
-					srcUrl, request, user, password, new Integer(cacheDuration));
+					srcUrl, request, user, password, cacheDuration);
 			String redirectUrl = projectUri.toString() + "#source";
 			response = Response.created(sourceUri)
 					.entity(this.m.newViewable("/redirect.vm", redirectUrl))
@@ -449,7 +449,7 @@ public class ProjectResource {
 			@FormParam("title") String title, @FormParam("user") String user,
 			@FormParam("request") String request,
 			@FormParam("password") String password,
-			@FormParam("cache_duration") String cacheDuration,
+			@FormParam("cache_duration") int cacheDuration,
 			@FormParam("current_source") URI currentSourceUri)
 			throws WebApplicationException {
 		Response response = null;
@@ -457,7 +457,7 @@ public class ProjectResource {
 			URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
 			
 			this.m.getProjectManager().updateDbSource(projectUri, currentSourceUri, title, database,
-						user, password, request, new Integer(cacheDuration));
+						user, password, request, cacheDuration);
 			String redirectUrl = projectUri.toString() + "#source";
 			response = Response.ok()
 					.entity(this.m.newViewable("/redirect.vm", redirectUrl))

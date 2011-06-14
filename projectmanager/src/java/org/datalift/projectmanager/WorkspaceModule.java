@@ -7,25 +7,18 @@ import javax.ws.rs.Path;
 
 import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
-import org.datalift.fwk.LifeCycle;
-import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.ProjectManager;
 
 import com.sun.jersey.api.view.Viewable;
 
 @Path("/workspace")
-public class WorkspaceModule extends BaseModule {
+public class WorkspaceModule extends BaseModule
+{
 	// -------------------------------------------------------------------------
 	// Constants
 	// -------------------------------------------------------------------------
 
 	private final static String MODULE_NAME = "workspace";
-
-	// -------------------------------------------------------------------------
-	// Class members
-	// -------------------------------------------------------------------------
-
-	private final static Logger log = Logger.getLogger();
 
 	// -------------------------------------------------------------------------
 	// Instance members
@@ -34,15 +27,16 @@ public class WorkspaceModule extends BaseModule {
 	/** The DataLift configuration. */
 	private Configuration configuration = null;
 	
-	private	ProjectManager	projectManager = null;
+	private	ProjectManagerImpl projectManager = null;
 
-
+	//-------------------------------------------------------------------------
+	// Constructors
+	//-------------------------------------------------------------------------
 
 	public WorkspaceModule() {
 		super(MODULE_NAME);
 	}
-	
-	
+
 	// -------------------------------------------------------------------------
 	// LifeCycle contract support
 	// -------------------------------------------------------------------------
@@ -50,23 +44,23 @@ public class WorkspaceModule extends BaseModule {
 	/** {@inheritDoc} */
 	@Override
 	public void init(Configuration configuration) {
-		this.projectManager = new ProjectManagerImpl();
-		this.configuration = configuration;
-		// Register application namespaces to Empire.
-		//this.registerRdfNamespaces();
-		this.configuration.registerBean(this.projectManager);
-		((LifeCycle) this.projectManager).init(this.configuration);
-		((LifeCycle) this.projectManager).postInit();
+	    this.configuration = configuration;
+	    this.projectManager = new ProjectManagerImpl();
+	    // Register application namespaces to Empire.
+	    this.projectManager.init(this.configuration);
+	    this.configuration.registerBean(this.projectManager);
 	}
 	
+        /** {@inheritDoc} */
 	@Override
-	public void postInit() {
-		// NOP
+	public void postInit(Configuration configuration) {
+	    this.projectManager.postInit(configuration);
 	}
 
 	/** {@inheritDoc} */
 	@Override
 	public void shutdown(Configuration configuration) {
+	    this.projectManager.shutdown(configuration);
 	}
 	
 	@Override
@@ -77,14 +71,14 @@ public class WorkspaceModule extends BaseModule {
 		return rsc;
 	}
 
-	public ProjectManager	getProjectManager() {
+	public ProjectManager getProjectManager() {
 		return this.projectManager;
 	}
 
-	public Configuration	getConfiguration() {
+	public Configuration getConfiguration() {
 		return this.configuration;
 	}
-	
+
 	// -------------------------------------------------------------------------
 	// Object contract support
 	// -------------------------------------------------------------------------

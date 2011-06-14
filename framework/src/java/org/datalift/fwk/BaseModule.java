@@ -94,7 +94,7 @@ public abstract class BaseModule implements Module
      * <p>This implementation is empty.</p>
      */
     @Override
-    public void postInit() {
+    public void postInit(Configuration cfg) {
         // NOP
     }
     
