@@ -37,12 +37,12 @@ import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 
+import static javax.ws.rs.core.HttpHeaders.ACCEPT;
+
 import org.openrdf.model.Literal;
 import org.openrdf.query.Binding;
 import org.openrdf.query.BindingSet;
 import org.openrdf.query.TupleQueryResultHandlerBase;
-
-import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 
 import org.datalift.core.log.LogContext;
 import org.datalift.core.velocity.jersey.VelocityTemplateProcessor;
