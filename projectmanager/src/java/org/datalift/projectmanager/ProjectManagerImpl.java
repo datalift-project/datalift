@@ -19,18 +19,18 @@ import java.util.Map;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.spi.PersistenceProvider;
-import javax.ws.rs.core.MediaType;
 
 import com.clarkparsia.empire.Empire;
 import com.clarkparsia.empire.config.EmpireConfiguration;
 import com.clarkparsia.empire.sesametwo.OpenRdfEmpireModule;
 import com.clarkparsia.utils.NamespaceUtils;
-import com.sun.jersey.api.NotFoundException;
 
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.LifeCycle;
+import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.CsvSource;
 import org.datalift.fwk.project.DbSource;
+import org.datalift.fwk.project.Ontology;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectManager;
 import org.datalift.fwk.project.RdfSource;
@@ -252,6 +252,7 @@ public class ProjectManagerImpl implements ProjectManager, LifeCycle
         return p;
     }
 
+    /*
     public void addCsvSource(URI projectUri, URI sourceUri, String id,
                              String fileName, InputStream file,
                              String titleRow, String separator) {
@@ -276,7 +277,7 @@ public class ProjectManagerImpl implements ProjectManager, LifeCycle
 
     public void addRdfSource(URI baseUri, String id, String fileName,
                              String mimeType, InputStream file) {
-        MediaType mappedType = null;
+    		MediaType mappedType = null;
             mappedType = RdfSourceImpl.parseMimeType(mimeType);
             URI projectUri = this.newProjectId(baseUri, id);
             URI sourceUri = new URI(projectUri.getScheme(), null,
@@ -309,82 +310,15 @@ public class ProjectManagerImpl implements ProjectManager, LifeCycle
                 user, password, request, cacheDuration);
         p.addSource(src);
         this.projectDao.save(p);
-    }
-
-    public void addOntology(URI projectUri, URI srcUrl, String title) {
-        Project p = this.projectDao.get(projectUri);
-
-        // Add ontology to persistent project
-        OntologyImpl ontology = new OntologyImpl();
-        ontology.setTitle(title);
-        ontology.setSource(srcUrl);
-        ontology.setDateSubmitted(new Date());
-        ontology.setOperator(SecurityContext.getUserPrincipal());
-        p.addOntology(ontology);
-        this.projectDao.save(p);
-    }
-
-    public void updateCsvSource(Project p, URI sourceUri, String id,
-                                String titleRow, String separator) {
-            // Get source of project
-            CsvSourceImpl source = (CsvSourceImpl) p.getSource(sourceUri);
-            if (source == null) {
-                // Not found.
-                throw new NotFoundException();
-            }
-            // Save infos to persistent project
-            boolean hasTitleRow = ((titleRow != null) && (titleRow
-            .toLowerCase().equals("on")));
-            source.setSeparator(String.valueOf(separator));
-            source.setTitleRow(hasTitleRow);
-            this.projectDao.save(p);
-    }
-
-    public void updateRdfSource(URI projectUri, URI sourceUri, String id,
-            String mimeType) throws Exception {
-        try {
-            Project p = this.projectDao.get(projectUri);
-            MediaType mappedType = null;
-            try {
-                mappedType = RdfSourceImpl.parseMimeType(mimeType);
-            }
-            catch (Exception e) {
-                //this.throwInvalidParamError("mime_type", mimeType);
-                throw e;
-            }
-            // Get source to persistent project
-            RdfSourceImpl src = (RdfSourceImpl) p.getSource(sourceUri);
-            if (src == null) {
-                // Not found.
-                throw new NotFoundException();
-            }
-
-            // Save infos
-            src.setMimeType(mappedType.toString());
-            this.projectDao.save(p);
-        }
-        catch (Exception e) {
-            throw e;
-        }
-    }
-
-    public void updateDbSource(URI projectUri, URI sourceUri, String title, String database,
-            String user, String password, String request, int cacheDuration) {
-        Project p = this.projectDao.get(projectUri);
-        // Get source to persistent project
-        DbSource src = (DbSource) p.getSource(sourceUri);
-        if (src == null) {
-            // Not found.
-            throw new NotFoundException();
-        }
-        // Save informations
-        src.setTitle(title);
-        src.setDatabase(database);
-        src.setUser(user);
-        src.setPassword(password);
-        src.setRequest(request);
-        src.setCacheDuration(cacheDuration);
-        this.projectDao.save(p);
+    }*/
+    
+    public Ontology newOntology(URI srcUrl, String title) {
+    	 OntologyImpl ontology = new OntologyImpl();
+         ontology.setTitle(title);
+         ontology.setSource(srcUrl);
+         ontology.setDateSubmitted(new Date());
+         ontology.setOperator(SecurityContext.getUserPrincipal());
+         return ontology;
     }
 
     public String getProjectFilePath(String projectId, String fileName) {
@@ -395,34 +329,7 @@ public class ProjectManagerImpl implements ProjectManager, LifeCycle
         return path;
     }
 
-    private static void fileCopy(InputStream src, File dest) throws IOException {
-        OutputStream out = null;
-        try {
-            dest.createNewFile();
-            out = new FileOutputStream(dest);
-
-            byte buffer[] = new byte[4096];
-            int l;
-            while ((l = src.read(buffer)) != -1) {
-                out.write(buffer, 0, l);
-            }
-            out.flush();
-        } catch (IOException e) {
-            dest.delete();
-            throw e;
-        } finally {
-            try {
-                src.close();
-            } catch (Exception e) { /* Ignore... */
-            }
-            if (out != null) {
-                try {
-                    out.close();
-                } catch (Exception e) { /* Ignore... */
-                }
-            }
-        }
-    }
+    
 
     private URI newProjectId(URI baseUri, String name) {
         try {
@@ -434,31 +341,26 @@ public class ProjectManagerImpl implements ProjectManager, LifeCycle
         }
     }
 
-    private String getRelativeSourceId(String sourceName) {
-        return "/source/" + urlify(sourceName);
-    }
-
     @Override
     public void deleteProject(Project p) {
         this.projectDao.delete(p);
     }
 
-    @Override
-    public Project getProject(URI id) {
-        return this.projectDao.get(id);
-    }
-
     public void saveProject(Project p) {
-        this.projectDao.save(p);
-    }
-
-    public void persistProject(Project p) {
-        this.projectDao.persist(p);
-        // create Project directory in public storage
-        String id = p.getUri().substring(p.getUri().lastIndexOf("/") + 1);
-        File projectStorage = this.getFileStorage(
-                                        this.getProjectFilePath(id, null));
-        projectStorage.mkdirs();
+    	try {
+	    	if(this.findProject(new URL(p.getUri()).toURI()) == null) {
+	    		this.projectDao.persist(p);
+	            String id = p.getUri().substring(p.getUri().lastIndexOf("/") + 1);
+	            File projectStorage = this.getFileStorage(
+	                                            this.getProjectFilePath(id, null));
+	            projectStorage.mkdirs();
+	    	}
+	    	else
+	            this.projectDao.save(p);
+    	}
+    	catch (Exception e) {
+            throw new RuntimeException("Invalid project URI: " + p.getUri());
+        }
     }
 
     public Collection<Project> getAllProjects() {
