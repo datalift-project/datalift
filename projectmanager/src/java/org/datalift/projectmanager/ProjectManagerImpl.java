@@ -3,10 +3,7 @@ package org.datalift.projectmanager;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.URI;
 import java.net.URL;
 import java.util.Arrays;
@@ -61,6 +58,7 @@ public class ProjectManagerImpl implements ProjectManager, LifeCycle
 
     private final Collection<Class<?>> classes = new LinkedList<Class<?>>();
 
+    private Logger log = Logger.getLogger();
     @Override
     public void init(Configuration configuration) {
         this.configuration = configuration;
@@ -241,76 +239,14 @@ public class ProjectManagerImpl implements ProjectManager, LifeCycle
         // Create new project.
         Project p = new ProjectImpl(projectId.toString());
         p.setTitle(title);
-
         p.setOwner(SecurityContext.getUserPrincipal());
         p.setDescription(description);
         p.setLicense(License.valueOf(license).uri);
-
         Date date = new Date();
         p.setDateCreation(date);
         p.setDateModification(date);
         return p;
     }
-
-    /*
-    public void addCsvSource(URI projectUri, URI sourceUri, String id,
-                             String fileName, InputStream file,
-                             String titleRow, String separator) {
-            Project p = this.projectDao.get(projectUri);
-            if (p.getSource(sourceUri) == null) {
-                // Save new source to public project storage
-                String filePath = this.getProjectFilePath(id, fileName);
-                File storagePath = this.getFileStorage(filePath);
-                fileCopy(file, storagePath);
-
-                // Add new source to persistent project
-                Separator sep = Separator.valueOf(separator);
-                boolean hasTitleRow = ((titleRow != null) && (titleRow
-                        .toLowerCase().equals("on")));
-                CsvSource src = this.newCsvSource(sourceUri, fileName, filePath,
-                        sep.getValue(), hasTitleRow);
-                p.addSource(src);
-                this.projectDao.save(p);
-            }
-            // Else : source already exist
-    }
-
-    public void addRdfSource(URI baseUri, String id, String fileName,
-                             String mimeType, InputStream file) {
-    		MediaType mappedType = null;
-            mappedType = RdfSourceImpl.parseMimeType(mimeType);
-            URI projectUri = this.newProjectId(baseUri, id);
-            URI sourceUri = new URI(projectUri.getScheme(), null,
-                    projectUri.getHost(), projectUri.getPort(),
-                    projectUri.getPath() + this.getRelativeSourceId(fileName),
-                    null, null);
-            Project p = this.projectDao.get(projectUri);
-
-            // Save new source to public project storage
-            String filePath = this.getProjectFilePath(id, fileName);
-            File storagePath = this.getFileStorage(filePath);
-            fileCopy(file, storagePath);
-
-            // Add new source to persistent project
-            RdfSource src = this.newRdfSource(sourceUri, fileName, filePath,
-                    mappedType.toString());
-
-            ((RdfSourceImpl)src).init(configuration.getPublicStorage(), baseUri);
-
-            p.addSource(src);
-            this.projectDao.save(p);
-    }
-
-    public void addDbSource(URI projectUri, URI sourceUri, String title, String database,
-            String srcUrl, String request, String user, String password, int cacheDuration) {
-        Project p = this.projectDao.get(projectUri);
-
-        // Add new source to persistent project
-        DbSource src = newDbSource(sourceUri, title, database, srcUrl,
-                user, password, request, cacheDuration);
-        p.addSource(src);
-        this.projectDao.save(p);
-    }*/
     
     public Ontology newOntology(URI srcUrl, String title) {
     	 OntologyImpl ontology = new OntologyImpl();
