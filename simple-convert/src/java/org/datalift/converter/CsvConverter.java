@@ -4,15 +4,13 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.Map;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
 
+import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.CsvSource;
@@ -24,11 +22,9 @@ import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.rdf.Repository;
 import org.openrdf.model.Statement;
 import org.openrdf.model.ValueFactory;
-import org.openrdf.model.impl.LiteralImpl;
-import org.openrdf.model.impl.URIImpl;
 import org.openrdf.repository.RepositoryConnection;
 
-public class CsvConverter implements ProjectModule
+public class CsvConverter extends BaseModule implements ProjectModule 
 {	
 	private final static String MODULE_NAME = "csvconverter";
 	
@@ -41,6 +37,7 @@ public class CsvConverter implements ProjectModule
 	private Logger log = Logger.getLogger();
 	
     public CsvConverter() {
+    	super(MODULE_NAME, true);
     }
 
     @Override
@@ -111,7 +108,6 @@ public class CsvConverter implements ProjectModule
         	   u = valueFactory.createURI(namedGraph.toString());
         	   cnx.clear(u);
            }
-           final org.openrdf.model.URI ctx = u;
            // Prevent transaction commit for each triple inserted.
            cnx.setAutoCommit(false);
            // Load triples
@@ -137,24 +133,7 @@ public class CsvConverter implements ProjectModule
             try { cnx.close(); } catch (Exception e) { /* Ignore */ }
         }
     }
-
-	@Override
-	public String getName() {
-		return MODULE_NAME;
-	}
-
-	@Override
-	public Map<String, Class<?>> getResources() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public boolean isResource() {
-		// TODO Auto-generated method stub
-		return true;
-	}
-
+    
 	@Override
 	public void init(Configuration configuration) {
 		ProjectManager mgr = configuration.getBean(ProjectManager.class);
@@ -166,17 +145,4 @@ public class CsvConverter implements ProjectModule
 		else
 			throw new RuntimeException("Could not retrieve Project Manager");
 	}
-
-	@Override
-	public void postInit(Configuration configuration) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void shutdown(Configuration configuration) {
-		// TODO Auto-generated method stub
-		
-	}
-	
 }
