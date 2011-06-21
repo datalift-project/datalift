@@ -8,7 +8,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -17,8 +16,6 @@ import java.util.Map;
 import java.util.MissingResourceException;
 import java.util.Properties;
 import java.util.TreeMap;
-
-import javax.servlet.ServletContext;
 
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.log.Logger;
@@ -110,12 +107,13 @@ public class DefaultConfiguration extends Configuration
 
     /**
      * Default constructor.
+     * @param  props   the application runtime environment.
      *
      * @throws TechnicalException if any error occurred loading or
      *         parsing the configuration data.
      */
-    public DefaultConfiguration(ServletContext ctx) {
-        this.props          = this.loadConfiguration(ctx);
+    public DefaultConfiguration(Properties props) {
+        this.props          = this.loadConfiguration(props);
         this.repositories   = this.initRepositories();
         this.modulesPath    = this.initLocalPath(MODULES_PATH, false);
         this.privateStorage = this.initLocalPath(PRIVATE_STORAGE_PATH, true);
@@ -305,8 +303,8 @@ public class DefaultConfiguration extends Configuration
     // Specific implementation
     //-------------------------------------------------------------------------
 
-    private VersatileProperties loadConfiguration(ServletContext ctx) {
-        VersatileProperties props = null;
+    private VersatileProperties loadConfiguration(Properties props) {
+        VersatileProperties config = null;
         try {
             String cfgFilePath = CONFIGURATION_FILE;
             String homePath = this.getProperty(DATALIFT_HOME);
@@ -316,15 +314,8 @@ public class DefaultConfiguration extends Configuration
                     cfgFilePath = f.getPath();
                 }
             }
-            // Use application init parameters as defaults for configuration.
-            Properties def = new Properties(System.getProperties());
-            for (Enumeration<?> e = ctx.getInitParameterNames();
-                 e.hasMoreElements(); ) {
-                String name = (String)(e.nextElement());
-                def.setProperty(name, ctx.getInitParameter(name));
-            }
             // Load configuration.
-            props = this.loadFromClasspath(cfgFilePath, def, null);
+            config = this.loadFromClasspath(cfgFilePath, props, null);
             log.info("DataLift configuration loaded from {}", cfgFilePath);
         }
         catch (IOException e) {
@@ -333,7 +324,7 @@ public class DefaultConfiguration extends Configuration
             log.fatal(error.getMessage(), e);
             throw error;
         }
-        return props;
+        return config;
     }
 
     private Map<String,Repository> initRepositories() {
