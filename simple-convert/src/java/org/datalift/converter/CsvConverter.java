@@ -115,7 +115,6 @@ public class CsvConverter extends BaseModule implements ProjectModule
         	   String subject = namedGraph + "/row" + i + "#_";    		
         	   for (int j = 0; j < line.length && j < src.getColumnsHeader().size(); j++) {
         		   String predicate = namedGraph + "/column" + src.getColumnsHeader().get(j);
-        		   log.debug("S[{}]P[{}]O[{}]", subject, predicate, line[j]);
         		   Statement stmt = valueFactory.createStatement(
         				   valueFactory.createURI(subject), 
         				   valueFactory.createURI(predicate), 
@@ -136,6 +135,7 @@ public class CsvConverter extends BaseModule implements ProjectModule
     
 	@Override
 	public void init(Configuration configuration) {
+		super.init(configuration);
 		ProjectManager mgr = configuration.getBean(ProjectManager.class);
 		if (mgr != null) {
 			this.projectManager = mgr;
