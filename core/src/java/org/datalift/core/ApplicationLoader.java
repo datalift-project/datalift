@@ -6,8 +6,6 @@ import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
 
-import javax.servlet.ServletContextEvent;
-
 import org.datalift.core.log.LogContext;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.LifeCycle;
@@ -35,24 +33,6 @@ public class ApplicationLoader extends LogServletContextListener
     private static Set<Object> resources = null;
 
     private static Logger log = null;
-
-    //------------------------------------------------------------------------
-    // ServletContextListener contract support
-    //------------------------------------------------------------------------
-
-    /** {@inheritDoc} */
-    @Override
-    public void contextInitialized(ServletContextEvent event) {
-        // Initialize application.
-        this.init(this.getConfiguration(event.getServletContext()));
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public void contextDestroyed(ServletContextEvent event) {
-        // Shutdown application.
-        this.shutdown();
-    }
 
     //------------------------------------------------------------------------
     // LogServletContextListener contract support
