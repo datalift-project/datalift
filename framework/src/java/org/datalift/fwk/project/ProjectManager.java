@@ -84,6 +84,9 @@ public interface ProjectManager
                                 String request, int cacheDuration)
                                                             throws IOException;
 
+    public TransformedRdfSource newTransformedRdfSource(URI uri, String title, 
+    							URI targetGraph);
+    
     public Ontology newOntology(URI srcUrl, String title);
 
     public Project newProject(URI projectId, String title,

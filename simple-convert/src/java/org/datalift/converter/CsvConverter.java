@@ -20,6 +20,7 @@ import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectManager;
 import org.datalift.fwk.project.ProjectModule;
 import org.datalift.fwk.project.Source;
+import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.rdf.Repository;
 import org.openrdf.model.Statement;
 import org.openrdf.model.ValueFactory;
@@ -84,18 +85,17 @@ public class CsvConverter implements ProjectModule
     	            	try {
     	            		URI	transformedUri = new URL(s.getUri() + "/rdf" + p.getSources().size()).toURI();
 							this.convert((CsvSource)s, this.internal, transformedUri);
-							TransformedRdfSource src = new TransformedRdfSource(transformedUri.toString());
-							src.setTitle(s.getTitle() + "/rdf" + p.getSources().size());
-							src.setTargetGraph(transformedUri);
-							src.setTargetGraph(new URL(s.getUri()).toURI());
+							TransformedRdfSource src = this.projectManager.newTransformedRdfSource(
+									transformedUri, s.getTitle() + "-rdf" + p.getSources().size(), 
+									transformedUri);
 							p.addSource(src);
 							this.projectManager.saveProject(p);
 						} catch (Exception e) {
-							// Should never occur
+							log.debug(e);
 						} 
     	            }
     		  }
-        	return "Converter project " + projectId;
+        	return "CSV Conversion done for project " + projectId;
     	}
     	return "Converter index page";
     }
@@ -117,23 +117,24 @@ public class CsvConverter implements ProjectModule
            // Load triples
            for (String[] line : src) {
         	   String subject = namedGraph + "/row" + i + "#_";    		
-        	   for (int j = 0; j < line.length; j++) {
+        	   for (int j = 0; j < line.length && j < src.getColumnsHeader().size(); j++) {
         		   String predicate = namedGraph + "/column" + src.getColumnsHeader().get(j);
         		   log.debug("S[{}]P[{}]O[{}]", subject, predicate, line[j]);
         		   Statement stmt = valueFactory.createStatement(
-        				   new URIImpl(subject), new URIImpl(predicate), new LiteralImpl(line[j]));        		  
-        		   cnx.add(stmt);
-        		   i++;
+        				   valueFactory.createURI(subject), 
+        				   valueFactory.createURI(predicate), 
+        				   valueFactory.createLiteral(line[j]));        		  
+        		   cnx.add(stmt, valueFactory.createURI(namedGraph.toString()));
         	   }
+    		   i++;
            }
-           log.debug("Goin to commit");
            cnx.commit();
         }
         catch (Exception e) {
     		throw new RuntimeException("Could not convert CsvSource into RDF triples");
     	}
         finally {
-            try { cnx.close(); } catch (Exception e) { log.debug(e); }
+            try { cnx.close(); } catch (Exception e) { /* Ignore */ }
         }
     }
 
@@ -159,9 +160,6 @@ public class CsvConverter implements ProjectModule
 		ProjectManager mgr = configuration.getBean(ProjectManager.class);
 		if (mgr != null) {
 			this.projectManager = mgr;
-	        Collection<Class<?>> classes = new LinkedList<Class<?>>();
-	        classes.add(TransformedRdfSource.class.getClass());
-			this.projectManager.addPersistentClasses(classes);
 			this.storage = configuration.getPublicStorage();
 			this.internal = configuration.getInternalRepository();
 		}

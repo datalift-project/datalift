@@ -24,12 +24,14 @@ import com.clarkparsia.utils.NamespaceUtils;
 
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.LifeCycle;
+import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.CsvSource;
 import org.datalift.fwk.project.DbSource;
 import org.datalift.fwk.project.Ontology;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectManager;
 import org.datalift.fwk.project.RdfSource;
+import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.project.CsvSource.Separator;
 import org.datalift.fwk.rdf.RdfNamespace;
 import org.datalift.fwk.security.SecurityContext;
@@ -160,6 +162,13 @@ public class ProjectManagerImpl implements ProjectManager, LifeCycle
         return src;
     }
 
+    public TransformedRdfSource newTransformedRdfSource(URI uri, String title, URI targetGraph) {
+    	TransformedRdfSource src = new TransformedRdfSourceImpl(uri.toString());
+		src.setTitle(title);
+    	src.setTargetGraph(targetGraph);
+    	return src;
+    }
+    
     /** {@inheritDoc} */
     @Override
     public Ontology newOntology(URI srcUrl, String title) {
@@ -219,7 +228,7 @@ public class ProjectManagerImpl implements ProjectManager, LifeCycle
             }
         }
         catch (Exception e) {
-            throw new RuntimeException("Invalid project URI: " + p.getUri());
+            throw new RuntimeException("Invalid project URI: " + p.getUri(), e);
         }
     }
 
@@ -253,7 +262,8 @@ public class ProjectManagerImpl implements ProjectManager, LifeCycle
     private Collection<Class<?>> getPersistentClasses() {
         Collection<Class<?>> classes = new LinkedList<Class<?>>();
         classes.addAll(Arrays.asList(ProjectImpl.class, CsvSourceImpl.class,
-                RdfSourceImpl.class, DbSourceImpl.class, OntologyImpl.class));
+                RdfSourceImpl.class, DbSourceImpl.class, OntologyImpl.class, 
+                TransformedRdfSourceImpl.class));
         return classes;
     }
 

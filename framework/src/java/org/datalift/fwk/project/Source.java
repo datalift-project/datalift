@@ -12,6 +12,7 @@ public interface Source
     public enum SourceType {
     	RdfSource, 
     	CsvSource,
-    	DbSource;
+    	DbSource,
+    	TransformedRdfSource;
     }
 }
