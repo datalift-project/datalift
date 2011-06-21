@@ -3,9 +3,9 @@ package org.datalift.core;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Properties;
 import java.util.Set;
 
-import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 
 import org.datalift.core.log.LogContext;
@@ -43,13 +43,8 @@ public class ApplicationLoader extends LogServletContextListener
     /** {@inheritDoc} */
     @Override
     public void contextInitialized(ServletContextEvent event) {
-        ServletContext ctx = event.getServletContext();
-        // Initialize system properties from env. variables if need be.
-        this.setupEnvironment(ctx);
-        // Initialize log service.
-        super.contextInitialized(event);
-        // Initialize DataLift application.
-        this.init(ctx);
+        // Initialize application.
+        this.init(this.getConfiguration(event.getServletContext()));
     }
 
     /** {@inheritDoc} */
@@ -57,8 +52,56 @@ public class ApplicationLoader extends LogServletContextListener
     public void contextDestroyed(ServletContextEvent event) {
         // Shutdown application.
         this.shutdown();
-        // Shutdown log service.
-        super.contextDestroyed(event);
+    }
+
+    //------------------------------------------------------------------------
+    // LogServletContextListener contract support
+    //------------------------------------------------------------------------
+
+    /**
+     * Initializes the DataLift application.
+     */
+    @Override
+    public void init(Properties props) {
+        // Initialize system properties from env. variables if need be.
+        this.setupEnvironment();
+        // Initialize log service.
+        super.init(props);
+        // Initialize DataLift application.
+        this.initApplication(props);
+    }
+
+    /**
+     * Shuts down the DataLift application.
+     */
+    @Override
+    public void shutdown() {
+        LogContext.resetContexts("Core", "shutdown");
+        Logger log = Logger.getLogger();
+
+        try {
+            if (resources != null) {
+                for (Object r : resources) {
+                    if (r instanceof LifeCycle) {
+                        try {
+                            ((LifeCycle)r).shutdown(configuration);
+                        }
+                        catch (Exception e) {
+                            TechnicalException error = new TechnicalException(
+                                            "resource.shutdown.error", e,
+                                            r, e.getMessage());
+                            log.error(error.getMessage(), e);
+                            throw error;
+                        }
+                    }
+                }
+            }
+            log.info("DataLift application shutdown complete");
+        }
+        finally {
+            LogContext.resetContexts();
+            super.shutdown();
+        }
     }
 
     //------------------------------------------------------------------------
@@ -91,7 +134,7 @@ public class ApplicationLoader extends LogServletContextListener
      * from the corresponding environment variable (DATALIFT_HOME) if
      * not set
      */
-    private void setupEnvironment(ServletContext ctx) {
+    private void setupEnvironment() {
         if (System.getProperty(DATALIFT_HOME) == null) {
             // Try to define datalift.home system property from environment.
             String homePath = System.getenv(
@@ -108,25 +151,27 @@ public class ApplicationLoader extends LogServletContextListener
     /**
      * Loads the DataLift configuration and initializes the application
      * root resources.
-     * @param  ctx   the web application context.
+     * @param  props   the application runtime environment.
      *
      * @throws TechnicalException if any error occurred.
      */
-    private void init(ServletContext ctx) {
+    private void initApplication(Properties props) {
         LogContext.resetContexts("Core", "init");
         log = Logger.getLogger();
 
         try {
             // Load application configuration.
-            configuration = new DefaultConfiguration(ctx);
+            configuration = new DefaultConfiguration(props);
             // Initialize resources.
             // First initialization step.
             Set<Object> rsc = new HashSet<Object>();
             rsc.add(this.initResource(new RouterResource()));
+            // Second initialization step.
+            for (Object r : rsc) {
+                this.postInitResource(r);
+            }
             // So far, so good. => Install singletons
             resources = Collections.unmodifiableSet(rsc);
-            // Second initialization step.
-            this.postInit();
             log.info("DataLift application initialized");
         }
         catch (Throwable e) {
@@ -140,27 +185,11 @@ public class ApplicationLoader extends LogServletContextListener
         }
     }
 
-    private void postInit() {
-    	for (Object r : resources) {
-            if (r instanceof LifeCycle) {
-                try {
-                    ((LifeCycle)r).postInit(configuration);
-                }
-                catch (Exception e) {
-                    TechnicalException error = new TechnicalException(
-                                "resource.init.error", e, r, e.getMessage());
-                    log.error(error.getMessage(), e);
-                    throw error;
-                }
-            }
-    	}
-    }
-    
     /**
-     * Initializes a resource object.
+     * Initializes (step #1) a resource object.
      * @param  r   the resource to configure.
-     * @return the resource, ready for processing requests.
      *
+     * @return the resource, configured.
      * @throws TechnicalException if any error occurred.
      */
     private Object initResource(Object r) {
@@ -179,33 +208,23 @@ public class ApplicationLoader extends LogServletContextListener
     }
 
     /**
-     * Shuts down the DataLift application resources.
+     * Initializes (step #2) a resource object.
+     * @param  r   the resource to configure.
+     *
+     * @return the resource, ready for processing requests.
+     * @throws TechnicalException if any error occurred.
      */
-    private void shutdown() {
-        LogContext.resetContexts("Core", "shutdown");
-        Logger log = Logger.getLogger();
-
-        try {
-            if (resources != null) {
-                for (Object r : resources) {
-                    if (r instanceof LifeCycle) {
-                        try {
-                            ((LifeCycle)r).shutdown(configuration);
-                        }
-                        catch (Exception e) {
-                            TechnicalException error = new TechnicalException(
-                                            "resource.shutdown.error", e,
-                                            r, e.getMessage());
-                            log.error(error.getMessage(), e);
-                            throw error;
-                        }
-                    }
-                }
+    private void postInitResource(Object r) {
+        if (r instanceof LifeCycle) {
+            try {
+                ((LifeCycle)r).postInit(configuration);
             }
-            log.info("DataLift application shutdown complete");
-        }
-        finally {
-            LogContext.resetContexts();
-        }
+            catch (Exception e) {
+                TechnicalException error = new TechnicalException(
+                                "resource.init.error", e, r, e.getMessage());
+                log.error(error.getMessage(), e);
+                throw error;
+            }
+    	}
     }
 }
