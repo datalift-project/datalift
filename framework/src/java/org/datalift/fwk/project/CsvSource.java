@@ -21,6 +21,8 @@ public interface CsvSource extends FileSource<String[]>
 	}
 	
     public boolean hasTitleRow();
+    public void	setTitleRow(boolean titleRow);
     public String getSeparator();
+    public void setSeparator(String sep);
     public List<String> getColumnsHeader();
 }

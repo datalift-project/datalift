@@ -2,7 +2,6 @@ package org.datalift.fwk.project;
 
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 import java.util.Collection;
 
@@ -29,7 +28,7 @@ public interface ProjectManager
     /**
      * Creates a new CSV source object.
      * @param  uri           the source URI.
-     * @param  title         the source label.
+     * @param  title         the source labelProject p = .
      * @param  filePath      the CSV file path in the public storage.
      * @param  separator     the column separator character.
      * @param  hasTitleRow   whether the first row holds the column
@@ -83,40 +82,16 @@ public interface ProjectManager
     public DbSource newDbSource(URI uri, String title, String database, 
 			String srcUrl, String user, String password, 
 			String request, int cacheDuration) throws IOException;
-    
-    public void addPersistentClasses(Collection<Class<?>> classes);
+        
+    public Ontology newOntology(URI srcUrl, String title);
     
 	public Project newProject(URI projectId, String title, String description, String license);
 	
-	public void updateCsvSource(Project p, URI sourceUri, String id,
-			String titleRow, String separator) throws Exception;
-	
-	public void	updateRdfSource(URI projectUri, URI sourceUri, String id, 
-			String mimeType) throws Exception;
-
-	public void updateDbSource(URI projectUri, URI sourceUri, String title, String database, 
-			String user, String password, String request, int cacheDuration);
-	
-	public void addRdfSource(URI baseUri, String id, String fileName, 
-			String mimeType, InputStream file) throws Exception;
-	
-	public void addCsvSource(URI projectUri, URI sourceUri, String id, String fileName, InputStream file, 
-		String titleRow, String separator) throws Exception;
-
-	public void addDbSource(URI projectUri, URI sourceUri, String title, String database, 
-			String srcUrl, String request, String user, String password, int cacheDuration);
-	
-	public void addOntology(URI projectUri, URI srcUrl, String title);
-	
 	public String getProjectFilePath(String projectId, String fileName);
-	
-	public Project	getProject(URI id);
-	
+		
 	public void	deleteProject(Project p);
 	
 	public void saveProject(Project p);
 	
-	public void persistProject(Project p);
-	
-	public Collection<Project> getAllProjects();
+	public void addPersistentClasses(Collection<Class<?>> classes);		
 }
