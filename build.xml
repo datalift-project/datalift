@@ -35,7 +35,7 @@
 
   <filelist id="modules"
            dir="."
-         files="framework,core,sparql-endpoint,ui-sample"/>
+         files="framework,core,sparql-endpoint,projectmanager, simple-convert,ui-sample"/>
 
   <!-- ================ All Target ======================================== -->
 
