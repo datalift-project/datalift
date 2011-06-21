@@ -66,8 +66,8 @@ public interface ProjectManager
      * Creates a new Database source object.
      * @param  uri           the source URI.
      * @param  title         the source label.
-     * @param  database      the name of the Database	
-     * @param  srcUrl        the connection string of the Database	
+     * @param  database      the name of the database
+     * @param  srcUrl        the connection string of the database
      * @param  user          username for connection
      * @param  password      password for connection
      * @param  request       SQL query to extract data
@@ -85,7 +85,7 @@ public interface ProjectManager
                                                             throws IOException;
 
     public TransformedRdfSource newTransformedRdfSource(URI uri, String title, 
-    							URI targetGraph);
+                                                        URI targetGraph);
     
     public Ontology newOntology(URI srcUrl, String title);
 
@@ -98,5 +98,5 @@ public interface ProjectManager
 
     public void saveProject(Project p);
 
-    public void addPersistentClasses(Collection<Class<?>> classes);		
+    public void addPersistentClasses(Collection<Class<?>> classes);
 }

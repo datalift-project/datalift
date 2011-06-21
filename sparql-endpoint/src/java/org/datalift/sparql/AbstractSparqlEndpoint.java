@@ -119,7 +119,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     }
 
     //-------------------------------------------------------------------------
-    // JAX-RS root resource contract support
+    // Web services
     //-------------------------------------------------------------------------
 
     /**

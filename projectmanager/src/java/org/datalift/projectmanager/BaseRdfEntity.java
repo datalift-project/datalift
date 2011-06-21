@@ -7,6 +7,10 @@ import com.clarkparsia.empire.annotation.SupportsRdfIdImpl;
 
 public abstract class BaseRdfEntity implements SupportsRdfId
 {
+    //-------------------------------------------------------------------------
+    // Instance members
+    //-------------------------------------------------------------------------
+
     private SupportsRdfId rdfId = new SupportsRdfIdImpl();
 
     //-------------------------------------------------------------------------

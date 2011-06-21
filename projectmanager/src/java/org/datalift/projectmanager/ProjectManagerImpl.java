@@ -24,7 +24,6 @@ import com.clarkparsia.utils.NamespaceUtils;
 
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.LifeCycle;
-import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.CsvSource;
 import org.datalift.fwk.project.DbSource;
 import org.datalift.fwk.project.Ontology;
@@ -163,10 +162,10 @@ public class ProjectManagerImpl implements ProjectManager, LifeCycle
     }
 
     public TransformedRdfSource newTransformedRdfSource(URI uri, String title, URI targetGraph) {
-    	TransformedRdfSource src = new TransformedRdfSourceImpl(uri.toString());
-		src.setTitle(title);
-    	src.setTargetGraph(targetGraph);
-    	return src;
+        TransformedRdfSource src = new TransformedRdfSourceImpl(uri.toString());
+        src.setTitle(title);
+        src.setTargetGraph(targetGraph);
+        return src;
     }
     
     /** {@inheritDoc} */
