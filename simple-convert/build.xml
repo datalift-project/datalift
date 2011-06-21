@@ -30,7 +30,7 @@
   set to the current working directory.
 -->
 
-<project name="datalift-sparql" default="dist" basedir=".">
+<project name="datalift-doughnuts" default="dist" basedir=".">
 
   <!-- ================ Property Definitions ============================== -->
 
@@ -59,7 +59,6 @@
 
   <property file="${user.home}/datalift-build.properties"/>
   <property file="build.properties"/>
-  <property file="../core/build.properties"/>
 
 
   <!-- ================ File and Directory Names ========================== -->
@@ -90,7 +89,7 @@
   <property name="app.name"             value="simpleconvert"/>
   <property name="app.version"          value="0.1"/>
   <property name="app.path"             value="/${app.name}"/>
-  <property name="app.long.name"        value="DataLift Converter"/>
+  <property name="app.long.name"        value="Datalift Converter"/>
 
   <property name="build.home"           location="${basedir}/build"/>
   <property name="dist.home"            location="${basedir}/dist"/>
@@ -109,18 +108,14 @@
   <property name="core.run.libs"        location="${core.home}/lib/runtime"/>
 
   <property name="classes.dir"          location="${build.home}/classes"/>
+  <property name="lib.dir"				location="${build.home}/lib"/>
+  <property name="run.lib.home"			location="${basedir}/lib/runtime"/>
   <property name="docs.dir"             location="${dist.home}/docs"/>
 
   <property name="jar.name"             value="${app.name}.jar"/>
   <property name="jar.path"             location="${dist.home}/${jar.name}"/>
 
-  <property name="locale.default"		value="en"/>
-  <property name="locale.default_resources" 	
-	value="${web.home}/resources_${locale.default}.properties"/>
 
-  <available property="locale.exists" file="${locale.default_resources}">
-  </available>
-	
   <!-- ================ Compilation Control Options ======================= -->
 
   <!--
@@ -152,6 +147,9 @@
     <fileset dir="${fwk.run.libs}">
       <include name="**/*.jar"/>
     </fileset>
+  	<fileset dir="${run.lib.home}">
+  	  <include name="**/*.jar"/>
+  	</fileset>
     <fileset dir="${fwk.dist.home}">
       <include name="**/*.jar"/>
     </fileset>
@@ -216,6 +214,8 @@
     <mkdir dir="${build.home}"/>
     <!-- Create compilation target directory -->
     <mkdir dir="${classes.dir}"/>
+  	<!-- Create lib target directory -->
+  	<mkdir dir="${lib.dir}"/>
   </target>
 
 
@@ -252,22 +252,30 @@
     The "dist" target creates the web application configuration files
     and makes then ready for deployment.
    -->
-  
+
   <!-- Copy default locale resource file -->
   <target name="resource-copy" if="locale.exists">
-    	<copy todir="${classes.dir}" >
-      <fileset dir="${web.home}" includes="*_${locale.default}.properties"/>
+    <copy todir="${build.home}/WEB-INF/templates/core">
+	  <fileset dir="${web.home}/WEB-INF/templates/core" includes="*_${locale.default}.properties"/>
 	  <mapper type="glob" from="*_${locale.default}.properties" to="*.properties"/>
-		</copy>
+    </copy>
   </target>
 	
   <target name="prepare-dist" depends="prepare">
-    <!-- Copy web application page templates and resources -->
-    <copy todir="${classes.dir}" includeEmptyDirs="false"
-  		preservelastmodified="true">
-      <fileset dir="${web.home}" excludes="**/.*"/>
+	<!-- Copy META-INF -->
+    <copy todir="${classes.dir}/META-INF" includeEmptyDirs="false"
+                                 preservelastmodified="true">
+      <fileset dir="${web.home}/META-INF" excludes="**/.*"/>
     </copy>
-  	
+	<!-- Copy web application page templates and resources -->
+    <copy todir="${build.home}" includeEmptyDirs="false"
+                                preservelastmodified="true">
+      <fileset dir="${web.home}" excludes="META-INF/**, */.*"/>
+    </copy>
+  	<!-- Copy library informations -->
+  	<copy todir="${lib.dir}" preservelastmodified="true" flatten="true">
+      <fileset dir="${run.lib.home}"  includes="**/*.jar"/>
+	</copy>
     <!-- Create build directories as needed -->
     <mkdir dir="${dist.home}"/>
   </target>
@@ -282,15 +290,10 @@
         deployement.
    -->
 
-  <target name="dist" depends="compile,prepare-dist,resource-copy"
+  <target name="dist" depends="compile,prepare-dist"
                       description="Create binary distribution">
-    <!-- Create module JAR file -->
-    <jar jarfile="${jar.path}">
-      <fileset dir="${classes.dir}"/>
-      <service type="org.datalift.fwk.Module"
-               provider="org.datalift.converter.CsvConverter"/>
+    <zip destfile="${dist.home}/${app.name}.zip" basedir="${build.home}"/>
 	
-    </jar>
   </target>
 
 
