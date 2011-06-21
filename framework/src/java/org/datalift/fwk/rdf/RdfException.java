@@ -6,7 +6,7 @@ import org.openrdf.query.Dataset;
 
 
 /**
- * A wrapper for exceptions thrown by RDF result handlers.
+ * A wrapper for exceptions thrown by RDF operations.
  *
  * @author lbihanic
  */

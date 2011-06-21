@@ -45,6 +45,7 @@ import com.sun.jersey.api.view.Viewable;
 import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.FormDataParam;
 
+import org.datalift.core.rdf.RdfUtil;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.MediaTypes;
 import org.datalift.fwk.ResourceResolver;
@@ -180,31 +181,33 @@ public class ProjectResource
             this.deleteProject(id, uriInfo);
             response = this.getIndex();
         }
-        try {
-            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
-            Project p = this.loadProject(projectUri);
-
-            boolean modified = false;
-            if (!StringUtils.isBlank(title)) {
-                p.setTitle(title);
-                modified = true;
-            }
-            if (!StringUtils.isBlank(description)) {
-                p.setDescription(description);
-                modified = true;
-            }
-            URI li = License.valueOf(license).uri;
-            if (!p.getLicense().equals(li)) {
-                p.setLicense(li);
-                modified = true;
-            }
-            if (modified) {
-                this.projectManager.saveProject(p);
-            }
-            response = Response.seeOther(projectUri).build();
-        }
-        catch (Exception e) {
-            this.handleInternalError(e, "Failed to update project");
+        else {
+	        try {
+	            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
+	            Project p = this.loadProject(projectUri);
+	
+	            boolean modified = false;
+	            if (!StringUtils.isBlank(title)) {
+	                p.setTitle(title);
+	                modified = true;
+	            }
+	            if (!StringUtils.isBlank(description)) {
+	                p.setDescription(description);
+	                modified = true;
+	            }
+	            URI li = License.valueOf(license).uri;
+	            if (!p.getLicense().equals(li)) {
+	                p.setLicense(li);
+	                modified = true;
+	            }
+	            if (modified) {
+	                this.projectManager.saveProject(p);
+	            }
+	            response = Response.seeOther(projectUri).build();
+	        }
+	        catch (Exception e) {
+	            this.handleInternalError(e, "Failed to update project");
+	        }
         }
         return response;
     }
@@ -219,7 +222,7 @@ public class ProjectResource
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
             this.projectManager.deleteProject(this.loadProject(projectUri));
 
-            response = Response.ok().build();
+           response = this.displayIndexPage(Response.ok(), null).build();
         }
         catch (Exception e) {
             this.handleInternalError(e, "Failed to delete project");
@@ -393,9 +396,12 @@ public class ProjectResource
         try {
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
             Project p = this.loadProject(projectUri);
-
-            this.m.getProjectManager().updateCsvSource(
-                    p, currentSourceUri, id, titleRow, separator);
+            Source s = p.getSource(currentSourceUri);
+            boolean hasTitleRow = ((titleRow != null) && (titleRow
+                    .toLowerCase().equals("on")));
+            ((CsvSource)s).setSeparator(separator);
+            ((CsvSource)s).setTitleRow(hasTitleRow);
+            this.projectManager.saveProject(p);
             String redirectUrl = projectUri.toString() + "#source";
             response = Response.ok(currentSourceUri)
                                .entity(this.newViewable("/redirect.vm",
@@ -470,8 +476,16 @@ public class ProjectResource
         Response response = null;
         try {
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
-            this.m.getProjectManager().updateRdfSource(projectUri, currentSourceUri, 
-                    id, mimeType);
+            Project p = this.projectManager.findProject(projectUri);
+            MediaType mappedType = null;
+			try {
+				mappedType = RdfSourceImpl.parseMimeType(mimeType);
+			} catch (Exception e) {
+				this.throwInvalidParamError("mime_type", mimeType);
+			}
+            Source s = p.getSource(currentSourceUri);
+            ((RdfSource) s).setMimeType(mappedType.toString());
+            this.projectManager.saveProject(p);
             String redirectUrl = projectUri.toString() + "#source";
             response = Response.ok()
                                .entity(this.newViewable("/redirect.vm",
@@ -547,9 +561,15 @@ public class ProjectResource
         Response response = null;
         try {
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
-            
-            this.m.getProjectManager().updateDbSource(projectUri, currentSourceUri, title, database,
-                        user, password, request, cacheDuration);
+            Project p = this.projectManager.findProject(projectUri);
+            Source s = p.getSource(currentSourceUri);
+            ((DbSource)s).setTitle(title);
+            ((DbSource)s).setDatabase(database);
+            ((DbSource)s).setUser(user);
+            ((DbSource)s).setPassword(password);
+            ((DbSource)s).setRequest(request);
+            ((DbSource)s).setCacheDuration(cacheDuration);
+            this.projectManager.saveProject(p);
             String redirectUrl = projectUri.toString() + "#source";
             response = Response.ok()
                                .entity(this.newViewable("/redirect.vm",
@@ -732,7 +752,7 @@ public class ProjectResource
             Project p = this.loadProject(projectUri);
 
             // Add ontology to persistent project
-            p.addOntology(this.projectManager.newOntology(title, srcUrl));
+            p.addOntology(this.projectManager.newOntology(srcUrl.toURI(), title));
             this.projectManager.saveProject(p);
 
             String redirectUrl = projectUri.toString() + "#ontology";

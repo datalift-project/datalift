@@ -41,11 +41,11 @@
 
 			var select_panel = 0;
 	
-			#if($current.getTypeSource() == $field.CSVSource)
+			#if($current.getType() == $field.CSVSource)
 			 	select_panel = 0;
-			#elseif($current.getTypeSource() == $field.RdfSource)
+			#elseif($current.getType() == $field.RdfSource)
 				select_panel = 1;
-			#elseif($current.getTypeSource() == $field.DbSource)
+			#elseif($current.getType() == $field.DbSource)
 			 	select_panel = 2;
 			#end
 			
