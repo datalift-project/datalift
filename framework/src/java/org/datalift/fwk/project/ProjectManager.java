@@ -80,18 +80,20 @@ public interface ProjectManager
      *         or accessing the specified file.
      */
     public DbSource newDbSource(URI uri, String title, String database, 
-			String srcUrl, String user, String password, 
-			String request, int cacheDuration) throws IOException;
-        
+                                String srcUrl, String user, String password, 
+                                String request, int cacheDuration)
+                                                            throws IOException;
+
     public Ontology newOntology(URI srcUrl, String title);
-    
-	public Project newProject(URI projectId, String title, String description, String license);
-	
-	public String getProjectFilePath(String projectId, String fileName);
-		
-	public void	deleteProject(Project p);
-	
-	public void saveProject(Project p);
-	
-	public void addPersistentClasses(Collection<Class<?>> classes);		
+
+    public Project newProject(URI projectId, String title,
+                              String description, String license);
+
+    public String getProjectFilePath(String projectId, String fileName);
+
+    public void deleteProject(Project p);
+
+    public void saveProject(Project p);
+
+    public void addPersistentClasses(Collection<Class<?>> classes);		
 }

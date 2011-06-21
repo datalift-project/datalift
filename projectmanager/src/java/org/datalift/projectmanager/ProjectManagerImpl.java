@@ -24,7 +24,6 @@ import com.clarkparsia.utils.NamespaceUtils;
 
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.LifeCycle;
-import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.CsvSource;
 import org.datalift.fwk.project.DbSource;
 import org.datalift.fwk.project.Ontology;
@@ -58,7 +57,10 @@ public class ProjectManagerImpl implements ProjectManager, LifeCycle
 
     private final Collection<Class<?>> classes = new LinkedList<Class<?>>();
 
-    private Logger log = Logger.getLogger();
+    //-------------------------------------------------------------------------
+    // LifeCycle contract support
+    //-------------------------------------------------------------------------
+
     @Override
     public void init(Configuration configuration) {
         this.configuration = configuration;
@@ -77,38 +79,18 @@ public class ProjectManagerImpl implements ProjectManager, LifeCycle
 
     @Override
     public void shutdown(Configuration configuration) {
-                // Shutdown JPA persistence provider.
-                if (this.emf != null) {
-                        if (this.entityMgr != null) {
-                                this.entityMgr.close();
-                        }
-                        this.emf.close();
-                }
-        }
-
-    public void registerRdfNamespace(RdfNamespace ns) {
-        NamespaceUtils.addNamespace(ns.prefix, ns.uri);
-    }
-
-    private void registerRdfNamespaces() {
-        for (RdfNamespace ns : RdfNamespace.values()) {
-            NamespaceUtils.addNamespace(ns.prefix, ns.uri);
+        // Shutdown JPA persistence provider.
+        if (this.emf != null) {
+            if (this.entityMgr != null) {
+                this.entityMgr.close();
+            }
+            this.emf.close();
         }
     }
 
-    /**
-     * Returns the list of persistent classes to be handled by Empire JPA
-     * provider.
-     *
-     * @return the list of persistent classes.
-     */
-    @SuppressWarnings("unchecked")
-    private Collection<Class<?>> getPersistentClasses() {
-        Collection<Class<?>> classes = new LinkedList<Class<?>>();
-        classes.addAll(Arrays.asList(ProjectImpl.class, CsvSourceImpl.class,
-                RdfSourceImpl.class, DbSourceImpl.class, OntologyImpl.class));
-        return classes;
-    }
+    //-------------------------------------------------------------------------
+    // ProkectManager contract support
+    //-------------------------------------------------------------------------
 
     /** {@inheritDoc} */
     @Override
@@ -178,6 +160,103 @@ public class ProjectManagerImpl implements ProjectManager, LifeCycle
         return src;
     }
 
+    /** {@inheritDoc} */
+    @Override
+    public Ontology newOntology(URI srcUrl, String title) {
+         OntologyImpl ontology = new OntologyImpl();
+         ontology.setTitle(title);
+         ontology.setSource(srcUrl);
+         ontology.setDateSubmitted(new Date());
+         ontology.setOperator(SecurityContext.getUserPrincipal());
+         return ontology;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Project newProject(URI projectId, String title,
+                              String description, String license) {
+        // Create new project.
+        Project p = new ProjectImpl(projectId.toString());
+        p.setTitle(title);
+        p.setOwner(SecurityContext.getUserPrincipal());
+        p.setDescription(description);
+        p.setLicense(License.valueOf(license).uri);
+        Date date = new Date();
+        p.setDateCreation(date);
+        p.setDateModification(date);
+        return p;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public String getProjectFilePath(String projectId, String fileName) {
+        String path = "project/" + projectId;
+        if (isSet(fileName)) {
+            path += "/" + fileName;
+        }
+        return path;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void deleteProject(Project p) {
+        this.projectDao.delete(p);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void saveProject(Project p) {
+        try {
+            if (this.findProject(new URL(p.getUri()).toURI()) == null) {
+                this.projectDao.persist(p);
+                String id = p.getUri().substring(p.getUri().lastIndexOf("/") + 1);
+                File projectStorage = this.getFileStorage(
+                                            this.getProjectFilePath(id, null));
+                projectStorage.mkdirs();
+            }
+            else {
+                this.projectDao.save(p);
+            }
+        }
+        catch (Exception e) {
+            throw new RuntimeException("Invalid project URI: " + p.getUri());
+        }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void addPersistentClasses(Collection<Class<?>> classes) {
+        this.classes.addAll(classes);
+    }
+
+    //-------------------------------------------------------------------------
+    // Specific implementation
+    //-------------------------------------------------------------------------
+
+    public void registerRdfNamespace(RdfNamespace ns) {
+        NamespaceUtils.addNamespace(ns.prefix, ns.uri);
+    }
+
+    private void registerRdfNamespaces() {
+        for (RdfNamespace ns : RdfNamespace.values()) {
+            NamespaceUtils.addNamespace(ns.prefix, ns.uri);
+        }
+    }
+
+    /**
+     * Returns the list of persistent classes to be handled by Empire JPA
+     * provider.
+     *
+     * @return the list of persistent classes.
+     */
+    @SuppressWarnings("unchecked")
+    private Collection<Class<?>> getPersistentClasses() {
+        Collection<Class<?>> classes = new LinkedList<Class<?>>();
+        classes.addAll(Arrays.asList(ProjectImpl.class, CsvSourceImpl.class,
+                RdfSourceImpl.class, DbSourceImpl.class, OntologyImpl.class));
+        return classes;
+    }
+
     private File getFileStorage(String path) {
         return new File(this.configuration.getPublicStorage(), path);
     }
@@ -211,10 +290,6 @@ public class ProjectManagerImpl implements ProjectManager, LifeCycle
                 new HashMap<Object, Object>());
     }
 
-    public void addPersistentClasses(Collection<Class<?>> classes) {
-        this.classes.addAll(classes);
-    }
-
     //-------------------------------------------------------------------------
     // ProjectJpaDao nested class
     //-------------------------------------------------------------------------
@@ -232,74 +307,5 @@ public class ProjectManagerImpl implements ProjectManager, LifeCycle
             entity.setDateModification(new Date());
             return super.save(entity);
         }
-    }
-
-    public Project newProject(URI projectId, String title,
-                              String description, String license) {
-        // Create new project.
-        Project p = new ProjectImpl(projectId.toString());
-        p.setTitle(title);
-        p.setOwner(SecurityContext.getUserPrincipal());
-        p.setDescription(description);
-        p.setLicense(License.valueOf(license).uri);
-        Date date = new Date();
-        p.setDateCreation(date);
-        p.setDateModification(date);
-        return p;
-    }
-    
-    public Ontology newOntology(URI srcUrl, String title) {
-    	 OntologyImpl ontology = new OntologyImpl();
-         ontology.setTitle(title);
-         ontology.setSource(srcUrl);
-         ontology.setDateSubmitted(new Date());
-         ontology.setOperator(SecurityContext.getUserPrincipal());
-         return ontology;
-    }
-
-    public String getProjectFilePath(String projectId, String fileName) {
-        String path = "project/" + projectId;
-        if (isSet(fileName)) {
-            path += "/" + fileName;
-        }
-        return path;
-    }
-
-    
-
-    private URI newProjectId(URI baseUri, String name) {
-        try {
-            return new URL(baseUri.toURL(),
-                           "workspace/project/" + urlify(name)).toURI();
-        }
-        catch (Exception e) {
-            throw new RuntimeException("Invalid base URI: " + baseUri);
-        }
-    }
-
-    @Override
-    public void deleteProject(Project p) {
-        this.projectDao.delete(p);
-    }
-
-    public void saveProject(Project p) {
-    	try {
-	    	if(this.findProject(new URL(p.getUri()).toURI()) == null) {
-	    		this.projectDao.persist(p);
-	            String id = p.getUri().substring(p.getUri().lastIndexOf("/") + 1);
-	            File projectStorage = this.getFileStorage(
-	                                            this.getProjectFilePath(id, null));
-	            projectStorage.mkdirs();
-	    	}
-	    	else
-	            this.projectDao.save(p);
-    	}
-    	catch (Exception e) {
-            throw new RuntimeException("Invalid project URI: " + p.getUri());
-        }
-    }
-
-    public Collection<Project> getAllProjects() {
-        return this.projectDao.getAll();
     }
 }
