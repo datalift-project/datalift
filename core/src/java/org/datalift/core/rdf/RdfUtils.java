@@ -151,7 +151,8 @@ public class RdfUtils
                                List<String> constructQueries,
                                Repository target, URI namedGraph)
                                                         throws RdfException {
-        convert(source, constructQueries, target, null, null);
+        convert(source, constructQueries, target, namedGraph,
+                            (namedGraph != null)? namedGraph.toString(): null);
     }
 
     public static void convert(Repository source,
