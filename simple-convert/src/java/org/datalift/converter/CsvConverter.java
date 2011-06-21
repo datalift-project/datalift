@@ -118,22 +118,22 @@ public class CsvConverter implements ProjectModule
            for (String[] line : src) {
         	   String subject = namedGraph + "/row" + i + "#_";    		
         	   for (int j = 0; j < line.length; j++) {
-        		   String predicate = namedGraph + "/column" + getColumnName(j);
-        		   
+        		   String predicate = namedGraph + "/column" + src.getColumnsHeader().get(j);
+        		   log.debug("S[{}]P[{}]O[{}]", subject, predicate, line[j]);
         		   Statement stmt = valueFactory.createStatement(
         				   new URIImpl(subject), new URIImpl(predicate), new LiteralImpl(line[j]));        		  
         		   cnx.add(stmt);
+        		   i++;
         	   }
-        	   i++;
            }
+           log.debug("Goin to commit");
            cnx.commit();
-           
         }
         catch (Exception e) {
     		throw new RuntimeException("Could not convert CsvSource into RDF triples");
     	}
         finally {
-            try { cnx.close(); } catch (Exception e) { /* Ignore... */ }
+            try { cnx.close(); } catch (Exception e) { log.debug(e); }
         }
     }
 
@@ -160,7 +160,7 @@ public class CsvConverter implements ProjectModule
 		if (mgr != null) {
 			this.projectManager = mgr;
 	        Collection<Class<?>> classes = new LinkedList<Class<?>>();
-	        classes.add(TransformedRdfSource.class);
+	        classes.add(TransformedRdfSource.class.getClass());
 			this.projectManager.addPersistentClasses(classes);
 			this.storage = configuration.getPublicStorage();
 			this.internal = configuration.getInternalRepository();
@@ -180,14 +180,5 @@ public class CsvConverter implements ProjectModule
 		// TODO Auto-generated method stub
 		
 	}
-	
-	public static String getColumnName(int n) {
-        StringBuilder s = new StringBuilder();
-        for (; n >= 0; n = n / 26 - 1) {
-            s.insert(0, (char)(n % 26 + 65));
-        }
-        return s.toString();
-    }
-	
 	
 }
