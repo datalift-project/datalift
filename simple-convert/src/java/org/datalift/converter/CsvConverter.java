@@ -70,28 +70,35 @@ public class CsvConverter extends BaseModule implements ProjectModule
     			p = this.projectManager.findProject(new URL(projectId).toURI());
     		} catch (Exception e) {
     			// should never append
-    			return new RuntimeException(e);
+    			throw new RuntimeException("Could not find project with URI " + projectId, e);
     		}
+    		CsvSource src = null;
     		for (Source s : p.getSources()) {
-    	            if (s instanceof CsvSource) {
-    	            	try {
-							((CsvSource)s).init(storage, uriInfo.getBaseUri());
-						} catch (IOException e) {
-							throw new RuntimeException("Could not initialize Source");
-						}
-    	            	try {
-    	            		URI	transformedUri = new URL(s.getUri() + "/rdf" + p.getSources().size()).toURI();
-							this.convert((CsvSource)s, this.internal, transformedUri);
-							TransformedRdfSource src = this.projectManager.newTransformedRdfSource(
-									transformedUri, s.getTitle() + "-rdf" + p.getSources().size(), 
-									transformedUri);
-							p.addSource(src);
-							this.projectManager.saveProject(p);
-						} catch (Exception e) {
-							log.debug(e);
-						} 
-    	            }
-    		  }
+    			if (s instanceof CsvSource) {
+    				src = (CsvSource)s;
+    				try {
+    					src.init(storage, uriInfo.getBaseUri());
+    					break;
+    				} 
+    				catch (IOException e) {
+    					throw new RuntimeException("Could not initialize Source");
+    				}
+    			}
+    		}		
+    		if (src != null){
+	    		try {
+	    			URI	transformedUri = new URL(src.getUri() + "-rdf" + p.getSources().size()).toURI();
+	    			this.convert(src, this.internal, transformedUri);
+	    			TransformedRdfSource transformedSrc = this.projectManager.newTransformedRdfSource(
+	    					transformedUri, src.getTitle() + "-rdf" + p.getSources().size(), 
+	    					transformedUri);
+	    			p.addSource(transformedSrc);
+	    			this.projectManager.saveProject(p);
+	    		} 
+	    		catch (Exception e) {
+	    			log.debug("Error while persisting project with uri {}", p.getTitle());
+	    		}
+    		}
         	return "CSV Conversion done for project " + projectId;
     	}
     	return "Converter index page";

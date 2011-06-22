@@ -1,1 +1,2 @@
 org.datalift.converter.CsvConverter
+org.datalift.converter.RdfConverter

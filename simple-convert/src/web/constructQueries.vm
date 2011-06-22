@@ -1,0 +1,71 @@
+#load_core_resources
+#load("sparql/resources")
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<title>RDF Converter</title>
+#header_links
+</head>
+<body>
+<script>
+	$(function(){
+		$("#construct_queries_submit").button();
+		$("#add_query").button();
+		$("#add_query").click(function(){
+			var firstQuery = $("input[name=query_0]");
+		    if (typeof firstQuery == 'undefined')
+				return false;
+			$("input[name=query_0]")
+		    	.clone()
+		    	.attr("name", "query_" + $(".construct_query").length)
+		    	.insertAfter("input[name=query_0]");
+		});
+		$("#construct_queries_submit").click(function(){
+			var	queriesJson = [];
+			var queries = $(".construct_query");
+			for(var i = 0; i < queries.length; i++) {
+				queriesJson[i] = queries[i].value;
+			}
+			var requestParam = {"query" : queriesJson, "project" : "$it.getUri()" };
+			jQuery.ajax({
+				type: "POST",
+				url: "${baseUri}/rdfconverter",
+				data: requestParam,
+				success: successQueryPost,
+				error: errorQueryPost
+			});
+			return false;
+		});
+	});
+
+	function successQueryPost() {
+		 alert("successQueryPost");
+	}
+
+	function errorQueryPost() {
+		 alert("errorQueryPost");
+	}
+</script>
+
+<style>
+.construct_query {
+    display:block;
+    width:400px;
+.main_frame {
+	margin:auto;
+}
+</style>
+
+#banner
+	<div class="main_frame"
+		<p>RDF to RDF converter</p>
+		<p>CONSTRUCT requests which you want to apply to dataset :</p>
+		<form method="post">
+			<input type="text" name="query_0" class="construct_query"></input>
+			<input type="button" id="add_query" value="Add"/>
+			<input type="submit" id="construct_queries_submit"/>
+		</form>
+	</div>
+</body>
+</html>
