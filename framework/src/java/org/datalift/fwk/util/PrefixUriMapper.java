@@ -1,10 +1,9 @@
-package org.datalift.core.rdf;
+package org.datalift.fwk.util;
 
 
 import java.net.URI;
 import java.net.URISyntaxException;
 
-import org.datalift.fwk.util.StringUtils;
 
 
 public class PrefixUriMapper implements UriMapper

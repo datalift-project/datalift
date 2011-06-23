@@ -1,4 +1,4 @@
-package org.datalift.core.rdf;
+package org.datalift.fwk.util;
 
 
 import java.net.URI;

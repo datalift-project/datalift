@@ -1,4 +1,4 @@
-package org.datalift.core.rdf;
+package org.datalift.fwk.rdf;
 
 
 import java.io.File;
@@ -25,10 +25,8 @@ import org.openrdf.rio.trig.TriGParser;
 import org.openrdf.rio.trix.TriXParser;
 import org.openrdf.rio.turtle.TurtleParser;
 
-import org.datalift.core.TechnicalException;
-import org.datalift.fwk.rdf.RdfException;
-import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.util.StringUtils;
+import org.datalift.fwk.util.UriMapper;
 
 import static org.datalift.fwk.MediaTypes.*;
 
@@ -101,7 +99,7 @@ public class RdfUtils
                             cnx.add(stmt, ctx);
                         }
                         catch (RepositoryException e) {
-                            throw new TechnicalException(
+                            throw new RuntimeException(
                                             "RDF triple insertion failed", e);
                         }
                     }
