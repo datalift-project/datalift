@@ -21,7 +21,7 @@ import static org.apache.log4j.Level.*;
  * Adapted from
  * <a href="http://yajul.sourceforge.net/">JuliToLog4jHandler</a>.</p>
  */
-public class JulToLog4jHandler extends Handler
+public final class JulToLog4jHandler extends Handler
 {
     private final LoggerRepository loggerRepository;
 
