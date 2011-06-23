@@ -114,13 +114,13 @@
   <property name="jar.name"             value="00-${app.name}.jar"/>
   <property name="jar.path"             location="${dist.home}/${jar.name}"/>
 
-  <property name="locale.default"		value="en"/>
-  <property name="locale.default_resources" 	
-	value="${web.home}/resources_${locale.default}.properties"/>
+  <property name="locale.default"       value="en"/>
+  <property name="locale.default_resources"
+            value="${web.home}/resources_${locale.default}.properties"/>
 
-  <available property="locale.exists" file="${locale.default_resources}">
-  </available>
-	
+  <available property="locale.exists" file="${locale.default_resources}"/>
+
+
   <!-- ================ Compilation Control Options ======================= -->
 
   <!--
@@ -252,22 +252,22 @@
     The "dist" target creates the web application configuration files
     and makes then ready for deployment.
    -->
-  
+
   <!-- Copy default locale resource file -->
   <target name="resource-copy" if="locale.exists">
-    	<copy todir="${classes.dir}" >
+    <copy todir="${classes.dir}">
       <fileset dir="${web.home}" includes="*_${locale.default}.properties"/>
-	  <mapper type="glob" from="*_${locale.default}.properties" to="*.properties"/>
-		</copy>
+      <mapper type="glob"
+              from="*_${locale.default}.properties" to="*.properties"/>
+    </copy>
   </target>
-	
+
   <target name="prepare-dist" depends="prepare">
     <!-- Copy web application page templates and resources -->
     <copy todir="${classes.dir}" includeEmptyDirs="false"
-  		preservelastmodified="true">
+                                 preservelastmodified="true">
       <fileset dir="${web.home}" excludes="**/.*"/>
     </copy>
-  	
     <!-- Create build directories as needed -->
     <mkdir dir="${dist.home}"/>
   </target>
@@ -287,8 +287,9 @@
     <!-- Create module JAR file -->
     <jar jarfile="${jar.path}">
       <fileset dir="${classes.dir}"/>
-      <service type="org.datalift.fwk.Module"
-               provider="org.datalift.sparql.SesameSparqlEndpoint"/>
+      <service type="org.datalift.fwk.Module">
+        <provider classname="org.datalift.sparql.SesameSparqlEndpoint"/>
+      </service>
     </jar>
   </target>
 

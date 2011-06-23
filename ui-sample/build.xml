@@ -59,6 +59,7 @@
 
   <property file="${user.home}/datalift-build.properties"/>
   <property file="build.properties"/>
+  <property file="../core/build.properties"/>
 
 
   <!-- ================ File and Directory Names ========================== -->
@@ -112,6 +113,13 @@
 
   <property name="jar.name"             value="${app.name}.jar"/>
   <property name="jar.path"             location="${dist.home}/${jar.name}"/>
+
+  <property name="locale.default"       value="en"/>
+  <property name="locale.default_resources"
+            value="${web.home}/resources_${locale.default}.properties"/>
+
+  <available property="locale.exists" file="${locale.default_resources}"/>
+
 
   <!-- ================ Compilation Control Options ======================= -->
 
@@ -247,12 +255,13 @@
 
   <!-- Copy default locale resource file -->
   <target name="resource-copy" if="locale.exists">
-    <copy todir="${build.home}/WEB-INF/templates/core">
-	  <fileset dir="${web.home}/WEB-INF/templates/core" includes="*_${locale.default}.properties"/>
-	  <mapper type="glob" from="*_${locale.default}.properties" to="*.properties"/>
+    <copy todir="${classes.dir}">
+      <fileset dir="${web.home}" includes="*_${locale.default}.properties"/>
+      <mapper type="glob"
+              from="*_${locale.default}.properties" to="*.properties"/>
     </copy>
   </target>
-	
+
   <target name="prepare-dist" depends="prepare">
     <!-- Copy web application page templates and resources -->
     <copy todir="${classes.dir}" includeEmptyDirs="false"
@@ -273,7 +282,7 @@
         deployement.
    -->
 
-  <target name="dist" depends="compile,prepare-dist"
+  <target name="dist" depends="compile,prepare-dist,resource-copy"
                       description="Create binary distribution">
     <!-- Create module JAR file -->
     <jar jarfile="${jar.path}">
