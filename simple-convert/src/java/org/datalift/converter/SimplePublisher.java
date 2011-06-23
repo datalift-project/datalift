@@ -19,7 +19,6 @@ import javax.ws.rs.core.Response.Status;
 
 import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 
-import org.datalift.core.rdf.RdfUtils;
 import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.project.Project;
@@ -27,6 +26,7 @@ import org.datalift.fwk.project.ProjectManager;
 import org.datalift.fwk.project.ProjectModule;
 import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.TransformedRdfSource;
+import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.sparql.SparqlEndpoint;
 

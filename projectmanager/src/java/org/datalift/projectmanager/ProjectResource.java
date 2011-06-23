@@ -180,32 +180,32 @@ public class ProjectResource
             response = this.getIndex();
         }
         else {
-	        try {
-	            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
-	            Project p = this.loadProject(projectUri);
-	
-	            boolean modified = false;
-	            if (!StringUtils.isBlank(title)) {
-	                p.setTitle(title);
-	                modified = true;
-	            }
-	            if (!StringUtils.isBlank(description)) {
-	                p.setDescription(description);
-	                modified = true;
-	            }
-	            URI li = License.valueOf(license).uri;
-	            if (!p.getLicense().equals(li)) {
-	                p.setLicense(li);
-	                modified = true;
-	            }
-	            if (modified) {
-	                this.projectManager.saveProject(p);
-	            }
-	            response = Response.seeOther(projectUri).build();
-	        }
-	        catch (Exception e) {
-	            this.handleInternalError(e, "Failed to update project");
-	        }
+            try {
+                URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
+                Project p = this.loadProject(projectUri);
+
+                boolean modified = false;
+                if (!StringUtils.isBlank(title)) {
+                    p.setTitle(title);
+                    modified = true;
+                }
+                if (!StringUtils.isBlank(description)) {
+                    p.setDescription(description);
+                    modified = true;
+                }
+                URI li = License.valueOf(license).uri;
+                if (!p.getLicense().equals(li)) {
+                    p.setLicense(li);
+                    modified = true;
+                }
+                if (modified) {
+                    this.projectManager.saveProject(p);
+                }
+                response = Response.seeOther(projectUri).build();
+            }
+            catch (Exception e) {
+                this.handleInternalError(e, "Failed to update project");
+            }
         }
         return response;
     }
@@ -395,8 +395,8 @@ public class ProjectResource
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
             Project p = this.loadProject(projectUri);
             Source s = p.getSource(currentSourceUri);
-            boolean hasTitleRow = ((titleRow != null) && (titleRow
-                    .toLowerCase().equals("on")));
+            boolean hasTitleRow = ((titleRow != null) &&
+                                   (titleRow.toLowerCase().equals("on")));
             ((CsvSource)s).setSeparator(separator);
             ((CsvSource)s).setTitleRow(hasTitleRow);
             this.projectManager.saveProject(p);
@@ -476,11 +476,11 @@ public class ProjectResource
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
             Project p = this.projectManager.findProject(projectUri);
             MediaType mappedType = null;
-			try {
-				mappedType = RdfSourceImpl.parseMimeType(mimeType);
-			} catch (Exception e) {
-				this.throwInvalidParamError("mime_type", mimeType);
-			}
+            try {
+                mappedType = RdfSourceImpl.parseMimeType(mimeType);
+            } catch (Exception e) {
+                this.throwInvalidParamError("mime_type", mimeType);
+            }
             Source s = p.getSource(currentSourceUri);
             ((RdfSource) s).setMimeType(mappedType.toString());
             this.projectManager.saveProject(p);
@@ -646,15 +646,18 @@ public class ProjectResource
             String template = null;
             if (src instanceof CsvSource) {
                 template = "/CsvSourceGrid.vm";
-            } else if (src instanceof RdfSource) {
+            }
+            else if (src instanceof RdfSource) {
                 template = "/RdfSourceGrid.vm";
-            } else if (src instanceof DbSource) {
+            }
+            else if (src instanceof DbSource) {
                 ((DbSource) src).init(this.getFileStorage(
                                         this.getProjectFilePath(id, srcId)));
                 template = "/DbSourceGrid.vm";
-            } else {
+            }
+            else {
                 throw new TechnicalException("Unknown source type: {1}",
-                        src.getClass());
+                                             src.getClass());
             }
             response = Response.ok(this.newViewable(template, src)).build();
         }

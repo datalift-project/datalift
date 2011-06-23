@@ -24,18 +24,18 @@ import org.openrdf.model.Statement;
 import org.openrdf.model.ValueFactory;
 import org.openrdf.repository.RepositoryConnection;
 
-public class CsvConverter extends BaseModule implements ProjectModule 
-{	
+public class CsvConverter extends BaseModule implements ProjectModule
+{
 	private final static String MODULE_NAME = "csvconverter";
-	
+
 	private ProjectManager	projectManager = null;
-	
+
 	private File	storage = null;
-	
+
 	private Repository internal = null;
-	
+
 	private Logger log = Logger.getLogger();
-	
+
     public CsvConverter() {
     	super(MODULE_NAME, true);
     }
@@ -60,7 +60,7 @@ public class CsvConverter extends BaseModule implements ProjectModule
         }
         return projectPage;
     }
-    
+
     @GET
     public Object getIndexPage(@QueryParam("project") String projectId,
     		                   @Context UriInfo uriInfo){
@@ -79,31 +79,31 @@ public class CsvConverter extends BaseModule implements ProjectModule
     				try {
     					src.init(storage, uriInfo.getBaseUri());
     					break;
-    				} 
+    				}
     				catch (IOException e) {
     					throw new RuntimeException("Could not initialize Source");
     				}
     			}
-    		}		
+    		}
     		if (src != null){
 	    		try {
-	    			URI	transformedUri = new URL(src.getUri() + "-rdf" + p.getSources().size()).toURI();
+	    			URI transformedUri = new URL(src.getUri() + "-rdf" + p.getSources().size()).toURI();
 	    			this.convert(src, this.internal, transformedUri);
 	    			TransformedRdfSource transformedSrc = this.projectManager.newTransformedRdfSource(
-	    					transformedUri, src.getTitle() + "-rdf" + p.getSources().size(), 
+	    					transformedUri, src.getTitle() + "-rdf" + p.getSources().size(),
 	    					transformedUri);
 	    			p.addSource(transformedSrc);
 	    			this.projectManager.saveProject(p);
-	    		} 
+	    		}
 	    		catch (Exception e) {
-	    			log.debug("Error while persisting project with uri {}", p.getTitle());
+	    			log.debug("Error while persisting project {}", p.getTitle());
 	    		}
     		}
         	return "CSV Conversion done for project " + projectId;
     	}
     	return "Converter index page";
     }
-    
+
     public void convert(CsvSource src, Repository target, URI namedGraph) {
     	int	i = 0;
         final RepositoryConnection cnx = target.newConnection();
@@ -119,13 +119,13 @@ public class CsvConverter extends BaseModule implements ProjectModule
            cnx.setAutoCommit(false);
            // Load triples
            for (String[] line : src) {
-        	   String subject = namedGraph + "/row" + i + "#_";    		
+        	   String subject = namedGraph + "/row" + i; // + "#_";
         	   for (int j = 0; j < line.length && j < src.getColumnsHeader().size(); j++) {
         		   String predicate = namedGraph + "/column" + src.getColumnsHeader().get(j);
         		   Statement stmt = valueFactory.createStatement(
-        				   valueFactory.createURI(subject), 
-        				   valueFactory.createURI(predicate), 
-        				   valueFactory.createLiteral(line[j]));        		  
+        				   valueFactory.createURI(subject),
+        				   valueFactory.createURI(predicate),
+        				   valueFactory.createLiteral(line[j]));
         		   cnx.add(stmt, valueFactory.createURI(namedGraph.toString()));
         	   }
     		   i++;
@@ -139,7 +139,7 @@ public class CsvConverter extends BaseModule implements ProjectModule
             try { cnx.close(); } catch (Exception e) { /* Ignore */ }
         }
     }
-    
+
 	@Override
 	public void init(Configuration configuration) {
 		super.init(configuration);

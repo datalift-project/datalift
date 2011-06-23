@@ -1,11 +1,8 @@
 package org.datalift.converter;
 
-import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 
 import java.net.URI;
 import java.net.URL;
-import java.util.Collection;
-import java.util.LinkedList;
 import java.util.List;
 
 import javax.persistence.EntityNotFoundException;
@@ -22,31 +19,36 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.core.Response.Status;
 
+import static javax.ws.rs.core.HttpHeaders.ACCEPT;
+
+import com.sun.jersey.api.view.Viewable;
+
 import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
-import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectManager;
 import org.datalift.fwk.project.ProjectModule;
 import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.TransformedRdfSource;
+import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.sparql.SparqlEndpoint;
 
-import com.sun.jersey.api.view.Viewable;
 
 public class RdfConverter extends BaseModule implements ProjectModule
-{	
-	private final static String MODULE_NAME = "rdfconverter";
-	
-	private ProjectManager	projectManager = null;
-	
+{
+    private final static String MODULE_NAME = "rdfconverter";
+
+    private ProjectManager projectManager = null;
     private SparqlEndpoint sparqlEndpoint = null;
-	
-	private Repository internRepository = null;
-		
-	@Override
-	public URI canHandle(Project p) {
+    private Repository internRepository = null;
+
+    public RdfConverter() {
+        super(MODULE_NAME, true);
+    }
+
+    @Override
+    public URI canHandle(Project p) {
         boolean hasRdfSource = false;
         for (Source s : p.getSources()) {
             if (s instanceof TransformedRdfSource) {
@@ -64,15 +66,11 @@ public class RdfConverter extends BaseModule implements ProjectModule
             }
         }
         return projectPage;
-	}
+    }
 
-	public RdfConverter() {
-		super(MODULE_NAME, true);
-	}
-	
-	@Override
-	public void init(Configuration configuration) {	
-		this.internRepository = configuration.getInternalRepository();
+    @Override
+    public void init(Configuration configuration) {
+        this.internRepository = configuration.getInternalRepository();
         this.projectManager = configuration.getBean(ProjectManager.class);
         if (this.projectManager == null) {
             throw new RuntimeException("Could not retrieve Project Manager");
@@ -81,36 +79,37 @@ public class RdfConverter extends BaseModule implements ProjectModule
         if (this.sparqlEndpoint == null) {
             throw new RuntimeException("Could not retrieve SPARQL endpoint");
         }
-	}	
-	
-	@GET
-	public Response getIndexPage(@QueryParam("project") String projectId, @Context UriInfo uriInfo) {
-		Project p;
-		try {
-			p = this.projectManager.findProject(new URL(projectId).toURI());
-		} 
-		catch (Exception e) {
-			throw new RuntimeException("Could not find project with URI " + projectId, e);
-		}
-		TransformedRdfSource src = null;
-		for (Source s : p.getSources()) {
-			if (s instanceof TransformedRdfSource) {
-				src = (TransformedRdfSource)s;
-			}
-		}
-		if (src == null)
-			throw new RuntimeException("Could not find rdf source in project with URI " + projectId);
-		return Response.ok(this.newViewable("/constructQueries.vm", p)).build();
+    }	
 
-	}
-	
-	@POST
-	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-	public Response convertRdfSource(@FormParam("query") List<String> query, 
-									 @FormParam("project") URI projectId, 
-									 @Context UriInfo uriInfo,
-									 @Context Request request,
-									 @HeaderParam(ACCEPT) String acceptHdr) {
+    @GET
+    public Response getIndexPage(@QueryParam("project") String projectId,
+                                 @Context UriInfo uriInfo) {
+        Project p;
+        try {
+            p = this.projectManager.findProject(new URL(projectId).toURI());
+        } 
+        catch (Exception e) {
+            throw new RuntimeException("Could not find project with URI " + projectId, e);
+        }
+        TransformedRdfSource src = null;
+        for (Source s : p.getSources()) {
+            if (s instanceof TransformedRdfSource) {
+                src = (TransformedRdfSource)s;
+            }
+        }
+        if (src == null) {
+            throw new RuntimeException("Could not find rdf source in project with URI " + projectId);
+        }
+        return Response.ok(this.newViewable("/constructQueries.vm", p)).build();
+    }
+
+    @POST
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public Response convertRdfSource(@FormParam("query") List<String> query, 
+                                     @FormParam("project") URI projectId, 
+                                     @Context UriInfo uriInfo,
+                                     @Context Request request,
+                                     @HeaderParam(ACCEPT) String acceptHdr) {
 		Response response = null;
 		if (projectId != null && query != null) {
 			TransformedRdfSource src = null;
@@ -148,9 +147,9 @@ public class RdfConverter extends BaseModule implements ProjectModule
 			}
 		}
         return response;
-	}
-	
-	  /**
+    }
+
+    /**
      * Return a viewable for the specified template, populated with the
      * specified model object.
      * <p>
@@ -163,6 +162,5 @@ public class RdfConverter extends BaseModule implements ProjectModule
      */
     protected final Viewable newViewable(String templateName, Object it) {
         return new Viewable("/" + this.getName() + templateName, it);
-    }
-	
+    }	
 }
