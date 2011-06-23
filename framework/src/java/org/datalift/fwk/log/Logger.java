@@ -64,22 +64,6 @@ public abstract class Logger
 
     private final static Pattern FORMAT_ELT_PATTERN = Pattern.compile("\\{}");
 
-    //------------------------------------------------------------------------
-    // Class members
-    //------------------------------------------------------------------------
-
-    /**
-     * Thread-local storage for the promotion of debug and trace log
-     * requests.
-     */
-    private final static ThreadLocal<Boolean> promoteDebugFlag =
-            new ThreadLocal<Boolean>()
-            {
-                protected synchronized Boolean initialValue() {
-                    return Boolean.FALSE;
-                }
-            };
-
     //-------------------------------------------------------------------------
     // Logger contract definition
     //-------------------------------------------------------------------------
@@ -352,7 +336,7 @@ public abstract class Logger
      *                   <code>false</code> otherwise.
      */
     public final static void promoteDebugTraces(boolean promote) {
-        promoteDebugFlag.set(Boolean.valueOf(promote));
+        LogService.getInstance().promoteDebugTraces(promote);
     }
 
     /**
@@ -364,7 +348,7 @@ public abstract class Logger
      *         otherwise.
      */
     public final static boolean areDebugTracesPromoted() {
-        return (promoteDebugFlag.get()).booleanValue();
+        return LogService.getInstance().areDebugTracesPromoted();
     }
 
     //-------------------------------------------------------------------------

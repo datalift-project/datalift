@@ -102,6 +102,25 @@ public abstract class LogService
     abstract public void clearDiagnosticContexts();
 
     /**
+     * Sets whether debug and trace log requests shall be promoted
+     * to a higher level (info and warning).
+     * @param  promote   <code>true</code> to force debug and trace
+     *                   log requests to a higher level;
+     *                   <code>false</code> otherwise.
+     */
+    abstract public void promoteDebugTraces(boolean promote);
+
+    /**
+     * Returns whether debug and trace log requests are promoted
+     * to a higher level (info and warning).
+     *
+     * @return <code>true</code> if debug and trace log requests are
+     *         promoted to a higher level; <code>false</code>
+     *         otherwise.
+     */
+    abstract public boolean areDebugTracesPromoted();
+
+    /**
      * Initializes this log service.
      * @param  props   configuration data or <code>null</code>.
      */

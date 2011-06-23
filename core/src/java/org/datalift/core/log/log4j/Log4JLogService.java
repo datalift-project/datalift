@@ -10,7 +10,7 @@ import java.util.ResourceBundle;
 import org.apache.log4j.Hierarchy;
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
-import org.apache.log4j.MDC;
+import org.apache.log4j.MDC2;
 import org.apache.log4j.Priority;
 import org.apache.log4j.spi.DefaultRepositorySelector;
 import org.apache.log4j.spi.RootLogger;
@@ -46,8 +46,10 @@ public final class Log4JLogService extends LogService
     public final static PromotedLevel PROMOTED_TRACE =
                                 new PromotedLevel(Level.TRACE_INT, "TRACE");
 
-    private static final String LOG4J_INIT_OVERRIDE_KEY = 
+    private final static String LOG4J_INIT_OVERRIDE_KEY = 
                                                  "log4j.defaultInitOverride";
+    private final static String PROMOTE_DEBUG_MDC =
+                        Log4JLogService.class.getName() + ".promoteDebugTrace";
 
     //-------------------------------------------------------------------------
     // Instance members
@@ -77,12 +79,12 @@ public final class Log4JLogService extends LogService
      */
     @Override
     public Object setDiagnosticContext(String name, Object context) {
-        Object oldCtx = MDC.get(name);
+        Object oldCtx = MDC2.get(name);
         if (context != null) {
-            MDC.put(name, context);
+            MDC2.put(name, context);
         }
         else {
-            MDC.remove(name);
+            MDC2.remove(name);
         }
         return oldCtx;
     }
@@ -90,15 +92,28 @@ public final class Log4JLogService extends LogService
     /** {@inheritDoc} */
     @Override
     public Object removeDiagnosticContext(String name) {
-        Object oldCtx = MDC.get(name);
-        MDC.remove(name);
+        Object oldCtx = MDC2.get(name);
+        MDC2.remove(name);
         return oldCtx;
     }
 
     /** {@inheritDoc} */
     @Override
     public void clearDiagnosticContexts() {
-        MDC.clear();
+        MDC2.clear();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void promoteDebugTraces(boolean promote) {
+        MDC2.put(PROMOTE_DEBUG_MDC, Boolean.valueOf(promote));
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean areDebugTracesPromoted() {
+        Boolean b = (Boolean)(MDC2.get(PROMOTE_DEBUG_MDC));
+        return (b != null)? b.booleanValue(): false;
     }
 
     /** {@inheritDoc} */
@@ -149,6 +164,7 @@ public final class Log4JLogService extends LogService
         // Shutdown log service.
         this.loggerRepository.shutdown();
     }
+
 
     //-------------------------------------------------------------------------
     // Logger implementation nested class
@@ -255,6 +271,7 @@ public final class Log4JLogService extends LogService
         }
     }
 
+
     //-------------------------------------------------------------------------
     // PromotedLevel implementation nested class
     //-------------------------------------------------------------------------
@@ -263,7 +280,7 @@ public final class Log4JLogService extends LogService
      * A specialization of Log4J Level to support promoted debug traces
      * log levels.
      */
-    private static class PromotedLevel extends Level
+    private final static class PromotedLevel extends Level
     {
         protected PromotedLevel(int level, String levelStr) {
             super(Level.INFO_INT + (level / 100), levelStr, 7);
