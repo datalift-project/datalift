@@ -1,5 +1,4 @@
 #load_core_resources
-#load("sparql/resources")
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -60,9 +59,12 @@
 #banner
 	<div class="main_frame"
 		<p>RDF to RDF converter</p>
-		<p>CONSTRUCT requests which you want to apply to dataset :</p>
 		<form method="post">
+			<label for="query_0">CONSTRUCT requests you want to apply to dataset: </label><br />
+<!--
 			<input type="text" name="query_0" class="construct_query"></input>
+ -->
+			<textarea name="query_0" class="construct_query" style="width:600px; height:150px;"></textarea>
 			<input type="button" id="add_query" value="Add"/>
 			<input type="submit" id="construct_queries_submit"/>
 		</form>
