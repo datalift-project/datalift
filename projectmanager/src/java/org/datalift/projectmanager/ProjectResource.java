@@ -106,7 +106,7 @@ public class ProjectResource
         Response response = null;
         // Check that project is unique.
         URI projectId = this.newProjectId(uriInfo.getBaseUri(), title);
-        if (this.projectManager.findProject(projectId) == null) {
+        if (this.findProject(projectId) == null) {
             // Create new project.
             Project p = this.projectManager.newProject(projectId, title,
                                                        description, license);
@@ -474,7 +474,7 @@ public class ProjectResource
         Response response = null;
         try {
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
-            Project p = this.projectManager.findProject(projectUri);
+            Project p = this.loadProject(projectUri);
             MediaType mappedType = null;
             try {
                 mappedType = RdfSourceImpl.parseMimeType(mimeType);
@@ -559,7 +559,7 @@ public class ProjectResource
         Response response = null;
         try {
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
-            Project p = this.projectManager.findProject(projectUri);
+            Project p = this.loadProject(projectUri);
             Source s = p.getSource(currentSourceUri);
             ((DbSource)s).setTitle(title);
             ((DbSource)s).setDatabase(database);
@@ -888,8 +888,23 @@ public class ProjectResource
                        .type(TEXT_HTML);
     }
 
+    private Project findProject(URI uri) throws WebApplicationException {
+        try {
+            return this.projectManager.findProject(uri);
+        }
+        catch (Exception e) {
+            TechnicalException error = new TechnicalException(
+                                        "ws.internal.error", e, e.getMessage());
+            log.error(error.getMessage(), e);
+            throw new WebApplicationException(
+                                Response.status(Status.INTERNAL_SERVER_ERROR)
+                                        .type(MediaTypes.TEXT_PLAIN_TYPE)
+                                        .entity(error.getMessage()).build());
+        }
+    }
+
     private Project loadProject(URI uri) throws WebApplicationException {
-        Project p = this.projectManager.findProject(uri);
+        Project p = this.findProject(uri);
         if (p == null) {
             // Not found.
             throw new NotFoundException(uri);

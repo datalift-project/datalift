@@ -4,7 +4,6 @@ package org.datalift.converter;
 import java.io.File;
 import java.net.URI;
 
-import javax.persistence.EntityNotFoundException;
 import javax.ws.rs.GET;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
@@ -18,8 +17,11 @@ import org.openrdf.model.Literal;
 import org.openrdf.model.ValueFactory;
 import org.openrdf.repository.RepositoryConnection;
 
+import com.sun.jersey.api.NotFoundException;
+
 import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
+import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.CsvSource;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectManager;
@@ -36,6 +38,12 @@ public class CsvConverter extends BaseModule implements ProjectModule
     //-------------------------------------------------------------------------
 
     private final static String MODULE_NAME = "csvconverter";
+
+    //-------------------------------------------------------------------------
+    // Class members
+    //-------------------------------------------------------------------------
+
+    private final static Logger log = Logger.getLogger();
 
     //-------------------------------------------------------------------------
     // Instance members
@@ -67,7 +75,7 @@ public class CsvConverter extends BaseModule implements ProjectModule
 
         this.projectManager = configuration.getBean(ProjectManager.class);
         if (this.projectManager == null) {
-            throw new RuntimeException("Could not retrieve Project Manager");
+            throw new TechnicalException("project.manager.not.available");
         }
     }
 
@@ -95,7 +103,7 @@ public class CsvConverter extends BaseModule implements ProjectModule
                 return new URI(this.getName() + "?project=" + p.getUri());
             }
             catch (Exception e) {
-                throw new RuntimeException(e);
+                throw new TechnicalException(e);
             }
         }
         return projectPage;
@@ -120,7 +128,7 @@ public class CsvConverter extends BaseModule implements ProjectModule
             }
         }
         if (src == null) {
-            throw new EntityNotFoundException("No CSV source found");
+            throw new NotFoundException("No CSV source found", projectId);
         }
         try {
             src.init(storage, uriInfo.getBaseUri());
@@ -134,11 +142,13 @@ public class CsvConverter extends BaseModule implements ProjectModule
             this.projectManager.saveProject(p);
         }
         catch (Exception e) {
+            TechnicalException error = new TechnicalException(
+                                        "ws.internal.error", e, e.getMessage());
+            log.error(error.getMessage(), e);
             throw new WebApplicationException(
-                        Response.status(Status.INTERNAL_SERVER_ERROR)
-                                .entity(e.getLocalizedMessage())
-                                .type(MediaType.TEXT_PLAIN)
-                                .build());
+                                Response.status(Status.INTERNAL_SERVER_ERROR)
+                                        .type(MediaType.TEXT_PLAIN_TYPE)
+                                        .entity(error.getMessage()).build());
         }
         return "CSV to RDF conversion completed for source " + src.getTitle();
     }
@@ -186,7 +196,7 @@ public class CsvConverter extends BaseModule implements ProjectModule
             cnx.commit();
         }
         catch (Exception e) {
-            throw new RuntimeException("CSV to RDF conversion failed", e);
+            throw new TechnicalException("csv.conversion.failed", e);
     	}
         finally {
             try { cnx.close(); } catch (Exception e) { /* Ignore */ }

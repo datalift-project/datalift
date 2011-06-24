@@ -5,7 +5,6 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.persistence.EntityNotFoundException;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.QueryParam;
@@ -17,10 +16,13 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.core.Response.Status;
 
+import com.sun.jersey.api.NotFoundException;
+
 import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 
 import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
+import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectManager;
 import org.datalift.fwk.project.ProjectModule;
@@ -38,6 +40,12 @@ public class SimplePublisher extends BaseModule implements ProjectModule
     //-------------------------------------------------------------------------
 
     private final static String MODULE_NAME = "simple-publisher";
+
+    //-------------------------------------------------------------------------
+    // Class members
+    //-------------------------------------------------------------------------
+
+    private final static Logger log = Logger.getLogger();
 
     //-------------------------------------------------------------------------
     // Instance members
@@ -70,11 +78,11 @@ public class SimplePublisher extends BaseModule implements ProjectModule
 
         this.projectManager = configuration.getBean(ProjectManager.class);
         if (this.projectManager == null) {
-            throw new RuntimeException("Could not retrieve Project Manager");
+            throw new TechnicalException("project.manager.not.available");
         }
         this.sparqlEndpoint = configuration.getBean(SparqlEndpoint.class);
         if (this.sparqlEndpoint == null) {
-            throw new RuntimeException("Could not retrieve SPARQL endpoint");
+            throw new TechnicalException("sparql.endpoint.not.available");
         }
     }
 
@@ -102,7 +110,7 @@ public class SimplePublisher extends BaseModule implements ProjectModule
                 projectPage = new URI(this.getName() + "?project=" + p.getUri());
             }
             catch (Exception e) {
-                throw new RuntimeException(e);
+                throw new TechnicalException(e);
             }
         }
         return projectPage;
@@ -130,12 +138,12 @@ public class SimplePublisher extends BaseModule implements ProjectModule
             }
         }
         if (src == null) {
-            throw new EntityNotFoundException("No RDF source found");
+            throw new NotFoundException("No RDF source found", projectId);
         }
         Response response = null;
         try {
             List<String> constructs = Arrays.asList(
-                            "CONSTRUCT ?s ?p ?o WHERE { GRAPH <"
+                            "CONSTRUCT { ?s ?p ?o } WHERE { GRAPH <"
                                 + src.getTargetGraph() + "> { ?s ?p ?o . } }");
             RdfUtils.convert(this.internRepository, constructs,
                              this.publicRepository, projectId);
@@ -146,10 +154,13 @@ public class SimplePublisher extends BaseModule implements ProjectModule
                                         uriInfo, request, acceptHdr).build();
         }
         catch (Exception e) {
-            response = Response.status(Status.INTERNAL_SERVER_ERROR)
-                               .entity(e.getLocalizedMessage())
-                               .type(MediaType.TEXT_PLAIN_TYPE)
-                               .build();
+            TechnicalException error = new TechnicalException(
+                                        "ws.internal.error", e, e.getMessage());
+            log.error(error.getMessage(), e);
+            throw new WebApplicationException(
+                                Response.status(Status.INTERNAL_SERVER_ERROR)
+                                        .type(MediaType.TEXT_PLAIN_TYPE)
+                                        .entity(error.getMessage()).build());
         }
         return response;
     }
