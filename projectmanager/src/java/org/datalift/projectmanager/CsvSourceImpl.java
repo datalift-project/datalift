@@ -62,8 +62,9 @@ public class CsvSourceImpl extends BaseFileSource<String[]>
 
         InputStream in = this.getInputStream();
         if (in != null) {
-            CSVReader reader = new CSVReader(new InputStreamReader(in),
-                                Separator.valueOf(this.separator).getValue());
+            CSVReader reader = new CSVReader(
+                            new InputStreamReader(in, "ISO-8859-1"),
+                            Separator.valueOf(this.separator).getValue());
             this.grid = Collections.unmodifiableList(reader.readAll());
 
             Iterator<String[]> it = this.grid.iterator();
