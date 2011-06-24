@@ -888,10 +888,11 @@ public class ProjectResource
                        .type(TEXT_HTML);
     }
 
-    private Project loadProject(URI uri) throws EntityNotFoundException {
+    private Project loadProject(URI uri) throws WebApplicationException {
         Project p = this.projectManager.findProject(uri);
         if (p == null) {
-            throw new EntityNotFoundException(uri.toString());
+            // Not found.
+            throw new NotFoundException(uri);
         }
         return p;
     }
