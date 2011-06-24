@@ -73,6 +73,9 @@ public class RdfUtils
         try {
             RDFParser parser = newRdfParser(mimeType);
             final ValueFactory valueFactory = cnx.getValueFactory();
+
+            // Prevent transaction commit for each triple inserted.
+            cnx.setAutoCommit(false);
             // Clear target named graph, if any.
             org.openrdf.model.URI u = null;
             if (namedGraph != null) {
@@ -80,9 +83,6 @@ public class RdfUtils
                 cnx.clear(u);
             }
             final org.openrdf.model.URI ctx = u;
-
-            // Prevent transaction commit for each triple inserted.
-            cnx.setAutoCommit(false);
             // Load triples, mapping URIs on the fly.
             parser.setRDFHandler(new RDFHandlerBase()
                 {
@@ -179,6 +179,8 @@ public class RdfUtils
             out = target.newConnection();
 
             final ValueFactory valueFactory = out.getValueFactory();
+            // Prevent transaction commit for each triple inserted.
+            out.setAutoCommit(false);
             // Clear target named graph, if any.
             org.openrdf.model.URI u = null;
             if (namedGraph != null) {
@@ -190,16 +192,22 @@ public class RdfUtils
                 query = s;
                 GraphQuery q = in.prepareGraphQuery(QueryLanguage.SPARQL,
                                                     query, baseUri);
-                in.add(q.evaluate(), u);
+                out.add(q.evaluate(), u);
             }
-            query = null;
+            out.commit();
+            query = null;       // No query in error.
         }
         catch (Exception e) {
+            try {
+                out.rollback();
+            }
+            catch (Exception e2) { /* Ignore... */ }
+
             throw new RdfException((query != null)? query: e.getMessage(), e);
         }
         finally {
             if (in != null) {
-                try { in.close(); } catch (Exception e) { /* Ignore... */ }
+                try { in.close();  } catch (Exception e) { /* Ignore... */ }
             }
             if (in != null) {
                 try { out.close(); } catch (Exception e) { /* Ignore... */ }
