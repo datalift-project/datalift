@@ -93,8 +93,15 @@ public class ProjectResource
 
     @GET
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
-    public Response getIndex() {
-        return this.displayIndexPage(Response.ok(), null).build();
+    public Response getIndex() throws WebApplicationException {
+        Response response = null;
+        try {
+            response = this.displayIndexPage(Response.ok(), null).build();
+        }
+        catch (Exception e) {
+            this.handleInternalError(e, "Failed to delete project");
+        }
+        return response;
     }
 
     @POST
@@ -102,7 +109,8 @@ public class ProjectResource
                                 @FormParam("title") String title,
                                 @FormParam("description") String description,
                                 @FormParam("license") String license,
-                                @Context UriInfo uriInfo) {
+                                @Context UriInfo uriInfo)
+                                                throws WebApplicationException {
         Response response = null;
         // Check that project is unique.
         URI projectId = this.newProjectId(uriInfo.getBaseUri(), title);
@@ -235,8 +243,15 @@ public class ProjectResource
                                    @Context UriInfo uriInfo,
                                    @Context Request request)
                                                 throws WebApplicationException {
-        Project p = this.loadProject(uriInfo.getAbsolutePath());
-        return this.displayIndexPage(Response.ok(), p).build();
+        Response response = null;
+        try {
+            Project p = this.loadProject(uriInfo.getAbsolutePath());
+            response = this.displayIndexPage(Response.ok(), p).build();
+        }
+        catch (Exception e) {
+            this.handleInternalError(e, "Failed to delete project");
+        }
+        return response;
     }
 
     @GET
