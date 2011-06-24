@@ -57,9 +57,10 @@ public abstract class BaseSource extends BaseRdfEntity implements Source
     public void setTitle(String t) {
         title = t;
     }
+
     /** {@inheritDoc} */
     @Override
-    public SourceType getType() {
+    public final SourceType getType() {
         return this.type;
     }
 
