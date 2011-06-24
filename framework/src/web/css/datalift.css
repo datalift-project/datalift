@@ -241,19 +241,19 @@ body {
 }
 
 .form_formated label {
-  width:150px;
+  width:280px;
   display:block;
   float:left;
 }
 
 .form_formated .medium {
-  width:225px;
+  width:325px;
   display:block;
   float:left;
 }
 
 .form_formated .large {
-  width:350px;
+  width:450px;
   display:block;
   float:left;
 }

@@ -94,7 +94,7 @@
 			uri:"$curSrc.uri",
 			title:"<a href='$curSrc.uri'>$esc.html($curSrc.title)</a>",
 			#if($curSrc.getType() == $field.DbSource)
-				infos: "#i18n("project.upload_db.source_url"): $!esc.html($curSrc.connectionUrl)  <br/>#i18n("project.upload_db.request"): $!esc.html($curSrc.request)  <br/>#i18n("project.upload_db.cache_duration"): $!esc.html($curSrc.cacheDuration)"
+				infos: "#i18n("project.upload_db.source_url"): $!esc.html($curSrc.connectionUrl) <br />#i18n("project.upload_db.request"): $!esc.html($curSrc.request)  <br />#i18n("project.upload_db.cache_duration"): $!esc.html($curSrc.cacheDuration)"
 			#elseif($curSrc.getType() == $field.RdfSource)
 				infos: "$!esc.html($curSrc.filePath)"
 			#elseif($curSrc.getType() == $field.TransformedRdfSource)
@@ -257,10 +257,10 @@
 				<p>#i18n("project.module_available"):</p>
 				<ol id="selectable_module">
 #foreach ($curModule in $canHandle)
+#set( $i18nEntry = $curModule.name + ".module.label" )
 					<li>
-						<a href="${baseUri}/$curModule.canHandle($current)"
-						class="module_can_handle" id="$curModule.name">
-						$esc.html($curModule.getName())</a>
+						<a href="${baseUri}/$curModule.canHandle($current)" class="module_can_handle"
+						   id="$curModule.name">#i18n($i18nEntry)</a>
 					</li>
 #end
 				</ol>
