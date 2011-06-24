@@ -1,47 +1,65 @@
 package org.datalift.projectmanager;
 
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 
 import javax.persistence.Entity;
 
-import org.datalift.fwk.project.TransformedRdfSource;
-
 import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.RdfsClass;
 
+import org.datalift.fwk.project.TransformedRdfSource;
+
+
 @Entity
 @RdfsClass("datalift:TransformedRdfSource")
-public class TransformedRdfSourceImpl extends BaseSource implements TransformedRdfSource{
+public class TransformedRdfSourceImpl extends BaseSource
+                                      implements TransformedRdfSource
+{
+    //-------------------------------------------------------------------------
+    // Instance members
+    //-------------------------------------------------------------------------
 
-	@RdfProperty("datalift:targetGraph")
-	private URI		targetGraph;
-	
-	public TransformedRdfSourceImpl() {
-		super(SourceType.TransformedRdfSource);
-	}
+    @RdfProperty("datalift:targetGraph")
+    private String targetGraph;
 
-	public TransformedRdfSourceImpl(String uri) {
-		super(SourceType.TransformedRdfSource, uri);
-	}
+    //-------------------------------------------------------------------------
+    // Constructors
+    //-------------------------------------------------------------------------
 
-	@Override
-	public SourceType getType() {
-		return SourceType.TransformedRdfSource;
-	}
+    public TransformedRdfSourceImpl() {
+        super(SourceType.TransformedRdfSource);
+    }
 
-	public void setTargetGraph(URI targetGraph) {
-		this.targetGraph = targetGraph;
-	}
+    public TransformedRdfSourceImpl(String uri) {
+        super(SourceType.TransformedRdfSource, uri);
+    }
 
-	public URI getTargetGraph() {
-		return targetGraph;
-	}
+    //-------------------------------------------------------------------------
+    // BaseSource contract support
+    //-------------------------------------------------------------------------
 
-	@Override
-	public void init(File docRoot, URI baseUri) throws IOException {
-		// Nothing to init
-	}
+    /** {@inheritDoc} */
+    @Override
+    public void init(File docRoot, URI baseUri) throws IOException {
+        // Nothing to initialize.
+    }
 
+    //-------------------------------------------------------------------------
+    // TransformedRdfSource contract support
+    //-------------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    @Override
+    public void setTargetGraph(String targetGraph) {
+        this.targetGraph = targetGraph;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public String getTargetGraph() {
+        return targetGraph;
+    }
 }

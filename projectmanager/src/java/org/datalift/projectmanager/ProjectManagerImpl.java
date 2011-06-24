@@ -164,7 +164,7 @@ public class ProjectManagerImpl implements ProjectManager, LifeCycle
     public TransformedRdfSource newTransformedRdfSource(URI uri, String title, URI targetGraph) {
         TransformedRdfSource src = new TransformedRdfSourceImpl(uri.toString());
         src.setTitle(title);
-        src.setTargetGraph(targetGraph);
+        src.setTargetGraph(targetGraph.toString());
         return src;
     }
     
