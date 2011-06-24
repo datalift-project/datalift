@@ -55,6 +55,8 @@ public final class Log4JLogService extends LogService
     // Instance members
     //-------------------------------------------------------------------------
 
+    /** The Log4J configuration. */
+    private DOMConfigurator2 configuration = null;
     /** The Log4J logger repository. */
     private Hierarchy loggerRepository = null;
 
@@ -125,11 +127,11 @@ public final class Log4JLogService extends LogService
             // Configure Log4J, forcing usage of an XML configurator
             // supporting XML schemas and includes.
             URL u = this.getClass().getClassLoader().getResource("log4j.xml");
-            DOMConfigurator2 cfg = new DOMConfigurator2();
+            this.configuration = new DOMConfigurator2();
             if (props != null) {
-                cfg.setProperties(props);
+                configuration.setProperties(props);
             }
-            cfg.doConfigure(u, h);
+            configuration.doConfigure(u, h);
 
             // Install configured Logger factory as default.
             // 1. Prevent loading of default Log4J configuration.
@@ -159,10 +161,17 @@ public final class Log4JLogService extends LogService
     /** {@inheritDoc} */
     @Override
     public void shutdown() {
-        // Remove redirection of java.util.logging requests to Log4J.
-        JulToLog4jHandler.uninstall();
+        // Cancel all running configuration file watchdog timers.
+        if (this.configuration != null) {
+            this.configuration.shutdown();
+        }
         // Shutdown log service.
-        this.loggerRepository.shutdown();
+        if (this.loggerRepository != null) {
+            // Remove redirection of java.util.logging requests to Log4J.
+            JulToLog4jHandler.uninstall();
+            // Shutdown all loggers.
+            this.loggerRepository.shutdown();
+        }
     }
 
 

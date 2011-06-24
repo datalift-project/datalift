@@ -415,6 +415,16 @@ public class DOMConfigurator2 extends DOMConfigurator
     }
 
     /**
+     * Shut this logging configuration.
+     * <p>
+     * This methods cancel all running configuration file watchdog
+     * timers.</p>
+     */
+    public void shutdown() {
+        this.stopFileWatchdogs();
+    }
+
+    /**
      * Configures Log4J from the specified byte stream using the
      * specified character encoding.
      *
@@ -506,13 +516,9 @@ public class DOMConfigurator2 extends DOMConfigurator
 
             // Reset known appenders.
             this.appenderBag.clear();
-            // Stop all running file watchdogs as the reloaded
+            // Stop all running file watchdog timers as the reloaded
             // configurations may add or remove included files.
-            for (Iterator i=this.fileWatchdogs.iterator(); i.hasNext(); ) {
-                TimerTask t = (TimerTask)(i.next());
-                t.cancel();
-                i.remove();
-            }
+            this.stopFileWatchdogs();
             // Apply configuration. Configuration is eligible for reloading
             // only if a valid system id. URI is provided.
             this.parse(doc, source.getSystemId(), resolver.getResolvedFiles());
@@ -821,11 +827,24 @@ public class DOMConfigurator2 extends DOMConfigurator
      * @param  configUri   the URI of the main Log4J configuration.
      * @param  period      the file check interval.
      */
-    private void addFileWatchdog(File f, String configUri, long period) {
+    private synchronized void addFileWatchdog(File f, String configUri,
+                                                      long period) {
         FileWatchdog watchdog = new FileWatchdog(f, configUri);
         getTimer().schedule(watchdog, period, period);
         this.fileWatchdogs.add(watchdog);
         LogLog.debug("Added file update watchdog for " + f);
+    }
+
+    /**
+     * Stops all running file watchdog timers for this configuration.
+     */
+    private synchronized void stopFileWatchdogs() {
+        // Stop all running file watchdog timers.
+        for (Iterator i=this.fileWatchdogs.iterator(); i.hasNext(); ) {
+            TimerTask t = (TimerTask)(i.next());
+            t.cancel();
+            i.remove();
+        }
     }
 
     /**
@@ -1344,12 +1363,13 @@ public class DOMConfigurator2 extends DOMConfigurator
         }
     }
 
+
     //-------------------------------------------------------------------------
     // Specific entity resolver to support classpath URIs
     //-------------------------------------------------------------------------
 
     /**
-     * A SAX EntityResolver that attempts to revoled entities against
+     * A SAX EntityResolver that attempts to resolved entities against
      * the Java VM class path.
      */
     private final class ClasspathEntityResolver implements EntityResolver
@@ -1472,6 +1492,7 @@ public class DOMConfigurator2 extends DOMConfigurator
         }
     }
 
+
     //-------------------------------------------------------------------------
     // Specific Properties subclass to access parent properties (defaults)
     //-------------------------------------------------------------------------
@@ -1501,6 +1522,7 @@ public class DOMConfigurator2 extends DOMConfigurator
             return this.defaults;
         }
     }
+
 
     //-------------------------------------------------------------------------
     // TimerTask to check for file updates
@@ -1544,7 +1566,7 @@ public class DOMConfigurator2 extends DOMConfigurator
                     reload(this.configUri);
                 }
             }
-            catch (Exception e) { /* Ignore reloading failures. */ }
+            catch (Exception e) { /* Ignore configuration reload errors. */ }
         }
     }
 }
