@@ -142,11 +142,20 @@ public class SimplePublisher extends BaseModule implements ProjectModule
         }
         Response response = null;
         try {
+            Source origin = null;
+            TransformedRdfSource current = src;
+            while (current != null) {
+                origin = current.getParent();
+                current = (origin instanceof TransformedRdfSource)?
+                                            (TransformedRdfSource)origin: null;
+            }
+            URI targetGraph = (origin != null)? new URI(origin.getUri()):
+                                                projectId;
             List<String> constructs = Arrays.asList(
                             "CONSTRUCT { ?s ?p ?o } WHERE { GRAPH <"
                                 + src.getTargetGraph() + "> { ?s ?p ?o . } }");
             RdfUtils.convert(this.internRepository, constructs,
-                             this.publicRepository, projectId);
+                             this.publicRepository, targetGraph);
 
             response = this.sparqlEndpoint.executeQuery(
                                         "SELECT * WHERE { GRAPH <"

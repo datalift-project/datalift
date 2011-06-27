@@ -12,6 +12,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
@@ -25,7 +26,7 @@ import com.sun.jersey.api.view.Viewable;
 
 import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
-import org.datalift.fwk.log.Logger;
+import org.datalift.fwk.project.CsvSource;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectManager;
 import org.datalift.fwk.project.ProjectModule;
@@ -34,6 +35,7 @@ import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.sparql.SparqlEndpoint;
+import org.datalift.fwk.util.StringUtils;
 
 
 public class RdfConverter extends BaseModule implements ProjectModule
@@ -106,49 +108,55 @@ public class RdfConverter extends BaseModule implements ProjectModule
 
     @POST
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public Response convertRdfSource(@FormParam("query") List<String> query, 
-                                     @FormParam("project") URI projectId, 
+    public Response convertRdfSource(@FormParam("project") URI projectId,
+                                     @FormParam("query") List<String> query,
                                      @Context UriInfo uriInfo,
                                      @Context Request request,
                                      @HeaderParam(ACCEPT) String acceptHdr) {
-		Response response = null;
-		if (projectId != null && query != null) {
-			TransformedRdfSource src = null;
-	        Project p = this.projectManager.findProject(projectId);
-	        if (p != null) {
-	            for (Source s : p.getSources()) {
-	                if (s instanceof TransformedRdfSource) {
-	                    src = (TransformedRdfSource)s;
-	                    // Continue to find last RDF source available...
-	                }
-	            }
-	        }
-	        if (src == null) {
-	            throw new EntityNotFoundException("No RDF source found");
-	        }
-			try {
-				URI newNamedGraph = new URL(src.getUri() + "-rdf" + p.getSources().size()).toURI();
-				RdfUtils.convert(this.internRepository, query,
-				        this.internRepository, newNamedGraph);
-				TransformedRdfSource newSrc = this.projectManager.newTransformedRdfSource(
-						newNamedGraph, src.getTitle() + "-rdf" + p.getSources().size(), 
-						newNamedGraph);
-				p.addSource(newSrc);
-				this.projectManager.saveProject(p);
-				response = this.sparqlEndpoint.executeQuery(
-                        "SELECT * WHERE { GRAPH <"
-                            + newNamedGraph + "> { ?s ?p ?o . } }",
-                        uriInfo, request, acceptHdr).build();
-			} 
-			catch (Exception e) {
-			    	response = Response.status(Status.INTERNAL_SERVER_ERROR)
-			                               .entity(e.getLocalizedMessage())
-			                               .type(MediaType.TEXT_PLAIN_TYPE)
-			                               .build();
-			}
-		}
-		else
-			Logger.getLogger().debug("No project or no query in the request");
+        if ((query == null) || (query.size() == 0)) {
+            TechnicalException error =
+                            new TechnicalException("ws.missing.param", "query");
+            throw new WebApplicationException(error,
+                            Response.status(Status.PRECONDITION_FAILED)
+                                    .entity(error.getLocalizedMessage())
+                                    .type(MediaType.TEXT_HTML).build());
+        }
+        TransformedRdfSource src = null;
+        Project p = this.projectManager.findProject(projectId);
+        if (p != null) {
+            for (Source s : p.getSources()) {
+                if (s instanceof CsvSource) {
+                    src = (TransformedRdfSource)s;
+                    // Continue to get last RDF source in project...
+                }
+            }
+        }
+        if (src == null) {
+            throw new EntityNotFoundException("No RDF source found");
+        }
+        Response response = null;
+        try {
+            String srcName = " (RDF #" + p.getSources().size() + ')';
+            URI targetGraph = new URI(src.getUri()
+                                      + '/' + StringUtils.urlify(srcName));
+            RdfUtils.convert(this.internRepository, query,
+                             this.internRepository, targetGraph);
+            p.addSource(this.projectManager.newTransformedRdfSource(
+                                    targetGraph, src.getTitle() + srcName,
+                                    targetGraph, src));
+            this.projectManager.saveProject(p);
+
+            response = this.sparqlEndpoint.executeQuery(
+                                "SELECT * WHERE { GRAPH <"
+                                    + targetGraph + "> { ?s ?p ?o . } }",
+                                uriInfo, request, acceptHdr).build();
+        }
+        catch (Exception e) {
+            response = Response.status(Status.INTERNAL_SERVER_ERROR)
+                               .entity(e.getLocalizedMessage())
+                               .type(MediaType.TEXT_PLAIN_TYPE)
+                               .build();
+        }
         return response;
     }
 

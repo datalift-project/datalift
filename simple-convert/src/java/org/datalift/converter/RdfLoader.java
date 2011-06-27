@@ -142,7 +142,8 @@ public class RdfLoader extends BaseModule implements ProjectModule
                                       + '/' + StringUtils.urlify(srcName));
             this.convert(src, this.internRepository, targetGraph);
             p.addSource(this.projectManager.newTransformedRdfSource(
-                        targetGraph, src.getTitle() + srcName, targetGraph));
+                                        targetGraph, src.getTitle() + srcName,
+                                        targetGraph, src));
             this.projectManager.saveProject(p);
 
             List<String> defGraphs = new LinkedList<String>();

@@ -10,6 +10,7 @@ import javax.persistence.Entity;
 import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.RdfsClass;
 
+import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.TransformedRdfSource;
 
 
@@ -24,6 +25,8 @@ public class TransformedRdfSourceImpl extends BaseSource
 
     @RdfProperty("datalift:targetGraph")
     private String targetGraph;
+    @RdfProperty("datalift:parentSource")
+    private Source parent;
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -53,13 +56,25 @@ public class TransformedRdfSourceImpl extends BaseSource
 
     /** {@inheritDoc} */
     @Override
-    public void setTargetGraph(String targetGraph) {
-        this.targetGraph = targetGraph;
+    public String getTargetGraph() {
+        return this.targetGraph;
     }
 
     /** {@inheritDoc} */
     @Override
-    public String getTargetGraph() {
-        return targetGraph;
+    public Source getParent() {
+        return this.parent;
+    }
+
+    //-------------------------------------------------------------------------
+    // Specific implementation
+    //-------------------------------------------------------------------------
+
+    public void setTargetGraph(String targetGraph) {
+        this.targetGraph = targetGraph;
+    }
+
+    public void setParent(Source parent) {
+        this.parent = parent;
     }
 }

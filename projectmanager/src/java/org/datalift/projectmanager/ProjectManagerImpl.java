@@ -30,6 +30,7 @@ import org.datalift.fwk.project.Ontology;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectManager;
 import org.datalift.fwk.project.RdfSource;
+import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.project.CsvSource.Separator;
 import org.datalift.fwk.rdf.RdfNamespace;
@@ -161,13 +162,18 @@ public class ProjectManagerImpl implements ProjectManager, LifeCycle
         return src;
     }
 
-    public TransformedRdfSource newTransformedRdfSource(URI uri, String title, URI targetGraph) {
-        TransformedRdfSource src = new TransformedRdfSourceImpl(uri.toString());
+    /** {@inheritDoc} */
+    @Override
+    public TransformedRdfSource newTransformedRdfSource(URI uri, String title, 
+                                            URI targetGraph, Source parent) {
+        TransformedRdfSourceImpl src =
+                                new TransformedRdfSourceImpl(uri.toString());
         src.setTitle(title);
         src.setTargetGraph(targetGraph.toString());
+        src.setParent(parent);
         return src;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public Ontology newOntology(URI srcUrl, String title) {

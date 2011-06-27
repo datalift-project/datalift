@@ -85,7 +85,7 @@ public interface ProjectManager
                                                             throws IOException;
 
     public TransformedRdfSource newTransformedRdfSource(URI uri, String title, 
-                                                        URI targetGraph);
+                                URI targetGraph, Source parent);
     
     public Ontology newOntology(URI srcUrl, String title);
 
