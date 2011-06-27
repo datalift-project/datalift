@@ -135,7 +135,7 @@ public class CsvConverter extends BaseModule implements ProjectModule
 
             String srcName = " (RDF #" + p.getSources().size() + ')';
             URI targetGraph = new URI(src.getUri()
-                                      + '/' + StringUtils.urlify(srcName));
+                                      + '-' + StringUtils.urlify(srcName));
             this.convert(src, this.internal, targetGraph);
             p.addSource(this.projectManager.newTransformedRdfSource(
                             targetGraph, src.getTitle() + srcName, targetGraph));

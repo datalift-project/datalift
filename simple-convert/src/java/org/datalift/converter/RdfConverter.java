@@ -106,7 +106,7 @@ public class RdfConverter extends BaseModule implements ProjectModule
 
     @POST
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public Response convertRdfSource(@FormParam("query") List<String> query, 
+    public Response convertRdfSource(@FormParam("query[]") List<String> query, 
                                      @FormParam("project") URI projectId, 
                                      @Context UriInfo uriInfo,
                                      @Context Request request,
@@ -129,7 +129,7 @@ public class RdfConverter extends BaseModule implements ProjectModule
 			try {
 				URI newNamedGraph = new URL(src.getUri() + "-rdf" + p.getSources().size()).toURI();
 				RdfUtils.convert(this.internRepository, query,
-				        this.internRepository, newNamedGraph);
+						this.internRepository, newNamedGraph);
 				TransformedRdfSource newSrc = this.projectManager.newTransformedRdfSource(
 						newNamedGraph, src.getTitle() + "-rdf" + p.getSources().size(), 
 						newNamedGraph);
