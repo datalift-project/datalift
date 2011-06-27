@@ -25,6 +25,8 @@ import org.openrdf.rio.trig.TriGParser;
 import org.openrdf.rio.trix.TriXParser;
 import org.openrdf.rio.turtle.TurtleParser;
 
+import static javax.ws.rs.core.MediaType.APPLICATION_XML;
+
 import org.datalift.fwk.util.StringUtils;
 import org.datalift.fwk.util.UriMapper;
 
@@ -215,41 +217,43 @@ public class RdfUtils
         }
     }
 
-    public static RDFParser newRdfParser(MediaType mimeType) {
-        if (mimeType == null) {
-            throw new IllegalArgumentException("mimeType");
-        }
-        return newRdfParser(mimeType.toString());
-    }
-
     public static RDFParser newRdfParser(String mimeType) {
         if (StringUtils.isBlank(mimeType)) {
             throw new IllegalArgumentException("mimeType");
         }
+        return newRdfParser(parseMimeType(mimeType));
+    }
+
+    public static RDFParser newRdfParser(MediaType mimeType) {
+        if (mimeType == null) {
+            throw new IllegalArgumentException("mimeType");
+        }
         RDFParser parser = null;
-        if ((TEXT_TURTLE.equals(mimeType)) || (TEXT_N3.equals(mimeType))) {
+        if ((TEXT_TURTLE_TYPE.equals(mimeType)) ||
+            (TEXT_N3_TYPE.equals(mimeType))) {
             parser = new TurtleParser();
         }
-        else if (APPLICATION_NTRIPLES.equals(mimeType)) {
+        else if (APPLICATION_NTRIPLES_TYPE.equals(mimeType)) {
             parser = new NTriplesParser();
         }
-        else if (APPLICATION_TRIG.equals(mimeType)) {
+        else if (APPLICATION_TRIG_TYPE.equals(mimeType)) {
             parser = new TriGParser();
         }
-        else if (APPLICATION_TRIX.equals(mimeType)) {
+        else if (APPLICATION_TRIX_TYPE.equals(mimeType)) {
             parser = new TriXParser();
         }
-        else if (APPLICATION_RDF_XML.equals(mimeType)) {
+        else if ((APPLICATION_RDF_XML_TYPE.equals(mimeType)) ||
+                 (APPLICATION_XML_TYPE.equals(mimeType))) {
             parser = new RDFXMLParser();
         }
         else {
             throw new IllegalArgumentException(
-                                        "Unsupported MIME type: " + mimeType);
+                            "Unsupported MIME type for RDF data: " + mimeType);
         }
         return parser;
     }
 
-    private static MediaType guessRdfTypeFromExtension(File f) {
+    public static MediaType guessRdfTypeFromExtension(File f) {
         String fileName = f.getName();
         String ext = "";
         int i = fileName.lastIndexOf('.');
@@ -277,5 +281,39 @@ public class RdfUtils
             mimeType = APPLICATION_TRIX_TYPE;
         }
         return mimeType;
+    }
+
+    public static MediaType parseMimeType(String mimeType) {
+        MediaType mappedType = null;
+        if (! StringUtils.isBlank(mimeType)) {
+            mimeType = mimeType.trim().toLowerCase();
+            if ((TEXT_TURTLE.equals(mimeType)) ||
+                (APPLICATION_TURTLE.equals(mimeType))) {
+                mappedType = TEXT_TURTLE_TYPE;
+            }
+            else if ((TEXT_N3.equals(mimeType)) ||
+                     (TEXT_RDF_N3.equals(mimeType)) ||
+                     (APPLICATION_N3.equals(mimeType))) {
+                mappedType = TEXT_N3_TYPE;
+            }
+            else if ((APPLICATION_RDF_XML.equals(mimeType)) ||
+                     (APPLICATION_XML.equals(mimeType))) {
+                mappedType = APPLICATION_RDF_XML_TYPE;
+            }
+            else if (APPLICATION_TRIG.equals(mimeType)) {
+                mappedType = APPLICATION_TRIG_TYPE;
+            }
+            else if (APPLICATION_TRIX.equals(mimeType)) {
+                mappedType = APPLICATION_TRIX_TYPE;
+            }
+            else if (APPLICATION_NTRIPLES.equals(mimeType)) {
+                mappedType = APPLICATION_NTRIPLES_TYPE;
+            }
+        }
+        if (mappedType == null) {
+            throw new IllegalArgumentException(
+                            "Unsupported MIME type for RDF data: " + mimeType);
+        }
+        return mappedType;
     }
 }
