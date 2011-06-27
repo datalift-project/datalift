@@ -58,6 +58,7 @@ import org.datalift.fwk.project.ProjectModule;
 import org.datalift.fwk.project.RdfSource;
 import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.CsvSource.Separator;
+import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.sparql.SparqlEndpoint;
 import org.datalift.fwk.util.StringUtils;
 
@@ -492,8 +493,9 @@ public class ProjectResource
             Project p = this.loadProject(projectUri);
             MediaType mappedType = null;
             try {
-                mappedType = RdfSourceImpl.parseMimeType(mimeType);
-            } catch (Exception e) {
+                mappedType = RdfUtils.parseMimeType(mimeType);
+            }
+            catch (Exception e) {
                 this.throwInvalidParamError("mime_type", mimeType);
             }
             Source s = p.getSource(currentSourceUri);
