@@ -1,10 +1,10 @@
-#load("sparql/resources")
-#load_core_resources
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-	<title>SPARQL Endpoint - #i18n("sparql.query.results")</title>
+#load("sparql/resources")
+#load_core_resources
+	<title>#i18n("sparql.query.results") - #i18n("sparql.endpoint.title") - DataLift</title>
 #header_links
 </head>
 <body>
@@ -13,9 +13,8 @@
 	<script>
 		var gridData = new Array();
 		var searchData = new Array();
-		
+
 		$(function(){
-			
 			jQuery.extend(jQuery.jgrid.defaults, {
 				pager: $('#pagernav'),
 				caption: $('#searchnav').html()
@@ -30,7 +29,7 @@
 			gridData = $("#queryresults").getRowData();
 			// Add options to search select
 			var options = $('#searchColumn').attr('options');
-			options.length = 0;						
+			options.length = 0;
 			options[options.length] = new Option("#i18n("sparql.search.all_columns")", "#i18n("sparql.search.all_columns")", true, true);
 			if (gridData[0]) {
 				for (property in gridData[0]) {
@@ -46,7 +45,7 @@
 				gridSearch($("#gridsearch").val().toLowerCase());
 			});
 		});
-		
+
 		function gridSearch(searchString) {
 			searchData = [];
 			if ($("#searchColumn").val() == "all") {
@@ -57,8 +56,8 @@
 			}
 			$("#queryresults").jqGrid('clearGridData', true);
 			$("#queryresults").jqGrid('setGridParam',{data:searchData}).trigger("reloadGrid");
-		}		
-		
+		}
+
 		function searchAllColumns(searchString) {
 			var c = 0;
 			for (var i = 0; i < gridData.length; i++) {
@@ -73,7 +72,7 @@
 				}
 			}
 		}
-		
+
 		function searchOneColumn(searchString, searchColumn) {
 			var c = 0;
 			for (var i = 0; i < gridData.length; i++) {
@@ -96,24 +95,29 @@
 		</thead>
 		<tbody>
 #foreach( $item in $it )
-	<tr>
+			<tr>
 	#foreach( $c in $it.Columns )
 		#set( $value = false ) ## Preset local variable to force next assignment in all cases.
 		#set( $value = $!{item.getValue($c)} )
 		#if( ${value.startsWith("http://")} )
-			<td><a href="$esc.url(${value})">$esc.html(${value})</a></td>
+				<td><a href="$esc.url(${value})">$esc.html(${value})</a></td>
 		#else
-			<td>$esc.html(${value})</td>
+				<td>$esc.html(${value})</td>
 		#end
 	#end
-	</tr>
+			</tr>
 #end
 		</tbody>
 	</table>
 	<div id="pagernav"/>
 	<div id="searchnav" style="display:none">
-		#i18n("sparql.search.column") <select id="searchColumn"></select>
-		#i18n("sparql.search.title") <input type="search" id="gridsearch" placeholder="Search" results="0" class="gridsearch" />
+		#i18n("grid.search.value.label"): <input type="search" id="gridsearch" placeholder="Search" results="0" class="gridsearch" />
+		#i18n("grid.search.column.label"): <select id="searchColumn">
+			<option id="all">#i18n("grid.search.column.option.all")</option>
+#foreach( $c in $it.Columns )
+			<option id="$esc.html($c)">$esc.html($c)</option>
+#end
+		</select>
 	</div>
 #footer
 </body>

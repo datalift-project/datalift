@@ -2,16 +2,17 @@
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-	<title>Datalift - Source Grid</title>
+#load("workspace/resources")
+#load_core_resources
+	<title>#i18n("source.grid.title") - DataLift</title>
 #header_links
 </head>
-
 <body>
 	<script>
 		var gridData = new Array();
 		var searchData = new Array();
-		var	gridHeader = new Array();
-		
+		var gridHeader = new Array();
+
 		$(function(){
 			getHeaderColumns();
 			jQuery.extend(jQuery.jgrid.defaults, {
@@ -30,14 +31,14 @@
 				gridSearch($("#gridsearch").val().toLowerCase());
 			});
 		});
-		
+
 		function getHeaderColumns() {
 			var cols = $(".dl-grid-header-column");
 			for (var i = 0; cols[i]; i++) {
 				gridHeader[i] = cols[i].innerHTML;
 			}
 		}
-		
+
 		function gridSearch(searchString) {
 			searchData = [];
 			if ($("#searchColumn").val() == "all") {
@@ -49,8 +50,8 @@
 			$("#grid").jqGrid('clearGridData', true);
 			$("#grid").jqGrid('setGridParam',{data:searchData}).trigger("reloadGrid");
 
-		}		
-		
+		}
+
 		function searchAllColumns(searchString) {
 			if (searchString != "") {
 				var c = 0;
@@ -70,7 +71,7 @@
 			else
 				searchData = gridData;
 		}
-	
+
 		function searchOneColumn(searchString, searchColumn) {
 			if (searchString != "") {
 				var c = 0;
@@ -86,38 +87,37 @@
 			else
 			searchData = gridData;
 		}
-		
 	</script>
-	
+
 #banner
-$it.getTitle()
+	<p>#i18n("source.grid.desc") $!esc.html($it.title)</p>
 	<table id="grid">
 		<thead>
 			<tr>
-#foreach ($i in $it.getColumnsName())	
+#foreach( $i in $it.getColumnsName() )
 				<th class="dl-grid-header-column">$i</th>
 #end
 			</tr>
-	</thead>
-	<tbody>
-#foreach($row in $it)
-	<tr>
+		</thead>
+		<tbody>
+#foreach( $row in $it )
+			<tr>
 #foreach( $colNbr in [1..$it.getColumnCount()] )
-	<td>$row.getColumnObject($colNbr)</td>
+				<td>$row.getColumnObject($colNbr)</td>
 #end
-	</tr>
-#end 
-	</tbody>
+			</tr>
+#end
+		</tbody>
 	</table>
 	<div id="pagernav"></div>
 	<div id="searchnav" style="display:none">
-		Column: <select id="searchColumn">
-		<option id="all">all</option>
-#foreach ($i in $it.getColumnsName())	
-		<option id="$i">$i</option>
+		#i18n("grid.search.value.label"): <input type="search" id="gridsearch" placeholder="Search" results="0" class="gridsearch" />
+		#i18n("grid.search.column.label"): <select id="searchColumn">
+			<option id="all">#i18n("grid.search.column.option.all")</option>
+#foreach( $i in $it.getColumnsName() )
+			<option id="$esc.html($i)">$esc.html($i)</option>
 #end
 		</select>
-		Search: <input type="search" id="gridsearch" placeholder="Search" results="0" class="gridsearch" />
 	</div>
 </body>
 </html>

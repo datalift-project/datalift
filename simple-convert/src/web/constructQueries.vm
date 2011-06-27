@@ -1,27 +1,28 @@
-#load_core_resources
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-	<title>RDF Converter</title>
+#load("rdfconverter/resources")
+#load_core_resources
+	<title>#i18n("rdfconverter.title") - DataLift</title>
 #header_links
 </head>
 <body>
 <script>
-	$(function(){
+	$(function() {
 		$("#construct_queries_submit").button();
 		$("#add_query").button();
 		$("#add_query").click(function(){
 			var firstQuery = $("textarea[name=query_0]");
-		    if (typeof firstQuery == 'undefined')
+			if (typeof firstQuery == 'undefined')
 				return false;
 			$("textarea[name=query_0]")
-		    	.clone()
-		    	.attr("name", "query_" + $(".construct_query").length)
-		    	.insertAfter("textarea[name=query_0]");
+				.clone()
+				.attr("name", "query_" + $(".construct_query").length)
+				.insertAfter("textarea[name=query_0]");
 		});
 		$("#construct_queries_submit").click(function(){
-			var	queriesJson = [];
+			var queriesJson = [];
 			var queries = $(".construct_query");
 			for(var i = 0; i < queries.length; i++) {
 				queriesJson[i] = queries[i].value;
@@ -49,8 +50,8 @@
 
 <style>
 .construct_query {
-    display:block;
-    width:400px;
+	display:block;
+	width:400px;
 .main_frame {
 	margin:auto;
 }
@@ -58,12 +59,12 @@
 
 #banner
 	<div class="main_frame">
-		<p>RDF to RDF converter</p>
+		<p>#i18n("rdfconverter.title")</p>
 		<form method="post">
-			<label for="query_0">CONSTRUCT requests you want to apply to dataset: </label><br />
+			<label for="query_0">#i18n("construct.query.label"): </label><br />
 			<textarea name="query_0" class="construct_query" style="width:600px; height:150px;"></textarea>
-			<input type="button" id="add_query" value="Add"/>
-			<input type="submit" id="construct_queries_submit"/>
+			<input type="button" id="add_query" value="#i18n("add.label")"/>
+			<input type="submit" id="construct_queries_submit" value="#i18n("submit.label")"/>
 		</form>
 	</div>
 </body>

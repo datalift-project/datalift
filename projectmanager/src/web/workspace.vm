@@ -1,10 +1,10 @@
-#load("workspace/resources")
-#load_core_resources
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-	<title>Datalift - Workspace</title>
+#load("workspace/resources")
+#load_core_resources
+	<title>#i18n("workspace.title") - DataLift</title>
 #header_links
 </head>
 <body>
@@ -15,7 +15,7 @@
 	$(function() {
 		$("input:submit, .button").button();
 		$("#tabs").tabs();
-		
+
 		if (typeof(currentProject) != 'undefined') {
 			makeFocus(currentProject);
 			if (window.location.hash == "")
@@ -32,14 +32,12 @@
 		});
 
 		loadGridSources();
-		loadGridOntologies();	
-		
+		loadGridOntologies();
+
 		$(window).bind('resize', function() {
 			$("#selectable_sources").setGridWidth($("#tabs").width() - 50);
 	    	$("#selectable_ontologies").setGridWidth($("#tabs").width() - 50);
 		}).trigger('resize');
-		
-		
 	});
 
 	function makeFocus(projectUrl) {
@@ -72,7 +70,7 @@
 	function unsuccessfulQuery(XMLHttpRequest){
 		alert("An error occured when trying to get project description.");
 	}
-	
+
 	function loadGridSources() {
 		/*	Sources */
 		jQuery("#selectable_sources").jqGrid({
@@ -87,7 +85,7 @@
 		   	autowidth: true,
 		   	gridview: true
 		});
-		
+
 		var mydata = [
 		#foreach($curSrc in $current.getSources())
 		{
@@ -107,7 +105,7 @@
 		];
 		for(var i=0;i<=mydata.length;i++)
 			jQuery("#selectable_sources").jqGrid('addRowData',i+1,mydata[i]);
-			
+
 		jQuery("#selectable_sources").navGrid('#selectable_sources_toolbar',
 			{edit:false,add:false,del:false}).navButtonAdd(
 			'#selectable_sources_toolbar',
@@ -115,7 +113,7 @@
 			caption:"",
 			buttonicon:"ui-icon-plus",
 			onClickButton:function(){
-				window.location = currentProject + "/srcupload.html"					
+				window.location = currentProject + "/srcupload.html"
 			} 
 		}).navButtonAdd(
 			'#selectable_sources_toolbar',
@@ -143,13 +141,13 @@
 					 window.location = ret.uri+"/delete";
 				} else {
 					alert('#i18n("project.msg.select_row")');
-				}	
+				}
 			} 
 		});
-		
+
 		jQuery("#selectable_sources").jqGrid('hideCol',["uri"]);
 	}
-	
+
 	function loadGridOntologies(){
 	/*	Ontologies */
 		var lastsel2
@@ -167,7 +165,7 @@
 		   	autowidth: true,
 		   	gridview: true
 		});
-		
+
 		var mydataOntology = [
 		#foreach($curOnto in $current.getOntologies())
 		{
@@ -181,7 +179,7 @@
 		];
 		for(var i=0;i<=mydataOntology.length;i++)
 			jQuery("#selectable_ontologies").jqGrid('addRowData',i+1,mydataOntology[i]);
-						
+
 		jQuery("#selectable_ontologies")
 			.navGrid('#selectable_ontologies_toolbar',
 				{edit:false,add:false,del:false
@@ -191,10 +189,10 @@
 				caption:"",
 				buttonicon:"ui-icon-plus",
 				onClickButton:function(){
-				window.location = currentProject + "/ontologyUpload.html"					
+				window.location = currentProject + "/ontologyUpload.html"
 			} 
 			}).navButtonAdd('#selectable_ontologies_toolbar',
-				
+
 				{caption:"",
 				buttonicon:"ui-icon-pencil",
 				onClickButton:function(){
@@ -204,7 +202,7 @@
 						window.location = currentProject + "/ontology/"+ret.title+"/modify.html";
 					} else {
 						alert('#i18n("project.msg.select_row")');
-					}							
+					}
 				} 
 			}).navButtonAdd(
 			'#selectable_ontologies_toolbar',
@@ -218,7 +216,7 @@
 					window.location = currentProject + "/ontology/"+ret.title+"/delete";
 				} else {
 					alert('#i18n("project.msg.select_row")');
-				}	
+				}
 			} 
 			});
 			jQuery("#selectable_ontologies").jqGrid('hideCol',["uri"]);
@@ -294,7 +292,6 @@
 			<a href="${current.uri}/ontologyUpload.html">#i18n("project.add_ontology")</a>
 		</div>
 	</div>
-	
 #else
 	<p style='text-align:center'>
 		#i18n("welcome")

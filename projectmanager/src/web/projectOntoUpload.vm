@@ -1,49 +1,40 @@
-#load("workspace/resources")
-#load_core_resources
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-
+#load("workspace/resources")
+#load_core_resources
 #if( $current )
 	#set( $title  = "project.title.modify_ontology" )
 	#set( $submit = "modify" )
-		#set ( $target = "ontology/$current.title/modify")
+	#set( $target = "ontology/$current.title/modify" )
 #else
-	#set( $title = "project.title.add_ontology" )
+	#set( $title  = "project.title.add_ontology" )
 	#set( $submit = "create" )
-	 	#set ( $target = "ontologyUpload")
+	#set( $target = "ontologyUpload" )
 #end
-	<title>Datalift - #i18n($title)</title>
+	<title>#i18n($title) - #i18n("workspace.title") - DataLift</title>
 #header_links
 </head>
-
 <body>
-
-<script>
-	$(function() {
-	
-		$("input:submit").button();
-		$("#accordion").accordion({
-			autoHeight: false,
-			navigation: true
+	<script>
+		$(function() {
+			$("input:submit").button();
+			$("#accordion").accordion({
+				autoHeight: false,
+				navigation: true
+			});
 		});
-	});
-</script>
-
+	</script>
 #banner
-
 <div id="content" class="ui-widget-content dl-main-panel">
-<h3 class="ui-widget-header dl-widget-header">#i18n("$title")</h3>
-<div class="dl-panel">
-<a href="${it.uri}#ontology">#i18n("back")</a>
-
-
-<div id="accordion">
-	
+  <h3 class="ui-widget-header dl-widget-header">#i18n("$title")</h3>
+  <div class="dl-panel">
+    <a href="${it.uri}#ontology">#i18n("back")</a>
+    <div id="accordion">
 	<h3><a href="#">Ontology</a></h3>
 	<div>
-	<form method="post" action="${it.uri}/$target" class="form_formated">
+	  <form method="post" action="${it.uri}/$target" class="form_formated">
 		<input type="hidden" name="oldTitle" id="oldTitle" value="$current.title" />
 		<p>#i18n("project.upload_ontology") : $esc.html($it.getTitle())</p>
 		<p><label for="title">#i18n("project.upload_ontology.title") :</label>
@@ -51,13 +42,11 @@
 		<p><label for="source_url">#i18n("project.upload_ontology.source") :</label>
 		<input type="text" id="source_url" name="source_url" value="$!esc.html($current.source)" /></p>
 		<p><input type="submit" value="#i18n("$submit")"/></p>
-	</form>
+	  </form>
 	</div>
-	
-	
-</div>
-</div>
-</div>
+      </div>
+    </div>
+  </div>
 #footer
 </body>
 </html>

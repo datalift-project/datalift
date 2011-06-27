@@ -1,10 +1,10 @@
-#load("sparql/resources")
-#load_core_resources
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-	<title>SPARQL Endpoint - DataLift</title>
+#load("sparql/resources")
+#load_core_resources
+	<title>#i18n("sparql.endpoint.title") - DataLift</title>
 #header_links
 </head>
 <body>
@@ -18,7 +18,7 @@
 		$(function() {
 			$("#result-format").buttonset();
 			$("#query_submit").button();
-			$("#query_form").submit(function(e){
+			$("#query_form").submit(function(e) {
 				//var requestMin = 0;
 				//var requestMax = 500000;
 #if( ${securityCtx.isAuthenticated()} )
@@ -200,8 +200,8 @@
 		<div id="results" class="dl-result-panel">
 		</div>
 		<div id="searchnav" style="display:none">
-			#i18n("sparql.search.column") <select id="searchColumn"></select>
-			#i18n("sparql.search.title") <input type="search" id="gridsearch" placeholder="" results="0" class="gridsearch" />
+			#i18n("grid.search.value.label"): <input type="search" id="gridsearch" placeholder="" results="0" class="gridsearch" />
+			#i18n("grid.search.column.label") <select id="searchColumn"></select>
 		</div>
 	</div>
 #footer
