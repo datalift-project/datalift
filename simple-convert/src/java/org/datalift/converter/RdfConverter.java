@@ -25,6 +25,7 @@ import com.sun.jersey.api.view.Viewable;
 
 import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
+import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectManager;
 import org.datalift.fwk.project.ProjectModule;
@@ -146,6 +147,8 @@ public class RdfConverter extends BaseModule implements ProjectModule
 			                               .build();
 			}
 		}
+		else
+			Logger.getLogger().debug("No project or no query in the request");
         return response;
     }
 
