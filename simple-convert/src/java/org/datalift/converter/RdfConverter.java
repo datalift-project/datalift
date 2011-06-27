@@ -109,7 +109,7 @@ public class RdfConverter extends BaseModule implements ProjectModule
     @POST
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response convertRdfSource(@FormParam("project") URI projectId,
-                                     @FormParam("query") List<String> query,
+                                     @FormParam("query[]") List<String> query,
                                      @Context UriInfo uriInfo,
                                      @Context Request request,
                                      @HeaderParam(ACCEPT) String acceptHdr) {
