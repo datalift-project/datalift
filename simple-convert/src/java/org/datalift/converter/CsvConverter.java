@@ -157,6 +157,9 @@ public class CsvConverter extends BaseModule implements ProjectModule
         final RepositoryConnection cnx = target.newConnection();
         try {
             final ValueFactory valueFactory = cnx.getValueFactory();
+
+            // Prevent transaction commit for each triple inserted.
+            cnx.setAutoCommit(false);
             // Clear target named graph, if any.
             org.openrdf.model.URI ctx = null;
             if (targetGraph != null) {
@@ -165,8 +168,6 @@ public class CsvConverter extends BaseModule implements ProjectModule
             }
             String baseUri = (targetGraph != null)?
                                             targetGraph.toString() + '/': "";
-            // Prevent transaction commit for each triple inserted.
-            cnx.setAutoCommit(false);
             // Build predicates URIs.
             int max = src.getColumnsHeader().size();
             org.openrdf.model.URI[] predicates = new org.openrdf.model.URI[max];
