@@ -12,13 +12,13 @@
 		$("#construct_queries_submit").button();
 		$("#add_query").button();
 		$("#add_query").click(function(){
-			var firstQuery = $("input[name=query_0]");
+			var firstQuery = $("textarea[name=query_0]");
 		    if (typeof firstQuery == 'undefined')
 				return false;
-			$("input[name=query_0]")
+			$("textarea[name=query_0]")
 		    	.clone()
 		    	.attr("name", "query_" + $(".construct_query").length)
-		    	.insertAfter("input[name=query_0]");
+		    	.insertAfter("textarea[name=query_0]");
 		});
 		$("#construct_queries_submit").click(function(){
 			var	queriesJson = [];
@@ -57,13 +57,10 @@
 </style>
 
 #banner
-	<div class="main_frame"
+	<div class="main_frame">
 		<p>RDF to RDF converter</p>
 		<form method="post">
 			<label for="query_0">CONSTRUCT requests you want to apply to dataset: </label><br />
-<!--
-			<input type="text" name="query_0" class="construct_query"></input>
- -->
 			<textarea name="query_0" class="construct_query" style="width:600px; height:150px;"></textarea>
 			<input type="button" id="add_query" value="Add"/>
 			<input type="submit" id="construct_queries_submit"/>
