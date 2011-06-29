@@ -20,7 +20,6 @@ import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.rdf.Repository;
 
 import org.datalift.core.rdf.sesame.HttpRepository;
-import org.datalift.core.rdf.virtuoso.VirtuosoRepository;
 import org.datalift.core.util.VersatileProperties;
 
 
@@ -327,8 +326,8 @@ public class DefaultConfiguration extends Configuration
             if (name.length() == 0) continue;           // Ignore...
 
             try {
-                // Repository r = new HttpRepository(this, name);
-                Repository r = new VirtuosoRepository(this, name);
+                Repository r = new HttpRepository(this, name);
+                // Repository r = new org.datalift.core.rdf.virtuoso.VirtuosoRepository(this, name);
                 m.put(name, r);
                 if (this.props.getBoolean(
                                 name + REPOSITORY_DEFAULT_FLAG, false)) {
