@@ -210,6 +210,7 @@ public class DefaultConfiguration extends Configuration
         if (o == null) {
             throw new MissingResourceException(key, null, key);
         }
+        log.trace("Retrieved bean {} for key \"{}\"", o, key);
         return o;
     }
 
@@ -221,9 +222,6 @@ public class DefaultConfiguration extends Configuration
         }
         T bean = null;
         Object o = this.beansByType.get(clazz);
-        if (o != null) {
-        	log.debug("beansByType sent back an Object : {}", o);
-        }
         if ((o != null) && (clazz.isAssignableFrom(o.getClass()))) {
             bean = clazz.cast(o);
         }
@@ -234,6 +232,7 @@ public class DefaultConfiguration extends Configuration
             String name = clazz.getName();
             throw new MissingResourceException(name, null, name);
         }
+        log.trace("Retrieved bean {} for class {}", bean, clazz);
         return bean;
     }
 
@@ -258,6 +257,7 @@ public class DefaultConfiguration extends Configuration
         }
         // Else: no bean found. => Return an empty list.
 
+        log.trace("Retrieved beans {} for class {}", beans, clazz);
         return beans;
     }
 
@@ -272,7 +272,7 @@ public class DefaultConfiguration extends Configuration
         }
         if (! this.beansByName.containsKey(key)) {
             this.beansByName.put(key, bean);
-            log.trace("Registered bean {} as \"{}\"", bean, key);
+            log.trace("Registered bean {} with key \"{}\"", bean, key);
         }
         else {
             throw new IllegalArgumentException(
