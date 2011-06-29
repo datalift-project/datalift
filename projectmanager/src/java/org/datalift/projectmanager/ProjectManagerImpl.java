@@ -18,8 +18,10 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.spi.PersistenceProvider;
 
 import com.clarkparsia.empire.Empire;
+import com.clarkparsia.empire.config.ConfigKeys;
 import com.clarkparsia.empire.config.EmpireConfiguration;
 import com.clarkparsia.empire.sesametwo.OpenRdfEmpireModule;
+import com.clarkparsia.empire.sesametwo.RepositoryFactoryKeys;
 import com.clarkparsia.utils.NamespaceUtils;
 
 import org.datalift.fwk.Configuration;
@@ -34,6 +36,7 @@ import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.project.CsvSource.Separator;
 import org.datalift.fwk.rdf.RdfNamespace;
+import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.security.SecurityContext;
 
 import static org.datalift.fwk.util.StringUtils.*;
@@ -41,12 +44,6 @@ import static org.datalift.fwk.util.StringUtils.*;
 
 public class ProjectManagerImpl implements ProjectManager, LifeCycle
 {
-    //-------------------------------------------------------------------------
-    // Constants
-    //-------------------------------------------------------------------------
-
-    private final static String REPOSITORY_URL_PARSER = "/repositories/";
-
     //-------------------------------------------------------------------------
     // Instance members
     //-------------------------------------------------------------------------
@@ -73,7 +70,7 @@ public class ProjectManagerImpl implements ProjectManager, LifeCycle
     @Override
     public void postInit(Configuration configuration) {
         this.emf = this.createEntityManagerFactory(
-                            configuration.getInternalRepository().url);
+                                        configuration.getInternalRepository());
         this.entityMgr = this.emf.createEntityManager();
         // Create Data Access Object for Projects.
         this.projectDao = new ProjectJpaDao(this.entityMgr);
@@ -284,25 +281,25 @@ public class ProjectManagerImpl implements ProjectManager, LifeCycle
      *
      * @return a configured Empire EntityManagerFactory.
      */
-    private EntityManagerFactory createEntityManagerFactory(URL repository) {
+    private EntityManagerFactory createEntityManagerFactory(
+                                                        Repository repository) {
         // Build Empire configuration.
         EmpireConfiguration empireCfg = new EmpireConfiguration();
-        // Configure target repository.
-        Map<String, String> props = empireCfg.getGlobalConfig();
-        String[] repo = repository.toString().split(REPOSITORY_URL_PARSER);
-        props.put("factory", "sesame");
-        props.put("url", repo[0]);
-        props.put("repo", repo[1]);
         // Set persistent classes and associated (custom) annotation provider.
         empireCfg.setAnnotationProvider(CustomAnnotationProvider.class);
+        Map<String,String> props = empireCfg.getGlobalConfig();
         props.put(CustomAnnotationProvider.ANNOTATED_CLASSES_PROP,
-                join(this.classes, ",").replace("class ", ""));
+                  join(this.classes, ",").replace("class ", ""));
         // Initialize Empire.
         Empire.init(empireCfg, new OpenRdfEmpireModule());
+        // Configure target repository.
+        Map<Object, Object> map = new HashMap<Object,Object>();
+        map.put(ConfigKeys.FACTORY, "sesame");
+        map.put(RepositoryFactoryKeys.REPO_HANDLE,
+                                            repository.getNativeRepository());
         // Create Empire JPA persistence provider.
         PersistenceProvider provider = Empire.get().persistenceProvider();
-        return provider.createEntityManagerFactory("",
-                new HashMap<Object, Object>());
+        return provider.createEntityManagerFactory("", map);
     }
 
     //-------------------------------------------------------------------------

@@ -673,7 +673,7 @@ public class ProjectResource
                 template = "/DbSourceGrid.vm";
             }
             else {
-                throw new TechnicalException("Unknown source type: {1}",
+                throw new TechnicalException("unknown.source.type",
                                              src.getClass());
             }
             response = Response.ok(this.newViewable(template, src)).build();

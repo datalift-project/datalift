@@ -4,8 +4,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -21,7 +19,8 @@ import org.datalift.fwk.Configuration;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.rdf.Repository;
 
-import org.datalift.core.rdf.HttpRepository;
+import org.datalift.core.rdf.sesame.HttpRepository;
+import org.datalift.core.rdf.virtuoso.VirtuosoRepository;
 import org.datalift.core.util.VersatileProperties;
 
 
@@ -48,14 +47,6 @@ public class DefaultConfiguration extends Configuration
     /** The property to define the list of repository names. */
     public final static String REPOSITORY_URIS         =
                                             "datalift.rdf.repositories";
-    /** The property suffix for repository display label. */
-    public final static String REPOSITORY_LABEL        = ".repository.label";
-    /** The property suffix for repository URL. */
-    public final static String REPOSITORY_URL          = ".repository.http.url";
-    /** The property suffix for repository login. */
-    public final static String REPOSITORY_USERNAME     = ".repository.username";
-    /** The property suffix for repository password. */
-    public final static String REPOSITORY_PASSWORD     = ".repository.password";
     /** The property suffix for repository default flag. */
     public final static String REPOSITORY_DEFAULT_FLAG = ".repository.default";
 
@@ -335,21 +326,22 @@ public class DefaultConfiguration extends Configuration
                                .split("\\s*,\\s*")) {
             if (name.length() == 0) continue;           // Ignore...
 
-            String url = this.props.getProperty(name + REPOSITORY_URL);
             try {
-                Repository r = new HttpRepository(name, new URL(url),
-                        this.props.getProperty(name + REPOSITORY_USERNAME),
-                        this.props.getProperty(name + REPOSITORY_PASSWORD),
-                        this.props.getProperty(name + REPOSITORY_LABEL));
+                // Repository r = new HttpRepository(this, name);
+                Repository r = new VirtuosoRepository(this, name);
                 m.put(name, r);
                 if (this.props.getBoolean(
                                 name + REPOSITORY_DEFAULT_FLAG, false)) {
                     m.put(DEFAULT_REPOSITORY, r);
                 }
             }
-            catch (MalformedURLException e) {
+            catch (TechnicalException e) {
+                log.fatal(e.getMessage(), e);
+                throw e;
+            }
+            catch (Exception e) {
                 TechnicalException error = new TechnicalException(
-                        "repository.invalid.url", e, name, url, e.getMessage());
+                        "repository.config.error", e, name, e.getMessage());
                 log.fatal(error.getMessage(), e);
                 throw error;
             }

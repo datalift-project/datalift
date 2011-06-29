@@ -18,13 +18,13 @@ import org.openrdf.query.TupleQueryResultHandler;
 import org.openrdf.query.TupleQueryResultHandlerException;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
-import org.openrdf.repository.http.HTTPRepository;
 import org.openrdf.rio.RDFHandler;
 import org.openrdf.rio.RDFHandlerException;
 
 import static org.openrdf.query.QueryLanguage.SPARQL;
 
 import org.datalift.core.TechnicalException;
+import org.datalift.fwk.Configuration;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.rdf.RdfException;
 import org.datalift.fwk.rdf.Repository;
@@ -37,8 +37,23 @@ import org.datalift.fwk.rdf.Repository;
  *
  * @author hdevos
  */
-public final class HttpRepository extends Repository
+abstract public class BaseRepository extends Repository
 {
+    //-------------------------------------------------------------------------
+    // Constants
+    //-------------------------------------------------------------------------
+
+    /** The property suffix for repository display label. */
+    public final static String REPOSITORY_LABEL        = ".repository.label";
+    /** The property suffix for repository URL. */
+    public final static String REPOSITORY_HTTP_URL     = ".repository.http.url";
+    /** The property suffix for repository login. */
+    public final static String REPOSITORY_USERNAME     = ".repository.username";
+    /** The property suffix for repository password. */
+    public final static String REPOSITORY_PASSWORD     = ".repository.password";
+    /** The property suffix for repository default flag. */
+    public final static String REPOSITORY_DEFAULT_FLAG = ".repository.default";
+
     //-------------------------------------------------------------------------
     // Class members
     //-------------------------------------------------------------------------
@@ -60,38 +75,39 @@ public final class HttpRepository extends Repository
 
     /**
      * Build a new repository.
-     * @param  name       the repository name in DataLift configuration.
-     * @param  url        the repository URL.
-     * @param  username   the login or <code>null</code> if no
-     *                    authentication is required.
-     * @param  password   the password or <code>null</code> if no
-     *                    authentication is required.
-     * @param  label      the repository display label. If
-     *                    <code>null</code>, <code>name</code> is used.
+     * @param  configuration   the DataLift configuration
+     * @param  name            the repository name in DataLift
+     *                         configuration.
      *
      * @throws IllegalArgumentException if either <code>name</code> or
-     *         <code>url</code> is null.
+     *         <code>configuration</code> is null.
      * @throws RuntimeException if any error occurred connecting the
      *         repository.
      */
-    public HttpRepository(String name, URL url,
-                          String username, String password, String label) {
-        super(name, url, username, password, label);
+    protected BaseRepository(Configuration configuration, String name) {
+        super(name, configuration.getProperty(name + REPOSITORY_HTTP_URL),
+                    configuration.getProperty(name + REPOSITORY_LABEL));
 
-        try {
-            this.target = new HTTPRepository(url.toString());
-            this.target.initialize();
-            this.valueFactory = this.target.getValueFactory();
-        }
-        catch (RepositoryException e) {
-            throw new TechnicalException("repository.connect.error", e,
-                                         name, url, e.getMessage());
-        }
+        this.target = this.newNativeRepository(configuration, name);
+        this.valueFactory = this.target.getValueFactory();
     }
+
+    //-------------------------------------------------------------------------
+    // BaseRepository interface definition
+    //-------------------------------------------------------------------------
+
+    abstract protected org.openrdf.repository.Repository
+                newNativeRepository(Configuration configuration, String name);
 
     //-------------------------------------------------------------------------
     // Repository contract support
     //-------------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    @Override
+    public org.openrdf.repository.Repository getNativeRepository() {
+        return this.target;
+    }
 
     /** {@inheritDoc} */
     @Override

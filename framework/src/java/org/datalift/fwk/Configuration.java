@@ -3,7 +3,6 @@ package org.datalift.fwk;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.util.Collection;
 import java.util.MissingResourceException;
 import java.util.Properties;
@@ -110,20 +109,6 @@ public abstract class Configuration
      */
     public Repository getInternalRepository() {
         return this.getRepository(INTERNAL_REPOSITORY);
-    }
-
-    /**
-     * Return the URL of a given repository.
-     * @param  uri   the configured name of the repository,
-     *               <code>null</code> for the default repository.
-     *
-     * @return the URL of the repository identified by <code>uri</code>
-     *         in the configuration.
-     * @throws IllegalArgumentException if no repository named
-     *         <code>uri</code> was configured.
-     */
-    public URL getRepositoryUrl(String uri) {
-        return this.getRepository(uri).url;
     }
 
     /**

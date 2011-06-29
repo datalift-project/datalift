@@ -1,6 +1,7 @@
 package org.datalift.fwk.rdf;
 
 
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Map;
 
@@ -10,6 +11,7 @@ import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.rio.RDFHandler;
 
 import org.datalift.fwk.TechnicalException;
+import org.datalift.fwk.util.StringUtils;
 
 
 /**
@@ -35,14 +37,10 @@ public abstract class Repository
 
     /** The repository name in the DataLift configuration. */
     public final String name;
-    /** The repository URL. */
+    /** The repository connection URL. */
     public final URL url;
     /** The repository display label. */
     public final String label;
-    /** The login, for secured repositories. */
-    protected final String username;
-    /** The password, for secured repositories. */
-    protected final String password;
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -50,38 +48,41 @@ public abstract class Repository
 
     /**
      * Build a new repository.
-     * @param  name       the repository name in DataLift configuration.
-     * @param  url        the repository URL.
-     * @param  username   the login or <code>null</code> if no
-     *                    authentication is required.
-     * @param  password   the password or <code>null</code> if no
-     *                    authentication is required.
-     * @param  label      the repository display label. If
-     *                    <code>null</code>, <code>name</code> is used.
+     * @param  name    the repository name in DataLift configuration.
+     * @param  url     the repository URL.
+     * @param  label   the repository display label. If
+     *                 <code>null</code>, <code>name</code> is used.
      *
      * @throws IllegalArgumentException if either <code>name</code> or
      *         <code>url</code> is null.
      * @throws RuntimeException if any error occurred connecting the
      *         repository.
      */
-    public Repository(String name, URL url,
-                      String username, String password, String label) {
+    public Repository(String name, String url, String label) {
         if ((name == null) || (name.length() == 0)) {
             throw new IllegalArgumentException("name");
         }
-        if (url == null) {
-            throw new IllegalArgumentException("url");
+        try {
+            this.name  = name;
+            this.url   = (StringUtils.isSet(url))? new URL(url): null;
+            this.label = ((label != null) && (label.length() != 0))? label: name;
         }
-        this.name = name;
-        this.url  = url;
-        this.username = username;
-        this.password = password;
-        this.label    = ((label != null) && (label.length() != 0))? label: name;
+        catch (MalformedURLException e) {
+            throw new IllegalArgumentException(url, e);
+        }
     }
 
     //-------------------------------------------------------------------------
     // Repository contract definition
     //-------------------------------------------------------------------------
+
+    /**
+     * Returns the internal RDF store representation.
+     * @return the internal RDF store.
+     * @throws TechnicalException if any error occurred accessing
+     *         the RDF store.
+     */
+    abstract public org.openrdf.repository.Repository getNativeRepository();
 
     /**
      * Returns a connection to the RDF store.
@@ -258,8 +259,8 @@ public abstract class Repository
     }
 
     /**
-     * Returns the URL of the repository.
-     * @return the URL of the repository.
+     * Returns the connection URL to the repository.
+     * @return the connection URL to the repository.
      */
     public URL getUrl() {
         return this.url;
@@ -283,10 +284,7 @@ public abstract class Repository
         boolean equals = false;
         if (o instanceof Repository) {
             Repository r = (Repository)o;
-            equals = (this.url.equals(r.url)) &&
-                     (((this.username == null) && (r.username == null)) ||
-                      ((this.username != null)
-                                        && (this.username.equals(r.username))));
+            equals = (this.url.equals(r.url));
         }
         return equals;
     }
