@@ -2,7 +2,6 @@ package org.datalift.core.rdf.sesame;
 
 
 import org.openrdf.repository.Repository;
-import org.openrdf.repository.RepositoryException;
 import org.openrdf.repository.http.HTTPRepository;
 
 import org.datalift.core.TechnicalException;
@@ -50,7 +49,7 @@ public final class HttpRepository extends BaseRepository
             repository = new HTTPRepository(this.url.toString());
             repository.initialize();
         }
-        catch (RepositoryException e) {
+        catch (Exception e) {
             throw new TechnicalException("repository.connect.error", e,
                                          name, this.url, e.getMessage());
         }
