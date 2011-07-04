@@ -206,10 +206,7 @@ public class RouterResource implements LifeCycle, ResourceResolver
             }
         }
 
-        // Step #2: Register this object in configuration.
-        this.configuration.registerBean(this);
-
-        // Step #3: Load available modules.
+        // Step #2: Load available modules.
         this.modules.clear();
         // Load modules embedded in web application first (if any).
         this.loadModules(this.getClass().getClassLoader(), null);
@@ -235,17 +232,18 @@ public class RouterResource implements LifeCycle, ResourceResolver
                 }
             }
         }
-        // Step #4: Check whether SPARQL endpoint module is available.
+    }
+    
+    @Override
+    public void postInit(Configuration config) {
+        // Check whether SPARQL endpoint module is available.
         try {
             this.sparqlEndpoint = config.getBean(SparqlEndpoint.class);
         }
         catch (Exception e) {
             log.warn("No SPARQL endpoint module available");
         }
-    }
-    
-    @Override
-    public void postInit(Configuration config) {
+
         // Post-init each module, ignoring errors.
         for (ModuleDesc desc : this.modules.values()) {
             Module m = desc.module;

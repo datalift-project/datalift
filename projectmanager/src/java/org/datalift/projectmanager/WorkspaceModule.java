@@ -28,8 +28,8 @@ public class WorkspaceModule extends BaseModule
 
     /** The DataLift configuration. */
     private Configuration configuration = null;
-
-    private ProjectManagerImpl projectManager = null;
+    /** Project Manager bean. */
+    private ProjectManager projectManager = null;
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -40,29 +40,14 @@ public class WorkspaceModule extends BaseModule
     }
 
     //-------------------------------------------------------------------------
-    // LifeCycle contract support
+    // Module contract support
     //-------------------------------------------------------------------------
 
     /** {@inheritDoc} */
     @Override
-    public void init(Configuration configuration) {
-        this.configuration = configuration;
-        this.projectManager = new ProjectManagerImpl();
-        // Register application namespaces to Empire.
-        this.projectManager.init(this.configuration);
-        this.configuration.registerBean(this.projectManager);
-    }
-
-    /** {@inheritDoc} */
-    @Override
     public void postInit(Configuration configuration) {
-        this.projectManager.postInit(configuration);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public void shutdown(Configuration configuration) {
-        this.projectManager.shutdown(configuration);
+        this.configuration  = configuration;
+        this.projectManager = configuration.getBean(ProjectManager.class);
     }
 
     /** {@inheritDoc} */
@@ -70,9 +55,12 @@ public class WorkspaceModule extends BaseModule
     public Map<String, Class<?>> getResources() {
         Map<String, Class<?>> rsc = new HashMap<String, Class<?>>();
         rsc.put("project", ProjectResource.class);
-
         return rsc;
     }
+
+    //-------------------------------------------------------------------------
+    // Specific implementation
+    //-------------------------------------------------------------------------
 
     public ProjectManager getProjectManager() {
         return this.projectManager;
@@ -80,17 +68,6 @@ public class WorkspaceModule extends BaseModule
 
     public Configuration getConfiguration() {
         return this.configuration;
-    }
-
-    //-------------------------------------------------------------------------
-    // Object contract support
-    //-------------------------------------------------------------------------
-
-    /** {@inheritDoc} */
-    @Override
-    public String toString() {
-        return this.getClass().getSimpleName() +
-                    " (" + this.configuration.getInternalRepository().url + ')';
     }
 
     /**

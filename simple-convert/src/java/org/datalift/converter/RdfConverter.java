@@ -42,13 +42,44 @@ public class RdfConverter extends BaseModule implements ProjectModule
 {
     private final static String MODULE_NAME = "rdfconverter";
 
+    //-------------------------------------------------------------------------
+    // Instance members
+    //-------------------------------------------------------------------------
+
     private ProjectManager projectManager = null;
     private SparqlEndpoint sparqlEndpoint = null;
     private Repository internRepository = null;
 
+    //-------------------------------------------------------------------------
+    // Constructors
+    //-------------------------------------------------------------------------
+
     public RdfConverter() {
         super(MODULE_NAME, true);
     }
+
+    //-------------------------------------------------------------------------
+    // Module contract support
+    //-------------------------------------------------------------------------
+
+    @Override
+    public void postInit(Configuration configuration) {
+        super.postInit(configuration);
+
+        this.internRepository = configuration.getInternalRepository();
+        this.projectManager = configuration.getBean(ProjectManager.class);
+        if (this.projectManager == null) {
+            throw new RuntimeException("Could not retrieve Project Manager");
+        }
+        this.sparqlEndpoint = configuration.getBean(SparqlEndpoint.class);
+        if (this.sparqlEndpoint == null) {
+            throw new RuntimeException("Could not retrieve SPARQL endpoint");
+        }
+    }   
+
+    //-------------------------------------------------------------------------
+    // ProjectModule contract support
+    //-------------------------------------------------------------------------
 
     @Override
     public URI canHandle(Project p) {
@@ -71,18 +102,9 @@ public class RdfConverter extends BaseModule implements ProjectModule
         return projectPage;
     }
 
-    @Override
-    public void init(Configuration configuration) {
-        this.internRepository = configuration.getInternalRepository();
-        this.projectManager = configuration.getBean(ProjectManager.class);
-        if (this.projectManager == null) {
-            throw new RuntimeException("Could not retrieve Project Manager");
-        }
-        this.sparqlEndpoint = configuration.getBean(SparqlEndpoint.class);
-        if (this.sparqlEndpoint == null) {
-            throw new RuntimeException("Could not retrieve SPARQL endpoint");
-        }
-    }	
+    //-------------------------------------------------------------------------
+    // Web services
+    //-------------------------------------------------------------------------
 
     @GET
     public Response getIndexPage(@QueryParam("project") String projectId,

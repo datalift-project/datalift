@@ -109,12 +109,10 @@
   <property name="core.run.libs"        location="${core.home}/lib/runtime"/>
 
   <property name="classes.dir"          location="${build.home}/classes"/>
-  <property name="lib.dir"              location="${build.home}/lib"/>
-  <property name="run.lib.home"         location="${basedir}/lib/runtime"/>
   <property name="docs.dir"             location="${dist.home}/docs"/>
 
-  <property name="zip.name"             value="01-${app.name}.zip"/>
-  <property name="zip.path"             location="${dist.home}/${zip.name}"/>
+  <property name="jar.name"             value="${app.name}.jar"/>
+  <property name="jar.path"             location="${dist.home}/${jar.name}"/>
 
   <property name="locale.default"       value="en"/>
   <property name="locale.default_resources"
@@ -152,9 +150,6 @@
   <path id="runtime.classpath">
     <!-- Include all JAR files that will be included in webapp WAR -->
     <fileset dir="${fwk.run.libs}">
-      <include name="**/*.jar"/>
-    </fileset>
-    <fileset dir="${run.lib.home}">
       <include name="**/*.jar"/>
     </fileset>
     <fileset dir="${fwk.dist.home}">
@@ -221,8 +216,6 @@
     <mkdir dir="${build.home}"/>
     <!-- Create compilation target directory -->
     <mkdir dir="${classes.dir}"/>
-    <!-- Create lib target directory -->
-    <mkdir dir="${lib.dir}"/>
   </target>
 
 
@@ -262,7 +255,7 @@
 
   <!-- Copy default locale resource file -->
   <target name="resource-copy" if="locale.exists">
-    <copy todir="${build.home}">
+    <copy todir="${classes.dir}">
       <fileset dir="${web.home}" includes="*_${locale.default}.properties"/>
       <mapper type="glob"
               from="*_${locale.default}.properties" to="*.properties"/>
@@ -271,13 +264,9 @@
 
   <target name="prepare-dist" depends="prepare">
     <!-- Copy web application page templates and resources -->
-    <copy todir="${build.home}" includeEmptyDirs="false"
-                                preservelastmodified="true">
+    <copy todir="${classes.dir}" includeEmptyDirs="false"
+                                 preservelastmodified="true">
       <fileset dir="${web.home}" excludes="**/.*"/>
-    </copy>
-    <!-- Copy library informations -->
-    <copy todir="${lib.dir}" preservelastmodified="true" flatten="true">
-      <fileset dir="${run.lib.home}"  includes="**/*.jar"/>
     </copy>
     <!-- Create build directories as needed -->
     <mkdir dir="${dist.home}"/>
@@ -295,7 +284,13 @@
 
   <target name="dist" depends="compile,prepare-dist,resource-copy"
                       description="Create binary distribution">
-    <zip destfile="${zip.path}" basedir="${build.home}"/>
+    <!-- Create module JAR file -->
+    <jar jarfile="${jar.path}">
+      <fileset dir="${classes.dir}"/>
+      <service type="org.datalift.fwk.Module">
+        <provider classname="org.datalift.projectmanager.WorkspaceModule"/>
+      </service>
+    </jar>
   </target>
 
 

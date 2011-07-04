@@ -90,7 +90,7 @@ public interface ProjectManager
     public Ontology newOntology(URI srcUrl, String title);
 
     public Project newProject(URI projectId, String title,
-                              String description, String license);
+                              String description, URI license);
 
     public String getProjectFilePath(String projectId, String fileName);
 

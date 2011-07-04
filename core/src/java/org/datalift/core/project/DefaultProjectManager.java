@@ -1,4 +1,4 @@
-package org.datalift.projectmanager;
+package org.datalift.core.project;
 
 
 import java.io.File;
@@ -42,7 +42,7 @@ import org.datalift.fwk.security.SecurityContext;
 import static org.datalift.fwk.util.StringUtils.*;
 
 
-public class ProjectManagerImpl implements ProjectManager, LifeCycle
+public class DefaultProjectManager implements ProjectManager, LifeCycle
 {
     //-------------------------------------------------------------------------
     // Instance members
@@ -185,13 +185,13 @@ public class ProjectManagerImpl implements ProjectManager, LifeCycle
     /** {@inheritDoc} */
     @Override
     public Project newProject(URI projectId, String title,
-                              String description, String license) {
+                              String description, URI license) {
         // Create new project.
         Project p = new ProjectImpl(projectId.toString());
         p.setTitle(title);
         p.setOwner(SecurityContext.getUserPrincipal());
         p.setDescription(description);
-        p.setLicense(License.valueOf(license).uri);
+        p.setLicense(license);
         Date date = new Date();
         p.setDateCreation(date);
         p.setDateModification(date);

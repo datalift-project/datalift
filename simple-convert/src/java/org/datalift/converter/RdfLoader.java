@@ -68,8 +68,8 @@ public class RdfLoader extends BaseModule implements ProjectModule
 
     /** {@inheritDoc} */
     @Override
-    public void init(Configuration configuration) {
-        super.init(configuration);
+    public void postInit(Configuration configuration) {
+        super.postInit(configuration);
 
         this.internRepository = configuration.getInternalRepository();
         this.storage = configuration.getPublicStorage();

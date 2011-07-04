@@ -117,8 +117,9 @@ public class ProjectResource
         URI projectId = this.newProjectId(uriInfo.getBaseUri(), title);
         if (this.findProject(projectId) == null) {
             // Create new project.
+            License l = License.valueOf(license);
             Project p = this.projectManager.newProject(projectId, title,
-                                                       description, license);
+                                                       description, l.uri);
             // Persist project to RDF store.
             try {
                 this.projectManager.saveProject(p);
@@ -368,7 +369,7 @@ public class ProjectResource
             fileCopy(file, storagePath);
 
             // Add new source to persistent project
-            Separator sep = CsvSourceImpl.Separator.valueOf(separator);
+            Separator sep = Separator.valueOf(separator);
             boolean hasTitleRow = ((titleRow != null) &&
                                    (titleRow.toLowerCase().equals("on")));
 

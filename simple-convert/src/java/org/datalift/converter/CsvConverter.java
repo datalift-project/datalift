@@ -67,8 +67,8 @@ public class CsvConverter extends BaseModule implements ProjectModule
 
     /** {@inheritDoc} */
     @Override
-    public void init(Configuration configuration) {
-        super.init(configuration);
+    public void postInit(Configuration configuration) {
+        super.postInit(configuration);
 
         this.storage = configuration.getPublicStorage();
         this.internal = configuration.getInternalRepository();

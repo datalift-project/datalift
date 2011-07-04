@@ -7,6 +7,7 @@ import java.util.Properties;
 import java.util.Set;
 
 import org.datalift.core.log.LogContext;
+import org.datalift.core.project.DefaultProjectManager;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.LifeCycle;
 import org.datalift.fwk.log.Logger;
@@ -146,6 +147,7 @@ public class ApplicationLoader extends LogServletContextListener
             // First initialization step.
             Set<Object> rsc = new HashSet<Object>();
             rsc.add(this.initResource(new RouterResource()));
+            rsc.add(this.initResource(new DefaultProjectManager()));
             // Second initialization step.
             for (Object r : rsc) {
                 this.postInitResource(r);
@@ -176,6 +178,7 @@ public class ApplicationLoader extends LogServletContextListener
         if (r instanceof LifeCycle) {
             try {
                 ((LifeCycle)r).init(configuration);
+                configuration.registerBean(r);
             }
             catch (Exception e) {
                 TechnicalException error = new TechnicalException(

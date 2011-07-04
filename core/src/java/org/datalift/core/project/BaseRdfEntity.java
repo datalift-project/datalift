@@ -1,4 +1,4 @@
-package org.datalift.projectmanager;
+package org.datalift.core.project;
 
 
 import com.clarkparsia.empire.SupportsRdfId;
