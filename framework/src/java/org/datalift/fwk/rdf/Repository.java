@@ -39,6 +39,8 @@ public abstract class Repository
     public final String name;
     /** The repository connection URL. */
     public final URL url;
+   /** The repository display label. */
+    public final String label;
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -48,19 +50,22 @@ public abstract class Repository
      * Build a new repository.
      * @param  name    the repository name in DataLift configuration.
      * @param  url     the repository URL.
+     * @param  label   the repository display label. If
+     *                 <code>null</code>, <code>name</code> is used.
      *
      * @throws IllegalArgumentException if either <code>name</code> or
      *         <code>url</code> is null.
      * @throws RuntimeException if any error occurred connecting the
      *         repository.
      */
-    public Repository(String name, String url) {
+    public Repository(String name, String url, String label) {
         if ((name == null) || (name.length() == 0)) {
             throw new IllegalArgumentException("name");
         }
         try {
             this.name  = name;
             this.url   = (StringUtils.isSet(url))? new URL(url): null;
+            this.label = ((label != null) && (label.length() != 0))? label: name;
         }
         catch (MalformedURLException e) {
             throw new IllegalArgumentException(url, e);
@@ -259,6 +264,14 @@ public abstract class Repository
      */
     public URL getUrl() {
         return this.url;
+    }
+
+    /**
+     * Returns the display label for the repository.
+     * @return the display label for the repository.
+     */
+    public String getLabel() {
+        return this.label;
     }
 
     //-------------------------------------------------------------------------

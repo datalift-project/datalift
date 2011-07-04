@@ -43,6 +43,8 @@ abstract public class BaseRepository extends Repository
     // Constants
     //-------------------------------------------------------------------------
 
+    /** The property suffix for repository display label. */
+    public final static String REPOSITORY_LABEL        = ".repository.label";
     /** The property suffix for repository URL. */
     public final static String REPOSITORY_HTTP_URL     = ".repository.http.url";
     /** The property suffix for repository login. */
@@ -83,7 +85,8 @@ abstract public class BaseRepository extends Repository
      *         repository.
      */
     protected BaseRepository(Configuration configuration, String name) {
-        super(name, configuration.getProperty(name + REPOSITORY_HTTP_URL));
+        super(name, configuration.getProperty(name + REPOSITORY_HTTP_URL),
+                    configuration.getProperty(name + REPOSITORY_LABEL));
 
         this.target = this.newNativeRepository(configuration, name);
         this.valueFactory = this.target.getValueFactory();
