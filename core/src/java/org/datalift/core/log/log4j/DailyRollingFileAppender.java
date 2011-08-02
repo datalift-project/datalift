@@ -1,57 +1,39 @@
 /*
  * Copyright / Copr. 2010-2013 Atos - Public Sector France -
- * BS & Innovation for the DataLift project, 
+ * BS & Innovation for the DataLift project,
  * Contributor(s) : L. Bihanic, H. Devos, O. Ventura, M. Chetima
  *
  * Contact: dlfr-datalift@atos.net
  *
  * This software is governed by the CeCILL license under French law and
- * abiding by the rules of distribution of free software.  You can  use, 
- * modify and/ or redistribute the software under the terms of the CeCILL
+ * abiding by the rules of distribution of free software. You can use,
+ * modify and/or redistribute the software under the terms of the CeCILL
  * license as circulated by CEA, CNRS and INRIA at the following URL
- * "http://www.cecill.info". 
+ * "http://www.cecill.info".
  *
- * As a counterpart to the access to the source code and  rights to copy,
+ * As a counterpart to the access to the source code and rights to copy,
  * modify and redistribute granted by the license, users are provided only
- * with a limited warranty  and the software's author,  the holder of the
- * economic rights,  and the successive licensors  have only  limited
- * liability. 
+ * with a limited warranty and the software's author, the holder of the
+ * economic rights, and the successive licensors have only limited
+ * liability.
  *
  * In this respect, the user's attention is drawn to the risks associated
- * with loading,  using,  modifying and/or developing or reproducing the
+ * with loading, using, modifying and/or developing or reproducing the
  * software by the user in light of its specific status of free software,
- * that may mean  that it is complicated to manipulate,  and  that  also
- * therefore means  that it is reserved for developers  and  experienced
+ * that may mean that it is complicated to manipulate, and that also
+ * therefore means that it is reserved for developers and experienced
  * professionals having in-depth computer knowledge. Users are therefore
  * encouraged to load and test the software's suitability as regards their
- * requirements in conditions enabling the security of their systems and/or 
- * data to be ensured and,  more generally, to use and operate it in the 
- * same conditions as regards security. 
+ * requirements in conditions enabling the security of their systems and/or
+ * data to be ensured and, more generally, to use and operate it in the
+ * same conditions as regards security.
  *
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
 
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-
-
 package org.datalift.core.log.log4j;
+
 
 import java.io.IOException;
 import java.io.File;
@@ -67,6 +49,7 @@ import org.apache.log4j.FileAppender;
 import org.apache.log4j.Layout;
 import org.apache.log4j.helpers.LogLog;
 import org.apache.log4j.spi.LoggingEvent;
+
 
 /**
    DailyRollingFileAppender extends {@link FileAppender} so that the
