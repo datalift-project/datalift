@@ -46,12 +46,22 @@ public interface LifeCycle
 {
     /**
      * Component initialization, first step.
+     * <p>
+     * At this stage, components should read their configuration data
+     * and perform any initialization tasks that do not have
+     * dependencies on other components as this may not have been
+     * initialized yet.</p>
+     *
      * @param  configuration   the DataLift configuration.
      */
     public void init(Configuration configuration);
 
     /**
-     * Component initialization, second step
+     * Component initialization, second step.
+     * <p>
+     * At this stage, all components have been initialized (first step
+     * at least) so that dependencies can be resolved./p>
+     *
      * @param  configuration   the DataLift configuration.
      */
     public void postInit(Configuration configuration);
