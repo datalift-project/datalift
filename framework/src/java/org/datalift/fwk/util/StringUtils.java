@@ -39,6 +39,7 @@ import java.text.Normalizer;
 import java.text.Normalizer.Form;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.regex.Pattern;
 
 
 /**
@@ -189,6 +190,8 @@ public class StringUtils
         return urlify(s, -1);
     }
 
+    private static final Pattern DIACRITICS_AND_FRIENDS = Pattern.compile(
+                    "[\\p{InCombiningDiacriticalMarks}\\p{IsLm}\\p{IsSk}]+");
     private final static String CHARS_TO_REPLACE = "ÆŒæœß";
     private final static String[] REPLACEMENT_CHARS =
                                             { "Ae", "Oe", "ae", "oe", "ss" };
@@ -217,20 +220,32 @@ public class StringUtils
             }
         }
         // Remove accents.
-        String u = Normalizer.normalize(buf.toString(), Form.NFD)
-                        .replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
+        String u = Normalizer.normalize(buf.toString(), Form.NFKD);
+        u = DIACRITICS_AND_FRIENDS.matcher(u).replaceAll("");
         // Convert to lower cases.
         u = u.toLowerCase();
         // Remove punctuation characters and convert multiple spaces/hyphens
         // into a single space.
-        u = u.replaceAll("[\\s-./'\"]+", " ").trim()
+        u = u.replaceAll("[\\s-./'\"_]+", " ").trim()
              .replaceAll("[\\p{Punct}§()]", "");
         // Cut if requested.
         if (maxLength > 0) {
             u = u.substring(0, Math.min(u.length(), maxLength)).trim();
         }
-        // Replace spaces with hyphens.
-        u = u.replace(' ', '-');
+        // Replace spaces with hyphens and clean up the remaining mess!
+        StringBuilder t = new StringBuilder(s.length());
+        for (int i=0, max=u.length(); i<max; i++) {
+            char c = u.charAt(i);
+            if (c == ' ') {
+                t.append('-');
+            }
+            else if (Character.isLetterOrDigit(c)) {
+                t.append(c);
+            }
+            // Else: ignore character.
+        }
+        u = t.toString();
+        // Check there's something left with all those characters removed!
         if ((u.length() == 0) || (u.charAt(0) == '-')) {
             throw new IllegalArgumentException(s);
         }
