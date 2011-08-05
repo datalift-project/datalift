@@ -264,7 +264,7 @@ public class ProjectResource
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
             this.projectManager.deleteProject(this.loadProject(projectUri));
 
-           response = this.displayIndexPage(Response.ok(), null).build();
+            response = this.displayIndexPage(Response.ok(), null).build();
         }
         catch (Exception e) {
             this.handleInternalError(e, "Failed to delete project");
@@ -420,6 +420,9 @@ public class ProjectResource
                                .type(TEXT_HTML)
                                .build();
         }
+        catch (IOException e) {
+            this.throwInvalidParamError(fileName, e.getLocalizedMessage());
+        }
         catch (Exception e) {
             this.handleInternalError(e,
                             "Failed to create CVS source for {}", fileName);
@@ -505,6 +508,9 @@ public class ProjectResource
                                                         redirectUrl))
                                .type(TEXT_HTML)
                                .build();
+        }
+        catch (IOException e) {
+            this.throwInvalidParamError(fileName, e.getLocalizedMessage());
         }
         catch (Exception e) {
             this.handleInternalError(e,
@@ -1021,8 +1027,9 @@ public class ProjectResource
     }
 
     private void throwInvalidParamError(String name, Object value) {
-        TechnicalException error = new TechnicalException(
-                                        "ws.invalid.param.error", name, value);
+        TechnicalException error = (value != null)?
+                new TechnicalException("ws.invalid.param.error", name, value):
+                new TechnicalException("ws.missing.param", name);
         throw new WebApplicationException(
                                 Response.status(Status.BAD_REQUEST)
                                         .type(MediaTypes.TEXT_PLAIN_TYPE)

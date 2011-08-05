@@ -71,7 +71,7 @@
 	<form method="post" action="$target_csv" enctype="multipart/form-data" class="form_formated">
 #if(!$current)
 		<p>#i18n("project.upload_csv") $esc.html($it.getTitle())</p>
-		<p><input type="file" name="source"/></p>
+		<p><input type="file" name="source" size="64"/></p>
 #else
 		<input type="hidden" name="current_source" value="$current.uri"/>
 #end
@@ -81,15 +81,17 @@
 #else
 		<input type="checkbox" id="title_row" name="title_row"/></p>
 #end
+		
 		<p><label for="separator">#i18n("project.upload_csv_separator"): </label>
 		<select id="separator" name="separator">
-		#foreach($s in $sep)
-			#if(($foreach.count == 1 && !$current) || $current.getSeparator().equals($s.toString()))
-				<option value="$esc.html($s.name())" selected="true">$esc.html($s.toString())</option>
-			#else
-				<option value="$esc.html($s.name())">$esc.html($s.toString())</option>
-			#end
-		#end
+#foreach($s in $sep)
+#set( $label = "csv.source.${s.name()}.separator" )
+#if(($foreach.count == 1 && !$current) || $current.getSeparator().equals($s.toString()))
+				<option value="$esc.html($s.name())" selected="true">#i18n($label)</option>
+#else
+				<option value="$esc.html($s.name())">#i18n($label)</option>
+#end
+#end
 		</select></p>
 		<p><input type="submit" value="#i18n("$submit")"/></p>
 	</form>
@@ -100,7 +102,7 @@
 	<form method="post" action="$target_rdf" enctype="multipart/form-data" class="form_formated">
 #if (!$current)
 		<p>#i18n("project.upload_rdf") $esc.html($it.getTitle())</p>
-		<p><input type="file" name="source"/></p>
+		<p><input type="file" name="source" size="64"/></p>
 #else
 		<input type="hidden" id="current_source" name="current_source" value="$current.uri"/>
 #end
