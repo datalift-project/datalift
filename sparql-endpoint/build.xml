@@ -111,7 +111,7 @@
   <property name="classes.dir"          location="${build.home}/classes"/>
   <property name="docs.dir"             location="${dist.home}/docs"/>
 
-  <property name="jar.name"             value="00-${app.name}.jar"/>
+  <property name="jar.name"             value="${app.name}.jar"/>
   <property name="jar.path"             location="${dist.home}/${jar.name}"/>
 
   <property name="locale.default"       value="en"/>
