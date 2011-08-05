@@ -40,24 +40,55 @@ import java.util.List;
 import java.util.Properties;
 
 
-public class BundleList
+/* package */ final class BundleList
 {
-    /* package */ final static String KEY = BundleList.class.getName();
+    public final static String KEY = BundleList.class.getName();
 
-    private final List<Properties> properties = new LinkedList<Properties>();
+    private final List<Bundle> bundles = new LinkedList<Bundle>();
 
-    public void addProperties(Properties propertie) {
-        this.properties.add(propertie);
+    public void add(Bundle properties) {
+        this.bundles.add(properties);
     }
 
-    public String get(String key) {
+    public String getValue(String key) {
         String value = key;
-        for (Properties p : this.properties) {
-            if (p.getProperty(key) != null) {
-                value = p.getProperty(key);
+        for (Bundle b : this.bundles) {
+            String v = b.get(key);
+            if (v != null) {
+                value = v;
                 break;
             }
         }
         return value;
+    }
+
+    public static Bundle newBundle(Properties values, Bundle parent) {
+        return new BundleImpl(values, parent);
+    }
+
+    public static interface Bundle
+    {
+        public String get(String key);
+    }
+
+    private final static class BundleImpl implements Bundle
+    {
+        private final Properties values;
+        private final Bundle defaults;
+
+        public BundleImpl(Properties values, Bundle defaults) {
+            super();
+            this.values = values;
+            this.defaults = defaults;
+        }
+
+        @Override
+        public String get(String key) {
+            String v = this.values.getProperty(key);
+            if ((v == null) && (this.defaults != null)) {
+                v = this.defaults.get(key);
+            }
+            return v;
+        }
     }
 }

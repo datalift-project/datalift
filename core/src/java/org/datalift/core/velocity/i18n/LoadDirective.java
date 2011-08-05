@@ -50,6 +50,9 @@ import org.apache.velocity.exception.ParseErrorException;
 import org.apache.velocity.exception.ResourceNotFoundException;
 import org.apache.velocity.runtime.directive.Directive;
 import org.apache.velocity.runtime.parser.node.Node;
+
+import org.datalift.core.util.SimpleCache;
+import org.datalift.core.velocity.i18n.BundleList.Bundle;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.util.StringUtils;
 
@@ -58,6 +61,20 @@ import com.sun.jersey.api.core.HttpRequestContext;
 
 public class LoadDirective extends Directive
 {
+    //-------------------------------------------------------------------------
+    // Constants
+    //-------------------------------------------------------------------------
+
+    private final static int CACHE_DURATION = 3600 * 6;         // 6 hours.
+
+    //-------------------------------------------------------------------------
+    // Class members
+    //-------------------------------------------------------------------------
+
+    /** A cache of loaded i18n resource bundles. */
+    private final static SimpleCache<String,Properties> bundleCache =
+                    new SimpleCache<String,Properties>(1000, CACHE_DURATION);
+
     private final static Logger log = Logger.getLogger();
 
     //-------------------------------------------------------------------------
@@ -120,53 +137,57 @@ public class LoadDirective extends Directive
         // Reverse locale list to get least wanted locales first.
         Collections.reverse(locales);
         // Get existing bundle list, to add new bundles.
-        BundleList bundleList = (BundleList)(context.get(BundleList.KEY));
-        if (bundleList == null) {
-            bundleList = new BundleList();
-            context.put(BundleList.KEY, bundleList);
+        BundleList bundles = (BundleList)(context.get(BundleList.KEY));
+        if (bundles == null) {
+            bundles = new BundleList();
+            context.put(BundleList.KEY, bundles);
         }
 
-        // Load requested bundles to add them to the bundle list.
+        // Load requested bundles to add them to the bundle list. The first
+        // loaded bundles are the ones with the least priority so that they
+        // be parent the the ones with higher priority as they are only queried
+        // if the key is not found.
         for (int i=0; i<node.jjtGetNumChildren(); i++) {
-            String bundleName = String.valueOf(node.jjtGetChild(i).value(context));
+            String name = String.valueOf(node.jjtGetChild(i).value(context));
 
-//          // Get module name.
-//          String templateName = context.getCurrentResource().getName();
-//          int start = (templateName.charAt(0) == '/')? 1: 0;
-//          int sep   = templateName.indexOf('/', start);
-//          String module =
-//                  (sep != -1)? templateName.substring(start, sep + 1): "";
-//          bundleName = module + bundleName;
-
-            Properties bundleData = null;
+            Bundle b = null;
             for (Locale locale : locales) {
                 // Build properties resource bundle name for locale.
-                StringBuilder buf = new StringBuilder(bundleName);
+                StringBuilder buf = new StringBuilder(name);
                 if (locale != Locale.ROOT) {
                     buf.append('_').append(locale);
                 }
-                String propsName = buf.append(".properties").toString();
+                String propName = buf.append(".properties").toString();
 
-                if (this.rsvc.getLoaderNameForResource(propsName) != null) {
-                    try {
-                        Object o = this.rsvc.getContent(propsName,
+                Properties props = bundleCache.get(propName);
+                if (props == null) {
+                    // Load resource bundle.
+                    if (this.rsvc.getLoaderNameForResource(propName) != null) {
+                        try {
+                            // Force encoding as requested by Java Properties.
+                            Object o = this.rsvc.getContent(propName,
                                                         "ISO-8859-1").getData();
-                        Properties p = new Properties(bundleData);
-                        p.load(new StringReader((String)o));
-                        bundleData = p;
+                            Properties p = new Properties();
+                            p.load(new StringReader((String)o));
+                            props = p;
+                            bundleCache.put(propName, p);
+                        }
+                        catch (Exception e) {
+                            log.error("Failed to load resource bundle {}", e,
+                                      propName);
+                        }
                     }
-                    catch (Exception e) {
-                        log.error("Failed to load resource bundle {}", e,
-                                  propsName);
-                    }
+                    // Else: Properties resource bundle not found. => Ignore...
                 }
-                // Else: Properties resource bundle not found. => Ignore...
+                if (props != null) {
+                    b = BundleList.newBundle(props, b);
+                }
             }
-            if (bundleData != null) {
-                bundleList.addProperties(bundleData);
+            if (b != null) {
+                bundles.add(b);
             }
             else {
-                log.warn("Can't find bundle {}", bundleName);
+                log.warn("Can't find bundle {}", name);
             }
         }
         return true;

@@ -83,7 +83,7 @@ public class I18nDirective extends Directive
         BundleList b = (BundleList)(context.get(BundleList.KEY));
         if (b != null) {
             // Get value from bundles
-            writer.write(b.get(key));
+            writer.write(b.getValue(key));
             return true;
         }
         else {
