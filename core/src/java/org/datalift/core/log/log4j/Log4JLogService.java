@@ -44,7 +44,7 @@ import java.util.ResourceBundle;
 import org.apache.log4j.Hierarchy;
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
-import org.apache.log4j.MDC2;
+import org.apache.log4j.MDC;
 import org.apache.log4j.Priority;
 import org.apache.log4j.spi.DefaultRepositorySelector;
 import org.apache.log4j.spi.RootLogger;
@@ -115,12 +115,12 @@ public final class Log4JLogService extends LogService
      */
     @Override
     public Object setDiagnosticContext(String name, Object context) {
-        Object oldCtx = MDC2.get(name);
+        Object oldCtx = MDC.get(name);
         if (context != null) {
-            MDC2.put(name, context);
+            MDC.put(name, context);
         }
         else {
-            MDC2.remove(name);
+            MDC.remove(name);
         }
         return oldCtx;
     }
@@ -128,27 +128,27 @@ public final class Log4JLogService extends LogService
     /** {@inheritDoc} */
     @Override
     public Object removeDiagnosticContext(String name) {
-        Object oldCtx = MDC2.get(name);
-        MDC2.remove(name);
+        Object oldCtx = MDC.get(name);
+        MDC.remove(name);
         return oldCtx;
     }
 
     /** {@inheritDoc} */
     @Override
     public void clearDiagnosticContexts() {
-        MDC2.clear();
+        MDC.clear();
     }
 
     /** {@inheritDoc} */
     @Override
     public void promoteDebugTraces(boolean promote) {
-        MDC2.put(PROMOTE_DEBUG_MDC, Boolean.valueOf(promote));
+        MDC.put(PROMOTE_DEBUG_MDC, Boolean.valueOf(promote));
     }
 
     /** {@inheritDoc} */
     @Override
     public boolean areDebugTracesPromoted() {
-        Boolean b = (Boolean)(MDC2.get(PROMOTE_DEBUG_MDC));
+        Boolean b = (Boolean)(MDC.get(PROMOTE_DEBUG_MDC));
         return (b != null)? b.booleanValue(): false;
     }
 
