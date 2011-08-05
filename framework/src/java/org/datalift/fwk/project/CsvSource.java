@@ -38,25 +38,64 @@ package org.datalift.fwk.project;
 import java.util.List;
 
 
+/**
+ * A file source object describing CSV (character separated values)
+ * files.
+ *
+ * @author hdevos
+ */
 public interface CsvSource extends FileSource<String[]>
 {
-	public enum Separator {
-	    comma(','), semicolon(';'), tab('\t');
+    /**
+     * Supported separator characters.
+     */
+    public enum Separator {
+        comma(','), semicolon(';'), tab('\t'), space(' ');
 
-	    protected final char value;
+        protected final char value;
 
-	    Separator(char s) {
-	        this.value = s;
-	    }
+        Separator(char s) {
+            this.value = s;
+        }
 
-	    public char getValue() {
-	        return value;
-	    }
-	}
-	
+        public char getValue() {
+            return value;
+        }
+    }
+
+    /**
+     * Returns whether the first line of the file contains column
+     * headings.
+     * @return <code>true</code> if the first line of the file contains
+     *         column heading; <code>false</code> otherwise.
+     */
     public boolean hasTitleRow();
+
+    /**
+     * Defines whether the first line of the file contains column
+     * headings.
+     * @param  titleRow   <code>true</code> if the first line of the
+     *                    file contains column heading;
+     *                    <code>false</code> otherwise.
+     */
     public void	setTitleRow(boolean titleRow);
+
+    /**
+     * Returns the separator character.
+     * @return the separator character.
+     */
     public String getSeparator();
+
+    /**
+     * Sets the separator character.
+     * @param  sep    the separator character.
+     */
     public void setSeparator(String sep);
+
+    /**
+     * Returns the column headings, building Excel-like names
+     * (A, B ..., Z, AA, AB ...) if the file has no title row.
+     * @return the column headings.
+     */
     public List<String> getColumnsHeader();
 }
