@@ -30,7 +30,7 @@
 			// Add options to search select
 			var options = $('#searchColumn').attr('options');
 			options.length = 0;
-			options[options.length] = new Option("#i18n("sparql.search.all_columns")", "#i18n("sparql.search.all_columns")", true, true);
+			options[options.length] = new Option("#i18n("sparql.search.all_columns")", "all", true, true);
 			if (gridData[0]) {
 				for (property in gridData[0]) {
 					options[options.length] = new Option(property, property, false, false);

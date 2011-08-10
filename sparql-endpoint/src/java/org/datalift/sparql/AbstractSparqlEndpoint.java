@@ -63,6 +63,7 @@ import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.security.SecurityContext;
 import org.datalift.fwk.sparql.SparqlEndpoint;
+import org.datalift.fwk.util.StringUtils;
 
 
 abstract public class AbstractSparqlEndpoint extends BaseModule
@@ -298,20 +299,18 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         return repo;
     }
 
-    protected final Variant getResponseType(Request request,
+    protected final Variant getResponseType(Request request, String accept,
                                             List<Variant> supportedTypes)
                                                 throws WebApplicationException {
         Variant responseType = request.selectVariant(supportedTypes);
         if (responseType == null) {
             // No matching type found.
-            StringBuilder buf = new StringBuilder();
-            buf.append("No matching content type found. ")
-               .append("Supported content types for query type: ");
-            for (Variant v : supportedTypes) {
-                buf.append(v.getMediaType()).append(", ");
-            }
-            buf.setLength(buf.length() - 2);
-            String msg = buf.toString();
+            String msg = new StringBuilder()
+                .append("No matching content type found: requested types: [")
+                .append(accept)
+                .append("], Supported content types for query type: [")
+                .append(StringUtils.join(supportedTypes, ", "))
+                .append("]").toString();
             log.error(msg);
 
             throw new WebApplicationException(

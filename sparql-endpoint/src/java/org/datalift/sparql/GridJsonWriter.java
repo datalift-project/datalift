@@ -35,46 +35,54 @@
 package org.datalift.sparql;
 
 
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.io.Writer;
-import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-import info.aduna.io.IndentingWriter;
-import info.aduna.text.StringUtil;
-
+import org.openrdf.model.Statement;
 import org.openrdf.query.Binding;
 import org.openrdf.query.BindingSet;
 import org.openrdf.query.TupleQueryResultHandlerException;
 import org.openrdf.query.resultio.TupleQueryResultFormat;
 import org.openrdf.query.resultio.TupleQueryResultWriter;
+import org.openrdf.rio.RDFHandler;
+import org.openrdf.rio.RDFHandlerException;
 
 
-public class GridJsonWriter implements TupleQueryResultWriter
+public class GridJsonWriter extends AbstractJsonWriter
+                            implements TupleQueryResultWriter, RDFHandler
 {
-    private IndentingWriter writer;
-
-    private boolean firstTupleWritten;
-    private List<String> columnHeaders;
+    //-------------------------------------------------------------------------
+    // Constructors
+    //-------------------------------------------------------------------------
 
     public GridJsonWriter(OutputStream out) {
-        Writer w = new OutputStreamWriter(out, Charset.forName("UTF-8"));
-        w = new BufferedWriter(w, 1024);
-        writer = new IndentingWriter(w);
+        super(out);
     }
 
+    public GridJsonWriter(Writer out) {
+        super(out);
+    }
+
+    //-------------------------------------------------------------------------
+    // TupleQueryResultWriter contract support
+    //-------------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    @Override
     public final TupleQueryResultFormat getTupleQueryResultFormat() {
         return TupleQueryResultFormat.JSON;
     }
 
+    /** {@inheritDoc} */
+    @Override
     public void startQueryResult(List<String> columnHeaders)
                                     throws TupleQueryResultHandlerException {
-    	this.columnHeaders = columnHeaders;
         try {
+            this.start(columnHeaders);
             this.openBraces();
             // Write header
             this.writeKeyValue("head", columnHeaders);
@@ -82,133 +90,107 @@ public class GridJsonWriter implements TupleQueryResultWriter
             // Write results
             this.writeKey("rows");
             this.openArray();
-
-            this.firstTupleWritten = false;
         }
         catch (IOException e) {
             throw new TupleQueryResultHandlerException(e);
         }
     }
 
-    public void endQueryResult() throws TupleQueryResultHandlerException {
-        try {
-            this.closeArray();
-            this.closeBraces();
-            this.writer.flush();
-        }
-        catch (IOException e) {
-            throw new TupleQueryResultHandlerException(e);
-        }
-    }
-
+    /** {@inheritDoc} */
+    @Override
     public void handleSolution(BindingSet bindingSet)
                                     throws TupleQueryResultHandlerException {
         try {
-            if (firstTupleWritten) {
-                this.writeComma();
-            }
-            else {
-                this.firstTupleWritten = true;
-            }
-            this.openBraces(); // start of new solution
+            this.startSolution();       // start of new solution
 
             Iterator<Binding> bindingIter = bindingSet.iterator();
             Iterator<String> headerIter = columnHeaders.iterator();
 
             while (bindingIter.hasNext() && headerIter.hasNext()) {
                 Binding binding = bindingIter.next();
-                String head = headerIter.next();
-                String v = binding.getValue().stringValue();
-                if (v.startsWith("http://")) {
-                    this.writeKeyValue(head,
-                                       "<a href=\"" + v + "\">" + v + "</a>");
-                }
-                else {
-                    this.writeKeyValue(head, v);
-                }
+                this.writeKeyValue(headerIter.next(), binding.getValue());
                 if (bindingIter.hasNext()) {
                     this.writeComma();
                 }
             }
-            this.closeBraces(); // end solution
-            this.writer.flush();
+            this.endSolution();         // end solution
         }
         catch (IOException e) {
             throw new TupleQueryResultHandlerException(e);
         }
     }
 
-    private void writeKeyValue(String key, String value) throws IOException {
-        this.writeKey(key);
-        this.writeString(value);
-    }
-
-    private void writeKeyValue(String key, Iterable<String> array)
-                                                            throws IOException {
-        this.writeKey(key);
-        this.writeArray(array);
-    }
-
-    private void writeKey(String key) throws IOException {
-        this.writeString(key);
-        this.writer.write(": ");
-    }
-
-    private void writeString(String value) throws IOException {
-        // Escape special characters
-        value = StringUtil.gsub("\\", "\\\\", value);
-        value = StringUtil.gsub("\"", "\\\"", value);
-        value = StringUtil.gsub("/", "\\/", value);
-        value = StringUtil.gsub("\b", "\\b", value);
-        value = StringUtil.gsub("\f", "\\f", value);
-        value = StringUtil.gsub("\n", "\\n", value);
-        value = StringUtil.gsub("\r", "\\r", value);
-        value = StringUtil.gsub("\t", "\\t", value);
-
-        this.writer.write("\"");
-        this.writer.write(value);
-        this.writer.write("\"");
-    }
-
-    private void writeArray(Iterable<String> array) throws IOException {
-        this.writer.write("[ ");
-
-        Iterator<String> iter = array.iterator();
-        while (iter.hasNext()) {
-            this.writeString(iter.next());
-            if (iter.hasNext()) {
-                this.writer.write(", ");
-            }
+    /** {@inheritDoc} */
+    @Override
+    public void endQueryResult() throws TupleQueryResultHandlerException {
+        try {
+            this.closeArray();
+            this.closeBraces();
+            this.end();
         }
-        this.writer.write(" ]");
+        catch (IOException e) {
+            throw new TupleQueryResultHandlerException(e);
+        }
     }
 
-    private void openArray() throws IOException {
-        this.writer.write("[");
-        this.writer.writeEOL();
-        this.writer.increaseIndentation();
+    //-------------------------------------------------------------------------
+    // RDFHandler contract support
+    //-------------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    @Override
+    public void startRDF() throws RDFHandlerException {
+        try {
+            this.startQueryResult(Arrays.asList(CONSTRUCT_VARS));
+        }
+        catch (Exception e) {
+            throw new RDFHandlerException(e);
+        }
     }
 
-    private void closeArray() throws IOException {
-        this.writer.writeEOL();
-        this.writer.decreaseIndentation();
-        this.writer.write("]");
+    /** {@inheritDoc} */
+    @Override
+    public void handleNamespace(String prefix, String uri)
+                                                    throws RDFHandlerException {
+        // Ignore namespace prefixes.
     }
 
-    private void openBraces() throws IOException {
-        this.writer.write("{");
-        this.writer.writeEOL();
-        this.writer.increaseIndentation();
+    /** {@inheritDoc} */
+    @Override
+    public void handleStatement(Statement stmt) throws RDFHandlerException {
+        try {
+            this.startSolution();       // start of new solution
+            this.writeKeyValue(CONSTRUCT_VARS[0], stmt.getSubject());
+            this.writeComma();
+            this.writeKeyValue(CONSTRUCT_VARS[1], stmt.getPredicate());
+            this.writeComma();
+            this.writeKeyValue(CONSTRUCT_VARS[2], stmt.getObject());
+            this.endSolution();         // end solution
+        }
+        catch (IOException e) {
+            throw new RDFHandlerException(e);
+        }
     }
 
-    private void closeBraces() throws IOException {
-        this.writer.writeEOL();
-        this.writer.decreaseIndentation();
-        this.writer.write("}");
+    /** {@inheritDoc} */
+    @Override
+    public void handleComment(String comment) throws RDFHandlerException {
+        // Ignore comments.
     }
 
-    private void writeComma() throws IOException {
-        this.writer.write(", ");
-        this.writer.writeEOL();
+    /** {@inheritDoc} */
+    @Override
+    public void endRDF() throws RDFHandlerException {
+        try {
+            this.endQueryResult();
+        }
+        catch (Exception e) {
+            throw new RDFHandlerException(e);
+        }
     }
+
+    //-------------------------------------------------------------------------
+    // Specific implementation
+    //-------------------------------------------------------------------------
+
 }

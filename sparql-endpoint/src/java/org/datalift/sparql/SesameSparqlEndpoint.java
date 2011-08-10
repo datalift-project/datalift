@@ -114,6 +114,8 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                     new Variant(APPLICATION_XML_TYPE, null, null));
     private final static List<Variant> CONSTRUCT_RESPONSE_TYPES = Arrays.asList(
                     new Variant(APPLICATION_RDF_XML_TYPE, null, null),
+                    new Variant(APPLICATION_SPARQL_RESULT_JSON_TYPE, null, null),
+                    new Variant(APPLICATION_JSON_TYPE, null, null),
                     new Variant(TEXT_TURTLE_TYPE, null, null),
                     new Variant(APPLICATION_TURTLE_TYPE, null, null),
                     new Variant(TEXT_N3_TYPE, null, null),
@@ -124,6 +126,8 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                     new Variant(APPLICATION_XHTML_XML_TYPE, null, null),
                     new Variant(APPLICATION_XML_TYPE, null, null));
     private final static List<Variant> ASK_RESPONSE_TYPES = Arrays.asList(
+                    new Variant(APPLICATION_SPARQL_RESULT_JSON_TYPE, null, null),
+                    new Variant(APPLICATION_JSON_TYPE, null, null),
                     new Variant(TEXT_PLAIN_TYPE, null, null));
 
     //-------------------------------------------------------------------------
@@ -181,15 +185,31 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
         ResponseBuilder response = null;
         Variant responseType = null;
         if (parsedQuery instanceof ParsedBooleanQuery) {
-            responseType = this.getResponseType(request, ASK_RESPONSE_TYPES);
+            responseType = this.getResponseType(request, acceptHdr,
+                                                         ASK_RESPONSE_TYPES);
+            MediaType mediaType = responseType.getMediaType();
+
             String result = Boolean.toString(this.executeAskQuery(
                                                 repo, query, baseUri, dataset));
+            if ((mediaType.isCompatible(APPLICATION_JSON_TYPE)) ||
+                (mediaType.isCompatible(APPLICATION_SPARQL_RESULT_JSON_TYPE))) {
+                if (gridJson) {
+                    result = "{ \"head\": [ \"value\" ], " 
+                             + "\"rows\": [ { \"value\": \"" + result + "\" } ] }";
+                }
+                else {
+                    result = "{ \"head\": { \"vars\": [ \"value\" ] }, "
+                        + "\"results\": { \"bindings\": [ { "
+                        + "\"value\": { \"type\": \"literal\", \"value\": \""
+                        + result + "\" } } ] } }";
+                }
+            }
             response = Response.ok(result, responseType);
             log.debug("ASK query result: {} for \"{}\"", result,
                                                 new QueryDescription(query));
         }
         else if (parsedQuery instanceof ParsedGraphQuery) {
-            responseType = this.getResponseType(request,
+            responseType = this.getResponseType(request, acceptHdr,
                                                 CONSTRUCT_RESPONSE_TYPES);
             MediaType mediaType = responseType.getMediaType();
 
@@ -202,13 +222,15 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
             }
             else {
                 StreamingOutput out = this.getRdfHandlerOutput(repo, query,
-                                                baseUri, dataset, responseType);
+                                                        gridJson, baseUri,
+                                                        dataset, responseType);
                 response = Response.ok(out, responseType);
             }
         }
         else {
             // ParsedTupleQuery
-            responseType = this.getResponseType(request, SELECT_RESPONSE_TYPES);
+            responseType = this.getResponseType(request, acceptHdr,
+                                                         SELECT_RESPONSE_TYPES);
             MediaType mediaType = responseType.getMediaType();
 
             if (mediaType.isCompatible(TEXT_HTML_TYPE) ||
@@ -313,17 +335,39 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
     }
 
     private StreamingOutput getRdfHandlerOutput(Repository repository,
-                                            final String query, String baseUri,
+                                            final String query,
+                                            boolean gridJson, String baseUri,
                                             Dataset dataset, Variant v) {
         StreamingOutput handler = null;
 
         MediaType mediaType = v.getMediaType();
-        if ((mediaType.isCompatible(TEXT_TURTLE_TYPE)) ||
-            (mediaType.isCompatible(APPLICATION_TURTLE_TYPE)) ||
-            (mediaType.isCompatible(TEXT_N3_TYPE)) ||
-            (mediaType.isCompatible(TEXT_RDF_N3_TYPE)) ||
-            (mediaType.isCompatible(APPLICATION_N3_TYPE)) ||
-            (mediaType.isCompatible(APPLICATION_NTRIPLES_TYPE))) {
+        if ((mediaType.isCompatible(APPLICATION_JSON_TYPE)) ||
+            (mediaType.isCompatible(APPLICATION_SPARQL_RESULT_JSON_TYPE))) {
+            if (gridJson) {
+                handler = new ConstructStreamingOutput(repository, query,
+                                                            baseUri, dataset)
+                    {
+                        protected RDFHandler newHandler(OutputStream out) {
+                            return new GridJsonWriter(out);
+                        }
+                    };
+            }
+            else {
+                handler = new ConstructStreamingOutput(repository, query,
+                                                            baseUri, dataset)
+                    {
+                        protected RDFHandler newHandler(OutputStream out) {
+                            return new JsonRdfHandler(out);
+                        }
+                    };
+            }
+        }
+        else if ((mediaType.isCompatible(TEXT_TURTLE_TYPE)) ||
+                 (mediaType.isCompatible(APPLICATION_TURTLE_TYPE)) ||
+                 (mediaType.isCompatible(TEXT_N3_TYPE)) ||
+                 (mediaType.isCompatible(TEXT_RDF_N3_TYPE)) ||
+                 (mediaType.isCompatible(APPLICATION_N3_TYPE)) ||
+                 (mediaType.isCompatible(APPLICATION_NTRIPLES_TYPE))) {
             handler = new ConstructStreamingOutput(repository, query,
                                                             baseUri, dataset)
                 {

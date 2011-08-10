@@ -4,14 +4,13 @@
 <head>
 #load("sparql/resources")
 #load_core_resources
-	<title>#i18n("sparql.endpoint.title") - DataLift</title>
+	<title>#i18n("sparql.query.results") - #i18n("sparql.endpoint.title") - DataLift</title>
 #header_links
 </head>
 <body>
 #banner
 	<script>
 		var rowNumber = 10;
-		var grid = false;
 		var searchData = new Array();
 		var responsePtr;
 
@@ -19,28 +18,29 @@
 			$("#result-format").buttonset();
 			$("#query_submit").button();
 			$("#query_form").submit(function(e) {
-				//var requestMin = 0;
-				//var requestMax = 500000;
 #if( ${securityCtx.isAuthenticated()} )
 				var requestUrl = $("#query_form").attr("action")
 							+ "?" + $("#query").serialize()
 							+ "&" + $("#default-graph-uri").serialize()
-							//+ "&min=" + requestMin + "&max=" + requestMax
 							+ "&grid=true";
 #else
 				var requestUrl = $("#query_form").attr("action")
 							+ "?" + $("#query").serialize()
 							+ "&grid=true";
 #end
+				var acceptHdr = $("input[name=format]:checked").val();
+				$("#format_save").val(acceptHdr);
+				var expectedType = (acceptHdr.match(/json/))? "json": "text";
+
 				e.preventDefault(); // Prevent the navigator from sending the form
 				jQuery.ajax({
 					beforeSend: function(req) {
-						req.setRequestHeader("Accept", $("input[name=format]:checked").val());
-						$("#format_save").val($("input[name=format]:checked").val());
+						req.setRequestHeader("Accept", acceptHdr);
 					},
 					type: "GET",
 					cache: false,
 					url: requestUrl,
+					dataType: expectedType,
 					success: successfulQuery,
 					error: unsuccessfulQuery,
 				});
@@ -50,16 +50,19 @@
 		function successfulQuery(response){
 			if ($("#format_save").val() == "application/json") {
 				jsonGridSuccessRequest(response);
-			}
-			// Function called when modifying search text
-			$("#gridsearch").keyup(function () {
-				gridSearch(response, $(this).val().toLowerCase());
-			});
 
-			// Function called when modifying search Column
-			$("#searchColumn").change(function() {
-				gridSearch(response, $("#gridsearch").val().toLowerCase());
-			});
+				// Function called when modifying search text
+				$("#gridsearch").keyup(function () {
+					gridSearch(response, $(this).val().toLowerCase());
+				});
+				// Function called when modifying search Column
+				$("#searchColumn").change(function() {
+					gridSearch(response, $("#gridsearch").val().toLowerCase());
+				});
+			}
+			else {
+				alert(response);
+			}
 		}
 
 		function jsonGridSuccessRequest(response) {
@@ -70,7 +73,7 @@
 			// initialize search select
 			var options = $('#searchColumn').attr('options');
 			options.length = 0;
-			options[options.length] = new Option("#i18n("sparql.search.all_columns")", "#i18n("sparql.search.all_columns")", true, true);
+			options[options.length] = new Option("#i18n("grid.search.column.option.all")", "all", true, true);
 			// generating Column Model for jqGrid
 			var myColModel = [];
 			for (var i = 0; i < response.head.length; i++ ) {
@@ -79,39 +82,23 @@
 				// add row to search select
 				options[options.length] = new Option(response.head[i], response.head[i], false, false);
 			}
-			if (grid == false ) {
-				// initializing empty table in result div
-				$("#table_results").GridUnload();
-				$("#results").empty();
-				$("#results").append('<table id="table_results"></table><div id="pagernav"/>');
-				// initializing jqGrid
-				$("#table_results").jqGrid({
-					datatype: "local",
-					colNames: response.head,
-					colModel: myColModel,
-					pager: $('#pagernav'),
-					data: response.rows,
-					caption: $("#searchnav").html(),
-					rowNum: 50,
-					rowList: [50,100,200,500],
-					search: {
-                                            caption: "#i18n("sparql.search.title")"
-                                        }
-				});
-
-				$("#results").show();
-				$("#table_results").setGridWidth($("#results").width());
-				grid = true;
-			}
-			else {
-				$("#table_results").clearGridData();
-				$("#table_results").setGridParam({
-					colNames: response.head,
-					colModel: myColModel,
-					data: response.rows,
-				});
-				$("#table_results").trigger("reloadGrid");
-			}
+			$("#table_results").GridUnload();
+			// initializing jqGrid
+			$("#table_results").jqGrid({
+				datatype: "local",
+				colNames: response.head,
+				colModel: myColModel,
+				pager: $('#pagernav'),
+				data: response.rows,
+				caption: $("#searchnav").html(),
+				rowNum: 50,
+				rowList: [50,100,200,500],
+				search: {
+					caption: "#i18n("sparql.search.title")"
+				}
+			});
+			$("#results").show();
+			$("#table_results").setGridWidth($("#results").width());
 		}
 
 		function unsuccessfulQuery(XMLHttpRequest, strError){
@@ -181,8 +168,8 @@
 			<div id="result-format" class="dl-form-elt">
 				<label>#i18n("sparql.parameter.format"): </label>
 				<input type="radio" id="html_format" name="format" value="application/json" checked="checked"/><label for="html_format">HTML</label>
-				<input type="radio" id="rdf_format" name="format" value="application/rdf+xml"/><label for="rdf_format">RDF/XML</label>
-				<input type="radio" id="turtle_format" name="format" value="text/turtle"/><label for="turtle_format">Turtle</label>
+				<input type="radio" id="rdf_format" name="format" value="application/sparql-results+xml, application/rdf+xml, text/plain; q=0.5"/><label for="rdf_format">RDF/XML</label>
+				<input type="radio" id="turtle_format" name="format" value="text/turtle, text/plain; q=0.5"/><label for="turtle_format">Turtle</label>
 				<input type="hidden" id="format_save" />
 			</div>
 			<div class="dl-form-elt">
@@ -198,6 +185,8 @@
 		    </form>
 	    	</div>
 		<div id="results" class="dl-result-panel">
+			<table id="table_results"><tr><td/></tr></table>
+			<div id="pagernav"/>
 		</div>
 		<div id="searchnav" style="display:none">
 			#i18n("grid.search.value.label"): <input type="search" id="gridsearch" placeholder="" results="0" class="gridsearch" />
