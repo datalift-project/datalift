@@ -48,6 +48,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -65,6 +66,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
@@ -86,9 +88,10 @@ import org.datalift.fwk.MediaTypes;
 import org.datalift.fwk.Module;
 import org.datalift.fwk.ResourceResolver;
 import org.datalift.fwk.log.Logger;
-import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.sparql.SparqlEndpoint;
 import org.datalift.fwk.sparql.SparqlQueries;
+import org.datalift.fwk.util.UriPolicy;
+import org.datalift.fwk.util.UriPolicy.ResourceHandler;
 
 import static org.datalift.fwk.util.StringUtils.*;
 
@@ -168,13 +171,6 @@ public class RouterResource implements LifeCycle, ResourceResolver
     // Instance members
     //-------------------------------------------------------------------------
 
-    /** Application modules. */
-    private final Map<String,ModuleDesc> modules =
-                                            new TreeMap<String,ModuleDesc>();
-    /** Predefined SPARQL queries for DataLift core module. */
-    private final SparqlQueries queries =
-                                new SparqlQueries(DataliftApplication.class);
-
     /** The DataLift configuration. */
     private Configuration configuration = null;
     /** Cache management informations. */
@@ -182,6 +178,26 @@ public class RouterResource implements LifeCycle, ResourceResolver
     private int[] businessDay = { 8, 20 };          // 8 A.M. to 8 P.M.
     /** The DataLift SPARQL endpoint module. */
     private SparqlEndpoint sparqlEndpoint = null;
+
+    /** Application modules. */
+    private final Map<String,ModuleDesc> modules =
+                                            new TreeMap<String,ModuleDesc>();
+    /** Resource resolvers. */
+    private final List<UriPolicy> policies = new LinkedList<UriPolicy>();
+    /** Predefined SPARQL queries for DataLift core module. */
+    private final SparqlQueries queries =
+                                new SparqlQueries(DataliftApplication.class);
+    /** Default URI policy. */
+    private final UriPolicy defaultPolicy = new UriPolicy()
+        {
+            @Override public void init(Configuration cfg)     { /* NOP */ }
+            @Override public void postInit(Configuration cfg) { /* NOP */ }
+            @Override public void shutdown(Configuration cfg) { /* NOP */ }
+            @Override public ResourceHandler canHandle(UriInfo uriInfo,
+                                            Request request, String acceptHdr) {
+                return new DefaultUriHandler(uriInfo, request, acceptHdr);
+            }
+        };
 
     //-------------------------------------------------------------------------
     // LifeCycle contract support
@@ -209,7 +225,7 @@ public class RouterResource implements LifeCycle, ResourceResolver
                 this.cacheDuration = Integer.parseInt(s);
             }
             catch (Exception e) {
-                log.warn("Invalid cache duration: {}. Using default: {}",
+                log.warn("Invalid cache duration: {}. Using default value: {}",
                                         s, Integer.valueOf(this.cacheDuration));
             }
         }
@@ -228,14 +244,18 @@ public class RouterResource implements LifeCycle, ResourceResolver
                     int closingHour = Integer.parseInt(v[1]);
                     if ((openingHour < 0) || (openingHour > 23) ||
                         (closingHour < 0) || (closingHour > 23)) {
-                        throw new IllegalArgumentException(BUSINESS_DAY_PROPERTY);
+                        throw new IllegalArgumentException(
+                                                        BUSINESS_DAY_PROPERTY);
                     }
-                    this.businessDay[0] = Math.min(openingHour, closingHour);
-                    this.businessDay[1] = Math.max(openingHour, closingHour);
+                    this.businessDay = new int[] {
+                                        Math.min(openingHour, closingHour),
+                                        Math.max(openingHour, closingHour) };
                 }
                 catch (Exception e) {
-                    log.warn("Invalid business day hours: {}. Using default: {}", s,
-                             "" + this.businessDay[0] + '-' + this.businessDay[1]);
+                    log.warn("Invalid business day hours: {}. "
+                             + "Using default value: {}", s,
+                             "" + this.businessDay[0] + '-'
+                                + this.businessDay[1]);
                 }
             }
         }
@@ -266,35 +286,58 @@ public class RouterResource implements LifeCycle, ResourceResolver
                 }
             }
         }
-    }
-    
-    @Override
-    public void postInit(Configuration config) {
-        // Check whether SPARQL endpoint module is available.
-        try {
-            this.sparqlEndpoint = config.getBean(SparqlEndpoint.class);
-        }
-        catch (Exception e) {
-            log.warn("No SPARQL endpoint module available");
-        }
 
+        // Step #3: Load available resource resolvers.
+        this.policies.clear();
+        // Load modules embedded in web application first (if any).
+        this.loadPolicies(this.getClass().getClassLoader());
+    }
+
+    @Override
+    public void postInit(Configuration configuration) {
         // Post-init each module, ignoring errors.
-        for (ModuleDesc desc : this.modules.values()) {
-            Module m = desc.module;
-            Object[] prevCtx = LogContext.pushContexts(m.getName(), "postInit");
+        for (Iterator<ModuleDesc> i=this.modules.values().iterator();
+                                                                i.hasNext(); ) {
+            ModuleDesc desc = i.next();
+            Object[] prevCtx = LogContext.pushContexts(desc.name, "postInit");
             try {
-                m.postInit(configuration);
+                desc.module.postInit(configuration);
             }
             catch (Exception e) {
                 log.error("Post-init failed for module {}: {}", e,
-                          m.getName(), e.getMessage());
+                          desc.name, e.getMessage());
+                // Disable module.
+                i.remove();
+                configuration.removeBean(desc.module, desc.name);
                 // Continue with next module.
             }
             finally {
                 LogContext.pushContexts(prevCtx[0], prevCtx[1]);
             }
         }
-        LogContext.pushContexts(null, null);
+        // Post-init each URI policy, ignoring errors.
+        for (Iterator<UriPolicy> i=this.policies.iterator(); i.hasNext(); ) {
+            UriPolicy p = i.next();
+            try {
+                p.postInit(configuration);
+            }
+            catch (Exception e) {
+                log.error("Post-init failed for URI policy {}: {}", e,
+                          p.getClass(), e.getMessage());
+                // Disable URI policy.
+                i.remove();
+                configuration.removeBean(p, null);
+                // Continue with next policy.
+            }
+        }
+
+        // Check whether SPARQL endpoint module is available.
+        try {
+            this.sparqlEndpoint = configuration.getBean(SparqlEndpoint.class);
+        }
+        catch (Exception e) {
+            log.warn("No SPARQL endpoint module available");
+        }
     }
 
     /** {@inheritDoc} */
@@ -316,7 +359,17 @@ public class RouterResource implements LifeCycle, ResourceResolver
                 LogContext.pushContexts(prevCtx[0], prevCtx[1]);
             }
         }
-        LogContext.pushContexts(null, null);
+        // Shutdown each URI policy, ignoring errors.
+        for (UriPolicy p : this.policies) {
+            try {
+                p.shutdown(configuration);
+            }
+            catch (Exception e) {
+                log.error("Failed to properly shutdown URI policy {}: {}", e,
+                          p.getClass(), e.getMessage());
+                // Continue with next policy.
+            }
+        }
     }
 
     //-------------------------------------------------------------------------
@@ -343,42 +396,28 @@ public class RouterResource implements LifeCycle, ResourceResolver
         if (request == null) {
             throw new IllegalArgumentException("request");
         }
+
+        // Find a resource handler supporting the requested URI.
+        ResourceHandler handler = null;
+        for (Iterator<UriPolicy> i=this.policies.iterator(); i.hasNext(); ) {
+            handler = i.next().canHandle(uriInfo, request, acceptHdr);
+            if (handler != null) break;
+        }
+        if (handler == null) {
+            // URI not supported by any configured handler. => Use default. 
+            handler = this.defaultPolicy.canHandle(uriInfo, request, acceptHdr);
+        }
         Response response = null;
-
-        URI uri = uriInfo.getRequestUri();
-        // Check that target subject exists in published data store.
-        Repository data = this.configuration.getDataRepository();
-        String query = this.queries.get("checkExists");
-        ExistsQueryResultHandler result = new ExistsQueryResultHandler();
-        try {
-            Map<String,Object> bindings = new HashMap<String,Object>();
-            bindings.put("s", uri);
-            data.select(query, bindings, result);
+        // Check whether a 303 redirection is required for accessing resource.
+        URI target = handler.resolve();
+        if (target == null) {
+            response = handler.getRepresentation();
         }
-        catch (Exception e) {
-            throw new RuntimeException("Failed to execute query \""
-                                       + query + "\" for \"" + uri + '"', e);
+        else {
+            response = Response.seeOther(target)
+                            .header(HttpHeaders.VARY, "Accept, Accept-Encoding")
+                            .build();
         }
-
-        if (result.subject != null) {
-            // Subject found in RDF store.
-            // => Check whether data shall be returned.
-            ResponseBuilder b = null;
-            if (result.lastModified != null) {
-                b = request.evaluatePreconditions(result.lastModified);
-            }
-            if (b == null) {
-                // Forward request to SPARQL endpoint.
-                log.trace("Resolved request as RDF resource {}", uri);
-                b = this.sparqlEndpoint.executeQuery(
-                                                "DESCRIBE <" + uri + '>',
-                                                uriInfo, request, acceptHdr);
-            }
-            // Else: Client already has an up-to-date copy of the data.
-            response = this.addCacheDirectives(b, result.lastModified).build();
-        }
-        // Else: No matching RDF resource.
-
         return response;
     }
 
@@ -650,7 +689,7 @@ public class RouterResource implements LifeCycle, ResourceResolver
             GregorianCalendar cal = new GregorianCalendar();
             int h = cal.get(HOUR_OF_DAY);
             if ((h <= this.businessDay[0]) || (h >= this.businessDay[1])) {
-                // No data updates occur between close and opening of business. 
+                // No data updates occur between close and opening of business.
                 // => Set expiry date to opening of business hour, ignoring
                 //    minutes & seconds.
                 if (h >= this.businessDay[1]) {
@@ -727,10 +766,32 @@ public class RouterResource implements LifeCycle, ResourceResolver
             this.configuration.registerBean(name, m);
             // Publish module REST resources.
             ModuleDesc desc = new ModuleDesc(m, f, cl);
-            modules.put(name, desc);
+            this.modules.put(name, desc);
             log.info("Registered module {} ({} resource(s))", name,
                             Integer.valueOf(desc.ressourceClasses.size()));
         }
+    }
+
+    /**
+     * Loads all available {@link UriPolicy} implementation
+     * classes.
+     * @param  cl   the classloader to load the URI policies.
+     */
+    private void loadPolicies(ClassLoader cl) {
+        for (UriPolicy a : ServiceLoader.load(UriPolicy.class, cl)) {
+            try {
+                a.init(this.configuration);
+                // Make policy available thru the Configuration object.
+                this.configuration.registerBean(a);
+                // Register policy.
+                this.policies.add(a);
+            }
+            catch (Exception e) {
+                log.error("Failed to initialize URI policy {}", a.getClass());
+            }
+        }
+        log.info("Registered {} URI policy(ies))",
+                                        Integer.valueOf(this.policies.size()));
     }
 
     /**
@@ -930,6 +991,7 @@ public class RouterResource implements LifeCycle, ResourceResolver
             return this.root.isFile();
         }
 
+        /** {@inheritDoc} */
         @Override
         public String toString() {
             return this.name;
@@ -944,7 +1006,7 @@ public class RouterResource implements LifeCycle, ResourceResolver
      * A catch-all JAX-RS sub-resource that accepts all HTTP GET
      * requests and returns a prepared response.
      */
-    public final static class ResponseWrapper
+    public static final class ResponseWrapper
     {
         private final Response response;
 
@@ -975,7 +1037,74 @@ public class RouterResource implements LifeCycle, ResourceResolver
         }
     }
 
-    private static class ExistsQueryResultHandler
+    //-------------------------------------------------------------------------
+    // DefaultHandler inner class
+    //-------------------------------------------------------------------------
+
+    private final class DefaultUriHandler implements ResourceHandler
+    {
+        private final UriInfo uriInfo;
+        private final Request request;
+        private final String acceptHdr;
+
+        public DefaultUriHandler(UriInfo uriInfo,
+                              Request request, String acceptHdr) {
+            this.uriInfo   = uriInfo;
+            this.request   = request;
+            this.acceptHdr = acceptHdr;
+        }
+
+        @Override
+        public URI resolve() throws WebApplicationException {
+            return null;
+        }
+
+        @Override
+        public Response getRepresentation() throws WebApplicationException {
+            Response response = null;
+            
+            final URI uri = this.uriInfo.getRequestUri();
+            // Check that the requested URI exists as subject in the
+            // public data RDF store.
+            String query = queries.get("checkExists");
+            ExistsQueryResultHandler result = new ExistsQueryResultHandler();
+            try {
+                Map<String,Object> bindings = new HashMap<String,Object>();
+                bindings.put("s", uri);
+                configuration.getDataRepository()
+                             .select(query, bindings, result);
+            }
+            catch (Exception e) {
+                throw new RuntimeException("Failed to execute query \""
+                                        + query + "\" for \"" + uri + '"', e);
+            }
+            if (result.subject != null) {
+                // URI found as subject in RDF store.
+                // => Check whether data shall be returned.
+                ResponseBuilder b = null;
+                if (result.lastModified != null) {
+                    b = this.request.evaluatePreconditions(result.lastModified);
+                }
+                if (b == null) {
+                    // Data recently updated or not cached by client.
+                    // => Get subject description from SPARQL endpoint.
+                    log.trace("Resolved requested URI {} as RDF resource", uri);
+                    b = sparqlEndpoint.executeQuery("DESCRIBE <" + uri + '>',
+                                this.uriInfo, this.request, this.acceptHdr);
+                }
+                // Else: Client already up-to-date.
+
+                response = addCacheDirectives(b, result.lastModified).build();
+            }
+            return response;
+        }
+    }
+
+    //-------------------------------------------------------------------------
+    // ExistsQueryResultHandler nested class
+    //-------------------------------------------------------------------------
+
+    private static final class ExistsQueryResultHandler
                                         extends TupleQueryResultHandlerBase {
         public String subject = null;
         public Date   lastModified = null;
@@ -984,6 +1113,7 @@ public class RouterResource implements LifeCycle, ResourceResolver
             super();
         }
 
+        /** {@inheritDoc} */
         @Override
         public void handleSolution(BindingSet b) {
             if (this.subject == null) {
