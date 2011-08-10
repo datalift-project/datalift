@@ -119,8 +119,12 @@ abstract public class BaseRepository extends Repository
      *         repository.
      */
     protected BaseRepository(Configuration configuration, String name) {
+        // Read repository connection URL and display label. If label is
+        // absent from configuration, use the label property name as key
+        // for retrieving internationalized text from resource bundles.
         super(name, configuration.getProperty(name + REPOSITORY_HTTP_URL),
-                    configuration.getProperty(name + REPOSITORY_LABEL));
+                    configuration.getProperty(name + REPOSITORY_LABEL,
+                                              name + REPOSITORY_LABEL));
 
         this.target = this.newNativeRepository(configuration, name);
         this.valueFactory = this.target.getValueFactory();
