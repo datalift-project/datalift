@@ -298,11 +298,11 @@ public class DefaultConfiguration extends Configuration
     /** {@inheritDoc} */
     @Override
     public void registerBean(String key, Object bean) {
+        if (bean == null) {
+            throw new IllegalArgumentException("bean");
+        }
         if ((key == null) || (key.length() == 0)) {
             throw new IllegalArgumentException("key");
-        }
-        if (bean == null) {
-            this.beansByName.remove(key);
         }
         if (! this.beansByName.containsKey(key)) {
             this.beansByName.put(key, bean);
@@ -322,6 +322,21 @@ public class DefaultConfiguration extends Configuration
         }
         // Register the bean for all its classes and interfaces.
         this.registerForClass(bean, bean.getClass());
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void removeBean(Object bean, String key) {
+        if (bean == null) {
+            throw new IllegalArgumentException("bean");
+        }
+        // Remove bean entries for all its classes and interfaces.
+        this.removeForClass(bean, bean.getClass());
+        // Remove bean by key.
+        if ((key != null) && (key.length() != 0)
+                          && (bean == this.beansByName.get(key))) {
+            this.beansByName.remove(key);
+        }
     }
 
     //-------------------------------------------------------------------------
@@ -459,7 +474,6 @@ public class DefaultConfiguration extends Configuration
             this.registerForInterface(o, i);
         }
     }
-
     @SuppressWarnings("unchecked")
     private void registerForType(Object o, Class<?> clazz) {
         Object x = this.beansByType.get(clazz);
@@ -481,6 +495,41 @@ public class DefaultConfiguration extends Configuration
             }
             l.add(o);
         }
-        log.trace("Registered bean {} as class {}", o, clazz);
+        log.trace("Registered bean {} as type {}", o, clazz);
+    }
+
+    private void removeForClass(Object o, Class<?> c) {
+        if ((c != null) && (c != Object.class)) {
+            this.removeForType(o, c);
+            for (Class<?> i : c.getInterfaces()) {
+                this.removeForInterface(o, i);
+            }
+            this.removeForClass(o, c.getSuperclass());
+        }
+        // Else: ignore.
+    }
+    private void removeForInterface(Object o, Class<?> c) {
+        this.removeForType(o, c);
+        for (Class<?> i : c.getInterfaces()) {
+            this.removeForInterface(o, i);
+        }
+    }
+    @SuppressWarnings("unchecked")
+    private void removeForType(Object o, Class<?> clazz) {
+        Object x = this.beansByType.get(clazz);
+        if (x instanceof List<?>) {
+            // Remove bean from list.
+            List<Object> l = (List<Object>)x;
+            l.remove(o);
+            if (l.isEmpty()) {
+                this.beansByType.remove(clazz);
+            }
+        }
+        else if (o == x) {
+            // Remove entry.
+            this.beansByType.remove(clazz);
+        }
+        // Else: not found.
+        log.trace("Removed bean {} for type {}", o, clazz);
     }
 }

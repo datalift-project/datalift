@@ -264,8 +264,7 @@ public abstract class Configuration
     /**
      * Registers an object under the specified key
      * @param  key    the key for the object.
-     * @param  bean   the object or <code>null</code> to remove any
-     *                object previously associated to <code>key</code>.
+     * @param  bean   the object to register.
      *
      * @throws IllegalArgumentException if <code>key</code> or
      *         <code>bean<code> is <code>null</code> or if another
@@ -274,12 +273,19 @@ public abstract class Configuration
     abstract public void registerBean(String key, Object bean);
 
     /**
-     * Registers an object using its class, one of its
-     * superclasses or one of the interfaces it implements.
+     * Registers an object by its class, its superclasses and all
+     * implemented interfaces.
      * @param  bean   the object.
      *
      * @throws IllegalArgumentException if <code>bean</code> is
      *         <code>null</code>.
      */
     abstract public void registerBean(Object bean);
+
+    /**
+     * Removes the specified object from the registry.
+     * @param  bean   the object to remove.
+     * @param  key    the optional key the object was associated with.
+     */
+    abstract public void removeBean(Object bean, String key);
 }
