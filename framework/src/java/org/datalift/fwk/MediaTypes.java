@@ -46,72 +46,71 @@ import javax.ws.rs.core.MediaType;
  */
 public class MediaTypes extends MediaType
 {
-    private final static String APPL_TYPE = APPLICATION_XML_TYPE.getType();
-    private final static String TEXT_TYPE = TEXT_PLAIN_TYPE.getType();
-
-    /** "application/rdf+xml" */
-    public final static MediaType APPLICATION_RDF_XML_TYPE =
-                                    new MediaType(APPL_TYPE, "rdf+xml");
     /** "application/rdf+xml" */
     public final static String APPLICATION_RDF_XML = "application/rdf+xml";
+    /** "application/rdf+xml" */
+    public final static MediaType APPLICATION_RDF_XML_TYPE =
+                                        MediaType.valueOf(APPLICATION_RDF_XML);
 
-    /** "text/turtle" */
-    public final static MediaType TEXT_TURTLE_TYPE =
-                                    new MediaType(TEXT_TYPE, "turtle");
     /** "text/turtle" */
     public final static String TEXT_TURTLE = "text/turtle";
-    /** "application/x-turtle" */
-    public final static MediaType APPLICATION_TURTLE_TYPE =
-                                    new MediaType(APPL_TYPE, "x-turtle");
+    /** "text/turtle" */
+    public final static MediaType TEXT_TURTLE_TYPE =
+                                        MediaType.valueOf(TEXT_TURTLE);
     /** "application/x-turtle" */
     public final static String APPLICATION_TURTLE = "application/x-turtle";
+    /** "application/x-turtle" */
+    public final static MediaType APPLICATION_TURTLE_TYPE =
+                                        MediaType.valueOf(APPLICATION_TURTLE);
 
-    /** "text/n3" */
-    public final static MediaType TEXT_N3_TYPE = new MediaType(TEXT_TYPE, "n3");
     /** "text/n3" */
     public final static String TEXT_N3 = "text/n3";
-    /** "text/rdf+n3" */
-    public final static MediaType TEXT_RDF_N3_TYPE =
-                                    new MediaType(TEXT_TYPE, "rdf+n3");
+    /** "text/n3" */
+    public final static MediaType TEXT_N3_TYPE = MediaType.valueOf(TEXT_N3);
     /** "text/rdf+n3" */
     public final static String TEXT_RDF_N3 = "text/rdf+n3";
-    /** "application/n3" */
-    public final static MediaType APPLICATION_N3_TYPE =
-                                    new MediaType(APPL_TYPE, "n3");
+    /** "text/rdf+n3" */
+    public final static MediaType TEXT_RDF_N3_TYPE =
+                                            MediaType.valueOf(TEXT_RDF_N3);
     /** "application/n3" */
     public final static String APPLICATION_N3 = "application/n3";
+    /** "application/n3" */
+    public final static MediaType APPLICATION_N3_TYPE =
+                                            MediaType.valueOf(APPLICATION_N3);
 
-    /** "application/n-triples" */
-    public final static MediaType APPLICATION_NTRIPLES_TYPE =
-                                    new MediaType(APPL_TYPE, "n-triples");
     /** "application/n-triples" */
     public final static String APPLICATION_NTRIPLES = "application/n-triples";
+    /** "application/n-triples" */
+    public final static MediaType APPLICATION_NTRIPLES_TYPE =
+                                    MediaType.valueOf(APPLICATION_NTRIPLES);
 
     /** "application/sparql-query" */
-    public final static MediaType APPLICATION_SPARQL_QUERY_TYPE =
-                                    new MediaType(APPL_TYPE, "sparql-query");
-    /** "application/sparql-query" */
     public final static String APPLICATION_SPARQL_QUERY =
-                                                    "application/sparql-query";
-    /** "application/sparql-results+xml" */
-    public final static MediaType APPLICATION_SPARQL_RESULT_XML_TYPE =
-                            new MediaType(APPL_TYPE, "sparql-results+xml");
+                                            "application/sparql-query";
+    /** "application/sparql-query" */
+    public final static MediaType APPLICATION_SPARQL_QUERY_TYPE =
+                            MediaType.valueOf(APPLICATION_SPARQL_QUERY);
     /** "application/sparql-results+xml" */
     public final static String APPLICATION_SPARQL_RESULT_XML =
                                             "application/sparql-results+xml";
-    /** "application/sparql-results+json" */
-    public final static MediaType APPLICATION_SPARQL_RESULT_JSON_TYPE =
-                            new MediaType(APPL_TYPE, "sparql-results+json");
+    /** "application/sparql-results+xml" */
+    public final static MediaType APPLICATION_SPARQL_RESULT_XML_TYPE =
+                            MediaType.valueOf(APPLICATION_SPARQL_RESULT_XML);
     /** "application/sparql-results+json" */
     public final static String APPLICATION_SPARQL_RESULT_JSON =
                                             "application/sparql-results+json";    
-    /** "application/trix" */
-    public final static MediaType APPLICATION_TRIX_TYPE = new MediaType(APPL_TYPE, "trix");
+    /** "application/sparql-results+json" */
+    public final static MediaType APPLICATION_SPARQL_RESULT_JSON_TYPE =
+                            MediaType.valueOf(APPLICATION_SPARQL_RESULT_JSON);
+
     /** "application/trix" */
     public final static String APPLICATION_TRIX = "application/trix";
-
-    /** "application/x-trig" */
-    public final static MediaType APPLICATION_TRIG_TYPE = new MediaType(APPL_TYPE, "x-trig");
+    /** "application/trix" */
+    public final static MediaType APPLICATION_TRIX_TYPE =
+                                            MediaType.valueOf(APPLICATION_TRIX);
     /** "application/x-trig" */
     public final static String APPLICATION_TRIG = "application/x-trig";
+    /** "application/x-trig" */
+    public final static MediaType APPLICATION_TRIG_TYPE =
+                                            MediaType.valueOf(APPLICATION_TRIG);
 }
