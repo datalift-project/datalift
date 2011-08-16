@@ -35,7 +35,10 @@
 package org.datalift.sparql;
 
 
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
+import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -64,6 +67,8 @@ import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.security.SecurityContext;
 import org.datalift.fwk.sparql.SparqlEndpoint;
 import org.datalift.fwk.util.StringUtils;
+
+import static org.datalift.fwk.util.StringUtils.isBlank;
 
 
 abstract public class AbstractSparqlEndpoint extends BaseModule
@@ -119,7 +124,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     public ResponseBuilder executeQuery(String query, UriInfo uriInfo,
                                         Request request, String acceptHdr)
                                                 throws WebApplicationException {
-        return this.executeQuery(null, null, query, -1, -1, false,
+        return this.executeQuery(null, null, query, -1, -1, false, null,
                                  uriInfo, request, acceptHdr);
     }
     
@@ -131,7 +136,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                                         Request request, String acceptHdr)
                                                 throws WebApplicationException {
         return this.executeQuery(defaultGraphUris, namedGraphUris, query,
-                                 -1, -1, false, uriInfo, request, acceptHdr);
+                            -1, -1, false, null, uriInfo, request, acceptHdr);
     }
 
     /** {@inheritDoc} */
@@ -141,16 +146,9 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                             int startOffset, int endOffset, boolean gridJson,
                             UriInfo uriInfo, Request request, String acceptHdr)
                                                 throws WebApplicationException {
-        ResponseBuilder response = null;
-        try {
-            response = this.doExecute(defaultGraphUris, namedGraphUris, query,
-                                      startOffset, endOffset, gridJson,
-                                      uriInfo, request, acceptHdr);
-        }
-        catch (Exception e) {
-            this.handleError(query, e);
-        }
-        return response;
+        return this.executeQuery(defaultGraphUris, namedGraphUris, query,
+                                startOffset, endOffset, gridJson, null,
+                                uriInfo, request, acceptHdr);
     }
 
     //-------------------------------------------------------------------------
@@ -186,12 +184,13 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                 @QueryParam("min") @DefaultValue("-1") int startOffset,
                 @QueryParam("max") @DefaultValue("-1") int endOffset,
                 @QueryParam("grid") @DefaultValue("false") boolean gridJson,
+                @QueryParam("format") String format,
                 @Context UriInfo uriInfo,
                 @Context Request request,
                 @HeaderParam("Accept") String acceptHdr)
                                                 throws WebApplicationException {
         return this.dispatchQuery(defaultGraphUris, namedGraphUris, query,
-                                  startOffset, endOffset, gridJson,
+                                  startOffset, endOffset, gridJson, format,
                                   uriInfo, request, acceptHdr);
     }
     
@@ -224,12 +223,13 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                 @QueryParam("min") @DefaultValue("-1") int startOffset,
                 @QueryParam("max") @DefaultValue("-1") int endOffset,
                 @QueryParam("grid") @DefaultValue("false") boolean gridJson,
+                @QueryParam("format") String format,
                 @Context UriInfo uriInfo,
                 @Context Request request,
                 @HeaderParam("Accept") String acceptHdr)
                                                 throws WebApplicationException {
         return this.dispatchQuery(defaultGraphUris, namedGraphUris, query,
-                                  startOffset, endOffset, gridJson,
+                                  startOffset, endOffset, gridJson, format,
                                   uriInfo, request, acceptHdr);
     }
 
@@ -238,10 +238,10 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     //-------------------------------------------------------------------------
 
     private final Response dispatchQuery(List<String> defaultGraphUris,
-                                List<String> namedGraphUris, String query,
-                                int startOffset, int endOffset,
-                                boolean gridJson, UriInfo uriInfo,
-                                Request request, String acceptHdr)
+                            List<String> namedGraphUris, String query,
+                            int startOffset, int endOffset, 
+                            boolean gridJson, String format, UriInfo uriInfo,
+                            Request request, String acceptHdr)
                                                 throws WebApplicationException {
         ResponseBuilder response = null;
 
@@ -256,7 +256,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
             try {
                 response = this.executeQuery(defaultGraphUris, namedGraphUris,
                                         query, startOffset, endOffset, gridJson,
-                                        uriInfo, request, acceptHdr);
+                                        format, uriInfo, request, acceptHdr);
             }
             catch (Exception e) {
                 this.handleError(query, e);
@@ -264,13 +264,31 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         }
         return response.build();
     }
-    
+
+    private ResponseBuilder executeQuery(List<String> defaultGraphUris,
+                            List<String> namedGraphUris, String query,
+                            int startOffset, int endOffset,
+                            boolean gridJson, String format,
+                            UriInfo uriInfo, Request request, String acceptHdr)
+                                                throws WebApplicationException {
+        ResponseBuilder response = null;
+        try {
+            response = this.doExecute(defaultGraphUris, namedGraphUris, query,
+                                      startOffset, endOffset, gridJson, format,
+                                      uriInfo, request, acceptHdr);
+        }
+        catch (Exception e) {
+            this.handleError(query, e);
+        }
+        return response;
+    }
+
     abstract protected ResponseBuilder doExecute(
                                           List<String> defaultGraphUris,
                                           List<String> namedGraphUris,
-                                          String query,
-                                          int startOffset, int endOffset,
-                                          boolean gridJson, UriInfo uriInfo,
+                                          String query, int startOffset,
+                                          int endOffset, boolean gridJson,
+                                          String format, UriInfo uriInfo,
                                           Request request, String acceptHdr)
                                                             throws Exception;
 
@@ -299,18 +317,48 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         return repo;
     }
 
-    protected final Variant getResponseType(Request request, String accept,
+    protected final Variant getResponseType(Request request, String expected,
                                             List<Variant> supportedTypes)
                                                 throws WebApplicationException {
-        Variant responseType = request.selectVariant(supportedTypes);
+        Variant responseType = null;
+        log.trace("Negotiating content type for {}", supportedTypes);
+        if (! isBlank(expected)) {
+            // Specific output format requested thru request parameter.
+            // => Try to get a valid response type form it.
+            Collection<AcceptType> types = new TreeSet<AcceptType>();
+            int i = 0;
+            for (String t : expected.split("\\s*,\\s*")) {
+                types.add(new AcceptType(t, i++));
+            }
+            Iterator<AcceptType> it = types.iterator();
+            while ((it.hasNext()) && (responseType == null)) {
+                AcceptType t = it.next();
+                for (Variant v : supportedTypes) {
+                    if (t.mimeType.isCompatible(v.getMediaType())) {
+                        responseType = v;
+                        break;
+                    }
+                }
+            }
+            log.trace("Negotiated content type: [{}] -> {}",
+                                                    expected, responseType);
+        }
+        else {
+            // No specific output format requested.
+            // => Get matching format from request Accept HTTP header.
+            responseType = request.selectVariant(supportedTypes);
+        }
         if (responseType == null) {
-            // No matching type found.
-            String msg = new StringBuilder()
-                .append("No matching content type found: requested types: [")
-                .append(accept)
-                .append("], Supported content types for query type: [")
-                .append(StringUtils.join(supportedTypes, ", "))
-                .append("]").toString();
+            // Oops! No matching MIME type found.
+            StringBuilder buf = new StringBuilder(
+                                        "No matching content type found: ");
+            if (! isBlank(expected)) {
+                buf.append("requested types: [").append(expected).append("] ");
+            }
+            buf.append("supported response types for query: [")
+               .append(StringUtils.join(supportedTypes, ", "))
+               .append("]");
+            String msg = buf.toString();
             log.error(msg);
 
             throw new WebApplicationException(
@@ -318,6 +366,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                                         .type(MediaTypes.TEXT_PLAIN_TYPE)
                                         .entity(msg).build());
         }
+        log.debug("Negotiated content type: {}", responseType);
         return responseType;
     }
 
@@ -331,7 +380,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         if (status == null) {
             status = Status.INTERNAL_SERVER_ERROR;
         }
-        log.error("Query processing failed: \"{}\" for: \"{}\"", message, query);
+        log.error("Query processing failed: {}, for \"{}\"", message, query);
         throw new WebApplicationException(
                                 Response.status(status)
                                         .type(MediaTypes.TEXT_PLAIN_TYPE)
@@ -390,6 +439,67 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                 this.desc = getQueryDesc(this.query);
             }
             return this.desc;
+        }
+    }
+
+    private final static class AcceptType implements Comparable<AcceptType>
+    {
+        public final MediaType mimeType;
+        public final double priority;
+        private final int order;
+
+        public AcceptType(String type, int order) {
+            String mimeType = type;
+            double priority = 1.0;
+            // Extract MIME type and type priority ("quality factor").
+            int i = type.indexOf(";");
+            if (i != -1) {
+                mimeType = type.substring(0, i);
+                i = type.indexOf("q=", i);
+                if (i != -1) {
+                    try {
+                        priority = Double.parseDouble(type.substring(i+2));
+                    }
+                    catch (Exception e) { /* Ignore... */ }
+                }
+            }
+            this.mimeType = MediaType.valueOf(mimeType);
+            this.priority = priority;
+            this.order = order;
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public int compareTo(AcceptType o) {
+            // Higher priority comes first in list (i.e. lesser).
+            int diff = (int)((o.priority - this.priority) * 100);
+            // Same priority? first in list comes first!
+            return (diff != 0)? diff: this.order - o.order; 
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public boolean equals(Object o) {
+            boolean equals = (o instanceof AcceptType);
+            if (equals) {
+                AcceptType t = (AcceptType)o;
+                equals = ((this.mimeType.equals(t.mimeType)) &&
+                          (((int)((this.priority - t.priority) * 100)) == 0));
+            }
+            return equals;
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public int hashCode() {
+            return this.mimeType.hashCode()
+                                    + (int)(this.priority * 100) + this.order;
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public String toString() {
+            return this.mimeType + "; q=" + this.priority;
         }
     }
 }

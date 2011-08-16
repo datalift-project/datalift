@@ -10,7 +10,6 @@
 <body>
 #banner
 	<script>
-		var rowNumber = 10;
 		var searchData = new Array();
 		var responsePtr;
 
@@ -18,32 +17,36 @@
 			$("#result-format").buttonset();
 			$("#query_submit").button();
 			$("#query_form").submit(function(e) {
+				var fmt = $("input[name=format]:checked").val();
+				$("#format_save").val(fmt);
+				var requestUrl = $("#query_form").attr("action")
+							+ "?" + $("#query").serialize();
 #if( ${securityCtx.isAuthenticated()} )
-				var requestUrl = $("#query_form").attr("action")
-							+ "?" + $("#query").serialize()
-							+ "&" + $("#default-graph-uri").serialize()
-							+ "&grid=true";
-#else
-				var requestUrl = $("#query_form").attr("action")
-							+ "?" + $("#query").serialize()
-							+ "&grid=true";
+				requestUrl += "&" + $("#default-graph-uri").serialize();
 #end
-				var acceptHdr = $("input[name=format]:checked").val();
-				$("#format_save").val(acceptHdr);
-				var expectedType = (acceptHdr.match(/json/))? "json": "text";
-
-				e.preventDefault(); // Prevent the navigator from sending the form
-				jQuery.ajax({
-					beforeSend: function(req) {
-						req.setRequestHeader("Accept", acceptHdr);
-					},
-					type: "GET",
-					cache: false,
-					url: requestUrl,
-					dataType: expectedType,
-					success: successfulQuery,
-					error: unsuccessfulQuery,
-				});
+				if (fmt.match(/json/)) {
+					// Prevent the navigator from sending the form
+					e.preventDefault();
+					// Use async. call to fill result table
+					jQuery.ajax({
+						beforeSend: function(req) {
+							req.setRequestHeader("Accept", fmt);
+						},
+						type: "GET",
+						cache: false,
+						url: requestUrl + "&grid=true",
+						dataType: "json",
+						success: successfulQuery,
+						error: unsuccessfulQuery,
+					});
+				}
+				// Else: let the browser send the form request.
+/*
+				else {
+					// Download document.
+					window.location = requestUrl + "&format=" + fmt;
+				}
+*/
 			});
 		});
 
@@ -92,9 +95,9 @@
 				data: response.rows,
 				caption: $("#searchnav").html(),
 				rowNum: 50,
-				rowList: [50,100,200,500],
+				rowList: [50,100,200,500,1000,2000],
 				search: {
-					caption: "#i18n("sparql.search.title")"
+					caption: "#i18n("grid.search.value.label")"
 				}
 			});
 			$("#results").show();
@@ -148,7 +151,7 @@
 	</script>
 
 	<div id="content" class="ui-widget-content dl-main-panel">
-	  <h3 class="ui-widget-header dl-widget-header">#i18n("sparql.query.full")</h3>
+		<h3 class="ui-widget-header dl-widget-header">#i18n("sparql.query.full")</h3>
 		<div class="dl-panel">
 		    <form id="query_form" action="${baseUri}/sparql" method="get">
 #if( ${securityCtx.isAuthenticated()} )
@@ -189,7 +192,7 @@
 			<div id="pagernav"/>
 		</div>
 		<div id="searchnav" style="display:none">
-			#i18n("grid.search.value.label"): <input type="search" id="gridsearch" placeholder="" results="0" class="gridsearch" />
+			#i18n("grid.search.value.label"): <input type="search" id="gridsearch" placeholder="#i18n("grid.search.value.placeholder")" results="0" class="gridsearch" />
 			#i18n("grid.search.column.label") <select id="searchColumn"></select>
 		</div>
 	</div>

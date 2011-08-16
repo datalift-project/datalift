@@ -14,20 +14,23 @@
 		var gridData = new Array();
 		var searchData = new Array();
 
-		$(function(){
+		$(document).ready(function(){
 			jQuery.extend(jQuery.jgrid.defaults, {
 				pager: $('#pagernav'),
 				caption: $('#searchnav').html(),
 				rowNum: 50,
-				rowList:[50,100,200,500],
+				rowList:[50,100,200,500,1000,2000],
 				search:{
-					caption: #i18n("sparql.search.title")
+					caption: "#i18n("grid.search.value.label")"
 				}
 			});
-			tableToGrid("#queryresults", {});
-			$("#queryresults").trigger("reloadGrid");
-			gridData = $("#queryresults").getRowData();
+			tableToGrid("#queryresults");
 
+			$("#queryresults").trigger("reloadGrid");
+			$("#results").show();
+			$("#queryresults").setGridWidth($("#results").width());
+
+			gridData = $("#queryresults").getRowData();
 			// Function called when modifying search text
 			$("#gridsearch").keyup(function () {
 				gridSearch($(this).val().toLowerCase());
@@ -40,7 +43,7 @@
 
 		function gridSearch(searchString) {
 			searchData = [];
-			if ($("#searchColumn").val() == "#i18n("sparql.search.all_columns")") {
+			if ($("#searchColumn").val() == "all") {
 				searchAllColumns(searchString);
 			}
 			else {
@@ -52,16 +55,14 @@
 
 		function searchAllColumns(searchString) {
 			var c = 0;
-			var obj = ["#i18n("sparql.subject")",
-				   "#i18n("sparql.predicate")",
-				   "#i18n("sparql.object")"];
 			for (var i = 0; i < gridData.length; i++) {
-				for (var k = 0; k < obj.length; k++) {
-					var toCmp = eval("gridData[i]." + obj[k]);
-					if (toCmp.toLowerCase().indexOf(searchString) != -1) {
+				var found = false;
+				for (property in gridData[0]) {
+					var toCmp = eval("gridData[i]." + property);
+					if (!found && toCmp.toLowerCase().indexOf(searchString) != -1) {
 						searchData[c] = gridData[i];
 						c++;
-						k = obj.length;
+						found = true;
 					}
 				}
 			}
@@ -77,44 +78,48 @@
 				}
 			}
 		}
-
 	</script>
 
-	<table id="queryresults" style="width:100%">
-		<thead>
-			<tr>
-				<th>#i18n("sparql.subject")</th>
-				<th>#i18n("sparql.predicate")</th>
-				<th>#i18n("sparql.object")</th>
-			</tr>
-		</thead>
-		<tbody>
+	<div id="content" class="ui-widget-content dl-main-panel">
+		<h3 class="ui-widget-header dl-widget-header">#i18n("sparql.query.full")</h3>
+		<div id="results" class="dl-result-panel">
+			<table id="queryresults" style="width:100%">
+				<thead>
+					<tr>
+						<th>#i18n("sparql.subject")</th>
+						<th>#i18n("sparql.predicate")</th>
+						<th>#i18n("sparql.object")</th>
+					</tr>
+				</thead>
+				<tbody>
 #foreach( $item in $it )
-			<tr>
+					<tr>
 #if( ${item.subject.startsWith("http://")} )
-				<td><a href="$esc.url($!{item.subject})">$esc.html($!{item.subject})</a></td>
+						<td><a href="$esc.url($!{item.subject})">$esc.html($!{item.subject})</a></td>
 #else
-				<td>$esc.html($!{item.subject})</td>
+						<td>$esc.html($!{item.subject})</td>
 #end
-				<td>$esc.html($!{item.predicate})</td>
+						<td>$esc.html($!{item.predicate})</td>
 #if( ${item.object.startsWith("http://")} )
-				<td><a href="$esc.url($!{item.object})">$esc.html($!{item.subject})</a></td>
+						<td><a href="$esc.url($!{item.object})">$esc.html($!{item.object})</a></td>
 #else
-				<td>$esc.html($!{item.object})</td>
+						<td>$esc.html($!{item.object})</td>
 #end
-			</tr>
+					</tr>
 #end
-		</tbody>
-	</table>
-	<div id="pagernav"></div>
-	<div id="searchnav" style="display:none">
-		#i18n("grid.search.value.label"): <input type="search" id="gridsearch" placeholder="Search" results="0" class="gridsearch" />
-		#i18n("grid.search.column.label"): <select id="searchColumn">
-			<option id="all">#i18n("grid.search.column.option.all")</option>
-			<option id="subject">#i18n("sparql.subject")</option>
-			<option id="predicate">#i18n("sparql.predicate")</option>
-			<option id="object">#i18n("sparql.object")</option>
-		</select>
+				</tbody>
+			</table>
+			<div id="pagernav"></div>
+		</div>
+		<div id="searchnav" style="display:none">
+			#i18n("grid.search.value.label"): <input type="search" id="gridsearch" placeholder="#i18n("grid.search.value.placeholder")" results="0" class="gridsearch" />
+			#i18n("grid.search.column.label"): <select id="searchColumn">
+				<option value="all">#i18n("grid.search.column.option.all")</option>
+				<option>#i18n("sparql.subject")</option>
+				<option>#i18n("sparql.predicate")</option>
+				<option>#i18n("sparql.object")</option>
+			</select>
+		</div>
 	</div>
 #footer
 </body>

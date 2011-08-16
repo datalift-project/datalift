@@ -51,6 +51,8 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 
 import org.datalift.fwk.MediaTypes;
 
+import static org.datalift.fwk.util.StringUtils.isBlank;
+
 
 /**
  * The JAS-RS root resource exposing a SPARQL endpoint that routes
@@ -69,9 +71,9 @@ public class HttpSparqlEndpoint extends AbstractSparqlEndpoint
     @Override
     protected ResponseBuilder doExecute(List<String> defaultGraphUris,
                                         List<String> namedGraphUris,
-                                        String query,
-                                        int startOffset, int endOffset,
-                                        boolean gridJson, UriInfo uriInfo,
+                                        String query, int startOffset,
+                                        int endOffset, boolean gridJson,
+                                        String format, UriInfo uriInfo,
                                         Request request, String acceptHdr)
                                         throws IOException, URISyntaxException {
         log.trace("Processing SPARQL query: \"{}\"", query);
@@ -86,7 +88,7 @@ public class HttpSparqlEndpoint extends AbstractSparqlEndpoint
         cnx.setRequestMethod(request.getMethod());
         cnx.setConnectTimeout(2000);    // 2 sec.
         cnx.setReadTimeout(30000);      // 30 sec.
-        cnx.setRequestProperty("Accept", acceptHdr);
+        cnx.setRequestProperty("Accept", isBlank(format)? acceptHdr: format);
         // Force server connection.
         cnx.connect();
         int status = cnx.getResponseCode();

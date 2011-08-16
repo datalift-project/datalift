@@ -111,7 +111,8 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                     new Variant(APPLICATION_JSON_TYPE, null, null),
                     new Variant(TEXT_HTML_TYPE, null, null),
                     new Variant(APPLICATION_XHTML_XML_TYPE, null, null),
-                    new Variant(APPLICATION_XML_TYPE, null, null));
+                    new Variant(APPLICATION_XML_TYPE, null, null),
+                    new Variant(TEXT_XML_TYPE, null, null));
     private final static List<Variant> CONSTRUCT_RESPONSE_TYPES = Arrays.asList(
                     new Variant(APPLICATION_RDF_XML_TYPE, null, null),
                     new Variant(APPLICATION_SPARQL_RESULT_JSON_TYPE, null, null),
@@ -124,11 +125,20 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                     new Variant(APPLICATION_NTRIPLES_TYPE, null, null),
                     new Variant(TEXT_HTML_TYPE, null, null),
                     new Variant(APPLICATION_XHTML_XML_TYPE, null, null),
-                    new Variant(APPLICATION_XML_TYPE, null, null));
+                    new Variant(APPLICATION_XML_TYPE, null, null),
+                    new Variant(TEXT_XML_TYPE, null, null));
     private final static List<Variant> ASK_RESPONSE_TYPES = Arrays.asList(
                     new Variant(APPLICATION_SPARQL_RESULT_JSON_TYPE, null, null),
                     new Variant(APPLICATION_JSON_TYPE, null, null),
                     new Variant(TEXT_PLAIN_TYPE, null, null));
+
+    private final static String STD_JSON_SINGLE_VALUE_FMT =
+            "{ \"head\":{ \"vars\":[ \"value\" ] }, " +
+              "\"results\":{ \"bindings\":[ { " +
+                "\"value\":{ \"type\":\"literal\", \"value\":\"%1$\" } } ] } }";
+    private final static String GRID_JSON_SINGLE_VALUE_FMT =
+            "{ \"head\":[ \"value\" ], " + 
+              "\"rows\":[ { \"value\":\"%1$\" } ] }";
 
     //-------------------------------------------------------------------------
     // Instance members
@@ -155,9 +165,9 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
     @Override
     protected ResponseBuilder doExecute(List<String> defaultGraphUris,
                                         List<String> namedGraphUris,
-                                        String query,
-                                        int startOffset, int endOffset,
-                                        boolean gridJson, UriInfo uriInfo,
+                                        String query, int startOffset,
+                                        int endOffset, boolean gridJson,
+                                        String format, UriInfo uriInfo,
                                         Request request, String acceptHdr)
                                                 throws WebApplicationException {
         log.trace("Processing SPARQL query: \"{}\"", query);
@@ -185,7 +195,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
         ResponseBuilder response = null;
         Variant responseType = null;
         if (parsedQuery instanceof ParsedBooleanQuery) {
-            responseType = this.getResponseType(request, acceptHdr,
+            responseType = this.getResponseType(request, format,
                                                          ASK_RESPONSE_TYPES);
             MediaType mediaType = responseType.getMediaType();
 
@@ -193,23 +203,16 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                                                 repo, query, baseUri, dataset));
             if ((mediaType.isCompatible(APPLICATION_JSON_TYPE)) ||
                 (mediaType.isCompatible(APPLICATION_SPARQL_RESULT_JSON_TYPE))) {
-                if (gridJson) {
-                    result = "{ \"head\": [ \"value\" ], " 
-                             + "\"rows\": [ { \"value\": \"" + result + "\" } ] }";
-                }
-                else {
-                    result = "{ \"head\": { \"vars\": [ \"value\" ] }, "
-                        + "\"results\": { \"bindings\": [ { "
-                        + "\"value\": { \"type\": \"literal\", \"value\": \""
-                        + result + "\" } } ] } }";
-                }
+                String fmt = (gridJson)? GRID_JSON_SINGLE_VALUE_FMT:
+                                         STD_JSON_SINGLE_VALUE_FMT;
+                result = String.format(fmt, result);
             }
             response = Response.ok(result, responseType);
             log.debug("ASK query result: {} for \"{}\"", result,
                                                 new QueryDescription(query));
         }
         else if (parsedQuery instanceof ParsedGraphQuery) {
-            responseType = this.getResponseType(request, acceptHdr,
+            responseType = this.getResponseType(request, format,
                                                 CONSTRUCT_RESPONSE_TYPES);
             MediaType mediaType = responseType.getMediaType();
 
@@ -229,7 +232,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
         }
         else {
             // ParsedTupleQuery
-            responseType = this.getResponseType(request, acceptHdr,
+            responseType = this.getResponseType(request, format,
                                                          SELECT_RESPONSE_TYPES);
             MediaType mediaType = responseType.getMediaType();
 

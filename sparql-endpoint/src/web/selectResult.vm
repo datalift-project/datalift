@@ -14,28 +14,23 @@
 		var gridData = new Array();
 		var searchData = new Array();
 
-		$(function(){
+		$(document).ready(function() {
 			jQuery.extend(jQuery.jgrid.defaults, {
 				pager: $('#pagernav'),
-				caption: $('#searchnav').html()
+				caption: $('#searchnav').html(),
 				rowNum: 50,
-				rowList:[50,100,200,500],
-				search: {
-					caption: #i18n("sparql.search.title")
+				rowList:[50,100,200,500,1000,2000],
+				search:{
+					caption: "#i18n("grid.search.value.label")"
 				}
 			});
-			tableToGrid("#queryresults", {});
+			tableToGrid("#queryresults");
+
 			$("#queryresults").trigger("reloadGrid");
+			$("#results").show();
+			$("#queryresults").setGridWidth($("#results").width());
+
 			gridData = $("#queryresults").getRowData();
-			// Add options to search select
-			var options = $('#searchColumn').attr('options');
-			options.length = 0;
-			options[options.length] = new Option("#i18n("sparql.search.all_columns")", "all", true, true);
-			if (gridData[0]) {
-				for (property in gridData[0]) {
-					options[options.length] = new Option(property, property, false, false);
-				}
-			}
 			// Function called when modifying search text
 			$("#gridsearch").keyup(function () {
 				gridSearch($(this).val().toLowerCase());
@@ -85,39 +80,42 @@
 		}
 	</script>
 
-	<table id="queryresults" style="width:100%">
-		<thead>
-			<tr>
-#foreach( $c in $it.Columns )
-				<th>$esc.html($c)</th>
-#end
-			</tr>
-		</thead>
-		<tbody>
+	<div id="content" class="ui-widget-content dl-main-panel">
+		<h3 class="ui-widget-header dl-widget-header">#i18n("sparql.query.full")</h3>
+		<div id="results" class="dl-result-panel">
+			<table id="queryresults" style="width:100%">
+				<thead>
+					<tr>
+#foreach( $c in $it.Columns ) <th>$esc.html($c)</th> #end
+					</tr>
+				</thead>
+				<tbody>
 #foreach( $item in $it )
-			<tr>
+					<tr>
 	#foreach( $c in $it.Columns )
 		#set( $value = false ) ## Preset local variable to force next assignment in all cases.
 		#set( $value = $!{item.getValue($c)} )
 		#if( ${value.startsWith("http://")} )
-				<td><a href="$esc.url(${value})">$esc.html(${value})</a></td>
+						<td><a href="$esc.url(${value})">$esc.html(${value})</a></td>
 		#else
-				<td>$esc.html(${value})</td>
+						<td>$esc.html(${value})</td>
 		#end
 	#end
-			</tr>
+					</tr>
 #end
-		</tbody>
-	</table>
-	<div id="pagernav"/>
-	<div id="searchnav" style="display:none">
-		#i18n("grid.search.value.label"): <input type="search" id="gridsearch" placeholder="Search" results="0" class="gridsearch" />
-		#i18n("grid.search.column.label"): <select id="searchColumn">
-			<option id="all">#i18n("grid.search.column.option.all")</option>
+				</tbody>
+			</table>
+			<div id="pagernav"></div>
+		</div>
+		<div id="searchnav" style="display:none">
+			#i18n("grid.search.value.label"): <input type="search" id="gridsearch" placeholder="#i18n("grid.search.value.placeholder")" results="0" class="gridsearch"/>
+			#i18n("grid.search.column.label"): <select id="searchColumn">
+				<option value="all">#i18n("grid.search.column.option.all")</option>
 #foreach( $c in $it.Columns )
-			<option id="$esc.html($c)">$esc.html($c)</option>
+				<option>$esc.html($c)</option>
 #end
-		</select>
+			</select>
+		</div>
 	</div>
 #footer
 </body>
