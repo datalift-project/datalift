@@ -100,6 +100,12 @@ import static org.datalift.fwk.MediaTypes.*;
 import static org.datalift.fwk.util.StringUtils.*;
 
 
+/**
+ * The web resource providing an HTML interface for managing data
+ * lifting projects.
+ *
+ * @author hdevos
+ */
 public class ProjectResource
 {
     //-------------------------------------------------------------------------
@@ -116,6 +122,7 @@ public class ProjectResource
     private final Configuration configuration;
     private final ProjectManager projectManager;
 
+    /** Default resource constructor. */
     public ProjectResource(WorkspaceModule module) {
         this.parent = module;
         this.configuration  = module.getConfiguration();
@@ -126,6 +133,10 @@ public class ProjectResource
     // Web services
     // ------------------------------------------------------------------------
 
+    /**
+     * <i>[Resource method]</i> Displays the project index page.
+     * @return the project index HTML page.
+     */
     @GET
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
     public Response getIndex() throws WebApplicationException {
@@ -139,6 +150,18 @@ public class ProjectResource
         return response;
     }
 
+    /**
+     * <i>[Resource method]</i> Creates a new data lifting project.
+     * @param  title         the project name.
+     * @param  description   the project description.
+     * @param  license       the URL of the license that applies to the
+     *                       project.
+     * @param  uriInfo       the requested URI.
+     *
+     * @return A redirection to the new project summary page
+     *         (<a href="http://en.wikipedia.org/wiki/Post/Redirect/Get">Post-Redirect-Get pattern</a>).
+     * @throws WebApplicationException if any error occurred.
+     */
     @POST
     public Response registerProject(
                                 @FormParam("title") String title,
@@ -177,6 +200,13 @@ public class ProjectResource
         return response;
     }
 
+    /**
+     * <i>[Resource method]</i> Displays the project creation page.
+     * @param  uriInfo   the requested URI.
+     *
+     * @return the project creation HTML page.
+     * @throws WebApplicationException if any error occurred.
+     */
     @GET
     @Path("add.html")
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
@@ -185,6 +215,15 @@ public class ProjectResource
         return this.getModifyProjectPage(null, uriInfo);
     }
 
+    /**
+     * <i>[Resource method]</i> Displays the project update page.
+     * @param  id        the identifier of the project to modify.
+     * @param  uriInfo   the requested URI.
+     *
+     * @return the project update HTML page, populated with the current
+     *         project information.
+     * @throws WebApplicationException if any error occurred.
+     */
     @GET
     @Path("{id}/modify.html")
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
@@ -209,6 +248,23 @@ public class ProjectResource
         return response;
     }
 
+    /**
+     * <i>[Resource method]</i> Updates the specified project.
+     * @param  id            the identifier of the project to modify.
+     * @param  title         the new project name or <code>null</code>
+     *                       to leave it unchanged.
+     * @param  description   the new project description or
+     *                       <code>null</code> to leave it unchanged.
+     * @param  license       the URL of the new project license or
+     *                       <code>null</code> to leave it unchanged.
+     * @param  delete        whether to delete the project.
+     * @param  uriInfo       the requested URI.
+     *
+     * @return A redirection to the project summary page of to the
+     *         project index page if the project was deleted
+     *         (<a href="http://en.wikipedia.org/wiki/Post/Redirect/Get">Post-Redirect-Get pattern</a>).
+     * @throws WebApplicationException if any error occurred.
+     */
     @POST
     @Path("{id}")
     public Response modifyProject(
@@ -254,6 +310,15 @@ public class ProjectResource
         return response;
     }
 
+    /**
+     * <i>[Resource method]</i> Deletes the specified project.
+     * @param  id        the identifier of the project to delete.
+     * @param  uriInfo   the requested URI.
+     *
+     * @return A redirection to the project index page
+     *         (<a href="http://en.wikipedia.org/wiki/Post/Redirect/Get">Post-Redirect-Get pattern</a>).
+     * @throws WebApplicationException if any error occurred.
+     */
     @DELETE
     @Path("{id}")
     public Response deleteProject(@PathParam("id") String id,
@@ -272,6 +337,16 @@ public class ProjectResource
         return response;
     }
 
+    /**
+     * <i>[Resource method]</i> Display the summary page for the
+     * specified project.
+     * @param  id        the identifier of the project to display.
+     * @param  uriInfo   the requested URI.
+     * @param  request   the HTTP request.
+     *
+     * @return the project summary HTML page.
+     * @throws WebApplicationException if any error occurred.
+     */
     @GET
     @Path("{id}")
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
@@ -290,6 +365,18 @@ public class ProjectResource
         return response;
     }
 
+    /**
+     * <i>[Resource method]</i> Returns the RDF description of the
+     * specified project.
+     * @param  id          the identifier of the project to display.
+     * @param  uriInfo     the requested URI.
+     * @param  request     the HTTP request.
+     * @param  acceptHdr   the Accept header of the HTTP request.
+     *
+     * @return the RDF description of the project, in the best
+     *         available format (content negotiation).
+     * @throws WebApplicationException if any error occurred.
+     */
     @GET
     @Path("{id}")
     @Produces({ APPLICATION_RDF_XML, TEXT_TURTLE, APPLICATION_TURTLE,
@@ -674,7 +761,6 @@ public class ProjectResource
         }
         return response;
     }
-
 
     @GET
     @Path("{id}/source/{srcid}")

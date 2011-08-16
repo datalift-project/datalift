@@ -35,10 +35,16 @@
 package org.datalift.projectmanager;
 
 
+import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
+import javax.ws.rs.core.Response.Status;
 
 import com.sun.jersey.api.view.Viewable;
 
@@ -47,12 +53,20 @@ import org.datalift.fwk.Configuration;
 import org.datalift.fwk.project.ProjectManager;
 
 
+/**
+ * The workspace module provides a web interface for accessing and
+ * manipulating data lifting project.
+ *
+ * @author hdevos
+ */
 @Path("/workspace")
 public class WorkspaceModule extends BaseModule
 {
     //-------------------------------------------------------------------------
     // Constants
     //-------------------------------------------------------------------------
+
+    public final static String PROJECT_RESOURCE_PATH = "project";
 
     private final static String MODULE_NAME = "workspace";
 
@@ -70,7 +84,7 @@ public class WorkspaceModule extends BaseModule
     //-------------------------------------------------------------------------
 
     public WorkspaceModule() {
-        super(MODULE_NAME);
+        super(MODULE_NAME, true);
     }
 
     //-------------------------------------------------------------------------
@@ -88,18 +102,49 @@ public class WorkspaceModule extends BaseModule
     @Override
     public Map<String, Class<?>> getResources() {
         Map<String, Class<?>> rsc = new HashMap<String, Class<?>>();
-        rsc.put("project", ProjectResource.class);
+        rsc.put(PROJECT_RESOURCE_PATH, ProjectResource.class);
         return rsc;
+    }
+
+    //-------------------------------------------------------------------------
+    // Web services
+    //-------------------------------------------------------------------------
+
+    /**
+     * <i>[Resource method]</i> Redirects the client to the
+     * {@link ProjectResource project resource} index page, using a
+     * 301 (Moved permanently) HTTP status.
+     * @param  uriInfo   the requested URI.
+     *
+     * @return a 301 redirection response to the project resource
+     *         index page.
+     */
+    @GET
+    public Response getIndex(@Context UriInfo uriInfo) {
+        URI target = uriInfo.getRequestUriBuilder()
+                            .path(PROJECT_RESOURCE_PATH).build();
+        return Response.status(Status.MOVED_PERMANENTLY)
+                       .location(target)
+                       .build();
     }
 
     //-------------------------------------------------------------------------
     // Specific implementation
     //-------------------------------------------------------------------------
 
+    /**
+     * Returns the {@link ProjectManager} module used for accessing the
+     * DataLift projects.
+     * @return the {@link ProjectManager} object.
+     */
     public ProjectManager getProjectManager() {
         return this.projectManager;
     }
 
+    /**
+     * Returns the DataLift {@link Configuration}.
+     * @return the DataLift {@link Configuration}.
+     */
     public Configuration getConfiguration() {
         return this.configuration;
     }
