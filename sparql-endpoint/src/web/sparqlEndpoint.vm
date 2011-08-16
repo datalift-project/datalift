@@ -96,6 +96,7 @@
 				caption: $("#searchnav").html(),
 				rowNum: 50,
 				rowList: [50,100,200,500,1000,2000],
+				height: 270,
 				search: {
 					caption: "#i18n("grid.search.value.label")"
 				}
@@ -177,7 +178,7 @@
 			</div>
 			<div class="dl-form-elt">
 				<label for="query">#i18n("sparql.query.light"): </label><br />
-				<textarea id="query" name="query" style="width:600px; height:150px;">$esc.html("SELECT * WHERE {
+				<textarea id="query" name="query" style="width:600px; height:100px;">$esc.html("SELECT * WHERE {
   ?s ?p ?o .
 }
 ")</textarea>
