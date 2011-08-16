@@ -380,9 +380,8 @@ public class RouterResource implements LifeCycle, ResourceResolver
     @Override
     public Response resolveStaticResource(String path, Request request)
                                                 throws WebApplicationException {
-        return this.resolveStaticResource(
-                                    this.configuration.getPublicStorage(),
-                                    path, request);
+        return this.resolveStaticResource(this.configuration.getPublicStorage(),
+                                          path, request);
     }
 
     /** {@inheritDoc} */
@@ -410,7 +409,7 @@ public class RouterResource implements LifeCycle, ResourceResolver
         Response response = null;
         // Check whether a 303 redirection is required for accessing resource.
         URI target = handler.resolve();
-        if (target == null) {
+        if ((target == null) || (target.equals(uriInfo.getRequestUri()))) {
             response = handler.getRepresentation();
         }
         else {
@@ -596,7 +595,7 @@ public class RouterResource implements LifeCycle, ResourceResolver
                         // Get MIME type from file extension.
                         String mt = new MimetypesFileTypeMap().getContentType(rsc);
                         log.debug("Serving module public resource: {}/{} ({})",
-                                        module, rsc, mt);
+                                  module, rsc, mt);
                         b = Response.ok(src.openStream(), mt);
                     }
                     response = this.addCacheDirectives(b, lastModified)
