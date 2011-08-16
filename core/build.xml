@@ -60,6 +60,9 @@
   <property file="${user.home}/datalift-build.properties"/>
   <property file="build.properties"/>
 
+  <property name="fwk.home"  location="${basedir}/../framework"/>
+  <property file="${fwk.home}/build.properties"/>
+
 
   <!-- ================ File and Directory Names ========================== -->
 
@@ -102,7 +105,6 @@
   <property name="deploy.lib.home"      location="${lib.home}/deploy"/>
   <property name="run.lib.home"         location="${lib.home}/runtime"/>
 
-  <property name="fwk.home"             location="${basedir}/../framework"/>
   <property name="fwk.version"          value="${app.version}"/>
   <property name="fwk.src.home"         location="${fwk.home}/src/java"/>
   <property name="fwk.web.home"         location="${fwk.home}/src/web"/>

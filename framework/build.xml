@@ -59,7 +59,9 @@
 
   <property file="${user.home}/datalift-build.properties"/>
   <property file="build.properties"/>
-  <property file="../core/build.properties"/>
+
+  <property name="core.home" location="${basedir}/../core"/>
+  <property file="${core.home}/build.properties"/>
 
 
   <!-- ================ File and Directory Names ========================== -->
