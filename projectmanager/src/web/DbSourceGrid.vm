@@ -4,7 +4,7 @@
 <head>
 #load("workspace/resources")
 #load_core_resources
-	<title>#i18n("source.grid.title") - DataLift</title>
+	<title>$!esc.html($it.title) - #i18n("source.grid.title") - DataLift</title>
 #header_links
 </head>
 <body>
@@ -40,8 +40,15 @@
 		function getHeaderColumns() {
 			var cols = $(".dl-grid-header-column");
 			for (var i = 0; cols[i]; i++) {
-				gridHeader[i] = cols[i].innerHTML;
+				gridHeader[i] = normalizeHeaderName(cols[i].innerHTML);
 			}
+		}
+
+		function normalizeHeaderName(colTitle) {
+			return colTitle.replace(/ /g, "_")
+			               .replace(/&/g, "&amp;")
+			               .replace(/</g, "&lt;")
+			               .replace(/>/g, "&gt;");
 		}
 
 		function gridSearch(searchString) {
@@ -63,9 +70,8 @@
 				var obj = gridHeader;
 				for (var i = 0; i < gridData.length; i++) {
 					for (var k = 0; k < obj.length; k++) {
-						obj[k] = obj[k].replace(" ", "_");
-						var toCmp = eval("gridData[i]." + obj[k]);
-						if (toCmp.toLowerCase().indexOf(searchString) != -1) {
+						var toCmp = gridData[i][obj[k]];
+						if ((toCmp != undefined) && (toCmp.toLowerCase().indexOf(searchString) != -1)) {
 							searchData[c] = gridData[i];
 							c++;
 							k = obj.length;
@@ -78,11 +84,11 @@
 
 		function searchOneColumn(searchString, searchColumn) {
 			if (searchString != "") {
+				var p = normalizeHeaderName(searchColumn);
 				var c = 0;
 				for (var i = 0; i < gridData.length; i++) {
-					searchColumn = searchColumn.replace(" ", "_");
-					var toCmp = eval("gridData[i]." + searchColumn);
-					if (toCmp.toLowerCase().indexOf(searchString) != -1) {
+					var toCmp = gridData[i][p];
+					if ((toCmp != undefined) && (toCmp.toLowerCase().indexOf(searchString) != -1)) {
 						searchData[c] = gridData[i];
 						c++;
 					}
@@ -97,16 +103,16 @@
 	<table id="grid">
 		<thead>
 			<tr>
-#foreach( $i in $it.getColumnsName() )
-				<th class="dl-grid-header-column">$i</th>
+#foreach( $i in $it.getColumnNames() )
+				<th class="dl-grid-header-column">$esc.html($i)</th>
 #end
 			</tr>
 		</thead>
 		<tbody>
 #foreach( $row in $it )
 			<tr>
-#foreach( $colNbr in [1..$it.getColumnCount()] )
-				<td>$row.getColumnObject($colNbr)</td>
+#foreach( $i in [1..$it.getColumnCount()] )
+				<td>$!esc.html($row.getColumnObject($i))</td>
 #end
 			</tr>
 #end
@@ -117,7 +123,7 @@
 		#i18n("grid.search.value.label"): <input type="search" id="gridsearch" placeholder="#i18n("grid.search.value.placeholder")" results="0" class="gridsearch" />
 		#i18n("grid.search.column.label") <select id="searchColumn">
 			<option value="all">#i18n("grid.search.column.option.all")</option>
-#foreach( $i in $it.getColumnsName() )
+#foreach( $i in $it.getColumnNames() )
 			<option>$esc.html($i)</option>
 #end
 		</select>

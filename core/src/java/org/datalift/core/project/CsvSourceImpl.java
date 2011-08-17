@@ -86,7 +86,7 @@ public class CsvSourceImpl extends BaseFileSource<String[]>
     }
 
     //-------------------------------------------------------------------------
-    // FileSource contract support
+    // BaseSource contract support
     //-------------------------------------------------------------------------
 
     /** {@inheritDoc} */
@@ -119,28 +119,55 @@ public class CsvSourceImpl extends BaseFileSource<String[]>
             // Else: empty file.
         }
     }
-    
+
     //-------------------------------------------------------------------------
     // FileSource contract support
     //-------------------------------------------------------------------------
 
     /** {@inheritDoc} */
     @Override
-    public final boolean hasTitleRow() {
+    public boolean hasTitleRow() {
         return this.titleRow;
     }
 
+    /** {@inheritDoc} */
+    @Override
+    public void setTitleRow(boolean titleRow) {
+        this.titleRow = titleRow;
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public String getSeparator() {
         return this.separator;
     }
-    
-    public List<String> getColumnsHeader() {
+
+    /** {@inheritDoc} */
+    @Override
+    public void setSeparator(String separator) {
+        if (! StringUtils.isSet(separator)) {
+            throw new IllegalArgumentException("separator");
+        }
+        this.separator = separator;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public int getColumnCount() {
+        return this.getColumnNames().size();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public List<String> getColumnNames() {
         if (this.headers == null) {
             throw new IllegalStateException();
         }
         return this.headers;
     }
 
+    /** {@inheritDoc} */
+    @Override
     public final Iterator<String[]> iterator() {
         if (this.grid == null) {
             throw new IllegalStateException();
@@ -152,23 +179,12 @@ public class CsvSourceImpl extends BaseFileSource<String[]>
         }
         return i;
     }
-    
+
     //-------------------------------------------------------------------------
     // Specific implementation
     //-------------------------------------------------------------------------
 
-    public void setTitleRow(boolean titleRow) {
-        this.titleRow = titleRow;
-    }
-
-    public void setSeparator(String separator) {
-        if (! StringUtils.isSet(separator)) {
-            throw new IllegalArgumentException("separator");
-        }
-        this.separator = separator;
-    }
-
-    public static String getColumnName(int n) {
+    private String getColumnName(int n) {
         StringBuilder s = new StringBuilder();
         for (; n >= 0; n = n / 26 - 1) {
             s.insert(0, (char)(n % 26 + 65));

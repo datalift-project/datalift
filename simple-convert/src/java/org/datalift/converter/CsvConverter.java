@@ -204,10 +204,10 @@ public class CsvConverter extends BaseModule implements ProjectModule
             String baseUri = (targetGraph != null)?
                                             targetGraph.toString() + '/': "";
             // Build predicates URIs.
-            int max = src.getColumnsHeader().size();
+            int max = src.getColumnNames().size();
             org.openrdf.model.URI[] predicates = new org.openrdf.model.URI[max];
             int i = 0;
-            for (String s : src.getColumnsHeader()) {
+            for (String s : src.getColumnNames()) {
                 predicates[i++] = valueFactory.createURI(
                                             baseUri + StringUtils.urlify(s));
             }
