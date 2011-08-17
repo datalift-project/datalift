@@ -135,10 +135,10 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
     private final static String STD_JSON_SINGLE_VALUE_FMT =
             "{ \"head\":{ \"vars\":[ \"value\" ] }, " +
               "\"results\":{ \"bindings\":[ { " +
-                "\"value\":{ \"type\":\"literal\", \"value\":\"%1$\" } } ] } }";
+                "\"value\":{ \"type\":\"literal\", \"value\":\"%s\" } } ] } }";
     private final static String GRID_JSON_SINGLE_VALUE_FMT =
             "{ \"head\":[ \"value\" ], " + 
-              "\"rows\":[ { \"value\":\"%1$\" } ] }";
+              "\"rows\":[ { \"value\":\"%s\" } ] }";
 
     //-------------------------------------------------------------------------
     // Instance members
