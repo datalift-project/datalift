@@ -13,14 +13,19 @@
 		var searchData = new Array();
 		var gridHeader = new Array();
 
-		$(function(){
+		$(function() {
 			getHeaderColumns();
 			jQuery.extend(jQuery.jgrid.defaults, {
 				caption: $('#searchnav').html(),
-				rowNum: 1000000
+				rowNum: 1000000,
+				height: 450,
+				search:{
+					caption: "#i18n("grid.search.value.label")"
+				}
 			});
 			tableToGrid("#grid", { datatype: "local" });
 			$("#grid").trigger("reloadGrid");
+
 			gridData = $("#grid").getRowData();
 			// Function called when modifying search text
 			$("#gridsearch").keyup(function () {
@@ -68,8 +73,7 @@
 					}
 				}
 			}
-			else
-				searchData = gridData;
+			else searchData = gridData;
 		}
 
 		function searchOneColumn(searchString, searchColumn) {
@@ -84,8 +88,7 @@
 					}
 				}
 			}
-			else
-				searchData = gridData;
+			else searchData = gridData;
 		}
 	</script>
 
