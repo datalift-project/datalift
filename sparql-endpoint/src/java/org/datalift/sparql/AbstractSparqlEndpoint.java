@@ -37,6 +37,7 @@ package org.datalift.sparql;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
@@ -66,7 +67,6 @@ import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.security.SecurityContext;
 import org.datalift.fwk.sparql.SparqlEndpoint;
-import org.datalift.fwk.util.StringUtils;
 
 import static org.datalift.fwk.util.StringUtils.isBlank;
 
@@ -350,21 +350,20 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         }
         if (responseType == null) {
             // Oops! No matching MIME type found.
-            StringBuilder buf = new StringBuilder(
-                                        "No matching content type found: ");
-            if (! isBlank(expected)) {
-                buf.append("requested types: [").append(expected).append("] ");
+            List<MediaType> l = new LinkedList<MediaType>();
+            for (Variant v : supportedTypes) {
+                l.add(v.getMediaType());
             }
-            buf.append("supported response types for query: [")
-               .append(StringUtils.join(supportedTypes, ", "))
-               .append("]");
-            String msg = buf.toString();
-            log.error(msg);
+            TechnicalException error = new TechnicalException(
+                    (! isBlank(expected))? "explicit.negotiation.failed":
+                                           "default.negotiation.failed",
+                    l, expected);
+            log.error(error.getMessage());
 
             throw new WebApplicationException(
                                 Response.status(Status.NOT_ACCEPTABLE)
                                         .type(MediaTypes.TEXT_PLAIN_TYPE)
-                                        .entity(msg).build());
+                                        .entity(error.getMessage()).build());
         }
         log.debug("Negotiated content type: {}", responseType);
         return responseType;
