@@ -72,7 +72,7 @@
 	}
 
 	function loadGridSources() {
-		/*	Sources */
+		/* Sources */
 		jQuery("#selectable_sources").jqGrid({
 			datatype: "local",
 		   	colNames:['#i18n("project.p_uri")','#i18n("project.p_title")','#i18n("project.p_others")'],
@@ -98,7 +98,7 @@
 			#elseif($curSrc.getType() == $field.TransformedRdfSource)
 				infos: "$!esc.html($curSrc.targetGraph.toString())"
 			#else
-				infos: "#i18n('project.upload_csv_separator'): $!esc.html($curSrc.separator) <br/>#i18n('project.upload_csv_activate'): $!esc.html($curSrc.hasTitleRow())"
+				infos: "#i18n('project.upload_csv_separator'): $!esc.html($curSrc.separator)<br />#i18n('project.upload_csv_activate'): $!esc.html($curSrc.hasTitleRow())"
 			#end
 		},
 		#end
@@ -148,9 +148,8 @@
 		jQuery("#selectable_sources").jqGrid('hideCol',["uri"]);
 	}
 
-	function loadGridOntologies(){
-	/*	Ontologies */
-		var lastsel2
+	function loadGridOntologies() {
+		/* Ontologies */
 		jQuery("#selectable_ontologies").jqGrid({
 			datatype: "local",
 		   	colNames:['#i18n("project.p_uri")','#i18n("project.p_title")','#i18n("project.p_source")',"#i18n("project.p_dateSubmitted")", '#i18n("project.p_operator")'],
@@ -167,7 +166,7 @@
 		});
 
 		var mydataOntology = [
-		#foreach($curOnto in $current.getOntologies())
+#foreach($curOnto in $current.getOntologies())
 		{
 			uri:"$!esc.html($curOnto.uri)",
 			title:"$!esc.html($curOnto.title)",
@@ -175,24 +174,23 @@
 			dateSubmitted:"$date.format("medium", $curOnto.dateSubmitted)",
 			operator:"$!esc.html($curOnto.operator)"
 		},
-		#end
+#end
 		];
-		for(var i=0;i<=mydataOntology.length;i++)
+		for(var i=0; i<=mydataOntology.length; i++) {
 			jQuery("#selectable_ontologies").jqGrid('addRowData',i+1,mydataOntology[i]);
-
+		}
 		jQuery("#selectable_ontologies")
 			.navGrid('#selectable_ontologies_toolbar',
-				{edit:false,add:false,del:false
+				{ edit:false,add:false,del:false
 			}).navButtonAdd(
 			'#selectable_ontologies_toolbar',
 			{
 				caption:"",
 				buttonicon:"ui-icon-plus",
-				onClickButton:function(){
-				window.location = currentProject + "/ontologyUpload.html"
-			} 
+				onClickButton:function() {
+					window.location = currentProject + "/ontologyUpload.html"
+				}
 			}).navButtonAdd('#selectable_ontologies_toolbar',
-
 				{caption:"",
 				buttonicon:"ui-icon-pencil",
 				onClickButton:function(){
@@ -209,7 +207,7 @@
 			{
 			caption:"",
 			buttonicon:"ui-icon-trash",
-			onClickButton:function(){
+			onClickButton:function() {
 				var id = jQuery("#selectable_ontologies").getGridParam('selrow');
 				if(id){
 					var ret = jQuery("#selectable_ontologies").getRowData(id);
@@ -218,78 +216,79 @@
 					alert('#i18n("project.msg.select_row")');
 				}
 			} 
-			});
-			jQuery("#selectable_ontologies").jqGrid('hideCol',["uri"]);
+		});
+		jQuery("#selectable_ontologies").jqGrid('hideCol',["uri"]);
 	}
 </script>
 
 #banner
 <div id="workspace" class="ui-widget-content">
-<h3 class="ui-widget-header dl-widget-header">Workspace</h3>
+	<h3 class="ui-widget-header dl-widget-header">Workspace</h3>
 
-<div id="projects_panel" class="ui-widget-content">
-	<h3 class="ui-widget-header dl-widget-header">#i18n("project.title.available")</h3>
-	<div id="project_scroll">
+	<div id="projects_panel" class="ui-widget-content">
+		<div id="project_scroll" style="position:relative">
+			<h3 class="ui-widget-header dl-widget-header">#i18n("project.title.available")</h3>
 #foreach( $item in $it )
-		<a class="ui-state-default dl-project-button" onclick="makeFocus(this);" href="${item.uri}">$!esc.html($item.title)</a><br/>
+			<a class="ui-state-default dl-project-button" onclick="makeFocus(this);" href="${item.uri}">$!esc.html($item.title)</a><br />
 #end
-	</div>
-	<a href="${baseUri}/workspace/project/add.html">#i18n("project.title.new_project")</a>
-</div>
-<div id="workspace-main-panel" class="ui-widget-content">
-#if ($current)
-	<div id="tabs">
-		<ul>
-			<li><a onclick="historyPush('${current.uri}#description');" href="#description">Description</a></li>
-			<li><a onclick="historyPush('${current.uri}#source');" href="#source">Sources</a></li>
-			<li><a onclick="historyPush('${current.uri}#ontology');" href="#ontology">#i18n("project.title.ontology")</a></li>
-		</ul>
-		<div id="description">
-			#i18n("project.owner_s"): $!esc.html($current.owner)<br/>
-			#i18n("project.description"): $!esc.html($current.description)<br/>
-			#i18n("project.creation_s"): $date.format("medium", $current.dateCreation)<br/>
-			#i18n("project.modification_s"): $date.format("medium", $current.dateModification)<br/>
-			#i18n("project.license"): <a href="$current.getLicense()">$esc.html($!current.license)</a>
 
-			<div id="module_can_handle">
-				<p>#i18n("project.module_available"):</p>
-				<ol id="selectable_module">
+			<p><a href="${baseUri}/workspace/project/add.html" class="button" style="position:absolute;bottom:0">#i18n("project.title.new_project")</a></p>
+		</div>
+	</div>
+
+	<div id="workspace-main-panel" class="ui-widget-content">
+#if ($current)
+		<div id="tabs">
+			<ul>
+				<li><a onclick="historyPush('${current.uri}#description');" href="#description">#i18n("project.title.description")</a></li>
+				<li><a onclick="historyPush('${current.uri}#source');" href="#source">#i18n("project.title.sources")</a></li>
+				<li><a onclick="historyPush('${current.uri}#ontology');" href="#ontology">#i18n("project.title.ontology")</a></li>
+			</ul>
+
+			<div id="description"><p>
+				#i18n("project.owner_s"): $!esc.html($current.owner)<br />
+				#i18n("project.description"): $!esc.html($current.description)<br />
+				#i18n("project.creation_s"): $date.format("medium", $current.dateCreation)<br />
+				#i18n("project.modification_s"): $date.format("medium", $current.dateModification)<br />
+				#i18n("project.license"): <a href="$current.getLicense()">$esc.html($!current.license)</a></p>
+
+				<div id="module_can_handle">
+					<p>#i18n("project.module_available"):</p>
+					<ol id="selectable_module">
 #foreach ($curModule in $canHandle)
 #set( $i18nEntry = $curModule.name + ".module.label" )
-					<li>
-						<a href="${baseUri}/$curModule.canHandle($current)" class="module_can_handle"
-						   id="$curModule.name">#i18n($i18nEntry)</a>
-					</li>
+						<li><a href="${baseUri}/$curModule.canHandle($current)" class="module_can_handle"
+						       id="$curModule.name">#i18n($i18nEntry)</a></li>
 #end
-				</ol>
+					</ol>
+				</div>
+				<p><br /></p>
+				<form method="post" action="$current.uri" class="form_formated">
+					<a href="${current.uri}/modify.html" class="button">#i18n("modify")</a>
+					<input type="hidden" id="delete" name="delete" value="true" />
+					<input type="submit" value="#i18n("delete")"/>
+				</form>
 			</div>
-			<form method="post" action="$current.uri" class="form_formated">
-				<a href="${current.uri}/modify.html" class="button">#i18n("modify")</a>
-				<input type="hidden" id="delete" name="delete" value="true" />
-				<input type="submit" value="#i18n("delete")"/>
-			</form>
-		</div>
 
-		<div id="source">
-			<p>#i18n("project.source_available"):</p>
-			<form> 
-			<table id="selectable_sources">
-			</table>
-			<div id="selectable_sources_toolbar"></div>
-			</form> 
-			<br/>
-			<a href="${current.uri}/srcupload.html">#i18n("project.add_dataset")</a>
-		</div>
+			<div id="source">
+				<p>#i18n("project.source_available"):</p>
+				<form> 
+					<table id="selectable_sources">
+						<tr><td/></tr>
+					</table>
+					<div id="selectable_sources_toolbar"></div>
+				</form> 
+			</div>
 
-		<div id="ontology">
-			<p>#i18n("project.ontology_available"):</p>
-
-			<table id="selectable_ontologies">
-			</table>
-			<div id="selectable_ontologies_toolbar"></div>
-			</form> 
-			<br/>
-			<a href="${current.uri}/ontologyUpload.html">#i18n("project.add_ontology")</a>
+			<div id="ontology">
+				<p>#i18n("project.ontology_available"):</p>
+				<form> 
+					<table id="selectable_ontologies">
+						<tr><td/></tr>
+					</table>
+					<div id="selectable_ontologies_toolbar"></div>
+				</form> 
+			</div>
 		</div>
 	</div>
 #else
