@@ -40,6 +40,8 @@ import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.MissingResourceException;
 
+import org.datalift.fwk.log.Logger;
+
 
 /**
  * <code>TechnicalExceptions</code> are thrown to indicate technical
@@ -56,6 +58,12 @@ public abstract class TechnicalException extends RuntimeException
     //------------------------------------------------------------------------
 
     protected final static String DEFAULT_BUNDLE_NAME = "/error-messages";
+
+    //-------------------------------------------------------------------------
+    // Class members
+    //-------------------------------------------------------------------------
+
+    private final static Logger log = Logger.getLogger();
 
     //------------------------------------------------------------------------
     // Instance members definition
@@ -273,15 +281,21 @@ public abstract class TechnicalException extends RuntimeException
                 locale = Locale.getDefault();
             }
             try {
+                ClassLoader cl = this.getClass().getClassLoader();
                 ResourceBundle bundle = ResourceBundle.getBundle(
-                                                        bundleName, locale);
+                                                        bundleName, locale, cl);
                 try {
                     format = bundle.getString(key);
                 }
-                catch (MissingResourceException e) { /* Ignore... */ }
+                catch (MissingResourceException e) {
+                    /* Ignore... */
+                    log.trace("Failed to resolve key \"{}\" in bundle \"{}\"",
+                              key, bundleName);
+                }
             }
             catch (MissingResourceException e) {
-                e.printStackTrace();
+                log.error("Resource bundle \"{}\" not found ({})", e,
+                          bundleName, e.getMessage());
                 format = null;
             }
         }
