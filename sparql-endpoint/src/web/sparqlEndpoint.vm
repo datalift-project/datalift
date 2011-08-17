@@ -94,7 +94,7 @@
 				pager: $('#pagernav'),
 				data: response.rows,
 				caption: $("#searchnav").html(),
-				rowNum: 50,
+				rowNum: 200,
 				rowList: [50,100,200,500,1000,2000],
 				height: 270,
 				search: {
@@ -176,6 +176,7 @@
 				<input type="radio" id="turtle_format" name="format" value="text/turtle, text/plain; q=0.5"/><label for="turtle_format">Turtle</label>
 				<input type="hidden" id="format_save" />
 			</div>
+			<br />
 			<div class="dl-form-elt">
 				<label for="query">#i18n("sparql.query.light"): </label><br />
 				<textarea id="query" name="query" style="width:600px; height:100px;">$esc.html("SELECT * WHERE {
