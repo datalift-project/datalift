@@ -157,8 +157,8 @@
 		    <form id="query_form" action="${baseUri}/sparql" method="get">
 #if( ${securityCtx.isAuthenticated()} )
 			<div class="dl-form-elt">
-			  <label for="default-graph-uri">#i18n("sparql.repository"): </label>
-			  <select id="default-graph-uri" name="default-graph-uri">
+				<label for="default-graph-uri">#i18n("sparql.repository"): </label>
+				<select id="default-graph-uri" name="default-graph-uri">
 #foreach( $item in $it )
 #if( $foreach.count == 1 )
 					<option value="$esc.html($!{item.name})" selected="true">#i18n($!{item.label})</option>
@@ -187,10 +187,10 @@
 				<input type="submit" value="#i18n("sparql.query.execute")" id="query_submit" />
 			</div>
 		    </form>
-	    	</div>
+		</div>
 		<div id="results" class="dl-result-panel">
 			<table id="table_results"><tr><td/></tr></table>
-			<div id="pagernav"/>
+			<div id="pagernav"></div>
 		</div>
 		<div id="searchnav" style="display:none">
 			#i18n("grid.search.value.label"): <input type="search" id="gridsearch" placeholder="#i18n("grid.search.value.placeholder")" results="0" class="gridsearch" />
@@ -198,5 +198,8 @@
 		</div>
 	</div>
 #footer
+	<div style="text-align:right;font-style:italic;font-size:0.8em">
+		<span style="color:gray">Version @app.version@</span>
+	</div>
 </body>
 </html>
