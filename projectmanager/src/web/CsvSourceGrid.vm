@@ -85,7 +85,7 @@
 				}
 			}
 			else
-			searchData = gridData;
+				searchData = gridData;
 		}
 	</script>
 
@@ -102,20 +102,18 @@
 		<tbody>
 #foreach( $item in $it )
 			<tr>
-#foreach( $string in $item )
-				<td>$string</td>
-#end
+#foreach( $string in $item ) <td>$string</td> #end
 			</tr>
 #end
 		</tbody>
 	</table>
 	<div id="pagernav"></div>
 	<div id="searchnav" style="display:none">
-		#i18n("grid.search.value.label"): <input type="search" id="gridsearch" placeholder="Search" results="0" class="gridsearch" />
-		#i18n("grid.search.column.label"): <select id="searchColumn">
-			<option id="all">#i18n("grid.search.column.option.all")</option>
+		#i18n("grid.search.value.label"): <input type="search" id="gridsearch" placeholder="#i18n("grid.search.value.placeholder")" results="0" class="gridsearch"/>
+		#i18n("grid.search.column.label") <select id="searchColumn">
+			<option value="all">#i18n("grid.search.column.option.all")</option>
 #foreach( $i in $it.getColumnsHeader() )
-			<option id="$esc.html($i)">$esc.html($i)</option>
+			<option>$esc.html($i)</option>
 #end
 		</select>
 	</div>
