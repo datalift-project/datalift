@@ -100,6 +100,7 @@ public class ApplicationLoader extends LogServletContextListener
                     if (r instanceof LifeCycle) {
                         try {
                             ((LifeCycle)r).shutdown(configuration);
+                            configuration.removeBean(r, null);
                         }
                         catch (Exception e) {
                             TechnicalException error = new TechnicalException(
@@ -188,7 +189,7 @@ public class ApplicationLoader extends LogServletContextListener
             }
             // So far, so good. => Install singletons
             resources = Collections.unmodifiableSet(rsc);
-            log.info("DataLift application initialized");
+            log.info("DataLift initialization complete");
         }
         catch (Throwable e) {
             TechnicalException error = new TechnicalException(
