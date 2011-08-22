@@ -19,6 +19,13 @@
   <logger name="org.datalift">
     <level value="debug"/>
   </logger>
+  <logger name="org.datalift.core">
+    <level value="info"/>
+  </logger>
+  <logger name="org.datalift.framework">
+    <level value="info"/>
+  </logger>
+
   <!-- Jersey & JAX-RS -->
   <logger name="javax.ws.rs">
     <level value="info"/>

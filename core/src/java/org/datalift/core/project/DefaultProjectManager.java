@@ -122,7 +122,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     }
 
     //-------------------------------------------------------------------------
-    // ProkectManager contract support
+    // ProjectManager contract support
     //-------------------------------------------------------------------------
 
     /** {@inheritDoc} */
@@ -272,6 +272,18 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     @Override
     public void addPersistentClasses(Collection<Class<?>> classes) {
         this.classes.addAll(classes);
+    }
+
+    //-------------------------------------------------------------------------
+    // ProjectManager contract support
+    //-------------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    @Override
+    public String toString() {
+        return this.getClass().getSimpleName()
+                        + " (" + configuration.getInternalRepository() + ')';
+
     }
 
     //-------------------------------------------------------------------------

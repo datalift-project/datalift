@@ -73,7 +73,7 @@ public class DataliftApplication extends Application
         // each request as it accesses the HTTP request context.
         classes.add(VelocityTemplateProcessor.class);
 
-        log.info("Registered {} resource classes: {}",
+        log.debug("Registered {} resource classes: {}",
                                 Integer.valueOf(classes.size()), classes);
         return classes;
     }
@@ -82,7 +82,7 @@ public class DataliftApplication extends Application
     @Override
     public Set<Object> getSingletons() {
         Set<Object> resources = ApplicationLoader.getResources();
-        log.info("Registered {} singleton resources: {}",
+        log.debug("Registered {} singleton resources: {}",
                                 Integer.valueOf(resources.size()), resources);
         return resources;
     }

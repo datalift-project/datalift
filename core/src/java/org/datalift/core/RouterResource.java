@@ -298,7 +298,7 @@ public class RouterResource implements LifeCycle, ResourceResolver
             Object[] prevCtx = LogContext.pushContexts(desc.name, "postInit");
             try {
                 // Load & install module-specific URI policies, if any.
-                this.loadPolicies(desc.classLoader);
+                this.loadUriPolicies(desc.classLoader, desc.name);
                 // Complete module initialization.
                 desc.module.postInit(configuration);
             }
@@ -314,9 +314,6 @@ public class RouterResource implements LifeCycle, ResourceResolver
                 LogContext.pushContexts(prevCtx[0], prevCtx[1]);
             }
         }
-        // Notify whether URI policies were installed.
-        log.info("Registered {} URI policy(ies))",
-                                        Integer.valueOf(this.policies.size()));
 
         // Post-init each URI policy, ignoring errors.
         for (Iterator<UriPolicy> i=this.policies.iterator(); i.hasNext(); ) {
@@ -771,17 +768,19 @@ public class RouterResource implements LifeCycle, ResourceResolver
             // Publish module REST resources.
             ModuleDesc desc = new ModuleDesc(m, f, cl);
             this.modules.put(name, desc);
-            log.info("Registered module {} ({} resource(s))", name,
-                            Integer.valueOf(desc.ressourceClasses.size()));
+            log.info("Registered module \"{}\" ({} resource(s))",
+                     name, Integer.valueOf(desc.ressourceClasses.size()));
         }
     }
 
     /**
      * Loads all available {@link UriPolicy} implementation
-     * classes.
-     * @param  cl   the classloader to load the URI policies.
+     * classes for a given module (referenced by its class loader).
+     * @param  cl           the classloader to load the URI policies.
+     * @param  moduleName   the name of the owning module.
      */
-    private void loadPolicies(ClassLoader cl) {
+    private void loadUriPolicies(ClassLoader cl, String moduleName) {
+        int count = 0;
         for (UriPolicy a : ServiceLoader.load(UriPolicy.class, cl)) {
             try {
                 a.init(this.configuration);
@@ -790,9 +789,16 @@ public class RouterResource implements LifeCycle, ResourceResolver
                 // Register policy.
                 this.policies.add(a);
             }
-            catch (Exception e) {
-                log.error("Failed to initialize URI policy {}", a.getClass());
+            catch (RuntimeException e) {
+                log.error("Failed to initialize URI policy {} for module \"{}\"",
+                          a.getClass(), moduleName);
+                throw e;
             }
+        }
+        if (count != 0) {
+            // Notify whether URI policies were installed.
+            log.info("Registered {} URI policy(ies) for module \"{}\"",
+                     Integer.valueOf(this.policies.size()), moduleName);
         }
     }
 

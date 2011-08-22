@@ -190,6 +190,13 @@ public class SparqlQueries
                 // Else: ignore...
             }
             this.queries = queries;
+            if (this.queries.isEmpty()) {
+                log.warn("No query definitions found in \"{}\"", path);
+            }
+            else {
+                log.debug("Loaded {} queries from \"{}\" for {}",
+                          Integer.valueOf(this.queries.size()), path, owner);
+            }
         }
         catch (Exception e) {
             log.error("SPARQL queries definitions ({}) loading failed: {}", e,

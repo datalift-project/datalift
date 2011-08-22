@@ -94,7 +94,7 @@ public final class CustomAnnotationProvider implements EmpireAnnotationProvider
         if (this.annotatedClasses.containsKey(annotation)) {
             l = this.annotatedClasses.get(annotation);
         }
-        log.debug("Annotation: {} -> {}", annotation.getName(), l);
+        log.trace("Annotation: {} -> {}", annotation.getName(), l);
         return l;
     }
 

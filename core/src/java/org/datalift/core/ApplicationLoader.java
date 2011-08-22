@@ -112,7 +112,7 @@ public class ApplicationLoader extends LogServletContextListener
                     }
                 }
             }
-            log.info("DataLift application shutdown complete");
+            log.info("DataLift shutdown complete");
         }
         finally {
             LogContext.resetContexts();
