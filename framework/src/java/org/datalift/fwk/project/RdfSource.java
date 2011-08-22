@@ -38,6 +38,12 @@ package org.datalift.fwk.project;
 import org.openrdf.model.Statement;
 
 
+/**
+ * A file source object describing a RDF file (RDF/XML, Turtle, N3,
+ * NTriples, TRIG, TRIX...).
+ *
+ * @author hdevos
+ */
 public interface RdfSource extends FileSource<Statement>
 {
     // No specific method other than iterator().

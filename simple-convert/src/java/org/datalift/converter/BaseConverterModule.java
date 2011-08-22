@@ -63,6 +63,11 @@ import org.datalift.fwk.sparql.SparqlEndpoint;
 import org.datalift.fwk.util.StringUtils;
 
 
+/**
+ * A common superclass for converters, providing some utility methods.
+ * 
+ * @author lbihanic
+ */
 public abstract class BaseConverterModule
                                 extends BaseModule implements ProjectModule
 {
@@ -76,13 +81,20 @@ public abstract class BaseConverterModule
     // Instance members
     //-------------------------------------------------------------------------
 
-    protected final SourceType sourceType;
+    /** The type of input source this module can handle. */
+    protected final SourceType inputSource;
+    /** The HTTP method to access the module entry page. */
     protected final HttpMethod accessMethod;
 
+    /** The DataLift configuration. */
     protected Configuration configuration   = null;
+    /** The DataLift project manager. */
     protected ProjectManager projectManager = null;
+    /** The DataLift SPARQL endpoint. */
     protected SparqlEndpoint sparqlEndpoint = null;
+    /** The DataLift internal RDF store. */
     protected Repository internalRepository = null;
+    /** The DataLift public storage directory. */
     protected File publicStorage = null;
 
     //-------------------------------------------------------------------------
@@ -90,8 +102,11 @@ public abstract class BaseConverterModule
     //-------------------------------------------------------------------------
 
     /**
-     * Creates a new module instance.
-     * @param  name   the module name.
+     * Creates a new module instance, accepting the specified type of
+     * input source, with an entry page accessed using HTTP GET.
+     * @param  name          the module name.
+     * @param  inputSource   the type of source this module expects
+     *                       as input.
      */
     public BaseConverterModule(String name, SourceType inputSource) {
         this(name, inputSource, HttpMethod.GET);
@@ -100,6 +115,10 @@ public abstract class BaseConverterModule
     /**
      * Creates a new module instance.
      * @param  name   the module name.
+     * @param  inputSource   the type of source this module expects
+     *                       as input.
+     * @param  method        the HTTP method (GET or POST) to access
+     *                       the module entry page.
      */
     public BaseConverterModule(String name, SourceType inputSource,
                                             HttpMethod method) {
@@ -110,7 +129,7 @@ public abstract class BaseConverterModule
         if (method == null) {
             throw new IllegalArgumentException("method");
         }
-        this.sourceType = inputSource;
+        this.inputSource = inputSource;
         this.accessMethod = method;
     }
 
@@ -118,6 +137,7 @@ public abstract class BaseConverterModule
     // Module contract support
     //-------------------------------------------------------------------------
 
+    /** {@inheritDoc} */
     @Override
     public void postInit(Configuration configuration) {
         super.postInit(configuration);
@@ -140,6 +160,7 @@ public abstract class BaseConverterModule
     // ProjectModule contract support
     //-------------------------------------------------------------------------
 
+    /** {@inheritDoc} */
     @Override
     public UriDesc canHandle(Project p) {
         UriDesc projectPage = null;
@@ -161,7 +182,15 @@ public abstract class BaseConverterModule
     // Specific implementation
     //-------------------------------------------------------------------------
 
-    protected final Project getProject(URI projectId) {
+    /**
+     * Retrieves a {@link Project} using its URI.
+     * @param  projectId   the project URI.
+     *
+     * @return the project.
+     * @throws ObjectNotFoundException if the project does not exist.
+     */
+    protected final Project getProject(URI projectId)
+                                                throws ObjectNotFoundException {
         Project p = this.projectManager.findProject(projectId);
         if (p == null) {
             throw new ObjectNotFoundException("project.not.found", projectId);
@@ -169,10 +198,22 @@ public abstract class BaseConverterModule
         return p;
     }
 
+    /**
+     * Searches the specified project for a source matching the expected
+     * input source type of the module.
+     * @param  p          the project.
+     * @param  findLast   whether to return the last matching source or
+     *                    the first.
+     * @return a matching source of <code>null</code> if no matching
+     *         source was found.
+     */
     protected final Source findSource(Project p, boolean findLast) {
+        if (p == null) {
+            throw new IllegalArgumentException("p");
+        }
         Source src = null;
         for (Source s : p.getSources()) {
-            if (s.getType() == this.sourceType) {
+            if (s.getType() == this.inputSource) {
                 src = s;
                 if (! findLast) break;
                 // Else: continue to get last source of type in project...
@@ -181,11 +222,19 @@ public abstract class BaseConverterModule
         return src;
     }
 
+    /**
+     * Retrieves the latest source matching the expected input source
+     * type of the module in the specified project.
+     * @param  p   the project.
+     *
+     * @return the latest source.
+     * @throws ObjectNotFoundException if the project does not exist.
+     */
     protected final Source getLastSource(Project p) {
         Source src = this.findSource(p, true);
         if (src == null) {
             throw new ObjectNotFoundException("project.source.not.found",
-                                              p.getUri(), this.sourceType);
+                                              p.getUri(), this.inputSource);
         }
         return src;
     }
@@ -226,6 +275,19 @@ public abstract class BaseConverterModule
         return new Viewable("/" + this.getName() + templateName, it);
     }
 
+    /**
+     * Displays the content of the specified named graph.
+     * @param repository   the RDF store to query.
+     * @param namedGraph   the named graph the content of which shall
+     *                     be displayed.
+     * @param uriInfo      the requested URI.
+     * @param request      the HTTP request.
+     * @param acceptHdr    the HTTP Accept header string.
+     *
+     * @return A {@link Response JAX-RS Response object} containing a
+     *         representation of the named graph triples acceptable for
+     *         the client (content negotiation) or an error response.
+     */
     protected Response displayGraph(Repository repository,
                                     URI namedGraph, UriInfo uriInfo,
                                     Request request, String acceptHdr) {

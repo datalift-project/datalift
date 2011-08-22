@@ -40,6 +40,11 @@ import java.util.Collection;
 import java.util.Date;
 
 
+/**
+ * A data-lifting project.
+ *
+ * @author hdevos
+ */
 public interface Project
 {
     public String getUri();

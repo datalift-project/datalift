@@ -35,14 +35,41 @@
 package org.datalift.fwk.project;
 
 
+/**
+ * A source of data, external (file, URL, database query...) or
+ * internal (named graph, SPARQL query...).
+ *
+ * @author hdevos
+ */
 public interface Source
 {
+    /**
+     * Returns the source identifier as a URI.
+     * @return the source identifier.
+     */
     public String getUri();
-    public void setTitle(String title);
+
+    /**
+     * Returns the source description.
+     * @return the source description. 
+     */
     public String getTitle();
 
+    /**
+     * Sets the source description.
+     * @param  title   the source description string.
+     */
+    public void setTitle(String title);
+
+    /**
+     * Returns the {@link SourceType source type}.
+     * @return the source type.
+     */
     public SourceType getType();
 
+    /**
+     * The supported DataLift source types.
+     */
     public enum SourceType {
     	RdfSource,
     	CsvSource,

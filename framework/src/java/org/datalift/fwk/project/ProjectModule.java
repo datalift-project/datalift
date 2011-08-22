@@ -43,12 +43,40 @@ import java.net.URL;
 import org.datalift.fwk.Module;
 
 
+/**
+ * A project module is a specific type of module that participates in
+ * the data lifting process by providing an interface allowing the user
+ * to interact with the data transformation process.
+ *
+ * @author lbihanic
+ */
 public interface ProjectModule extends Module
 {
+    /**
+     * Returns whether this module applies to the specified project,
+     * i.e. the project current state allows data manipulation (e.g.
+     * transformation, conversion, data completion...) by this module.
+     * @param  p   a data-lifting project.
+     *
+     * @return the description of the module entry page applicable to
+     *         the specified project or <code>null</code> if this
+     *         module can not handle the project in its current state. 
+     */
     public abstract UriDesc canHandle(Project p);
 
+    /**
+     * The HTTP methods supported for accessing the module entry pages.
+     * <p>
+     * As the data-lifting process is usually user-driven, modules
+     * should avoid using HTTP methods other than {@link #GET} or
+     * {@link #POST} as only these two are supported by web
+     * browsers.</p>
+     */
     public enum HttpMethod { GET, POST, PUT, DELETE; }
 
+    /**
+     * A description of the access to a module page.
+     */
     public final class UriDesc
     {
         private final URI uri;
@@ -56,19 +84,55 @@ public interface ProjectModule extends Module
         private final String label;
         private URI icon;
 
+        /**
+         * Creates the description of a URI accessible using the HTTP
+         * {@link HttpMethod#GET} method.
+         * @param  uri     the page (relative) URI as a string.
+         * @param  label   the page description to display to the user.
+         *
+         * @throws URISyntaxException if the specified URI is not valid.
+         *
+         * @see    #UriDesc(URI,String)
+         */
         public UriDesc(String uri, String label) throws URISyntaxException {
             this(new URI(uri), HttpMethod.GET, label);
         }
 
+        /**
+         * Creates the description of a URI accessible using the HTTP
+         * {@link HttpMethod#GET} method.
+         * @param  uri     the page (relative) URI.
+         * @param  label   the page description to display to the user.
+         *
+         * @see    #UriDesc(URI,HttpMethod,String)
+         */
         public UriDesc(URI uri, String label) {
             this(uri, HttpMethod.GET, label);
         }
 
+        /**
+         * Creates the description of a URI accessible using the
+         * specified HTTP method.
+         * @param  uri      the page (relative) URI as a string.
+         * @param  method   the HTTP method to access the URI.
+         * @param  label    the page description to display to the user.
+         *
+         * @throws URISyntaxException if the specified URI is not valid.
+         *
+         * @see    #UriDesc(URI,HttpMethod,String)
+         */
         public UriDesc(String uri, HttpMethod method, String label)
                                                     throws URISyntaxException {
             this(new URI(uri), method, label);
         }
 
+        /**
+         * Creates the description of a URI accessible using the
+         * specified HTTP method.
+         * @param  uri      the page (relative) URI as a string.
+         * @param  method   the HTTP method to access the URI.
+         * @param  label    the page description to display to the user.
+         */
         public UriDesc(URI uri, HttpMethod method, String label) {
             if (uri == null) {
                 throw new IllegalArgumentException("uri");
@@ -84,18 +148,40 @@ public interface ProjectModule extends Module
             this.label = label;
         }
 
+        /**
+         * Returns the page (relative) URI.
+         * @return the page URI.
+         */
         public URI getUri() {
             return this.uri;
         }
 
+        /**
+         * Returns the page URL, resolved using the specified
+         * (absolute) base URI.
+         * @param  baseUri   the base URI to resolve the page URI, if
+         *                   relative.
+         *
+         * @return the page URL.
+         * @throws MalformedURLException if no valid URL can be built
+         *         from the page URI of if the base URI is invalid.
+         */
         public String getUrl(String baseUri) throws MalformedURLException {
             return this.toUrl(baseUri, this.getUri());
         }
 
+        /**
+         * Returns the HTTP method to access the page.
+         * @return the HTTP method.
+         */
         public HttpMethod getMethod() {
             return this.method;
         }
 
+        /**
+         * Returns the description of the page to display to the user.
+         * @return the description of the page.
+         */
         public String getLabel() {
             return this.label;
         }

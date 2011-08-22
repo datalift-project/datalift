@@ -39,8 +39,8 @@ import java.util.List;
 
 
 /**
- * A file source object describing CSV (character separated values)
- * files.
+ * A file source object describing a CSV (character separated values)
+ * file.
  *
  * @author hdevos
  */

@@ -41,11 +41,52 @@ import java.io.InputStream;
 import java.net.URI;
 
 
+/**
+ * A file-based source object.
+ *
+ * @param  <T>   The type of data the source contains and that can be
+ *               iterated over when reading through this source object.
+ *
+ * @author hdevos
+ */
 public interface FileSource<T> extends Source, Iterable<T>
 {
+    /**
+     * Returns the declared type of data this source contains.
+     * @return the declared MIME type for the source content.
+     */
     public String getMimeType();
+
+    /**
+     * Sets the data type of the source content.
+     * @param  mimeType   type of data this source contains. 
+     */
     public void setMimeType(String mimeType);
+
+    /**
+     * Returns the path (relative to the DataLift public storage
+     * directory) of the file containing the source data.
+     * @return the data file relative path.
+     */
     public String getFilePath();
+
+    /**
+     * Returns an input stream for reading the source content.
+     * @return an input stream
+     * @throws IOException if any error occurred accessing the source
+     *         data file.
+     */
     public InputStream getInputStream() throws IOException;
+
+    /**
+     * Initializes this source to make the source data accessible.
+     * This method shall be invoke prior any
+     * {@link #getInputStream() attempt to access} the file content.
+     * @param docRoot   the DataLift public storage directory.
+     * @param baseUri   the base URI for this DataLift deployment.
+     *
+     * @throws IOException if any error occurred accessing the source
+     *         data file.
+     */
     public void init(File docRoot, URI baseUri) throws IOException;
 }
