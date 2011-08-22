@@ -92,7 +92,7 @@
                         Defaults to "dist".
    -->
 
-  <property name="app.name"             value="sparqlEndpoint"/>
+  <property name="app.name"             value="sparql-endpoint"/>
   <property name="app.version"          value="0.3"/>
   <property name="app.path"             value="/${app.name}"/>
   <property name="app.long.name"        value="DataLift SPARQL Endpoint"/>

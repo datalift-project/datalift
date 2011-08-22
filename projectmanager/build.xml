@@ -30,7 +30,7 @@
   set to the current working directory.
 -->
 
-<project name="datalift-project-manager" default="dist" basedir=".">
+<project name="datalift-workspace" default="dist" basedir=".">
 
   <!-- ================ Property Definitions ============================== -->
 
@@ -92,7 +92,7 @@
                         Defaults to "dist".
    -->
 
-  <property name="app.name"             value="projectmanager"/>
+  <property name="app.name"             value="project-manager"/>
   <property name="app.version"          value="0.3"/>
   <property name="app.path"             value="/${app.name}"/>
   <property name="app.long.name"        value="ProjectManager"/>
