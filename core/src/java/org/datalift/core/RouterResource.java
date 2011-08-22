@@ -262,6 +262,7 @@ public class RouterResource implements LifeCycle, ResourceResolver
 
         // Step #2: Load available modules.
         this.modules.clear();
+        this.policies.clear();
         // Load modules embedded in web application first (if any).
         this.loadModules(this.getClass().getClassLoader(), null);
         // Load third-party module bundles.
@@ -286,11 +287,6 @@ public class RouterResource implements LifeCycle, ResourceResolver
                 }
             }
         }
-
-        // Step #3: Load available resource resolvers.
-        this.policies.clear();
-        // Load modules embedded in web application first (if any).
-        this.loadPolicies(this.getClass().getClassLoader());
     }
 
     @Override
@@ -301,6 +297,9 @@ public class RouterResource implements LifeCycle, ResourceResolver
             ModuleDesc desc = i.next();
             Object[] prevCtx = LogContext.pushContexts(desc.name, "postInit");
             try {
+                // Load & install module-specific URI policies, if any.
+                this.loadPolicies(desc.classLoader);
+                // Complete module initialization.
                 desc.module.postInit(configuration);
             }
             catch (Exception e) {
@@ -315,6 +314,10 @@ public class RouterResource implements LifeCycle, ResourceResolver
                 LogContext.pushContexts(prevCtx[0], prevCtx[1]);
             }
         }
+        // Notify whether URI policies were installed.
+        log.info("Registered {} URI policy(ies))",
+                                        Integer.valueOf(this.policies.size()));
+
         // Post-init each URI policy, ignoring errors.
         for (Iterator<UriPolicy> i=this.policies.iterator(); i.hasNext(); ) {
             UriPolicy p = i.next();
@@ -343,12 +346,25 @@ public class RouterResource implements LifeCycle, ResourceResolver
     /** {@inheritDoc} */
     @Override
     public void shutdown(Configuration configuration) {
+        // Shutdown each URI policy, ignoring errors.
+        for (UriPolicy p : this.policies) {
+            try {
+                p.shutdown(configuration);
+                configuration.removeBean(p, null);
+            }
+            catch (Exception e) {
+                log.error("Failed to properly shutdown URI policy {}: {}", e,
+                          p.getClass(), e.getMessage());
+                // Continue with next policy.
+            }
+        }
         // Shutdown each module, ignoring errors.
         for (ModuleDesc desc : this.modules.values()) {
             Module m = desc.module;
             Object[] prevCtx = LogContext.pushContexts(m.getName(), "shutdown");
             try {
                 m.shutdown(configuration);
+                configuration.removeBean(desc.module, desc.name);                
             }
             catch (Exception e) {
                 log.error("Failed to properly shutdown module {}: {}", e,
@@ -357,17 +373,6 @@ public class RouterResource implements LifeCycle, ResourceResolver
             }
             finally {
                 LogContext.pushContexts(prevCtx[0], prevCtx[1]);
-            }
-        }
-        // Shutdown each URI policy, ignoring errors.
-        for (UriPolicy p : this.policies) {
-            try {
-                p.shutdown(configuration);
-            }
-            catch (Exception e) {
-                log.error("Failed to properly shutdown URI policy {}: {}", e,
-                          p.getClass(), e.getMessage());
-                // Continue with next policy.
             }
         }
     }
@@ -789,8 +794,6 @@ public class RouterResource implements LifeCycle, ResourceResolver
                 log.error("Failed to initialize URI policy {}", a.getClass());
             }
         }
-        log.info("Registered {} URI policy(ies))",
-                                        Integer.valueOf(this.policies.size()));
     }
 
     /**
