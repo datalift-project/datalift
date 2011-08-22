@@ -35,8 +35,6 @@
 package org.datalift.samples.project;
 
 
-import java.net.URI;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
@@ -56,9 +54,10 @@ public class HandleProjectModule extends BaseModule implements ProjectModule
     }
 
     @Override
-    public URI canHandle(Project p) {
+    public UriDesc canHandle(Project p) {
         try {
-            return new URI(this.getName() + "/java-guy.jpg");
+            return new UriDesc(this.getName() + "/java-guy.jpg",
+                               this.getName() + ".module.label");
         }
         catch (Exception e) {
             log.fatal("Uh?", e);

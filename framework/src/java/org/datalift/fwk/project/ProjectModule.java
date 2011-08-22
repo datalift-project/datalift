@@ -35,12 +35,94 @@
 package org.datalift.fwk.project;
 
 
+import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 
 import org.datalift.fwk.Module;
 
 
 public interface ProjectModule extends Module
 {
-    public abstract URI canHandle(Project p);
+    public abstract UriDesc canHandle(Project p);
+
+    public enum HttpMethod { GET, POST, PUT, DELETE; }
+
+    public final class UriDesc
+    {
+        private final URI uri;
+        private final HttpMethod method;
+        private final String label;
+        private URI icon;
+
+        public UriDesc(String uri, String label) throws URISyntaxException {
+            this(new URI(uri), HttpMethod.GET, label);
+        }
+
+        public UriDesc(URI uri, String label) {
+            this(uri, HttpMethod.GET, label);
+        }
+
+        public UriDesc(String uri, HttpMethod method, String label)
+                                                    throws URISyntaxException {
+            this(new URI(uri), method, label);
+        }
+
+        public UriDesc(URI uri, HttpMethod method, String label) {
+            if (uri == null) {
+                throw new IllegalArgumentException("uri");
+            }
+            if (method == null) {
+                throw new IllegalArgumentException("method");
+            }
+            if ((label == null) || (label.length() == 0)) {
+                throw new IllegalArgumentException("label");
+            }
+            this.uri = uri;
+            this.method = method;
+            this.label = label;
+        }
+
+        public URI getUri() {
+            return this.uri;
+        }
+
+        public String getUrl(String baseUri) throws MalformedURLException {
+            return this.toUrl(baseUri, this.getUri());
+        }
+
+        public HttpMethod getMethod() {
+            return this.method;
+        }
+
+        public String getLabel() {
+            return this.label;
+        }
+
+        public void setIcon(URI icon) {
+            this.icon = icon;
+        }
+        public URI getIcon() {
+            return this.icon;
+        }
+        public String getIcon(String baseUri) throws MalformedURLException {
+            return this.toUrl(baseUri, this.getIcon());
+        }
+
+        private String toUrl(String baseUri, URI uri)
+                                                throws MalformedURLException {
+            String url = null;
+            if (baseUri != null) {
+                if (! baseUri.endsWith("/")) {
+                    baseUri += '/';
+                }
+                url = new URL(new URL(baseUri), uri.toString()).toString();
+            }
+            else {
+                url = this.getUri().toString();
+            }
+            return url;
+        }
+    }
 }

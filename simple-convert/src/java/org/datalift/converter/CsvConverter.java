@@ -35,37 +35,40 @@
 package org.datalift.converter;
 
 
-import java.io.File;
 import java.net.URI;
 
-import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
-import javax.ws.rs.core.Response.Status;
 
 import org.openrdf.model.Literal;
 import org.openrdf.model.ValueFactory;
 import org.openrdf.repository.RepositoryConnection;
 
-import com.sun.jersey.api.NotFoundException;
+import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 
-import org.datalift.fwk.BaseModule;
-import org.datalift.fwk.Configuration;
-import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.CsvSource;
 import org.datalift.fwk.project.Project;
-import org.datalift.fwk.project.ProjectManager;
 import org.datalift.fwk.project.ProjectModule;
-import org.datalift.fwk.project.Source;
+import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.util.StringUtils;
 
 
-public class CsvConverter extends BaseModule implements ProjectModule
+/**
+ * A {@link ProjectModule project module} that performs CSV to RDF
+ * conversion using
+ * <a href="http://www.w3.org/TR/2011/WD-rdb-direct-mapping-20110324/">RDF
+ * Direct Mapping</a> principles.
+ *
+ * @author lbihanic
+ */
+public class CsvConverter extends BaseConverterModule
 {
     //-------------------------------------------------------------------------
     // Constants
@@ -74,119 +77,50 @@ public class CsvConverter extends BaseModule implements ProjectModule
     private final static String MODULE_NAME = "csvconverter";
 
     //-------------------------------------------------------------------------
-    // Class members
-    //-------------------------------------------------------------------------
-
-    private final static Logger log = Logger.getLogger();
-
-    //-------------------------------------------------------------------------
-    // Instance members
-    //-------------------------------------------------------------------------
-
-    private ProjectManager projectManager = null;
-    private File storage = null;
-    private Repository internal = null;
-
-    //-------------------------------------------------------------------------
     // Constructors
     //-------------------------------------------------------------------------
 
+    /** Default constructor. */
     public CsvConverter() {
-    	super(MODULE_NAME, true);
-    }
-
-    //-------------------------------------------------------------------------
-    // Module contract support
-    //-------------------------------------------------------------------------
-
-    /** {@inheritDoc} */
-    @Override
-    public void postInit(Configuration configuration) {
-        super.postInit(configuration);
-
-        this.storage = configuration.getPublicStorage();
-        this.internal = configuration.getInternalRepository();
-
-        this.projectManager = configuration.getBean(ProjectManager.class);
-        if (this.projectManager == null) {
-            throw new TechnicalException("project.manager.not.available");
-        }
-    }
-
-    //-------------------------------------------------------------------------
-    // ProjectModule contract support
-    //-------------------------------------------------------------------------
-
-    /**
-     * {@inheritDoc}
-     * @return <code>true</code> if the project contains at least one
-     *         source of type {@link CsvSource}.
-     */
-    @Override
-    public URI canHandle(Project p) {
-        boolean hasCsvSource = false;
-        for (Source s : p.getSources()) {
-            if (s instanceof CsvSource) {
-                hasCsvSource = true;
-                break;
-            }
-        }
-        URI projectPage = null;
-        if (hasCsvSource) {
-            try {
-                return new URI(this.getName() + "?project=" + p.getUri());
-            }
-            catch (Exception e) {
-                throw new TechnicalException(e);
-            }
-        }
-        return projectPage;
+    	super(MODULE_NAME, SourceType.CsvSource, HttpMethod.POST);
     }
 
     //-------------------------------------------------------------------------
     // Web services
     //-------------------------------------------------------------------------
 
-    @GET
-    public String getIndexPage(@QueryParam("project") URI projectId,
-                               @Context UriInfo uriInfo)
+    @POST
+    public Response getIndexPage(@QueryParam("project") URI projectId,
+                                 @Context UriInfo uriInfo,
+                                 @Context Request request,
+                                 @HeaderParam(ACCEPT) String acceptHdr)
                                                 throws WebApplicationException {
-        CsvSource src = null;
-        Project p = this.projectManager.findProject(projectId);
-        if (p != null) {
-            for (Source s : p.getSources()) {
-                if (s instanceof CsvSource) {
-                    src = (CsvSource)s;
-                    // Continue to get last CSV source in project...
-                }
-            }
-        }
-        if (src == null) {
-            throw new NotFoundException("No CSV source found", projectId);
-        }
+        Response response = null;
         try {
-            src.init(storage, uriInfo.getBaseUri());
-
-            String srcName = " (RDF #" + p.getSources().size() + ')';
-            URI targetGraph = new URI(src.getUri()
-                                      + '-' + StringUtils.urlify(srcName));
-            this.convert(src, this.internal, targetGraph);
-            p.addSource(this.projectManager.newTransformedRdfSource(
-                                        targetGraph, src.getTitle() + srcName,
-                                        targetGraph, src));
-            this.projectManager.saveProject(p);
+            // Retrieve project.
+            Project p = this.getProject(projectId);
+            // Load input source.
+            CsvSource src = (CsvSource)this.getLastSource(p);
+            src.init(this.publicStorage, uriInfo.getBaseUri());
+            // Convert CSV data and load generated RDF triples.
+            String srcName  = this.nextSourceName(p);
+            URI targetGraph = this.newGraphUri(src, srcName);
+            this.convert(src, this.internalRepository, targetGraph);
+            // Register new transformed RDF source.
+            this.addResultSource(p, src, srcName, targetGraph);
+            // Display generated triples.
+            response = this.displayGraph(this.internalRepository, targetGraph,
+                                         uriInfo, request, acceptHdr);
         }
         catch (Exception e) {
-            TechnicalException error = new TechnicalException(
-                                        "ws.internal.error", e, e.getMessage());
-            log.error(error.getMessage(), e);
-            throw new WebApplicationException(
-                                Response.status(Status.INTERNAL_SERVER_ERROR)
-                                        .type(MediaType.TEXT_PLAIN_TYPE)
-                                        .entity(error.getMessage()).build());
+            this.handleInternalError(e);
         }
-        return "CSV to RDF conversion completed for source " + src.getTitle();
+        return response;
     }
+
+    //-------------------------------------------------------------------------
+    // Specific implementation
+    //-------------------------------------------------------------------------
 
     private void convert(CsvSource src, Repository target, URI targetGraph) {
         final RepositoryConnection cnx = target.newConnection();

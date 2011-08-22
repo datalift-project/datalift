@@ -9,7 +9,7 @@
 </head>
 <body>
 <script type="text/javascript">
-#if ($current)
+#if( $current )
 	var currentProject = "$current.uri";
 #end
 	$(function() {
@@ -166,7 +166,7 @@
 		});
 
 		var mydataOntology = [
-#foreach($curOnto in $current.getOntologies())
+#foreach( $curOnto in $current.getOntologies() )
 		{
 			uri:"$!esc.html($curOnto.uri)",
 			title:"$!esc.html($curOnto.title)",
@@ -237,7 +237,7 @@
 	</div>
 
 	<div id="workspace-main-panel" class="ui-widget-content">
-#if ($current)
+#if( $current )
 		<div id="tabs">
 			<ul>
 				<li><a onclick="historyPush('${current.uri}#description');" href="#description">#i18n("project.title.description")</a></li>
@@ -255,10 +255,13 @@
 				<div id="module_can_handle">
 					<p>#i18n("project.module_available"):</p>
 					<ol id="selectable_module">
-#foreach ($curModule in $canHandle)
-#set( $i18nEntry = $curModule.name + ".module.label" )
-						<li><a href="${baseUri}/$curModule.canHandle($current)" class="module_can_handle"
-						       id="$curModule.name">#i18n($i18nEntry)</a></li>
+#foreach( $page in $canHandle )
+#set( $pageUrl = $page.getUrl(${baseUri}) )
+#if( $page.method.name() == "GET" )
+						<li><a href="${pageUrl}" class="button" id="${page.label}">#i18n("${page.label}")</a></li>
+#else
+						<li><form id="${page.label}" method="post" action="${pageUrl}"><input type="submit" value="#i18n("${page.label}")"/></form></li>
+#end
 #end
 					</ol>
 				</div>

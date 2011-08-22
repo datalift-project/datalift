@@ -92,6 +92,7 @@ import org.datalift.fwk.project.ProjectModule;
 import org.datalift.fwk.project.RdfSource;
 import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.CsvSource.Separator;
+import org.datalift.fwk.project.ProjectModule.UriDesc;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.sparql.SparqlEndpoint;
 import org.datalift.fwk.util.StringUtils;
@@ -1019,10 +1020,12 @@ public class ProjectResource
         // Display selected project.
         if (p != null) {
             // Search for modules accepting the selected project.
-            Collection<ProjectModule> modules = new LinkedList<ProjectModule>();
-            for (ProjectModule m : this.configuration.getBeans(ProjectModule.class)) {
+            Collection<UriDesc> modules = new LinkedList<UriDesc>();
+            for (ProjectModule m : this.configuration.getBeans(
+                                                        ProjectModule.class)) {
+                UriDesc modulePage = m.canHandle(p);
                 if (m.canHandle(p) != null) {
-                    modules.add(m);
+                    modules.add(modulePage);
                 }
             }
             args.put("current", p);
