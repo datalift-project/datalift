@@ -78,6 +78,9 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     // Constants
     //-------------------------------------------------------------------------
 
+    /** The SPARQL endpoint module name. */
+    public final static String MODULE_NAME = "sparql";
+
     private final static Pattern QUERY_START_PATTERN = Pattern.compile(
                     "SELECT|CONSTRUCT|ASK|DESCRIBE", Pattern.CASE_INSENSITIVE);
     private final static int MAX_QUERY_DESC = 128;

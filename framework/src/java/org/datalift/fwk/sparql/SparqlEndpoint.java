@@ -42,23 +42,23 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
-import org.datalift.fwk.Module;
-
 
 /**
  * The Java interface for in-VM invocation of the SPARQL endpoint.
  * <p>
  * An implementation of this interface shall be provided by the
- * framework implementation and made available via the DataLift
- * {@link org.datalift.fwk.Configuration#getBean(Class) configuration}.</p>
+ * framework implementation. Datalift module can retrieve it through
+ * the DataLift runtime
+ * {@link org.datalift.fwk.Configuration#getBean(Class) configuration},
+ * during or after the post-initialization step:</p>
+ * <blockquote><pre>
+ *   SparqlEndpoint endpoint = configuration.getBean(SparqlEndpoint.class);
+ * </pre></blockquote>
  *
  * @author lbihanic
  */
-public interface SparqlEndpoint extends Module
+public interface SparqlEndpoint
 {
-    /** The SPARQL endpoint module name. */
-    public final static String MODULE_NAME = "sparql";
-
     /**
      * Executes a SPARQL query and returns the results directly to
      * the client.

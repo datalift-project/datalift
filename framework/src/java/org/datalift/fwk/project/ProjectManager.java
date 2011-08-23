@@ -45,6 +45,15 @@ import org.datalift.fwk.MediaTypes;
 /**
  * Project managers are responsible for handling the lifecycle and the
  * persistence of the data-lifting projects.
+ * <p>
+ * An implementation of this interface shall be provided by the
+ * framework implementation. Datalift module can retrieve it through
+ * the DataLift runtime
+ * {@link org.datalift.fwk.Configuration#getBean(Class) configuration},
+ * during or after the post-initialization step:</p>
+ * <blockquote><pre>
+ *   ProjectManager pm = configuration.getBean(ProjectManager.class);
+ * </pre></blockquote>
  *
  * @author hdevos
  */
