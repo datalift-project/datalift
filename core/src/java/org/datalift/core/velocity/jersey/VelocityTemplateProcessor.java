@@ -71,6 +71,7 @@ import org.apache.velocity.tools.ToolContext;
 import org.apache.velocity.tools.generic.DateTool;
 import org.apache.velocity.tools.generic.EscapeTool;
 import org.apache.velocity.tools.generic.FieldTool;
+import org.apache.velocity.tools.generic.LinkTool;
 
 import static org.apache.velocity.app.VelocityEngine.*;
 import static org.apache.velocity.runtime.log.Log4JLogChute.*;
@@ -101,8 +102,13 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
     public final static String CTX_MODEL            = "it";
     /** The context key for Velocity Escape tool. */
     public final static String CTX_ESCAPE_TOOL      = "esc";
+    /** The context key for Velocity Link tool. */
+    public final static String CTX_LINK_TOOL        = "link";
     /** The context key for Velocity Date tool. */
     public final static String CTX_DATE_TOOL        = "date";
+    /** The context key for Velocity Field tool. */
+    public final static String CTX_FIELD_TOOL       = "field";
+
     /** The context key for the HTTP servlet request object. */
     public final static String CTX_HTTP_REQUEST     = "request";
     /** The context key for the HTTP servlet response object. */
@@ -145,9 +151,7 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
     private final static String LOADER_PROPS_PREFIX = ".resource.loader.";
 
     private final static String CONFIG_ELTS_SEPARATOR = ", ";
-    
-    private final static String FIELD_TOOL = "field";
-    
+
     //-------------------------------------------------------------------------
     // Class members
     //-------------------------------------------------------------------------
@@ -266,14 +270,11 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
                 // Single object model (may be null).
                 ctx.put(CTX_MODEL, m);
             }
-            // Add Velocity string escaping tool.
-            if (ctx.get(CTX_ESCAPE_TOOL) == null) {
-                ctx.put(CTX_ESCAPE_TOOL, new EscapeTool());
-            }
-            // Add Velocity date tool.
+            // Add Velocity tools: escaping, date, link, field...
+            ctx.put(CTX_ESCAPE_TOOL, new EscapeTool());
+            ctx.put(CTX_LINK_TOOL, new LinkTool());
             if (ctx.get(CTX_DATE_TOOL) == null) {
                 Map<String, Object> config = new HashMap<String, Object>();
-
                 List<Locale> l = this.httpContext.getRequest().getAcceptableLanguages();
                 if ((l != null) && (! l.isEmpty())) {
                     config.put(ToolContext.LOCALE_KEY, l.get(0));
@@ -282,6 +283,11 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
                 dateTool.configure(config);
                 ctx.put(CTX_DATE_TOOL, dateTool);
             }
+            if (ctx.get(CTX_FIELD_TOOL) == null) {
+                // TODO: TypeSource???
+                ctx.put(CTX_FIELD_TOOL, new FieldTool().in(org.datalift.fwk.project.Source.SourceType.class));
+            }
+
             // Add predefined variables, the JSP way.
             if (ctx.get(CTX_HTTP_REQUEST) == null) {
                 ctx.put(CTX_HTTP_REQUEST, this.httpContext.getRequest());
@@ -302,10 +308,6 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
             }
             if (ctx.get(CTX_SECURITY_CONTEXT) == null) {
                 ctx.put(CTX_SECURITY_CONTEXT, SecurityContext.getContext());
-            }
-            if (ctx.get(FIELD_TOOL) == null) {
-                // TODO: TypeSource???
-            	ctx.put(FIELD_TOOL, new FieldTool().in(org.datalift.fwk.project.Source.SourceType.class));
             }
             // Apply Velocity template, using encoding from in HTTP request.
             Writer w = new OutputStreamWriter(out, this.getCharset());
