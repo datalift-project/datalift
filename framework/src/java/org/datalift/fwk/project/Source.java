@@ -35,6 +35,12 @@
 package org.datalift.fwk.project;
 
 
+import java.io.IOException;
+import java.net.URI;
+
+import org.datalift.fwk.Configuration;
+
+
 /**
  * A source of data, external (file, URL, database query...) or
  * internal (named graph, SPARQL query...).
@@ -43,6 +49,16 @@ package org.datalift.fwk.project;
  */
 public interface Source
 {
+    /**
+     * The supported DataLift source types.
+     */
+    public enum SourceType {
+        RdfSource,
+        CsvSource,
+        DbSource,
+        TransformedRdfSource;
+    }
+
     /**
      * Returns the source identifier as a URI.
      * @return the source identifier.
@@ -68,12 +84,15 @@ public interface Source
     public SourceType getType();
 
     /**
-     * The supported DataLift source types.
+     * Initializes this source to make the source data accessible.
+     * This method shall be invoked prior accessing the source data
+     * (e.g. <code>getInputStream()</code>, <code>iterator()</code>...).
+     * @param configuration   the DataLift configuration.
+     * @param baseUri         the base URI for this DataLift deployment.
+     *
+     * @throws IOException if any error occurred loading the source
+     *         data.
      */
-    public enum SourceType {
-    	RdfSource,
-    	CsvSource,
-    	DbSource,
-    	TransformedRdfSource;
-    }
+    public void init(Configuration configuration, URI baseUri)
+                                                            throws IOException;
 }

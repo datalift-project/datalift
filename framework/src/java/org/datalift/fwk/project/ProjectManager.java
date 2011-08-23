@@ -153,7 +153,7 @@ public interface ProjectManager
      *         {@link Project#addSource(Source) associated} to a
      *         project.
      * @throws IOException if any error occurred creating the source
-     *         or accessing the specified file.
+     *         or accessing the configured database.
      */
     public DbSource newDbSource(URI uri, String title, String database, 
                                 String srcUrl, String user, String password, 
@@ -170,9 +170,12 @@ public interface ProjectManager
      * @return a new transformed RDF source, ready to be
      *         {@link Project#addSource(Source) associated} to a
      *         project.
+     * @throws IOException if any error occurred creating the source
+     *         or accessing the underlying data.
      */
     public TransformedRdfSource newTransformedRdfSource(URI uri, String title, 
-                                URI targetGraph, Source parent);
+                                URI targetGraph, Source parent)
+                                                            throws IOException;
 
     /**
      * Create a new ontology description.

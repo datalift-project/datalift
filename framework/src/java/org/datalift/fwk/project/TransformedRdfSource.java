@@ -35,6 +35,9 @@
 package org.datalift.fwk.project;
 
 
+import org.openrdf.model.Statement;
+
+
 /**
  * A source object describing the RDF data resulting from the
  * transformation (i.e. a step in the data lifting process) of another
@@ -42,7 +45,7 @@ package org.datalift.fwk.project;
  *
  * @author lbihanic
  */
-public interface TransformedRdfSource extends Source
+public interface TransformedRdfSource extends Source, Iterable<Statement>
 {
     /**
      * Returns the URI of the named graph containing this source data

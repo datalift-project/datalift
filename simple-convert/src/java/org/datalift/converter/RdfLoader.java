@@ -89,7 +89,7 @@ public class RdfLoader extends BaseConverterModule
             Project p = this.getProject(projectId);
             // Load input source.
             RdfSource src = (RdfSource)this.getLastSource(p);
-            src.init(this.publicStorage, uriInfo.getBaseUri());
+            src.init(this.configuration, uriInfo.getBaseUri());
             // Parse RDF to load triples.
             String srcName  = this.nextSourceName(p);
             URI targetGraph = this.newGraphUri(src, srcName);

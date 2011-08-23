@@ -34,7 +34,6 @@
 
 package org.datalift.core.project;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -51,6 +50,7 @@ import org.openrdf.rio.helpers.StatementCollector;
 
 import com.clarkparsia.empire.annotation.RdfsClass;
 
+import org.datalift.fwk.Configuration;
 import org.datalift.fwk.project.RdfSource;
 import org.datalift.fwk.rdf.RdfUtils;
 
@@ -84,9 +84,12 @@ public class RdfSourceImpl extends BaseFileSource<Statement>
     // FileSource contract support
     //-------------------------------------------------------------------------
 
+    /** {@inheritDoc} */
     @Override
-    public void init(File docRoot, URI baseUri) throws IOException {
-        super.init(docRoot, baseUri);
+    public void init(Configuration configuration, URI baseUri)
+                                                            throws IOException {
+        super.init(configuration, baseUri);
+
         InputStream in = this.getInputStream();
         if (in != null) {
             RDFParser parser = RdfUtils.newRdfParser(this.getMimeType());

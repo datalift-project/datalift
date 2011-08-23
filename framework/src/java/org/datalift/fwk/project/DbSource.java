@@ -35,19 +35,11 @@
 package org.datalift.fwk.project;
 
 
-import java.io.File;
 import java.util.List;
 
 
 public interface DbSource extends Source, Iterable<Object>
 {
-    /**
-     * Initializes a database connection and executes the configured
-     * JDBC query to populate the specified cache file.
-     * @param  cacheFile   the file to store the request results.
-     */
-    public void init(File cacheFile);
-
     public String getConnectionUrl();
     public void setConnectionUrl(String connectionUrl);
 

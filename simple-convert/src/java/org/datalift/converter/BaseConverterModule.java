@@ -35,7 +35,7 @@
 package org.datalift.converter;
 
 
-import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.util.LinkedList;
 import java.util.List;
@@ -94,8 +94,6 @@ public abstract class BaseConverterModule
     protected SparqlEndpoint sparqlEndpoint = null;
     /** The DataLift internal RDF store. */
     protected Repository internalRepository = null;
-    /** The DataLift public storage directory. */
-    protected File publicStorage = null;
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -144,7 +142,6 @@ public abstract class BaseConverterModule
 
         this.configuration = configuration;
         this.internalRepository = configuration.getInternalRepository();
-        this.publicStorage = configuration.getPublicStorage();
 
         this.projectManager = configuration.getBean(ProjectManager.class);
         if (this.projectManager == null) {
@@ -253,7 +250,8 @@ public abstract class BaseConverterModule
     }
 
     protected void addResultSource(Project p, Source parent,
-                                              String name, URI namedGraph) {
+                                              String name, URI namedGraph)
+                                                            throws IOException {
         p.addSource(this.projectManager.newTransformedRdfSource(
                                         namedGraph, parent.getTitle() + name,
                                         namedGraph, parent));

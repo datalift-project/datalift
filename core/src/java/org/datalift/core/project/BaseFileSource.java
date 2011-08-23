@@ -46,6 +46,8 @@ import javax.persistence.MappedSuperclass;
 
 import com.clarkparsia.empire.annotation.RdfProperty;
 
+import org.datalift.core.TechnicalException;
+import org.datalift.fwk.Configuration;
 import org.datalift.fwk.project.FileSource;
 
 
@@ -76,10 +78,16 @@ public abstract class BaseFileSource<T> extends BaseSource
     // BaseSource contract support
     //-------------------------------------------------------------------------
 
+    /** {@inheritDoc} */
     @Override
-    public void init(File docRoot, URI baseUri) throws IOException {
-        if (docRoot == null) {
-            throw new IllegalArgumentException("docRoot");
+    public void init(Configuration configuration, URI baseUri)
+                                                            throws IOException {
+        super.init(configuration, baseUri);
+
+        File docRoot = configuration.getPublicStorage();
+        if ((docRoot == null) || (! docRoot.isDirectory())) {
+            throw new TechnicalException("public.storage.not.directory",
+                                         docRoot);
         }
         File f = new File(docRoot, this.filePath);
         if (! (f.isFile() && f.canRead())) {

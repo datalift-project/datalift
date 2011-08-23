@@ -35,7 +35,6 @@
 package org.datalift.core.project;
 
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -52,6 +51,7 @@ import com.clarkparsia.empire.annotation.RdfsClass;
 
 import au.com.bytecode.opencsv.CSVReader;
 
+import org.datalift.fwk.Configuration;
 import org.datalift.fwk.project.CsvSource;
 import org.datalift.fwk.util.StringUtils;
 
@@ -91,8 +91,9 @@ public class CsvSourceImpl extends BaseFileSource<String[]>
 
     /** {@inheritDoc} */
     @Override
-    public void init(File docRoot, URI baseUri) throws IOException {
-        super.init(docRoot, baseUri);
+    public void init(Configuration configuration, URI baseUri)
+                                                            throws IOException {
+        super.init(configuration, baseUri);
 
         InputStream in = this.getInputStream();
         if (in != null) {

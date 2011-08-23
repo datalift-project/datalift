@@ -35,10 +35,8 @@
 package org.datalift.fwk.project;
 
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
 
 
 /**
@@ -77,16 +75,4 @@ public interface FileSource<T> extends Source, Iterable<T>
      *         data file.
      */
     public InputStream getInputStream() throws IOException;
-
-    /**
-     * Initializes this source to make the source data accessible.
-     * This method shall be invoke prior any
-     * {@link #getInputStream() attempt to access} the file content.
-     * @param docRoot   the DataLift public storage directory.
-     * @param baseUri   the base URI for this DataLift deployment.
-     *
-     * @throws IOException if any error occurred accessing the source
-     *         data file.
-     */
-    public void init(File docRoot, URI baseUri) throws IOException;
 }

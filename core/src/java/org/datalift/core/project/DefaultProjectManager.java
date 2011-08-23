@@ -158,7 +158,8 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
                 break;
             }
         }
-        src.init(this.configuration.getPublicStorage(), uri);
+        // Force source initialization to validate uploaded file.
+        src.init(this.configuration, uri);
         return src;
     }
 
@@ -174,6 +175,8 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         }
         src.setFilePath(filePath);
         src.setMimeType(mimeType);
+        // Force source initialization to validate uploaded file.
+        src.init(this.configuration, uri);
         return src;
     }
 
@@ -181,7 +184,8 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     @Override
     public DbSource newDbSource(URI uri, String title, String database,
                                 String srcUrl, String user, String password,
-                                String request, int cacheDuration) {
+                                String request, int cacheDuration)
+                                                            throws IOException {
         DbSourceImpl src = new DbSourceImpl(uri.toString());
         src.setTitle(title);
         src.setDatabase(database);
@@ -190,18 +194,24 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         src.setPassword(password);
         src.setRequest(request);
         src.setCacheDuration(cacheDuration);
+        // Force source initialization to validate database connection
+        // parameters and SQL query.
+        src.init(this.configuration, uri);
         return src;
     }
 
     /** {@inheritDoc} */
     @Override
     public TransformedRdfSource newTransformedRdfSource(URI uri, String title, 
-                                            URI targetGraph, Source parent) {
+                                            URI targetGraph, Source parent)
+                                                            throws IOException {
         TransformedRdfSourceImpl src =
                                 new TransformedRdfSourceImpl(uri.toString());
         src.setTitle(title);
         src.setTargetGraph(targetGraph.toString());
         src.setParent(parent);
+        // Force source initialization for parameter validation.
+        src.init(this.configuration, uri);
         return src;
     }
 

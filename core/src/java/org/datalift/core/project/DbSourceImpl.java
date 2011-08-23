@@ -56,7 +56,9 @@ import com.clarkparsia.empire.annotation.RdfsClass;
 import com.sun.rowset.WebRowSetImpl;
 
 import org.datalift.core.TechnicalException;
+import org.datalift.fwk.Configuration;
 import org.datalift.fwk.project.DbSource;
+import org.datalift.fwk.util.StringUtils;
 
 
 @Entity
@@ -100,21 +102,18 @@ public class DbSourceImpl extends BaseSource implements DbSource
 
     /** {@inheritDoc} */
     @Override
-    public void init(File docRoot, URI baseUri) throws IOException {
-        // NOP
-    }
+    public void init(Configuration configuration, URI baseUri)
+                                                            throws IOException {
+        super.init(configuration, baseUri);
 
-    //-------------------------------------------------------------------------
-    // DbSource contract support
-    //-------------------------------------------------------------------------
-
-    /** {@inheritDoc} */
-    @Override
-    public void init(File cacheFile) {
         try {
+            String fileName = this.getClass().getSimpleName() + '-' +
+                                            StringUtils.urlify(this.getTitle());
+            File cacheFile = new File(configuration.getPrivateStorage(),
+                                      fileName);
             wrset = new WebRowSetImpl();
-            InputStream in;
-            if ((in = this.getCacheStream(cacheFile)) == null) {
+            InputStream in = this.getCacheStream(cacheFile);
+            if (in == null) {
                 // Force loading of database driver.
                 Class.forName(DatabaseType.valueOf(this.getDatabaseType())
                                           .getDriver());
@@ -132,9 +131,13 @@ public class DbSourceImpl extends BaseSource implements DbSource
             }
         }
         catch (Exception e) {
-            throw new TechnicalException(null, e);
+            throw new IOException(e);
         }
     }
+
+    //-------------------------------------------------------------------------
+    // DbSource contract support
+    //-------------------------------------------------------------------------
 
     /** {@inheritDoc} */
     @Override

@@ -35,18 +35,24 @@
 package org.datalift.core.project;
 
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 
 import javax.persistence.MappedSuperclass;
 
+import org.datalift.fwk.Configuration;
 import org.datalift.fwk.project.Source;
 
 import com.clarkparsia.empire.annotation.RdfId;
 import com.clarkparsia.empire.annotation.RdfProperty;
 
 
+/**
+ * An abstract superclass for implementations of the {@link Source}
+ * interface.
+ *
+ * @author hdevos
+ */
 @MappedSuperclass
 public abstract class BaseSource extends BaseRdfEntity implements Source
 {
@@ -65,10 +71,20 @@ public abstract class BaseSource extends BaseRdfEntity implements Source
     // Constructors
     //-------------------------------------------------------------------------
 
+    /**
+     * Creates a new source of the specified type.
+     * @param  type   the {@link SourceType source type}.
+     */
     protected BaseSource(SourceType type) {
         this(type, null);
     }
 
+    /**
+     * Creates a new source of the specified type and identifier.
+     * @param  type   the {@link SourceType source type}.
+     * @param  uri    the source unique identifier (URI) or
+     *                <code>null</code> if not known at this stage.
+     */
     protected BaseSource(SourceType type, String uri) {
         if (type == null) {
             throw new IllegalArgumentException("type");
@@ -80,6 +96,12 @@ public abstract class BaseSource extends BaseRdfEntity implements Source
     //-------------------------------------------------------------------------
     // Source contract support
     //-------------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    @Override
+    public String getUri() {
+        return this.uri;
+    }
 
     /** {@inheritDoc} */
     @Override
@@ -98,6 +120,13 @@ public abstract class BaseSource extends BaseRdfEntity implements Source
         return this.type;
     }
 
+    /** {@inheritDoc} */
+    @Override
+    public void init(Configuration configuration, URI baseUri)
+                                                            throws IOException {
+        // NOP
+    }
+
     //-------------------------------------------------------------------------
     // BaseRdfEntity contract support
     //-------------------------------------------------------------------------
@@ -107,14 +136,4 @@ public abstract class BaseSource extends BaseRdfEntity implements Source
     protected void setId(String id) {
         this.uri = id;
     }
-
-    //-------------------------------------------------------------------------
-    // BaseSource contract definition
-    //-------------------------------------------------------------------------
-
-    public String getUri() {
-        return this.uri;
-    }
-
-    abstract public void init(File docRoot, URI baseUri) throws IOException;
 }

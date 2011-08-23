@@ -84,13 +84,13 @@ import org.datalift.fwk.ResourceResolver;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.CsvSource;
 import org.datalift.fwk.project.DbSource;
-import org.datalift.fwk.project.FileSource;
 import org.datalift.fwk.project.Ontology;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectManager;
 import org.datalift.fwk.project.ProjectModule;
 import org.datalift.fwk.project.RdfSource;
 import org.datalift.fwk.project.Source;
+import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.project.CsvSource.Separator;
 import org.datalift.fwk.project.ProjectModule.UriDesc;
 import org.datalift.fwk.rdf.RdfUtils;
@@ -647,14 +647,14 @@ public class ProjectResource
     @POST
     @Path("{id}/dbupload")
     public Response dbUpload(@PathParam("id") String id,
-                             @Context UriInfo uriInfo,
                              @FormParam("database") String database,
                              @FormParam("source_url") String srcUrl,
                              @FormParam("title") String title,
                              @FormParam("user") String user,
                              @FormParam("request") String request,
                              @FormParam("password") String password,
-                             @FormParam("cache_duration") int cacheDuration)
+                             @FormParam("cache_duration") int cacheDuration,
+                             @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
         Response response = null;
         try {
@@ -706,13 +706,14 @@ public class ProjectResource
         try {
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
             Project p = this.loadProject(projectUri);
-            Source s = p.getSource(currentSourceUri);
-            ((DbSource)s).setTitle(title);
-            ((DbSource)s).setDatabase(database);
-            ((DbSource)s).setUser(user);
-            ((DbSource)s).setPassword(password);
-            ((DbSource)s).setRequest(request);
-            ((DbSource)s).setCacheDuration(cacheDuration);
+            DbSource s = (DbSource)(p.getSource(currentSourceUri));
+            s.setTitle(title);
+            s.setConnectionUrl(srcUrl);
+            s.setUser(user);
+            s.setPassword(password);
+            s.setDatabase(database);
+            s.setRequest(request);
+            s.setCacheDuration(cacheDuration);
             this.projectManager.saveProject(p);
             String redirectUrl = projectUri.toString() + "#source";
             response = Response.ok()
@@ -783,21 +784,16 @@ public class ProjectResource
                 throw new NotFoundException();
             }
             // Initialize source and return grid View
-            if (src instanceof FileSource<?>) {
-                ((FileSource<?>) src).init(
-                                    this.configuration.getPublicStorage(),
-                                    uriInfo.getBaseUri());
-            }
+            src.init(this.configuration, uriInfo.getBaseUri());
             String template = null;
             if (src instanceof CsvSource) {
                 template = "/CsvSourceGrid.vm";
             }
-            else if (src instanceof RdfSource) {
+            else if ((src instanceof RdfSource) ||
+                     (src instanceof TransformedRdfSource)) {
                 template = "/RdfSourceGrid.vm";
             }
             else if (src instanceof DbSource) {
-                ((DbSource) src).init(this.getFileStorage(
-                                        this.getProjectFilePath(id, srcId)));
                 template = "/DbSourceGrid.vm";
             }
             else {

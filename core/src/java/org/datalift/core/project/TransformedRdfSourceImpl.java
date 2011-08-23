@@ -35,15 +35,22 @@
 package org.datalift.core.project;
 
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.util.Iterator;
 
 import javax.persistence.Entity;
+
+import org.openrdf.model.Statement;
+import org.openrdf.query.GraphQueryResult;
+import org.openrdf.query.QueryLanguage;
+import org.openrdf.repository.RepositoryConnection;
 
 import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.RdfsClass;
 
+import org.datalift.core.TechnicalException;
+import org.datalift.fwk.Configuration;
 import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.TransformedRdfSource;
 
@@ -61,6 +68,9 @@ public class TransformedRdfSourceImpl extends BaseSource
     private String targetGraph;
     @RdfProperty("datalift:parentSource")
     private Source parent;
+
+    private transient Configuration configuration;
+    private transient String baseUri;
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -80,8 +90,16 @@ public class TransformedRdfSourceImpl extends BaseSource
 
     /** {@inheritDoc} */
     @Override
-    public void init(File docRoot, URI baseUri) throws IOException {
-        // Nothing to initialize.
+    public void init(Configuration configuration, URI baseUri)
+                                                            throws IOException {
+        super.init(configuration, baseUri);
+
+        this.configuration = configuration;
+        this.baseUri       = (baseUri != null)? baseUri.toString(): "";
+
+        if (this.getTitle() == null) {
+            this.setTitle("<" + targetGraph + '>');
+        }
     }
 
     //-------------------------------------------------------------------------
@@ -98,6 +116,69 @@ public class TransformedRdfSourceImpl extends BaseSource
     @Override
     public Source getParent() {
         return this.parent;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Iterator<Statement> iterator() {
+        final RepositoryConnection cnx =
+                    this.configuration.getInternalRepository().newConnection();
+        try {
+            final GraphQueryResult result =
+                        cnx.prepareGraphQuery(QueryLanguage.SPARQL,
+                                        "CONSTRUCT { ?s ?p ?o . }" +
+                                        " WHERE { GRAPH <" + this.targetGraph +
+                                            "> { ?s ?p ?o . } }",
+                                        this.baseUri).evaluate();
+            return new Iterator<Statement>() {
+                    @Override
+                    public boolean hasNext() {
+                        try {
+                            boolean hasNext = result.hasNext();
+                            if (! hasNext) {
+                                this.close();
+                            }
+                            return hasNext;
+                        }
+                        catch (Exception e) {
+                            this.close();
+                            throw new TechnicalException("rdf.store.access.error", e);
+                        }
+                    }
+    
+                    @Override
+                    public Statement next() {
+                        try {
+                            return result.next();
+                        }
+                        catch (Exception e) {
+                            this.close();
+                            throw new TechnicalException("rdf.store.access.error", e);
+                        }
+                    }
+    
+                    @Override
+                    public void remove() {
+                        this.close();
+                        throw new UnsupportedOperationException();
+                    }
+
+                    @Override
+                    protected void finalize() {
+                        this.close();
+                    }
+
+                    private void close() {
+                        try { result.close(); } catch (Exception e) { /* Ignore... */ }
+                        try { cnx.close();    } catch (Exception e) { /* Ignore... */ }
+                    }
+                };
+        }
+        catch (Exception e) {
+            try { cnx.close(); } catch (Exception e2) { /* Ignore... */ }
+
+            throw new TechnicalException("rdf.store.access.error", e);
+        }
     }
 
     //-------------------------------------------------------------------------
