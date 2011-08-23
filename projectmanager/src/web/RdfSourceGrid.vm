@@ -4,7 +4,7 @@
 <head>
 #load("workspace/resources")
 #load_core_resources
-	<title>#i18n("source.grid.title") - DataLift</title>
+	<title>$!esc.html($it.title) - #i18n("source.grid.title") - DataLift</title>
 #header_links
 </head>
 <body>
@@ -13,14 +13,19 @@
 		var searchData = new Array();
 		var gridHeader = new Array();
 
-		$(function(){
+		$(function() {
 			getHeaderColumns();
 			jQuery.extend(jQuery.jgrid.defaults, {
 				caption: $('#searchnav').html(),
-				rowNum: 1000000
+				rowNum: 1000000,
+				height: 450,
+				search:{
+					caption: "#i18n("grid.search.value.label")"
+				}
 			});
 			tableToGrid("#grid", { datatype: "local" });
 			$("#grid").trigger("reloadGrid");
+
 			gridData = $("#grid").getRowData();
 			// Function called when modifying search text
 			$("#gridsearch").keyup(function () {
@@ -35,8 +40,15 @@
 		function getHeaderColumns() {
 			var cols = $(".dl-grid-header-column");
 			for (var i = 0; cols[i]; i++) {
-				gridHeader[i] = cols[i].innerHTML;
+				gridHeader[i] = normalizeHeaderName(cols[i].innerHTML);
 			}
+		}
+
+		function normalizeHeaderName(colTitle) {
+			return colTitle.replace(/ /g, "_")
+			               .replace(/&/g, "&amp;")
+			               .replace(/</g, "&lt;")
+			               .replace(/>/g, "&gt;");
 		}
 
 		function gridSearch(searchString) {
@@ -58,9 +70,8 @@
 				var obj = gridHeader;
 				for (var i = 0; i < gridData.length; i++) {
 					for (var k = 0; k < obj.length; k++) {
-						obj[k] = obj[k].replace(" ", "_");
-						var toCmp = eval("gridData[i]." + obj[k]);
-						if (toCmp.toLowerCase().indexOf(searchString) != -1) {
+						var toCmp = gridData[i][obj[k]];
+						if ((toCmp != undefined) && (toCmp.toLowerCase().indexOf(searchString) != -1)) {
 							searchData[c] = gridData[i];
 							c++;
 							k = obj.length;
@@ -68,24 +79,22 @@
 					}
 				}
 			}
-			else
-				searchData = gridData;
+			else searchData = gridData;
 		}
 
 		function searchOneColumn(searchString, searchColumn) {
 			if (searchString != "") {
+				var p = normalizeHeaderName(searchColumn);
 				var c = 0;
 				for (var i = 0; i < gridData.length; i++) {
-					searchColumn = searchColumn.replace(" ", "_");
-					var toCmp = eval("gridData[i]." + searchColumn);
-					if (toCmp.toLowerCase().indexOf(searchString) != -1) {
+					var toCmp = gridData[i][p];
+					if ((toCmp != undefined) && (toCmp.toLowerCase().indexOf(searchString) != -1)) {
 						searchData[c] = gridData[i];
 						c++;
 					}
 				}
 			}
-			else
-			searchData = gridData;
+			else searchData = gridData;
 		}
 	</script>
 
@@ -94,9 +103,9 @@
 	<table id="grid">
 		<thead>
 			<tr>
-				<th>#i18n("sparql.subject")</th>
-				<th>#i18n("sparql.predicate")</th>
-				<th>#i18n("sparql.object")</th>
+				<th class="dl-grid-header-column">#i18n("sparql.subject")</th>
+				<th class="dl-grid-header-column">#i18n("sparql.predicate")</th>
+				<th class="dl-grid-header-column">#i18n("sparql.object")</th>
 			</tr>
 		</thead>
 		<tbody>
@@ -111,13 +120,12 @@
 	</table>
 	<div id="pagernav"></div>
 	<div id="searchnav" style="display:none">
-		#i18n("grid.search.value.label"): <input type="search" id="gridsearch" placeholder="Search" results="0" class="gridsearch" />
-		#i18n("grid.search.column.label"): <select id="searchColumn">
-			<option id="all">#i18n("grid.search.column.option.all")</option>
-			<option id="subject">#i18n("sparql.subject")</option>
-			<option id="predicate">#i18n("sparql.predicate")</option>
-			<option id="object">#i18n("sparql.object")</option>
-
+		#i18n("grid.search.value.label"): <input type="search" id="gridsearch" placeholder="#i18n("grid.search.value.placeholder")" results="0" class="gridsearch" />
+		#i18n("grid.search.column.label") <select id="searchColumn">
+			<option value="all">#i18n("grid.search.column.option.all")</option>
+			<option>#i18n("sparql.subject")</option>
+			<option>#i18n("sparql.predicate")</option>
+			<option>#i18n("sparql.object")</option>
 		</select>
 	</div>
 </body>

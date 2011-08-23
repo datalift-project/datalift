@@ -126,14 +126,14 @@
 		<input type="hidden" id="current_source" name="current_source" value="$current.uri"/>
 		<p><label for="title">#i18n("project.upload_db.source_name"): </label>
 		<input type="text" id="title" name="title" value="$!esc.html($current.title)"/></p>
+		<p><label for="database">#i18n("project.upload_db.db"): </label>
+		<input type="text" name="database" id="database" value="$!esc.html($current.database)"/></p>
 		<p><label for="source_url">#i18n("project.upload_db.source_url"): </label>
 		<input type="text" name="source_url" id="source_url" value="$!esc.html($current.connectionUrl)"/></p>
 		<p><label for="user">#i18n("project.upload_db.user"): </label>
 		<input type="text" id="user" name="user" value="$!esc.html($current.user)"/></p>
 		<p><label for="password">#i18n("project.upload_db.password"): </label>
 		<input type="password" name="password" id="password" value="$!esc.html($current.password)"/></p>
-		<p><label for="database">#i18n("project.upload_db.db"): </label>
-		<input type="text" name="database" id="database" value="$!esc.html($current.database)"/></p>
 		<p><label for="request">#i18n("project.upload_db.request"): </label>
 		<input type="text" id="request" name="request" value="$!esc.html($current.request)"/></p>
 		<p><label for="cache_duration">#i18n("project.upload_db.cache_duration"): </label></p>

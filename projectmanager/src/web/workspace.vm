@@ -36,7 +36,7 @@
 
 		$(window).bind('resize', function() {
 			$("#selectable_sources").setGridWidth($("#tabs").width() - 50);
-	    	$("#selectable_ontologies").setGridWidth($("#tabs").width() - 50);
+		$("#selectable_ontologies").setGridWidth($("#tabs").width() - 50);
 		}).trigger('resize');
 	});
 
@@ -67,7 +67,7 @@
 		$("#workspace-main-panel").append(response);
 	}
 
-	function unsuccessfulQuery(XMLHttpRequest){
+	function unsuccessfulQuery(XMLHttpRequest) {
 		alert("An error occured when trying to get project description.");
 	}
 
@@ -75,36 +75,38 @@
 		/* Sources */
 		jQuery("#selectable_sources").jqGrid({
 			datatype: "local",
-		   	colNames:['#i18n("project.p_uri")','#i18n("project.p_title")','#i18n("project.p_others")'],
-		   	colModel:[
-		   	{name:'uri',index:'uri', sorttype:"text"},
-		   	{name:'title',index:'title', sorttype:"text"},
-		   	{name:'infos',index:'infos', sorttype:"text"}],
-		   	caption: "",
-		   	rowNum:10, rowList:[10,20,30], pager: '#selectable_sources_toolbar',
-		   	autowidth: true,
-		   	gridview: true
+			colNames:['#i18n("project.p_uri")','#i18n("project.p_title")','#i18n("project.p_others")'],
+			colModel:[
+				{name:'uri',index:'uri', sorttype:"text"},
+				{name:'title',index:'title', sorttype:"text"},
+				{name:'infos',index:'infos', sorttype:"text"} ],
+			caption: "",
+			rowNum:10, rowList:[10,20,30], pager: '#selectable_sources_toolbar',
+			autowidth: true,
+			gridview: true
 		});
 
 		var mydata = [
-		#foreach($curSrc in $current.getSources())
+#foreach($curSrc in $current.getSources())
 		{
 			uri:"$curSrc.uri",
 			title:"<a href='$curSrc.uri'>$esc.html($curSrc.title)</a>",
-			#if($curSrc.getType() == $field.DbSource)
-				infos: "#i18n("project.upload_db.source_url"): $!esc.html($curSrc.connectionUrl) <br />#i18n("project.upload_db.request"): $!esc.html($curSrc.request)  <br />#i18n("project.upload_db.cache_duration"): $!esc.html($curSrc.cacheDuration)"
-			#elseif($curSrc.getType() == $field.RdfSource)
+			#if( $curSrc.getType() == $field.CsvSource )
+				infos: "#i18n('project.upload_csv_separator'): $!esc.html($curSrc.separator)<br />#i18n('project.upload_csv_activate'): #i18n("boolean.${curSrc.hasTitleRow()}")"
+			#elseif( $curSrc.getType() == $field.RdfSource )
 				infos: "$!esc.html($curSrc.filePath)"
-			#elseif($curSrc.getType() == $field.TransformedRdfSource)
+			#elseif( $curSrc.getType() == $field.DbSource )
+				infos: "#i18n("project.upload_db.source_url"): $!esc.html($curSrc.connectionUrl)<br />#i18n("project.upload_db.request"): $!esc.html($curSrc.request)<br />#i18n("project.upload_db.cache_duration"): $!esc.html($curSrc.cacheDuration)"
+			#elseif( $curSrc.getType() == $field.TransformedRdfSource )
 				infos: "$!esc.html($curSrc.targetGraph.toString())"
-			#else
-				infos: "#i18n('project.upload_csv_separator'): $!esc.html($curSrc.separator)<br />#i18n('project.upload_csv_activate'): $!esc.html($curSrc.hasTitleRow())"
 			#end
 		},
-		#end
+#end
 		];
-		for(var i=0;i<=mydata.length;i++)
+
+		for(var i=0;i<=mydata.length;i++) {
 			jQuery("#selectable_sources").jqGrid('addRowData',i+1,mydata[i]);
+		}
 
 		jQuery("#selectable_sources").navGrid('#selectable_sources_toolbar',
 			{edit:false,add:false,del:false}).navButtonAdd(
@@ -122,9 +124,9 @@
 			buttonicon:"ui-icon-pencil",
 			onClickButton:function(){
 				var id = jQuery("#selectable_sources").getGridParam('selrow');
-				if(id){
+				if(id) {
 					var ret = jQuery("#selectable_sources").getRowData(id);
-					 window.location = ret.uri+"/modify.html";
+					window.location = ret.uri+"/modify.html";
 				} else {
 					alert('#i18n("project.msg.select_row")');
 				}
@@ -136,9 +138,9 @@
 			buttonicon:"ui-icon-trash",
 			onClickButton:function(){
 				var id = jQuery("#selectable_sources").getGridParam('selrow');
-				if(id){
+				if(id) {
 					var ret = jQuery("#selectable_sources").getRowData(id);
-					 window.location = ret.uri+"/delete";
+					window.location = ret.uri+"/delete";
 				} else {
 					alert('#i18n("project.msg.select_row")');
 				}
@@ -152,17 +154,17 @@
 		/* Ontologies */
 		jQuery("#selectable_ontologies").jqGrid({
 			datatype: "local",
-		   	colNames:['#i18n("project.p_uri")','#i18n("project.p_title")','#i18n("project.p_source")',"#i18n("project.p_dateSubmitted")", '#i18n("project.p_operator")'],
-		   	colModel:[
-		   	{name:'uri',index:'uri', sorttype:"text",editable:true,editoptions:{size:10}},
-		   	{name:'title',index:'title', sorttype:"text",editable:true,editoptions:{size:50}},
-		   	{name:'source',index:'source', sorttype:"text",editable:true,editoptions:{size:50}},
-		   	{name:'dateSubmitted',index:'dateSubmitted', sorttype:"text",editable:true,editoptions:{size:50}},
-		   	{name:'operator',index:'operator', sorttype:"text",editable:true,editoptions:{size:50}}],
-		  	caption: "",
-		   	rowNum:10, rowList:[10,20,30], pager: '#selectable_ontologies_toolbar',
-		   	autowidth: true,
-		   	gridview: true
+			colNames:['#i18n("project.p_uri")','#i18n("project.p_title")','#i18n("project.p_source")',"#i18n("project.p_dateSubmitted")", '#i18n("project.p_operator")'],
+			colModel:[
+				{name:'uri',index:'uri', sorttype:"text",editable:true,editoptions:{size:10}},
+				{name:'title',index:'title', sorttype:"text",editable:true,editoptions:{size:50}},
+				{name:'source',index:'source', sorttype:"text",editable:true,editoptions:{size:50}},
+				{name:'dateSubmitted',index:'dateSubmitted', sorttype:"text",editable:true,editoptions:{size:50}},
+				{name:'operator',index:'operator', sorttype:"text",editable:true,editoptions:{size:50}} ],
+			caption: "",
+			rowNum:10, rowList:[10,20,30], pager: '#selectable_ontologies_toolbar',
+			autowidth: true,
+			gridview: true
 		});
 
 		var mydataOntology = [
@@ -232,7 +234,7 @@
 			<a class="ui-state-default dl-project-button" onclick="makeFocus(this);" href="${item.uri}">$!esc.html($item.title)</a><br />
 #end
 
-			<p><a href="${baseUri}/workspace/project/add.html" class="button" style="position:absolute;bottom:0">#i18n("project.title.new_project")</a></p>
+			<a href="${baseUri}/workspace/project/add.html" class="button" style="position:absolute;bottom:0">#i18n("project.title.new_project")</a>
 		</div>
 	</div>
 
