@@ -83,7 +83,7 @@ import org.datalift.fwk.MediaTypes;
 import org.datalift.fwk.ResourceResolver;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.CsvSource;
-import org.datalift.fwk.project.DbSource;
+import org.datalift.fwk.project.SqlSource;
 import org.datalift.fwk.project.Ontology;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectManager;
@@ -667,7 +667,7 @@ public class ProjectResource
             Project p = this.loadProject(projectUri);
 
             // Add new source to persistent project
-            DbSource src = this.projectManager.newDbSource(sourceUri,
+            SqlSource src = this.projectManager.newDbSource(sourceUri,
                                                 title, database, srcUrl,
                                                 user, password,
                                                 request, cacheDuration);
@@ -706,7 +706,7 @@ public class ProjectResource
         try {
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
             Project p = this.loadProject(projectUri);
-            DbSource s = (DbSource)(p.getSource(currentSourceUri));
+            SqlSource s = (SqlSource)(p.getSource(currentSourceUri));
             s.setTitle(title);
             s.setConnectionUrl(srcUrl);
             s.setUser(user);
@@ -793,7 +793,7 @@ public class ProjectResource
                      (src instanceof TransformedRdfSource)) {
                 template = "/RdfSourceGrid.vm";
             }
-            else if (src instanceof DbSource) {
+            else if (src instanceof SqlSource) {
                 template = "/DbSourceGrid.vm";
             }
             else {

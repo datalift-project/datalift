@@ -37,7 +37,6 @@ package org.datalift.core.project;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -57,13 +56,18 @@ import com.sun.rowset.WebRowSetImpl;
 
 import org.datalift.core.TechnicalException;
 import org.datalift.fwk.Configuration;
-import org.datalift.fwk.project.DbSource;
+import org.datalift.fwk.project.SqlSource;
 import org.datalift.fwk.util.StringUtils;
 
 
+/**
+ * Default implementation of the {@link SqlSource} interface.
+ *
+ * @author hdevos
+ */
 @Entity
 @RdfsClass("datalift:dbSource")
-public class DbSourceImpl extends BaseSource implements DbSource
+public class SqlSourceImpl extends BaseSource implements SqlSource
 {
     //-------------------------------------------------------------------------
     // Instance members
@@ -82,22 +86,30 @@ public class DbSourceImpl extends BaseSource implements DbSource
     @RdfProperty("datalift:cacheDuration")
     private int cacheDuration;
 
-    private transient WebRowSet wrset;
+    private transient WebRowSet wrset = null;
 
     //-------------------------------------------------------------------------
     // Constructors
     //-------------------------------------------------------------------------
 
-    public DbSourceImpl() {
+    /**
+     * Creates a new SQL source.
+     */
+    public SqlSourceImpl() {
         super(SourceType.DbSource);
     }
 
-    public DbSourceImpl(String uri) {
+    /**
+     * Creates a new SQL source with the specified identifier.
+     * @param  uri    the source unique identifier (URI) or
+     *                <code>null</code> if not known at this stage.
+     */
+    public SqlSourceImpl(String uri) {
         super(SourceType.DbSource, uri);
     }
 
     //-------------------------------------------------------------------------
-    // BaseSource contract support
+    // DbSource contract support
     //-------------------------------------------------------------------------
 
     /** {@inheritDoc} */
@@ -111,33 +123,30 @@ public class DbSourceImpl extends BaseSource implements DbSource
                                             StringUtils.urlify(this.getTitle());
             File cacheFile = new File(configuration.getPrivateStorage(),
                                       fileName);
-            wrset = new WebRowSetImpl();
+            WebRowSet rowSet = new WebRowSetImpl();
             InputStream in = this.getCacheStream(cacheFile);
             if (in == null) {
                 // Force loading of database driver.
                 Class.forName(DatabaseType.valueOf(this.getDatabaseType())
                                           .getDriver());
                 // Get table to grid
-                wrset.setCommand(request);
-                wrset.setUrl(connectionUrl);
-                wrset.setUsername(user);
-                wrset.setPassword(password);
-                wrset.execute();
-                wrset.writeXml(new FileOutputStream(cacheFile));
+                rowSet.setCommand(request);
+                rowSet.setUrl(connectionUrl);
+                rowSet.setUsername(user);
+                rowSet.setPassword(password);
+                rowSet.execute();
+                rowSet.writeXml(new FileOutputStream(cacheFile));
                 cacheFile.deleteOnExit();
             }
             else {
-                wrset.readXml(in);
+                rowSet.readXml(in);
             }
+            this.wrset = rowSet;
         }
         catch (Exception e) {
             throw new IOException(e);
         }
     }
-
-    //-------------------------------------------------------------------------
-    // DbSource contract support
-    //-------------------------------------------------------------------------
 
     /** {@inheritDoc} */
     @Override
@@ -213,26 +222,22 @@ public class DbSourceImpl extends BaseSource implements DbSource
 
     /** {@inheritDoc} */
     @Override
-    public int getColumnCount() {
-        try {
-            return wrset.getMetaData().getColumnCount();
+    public int getColumnCount() throws SQLException {
+        if (this.wrset == null) {
+            throw new IllegalStateException("Not initialized");
         }
-        catch (SQLException e) {
-            throw new TechnicalException(null, e);
-        }
+        return wrset.getMetaData().getColumnCount();
     }
 
     /** {@inheritDoc} */
     @Override
-    public List<String> getColumnNames() {
-        List<String> names = new LinkedList<String>();
-        try {
-            for (int i=0, max=this.getColumnCount(); i<max; i++) {
-                names.add(wrset.getMetaData().getColumnName(i+1));
-            }
+    public List<String> getColumnNames() throws SQLException {
+        if (this.wrset == null) {
+            throw new IllegalStateException("Not initialized");
         }
-        catch (SQLException e) {
-            throw new TechnicalException(null, e);
+        List<String> names = new LinkedList<String>();
+        for (int i=0, max=this.getColumnCount(); i<max; i++) {
+            names.add(wrset.getMetaData().getColumnName(i+1));
         }
         return Collections.unmodifiableList(names);
     }
@@ -240,6 +245,9 @@ public class DbSourceImpl extends BaseSource implements DbSource
     /** {@inheritDoc} */
     @Override
     public Iterator<Object> iterator() {
+        if (this.wrset == null) {
+            throw new IllegalStateException("Not initialized");
+        }
         try {
             return Collections.unmodifiableCollection(wrset.toCollection())
                               .iterator();
@@ -266,13 +274,15 @@ public class DbSourceImpl extends BaseSource implements DbSource
     }
 
     /**
-     * Get the data of the database in cache if it had to be used.
-     * @param cacheFile
-     * @return File in cache if it's valid
-     * @throws FileNotFoundException
+     * Get the data of the database form the cache file, if it has
+     * been populated.
+     * @param  cacheFile   the cache file path.
+     *
+     * @return an input stream on the cache file, if it exists.
+     * @throws IOException if any error occurred accessing the cache
+     *         file.
      */
-    private InputStream getCacheStream(File cacheFile)
-                                                throws FileNotFoundException {
+    private InputStream getCacheStream(File cacheFile) throws IOException {
         if (this.cacheDuration > 0) {
             long now = System.currentTimeMillis();
             if ((cacheFile.exists()) &&

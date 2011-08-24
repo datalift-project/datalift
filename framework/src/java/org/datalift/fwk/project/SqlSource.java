@@ -35,32 +35,18 @@
 package org.datalift.fwk.project;
 
 
+import java.sql.SQLException;
 import java.util.List;
 
 
-public interface DbSource extends Source, Iterable<Object>
+/**
+ * A source object reading data from a SQL database by executing a
+ * user-provided JDBC query.
+ *
+ * @author hdevos
+ */
+public interface SqlSource extends Source, Iterable<Object>
 {
-    public String getConnectionUrl();
-    public void setConnectionUrl(String connectionUrl);
-
-    public String getUser();
-    public void setUser(String user);
-
-    public String getPassword();
-    public void setPassword(String password);
-
-    public int getCacheDuration();
-    public void setCacheDuration(int cacheDuration);
-
-    public String getDatabase();
-    public void setDatabase(String database);
-
-    public String getRequest();
-    public void setRequest(String request);
-
-    public int getColumnCount();
-    public List<String> getColumnNames();
-
     /**
      * List of supported databases and their JDBC driver class.
      */
@@ -80,4 +66,42 @@ public interface DbSource extends Source, Iterable<Object>
         }
     }
 
+
+    public String getConnectionUrl();
+    public void setConnectionUrl(String connectionUrl);
+
+    public String getUser();
+    public void setUser(String user);
+
+    public String getPassword();
+    public void setPassword(String password);
+
+    public int getCacheDuration();
+    public void setCacheDuration(int cacheDuration);
+
+    public String getDatabase();
+    public void setDatabase(String database);
+
+    public String getRequest();
+    public void setRequest(String request);
+
+    /**
+     * Returns the number of data columns returned by the SQL query.
+     * @return the number of data columns.
+     * @throws SQLException if any error occurred accessing the
+     *         database.
+     * @throws IllegalStateException if this source object has not been
+     *         {@link #init(org.datalift.fwk.Configuration, java.net.URI)}.
+     */
+    public int getColumnCount() throws SQLException;
+
+    /**
+     * Returns the number of data columns returned by the SQL query.
+     * @return the number of data columns.
+     * @throws SQLException if any error occurred accessing the
+     *         database.
+     * @throws IllegalStateException if this source object has not been
+     *         {@link #init(org.datalift.fwk.Configuration, java.net.URI)}.
+     */
+    public List<String> getColumnNames() throws SQLException;
 }
