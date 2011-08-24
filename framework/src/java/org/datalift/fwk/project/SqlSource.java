@@ -55,7 +55,7 @@ public interface SqlSource extends Source, Iterable<Object>
         postgresql("org.postgresql.Driver"),
         oracle("oracle.jdbc.driver.OracleDriver");
 
-        protected String driverClass;
+        private final String driverClass;
 
         DatabaseType(String className) {
             this.driverClass = className;
