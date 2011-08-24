@@ -56,6 +56,11 @@ import org.datalift.fwk.project.CsvSource;
 import org.datalift.fwk.util.StringUtils;
 
 
+/**
+ * Default implementation of the {@link CsvSource} interface.
+ *
+ * @author hdevos
+ */
 @Entity
 @RdfsClass("datalift:csvSource")
 public class CsvSourceImpl extends BaseFileSource<String[]>
@@ -77,16 +82,24 @@ public class CsvSourceImpl extends BaseFileSource<String[]>
     // Constructors
     //-------------------------------------------------------------------------
 
+    /**
+     * Creates a new CSV source.
+     */
     public CsvSourceImpl() {
         super(SourceType.CsvSource);
     }
 
+    /**
+     * Creates a new CSV source with the specified identifier.
+     * @param  uri    the source unique identifier (URI) or
+     *                <code>null</code> if not known at this stage.
+     */
     public CsvSourceImpl(String uri) {
         super(SourceType.CsvSource, uri);
     }
 
     //-------------------------------------------------------------------------
-    // BaseSource contract support
+    // FileSource contract support
     //-------------------------------------------------------------------------
 
     /** {@inheritDoc} */
@@ -120,10 +133,6 @@ public class CsvSourceImpl extends BaseFileSource<String[]>
             // Else: empty file.
         }
     }
-
-    //-------------------------------------------------------------------------
-    // FileSource contract support
-    //-------------------------------------------------------------------------
 
     /** {@inheritDoc} */
     @Override
@@ -162,16 +171,20 @@ public class CsvSourceImpl extends BaseFileSource<String[]>
     @Override
     public List<String> getColumnNames() {
         if (this.headers == null) {
-            throw new IllegalStateException();
+            throw new IllegalStateException("Not initialized");
         }
         return this.headers;
     }
+
+    //-------------------------------------------------------------------------
+    // CsvSource contract support
+    //-------------------------------------------------------------------------
 
     /** {@inheritDoc} */
     @Override
     public final Iterator<String[]> iterator() {
         if (this.grid == null) {
-            throw new IllegalStateException();
+            throw new IllegalStateException("Not initialized");
         }
         Iterator<String[]> i = this.grid.iterator();
         if ((this.titleRow) && (i.hasNext())) {

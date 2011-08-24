@@ -61,7 +61,7 @@ import com.clarkparsia.utils.NamespaceUtils;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.LifeCycle;
 import org.datalift.fwk.project.CsvSource;
-import org.datalift.fwk.project.DbSource;
+import org.datalift.fwk.project.SqlSource;
 import org.datalift.fwk.project.Ontology;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectManager;
@@ -182,11 +182,11 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
 
     /** {@inheritDoc} */
     @Override
-    public DbSource newDbSource(URI uri, String title, String database,
+    public SqlSource newDbSource(URI uri, String title, String database,
                                 String srcUrl, String user, String password,
                                 String request, int cacheDuration)
                                                             throws IOException {
-        DbSourceImpl src = new DbSourceImpl(uri.toString());
+        SqlSourceImpl src = new SqlSourceImpl(uri.toString());
         src.setTitle(title);
         src.setDatabase(database);
         src.setConnectionUrl(srcUrl);
@@ -320,7 +320,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     private Collection<Class<?>> getPersistentClasses() {
         Collection<Class<?>> classes = new LinkedList<Class<?>>();
         classes.addAll(Arrays.asList(ProjectImpl.class, CsvSourceImpl.class,
-                RdfSourceImpl.class, DbSourceImpl.class, OntologyImpl.class, 
+                RdfSourceImpl.class, SqlSourceImpl.class, OntologyImpl.class, 
                 TransformedRdfSourceImpl.class));
         return classes;
     }

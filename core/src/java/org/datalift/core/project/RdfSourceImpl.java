@@ -57,6 +57,11 @@ import org.datalift.fwk.rdf.RdfUtils;
 import static org.datalift.fwk.rdf.RdfUtils.*;
 
 
+/**
+ * Default implementation of the {@link RdfSource} interface.
+ *
+ * @author hdevos
+ */
 @Entity
 @RdfsClass("datalift:rdfSource")
 public class RdfSourceImpl extends BaseFileSource<Statement>
@@ -72,10 +77,18 @@ public class RdfSourceImpl extends BaseFileSource<Statement>
     // Constructors
     //-------------------------------------------------------------------------
 
+    /**
+     * Creates a new RDF source.
+     */
     public RdfSourceImpl() {
         super(SourceType.RdfSource);
     }
 
+    /**
+     * Creates a new RDF source with the specified identifier.
+     * @param  uri    the source unique identifier (URI) or
+     *                <code>null</code> if not known at this stage.
+     */
     public RdfSourceImpl(String uri) {
         super(SourceType.RdfSource, uri);
     }
@@ -99,14 +112,16 @@ public class RdfSourceImpl extends BaseFileSource<Statement>
                     StatementCollector collector = new StatementCollector(l);
                     parser.setRDFHandler(collector);
                     parser.parse(in, (baseUri != null)? baseUri.toString(): "");
-                } catch (Exception e) {
-                    throw new IOException("Error while parsing RDF source");
+                }
+                catch (Exception e) {
+                    throw new IOException("Error while parsing RDF source", e);
                 }
             }
             this.content = Collections.unmodifiableCollection(l);
         }
     }
 
+    /** {@inheritDoc} */
     @Override
     public void setMimeType(String mimeType) {
         super.setMimeType(parseMimeType(mimeType).toString());
@@ -120,7 +135,7 @@ public class RdfSourceImpl extends BaseFileSource<Statement>
     @Override
     public Iterator<Statement> iterator() {
         if (this.content == null) {
-            throw new IllegalStateException();
+            throw new IllegalStateException("Not initialized");
         }
         return this.content.iterator();
     }

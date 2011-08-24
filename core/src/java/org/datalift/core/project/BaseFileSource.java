@@ -51,6 +51,12 @@ import org.datalift.fwk.Configuration;
 import org.datalift.fwk.project.FileSource;
 
 
+/**
+ * An abstract superclass for implementations of the {@link FileSource}
+ * interface.
+ *
+ * @author hdevos
+ */
 @MappedSuperclass
 public abstract class BaseFileSource<T> extends BaseSource
                                         implements FileSource<T>
@@ -60,16 +66,26 @@ public abstract class BaseFileSource<T> extends BaseSource
     @RdfProperty("datalift:path")
     private String filePath;
 
-    private transient File storage;
+    private transient File storage = null;
 
     //-------------------------------------------------------------------------
     // Constructors
     //-------------------------------------------------------------------------
 
+    /**
+     * Creates a new source of the specified type.
+     * @param  type   the {@link SourceType source type}.
+     */
     protected BaseFileSource(SourceType type) {
         super(type);
     }
 
+    /**
+     * Creates a new source of the specified type and identifier.
+     * @param  type   the {@link SourceType source type}.
+     * @param  uri    the source unique identifier (URI) or
+     *                <code>null</code> if not known at this stage.
+     */
     protected BaseFileSource(SourceType type, String uri) {
         super(type, uri);
     }
@@ -108,6 +124,12 @@ public abstract class BaseFileSource<T> extends BaseSource
 
     /** {@inheritDoc} */
     @Override
+    public void setMimeType(String mimeType) {
+        this.mimeType = mimeType;
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public final String getFilePath() {
         return this.filePath;
     }
@@ -116,7 +138,7 @@ public abstract class BaseFileSource<T> extends BaseSource
     @Override
     public InputStream getInputStream() throws IOException {
         if (this.storage == null) {
-            throw new IllegalStateException();
+            throw new IllegalStateException("Not initialized");
         }
     	return new FileInputStream(this.storage);
     }
@@ -125,10 +147,11 @@ public abstract class BaseFileSource<T> extends BaseSource
     // Specific implementation
     //-------------------------------------------------------------------------
 
-    public void setMimeType(String mimeType) {
-        this.mimeType = mimeType;
-    }
-
+    /**
+     * Sets the path (relative to the DataLift public storage
+     * directory) of the file containing the source data.
+     * @param  path   the data file relative path.
+     */
     public void setFilePath(String path) {
         this.filePath = path;
     }
