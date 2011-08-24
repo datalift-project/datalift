@@ -113,7 +113,7 @@
 			<div id="pagernav"></div>
 		</div>
 		<div id="searchnav" style="display:none">
-			#i18n("grid.search.value.label"): <input type="search" id="gridsearch" placeholder="#i18n("grid.search.value.placeholder")" results="0" class="gridsearch" />
+			#i18n("grid.search.value.label") <input type="search" id="gridsearch" placeholder="#i18n("grid.search.value.placeholder")" results="0" class="gridsearch" />
 			#i18n("grid.search.column.label") <select id="searchColumn">
 				<option value="all">#i18n("grid.search.column.option.all")</option>
 				<option>#i18n("sparql.subject")</option>

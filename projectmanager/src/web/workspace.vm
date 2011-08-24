@@ -255,7 +255,7 @@
 				#i18n("project.license"): <a href="$current.getLicense()">$esc.html($!current.license)</a></p>
 
 				<div id="module_can_handle">
-					<p>#i18n("project.module_available"):</p>
+					<p>#i18n("project.module_available")</p>
 					<ol id="selectable_module">
 #foreach( $page in $canHandle )
 #set( $pageUrl = $page.getUrl(${baseUri}) )
@@ -276,7 +276,7 @@
 			</div>
 
 			<div id="source">
-				<p>#i18n("project.source_available"):</p>
+				<p>#i18n("project.source_available")</p>
 				<form> 
 					<table id="selectable_sources">
 						<tr><td/></tr>
@@ -286,7 +286,7 @@
 			</div>
 
 			<div id="ontology">
-				<p>#i18n("project.ontology_available"):</p>
+				<p>#i18n("project.ontology_available")</p>
 				<form> 
 					<table id="selectable_ontologies">
 						<tr><td/></tr>
