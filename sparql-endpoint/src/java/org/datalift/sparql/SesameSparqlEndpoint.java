@@ -42,7 +42,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-import javax.ws.rs.Path;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
@@ -95,7 +94,6 @@ import static org.datalift.fwk.MediaTypes.*;
  *
  * @author lbihanic
  */
-@Path("/sparql")
 public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
 {
     //-------------------------------------------------------------------------

@@ -43,7 +43,6 @@ import java.net.URL;
 import java.net.HttpURLConnection;
 import java.util.List;
 
-import javax.ws.rs.Path;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
@@ -60,7 +59,6 @@ import static org.datalift.fwk.util.StringUtils.isBlank;
  *
  * @author lbihanic
  */
-@Path("/sparql")
 public class HttpSparqlEndpoint extends AbstractSparqlEndpoint
 {
     //-------------------------------------------------------------------------
