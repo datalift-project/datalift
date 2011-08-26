@@ -38,7 +38,17 @@ package org.datalift.fwk.util;
 import java.net.URI;
 
 
+/**
+ * A generic interface for translating URIs.
+ * 
+ * @author lbihanic
+ */
 public interface UriMapper
 {
+    /**
+     * Translates a URI.
+     * @param  in   the URI to translate.
+     * @return the translated URI.
+     */
     URI map(URI in);
 }

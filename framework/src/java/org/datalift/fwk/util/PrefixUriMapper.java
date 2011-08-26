@@ -39,12 +39,24 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 
-
+/**
+ * A simple URI mapper that substitutes the URI prefix. URIs not
+ * starting with the expected prefix are not modified (i.e. returned
+ * unchanged).
+ *
+ * @author lbihanic
+ */
 public class PrefixUriMapper implements UriMapper
 {
     private final String from;
     private final String to;
 
+    /**
+     * Creates a new URI mapper substituting the URI prefix.
+     * @param  fromPrefix   the prefix to be substituted in the input
+     *                      URIs
+     * @param  toPrefix     the prefix for the translated URIs.
+     */
     public PrefixUriMapper(String fromPrefix, String toPrefix) {
         if (! StringUtils.isSet(fromPrefix)) {
             throw new IllegalArgumentException("fromPrefix");
@@ -56,6 +68,7 @@ public class PrefixUriMapper implements UriMapper
         this.to   = toPrefix;
     }
 
+    /** {@inheritDoc} */
     @Override
     public URI map(URI in) {
         URI mapped = in;

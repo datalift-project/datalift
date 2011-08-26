@@ -59,16 +59,51 @@ import org.openrdf.rio.trig.TriGParser;
 import org.openrdf.rio.trix.TriXParser;
 import org.openrdf.rio.turtle.TurtleParser;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_XML;
-
 import org.datalift.fwk.util.StringUtils;
 import org.datalift.fwk.util.UriMapper;
 
 import static org.datalift.fwk.MediaTypes.*;
 
 
+/**
+ * A set of utility methods to manipulate RDF triples and files.
+ * <p>
+ * This class offers methods to:</p>
+ * <ul>
+ *  <li>Determine the type of RDF data (RDF/XML, Turtle, N3...) a file
+ *  contains from its extension:
+ *  {@link #guessRdfTypeFromExtension(File)}</li>
+ *  <li>Get an RDF parser: {@link #newRdfParser(MediaType)}</li>
+ *  <li>Parse RDF files and load the resulting triples into an RDF
+ *   store: {@link #upload(File, Repository, URI)}</li>
+ *  <li>Apply a set of SPARQL CONTRUCT queries to build a new set of
+ *   RDF triples and save them into an RDF store:
+ *   {@link #convert(Repository, List, Repository, URI)}</li>
+ * </ul>
+ *
+ * @author lbihanic
+ */
 public class RdfUtils
 {
+    /**
+     * Parses the specified file, guessing the RDF data type (RDF/XML,
+     * Turtle, N3...) from the file extension and loads the resulting
+     * triples into the specified RDF store, optionally placing them
+     * in the specified named graph.
+     * @param  source       the RDF file to load.
+     * @param  target       the RDF store to persist triples into.
+     * @param  namedGraph   the named graph to use as context for the
+     *                      triples or <code>null</code>. If the named
+     *                      graph exists, it will be cleared prior
+     *                      loading the triples.
+     *
+     * @throws IllegalArgumentException if no source file or target
+     *         RDF store are provided.
+     * @throws RdfException if any error occurred parsing the file or
+     *         accessing the RDF store.
+     *
+     * @see    #upload(File, MediaType, Repository, URI, UriMapper, String)
+     */
     public static void upload(File source, Repository target, URI namedGraph)
                                                         throws RdfException {
         if ((source == null) || (! source.isFile())) {
@@ -78,6 +113,28 @@ public class RdfUtils
                                                     target, namedGraph, null);
     }
 
+    /**
+     * Parses the specified file, guessing the RDF data type (RDF/XML,
+     * Turtle, N3...) from the file extension and loads the resulting
+     * triples into the specified RDF store, optionally placing them
+     * in the specified named graph.
+     * @param  source       the RDF file to load.
+     * @param  target       the RDF store to persist triples into.
+     * @param  namedGraph   the named graph to use as context for the
+     *                      triples or <code>null</code>. If the named
+     *                      graph exists, it will be cleared prior
+     *                      loading the triples.
+     * @param  mapper       an optional {@link UriMapper mapper} to
+     *                      translate URIs as triples are loaded or
+     *                      <code>null</code> if no mapping is needed.
+     *
+     * @throws IllegalArgumentException if no source file or target
+     *         RDF store are provided.
+     * @throws RdfException if any error occurred parsing the file or
+     *         accessing the RDF store.
+     *
+     * @see    #upload(File, MediaType, Repository, URI, UriMapper, String)
+     */
     public static void upload(File source, Repository target, URI namedGraph,
                               UriMapper mapper) throws RdfException {
         if ((source == null) || (! source.isFile())) {
@@ -87,6 +144,28 @@ public class RdfUtils
                                                     target, namedGraph, mapper);
     }
 
+    /**
+     * Parses the specified file and loads the resulting triples
+     * into the specified RDF store, optionally placing them in the
+     * specified named graph.
+     * @param  source       the RDF file to load.
+     * @param  mimeType     the type of RDF data present in the file.
+     * @param  target       the RDF store to persist triples into.
+     * @param  namedGraph   the named graph to use as context for the
+     *                      triples or <code>null</code>. If the named
+     *                      graph exists, it will be cleared prior
+     *                      loading the triples.
+     * @param  mapper       an optional {@link UriMapper mapper} to
+     *                      translate URIs as triples are loaded or
+     *                      <code>null</code> if no mapping is needed.
+     *
+     * @throws IllegalArgumentException if no source file, MIME type
+     *         or target RDF store are provided.
+     * @throws RdfException if any error occurred parsing the file or
+     *         accessing the RDF store.
+     *
+     * @see    #upload(File, MediaType, Repository, URI, UriMapper, String)
+     */
     public static void upload(File source, MediaType mimeType,
                               Repository target, URI namedGraph,
                               UriMapper mapper) throws RdfException {
@@ -94,6 +173,28 @@ public class RdfUtils
                             (namedGraph != null)? namedGraph.toString(): null);
     }
 
+    /**
+     * Parses the specified file and loads the resulting triples
+     * into the specified RDF store, optionally placing them in the
+     * specified named graph.
+     * @param  source       the RDF file to load.
+     * @param  mimeType     the type of RDF data present in the file.
+     * @param  target       the RDF store to persist triples into.
+     * @param  namedGraph   the named graph to use as context for the
+     *                      triples or <code>null</code>. If the named
+     *                      graph exists, it will be cleared prior
+     *                      loading the triples.
+     * @param  mapper       an optional {@link UriMapper mapper} to
+     *                      translate URIs as triples are loaded or
+     *                      <code>null</code> if no mapping is needed.
+     * @param  baseUri      the (optional) base URI to resolve relative
+     *                      URIs.
+     *
+     * @throws IllegalArgumentException if no source file, MIME type
+     *         or target RDF store are provided.
+     * @throws RdfException if any error occurred parsing the file or
+     *         accessing the RDF store.
+     */
     public static void upload(File source, MediaType mimeType,
                               Repository target, URI namedGraph,
                               final UriMapper mapper, String baseUri)
@@ -104,10 +205,10 @@ public class RdfUtils
         if (target == null) {
             throw new IllegalArgumentException("target");
         }
+        RDFParser parser = newRdfParser(mimeType);
 
         final RepositoryConnection cnx = target.newConnection();
         try {
-            RDFParser parser = newRdfParser(mimeType);
             final ValueFactory valueFactory = cnx.getValueFactory();
 
             // Prevent transaction commit for each triple inserted.
@@ -175,12 +276,53 @@ public class RdfUtils
         }
     }
 
+    /**
+     * Applies a set of SPARQL CONTRUCT queries on an RDF store to
+     * build a set of RDF triples and save them into another RDF store.
+     * @param  source             the RDF store to query.
+     * @param  constructQueries   the SPARQL CONSTRUCT queries to
+     *                            execute to extract triples.
+     * @param  target             the RDF store to persist the
+     *                            generated triple to or
+     *                            <code>null</code> to persist the
+     *                            triples into the source RDF store.
+     *
+     * @throws IllegalArgumentException if no source RDF store or
+     *         CONSTRUCT query list are provided.
+     * @throws RdfException if any error occurred accessing the RDF
+     *         stores or executing the CONSTRUCT queries.
+     *
+     * @see    #convert(Repository, List, Repository, URI, String)
+     */
     public static void convert(Repository source,
                                List<String> constructQueries,
                                Repository target) throws RdfException {
         convert(source, constructQueries, target, null);
     }
 
+    /**
+     * Applies a set of SPARQL CONTRUCT queries on an RDF store to
+     * build a set of RDF triples and save them into another RDF store.
+     * @param  source             the RDF store to query.
+     * @param  constructQueries   the SPARQL CONSTRUCT queries to
+     *                            execute to extract triples.
+     * @param  target             the RDF store to persist the
+     *                            generated triple to or
+     *                            <code>null</code> to persist the
+     *                            triples into the source RDF store.
+     * @param  namedGraph         the named graph to use as context
+     *                            when persisting the generated triples
+     *                            or <code>null</code>. If the named
+     *                            graph exists, it will be cleared
+     *                            prior inserting the new triples.
+     *
+     * @throws IllegalArgumentException if no source RDF store or
+     *         CONSTRUCT query list are provided.
+     * @throws RdfException if any error occurred accessing the RDF
+     *         stores or executing the CONSTRUCT queries.
+     *
+     * @see    #convert(Repository, List, Repository, URI, String)
+     */
     public static void convert(Repository source,
                                List<String> constructQueries,
                                Repository target, URI namedGraph)
@@ -189,6 +331,29 @@ public class RdfUtils
                             (namedGraph != null)? namedGraph.toString(): null);
     }
 
+    /**
+     * Applies a set of SPARQL CONTRUCT queries on an RDF store to
+     * build a set of RDF triples and save them into another RDF store.
+     * @param  source             the RDF store to query.
+     * @param  constructQueries   the SPARQL CONSTRUCT queries to
+     *                            execute to extract triples.
+     * @param  target             the RDF store to persist the
+     *                            generated triple to or
+     *                            <code>null</code> to persist the
+     *                            triples into the source RDF store.
+     * @param  namedGraph         the named graph to use as context
+     *                            when persisting the generated triples
+     *                            or <code>null</code>. If the named
+     *                            graph exists, it will be cleared
+     *                            prior inserting the new triples.
+     * @param  baseUri            the (optional) base URI to resolve
+     *                            relative URIs.
+     *
+     * @throws IllegalArgumentException if no source RDF store or
+     *         CONSTRUCT query list are provided.
+     * @throws RdfException if any error occurred accessing the RDF
+     *         stores or executing the CONSTRUCT queries.
+     */
     public static void convert(Repository source,
                                List<String> constructQueries,
                                Repository target,
@@ -198,9 +363,9 @@ public class RdfUtils
             throw new IllegalArgumentException("source");
         }
         if (target == null) {
-            throw new IllegalArgumentException("target");
+            target = source;
         }
-        if (constructQueries == null) {
+        if ((constructQueries == null) || (constructQueries.isEmpty())) {
             throw new IllegalArgumentException("constructQueries");
         }
         if (baseUri == null) {
@@ -288,6 +453,9 @@ public class RdfUtils
     }
 
     public static MediaType guessRdfTypeFromExtension(File f) {
+        if ((f == null) || (! f.isFile())) {
+            throw new IllegalArgumentException("f");
+        }
         String fileName = f.getName();
         String ext = "";
         int i = fileName.lastIndexOf('.');

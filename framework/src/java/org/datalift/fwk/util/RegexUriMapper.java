@@ -42,11 +42,28 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
+/**
+ * A URI mapper than uses a {@link Pattern regular expression} to
+ * match supported URIs and extract some parts to
+ * {@link MessageFormat format} an new URIs. URIs not matching the
+ * specified pattern are not modified (i.e. returned unchanged).
+ *
+ * @author lbihanic
+ */
 public class RegexUriMapper implements UriMapper
 {
     private final Pattern extractor;
     private final MessageFormat builder;
 
+    /**
+     * Creates a new URI mapper matching and extracting URI parts
+     * using a {@link Pattern regular expression} and a
+     * {@link MessageFormat formatter} to generate the mapped URI.
+     * @param  uriExtractor   the regular expression to filter the
+     *                        applicable URIs and extract the parts
+     *                        used to build the translated URI.
+     * @param  uriBuilder     the format of the resulting URIs.
+     */
     public RegexUriMapper(Pattern uriExtractor, MessageFormat uriBuilder) {
         if (uriExtractor == null) {
             throw new IllegalArgumentException("uriExtractor");
@@ -58,6 +75,7 @@ public class RegexUriMapper implements UriMapper
         this.builder   = uriBuilder;
     }
 
+    /** {@inheritDoc} */
     @Override
     public URI map(URI in) {
         URI mapped = in;

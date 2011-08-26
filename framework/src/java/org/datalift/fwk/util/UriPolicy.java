@@ -46,7 +46,7 @@ import org.datalift.fwk.LifeCycle;
 
 
 /**
- * Resource policies allow modules to provide specific URI mapping
+ * URI policies allow modules to provide specific URI mapping
  * and/or resolution policies for RDF resources, such as distinguishing
  * subject URIs from representation (RDF, HTML...) URIs or provides
  * custom HTML pages for known RDF types.
