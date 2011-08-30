@@ -59,6 +59,7 @@ import org.openrdf.rio.trig.TriGParser;
 import org.openrdf.rio.trix.TriXParser;
 import org.openrdf.rio.turtle.TurtleParser;
 
+import org.datalift.fwk.MediaTypes;
 import org.datalift.fwk.util.StringUtils;
 import org.datalift.fwk.util.UriMapper;
 
@@ -416,6 +417,18 @@ public class RdfUtils
         }
     }
 
+    /**
+     * Returns a RDF parser suitable for parsing files of the
+     * specified MIME type.
+     * @param  mimeType   the MIME type of the data to be parsed.
+     *
+     * @return a RDF parser.
+     * @throws IllegalArgumentException if mimeType is
+     *         <code>null</code> or not a valid MIME type for RDF
+     *         data.
+     *
+     * @see    #newRdfParser(MediaType)
+     */
     public static RDFParser newRdfParser(String mimeType) {
         if (StringUtils.isBlank(mimeType)) {
             throw new IllegalArgumentException("mimeType");
@@ -423,6 +436,16 @@ public class RdfUtils
         return newRdfParser(parseMimeType(mimeType));
     }
 
+    /**
+     * Returns a RDF parser suitable for parsing files of the
+     * specified MIME type.
+     * @param  mimeType   the MIME type of the data to be parsed.
+     *
+     * @return a RDF parser.
+     * @throws IllegalArgumentException if mimeType is
+     *         <code>null</code> or not a valid MIME type for RDF
+     *         data.
+     */
     public static RDFParser newRdfParser(MediaType mimeType) {
         if (mimeType == null) {
             throw new IllegalArgumentException("mimeType");
@@ -452,6 +475,16 @@ public class RdfUtils
         return parser;
     }
 
+    /**
+     * Attempts to guess the type of RDF data a file contains by
+     * examining the file extension.
+     * @param  f   the file the type of which is to determine.
+     *
+     * @return the MIME type of the file content or <code>null</code>
+     *         if the extension was not recognized.
+     * @throws IllegalArgumentException if <code>f</code> is
+     *         <code>null</code> or is not a regular file.
+     */
     public static MediaType guessRdfTypeFromExtension(File f) {
         if ((f == null) || (! f.isFile())) {
             throw new IllegalArgumentException("f");
@@ -485,6 +518,18 @@ public class RdfUtils
         return mimeType;
     }
 
+    /**
+     * Parses the specified RDF MIME type definition and returns the
+     * closest official MIME type, e.g. parsing
+     * "<code>text/rdf+n3</.code>" will return
+     * <code>{@link MediaTypes#TEXT_N3_TYPE text/n3}</code>.
+     * @param  mimeType   the MIME type definition.
+     *
+     * @return the official MIME type for the specified type.
+     * @throws IllegalArgumentException if mimeType is
+     *         <code>null</code> or not a valid MIME type for RDF
+     *         data.
+     */
     public static MediaType parseMimeType(String mimeType) {
         MediaType mappedType = null;
         if (! StringUtils.isBlank(mimeType)) {
