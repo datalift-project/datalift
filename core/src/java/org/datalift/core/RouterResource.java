@@ -768,8 +768,13 @@ public class RouterResource implements LifeCycle, ResourceResolver
             // Publish module REST resources.
             ModuleDesc desc = new ModuleDesc(m, f, cl);
             this.modules.put(name, desc);
+            // Notify module registration.
+            int resourceCount = desc.ressourceClasses.size();
+            if (desc.isResource) {
+                resourceCount++;
+            }
             log.info("Registered module \"{}\" ({} resource(s))",
-                     name, Integer.valueOf(desc.ressourceClasses.size()));
+                                        name, Integer.valueOf(resourceCount));
         }
     }
 
