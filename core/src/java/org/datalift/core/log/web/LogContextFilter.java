@@ -60,6 +60,12 @@ import org.datalift.fwk.security.SecurityContext;
 public class LogContextFilter implements Filter
 {
     //-------------------------------------------------------------------------
+    // Constants
+    //-------------------------------------------------------------------------
+
+    public final static String FORCE_DEBUG_REQUEST_PARAMETER = "force-debug";
+
+    //-------------------------------------------------------------------------
     // Filter contract support
     //-------------------------------------------------------------------------
 
@@ -88,6 +94,12 @@ public class LogContextFilter implements Filter
         String loggedUser = SecurityContext.getUserPrincipal();
         if (loggedUser != null) {
             Logger.setContext(LogContext.User, loggedUser);
+        }
+
+        // Check for forced debug traces.
+        String forceDebug = request.getParameter(FORCE_DEBUG_REQUEST_PARAMETER);
+        if (forceDebug != null) {
+            Logger.promoteDebugTraces(true);
         }
 
         // Forward request.
