@@ -49,9 +49,9 @@ public class StringUtilsTest
 {
     // @Test
     public void testUrlifyOk() throws Exception {
-        String in = "(Æß) - Récupération requête \"Noël\" à l'œuvre";
+        String in = "¿ Iñtërnâtiônàlîzætiøn\u00a0: ç'Æßt \"dùr\" (éê) ?";
         String out = StringUtils.urlify(in);
-        assertEquals("aess-recuperation-requete-noel-a-l-oeuvre", out);
+        assertEquals("internationalizaetion--c-aesst-dur-ee", out);
     }
 
     @Test(expected=IllegalArgumentException.class)

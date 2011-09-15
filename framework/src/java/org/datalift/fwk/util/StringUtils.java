@@ -185,6 +185,8 @@ public class StringUtils
      * @param  s   the string to convert.
      *
      * @return a string suitable for being included in a URL.
+     * @throws IllegalArgumentException if <code>s</code> is
+     *         <code>null</code> or no valid URL can be extracted.
      */
     public static String urlify(String s) {
         return urlify(s, -1);
@@ -192,9 +194,9 @@ public class StringUtils
 
     private static final Pattern DIACRITICS_AND_FRIENDS = Pattern.compile(
                     "[\\p{InCombiningDiacriticalMarks}\\p{IsLm}\\p{IsSk}]+");
-    private final static String CHARS_TO_REPLACE = "ÆŒæœß";
+    private final static String CHARS_TO_REPLACE = "ÆŒæœßø";
     private final static String[] REPLACEMENT_CHARS =
-                                            { "Ae", "Oe", "ae", "oe", "ss" };
+                                        { "Ae", "Oe", "ae", "oe", "ss", "o" };
     /**
      * Concert the specified string so that is can be used as a path
      * element in a URL, truncating it if need be.
@@ -203,24 +205,26 @@ public class StringUtils
      *                     string.
      *
      * @return a string suitable for being included in a URL.
+     * @throws IllegalArgumentException if <code>s</code> is
+     *         <code>null</code> or no valid URL can be extracted.
      */
     public static String urlify(String s, int maxLength) {
         if (! isSet(s)) {
             throw new IllegalArgumentException("s");
         }
         // Replace special characters.
-        StringBuilder buf = new StringBuilder(s.length() * 2);
+        StringBuilder t = new StringBuilder(s.length() * 2);
         for (char c : s.toCharArray()) {
             int k = CHARS_TO_REPLACE.indexOf(c);
             if (k == -1) {
-                buf.append(c);
+                t.append(c);
             }
             else {
-                buf.append(REPLACEMENT_CHARS[k]);
+                t.append(REPLACEMENT_CHARS[k]);
             }
         }
         // Remove accents.
-        String u = Normalizer.normalize(buf.toString(), Form.NFKD);
+        String u = Normalizer.normalize(t.toString(), Form.NFKD);
         u = DIACRITICS_AND_FRIENDS.matcher(u).replaceAll("");
         // Convert to lower cases.
         u = u.toLowerCase();
@@ -233,7 +237,7 @@ public class StringUtils
             u = u.substring(0, Math.min(u.length(), maxLength)).trim();
         }
         // Replace spaces with hyphens and clean up the remaining mess!
-        StringBuilder t = new StringBuilder(s.length());
+        t.setLength(0);
         for (int i=0, max=u.length(); i<max; i++) {
             char c = u.charAt(i);
             if (c == ' ') {
@@ -244,9 +248,14 @@ public class StringUtils
             }
             // Else: ignore character.
         }
-        u = t.toString();
+        // Remove heading and trailing dashes.
+        int i = 0;
+        while (t.charAt(i) == '-') i++;
+        int j = t.length() - 1;
+        while (t.charAt(j) == '-') j--;
+        u = (j > i)? t.substring(i, j + 1): "";
         // Check there's something left with all those characters removed!
-        if ((u.length() == 0) || (u.charAt(0) == '-')) {
+        if (u.length() == 0) {
             throw new IllegalArgumentException(s);
         }
         return u;
