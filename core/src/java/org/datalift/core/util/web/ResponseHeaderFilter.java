@@ -52,16 +52,27 @@ import javax.servlet.http.HttpServletResponse;
 /**
  * A {@link Filter servlet filter} to add headers to the HTTP response
  * to work around Tomcat's lack of support for setting cache-control
- * HTTP headers when serving static resource (CSS, images...).
+ * HTTP headers when serving static resources (CSS, images...).
  * <p>
  * From
  * <a href="http://www.symphonious.net/2007/06/19/caching-in-tomcat/">Danny's ResponseHeaderFilter</a>.</p>
+ *
+ * @author Danny Angus (http://blog.killerbees.co.uk/)
  */
 public class ResponseHeaderFilter implements Filter
 {
+    //-------------------------------------------------------------------------
+    // Instance members
+    //-------------------------------------------------------------------------
+
     private final Map<String,String> headers = new TreeMap<String,String>();
 
+    //-------------------------------------------------------------------------
+    // Filter contract support
+    //-------------------------------------------------------------------------
+
     /** {@inheritDoc} */
+    @Override
     public void init(FilterConfig filterConfig) throws ServletException {
         this.headers.clear();
         for (Enumeration<?> e = filterConfig.getInitParameterNames();
@@ -72,6 +83,12 @@ public class ResponseHeaderFilter implements Filter
     }
 
     /** {@inheritDoc} */
+    public void destroy() {
+        // NOP
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public void doFilter(ServletRequest request,
                          ServletResponse response, FilterChain chain)
                                         throws IOException, ServletException {
@@ -83,10 +100,5 @@ public class ResponseHeaderFilter implements Filter
             }
         }
         chain.doFilter(request, response);
-    }
-
-    /** {@inheritDoc} */
-    public void destroy() {
-        // NOP
     }
 }
