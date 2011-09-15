@@ -1,8 +1,8 @@
 ## Global library to centralize templates macros
 
 #macro( header_links )
-#maincss
-#mainscripts
+#css_links
+#script_links
 #end
 
 #macro( load_core_resources )
@@ -16,14 +16,15 @@
 	</div>
 #end
 
-#macro( maincss )
-	<meta http-equiv="content-type" content="text/html;charset=utf-8" />
-	<link rel="stylesheet" href="${baseUri}/css/datalift.css" type="text/css" />
-	<link rel="stylesheet" href="${baseUri}/css/jquery/jquery-ui.css" type="text/css" />
-	<link rel="stylesheet" href="${baseUri}/css/jquery/jquery.jqGrid.css" type="text/css" />
+#macro( css_links )
+	<meta http-equiv="content-type" content="text/html;charset=utf-8"/>
+	<link rel="icon" type="image/ico" href="${baseUri}/images/semantic-web.ico"/>
+	<link rel="stylesheet" type="text/css" href="${baseUri}/css/datalift.css"/>
+	<link rel="stylesheet" type="text/css" href="${baseUri}/css/jquery/jquery-ui.css"/>
+	<link rel="stylesheet" type="text/css" href="${baseUri}/css/jquery/jquery.jqGrid.css"/>
 #end
 
-#macro( mainscripts )
+#macro( script_links )
 	<!-- JQuery + JQuery UI -->
 	<script language="javascript" src="${baseUri}/js/jquery/jquery.js"></script>
 	<script language="javascript" src="${baseUri}/js/jquery/jquery-ui.js"></script>
