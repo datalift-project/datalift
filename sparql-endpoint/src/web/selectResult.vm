@@ -5,12 +5,52 @@
 #load("sparql/resources")
 #load_core_resources
 	<title>#i18n("sparql.query.results") - #i18n("sparql.endpoint.title") - DataLift</title>
-#header_links
+#css_links
 </head>
 <body>
 #banner
 #set($columnWidth = 100 / $it.Columns.size())
-	<script>
+	<div id="content" class="ui-widget-content dl-main-panel">
+		<h3 class="ui-widget-header dl-widget-header">#i18n("sparql.query.full")</h3>
+		<div id="results" class="dl-result-panel">
+			<table id="queryresults" style="width:100%">
+				<thead>
+					<tr>
+#foreach( $c in $it.Columns ) <th>$esc.html($c)</th> #end
+					</tr>
+				</thead>
+				<tbody>
+#foreach( $item in $it )
+					<tr>
+	#foreach( $c in $it.Columns )
+		#set( $value = false ) ## Preset local variable to force next assignment in all cases.
+		#set( $value = $!{item.getValue($c)} )
+		#if( ${value.startsWith("http://")} )
+						<td><a href="$esc.url(${value})">$esc.html(${value})</a></td>
+		#else
+						<td>$esc.html(${value})</td>
+		#end
+	#end
+					</tr>
+#end
+				</tbody>
+			</table>
+			<div id="pagernav"></div>
+		</div>
+		<div id="searchnav" style="display:none">
+			#i18n("grid.search.value.label") <input type="search" id="gridsearch" placeholder="#i18n("grid.search.value.placeholder")" results="0" class="gridsearch"/>
+			#i18n("grid.search.column.label") <select id="searchColumn">
+				<option value="all">#i18n("grid.search.column.option.all")</option>
+#foreach( $c in $it.Columns )
+				<option>$esc.html($c)</option>
+#end
+			</select>
+		</div>
+	</div>
+#footer
+
+#script_links
+	<script type="text/javascript">
 		var gridData = new Array();
 		var searchData = new Array();
 
@@ -80,44 +120,5 @@
 			}
 		}
 	</script>
-
-	<div id="content" class="ui-widget-content dl-main-panel">
-		<h3 class="ui-widget-header dl-widget-header">#i18n("sparql.query.full")</h3>
-		<div id="results" class="dl-result-panel">
-			<table id="queryresults" style="width:100%">
-				<thead>
-					<tr>
-#foreach( $c in $it.Columns ) <th>$esc.html($c)</th> #end
-					</tr>
-				</thead>
-				<tbody>
-#foreach( $item in $it )
-					<tr>
-	#foreach( $c in $it.Columns )
-		#set( $value = false ) ## Preset local variable to force next assignment in all cases.
-		#set( $value = $!{item.getValue($c)} )
-		#if( ${value.startsWith("http://")} )
-						<td><a href="$esc.url(${value})">$esc.html(${value})</a></td>
-		#else
-						<td>$esc.html(${value})</td>
-		#end
-	#end
-					</tr>
-#end
-				</tbody>
-			</table>
-			<div id="pagernav"></div>
-		</div>
-		<div id="searchnav" style="display:none">
-			#i18n("grid.search.value.label") <input type="search" id="gridsearch" placeholder="#i18n("grid.search.value.placeholder")" results="0" class="gridsearch"/>
-			#i18n("grid.search.column.label") <select id="searchColumn">
-				<option value="all">#i18n("grid.search.column.option.all")</option>
-#foreach( $c in $it.Columns )
-				<option>$esc.html($c)</option>
-#end
-			</select>
-		</div>
-	</div>
-#footer
 </body>
 </html>

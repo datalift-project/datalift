@@ -5,10 +5,26 @@
 #load("rdfconverter/resources")
 #load_core_resources
 	<title>#i18n("rdfconverter.title") - DataLift</title>
-#header_links
+#css_links
+	<style>
+		.construct_query { display:block; width:400px; }
+		.main_frame { margin:auto; }
+	</style>
 </head>
 <body>
-<script>
+#banner
+	<div class="main_frame">
+		<p>#i18n("rdfconverter.title")</p>
+		<form method="post">
+			<label for="query_0">#i18n("construct.query.label"): </label><br />
+			<textarea name="query_0" class="construct_query" style="width:600px; height:150px;"></textarea>
+			<input type="button" id="add_query" value="#i18n("add.label")"/>
+			<input type="submit" id="construct_queries_submit" value="#i18n("submit.label")"/>
+		</form>
+	</div>
+
+#script_links
+	<script type="text/javascript">
 	$(function() {
 		$("#construct_queries_submit").button();
 		$("#add_query").button();
@@ -46,26 +62,6 @@
 	function errorQueryPost() {
 		 alert("errorQueryPost");
 	}
-</script>
-
-<style>
-.construct_query {
-	display:block;
-	width:400px;
-.main_frame {
-	margin:auto;
-}
-</style>
-
-#banner
-	<div class="main_frame">
-		<p>#i18n("rdfconverter.title")</p>
-		<form method="post">
-			<label for="query_0">#i18n("construct.query.label"): </label><br />
-			<textarea name="query_0" class="construct_query" style="width:600px; height:150px;"></textarea>
-			<input type="button" id="add_query" value="#i18n("add.label")"/>
-			<input type="submit" id="construct_queries_submit" value="#i18n("submit.label")"/>
-		</form>
-	</div>
+	</script>
 </body>
 </html>

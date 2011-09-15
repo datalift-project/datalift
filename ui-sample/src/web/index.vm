@@ -2,46 +2,10 @@
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-#header_links
+    <title>UI Sample - DataLift</title>
+#css_links
   </head>
   <body>
-    <script>
-    
-    // First page loading
-   	loadHistorizedWidget();
-    
-    // State change when using page
-    $(window).bind('popstate', function() {
-    	loadHistorizedWidget();
-    });
-    
-    function loadHistorizedWidget() {
-    	if (History.getHash() != "") {
-    		widgetRequest(History.getHash());
-    	}
-    	else {
-    		$("#demo_widget").empty();
-    	}
-    }
-	
-	function widgetRequest(widgetName) {
-		jQuery.ajax({
-			url: "${baseUri}/sample-ui/widget/" + widgetName,
-			success: successfulQuery,
-	  		error: unsuccessfulQuery
-		});
-	}
-		
-	function successfulQuery(response){
-		$("#demo_widget").empty();
-		$("#demo_widget").append(response);
-	}
-	
-	function unsuccessfulQuery(XMLHttpRequest){
-		alert("Error while requesting Widget");
-	}
-	
-  </script>
 #banner
     <div id="demo">
       <div id="widget_list">
@@ -57,6 +21,41 @@
         </ul>
       </div>
     </div>
-     <div id="demo_widget"></div>
+    <div id="demo_widget">
+    </div>
+
+#script_links
+    <script type="text/javascript">
+	// First page loading
+	loadHistorizedWidget();
+	// State change when using page
+	$(window).bind('popstate', function() {
+		loadHistorizedWidget();
+	});
+
+	function loadHistorizedWidget() {
+		if (History.getHash() != "") {
+			widgetRequest(History.getHash());
+		}
+		else {
+			$("#demo_widget").empty();
+		}
+	}
+
+	function widgetRequest(widgetName) {
+		jQuery.ajax({
+			url: "${baseUri}/sample-ui/widget/" + widgetName,
+			success: successfulQuery,
+	  		error: unsuccessfulQuery
+		});
+	}
+	function successfulQuery(response){
+		$("#demo_widget").empty();
+		$("#demo_widget").append(response);
+	}
+	function unsuccessfulQuery(XMLHttpRequest){
+		alert("Error while requesting Widget");
+	}
+    </script>
   </body>
 </html>

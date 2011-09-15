@@ -5,11 +5,64 @@
 #load("sparql/resources")
 #load_core_resources
 	<title>#i18n("sparql.query.results") - #i18n("sparql.endpoint.title") - DataLift</title>
-#header_links
+#css_links
 </head>
 <body>
 #banner
-	<script>
+	<div id="content" class="ui-widget-content dl-main-panel">
+		<h3 class="ui-widget-header dl-widget-header">#i18n("sparql.query.full")</h3>
+		<div class="dl-panel">
+		    <form id="query_form" action="${baseUri}/sparql" method="get">
+#if( ${securityCtx.isAuthenticated()} )
+			<div class="dl-form-elt">
+				<label for="default-graph-uri">#i18n("sparql.repository"): </label>
+				<select id="default-graph-uri" name="default-graph-uri">
+#foreach( $item in $it )
+#if( $foreach.count == 1 )
+					<option value="$esc.html($!{item.name})" selected="true">#i18n($!{item.label})</option>
+#else
+					<option value="$esc.html($!{item.name})">#i18n($!{item.label})</option>
+#end
+#end
+				</select>
+			</div>
+#end
+			<div id="result-format" class="dl-form-elt">
+				<label>#i18n("sparql.parameter.format"): </label>
+				<input type="radio" id="html_format" name="format" value="application/json" checked="checked"/><label for="html_format">HTML</label>
+				<input type="radio" id="rdf_format" name="format" value="application/sparql-results+xml, application/rdf+xml, text/plain; q=0.5"/><label for="rdf_format">RDF/XML</label>
+				<input type="radio" id="turtle_format" name="format" value="text/turtle, text/plain; q=0.5"/><label for="turtle_format">Turtle</label>
+				<input type="hidden" id="format_save" />
+			</div>
+			<br />
+			<div class="dl-form-elt">
+				<label for="query">#i18n("sparql.query.light"): </label><br />
+				<textarea id="query" name="query" style="width:600px; height:100px;">$esc.html("SELECT * WHERE {
+  ?s ?p ?o .
+}
+")</textarea>
+			</div>
+			<div class="dl-form-buttons">
+				<input type="submit" value="#i18n("sparql.query.execute")" id="query_submit" />
+			</div>
+		    </form>
+		</div>
+		<div id="results" class="dl-result-panel">
+			<table id="table_results"><tr><td/></tr></table>
+			<div id="pagernav"></div>
+		</div>
+		<div id="searchnav" style="display:none">
+			#i18n("grid.search.value.label") <input type="search" id="gridsearch" placeholder="#i18n("grid.search.value.placeholder")" results="0" class="gridsearch" />
+			#i18n("grid.search.column.label") <select id="searchColumn"></select>
+		</div>
+	</div>
+#footer
+	<div style="text-align:right;font-style:italic;font-size:0.8em">
+		<span style="color:gray">Version @app.version@</span>
+	</div>
+
+#script_links
+	<script type="text/javascript">
 		var searchData = new Array();
 		var responsePtr;
 
@@ -150,57 +203,5 @@
 			}
 		}
 	</script>
-
-	<div id="content" class="ui-widget-content dl-main-panel">
-		<h3 class="ui-widget-header dl-widget-header">#i18n("sparql.query.full")</h3>
-		<div class="dl-panel">
-		    <form id="query_form" action="${baseUri}/sparql" method="get">
-#if( ${securityCtx.isAuthenticated()} )
-			<div class="dl-form-elt">
-				<label for="default-graph-uri">#i18n("sparql.repository"): </label>
-				<select id="default-graph-uri" name="default-graph-uri">
-#foreach( $item in $it )
-#if( $foreach.count == 1 )
-					<option value="$esc.html($!{item.name})" selected="true">#i18n($!{item.label})</option>
-#else
-					<option value="$esc.html($!{item.name})">#i18n($!{item.label})</option>
-#end
-#end
-				</select>
-			</div>
-#end
-			<div id="result-format" class="dl-form-elt">
-				<label>#i18n("sparql.parameter.format"): </label>
-				<input type="radio" id="html_format" name="format" value="application/json" checked="checked"/><label for="html_format">HTML</label>
-				<input type="radio" id="rdf_format" name="format" value="application/sparql-results+xml, application/rdf+xml, text/plain; q=0.5"/><label for="rdf_format">RDF/XML</label>
-				<input type="radio" id="turtle_format" name="format" value="text/turtle, text/plain; q=0.5"/><label for="turtle_format">Turtle</label>
-				<input type="hidden" id="format_save" />
-			</div>
-			<br />
-			<div class="dl-form-elt">
-				<label for="query">#i18n("sparql.query.light"): </label><br />
-				<textarea id="query" name="query" style="width:600px; height:100px;">$esc.html("SELECT * WHERE {
-  ?s ?p ?o .
-}
-")</textarea>
-			</div>
-			<div class="dl-form-buttons">
-				<input type="submit" value="#i18n("sparql.query.execute")" id="query_submit" />
-			</div>
-		    </form>
-		</div>
-		<div id="results" class="dl-result-panel">
-			<table id="table_results"><tr><td/></tr></table>
-			<div id="pagernav"></div>
-		</div>
-		<div id="searchnav" style="display:none">
-			#i18n("grid.search.value.label") <input type="search" id="gridsearch" placeholder="#i18n("grid.search.value.placeholder")" results="0" class="gridsearch" />
-			#i18n("grid.search.column.label") <select id="searchColumn"></select>
-		</div>
-	</div>
-#footer
-	<div style="text-align:right;font-style:italic;font-size:0.8em">
-		<span style="color:gray">Version @app.version@</span>
-	</div>
 </body>
 </html>
