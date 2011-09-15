@@ -34,6 +34,24 @@
 
   <!-- ===== Filter definitions & URL mappings ===== -->
 
+  <!-- Character encoding filter -->
+  <filter>
+    <filter-name>CharacterEncodingFilter</filter-name>
+    <filter-class>
+      org.datalift.core.util.web.CharacterEncodingFilter
+    </filter-class>
+    <init-param>
+      <!-- Set character encoding (UTF-8) only if no encoding is specified. -->
+      <param-name>ignore</param-name>
+      <param-value>false</param-value>
+    </init-param>
+  </filter>
+  <!-- Apply ccharacter encoding filter to all resources -->
+  <filter-mapping>
+    <filter-name>CharacterEncodingFilter</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
+
   <!-- Security (authentication and authorization) filter -->
   <filter>
     <filter-name>SecurityFilter</filter-name>
@@ -133,6 +151,10 @@
   <filter-mapping>
     <filter-name>CacheForWeek</filter-name>
     <url-pattern>*.png</url-pattern>
+  </filter-mapping>
+  <filter-mapping>
+    <filter-name>CacheForWeek</filter-name>
+    <url-pattern>*.ico</url-pattern>
   </filter-mapping>
 
   <!-- ===== Servlets definition & URL mapping ===== -->
