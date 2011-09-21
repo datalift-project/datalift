@@ -10,12 +10,14 @@
 	#set( $target_csv = "${it.uri}/csvuploadModify" )
 	#set( $target_rdf = "${it.uri}/rdfuploadModify" )
 	#set( $target_db = "${it.uri}/dbuploadModify" )
+	#set( $target_sparql = "${it.uri}/sparqluploadModify" )
 #else
 	#set( $title = "project.title.add_dataset" )
 	#set( $submit = "create" )
 	#set( $target_csv = "${it.uri}/csvupload" )
 	#set( $target_rdf = "${it.uri}/rdfupload" )
 	#set( $target_db = "${it.uri}/dbupload" )
+	#set( $target_sparql = "${it.uri}/sparqlupload")
 #end
 	<title>#i18n($title) - #i18n("workspace.title") - DataLift</title>
 #header_links
@@ -42,7 +44,10 @@
 				select_panel = 1;
 			#elseif($current.getType() == $field.DbSource)
 			 	select_panel = 2;
+			#elseif($current.getType() == $field.SparqlSource)
+			 	select_panel = 3;
 			#end
+			
 
 			if(select_panel != 0) {
 		 	 	$("#accordion").accordion("option", "active", select_panel);
@@ -75,6 +80,8 @@
 #else
 		<input type="hidden" name="current_source" value="$current.uri"/>
 #end
+		<p><label for="description">#i18n("project.upload_source.description"): </label>
+		<input type="text" id="description" name="description" value="$!esc.html($current.description)"/></p>
 		<p><label for="title_row">#i18n("project.upload_csv_activate"): </label>
 #if($current && $current.hasTitleRow() == true)
 		<input type="checkbox" id="title_row" name="title_row" checked="on"/></p>
@@ -106,7 +113,8 @@
 #else
 		<input type="hidden" id="current_source" name="current_source" value="$current.uri"/>
 #end
-
+		<p><label for="description">#i18n("project.upload_source.description"): </label>
+		<input type="text" id="description" name="description" value="$!esc.html($current.description)"/></p>
 		<p><label for="mime_type">#i18n("project.upload_rdf_format"): </label>
 		<select id="mime_type" name="mime_type">
 			<option id="rdfxml"	value="application/rdf+xml" #if($current.getMimeType().equals("application/rdf+xml")) selected="true" #end>RDF/XML</option>
@@ -124,8 +132,10 @@
 	<div>
 	<form method="post" action="$target_db" class="form_formated">
 		<input type="hidden" id="current_source" name="current_source" value="$current.uri"/>
-		<p><label for="title">#i18n("project.upload_db.source_name"): </label>
+		<p><label for="title">#i18n("project.upload_source.name"): </label>
 		<input type="text" id="title" name="title" value="$!esc.html($current.title)"/></p>
+		<p><label for="description">#i18n("project.upload_source.description"): </label>
+		<input type="text" id="description" name="description" value="$!esc.html($current.description)"/></p>
 		<p><label for="database">#i18n("project.upload_db.db"): </label>
 		<input type="text" name="database" id="database" value="$!esc.html($current.database)"/></p>
 		<p><label for="source_url">#i18n("project.upload_db.source_url"): </label>
@@ -136,8 +146,26 @@
 		<input type="password" name="password" id="password" value="$!esc.html($current.password)"/></p>
 		<p><label for="request">#i18n("project.upload_db.request"): </label>
 		<input type="text" id="request" name="request" value="$!esc.html($current.request)"/></p>
-		<p><label for="cache_duration">#i18n("project.upload_db.cache_duration"): </label></p>
+		<p><label for="cache_duration">#i18n("project.upload_source.cache_duration"): </label></p>
 		<p><input type="text" id="cache_duration" name="cache_duration" value="$!esc.html($current.cacheDuration)"/></p>
+		<p><input type="submit" value="#i18n("$submit")"/></p>
+	</form>
+	</div>
+	
+	<h3><a href="#">SPARQL</a></h3>
+	<div>
+	<form method="post" action="$target_sparql" class="form_formated">
+		<input type="hidden" id="current_source" name="current_source" value="$current.uri"/>
+		<p><label for="title">#i18n("project.upload_source.name"): </label>
+		<input type="text" id="title" name="title" value="$!esc.html($current.title)"/></p>
+		<p><label for="description">#i18n("project.upload_source.description"): </label>
+		<input type="text" id="description" name="description" value="$!esc.html($current.description)"/></p>
+		<p><label for="connection_url">#i18n("project.upload_sparql.connection_url"): </label>
+		<input type="text" id="connection_url" name="connection_url" value="$!esc.html($current.connectionUrl)"/></p>
+		<p><label for="request">#i18n("project.upload_sparql.request"):</label>
+		<input type="text" id="request" name="request" value="$!esc.html($current.request)"/></p>
+		<p><label for="cache_duration">#i18n("project.upload_source.cache_duration"): </label>
+		<input type="text" id="cache_duration" name="cache_duration" value="$!esc.html($current.cacheDuration)"/></p>
 		<p><input type="submit" value="#i18n("$submit")"/></p>
 	</form>
 	</div>

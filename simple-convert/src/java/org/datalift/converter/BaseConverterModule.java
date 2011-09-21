@@ -239,6 +239,7 @@ public abstract class BaseConverterModule
     protected final String nextSourceName(Project p) {
         return " (RDF #" + p.getSources().size() + ')';
     }
+    
 
     protected final URI newGraphUri(Source parent, String name) {
         try {
@@ -253,7 +254,7 @@ public abstract class BaseConverterModule
                                               String name, URI namedGraph)
                                                             throws IOException {
         p.addSource(this.projectManager.newTransformedRdfSource(
-                                        namedGraph, parent.getTitle() + name,
+                                        namedGraph, parent.getTitle() + name, "",
                                         namedGraph, parent));
         this.projectManager.saveProject(p);
     }

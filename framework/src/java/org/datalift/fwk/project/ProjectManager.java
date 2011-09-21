@@ -115,7 +115,7 @@ public interface ProjectManager
      * @throws IOException if any error occurred creating the source
      *         or accessing the specified file.
      */
-    public CsvSource newCsvSource(URI uri, String title, String filePath,
+    public CsvSource newCsvSource(URI uri, String title, String description, String filePath,
                                   char separator, boolean hasTitleRow)
                                                             throws IOException;
 
@@ -135,7 +135,7 @@ public interface ProjectManager
      * @throws IOException if any error occurred creating the source
      *         or accessing the specified file.
      */
-    public RdfSource newRdfSource(URI uri, String title, String filePath,
+    public RdfFileSource newRdfSource(URI uri, String title, String description, String filePath,
                                   String mimeType) throws IOException;
     
     /**
@@ -155,11 +155,14 @@ public interface ProjectManager
      * @throws IOException if any error occurred creating the source
      *         or accessing the configured database.
      */
-    public SqlSource newDbSource(URI uri, String title, String database, 
+    public SqlSource newDbSource(URI uri, String title, String description, String database, 
                                 String srcUrl, String user, String password, 
                                 String request, int cacheDuration)
                                                             throws IOException;
 
+    public SparqlSource	newSparqlSource(URI uri, String title, String description, String connectionUrl, 
+    							String request, int cacheDuration)
+    														throws IOException;
     /**
      * Creates a new transformed RDF source object.
      * @param  uri           the source URI.
@@ -173,7 +176,7 @@ public interface ProjectManager
      * @throws IOException if any error occurred creating the source
      *         or accessing the underlying data.
      */
-    public TransformedRdfSource newTransformedRdfSource(URI uri, String title, 
+    public TransformedRdfSource newTransformedRdfSource(URI uri, String title, String description, 
                                 URI targetGraph, Source parent)
                                                             throws IOException;
 

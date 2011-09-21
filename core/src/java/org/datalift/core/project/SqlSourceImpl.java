@@ -36,7 +36,6 @@ package org.datalift.core.project;
 
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -67,7 +66,7 @@ import org.datalift.fwk.util.StringUtils;
  */
 @Entity
 @RdfsClass("datalift:dbSource")
-public class SqlSourceImpl extends BaseSource implements SqlSource
+public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
 {
     //-------------------------------------------------------------------------
     // Instance members
@@ -83,8 +82,6 @@ public class SqlSourceImpl extends BaseSource implements SqlSource
     private String database;
     @RdfProperty("datalift:request")
     private String request;
-    @RdfProperty("datalift:cacheDuration")
-    private int cacheDuration;
 
     private transient WebRowSet wrset = null;
 
@@ -186,18 +183,6 @@ public class SqlSourceImpl extends BaseSource implements SqlSource
 
     /** {@inheritDoc} */
     @Override
-    public int getCacheDuration() {
-        return cacheDuration;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public void setCacheDuration(int cacheDuration) {
-        this.cacheDuration = cacheDuration;
-    }
-
-    /** {@inheritDoc} */
-    @Override
     public String getDatabase() {
         return database;
     }
@@ -271,25 +256,5 @@ public class SqlSourceImpl extends BaseSource implements SqlSource
         else {
             throw new RuntimeException();
         }
-    }
-
-    /**
-     * Get the data of the database form the cache file, if it has
-     * been populated.
-     * @param  cacheFile   the cache file path.
-     *
-     * @return an input stream on the cache file, if it exists.
-     * @throws IOException if any error occurred accessing the cache
-     *         file.
-     */
-    private InputStream getCacheStream(File cacheFile) throws IOException {
-        if (this.cacheDuration > 0) {
-            long now = System.currentTimeMillis();
-            if ((cacheFile.exists()) &&
-                (cacheFile.lastModified() < (now + this.cacheDuration))) {
-                return new FileInputStream(cacheFile);
-            }
-        }
-        return null;
     }
 }

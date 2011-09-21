@@ -52,7 +52,7 @@ import org.openrdf.repository.RepositoryConnection;
 import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 
 import org.datalift.fwk.project.Project;
-import org.datalift.fwk.project.RdfSource;
+import org.datalift.fwk.project.RdfFileSource;
 import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.rdf.Repository;
 
@@ -88,7 +88,7 @@ public class RdfLoader extends BaseConverterModule
             // Retrieve project.
             Project p = this.getProject(projectId);
             // Load input source.
-            RdfSource src = (RdfSource)this.getLastSource(p);
+            RdfFileSource src = (RdfFileSource)this.getLastSource(p);
             src.init(this.configuration, uriInfo.getBaseUri());
             // Parse RDF to load triples.
             String srcName  = this.nextSourceName(p);
@@ -110,7 +110,7 @@ public class RdfLoader extends BaseConverterModule
     // Specific implementation
     //-------------------------------------------------------------------------
 
-    private void convert(RdfSource src, Repository target, URI targetGraph) {
+    private void convert(RdfFileSource src, Repository target, URI targetGraph) {
         final RepositoryConnection cnx = target.newConnection();
         try {
             final ValueFactory valueFactory = cnx.getValueFactory();

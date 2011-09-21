@@ -96,9 +96,11 @@
 			#elseif( $curSrc.getType() == $field.RdfSource )
 				infos: "$!esc.html($curSrc.filePath)"
 			#elseif( $curSrc.getType() == $field.DbSource )
-				infos: "#i18n("project.upload_db.source_url"): $!esc.html($curSrc.connectionUrl)<br />#i18n("project.upload_db.request"): $!esc.html($curSrc.request)<br />#i18n("project.upload_db.cache_duration"): $!esc.html($curSrc.cacheDuration)"
+				infos: "#i18n("project.upload_db.source_url"): $!esc.html($curSrc.connectionUrl)<br />#i18n("project.upload_db.request"): $!esc.html($curSrc.request)<br />#i18n("project.upload_source.cache_duration"): $!esc.html($curSrc.cacheDuration)"
 			#elseif( $curSrc.getType() == $field.TransformedRdfSource )
 				infos: "$!esc.html($curSrc.targetGraph.toString())"
+			#elseif ( $curSrc.getType() == $field.SparqlSource )
+				infos: "#i18n('project.upload_sparql.connection_url'): $!esc.html($curSrc.connectionUrl)<br />#i18n("project.upload_sparql.request"): $!esc.html($curSrc.request)<br />#i18n("project.upload_source.cache_duration"): $!esc.html($curSrc.cacheDuration)"
 			#end
 		},
 #end
@@ -225,7 +227,7 @@
 
 #banner
 <div id="workspace" class="ui-widget-content">
-	<h3 class="ui-widget-header dl-widget-header">Workspace</h3>
+	<h3 class="ui-widget-header dl-widget-header">Workspace #if($current) - #i18n("project") $current.title#end</h3>
 
 	<div id="projects_panel" class="ui-widget-content">
 		<div id="project_scroll" style="position:relative">
@@ -253,7 +255,7 @@
 				#i18n("project.creation_s"): $date.format("medium", $current.dateCreation)<br />
 				#i18n("project.modification_s"): $date.format("medium", $current.dateModification)<br />
 				#i18n("project.license"): <a href="$current.getLicense()">$esc.html($!current.license)</a></p>
-
+#if (!$canHandle.isEmpty())
 				<div id="module_can_handle">
 					<p>#i18n("project.module_available")</p>
 					<ol id="selectable_module">
@@ -267,6 +269,7 @@
 #end
 					</ol>
 				</div>
+#end
 				<p><br /></p>
 				<form method="post" action="$current.uri" class="form_formated">
 					<a href="${current.uri}/modify.html" class="button">#i18n("modify")</a>
@@ -276,7 +279,6 @@
 			</div>
 
 			<div id="source">
-				<p>#i18n("project.source_available")</p>
 				<form> 
 					<table id="selectable_sources">
 						<tr><td/></tr>
@@ -286,7 +288,6 @@
 			</div>
 
 			<div id="ontology">
-				<p>#i18n("project.ontology_available")</p>
 				<form> 
 					<table id="selectable_ontologies">
 						<tr><td/></tr>

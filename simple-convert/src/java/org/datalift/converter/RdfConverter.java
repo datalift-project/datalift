@@ -37,6 +37,8 @@ package org.datalift.converter;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
@@ -54,6 +56,7 @@ import javax.ws.rs.core.UriInfo;
 import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 
 import org.datalift.fwk.project.Project;
+import org.datalift.fwk.project.RdfSource;
 import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.rdf.RdfUtils;
@@ -78,22 +81,32 @@ public class RdfConverter extends BaseConverterModule
     //-------------------------------------------------------------------------
     // Web services
     //-------------------------------------------------------------------------
-
+    
     @GET
     public Response getIndexPage(@QueryParam("project") URI projectId,
+    							 @QueryParam("source") URI sourceId,
                                  @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
         Response response = null;
-        try {
-            // Retrieve project.
-            Project p = this.getProject(projectId);
-            // Check that a valid source is available.
-            this.getLastSource(p);
-            response = Response.ok(
-                        this.newViewable("/constructQueries.vm", p)).build();
-        }
-        catch (Exception e) {
-            this.handleInternalError(e);
+        // Retrieve project.
+        Project p = this.getProject(projectId);
+        if (sourceId == null) {
+        	 response = Response.ok(
+                     this.newViewable("/rdfConverter.vm", p)).build();
+         }
+        else {
+	        try {
+	            // Retrieve project.
+	            RdfSource s = (RdfSource) p.getSource(sourceId);
+	            Map<String, Object> args = new TreeMap<String, Object>();
+	            args.put("it", s);
+	            args.put("project", p);
+	            response = Response.ok(
+	                        this.newViewable("/constructQueries.vm", args)).build();
+	        }
+	        catch (Exception e) {
+	            this.handleInternalError(e);
+	        }
         }
         return response;
     }
@@ -101,6 +114,7 @@ public class RdfConverter extends BaseConverterModule
     @POST
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response convertRdfSource(@FormParam("project") URI projectId,
+    								 @FormParam("source") URI sourceId,
                                      @FormParam("query[]") List<String> queries,
                                      @Context UriInfo uriInfo,
                                      @Context Request request,

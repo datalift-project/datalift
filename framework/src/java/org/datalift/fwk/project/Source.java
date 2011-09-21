@@ -56,7 +56,8 @@ public interface Source
         RdfSource,
         CsvSource,
         DbSource,
-        TransformedRdfSource;
+        TransformedRdfSource,
+        SparqlSource;
     }
 
     /**
@@ -66,16 +67,28 @@ public interface Source
     public String getUri();
 
     /**
+     * Returns the source title.
+     * @return the source title. 
+     */
+    public String getTitle();
+    
+    /**
+     * Sets the source title.
+     * @param  title   the source title string.
+     */
+    public void setTitle(String title);
+    
+    /**
      * Returns the source description.
      * @return the source description. 
      */
-    public String getTitle();
+    public String getDescription();
 
     /**
      * Sets the source description.
-     * @param  title   the source description string.
+     * @param  description   the source description string.
      */
-    public void setTitle(String title);
+    public void setDescription(String description);
 
     /**
      * Returns the {@link SourceType source type}.
