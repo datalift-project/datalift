@@ -98,7 +98,7 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
      * Creates a new SQL source.
      */
     public SqlSourceImpl() {
-        super(SourceType.DbSource);
+        super(SourceType.SqlSource);
     }
 
     /**
@@ -107,7 +107,7 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
      *                <code>null</code> if not known at this stage.
      */
     public SqlSourceImpl(String uri) {
-        super(SourceType.DbSource, uri);
+        super(SourceType.SqlSource, uri);
     }
 
     //-------------------------------------------------------------------------

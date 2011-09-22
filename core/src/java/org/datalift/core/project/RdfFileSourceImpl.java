@@ -83,7 +83,7 @@ public class RdfFileSourceImpl extends BaseFileSource<Statement>
      * Creates a new RDF source.
      */
     public RdfFileSourceImpl() {
-        super(SourceType.RdfSource);
+        super(SourceType.RdfFileSource);
     }
 
     /**
@@ -92,7 +92,7 @@ public class RdfFileSourceImpl extends BaseFileSource<Statement>
      *                <code>null</code> if not known at this stage.
      */
     public RdfFileSourceImpl(String uri) {
-        super(SourceType.RdfSource, uri);
+        super(SourceType.RdfFileSource, uri);
     }
 
     //-------------------------------------------------------------------------

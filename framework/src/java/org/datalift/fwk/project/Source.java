@@ -53,9 +53,9 @@ public interface Source
      * The supported DataLift source types.
      */
     public enum SourceType {
-        RdfSource,
+        RdfFileSource,
         CsvSource,
-        DbSource,
+        SqlSource,
         TransformedRdfSource,
         SparqlSource;
     }

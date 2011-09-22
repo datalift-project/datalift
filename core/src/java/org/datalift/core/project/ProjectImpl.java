@@ -216,7 +216,7 @@ public class ProjectImpl extends BaseRdfEntity implements Project
     @Override
     public void deleteSource(URI uri) {
         Source source = getSource(uri);
-        if(source != null) {
+        if (source != null) {
             this.sources.remove(source);
         }
     }

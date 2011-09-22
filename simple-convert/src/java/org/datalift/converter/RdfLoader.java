@@ -70,7 +70,7 @@ public class RdfLoader extends BaseConverterModule
     //-------------------------------------------------------------------------
 
     public RdfLoader() {
-        super(MODULE_NAME, SourceType.RdfSource, HttpMethod.POST);
+        super(MODULE_NAME, SourceType.RdfFileSource, HttpMethod.POST);
     }
 
     //-------------------------------------------------------------------------

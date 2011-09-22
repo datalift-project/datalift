@@ -21,7 +21,7 @@ Source to publish :
 	<div id="source">
 <div id="source">
 #foreach($curSrc in $it.getSources())
-	#if( $curSrc.getType() == $field.RdfSource || $curSrc.getType() == $field.TransformedRdfSource )
+	#if( $curSrc.getType() == $field.RdfFileSource || $curSrc.getType() == $field.TransformedRdfSource )
 	<form method="post" action="${baseUri}/simple-publisher?project=${it.uri}&source=${curSrc.uri}">	
 		<input type="submit" class="source_to_select" value="$esc.html($curSrc.title)"/>
 	</form>
