@@ -813,21 +813,19 @@ public class RouterResource implements LifeCycle, ResourceResolver
      * <p>
      * Recognized elements include:</p>
      * <ul>
+     *  <li>For JAR files: the JAR file itself.</li>
      *  <li>For directories:
      *   <dl>
+     *    <dt><code>/</code></dt>
+     *    <dd>The module root directory</dd>
      *    <dt><code>/classes</code></dt>
      *    <dd>The default directory for module classes</dd>
      *    <dt><code>/*.jar</code></dt>
-     *    <dd>JAR files containing the module classes, if no
-     *        <code>/classes</code> directory is present</dd>
+     *    <dd>JAR files containing the module classes</dd>
      *    <dt><code>/lib/**&#47;*.jar</code></dt>
      *    <dd>All the JAR files in the <code>/lib</code> directory tree
      *        (module classes and third-party libraries)</dd>
-     *    <dt><code>/</code></dt>
-     *    <dd>The module root directory, if no classes directory nor
-     *        any JAR file were found</dd>
      *   </dl></li>
-     *  <li>For JAR files: the JAR file itself.</li>
      * </ul>
      * @param  path   the directory or JAR file for the module.
      *
@@ -838,26 +836,21 @@ public class RouterResource implements LifeCycle, ResourceResolver
         List<URL> urls = new LinkedList<URL>();
 
         if (path.isDirectory()) {
+            // Add module root directory.
+            urls.add(this.getFileUrl(path));
             // Look for module classes as a directory tree.
             File classesDir = new File(path, MODULE_CLASSES_DIR);
             if (classesDir.isDirectory()) {
                 urls.add(this.getFileUrl(classesDir));
             }
-            else {
-                // No classes directory. => Look for root-level JAR files.
-                for (File jar : path.listFiles(jarFilter)) {
-                    urls.add(this.getFileUrl(jar));
-                }
+            // Look for root-level JAR files.
+            for (File jar : path.listFiles(jarFilter)) {
+                urls.add(this.getFileUrl(jar));
             }
             // Look for module dependencies as library JAR files.
             File libDir = new File(path, MODULE_LIB_DIR);
             if (classesDir.isDirectory()) {
                 urls.addAll(this.findFiles(libDir, jarFilter));
-            }
-            if (urls.isEmpty()) {
-                // No path matched.
-                // => Add module root directory.
-                urls.add(this.getFileUrl(path));
             }
         }
         else {
