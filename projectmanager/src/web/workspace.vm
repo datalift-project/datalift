@@ -5,9 +5,90 @@
 #load("workspace/resources")
 #load_core_resources
 	<title>#i18n("workspace.title") - DataLift</title>
-#header_links
+#css_links
 </head>
 <body>
+#banner
+<div id="workspace" class="ui-widget-content">
+	<h3 class="ui-widget-header dl-widget-header">Workspace #if( $current ) - #i18n("project") $!esc.html($current.title) #end</h3>
+
+	<div id="projects_panel" class="ui-widget-content">
+		<div id="project_scroll" style="position:relative">
+			<h3 class="ui-widget-header dl-widget-header">#i18n("project.title.available")</h3>
+#foreach( $item in $it )
+			<a class="ui-state-default dl-project-button" onclick="makeFocus(this);" href="${item.uri}">$!esc.html($item.title)</a><br />
+#end
+
+			<a href="${baseUri}/workspace/project/add.html" class="button" style="position:absolute;bottom:0">#i18n("project.title.new_project")</a>
+		</div>
+	</div>
+
+	<div id="workspace-main-panel" class="ui-widget-content">
+#if( $current )
+		<div id="tabs">
+			<ul>
+				<li><a onclick="historyPush('${current.uri}#description');" href="#description">#i18n("project.title.description")</a></li>
+				<li><a onclick="historyPush('${current.uri}#source');" href="#source">#i18n("project.title.sources")</a></li>
+				<li><a onclick="historyPush('${current.uri}#ontology');" href="#ontology">#i18n("project.title.ontology")</a></li>
+			</ul>
+
+			<div id="description"><p>
+				#i18n("project.owner_s"): $!esc.html($current.owner)<br />
+				#i18n("project.description"): $!esc.html($current.description)<br />
+				#i18n("project.creation_s"): $date.format("medium", $current.dateCreation)<br />
+				#i18n("project.modification_s"): $date.format("medium", $current.dateModification)<br />
+				#i18n("project.license"): <a href="$current.getLicense()">$esc.html($!current.license)</a></p>
+#if (!$canHandle.isEmpty())
+				<div id="module_can_handle">
+					<p>#i18n("project.module_available")</p>
+					<ol id="selectable_module">
+#foreach( $page in $canHandle )
+#set( $pageUrl = $page.getUrl(${baseUri}) )
+#if( $page.method.name() == "GET" )
+						<li><a href="${pageUrl}" class="button" id="${page.label}">#i18n("${page.label}")</a></li>
+#else
+						<li><form id="${page.label}" method="post" action="${pageUrl}"><input type="submit" value="#i18n("${page.label}")"/></form></li>
+#end
+#end
+					</ol>
+				</div>
+#end
+				<p><br /></p>
+				<form method="post" action="$current.uri" class="form_formated">
+					<a href="${current.uri}/modify.html" class="button">#i18n("modify")</a>
+					<input type="hidden" id="delete" name="delete" value="true" />
+					<input type="submit" value="#i18n("delete")"/>
+				</form>
+			</div>
+
+			<div id="source">
+				<form> 
+					<table id="selectable_sources">
+						<tr><td/></tr>
+					</table>
+					<div id="selectable_sources_toolbar"></div>
+				</form> 
+			</div>
+
+			<div id="ontology">
+				<form> 
+					<table id="selectable_ontologies">
+						<tr><td/></tr>
+					</table>
+					<div id="selectable_ontologies_toolbar"></div>
+				</form> 
+			</div>
+		</div>
+#else
+		<p style='text-align:center'>
+			#i18n("welcome")
+		</p>
+#end
+	</div>
+</div>
+#footer
+
+#script_links
 <script type="text/javascript">
 #if( $current )
 	var currentProject = "$current.uri";
@@ -91,17 +172,17 @@
 		{
 			uri:"$curSrc.uri",
 			title:"<a href='$curSrc.uri'>$esc.html($curSrc.title)</a>",
-			#if( $curSrc.getType() == $field.CsvSource )
+	#if( $curSrc.getType() == $field.CsvSource )
 				infos: "#i18n('project.upload_csv_separator'): $!esc.html($curSrc.separator)<br />#i18n('project.upload_csv_activate'): #i18n("boolean.${curSrc.hasTitleRow()}")"
-			#elseif( $curSrc.getType() == $field.RdfSource )
+	#elseif( $curSrc.getType() == $field.RdfFileSource )
 				infos: "$!esc.html($curSrc.filePath)"
-			#elseif( $curSrc.getType() == $field.DbSource )
+	#elseif( $curSrc.getType() == $field.SqlSource )
 				infos: "#i18n("project.upload_db.source_url"): $!esc.html($curSrc.connectionUrl)<br />#i18n("project.upload_db.request"): $!esc.html($curSrc.request)<br />#i18n("project.upload_source.cache_duration"): $!esc.html($curSrc.cacheDuration)"
-			#elseif( $curSrc.getType() == $field.TransformedRdfSource )
+	#elseif( $curSrc.getType() == $field.TransformedRdfSource )
 				infos: "$!esc.html($curSrc.targetGraph.toString())"
-			#elseif ( $curSrc.getType() == $field.SparqlSource )
+	#elseif ( $curSrc.getType() == $field.SparqlSource )
 				infos: "#i18n('project.upload_sparql.connection_url'): $!esc.html($curSrc.connectionUrl)<br />#i18n("project.upload_sparql.request"): $!esc.html($curSrc.request)<br />#i18n("project.upload_source.cache_duration"): $!esc.html($curSrc.cacheDuration)"
-			#end
+	#end
 		},
 #end
 		];
@@ -224,85 +305,5 @@
 		jQuery("#selectable_ontologies").jqGrid('hideCol',["uri"]);
 	}
 </script>
-
-#banner
-<div id="workspace" class="ui-widget-content">
-	<h3 class="ui-widget-header dl-widget-header">Workspace #if($current) - #i18n("project") $current.title#end</h3>
-
-	<div id="projects_panel" class="ui-widget-content">
-		<div id="project_scroll" style="position:relative">
-			<h3 class="ui-widget-header dl-widget-header">#i18n("project.title.available")</h3>
-#foreach( $item in $it )
-			<a class="ui-state-default dl-project-button" onclick="makeFocus(this);" href="${item.uri}">$!esc.html($item.title)</a><br />
-#end
-
-			<a href="${baseUri}/workspace/project/add.html" class="button" style="position:absolute;bottom:0">#i18n("project.title.new_project")</a>
-		</div>
-	</div>
-
-	<div id="workspace-main-panel" class="ui-widget-content">
-#if( $current )
-		<div id="tabs">
-			<ul>
-				<li><a onclick="historyPush('${current.uri}#description');" href="#description">#i18n("project.title.description")</a></li>
-				<li><a onclick="historyPush('${current.uri}#source');" href="#source">#i18n("project.title.sources")</a></li>
-				<li><a onclick="historyPush('${current.uri}#ontology');" href="#ontology">#i18n("project.title.ontology")</a></li>
-			</ul>
-
-			<div id="description"><p>
-				#i18n("project.owner_s"): $!esc.html($current.owner)<br />
-				#i18n("project.description"): $!esc.html($current.description)<br />
-				#i18n("project.creation_s"): $date.format("medium", $current.dateCreation)<br />
-				#i18n("project.modification_s"): $date.format("medium", $current.dateModification)<br />
-				#i18n("project.license"): <a href="$current.getLicense()">$esc.html($!current.license)</a></p>
-#if (!$canHandle.isEmpty())
-				<div id="module_can_handle">
-					<p>#i18n("project.module_available")</p>
-					<ol id="selectable_module">
-#foreach( $page in $canHandle )
-#set( $pageUrl = $page.getUrl(${baseUri}) )
-#if( $page.method.name() == "GET" )
-						<li><a href="${pageUrl}" class="button" id="${page.label}">#i18n("${page.label}")</a></li>
-#else
-						<li><form id="${page.label}" method="post" action="${pageUrl}"><input type="submit" value="#i18n("${page.label}")"/></form></li>
-#end
-#end
-					</ol>
-				</div>
-#end
-				<p><br /></p>
-				<form method="post" action="$current.uri" class="form_formated">
-					<a href="${current.uri}/modify.html" class="button">#i18n("modify")</a>
-					<input type="hidden" id="delete" name="delete" value="true" />
-					<input type="submit" value="#i18n("delete")"/>
-				</form>
-			</div>
-
-			<div id="source">
-				<form> 
-					<table id="selectable_sources">
-						<tr><td/></tr>
-					</table>
-					<div id="selectable_sources_toolbar"></div>
-				</form> 
-			</div>
-
-			<div id="ontology">
-				<form> 
-					<table id="selectable_ontologies">
-						<tr><td/></tr>
-					</table>
-					<div id="selectable_ontologies_toolbar"></div>
-				</form> 
-			</div>
-		</div>
-	</div>
-#else
-	<p style='text-align:center'>
-		#i18n("welcome")
-	</p>
-#end
-</div>
-#footer
 </body>
 </html>

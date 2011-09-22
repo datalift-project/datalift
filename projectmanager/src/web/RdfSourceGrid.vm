@@ -5,10 +5,42 @@
 #load("workspace/resources")
 #load_core_resources
 	<title>$!esc.html($it.title) - #i18n("source.grid.title") - DataLift</title>
-#header_links
+#css_links
 </head>
 <body>
-	<script>
+#banner
+	<p>#i18n("source.grid.desc") $!esc.html($it.title)</p>
+	<table id="grid">
+		<thead>
+			<tr>
+				<th class="dl-grid-header-column">#i18n("sparql.subject")</th>
+				<th class="dl-grid-header-column">#i18n("sparql.predicate")</th>
+				<th class="dl-grid-header-column">#i18n("sparql.object")</th>
+			</tr>
+		</thead>
+		<tbody>
+#foreach( $item in $it )
+			<tr>
+				<td>$!esc.html($item.subject)</td>
+				<td>$!esc.html($item.predicate)</td>
+				<td>$!esc.html($item.object)</td>
+			</tr>
+#end
+		</tbody>
+	</table>
+	<div id="pagernav"></div>
+	<div id="searchnav" style="display:none">
+		#i18n("grid.search.value.label") <input type="search" id="gridsearch" placeholder="#i18n("grid.search.value.placeholder")" results="0" class="gridsearch" />
+		#i18n("grid.search.column.label") <select id="searchColumn">
+			<option value="all">#i18n("grid.search.column.option.all")</option>
+			<option>#i18n("sparql.subject")</option>
+			<option>#i18n("sparql.predicate")</option>
+			<option>#i18n("sparql.object")</option>
+		</select>
+	</div>
+
+#script_links
+	<script type="text/javascript">
 		var gridData = new Array();
 		var searchData = new Array();
 		var gridHeader = new Array();
@@ -97,36 +129,5 @@
 			else searchData = gridData;
 		}
 	</script>
-
-#banner
-	<p>#i18n("source.grid.desc") $!esc.html($it.title)</p>
-	<table id="grid">
-		<thead>
-			<tr>
-				<th class="dl-grid-header-column">#i18n("sparql.subject")</th>
-				<th class="dl-grid-header-column">#i18n("sparql.predicate")</th>
-				<th class="dl-grid-header-column">#i18n("sparql.object")</th>
-			</tr>
-		</thead>
-		<tbody>
-#foreach( $item in $it )
-			<tr>
-				<td>$!esc.html($item.subject)</td>
-				<td>$!esc.html($item.predicate)</td>
-				<td>$!esc.html($item.object)</td>
-			</tr>
-#end
-		</tbody>
-	</table>
-	<div id="pagernav"></div>
-	<div id="searchnav" style="display:none">
-		#i18n("grid.search.value.label") <input type="search" id="gridsearch" placeholder="#i18n("grid.search.value.placeholder")" results="0" class="gridsearch" />
-		#i18n("grid.search.column.label") <select id="searchColumn">
-			<option value="all">#i18n("grid.search.column.option.all")</option>
-			<option>#i18n("sparql.subject")</option>
-			<option>#i18n("sparql.predicate")</option>
-			<option>#i18n("sparql.object")</option>
-		</select>
-	</div>
 </body>
 </html>

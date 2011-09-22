@@ -20,48 +20,9 @@
 	#set( $target_sparql = "${it.uri}/sparqlupload")
 #end
 	<title>#i18n($title) - #i18n("workspace.title") - DataLift</title>
-#header_links
+#css_links
 </head>
 <body>
-<script>
-	$(function() {
-		$("input:submit").button();
-		$("#accordion").accordion({
-			autoHeight: false,
-			navigation: true,
-			collapsible:true,
-			#if($current)
-			event: ""
-			#end
-		});
-
-		/** 	Selection of the right panel	**/
-		#if($current)
-			var select_panel = 0;
-			#if($current.getType() == $field.CSVSource)
-			 	select_panel = 0;
-			#elseif($current.getType() == $field.RdfSource)
-				select_panel = 1;
-			#elseif($current.getType() == $field.DbSource)
-			 	select_panel = 2;
-			#elseif($current.getType() == $field.SparqlSource)
-			 	select_panel = 3;
-			#end
-			
-
-			if(select_panel != 0) {
-		 	 	$("#accordion").accordion("option", "active", select_panel);
-			}
-			$("#accordion h3").click(function() {
-				var idx = $("#accordion h3").index(this);
-			if (idx == select_panel) {
-				$("#accordion").accordion("activate", idx);
-			}
-			});
-		#end
-	});
-</script>
-
 #banner
 
 <div id="content" class="ui-widget-content dl-main-panel">
@@ -173,5 +134,43 @@
 </div>
 </div>
 #footer
+
+#script_links
+<script type="text/javascript">
+	$(function() {
+		$("input:submit").button();
+		$("#accordion").accordion({
+			autoHeight: false,
+			navigation: true,
+			collapsible:true,
+#if( $current )
+			event: ""
+#end
+		});
+
+		/* Selection of the right panel */
+#if( $current )
+		var select_panel = 0;
+	#if( $current.getType() == $field.CsvSource )
+	 	select_panel = 0;
+	#elseif( $current.getType() == $field.RdfFileSource )
+		select_panel = 1;
+	#elseif( $current.getType() == $field.SqlSource )
+	 	select_panel = 2;
+	#elseif( $current.getType() == $field.SparqlSource )
+	 	select_panel = 3;
+	#end
+		if (select_panel != 0) {
+	 	 	$("#accordion").accordion("option", "active", select_panel);
+		}
+		$("#accordion h3").click(function() {
+			var idx = $("#accordion h3").index(this);
+			if (idx == select_panel) {
+				$("#accordion").accordion("activate", idx);
+			}
+		});
+#end
+	});
+</script>
 </body>
 </html>
