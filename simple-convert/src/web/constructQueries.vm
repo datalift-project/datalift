@@ -5,26 +5,10 @@
 #load("rdfconverter/resources")
 #load_core_resources
 	<title>#i18n("rdfconverter.title") - DataLift</title>
-#css_links
-	<style>
-		.construct_query { display:block; width:400px; }
-		.main_frame { margin:auto; }
-	</style>
+#header_links
 </head>
 <body>
-#banner
-	<div class="main_frame">
-		<p>#i18n("rdfconverter.title")</p>
-		<form method="post">
-			<label for="query_0">#i18n("construct.query.label"): </label><br />
-			<textarea name="query_0" class="construct_query" style="width:600px; height:150px;"></textarea>
-			<input type="button" id="add_query" value="#i18n("add.label")"/>
-			<input type="submit" id="construct_queries_submit" value="#i18n("submit.label")"/>
-		</form>
-	</div>
-
-#script_links
-	<script type="text/javascript">
+<script>
 	$(function() {
 		$("#construct_queries_submit").button();
 		$("#add_query").button();
@@ -43,7 +27,7 @@
 			for(var i = 0; i < queries.length; i++) {
 				queriesJson[i] = queries[i].value;
 			}
-			var requestParam = {"query" : queriesJson, "project" : "$it.getUri()" };
+			var requestParam = {"query" : queriesJson, "project" : "$project.uri", "source" : "$it.uri" };
 			jQuery.ajax({
 				type: "POST",
 				url: "${baseUri}/rdfconverter",
@@ -56,12 +40,32 @@
 	});
 
 	function successQueryPost() {
-		 alert("successQueryPost");
+		 window.location = '${project.uri}#source';
 	}
 
 	function errorQueryPost() {
-		 alert("errorQueryPost");
+		alert("An error occured while querying the server. Please try again.")
 	}
-	</script>
+</script>
+
+<style>
+.construct_query {
+	display:block;
+	width:400px;
+.main_frame {
+	margin:auto;
+}
+</style>
+
+#banner
+	<div class="ui-widget-content" id="workspace">
+	<h3 class="ui-widget-header dl-widget-header">#i18n("rdfconverter.title") - Project ${project.title}</h3>
+		<form method="post">
+			<label for="query_0">#i18n("construct.query.label"): </label><br />
+			<textarea name="query_0" class="construct_query" style="width:600px; height:150px;"></textarea>
+			<input type="button" id="add_query" value="#i18n("add.label")"/>
+			<input type="submit" id="construct_queries_submit" value="#i18n("submit.label")"/>
+		</form>
+	</div>
 </body>
 </html>

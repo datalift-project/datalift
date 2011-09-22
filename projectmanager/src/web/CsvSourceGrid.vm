@@ -21,7 +21,10 @@
 				height: 450,
 				search:{
 					caption: "#i18n("grid.search.value.label")"
-				}
+				},
+				colModel: [
+					{ name: '#i18n("csv.line")', index: '#i18n("csv.line")', sorttype:'int'  }
+				]
 			});
 			tableToGrid("#grid", { datatype: "local" });
 			$("#grid").trigger("reloadGrid");
@@ -103,6 +106,7 @@
 	<table id="grid">
 		<thead>
 			<tr>
+				<th>#i18n("csv.line")</th>
 #foreach( $i in $it.getColumnNames() )
 				<th class="dl-grid-header-column">$esc.html($i)</th>
 #end
@@ -111,6 +115,7 @@
 		<tbody>
 #foreach( $row in $it )
 			<tr>
+			<td>$velocityCount</td>
 #foreach( $i in $row ) <td>$!esc.html($i)</td> #end
 			</tr>
 #end

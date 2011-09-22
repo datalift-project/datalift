@@ -64,7 +64,9 @@ public abstract class BaseSource extends BaseRdfEntity implements Source
     private String uri;
     @RdfProperty("dc:title")
     private String title;
-
+    @RdfProperty("dc:description")
+    private String description;
+    
     private final SourceType type;
 
     //-------------------------------------------------------------------------
@@ -108,10 +110,23 @@ public abstract class BaseSource extends BaseRdfEntity implements Source
     public String getTitle(){
         return title;
     }
+    
     /** {@inheritDoc} */
     @Override
     public void setTitle(String t) {
         title = t;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public String getDescription() {
+    	return description;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public void setDescription(String description) {
+    	this.description = description;
     }
 
     /** {@inheritDoc} */

@@ -115,19 +115,21 @@ public interface ProjectManager
      * @throws IOException if any error occurred creating the source
      *         or accessing the specified file.
      */
-    public CsvSource newCsvSource(URI uri, String title, String filePath,
+    public CsvSource newCsvSource(URI uri, String title,
+                                  String description, String filePath,
                                   char separator, boolean hasTitleRow)
                                                             throws IOException;
 
     /**
      * Creates a new RDF source object.
-     * @param  uri           the source URI.
-     * @param  title         the source label.
-     * @param  filePath      the RDF file path in the public storage.
-     * @param  mimeType      the RDF file data format as a MIME type:
-     *  supported types are: {@link MediaTypes#TEXT_TURTLE},
-     *  {@link MediaTypes#TEXT_N3}, {@link MediaTypes#APPLICATION_RDF_XML}
-     *  and {@link MediaTypes#APPLICATION_XML}.
+     * @param  uri        the source URI.
+     * @param  title      the source label.
+     * @param  filePath   the RDF file path in the public storage.
+     * @param  mimeType   the RDF data format as a MIME type. Supported
+     *                    types are: {@link MediaTypes#TEXT_TURTLE},
+     *                    {@link MediaTypes#TEXT_N3},
+     *                    {@link MediaTypes#APPLICATION_RDF_XML}
+     *                    and {@link MediaTypes#APPLICATION_XML}.
      *
      * @return a new RDF source, ready to be
      *         {@link Project#addSource(Source) associated} to a
@@ -135,8 +137,9 @@ public interface ProjectManager
      * @throws IOException if any error occurred creating the source
      *         or accessing the specified file.
      */
-    public RdfSource newRdfSource(URI uri, String title, String filePath,
-                                  String mimeType) throws IOException;
+    public RdfFileSource newRdfSource(URI uri, String title,
+                                      String description, String filePath,
+                                      String mimeType) throws IOException;
     
     /**
      * Creates a new database source object.
@@ -155,8 +158,14 @@ public interface ProjectManager
      * @throws IOException if any error occurred creating the source
      *         or accessing the configured database.
      */
-    public SqlSource newDbSource(URI uri, String title, String database, 
-                                String srcUrl, String user, String password, 
+    public SqlSource newDbSource(URI uri, String title,
+                                 String description, String database, 
+                                 String srcUrl, String user, String password, 
+                                 String request, int cacheDuration)
+                                                            throws IOException;
+
+    public SparqlSource newSparqlSource(URI uri, String title,
+                                String description, String connectionUrl, 
                                 String request, int cacheDuration)
                                                             throws IOException;
 
@@ -173,7 +182,8 @@ public interface ProjectManager
      * @throws IOException if any error occurred creating the source
      *         or accessing the underlying data.
      */
-    public TransformedRdfSource newTransformedRdfSource(URI uri, String title, 
+    public TransformedRdfSource newTransformedRdfSource(URI uri, String title,
+                                String description, 
                                 URI targetGraph, Source parent)
                                                             throws IOException;
 

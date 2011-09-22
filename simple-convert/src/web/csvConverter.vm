@@ -1,0 +1,114 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+#load("rdfconverter/resources")
+#load_core_resources
+	<title>#i18n("csvconverter.title") - DataLift</title>
+#header_links
+</head>
+<body>
+<script>
+	$(function() {
+		$(".submit_button").button();
+		
+		$(".source_to_select").click(function(){
+			purge_selected_sources();
+			$(this).removeClass("source_to_select");
+			$(this).addClass("source_selected");
+			var children = $(this).parent().children();
+			if (typeof(children) != 'undefined') {
+				for (var i = 0; i < children.length; i++) {
+					if ($(children[i]).hasClass("hidden")) {
+						$(children[i]).removeClass("hidden");
+						$(children[i]).addClass("showed");
+					}
+				}		
+			}
+			return false;
+		});	
+	});
+	
+	function purge_selected_sources() {
+		var selected = $(".source_selected");
+		if (typeof(selected[0]) != 'undefined') {
+			for(var i = 0; i < selected.length; i++) {
+				$(selected[i]).removeClass("source_selected");
+				$(selected[i]).addClass("source_to_select");
+				var children = $(selected[i]).parent().children();
+				for (var j = 0; j < children.length; j++) {
+					if ($(children[j]).hasClass("showed")) {
+						$(children[j]).removeClass("showed");
+						$(children[j]).addClass("hidden");
+					}
+				}
+			}		
+		}
+	}
+	
+	function successQueryPost() {
+		 window.location = '${project.uri}#source';
+	}
+	
+	function errorQueryPost() {
+		alert("An error occured while querying the server. Please try again.")
+	}
+</script>
+
+<style>
+.hidden {
+	display:none;
+}
+.showed {
+	display:block;
+}
+
+.source_selectable {
+	width:100%;
+	margin:auto;
+}
+
+.source_selected {
+	background: #CCCCCC;
+}
+
+.select_source {
+	border:1px black solid;
+	text-align:center;
+}
+
+.automargin {
+	margin:auto;
+}
+
+</style>
+#banner
+<div class="ui-widget-content" id="workspace">
+<h3 class="ui-widget-header dl-widget-header">CSV Converter - Project ${project.title}</h3>
+
+Source to convert :
+	<div id="source">
+#foreach($curSrc in $project.getSources())
+	#set( $count = 1)
+	#if( $curSrc.getType() == $field.CsvSource )
+		#foreach($source in $project.getSources())
+			#if( $source.getType() == $field.TransformedRdfSource && $source.getParent().uri == $curSrc.uri)
+				#set( $count = $count + 1)
+			#end
+		#end
+		<form class="select_source" method="post" action="${baseUri}/csvconverter?project=${project.uri}&source=${curSrc.uri}">
+			<div class="source_selectable source_to_select" value="${curSrc.uri}">$esc.html($curSrc.title)</div>
+			
+			<label for="dest_title" class="hidden">#i18n("dest.title")</label>
+			<input type="text" class="hidden automargin" name="dest_title" id="dest_title" value="(RDF #$count)"/>
+			<label for="dest_graph_uri" class="hidden">#i18n("dest.uri")</label>
+			<input type="text" class="hidden automargin" name="dest_graph_uri" id="dest_graph_uri" value="${curSrc.uri}-rdf-$count"/>
+			<input type="submit" class="hidden submit_button automargin" value="#i18n('submit')"/>
+			
+		</form>
+	#end
+#end
+	</div>
+</div>
+</body>
+</html>

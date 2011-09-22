@@ -39,6 +39,7 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.QueryParam;
@@ -70,15 +71,27 @@ public class SimplePublisher extends BaseConverterModule
     //-------------------------------------------------------------------------
 
     public SimplePublisher() {
-        super(MODULE_NAME, SourceType.TransformedRdfSource, HttpMethod.POST);
+        super(MODULE_NAME, SourceType.TransformedRdfSource);
     }
 
     //-------------------------------------------------------------------------
     // Web services
     //-------------------------------------------------------------------------
 
+    @GET
+    public Response getIndexPage(@QueryParam("project") URI projectId,
+                                 @Context UriInfo uriInfo,
+                                 @Context Request request,
+                                 @HeaderParam(ACCEPT) String acceptHdr) {
+        // Retrieve project.
+        Project p = this.getProject(projectId);
+        return Response.ok(this.newViewable("/publisher.vm", p))
+                       .build();
+    }
+
     @POST
     public Response publishProject(@QueryParam("project") URI projectId,
+                                   @QueryParam("source") URI sourceId,
                                    @Context UriInfo uriInfo,
                                    @Context Request request,
                                    @HeaderParam(ACCEPT) String acceptHdr)
@@ -89,7 +102,7 @@ public class SimplePublisher extends BaseConverterModule
             Project p = this.getProject(projectId);
             // Load input source.
             TransformedRdfSource src =
-                                    (TransformedRdfSource)this.getLastSource(p);
+                                    (TransformedRdfSource)p.getSource(sourceId);
             // Get the source (CSV, RDF/XML, database...) at the origin of the
             // transformations and use its name as target named graph.
             Source origin = null;

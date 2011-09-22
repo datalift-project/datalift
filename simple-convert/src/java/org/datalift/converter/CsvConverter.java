@@ -35,8 +35,13 @@
 package org.datalift.converter;
 
 
+import java.net.MalformedURLException;
 import java.net.URI;
+import java.util.Map;
+import java.util.TreeMap;
 
+import javax.ws.rs.FormParam;
+import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.QueryParam;
@@ -83,15 +88,39 @@ public class CsvConverter extends BaseConverterModule
 
     /** Default constructor. */
     public CsvConverter() {
-    	super(MODULE_NAME, SourceType.CsvSource, HttpMethod.POST);
+        super(MODULE_NAME, SourceType.CsvSource);
     }
 
     //-------------------------------------------------------------------------
     // Web services
     //-------------------------------------------------------------------------
 
+    @GET
+    public Response getIndex(@QueryParam("project") URI projectId,
+                             @Context UriInfo uriInfo,
+                             @Context Request request,
+                             @HeaderParam(ACCEPT) String acceptHdr)
+                                                throws WebApplicationException {
+        Response response = null;
+        Project p = this.getProject(projectId);
+        Map<String, Object> args = new TreeMap<String, Object>();
+        try {
+            args.put("it", this.canHandle(p).getUrl(
+                                            uriInfo.getBaseUri().toString()));
+        }
+        catch (MalformedURLException e) { /* Ignore... */ }
+
+        args.put("project", p);
+        response = Response.ok(this.newViewable("/csvConverter.vm", args))
+                           .build();
+        return response;
+    }
+
     @POST
     public Response getIndexPage(@QueryParam("project") URI projectId,
+                                 @QueryParam("source") URI sourceId,
+                                 @FormParam("dest_title") String destTitle,
+                                 @FormParam("dest_graph_uri") URI targetGraph,
                                  @Context UriInfo uriInfo,
                                  @Context Request request,
                                  @HeaderParam(ACCEPT) String acceptHdr)
@@ -101,14 +130,13 @@ public class CsvConverter extends BaseConverterModule
             // Retrieve project.
             Project p = this.getProject(projectId);
             // Load input source.
-            CsvSource src = (CsvSource)this.getLastSource(p);
+            CsvSource src = (CsvSource)p.getSource(sourceId);
             src.init(this.configuration, uriInfo.getBaseUri());
             // Convert CSV data and load generated RDF triples.
-            String srcName  = this.nextSourceName(p);
-            URI targetGraph = this.newGraphUri(src, srcName);
+            destTitle = " - " + destTitle;
             this.convert(src, this.internalRepository, targetGraph);
             // Register new transformed RDF source.
-            this.addResultSource(p, src, srcName, targetGraph);
+            this.addResultSource(p, src, destTitle, targetGraph);
             // Display generated triples.
             response = this.displayGraph(this.internalRepository, targetGraph,
                                          uriInfo, request, acceptHdr);
@@ -168,7 +196,7 @@ public class CsvConverter extends BaseConverterModule
         }
         catch (Exception e) {
             throw new TechnicalException("csv.conversion.failed", e);
-    	}
+        }
         finally {
             try { cnx.close(); } catch (Exception e) { /* Ignore */ }
         }

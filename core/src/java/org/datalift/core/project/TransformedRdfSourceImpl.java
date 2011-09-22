@@ -37,7 +37,6 @@ package org.datalift.core.project;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.Iterator;
 
 import javax.persistence.Entity;
 
@@ -53,6 +52,7 @@ import org.datalift.core.TechnicalException;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.TransformedRdfSource;
+import org.datalift.fwk.util.CloseableIterator;
 
 
 @Entity
@@ -120,7 +120,7 @@ public class TransformedRdfSourceImpl extends BaseSource
 
     /** {@inheritDoc} */
     @Override
-    public Iterator<Statement> iterator() {
+    public CloseableIterator<Statement> iterator() {
         final RepositoryConnection cnx =
                     this.configuration.getInternalRepository().newConnection();
         try {
@@ -130,7 +130,7 @@ public class TransformedRdfSourceImpl extends BaseSource
                                         " WHERE { GRAPH <" + this.targetGraph +
                                             "> { ?s ?p ?o . } }",
                                         this.baseUri).evaluate();
-            return new Iterator<Statement>() {
+            return new CloseableIterator<Statement>() {
                     @Override
                     public boolean hasNext() {
                         try {
@@ -168,7 +168,7 @@ public class TransformedRdfSourceImpl extends BaseSource
                         this.close();
                     }
 
-                    private void close() {
+                    public void close() {
                         try { result.close(); } catch (Exception e) { /* Ignore... */ }
                         try { cnx.close();    } catch (Exception e) { /* Ignore... */ }
                     }

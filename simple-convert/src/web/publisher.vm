@@ -1,0 +1,33 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+#load("rdfconverter/resources")
+#load_core_resources
+	<title>#i18n("rdfconverter.title") - DataLift</title>
+#header_links
+</head>
+<body>
+<script>
+	$(function() {
+		$(".source_to_select").button();
+	});
+</script>
+#banner
+<div class="ui-widget-content" id="workspace">
+<h3 class="ui-widget-header dl-widget-header">RDF Publisher - Project ${it.title}</h3>
+
+Source to publish :
+	<div id="source">
+<div id="source">
+#foreach($curSrc in $it.getSources())
+	#if( $curSrc.getType() == $field.RdfSource || $curSrc.getType() == $field.TransformedRdfSource )
+	<form method="post" action="${baseUri}/simple-publisher?project=${it.uri}&source=${curSrc.uri}">	
+		<input type="submit" class="source_to_select" value="$esc.html($curSrc.title)"/>
+	</form>
+	#end
+#end
+	</div>
+</div>
+</body>
+</html>

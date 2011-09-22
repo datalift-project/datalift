@@ -34,26 +34,14 @@
 
 package org.datalift.fwk.project;
 
-/**
- * A source object describing the RDF data resulting from the
- * transformation (i.e. a step in the data lifting process) of another
- * (possible RDF) source.
- *
- * @author lbihanic
- */
-public interface TransformedRdfSource extends RdfSource
-{
-    /**
-     * Returns the URI of the named graph containing this source data
-     * (triples) in the DataLift internal RDF store.
-     * @return the URI of the source named graph
-     */
-    public String getTargetGraph();
 
-    /**
-     * Returns the parent source object, i.e. the source at the origin
-     * of the data transformation.
-     * @return the parent source.
-     */
-    public Source getParent();
+public interface SparqlSource extends RdfSource
+{
+    public String getConnectionUrl();
+
+    public void setConnectionUrl(String connectionUrl);
+
+    public String getRequest();
+
+    public void setRequest(String request);
 }

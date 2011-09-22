@@ -31,20 +31,14 @@
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
  */
-
 package org.datalift.fwk.project;
 
 
 import org.openrdf.model.Statement;
 
+import org.datalift.fwk.util.CloseableIterable;
 
-/**
- * A file source object describing a RDF file (RDF/XML, Turtle, N3,
- * NTriples, TRIG, TRIX...).
- *
- * @author hdevos
- */
-public interface RdfSource extends FileSource<Statement>
-{
+
+public interface RdfSource extends Source, CloseableIterable<Statement> {
     // No specific method other than iterator().
 }

@@ -34,6 +34,7 @@
 
 package org.datalift.core.project;
 
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -51,7 +52,7 @@ import org.openrdf.rio.helpers.StatementCollector;
 import com.clarkparsia.empire.annotation.RdfsClass;
 
 import org.datalift.fwk.Configuration;
-import org.datalift.fwk.project.RdfSource;
+import org.datalift.fwk.project.RdfFileSource;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.util.CloseableIterator;
 
@@ -59,14 +60,14 @@ import static org.datalift.fwk.rdf.RdfUtils.*;
 
 
 /**
- * Default implementation of the {@link RdfSource} interface.
+ * Default implementation of the {@link RdfFileSource} interface.
  *
  * @author hdevos
  */
 @Entity
 @RdfsClass("datalift:rdfSource")
 public class RdfSourceImpl extends BaseFileSource<Statement>
-                           implements RdfSource
+                           implements RdfFileSource
 {
     //-------------------------------------------------------------------------
     // Instance members

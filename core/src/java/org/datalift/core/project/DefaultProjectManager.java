@@ -61,11 +61,12 @@ import com.clarkparsia.utils.NamespaceUtils;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.LifeCycle;
 import org.datalift.fwk.project.CsvSource;
+import org.datalift.fwk.project.SparqlSource;
 import org.datalift.fwk.project.SqlSource;
 import org.datalift.fwk.project.Ontology;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectManager;
-import org.datalift.fwk.project.RdfSource;
+import org.datalift.fwk.project.RdfFileSource;
 import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.project.CsvSource.Separator;
@@ -139,7 +140,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
 
     /** {@inheritDoc} */
     @Override
-    public CsvSource newCsvSource(URI uri, String title, String filePath,
+    public CsvSource newCsvSource(URI uri, String title, String description, String filePath,
                                   char separator, boolean hasTitleRow)
                                                             throws IOException {
         CsvSourceImpl src = new CsvSourceImpl(uri.toString());
@@ -148,6 +149,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         if (!f.isFile()) {
             throw new FileNotFoundException(filePath);
         }
+        src.setDescription(description);
         src.setTitleRow(hasTitleRow);
         src.setFilePath(filePath);
         src.setMimeType("text/csv");
@@ -165,7 +167,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
 
     /** {@inheritDoc} */
     @Override
-    public RdfSource newRdfSource(URI uri, String title, String filePath,
+    public RdfFileSource newRdfSource(URI uri, String title, String description, String filePath,
                                   String mimeType) throws IOException {
         RdfSourceImpl src = new RdfSourceImpl(uri.toString());
         src.setTitle(title);
@@ -173,6 +175,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         if (!f.isFile()) {
             throw new FileNotFoundException(filePath);
         }
+        src.setDescription(description);
         src.setFilePath(filePath);
         src.setMimeType(mimeType);
         // Force source initialization to validate uploaded file.
@@ -182,12 +185,13 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
 
     /** {@inheritDoc} */
     @Override
-    public SqlSource newDbSource(URI uri, String title, String database,
+    public SqlSource newDbSource(URI uri, String title, String description, String database,
                                 String srcUrl, String user, String password,
                                 String request, int cacheDuration)
                                                             throws IOException {
         SqlSourceImpl src = new SqlSourceImpl(uri.toString());
         src.setTitle(title);
+        src.setDescription(description);
         src.setDatabase(database);
         src.setConnectionUrl(srcUrl);
         src.setUser(user);
@@ -202,12 +206,31 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
 
     /** {@inheritDoc} */
     @Override
-    public TransformedRdfSource newTransformedRdfSource(URI uri, String title, 
-                                            URI targetGraph, Source parent)
+    public SparqlSource newSparqlSource(URI uri, String title,
+                                    String description, String connectionUrl,
+                                    String request, int cacheDuration)
+                                                            throws IOException {
+        SparqlSourceImpl src = new SparqlSourceImpl(uri.toString());
+        src.setConnectionUrl(connectionUrl);
+        src.setTitle(title);
+        src.setDescription(description);
+        src.setRequest(request);
+        src.setCacheDuration(cacheDuration);
+        // Force source initialization to validate SPARQL Endpoint connection
+        // parameters and SQL query.
+        src.init(this.configuration, uri);
+        return src;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public TransformedRdfSource newTransformedRdfSource(URI uri, String title,
+                            String description, URI targetGraph, Source parent)
                                                             throws IOException {
         TransformedRdfSourceImpl src =
                                 new TransformedRdfSourceImpl(uri.toString());
         src.setTitle(title);
+        src.setDescription(description);
         src.setTargetGraph(targetGraph.toString());
         src.setParent(parent);
         // Force source initialization for parameter validation.
@@ -241,7 +264,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         p.setDateModification(date);
         return p;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public String getProjectFilePath(String projectId, String fileName) {
@@ -320,8 +343,8 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     private Collection<Class<?>> getPersistentClasses() {
         Collection<Class<?>> classes = new LinkedList<Class<?>>();
         classes.addAll(Arrays.asList(ProjectImpl.class, CsvSourceImpl.class,
-                RdfSourceImpl.class, SqlSourceImpl.class, OntologyImpl.class, 
-                TransformedRdfSourceImpl.class));
+                RdfSourceImpl.class, SqlSourceImpl.class, OntologyImpl.class,
+                TransformedRdfSourceImpl.class, SparqlSourceImpl.class));
         return classes;
     }
 
