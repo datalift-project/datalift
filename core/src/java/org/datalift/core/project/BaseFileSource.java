@@ -100,16 +100,19 @@ public abstract class BaseFileSource<T> extends BaseSource
                                                             throws IOException {
         super.init(configuration, baseUri);
 
-        File docRoot = configuration.getPublicStorage();
-        if ((docRoot == null) || (! docRoot.isDirectory())) {
-            throw new TechnicalException("public.storage.not.directory",
-                                         docRoot);
+        if (this.storage == null) {
+            File docRoot = configuration.getPublicStorage();
+            if ((docRoot == null) || (! docRoot.isDirectory())) {
+                throw new TechnicalException("public.storage.not.directory",
+                                             docRoot);
+            }
+            File f = new File(docRoot, this.filePath);
+            if (! (f.isFile() && f.canRead())) {
+                throw new FileNotFoundException(this.filePath);
+            }
+            this.storage = f;
         }
-        File f = new File(docRoot, this.filePath);
-        if (! (f.isFile() && f.canRead())) {
-            throw new FileNotFoundException(this.filePath);
-        }
-        this.storage = f;
+        // Else: Already initialized.
     }
 
     //-------------------------------------------------------------------------
