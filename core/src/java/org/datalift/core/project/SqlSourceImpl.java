@@ -40,12 +40,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
-import java.util.List;
 
 import javax.persistence.Entity;
 import javax.sql.rowset.WebRowSet;
@@ -87,7 +88,7 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
     private String request;
 
     private transient File cacheFile = null;
-    private transient String[] columns = null;
+    private transient Collection<String> columns = null;
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -119,45 +120,51 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
                                                             throws IOException {
         super.init(configuration, baseUri);
 
-        WebRowSet rowSet = null;
-        try {
-            String fileName = this.getClass().getSimpleName() + '-' +
+        if (this.columns == null) {
+            WebRowSet rowSet = null;
+            try {
+                String fileName = this.getClass().getSimpleName() + '-' +
                                             StringUtils.urlify(this.getTitle());
-            this.cacheFile = new File(configuration.getPrivateStorage(),
-                                      fileName);
-            rowSet = new WebRowSetImpl();
-            InputStream in = this.getCacheStream(this.cacheFile);
-            if (in == null) {
-                // Force loading of database driver.
-                Class.forName(DatabaseType.valueOf(this.getDatabaseType())
-                                          .getDriver());
-                // Get table to grid
-                rowSet.setCommand(request);
-                rowSet.setUrl(connectionUrl);
-                rowSet.setUsername(user);
-                rowSet.setPassword(password);
-                rowSet.execute();
-                rowSet.writeXml(new FileOutputStream(cacheFile));
-                cacheFile.deleteOnExit();
+                this.cacheFile = new File(configuration.getPrivateStorage(),
+                                          fileName);
+                rowSet = new WebRowSetImpl();
+                InputStream in = this.getCacheStream(this.cacheFile);
+                if (in == null) {
+                    // Force loading of database driver.
+                    Class.forName(DatabaseType.valueOf(this.getDatabaseType())
+                                              .getDriver());
+                    // Get table to grid
+                    rowSet.setCommand(request);
+                    rowSet.setUrl(connectionUrl);
+                    rowSet.setUsername(user);
+                    rowSet.setPassword(password);
+                    rowSet.execute();
+                    rowSet.writeXml(new FileOutputStream(cacheFile));
+                    cacheFile.deleteOnExit();
+                }
+                else {
+                    rowSet.readXml(in);
+                }
+                ResultSetMetaData metadata = rowSet.getMetaData();
+                String[] cols = new String[metadata.getColumnCount()];
+                for (int i=0, max=cols.length; i<max; i++) {
+                    cols[i] = metadata.getColumnName(i+1);
+                }
+                this.columns = Collections.unmodifiableCollection(
+                                                        Arrays.asList(cols));
             }
-            else {
-                rowSet.readXml(in);
+            catch (Exception e) {
+                throw new IOException(e);
             }
-            ResultSetMetaData metadata = rowSet.getMetaData();
-            String[] cols = new String[metadata.getColumnCount()];
-            for (int i=0, max=cols.length; i<max; i++) {
-                cols[i] = metadata.getColumnName(i+1);
+            finally {
+                if (rowSet != null) {
+                    try {
+                        rowSet.close();
+                    } catch (Exception e) { /* Ignore... */ }
+                }
             }
-            this.columns = cols;
         }
-        catch (Exception e) {
-            throw new IOException(e);
-        }
-        finally {
-            if (rowSet != null) {
-                try { rowSet.close(); } catch (Exception e) { /* Ignore... */ }
-            }
-        }
+        // Else: Already initialized.
     }
 
     /** {@inheritDoc} */
@@ -226,16 +233,16 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
         if (this.columns == null) {
             throw new IllegalStateException("Not initialized");
         }
-        return this.columns.length;
+        return this.columns.size();
     }
 
     /** {@inheritDoc} */
     @Override
-    public List<String> getColumnNames() throws SQLException {
+    public Collection<String> getColumnNames() throws SQLException {
         if (this.columns == null) {
             throw new IllegalStateException("Not initialized");
         }
-        return Arrays.asList(this.columns);
+        return this.columns;
     }
 
     /** {@inheritDoc} */
@@ -300,80 +307,7 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
         public Row<Object> next() {
             Row<Object> row = null;
             if (this.hasNext) {
-                row = new Row<Object>()
-                    {
-                        @Override
-                        public int size() {
-                            return columns.length;
-                        }
-
-                        @Override
-                        public Collection<String> keys() {
-                            return Arrays.asList(columns);
-                        }
-    
-                        @Override
-                        public Object get(String key) {
-                            try {
-                                return rowSet.getObject(key);
-                            }
-                            catch (SQLException e) {
-                                throw new RuntimeException(e);
-                            }
-                        }
-    
-                        @Override
-                        public String getString(String key) {
-                            try {
-                                return rowSet.getString(key);
-                            }
-                            catch (SQLException e) {
-                                throw new RuntimeException(e);
-                            }
-                        }
-    
-                        @Override
-                        public Object get(int index) {
-                            try {
-                                return rowSet.getObject(index);
-                            }
-                            catch (SQLException e) {
-                                throw new TechnicalException(null, e);
-                            }
-                        }
-    
-                        @Override
-                        public String getString(int index) {
-                            try {
-                                return rowSet.getString(index);
-                            }
-                            catch (SQLException e) {
-                                throw new TechnicalException(null, e);
-                            }
-                        }
-
-                        @Override
-                        public Iterator<Object> iterator() {
-                            return new Iterator<Object>() {
-                                private int curPos = 0;
-
-                                @Override
-                                public boolean hasNext() {
-                                    return (this.curPos < columns.length);
-                                }
-
-                                @Override
-                                public Object next() {
-                                    return get(this.curPos++);
-                                }
-
-                                @Override
-                                public void remove() {
-                                    throw new UnsupportedOperationException();
-                                }
-                            };
-                        }
-                    };
+                row = new ResultSetRow(this.rowSet, columns);
                 this.hasNext = this.getNextRow();
             }
             return row;
@@ -412,6 +346,100 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
                 }
             }
             return hasNext;
+        }
+    }
+
+    //-------------------------------------------------------------------------
+    // ResultSetRow nested class
+    //-------------------------------------------------------------------------
+
+    /**
+     * A Row implementation wrapping an array of strings.
+     * <p>
+     * <i>Implementation notes</i>: this class is marked as public on
+     * purpose. Otherwise the Velocity template engine fails to access
+     * methods of this class.</p>
+     */
+    public final static class ResultSetRow implements Row<Object>
+    {
+        private final ResultSet rs;
+        private final Collection<String> columns;
+
+        public ResultSetRow(ResultSet rs, Collection<String> columns) {
+            this.rs = rs;
+            this.columns = columns;
+        }
+
+        @Override
+        public int size() {
+            return this.columns.size();
+        }
+
+        @Override
+        public Collection<String> keys() {
+            return this.columns;
+        }
+
+        @Override
+        public Object get(String key) {
+            try {
+                return this.rs.getObject(key);
+            }
+            catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        @Override
+        public String getString(String key) {
+            try {
+                return this.rs.getString(key);
+            }
+            catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        @Override
+        public Object get(int index) {
+            try {
+                return this.rs.getObject(index);
+            }
+            catch (SQLException e) {
+                throw new TechnicalException(null, e);
+            }
+        }
+
+        @Override
+        public String getString(int index) {
+            try {
+                return this.rs.getString(index);
+            }
+            catch (SQLException e) {
+                throw new TechnicalException(null, e);
+            }
+        }
+
+        @Override
+        public Iterator<Object> iterator() {
+            return new Iterator<Object>() {
+                private int curPos = 0;
+
+                @Override
+                public boolean hasNext() {
+                    return (this.curPos < size());
+                }
+
+                @Override
+                public Object next() {
+                    return get(this.curPos++);
+                }
+
+                @Override
+                public void remove() {
+                    throw new UnsupportedOperationException();
+                }
+            };
         }
     }
 }

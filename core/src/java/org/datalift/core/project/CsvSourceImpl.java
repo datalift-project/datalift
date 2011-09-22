@@ -43,7 +43,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
@@ -81,7 +80,7 @@ public class CsvSourceImpl extends BaseFileSource<Row<String>>
     @RdfProperty("datalift:titleRow")
     private boolean titleRow = false;
 
-    private transient String[] headers = null;
+    private transient Collection<String> headers = null;
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -113,20 +112,26 @@ public class CsvSourceImpl extends BaseFileSource<Row<String>>
                                                             throws IOException {
         super.init(configuration, baseUri);
 
-        CSVReader reader = this.newReader();
-        try {
-            String[] firstRow = reader.readNext();
-            if ((! this.titleRow) && (firstRow != null)) {
-                // Generate generic column names (A, B... Z, AA, AB...).
-                for (int i=0; i<firstRow.length; i++) {
-                    firstRow[i] = this.getColumnName(i);
+        if (this.headers == null) {
+            CSVReader reader = this.newReader();
+            try {
+                String[] firstRow = reader.readNext();
+                if ((! this.titleRow) && (firstRow != null)) {
+                    // Generate generic column names (A, B... Z, AA, AB...).
+                    for (int i=0; i<firstRow.length; i++) {
+                        firstRow[i] = this.getColumnName(i);
+                    }
                 }
+                this.headers = Collections.unmodifiableCollection(
+                    Arrays.asList((firstRow != null)? firstRow: new String[0]));
             }
-            this.headers = (firstRow != null)? firstRow: new String[0];
+            finally {
+                try {
+                    reader.close();
+                } catch (IOException e) { /* Ignore... */ }
+            }
         }
-        finally {
-            try { reader.close(); } catch (IOException e) { /* Ignore... */ }
-        }
+        // Else: Already initialized.
     }
 
     /** {@inheritDoc} */
@@ -164,11 +169,11 @@ public class CsvSourceImpl extends BaseFileSource<Row<String>>
 
     /** {@inheritDoc} */
     @Override
-    public List<String> getColumnNames() {
+    public Collection<String> getColumnNames() {
         if (this.headers == null) {
             throw new IllegalStateException("Not initialized");
         }
-        return Collections.unmodifiableList(Arrays.asList(this.headers));
+        return this.headers;
     }
 
     //-------------------------------------------------------------------------
@@ -182,7 +187,7 @@ public class CsvSourceImpl extends BaseFileSource<Row<String>>
             throw new IllegalStateException("Not initialized");
         }
         try {
-            return new RowIterator(this.newReader(), this.headers, titleRow);
+            return new RowIterator(this.newReader());
         }
         catch (IOException e) {
             throw new TechnicalException(null, e);
@@ -197,7 +202,6 @@ public class CsvSourceImpl extends BaseFileSource<Row<String>>
         return new CSVReader(
                     new InputStreamReader(this.getInputStream(), "ISO-8859-1"),
                     Separator.valueOf(this.separator).getValue());
-
     }
 
     private String getColumnName(int n) {
@@ -215,8 +219,7 @@ public class CsvSourceImpl extends BaseFileSource<Row<String>>
     /**
      * An {@link Iterator} over the data rows read from a CSV file.
      */
-    private final static class RowIterator
-                                    implements CloseableIterator<Row<String>>
+    private final class RowIterator implements CloseableIterator<Row<String>>
     {
         private final CSVReader reader;
         private final Map<String,Integer> keyMapping;
@@ -225,24 +228,20 @@ public class CsvSourceImpl extends BaseFileSource<Row<String>>
 
         /**
          * Create a new row iterator.
-         * @param  reader         the provider of CSV data.
-         * @param  headers        the column headings.
-         * @param  hasTitleRow    whether the first row of the CSV file
-         *                        contains data of column headings.
+         * @param  reader   the provider of CSV data.
          *
          * @throws IOException if any error occurred accessing the CSV
          *                     content.
          */
-        public RowIterator(CSVReader reader,
-                           String[] headers, boolean hasTitleRow)
-                                                            throws IOException {
+        public RowIterator(CSVReader reader) throws IOException {
             this.reader = reader;
             Map<String,Integer> m = new HashMap<String,Integer>();
-            for (int i=0; i<headers.length; i++) {
-                m.put(headers[i], Integer.valueOf(i));
+            int i = 0;
+            for (String s : headers) {
+                m.put(s, Integer.valueOf(i++));
             }
             this.keyMapping = Collections.unmodifiableMap(m);
-            if (hasTitleRow) {
+            if (hasTitleRow()) {
                 // Skip title row to exclude it from actual data.
                 this.getNextRow();
             }
@@ -302,7 +301,7 @@ public class CsvSourceImpl extends BaseFileSource<Row<String>>
         private Row<String> getNextRow() throws IOException {
             Row<String> row = null;
             try {
-                String[] data = this.reader.readNext();
+                final String[] data = this.reader.readNext();
                 if (data != null) {
                     row = new StringArrayRow(data, this.keyMapping);
                 }
@@ -322,8 +321,12 @@ public class CsvSourceImpl extends BaseFileSource<Row<String>>
 
     /**
      * A Row implementation wrapping an array of strings.
+     * <p>
+     * <i>Implementation notes</i>: this class is marked as public on
+     * purpose. Otherwise the Velocity template engine fails to access
+     * methods of this class.</p>
      */
-    private final static class StringArrayRow implements Row<String>
+    public final static class StringArrayRow implements Row<String>
     {
         private final String[] data;
         private final Map<String,Integer> keyMapping;

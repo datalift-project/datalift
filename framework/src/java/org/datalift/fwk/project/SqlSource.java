@@ -36,7 +36,7 @@ package org.datalift.fwk.project;
 
 
 import java.sql.SQLException;
-import java.util.List;
+import java.util.Collection;
 
 import org.datalift.fwk.util.CloseableIterable;
 
@@ -105,5 +105,5 @@ public interface SqlSource extends Source, CloseableIterable<Row<Object>>
      * @throws IllegalStateException if this source object has not been
      *         {@link #init(org.datalift.fwk.Configuration, java.net.URI)}.
      */
-    public List<String> getColumnNames() throws SQLException;
+    public Collection<String> getColumnNames() throws SQLException;
 }

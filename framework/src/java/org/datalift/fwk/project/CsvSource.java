@@ -35,7 +35,7 @@
 package org.datalift.fwk.project;
 
 
-import java.util.List;
+import java.util.Collection;
 
 
 /**
@@ -107,5 +107,5 @@ public interface CsvSource extends FileSource<Row<String>>
      * @throws IllegalStateException if this source object has not been
      *         {@link #init(org.datalift.fwk.Configuration, java.net.URI)}.
      */
-    public List<String> getColumnNames();
+    public Collection<String> getColumnNames();
 }
