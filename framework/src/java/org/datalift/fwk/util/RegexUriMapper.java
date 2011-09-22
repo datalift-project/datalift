@@ -37,42 +37,45 @@ package org.datalift.fwk.util;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.text.MessageFormat;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
 /**
  * A URI mapper than uses a {@link Pattern regular expression} to
- * match supported URIs and extract some parts to
- * {@link MessageFormat format} an new URIs. URIs not matching the
- * specified pattern are not modified (i.e. returned unchanged).
+ * select applicable URIs and extract some parts to
+ * {@link Matcher#replaceAll(String) format} translated URIs.
+ * URIs not matching the specified pattern are not modified (i.e.
+ * returned unchanged).
  *
  * @author lbihanic
  */
 public class RegexUriMapper implements UriMapper
 {
     private final Pattern extractor;
-    private final MessageFormat builder;
+    private final String replacement;
 
     /**
      * Creates a new URI mapper matching and extracting URI parts
      * using a {@link Pattern regular expression} and a
-     * {@link MessageFormat formatter} to generate the mapped URI.
+     * replacement string to generate the mapped URI.
      * @param  uriExtractor   the regular expression to filter the
      *                        applicable URIs and extract the parts
      *                        used to build the translated URI.
-     * @param  uriBuilder     the format of the resulting URIs.
+     * @param  replacement    the replacement string, compliant with
+     *                        the regular expression
+     *                        {@link Matcher#replaceAll(String) syntax}
+     *                        for captured subsequences.
      */
-    public RegexUriMapper(Pattern uriExtractor, MessageFormat uriBuilder) {
+    public RegexUriMapper(Pattern uriExtractor, String replacement) {
         if (uriExtractor == null) {
             throw new IllegalArgumentException("uriExtractor");
         }
-        if (uriBuilder == null) {
+        if (replacement == null) {
             throw new IllegalArgumentException("uriBuilder");
         }
         this.extractor = uriExtractor;
-        this.builder   = uriBuilder;
+        this.replacement   = replacement;
     }
 
     /** {@inheritDoc} */
@@ -82,13 +85,8 @@ public class RegexUriMapper implements UriMapper
         if (in != null) {
             Matcher m = this.extractor.matcher(in.toString());
             if (m.matches()) {
-                int max = m.groupCount();
-                String[] args = new String[max];
-                for (int i=0; i<max; i++) {
-                    args[i] = m.group(i + 1);
-                }
                 try {
-                    mapped = new URI(this.builder.format(args));
+                    mapped = new URI(m.replaceAll(this.replacement));
                 }
                 catch (URISyntaxException e) {
                     throw new RuntimeException(e);
