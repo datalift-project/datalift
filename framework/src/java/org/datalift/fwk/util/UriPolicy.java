@@ -56,8 +56,8 @@ import org.datalift.fwk.LifeCycle;
  * <code>META-INF/services/org.datalift.fwk.util.UriPolicy</code> that
  * contains a list of fully-qualified implementation class names.</p>
  * <p>
- * The <code>UriPolicy</code> are loaded using the class loader of the
- * owning module.</p>
+ * <code>UriPolicy</code> classes are loaded using the class loader of
+ * the owning module.</p>
  *
  * @author lbihanic
  */
