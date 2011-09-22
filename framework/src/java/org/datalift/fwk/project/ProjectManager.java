@@ -158,10 +158,10 @@ public interface ProjectManager
      * @throws IOException if any error occurred creating the source
      *         or accessing the configured database.
      */
-    public SqlSource newDbSource(URI uri, String title,
-                                 String description, String database, 
-                                 String srcUrl, String user, String password, 
-                                 String request, int cacheDuration)
+    public SqlSource newSqlSource(URI uri, String title,
+                                  String description, String database, 
+                                  String srcUrl, String user, String password, 
+                                  String request, int cacheDuration)
                                                             throws IOException;
 
     public SparqlSource newSparqlSource(URI uri, String title,

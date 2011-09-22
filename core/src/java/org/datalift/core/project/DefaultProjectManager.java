@@ -140,7 +140,8 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
 
     /** {@inheritDoc} */
     @Override
-    public CsvSource newCsvSource(URI uri, String title, String description, String filePath,
+    public CsvSource newCsvSource(URI uri, String title,
+                                  String description, String filePath,
                                   char separator, boolean hasTitleRow)
                                                             throws IOException {
         CsvSourceImpl src = new CsvSourceImpl(uri.toString());
@@ -167,9 +168,10 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
 
     /** {@inheritDoc} */
     @Override
-    public RdfFileSource newRdfSource(URI uri, String title, String description, String filePath,
-                                  String mimeType) throws IOException {
-        RdfSourceImpl src = new RdfSourceImpl(uri.toString());
+    public RdfFileSource newRdfSource(URI uri, String title,
+                                      String description, String filePath,
+                                      String mimeType) throws IOException {
+        RdfFileSourceImpl src = new RdfFileSourceImpl(uri.toString());
         src.setTitle(title);
         File f = this.getFileStorage(filePath);
         if (!f.isFile()) {
@@ -185,9 +187,10 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
 
     /** {@inheritDoc} */
     @Override
-    public SqlSource newDbSource(URI uri, String title, String description, String database,
-                                String srcUrl, String user, String password,
-                                String request, int cacheDuration)
+    public SqlSource newSqlSource(URI uri, String title,
+                                  String description, String database,
+                                  String srcUrl, String user, String password,
+                                  String request, int cacheDuration)
                                                             throws IOException {
         SqlSourceImpl src = new SqlSourceImpl(uri.toString());
         src.setTitle(title);
@@ -343,7 +346,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     private Collection<Class<?>> getPersistentClasses() {
         Collection<Class<?>> classes = new LinkedList<Class<?>>();
         classes.addAll(Arrays.asList(ProjectImpl.class, CsvSourceImpl.class,
-                RdfSourceImpl.class, SqlSourceImpl.class, OntologyImpl.class,
+                RdfFileSourceImpl.class, SqlSourceImpl.class, OntologyImpl.class,
                 TransformedRdfSourceImpl.class, SparqlSourceImpl.class));
         return classes;
     }

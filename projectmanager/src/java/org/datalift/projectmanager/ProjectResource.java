@@ -675,7 +675,7 @@ public class ProjectResource
             Project p = this.loadProject(projectUri);
 
             // Add new source to persistent project
-            SqlSource src = this.projectManager.newDbSource(sourceUri,
+            SqlSource src = this.projectManager.newSqlSource(sourceUri,
                                                 title, description, database, srcUrl,
                                                 user, password,
                                                 request, cacheDuration);

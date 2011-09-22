@@ -66,8 +66,8 @@ import static org.datalift.fwk.rdf.RdfUtils.*;
  */
 @Entity
 @RdfsClass("datalift:rdfSource")
-public class RdfSourceImpl extends BaseFileSource<Statement>
-                           implements RdfFileSource
+public class RdfFileSourceImpl extends BaseFileSource<Statement>
+                               implements RdfFileSource
 {
     //-------------------------------------------------------------------------
     // Instance members
@@ -82,7 +82,7 @@ public class RdfSourceImpl extends BaseFileSource<Statement>
     /**
      * Creates a new RDF source.
      */
-    public RdfSourceImpl() {
+    public RdfFileSourceImpl() {
         super(SourceType.RdfSource);
     }
 
@@ -91,7 +91,7 @@ public class RdfSourceImpl extends BaseFileSource<Statement>
      * @param  uri    the source unique identifier (URI) or
      *                <code>null</code> if not known at this stage.
      */
-    public RdfSourceImpl(String uri) {
+    public RdfFileSourceImpl(String uri) {
         super(SourceType.RdfSource, uri);
     }
 
@@ -105,22 +105,26 @@ public class RdfSourceImpl extends BaseFileSource<Statement>
                                                             throws IOException {
         super.init(configuration, baseUri);
 
-        InputStream in = this.getInputStream();
-        if (in != null) {
-            RDFParser parser = RdfUtils.newRdfParser(this.getMimeType());
-            Collection<Statement> l = new LinkedList<Statement>();
-            if (parser != null) {
-                try {
-                    StatementCollector collector = new StatementCollector(l);
-                    parser.setRDFHandler(collector);
-                    parser.parse(in, (baseUri != null)? baseUri.toString(): "");
+        if (this.content == null) {
+            InputStream in = this.getInputStream();
+            if (in != null) {
+                RDFParser parser = RdfUtils.newRdfParser(this.getMimeType());
+                Collection<Statement> l = new LinkedList<Statement>();
+                if (parser != null) {
+                    try {
+                        parser.setRDFHandler(new StatementCollector(l));
+                        parser.parse(in,
+                                     (baseUri != null)? baseUri.toString(): "");
+                    }
+                    catch (Exception e) {
+                        throw new IOException(
+                                        "Error while parsing RDF source", e);
+                    }
                 }
-                catch (Exception e) {
-                    throw new IOException("Error while parsing RDF source", e);
-                }
+                this.content = Collections.unmodifiableCollection(l);
             }
-            this.content = Collections.unmodifiableCollection(l);
         }
+        // Else: Already initialized.
     }
 
     /** {@inheritDoc} */
