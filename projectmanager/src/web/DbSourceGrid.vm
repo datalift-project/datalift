@@ -111,9 +111,7 @@
 		<tbody>
 #foreach( $row in $it )
 			<tr>
-#foreach( $i in [1..$it.getColumnCount()] )
-				<td>$!esc.html($row.getColumnObject($i))</td>
-#end
+#foreach( $i in $row ) <td>$!esc.html($i)</td> #end
 			</tr>
 #end
 		</tbody>

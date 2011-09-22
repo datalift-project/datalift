@@ -379,5 +379,28 @@ public class CsvSourceImpl extends BaseFileSource<Row<String>>
         public String getString(int index) {
             return this.get(index);
         }
+
+        /** {@inheritDoc} */
+        @Override
+        public Iterator<String> iterator() {
+            return new Iterator<String>() {
+                private int curPos = 0;
+
+                @Override
+                public boolean hasNext() {
+                    return (this.curPos < size());
+                }
+
+                @Override
+                public String next() {
+                    return get(this.curPos++);
+                }
+
+                @Override
+                public void remove() {
+                    throw new UnsupportedOperationException();
+                }
+            };
+        }
     }
 }

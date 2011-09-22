@@ -114,8 +114,7 @@
 		</thead>
 		<tbody>
 #foreach( $row in $it )
-			<tr>
-			<td>$velocityCount</td>
+			<tr><td>$velocityCount</td>
 #foreach( $i in $row ) <td>$!esc.html($i)</td> #end
 			</tr>
 #end

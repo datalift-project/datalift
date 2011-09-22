@@ -351,6 +351,28 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
                                 throw new TechnicalException(null, e);
                             }
                         }
+
+                        @Override
+                        public Iterator<Object> iterator() {
+                            return new Iterator<Object>() {
+                                private int curPos = 0;
+
+                                @Override
+                                public boolean hasNext() {
+                                    return (this.curPos < columns.length);
+                                }
+
+                                @Override
+                                public Object next() {
+                                    return get(this.curPos++);
+                                }
+
+                                @Override
+                                public void remove() {
+                                    throw new UnsupportedOperationException();
+                                }
+                            };
+                        }
                     };
                 this.hasNext = this.getNextRow();
             }

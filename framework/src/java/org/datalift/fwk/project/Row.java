@@ -44,7 +44,7 @@ import java.util.Collection;
  *
  * @author lbihanic
  */
-public interface Row<V>
+public interface Row<V> extends Iterable<V>
 {
     /**
      * Returns the number of columns this row contains.
