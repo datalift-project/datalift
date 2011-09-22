@@ -5,10 +5,41 @@
 #load("workspace/resources")
 #load_core_resources
 	<title>$!esc.html($it.title) - #i18n("source.grid.title") - DataLift</title>
-#header_links
+#css_links
 </head>
 <body>
-	<script>
+#banner
+	<p>#i18n("source.grid.desc") $!esc.html($it.title)</p>
+	<table id="grid">
+		<thead>
+			<tr>
+				<th>#i18n("source.grid.row.heading")</th>
+#foreach( $i in $it.getColumnNames() )
+				<th class="dl-grid-header-column">$esc.html($i)</th>
+#end
+			</tr>
+		</thead>
+		<tbody>
+#foreach( $row in $it )
+			<tr><td>$velocityCount</td>
+#foreach( $i in $row ) <td>$!esc.html($i)</td> #end
+			</tr>
+#end
+		</tbody>
+	</table>
+	<div id="pagernav"></div>
+	<div id="searchnav" style="display:none">
+		#i18n("grid.search.value.label") <input type="search" id="gridsearch" placeholder="#i18n("grid.search.value.placeholder")" results="0" class="gridsearch"/>
+		#i18n("grid.search.column.label") <select id="searchColumn">
+			<option value="all">#i18n("grid.search.column.option.all")</option>
+#foreach( $i in $it.getColumnNames() )
+			<option>$esc.html($i)</option>
+#end
+		</select>
+	</div>
+
+#script_links
+	<script type="text/javascript">
 		var gridData = new Array();
 		var searchData = new Array();
 		var gridHeader = new Array();
@@ -23,7 +54,7 @@
 					caption: "#i18n("grid.search.value.label")"
 				},
 				colModel: [
-					{ name: '#i18n("csv.line")', index: '#i18n("csv.line")', sorttype:'int'  }
+					{ name: '#i18n("source.grid.row.heading")', index: '#i18n("source.grid.row.heading")', sorttype:'int'  }
 				]
 			});
 			tableToGrid("#grid", { datatype: "local" });
@@ -100,35 +131,5 @@
 			else searchData = gridData;
 		}
 	</script>
-
-#banner
-	<p>#i18n("source.grid.desc") $!esc.html($it.title)</p>
-	<table id="grid">
-		<thead>
-			<tr>
-				<th>#i18n("csv.line")</th>
-#foreach( $i in $it.getColumnNames() )
-				<th class="dl-grid-header-column">$esc.html($i)</th>
-#end
-			</tr>
-		</thead>
-		<tbody>
-#foreach( $row in $it )
-			<tr><td>$velocityCount</td>
-#foreach( $i in $row ) <td>$!esc.html($i)</td> #end
-			</tr>
-#end
-		</tbody>
-	</table>
-	<div id="pagernav"></div>
-	<div id="searchnav" style="display:none">
-		#i18n("grid.search.value.label") <input type="search" id="gridsearch" placeholder="#i18n("grid.search.value.placeholder")" results="0" class="gridsearch"/>
-		#i18n("grid.search.column.label") <select id="searchColumn">
-			<option value="all">#i18n("grid.search.column.option.all")</option>
-#foreach( $i in $it.getColumnNames() )
-			<option>$esc.html($i)</option>
-#end
-		</select>
-	</div>
 </body>
 </html>

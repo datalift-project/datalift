@@ -868,16 +868,13 @@ public class ProjectResource
             // Initialize source and return grid View
             src.init(this.configuration, uriInfo.getBaseUri());
             String template = null;
-            if (src instanceof CsvSource) {
-                template = "/CsvSourceGrid.vm";
+            if ((src instanceof CsvSource) || (src instanceof SqlSource)) {
+                template = "/RowSourceGrid.vm";
             }
             else if ((src instanceof RdfFileSource) ||
                      (src instanceof TransformedRdfSource) ||
                      (src instanceof SparqlSource)) {
                 template = "/RdfSourceGrid.vm";
-            }
-            else if (src instanceof SqlSource) {
-                template = "/DbSourceGrid.vm";
             }
             else {
                 throw new TechnicalException("unknown.source.type",
@@ -903,7 +900,7 @@ public class ProjectResource
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
             Project p = this.loadProject(projectUri);
             String url = uriInfo.getAbsolutePath().toString()
-                    .replace("/delete", "");
+                                                  .replace("/delete", "");
             // Delete
             p.deleteSource(new URI(url));
             this.projectManager.saveProject(p);
