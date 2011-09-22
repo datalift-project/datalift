@@ -35,52 +35,62 @@
 package org.datalift.fwk.project;
 
 
-import java.io.IOException;
-import java.io.InputStream;
-
-import org.datalift.fwk.util.CloseableIterable;
+import java.util.Collection;
 
 
 /**
- * A file-based source object.
+ * A interface modeling access to a row in matrix-like data.
+ * @param  <V>   the type of objects the row contains.
  *
- * @param  <T>   The type of data the source contains and that can be
- *               iterated over when reading through this source object.
- *
- * @author hdevos
+ * @author lbihanic
  */
-public interface FileSource<T> extends Source, CloseableIterable<T>
+public interface Row<V>
 {
     /**
-     * Returns the declared type of data this source contains.
-     * @return the declared MIME type for the source content.
+     * Returns the number of columns this row contains.
+     * @return the number of columns this row contains.
      */
-    public String getMimeType();
+    public int size();
 
     /**
-     * Sets the data type of the source content.
-     * @param  mimeType   type of data this source contains. 
+     * Returns the column headings for accessing row data.
+     * @return the column headings.
      */
-    public void setMimeType(String mimeType);
+    public Collection<String> keys();
 
     /**
-     * Returns the path (relative to the DataLift public storage
-     * directory) of the file containing the source data.
-     * @return the data file relative path.
+     * Return the row data for the specified key, in native format.
+     * @param  key   the column name.
+     *
+     * @return the data associated to the column identified by
+     *         <code>key</code>.
      */
-    public String getFilePath();
+    public V get(String key);
 
     /**
-     * Returns an input stream for reading the source content.
-     * <p>
-     * This method shall only be invoked once the
-     * {@link #init(org.datalift.fwk.Configuration, java.net.URI) init()}
-     * method has been called.
-     * @return an input stream
-     * @throws IOException if any error occurred accessing the source
-     *         data file.
-     * @throws IllegalStateException if this source object has not been
-     *         {@link #init(org.datalift.fwk.Configuration, java.net.URI)}.
+     * Return the row data for the specified key as a string.
+     * @param  key   the column name.
+     *
+     * @return the string representation of the data associated to
+     *         the column identified by <code>key</code>.
      */
-    public InputStream getInputStream() throws IOException;
+    public String getString(String key);
+
+    /**
+     * Return the row data at the specified index, in native format.
+     * @param  index   the column index.
+     *
+     * @return the data associated to the column at index
+     *         <code>index</code>.
+     */
+    public V get(int index);
+
+    /**
+     * Return the row data at the specified index as a string.
+     * @param  index   the column index.
+     *
+     * @return the string representation of the data associated to
+     *         the column at index <code>index</code>.
+     */
+    public String getString(int index);
 }

@@ -53,6 +53,7 @@ import com.clarkparsia.empire.annotation.RdfsClass;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.project.RdfSource;
 import org.datalift.fwk.rdf.RdfUtils;
+import org.datalift.fwk.util.CloseableIterator;
 
 import static org.datalift.fwk.rdf.RdfUtils.*;
 
@@ -133,10 +134,31 @@ public class RdfSourceImpl extends BaseFileSource<Statement>
 
     /** {@inheritDoc} */
     @Override
-    public Iterator<Statement> iterator() {
+    public CloseableIterator<Statement> iterator() {
         if (this.content == null) {
             throw new IllegalStateException("Not initialized");
         }
-        return this.content.iterator();
+        final Iterator<Statement> i = this.content.iterator();
+        return new CloseableIterator<Statement>() {
+                @Override
+                public boolean hasNext() {
+                    return i.hasNext();
+                }
+    
+                @Override
+                public Statement next() {
+                    return i.next();
+                }
+    
+                @Override
+                public void remove() {
+                    throw new UnsupportedOperationException();
+                }
+
+                @Override
+                public void close() {
+                    // NOP
+                }
+            };
     }
 }

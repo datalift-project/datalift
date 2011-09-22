@@ -44,7 +44,7 @@ import java.util.List;
  *
  * @author hdevos
  */
-public interface CsvSource extends FileSource<String[]>
+public interface CsvSource extends FileSource<Row<String>>
 {
     /**
      * Supported separator characters.

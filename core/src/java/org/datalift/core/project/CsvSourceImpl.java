@@ -36,13 +36,16 @@ package org.datalift.core.project;
 
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
 
 import javax.persistence.Entity;
 
@@ -51,8 +54,11 @@ import com.clarkparsia.empire.annotation.RdfsClass;
 
 import au.com.bytecode.opencsv.CSVReader;
 
+import org.datalift.core.TechnicalException;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.project.CsvSource;
+import org.datalift.fwk.project.Row;
+import org.datalift.fwk.util.CloseableIterator;
 import org.datalift.fwk.util.StringUtils;
 
 
@@ -63,7 +69,7 @@ import org.datalift.fwk.util.StringUtils;
  */
 @Entity
 @RdfsClass("datalift:csvSource")
-public class CsvSourceImpl extends BaseFileSource<String[]>
+public class CsvSourceImpl extends BaseFileSource<Row<String>>
                            implements CsvSource
 {
     //-------------------------------------------------------------------------
@@ -75,8 +81,7 @@ public class CsvSourceImpl extends BaseFileSource<String[]>
     @RdfProperty("datalift:titleRow")
     private boolean titleRow = false;
 
-    private transient List<String[]> grid = null;
-    private transient List<String> headers = null;
+    private transient String[] headers = null;
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -108,29 +113,19 @@ public class CsvSourceImpl extends BaseFileSource<String[]>
                                                             throws IOException {
         super.init(configuration, baseUri);
 
-        InputStream in = this.getInputStream();
-        if (in != null) {
-            CSVReader reader = new CSVReader(
-                            new InputStreamReader(in, "ISO-8859-1"),
-                            Separator.valueOf(this.separator).getValue());
-            this.grid = Collections.unmodifiableList(reader.readAll());
-
-            Iterator<String[]> it = this.grid.iterator();
-            if (it.hasNext()) {
-                String[] firstRow = it.next();
-                if (! this.titleRow) {
-                    // Generate generic column names (A, B... Z, AA, AB...).
-                    for (int i=0; i<firstRow.length; i++) {
-                        firstRow[i] = getColumnName(i);
-                    }
+        CSVReader reader = this.newReader();
+        try {
+            String[] firstRow = reader.readNext();
+            if ((! this.titleRow) && (firstRow != null)) {
+                // Generate generic column names (A, B... Z, AA, AB...).
+                for (int i=0; i<firstRow.length; i++) {
+                    firstRow[i] = this.getColumnName(i);
                 }
-                this.headers = Collections.unmodifiableList(
-                                                    Arrays.asList(firstRow));
             }
-            else {
-                this.headers = Collections.emptyList();
-            }
-            // Else: empty file.
+            this.headers = (firstRow != null)? firstRow: new String[0];
+        }
+        finally {
+            try { reader.close(); } catch (IOException e) { /* Ignore... */ }
         }
     }
 
@@ -173,7 +168,7 @@ public class CsvSourceImpl extends BaseFileSource<String[]>
         if (this.headers == null) {
             throw new IllegalStateException("Not initialized");
         }
-        return this.headers;
+        return Collections.unmodifiableList(Arrays.asList(this.headers));
     }
 
     //-------------------------------------------------------------------------
@@ -182,21 +177,28 @@ public class CsvSourceImpl extends BaseFileSource<String[]>
 
     /** {@inheritDoc} */
     @Override
-    public final Iterator<String[]> iterator() {
-        if (this.grid == null) {
+    public final CloseableIterator<Row<String>> iterator() {
+        if (this.headers == null) {
             throw new IllegalStateException("Not initialized");
         }
-        Iterator<String[]> i = this.grid.iterator();
-        if ((this.titleRow) && (i.hasNext())) {
-            // Skip title row.
-            i.next();
+        try {
+            return new RowIterator(this.newReader(), this.headers, titleRow);
         }
-        return i;
+        catch (IOException e) {
+            throw new TechnicalException(null, e);
+        }
     }
 
     //-------------------------------------------------------------------------
     // Specific implementation
     //-------------------------------------------------------------------------
+
+    private CSVReader newReader() throws IOException {
+        return new CSVReader(
+                    new InputStreamReader(this.getInputStream(), "ISO-8859-1"),
+                    Separator.valueOf(this.separator).getValue());
+
+    }
 
     private String getColumnName(int n) {
         StringBuilder s = new StringBuilder();
@@ -204,5 +206,178 @@ public class CsvSourceImpl extends BaseFileSource<String[]>
             s.insert(0, (char)(n % 26 + 65));
         }
         return s.toString();
+    }
+
+    //-------------------------------------------------------------------------
+    // RowIterator nested class
+    //-------------------------------------------------------------------------
+
+    /**
+     * An {@link Iterator} over the data rows read from a CSV file.
+     */
+    private final static class RowIterator
+                                    implements CloseableIterator<Row<String>>
+    {
+        private final CSVReader reader;
+        private final Map<String,Integer> keyMapping;
+        private Row<String> nextRow = null;
+        private boolean closed = false;
+
+        /**
+         * Create a new row iterator.
+         * @param  reader         the provider of CSV data.
+         * @param  headers        the column headings.
+         * @param  hasTitleRow    whether the first row of the CSV file
+         *                        contains data of column headings.
+         *
+         * @throws IOException if any error occurred accessing the CSV
+         *                     content.
+         */
+        public RowIterator(CSVReader reader,
+                           String[] headers, boolean hasTitleRow)
+                                                            throws IOException {
+            this.reader = reader;
+            Map<String,Integer> m = new HashMap<String,Integer>();
+            for (int i=0; i<headers.length; i++) {
+                m.put(headers[i], Integer.valueOf(i));
+            }
+            this.keyMapping = Collections.unmodifiableMap(m);
+            if (hasTitleRow) {
+                // Skip title row to exclude it from actual data.
+                this.getNextRow();
+            }
+            this.nextRow = this.getNextRow();
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public boolean hasNext() {
+            return (this.nextRow != null);
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public Row<String> next() {
+            if (this.nextRow != null) {
+                Row<String> current = this.nextRow;
+                try {
+                    this.nextRow = this.getNextRow();
+                }
+                catch (IOException e) {
+                    throw new TechnicalException(null, e);
+                }
+                return current;
+            }
+            else {
+                throw new NoSuchElementException();
+            }
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public void close() {
+            if (! this.closed) {
+                this.closed = true;
+                try {
+                    this.reader.close();
+                }
+                catch (IOException e) { /* Ignore... */ }
+            }
+            // Else: Already closed.
+        }
+
+        /**
+         * Reads the new line from the CSV data.
+         * @return a {@link Row} object wrapping the read data or
+         *         <code>null</code> if the end of data was reached.
+         * @throws IOException if any error occurred accessing the CSV
+         *                     content.
+         */
+        private Row<String> getNextRow() throws IOException {
+            Row<String> row = null;
+            try {
+                String[] data = this.reader.readNext();
+                if (data != null) {
+                    row = new StringArrayRow(data, this.keyMapping);
+                }
+            }
+            finally {
+                if (row == null) {              // EOF or error.
+                    this.close();
+                }
+            }
+            return row;
+        }
+    }
+
+    //-------------------------------------------------------------------------
+    // StringArrayRow nested class
+    //-------------------------------------------------------------------------
+
+    /**
+     * A Row implementation wrapping an array of strings.
+     */
+    private final static class StringArrayRow implements Row<String>
+    {
+        private final String[] data;
+        private final Map<String,Integer> keyMapping;
+
+        /**
+         * Creates a new Row backed by a string array.
+         * @param  data         the backing string array.
+         * @param  keyMapping   the mapping between keys and array
+         *                      indices.
+         */
+        public StringArrayRow(String[] data, Map<String,Integer> keyMapping) {
+            this.data = data;
+            this.keyMapping = keyMapping;
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public int size() {
+            return this.data.length;
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public Collection<String> keys() {
+            return this.keyMapping.keySet();
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public String get(String key) {
+            String v = null;
+            Integer i = this.keyMapping.get(key);
+            if (i != null) {
+                v = this.get(i.intValue());
+            }
+            return v;
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public String getString(String key) {
+            return this.get(key);
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public String get(int index) {
+            return this.data[index];
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public String getString(int index) {
+            return this.get(index);
+        }
     }
 }

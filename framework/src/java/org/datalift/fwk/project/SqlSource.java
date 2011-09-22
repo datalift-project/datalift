@@ -38,6 +38,8 @@ package org.datalift.fwk.project;
 import java.sql.SQLException;
 import java.util.List;
 
+import org.datalift.fwk.util.CloseableIterable;
+
 
 /**
  * A source object reading data from a SQL database by executing a
@@ -45,7 +47,7 @@ import java.util.List;
  *
  * @author hdevos
  */
-public interface SqlSource extends Source, Iterable<Object>
+public interface SqlSource extends Source, CloseableIterable<Row<Object>>
 {
     /**
      * List of supported databases and their JDBC driver class.

@@ -41,10 +41,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.util.Collections;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 
 import javax.persistence.Entity;
@@ -56,7 +57,9 @@ import com.sun.rowset.WebRowSetImpl;
 
 import org.datalift.core.TechnicalException;
 import org.datalift.fwk.Configuration;
+import org.datalift.fwk.project.Row;
 import org.datalift.fwk.project.SqlSource;
+import org.datalift.fwk.util.CloseableIterator;
 import org.datalift.fwk.util.StringUtils;
 
 
@@ -86,7 +89,8 @@ public class SqlSourceImpl extends BaseSource implements SqlSource
     @RdfProperty("datalift:cacheDuration")
     private int cacheDuration;
 
-    private transient WebRowSet wrset = null;
+    private transient File cacheFile = null;
+    private transient String[] columns = null;
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -118,13 +122,14 @@ public class SqlSourceImpl extends BaseSource implements SqlSource
                                                             throws IOException {
         super.init(configuration, baseUri);
 
+        WebRowSet rowSet = null;
         try {
             String fileName = this.getClass().getSimpleName() + '-' +
                                             StringUtils.urlify(this.getTitle());
-            File cacheFile = new File(configuration.getPrivateStorage(),
+            this.cacheFile = new File(configuration.getPrivateStorage(),
                                       fileName);
-            WebRowSet rowSet = new WebRowSetImpl();
-            InputStream in = this.getCacheStream(cacheFile);
+            rowSet = new WebRowSetImpl();
+            InputStream in = this.getCacheStream(this.cacheFile);
             if (in == null) {
                 // Force loading of database driver.
                 Class.forName(DatabaseType.valueOf(this.getDatabaseType())
@@ -141,10 +146,20 @@ public class SqlSourceImpl extends BaseSource implements SqlSource
             else {
                 rowSet.readXml(in);
             }
-            this.wrset = rowSet;
+            ResultSetMetaData metadata = rowSet.getMetaData();
+            String[] cols = new String[metadata.getColumnCount()];
+            for (int i=0, max=cols.length; i<max; i++) {
+                cols[i] = metadata.getColumnName(i+1);
+            }
+            this.columns = cols;
         }
         catch (Exception e) {
             throw new IOException(e);
+        }
+        finally {
+            if (rowSet != null) {
+                try { rowSet.close(); } catch (Exception e) { /* Ignore... */ }
+            }
         }
     }
 
@@ -222,36 +237,34 @@ public class SqlSourceImpl extends BaseSource implements SqlSource
 
     /** {@inheritDoc} */
     @Override
-    public int getColumnCount() throws SQLException {
-        if (this.wrset == null) {
+    public int getColumnCount() {
+        if (this.columns == null) {
             throw new IllegalStateException("Not initialized");
         }
-        return wrset.getMetaData().getColumnCount();
+        return this.columns.length;
     }
 
     /** {@inheritDoc} */
     @Override
     public List<String> getColumnNames() throws SQLException {
-        if (this.wrset == null) {
+        if (this.columns == null) {
             throw new IllegalStateException("Not initialized");
         }
-        List<String> names = new LinkedList<String>();
-        for (int i=0, max=this.getColumnCount(); i<max; i++) {
-            names.add(wrset.getMetaData().getColumnName(i+1));
-        }
-        return Collections.unmodifiableList(names);
+        return Arrays.asList(this.columns);
     }
 
     /** {@inheritDoc} */
     @Override
-    public Iterator<Object> iterator() {
-        if (this.wrset == null) {
+    public CloseableIterator<Row<Object>> iterator() {
+        if (this.columns == null) {
             throw new IllegalStateException("Not initialized");
         }
         try {
-            return Collections.unmodifiableCollection(wrset.toCollection())
-                              .iterator();
-        } catch (SQLException e) {
+            WebRowSet rowSet = new WebRowSetImpl();
+            rowSet.readXml(this.getCacheStream(this.cacheFile));
+            return new RowIterator(rowSet);
+        }
+        catch (Exception e) {
             throw new TechnicalException(null, e);
         }
     }
@@ -291,5 +304,127 @@ public class SqlSourceImpl extends BaseSource implements SqlSource
             }
         }
         return null;
+    }
+
+    //-------------------------------------------------------------------------
+    // RowIterator nested class
+    //-------------------------------------------------------------------------
+
+    /**
+     * An {@link Iterator} over the data rows read from a CSV file.
+     */
+    private final class RowIterator implements CloseableIterator<Row<Object>>
+    {
+        private final WebRowSet rowSet;
+        private boolean hasNext = false;
+        private boolean closed = false;
+
+        public RowIterator(WebRowSet rowSet) {
+            this.rowSet  = rowSet;
+            this.hasNext = this.getNextRow();
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public boolean hasNext() {
+            return this.hasNext;
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public Row<Object> next() {
+            Row<Object> row = null;
+            if (this.hasNext) {
+                row = new Row<Object>()
+                    {
+                        @Override
+                        public int size() {
+                            return columns.length;
+                        }
+
+                        @Override
+                        public Collection<String> keys() {
+                            return Arrays.asList(columns);
+                        }
+    
+                        @Override
+                        public Object get(String key) {
+                            try {
+                                return rowSet.getObject(key);
+                            }
+                            catch (SQLException e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
+    
+                        @Override
+                        public String getString(String key) {
+                            try {
+                                return rowSet.getString(key);
+                            }
+                            catch (SQLException e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
+    
+                        @Override
+                        public Object get(int index) {
+                            try {
+                                return rowSet.getObject(index);
+                            }
+                            catch (SQLException e) {
+                                throw new TechnicalException(null, e);
+                            }
+                        }
+    
+                        @Override
+                        public String getString(int index) {
+                            try {
+                                return rowSet.getString(index);
+                            }
+                            catch (SQLException e) {
+                                throw new TechnicalException(null, e);
+                            }
+                        }
+                    };
+                this.hasNext = this.getNextRow();
+            }
+            return row;
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public void close() {
+            if (! this.closed) {
+                this.closed = true;
+                try {
+                    this.rowSet.close();
+                }
+                catch (SQLException e) { /* Ignore... */ }
+            }
+            // Else: Already closed.
+        }
+
+        private boolean getNextRow() {
+            boolean hasNext = false;
+            try {
+                hasNext = this.rowSet.next();
+            }
+            catch (SQLException e) {
+                throw new TechnicalException(null, e);
+            }
+            finally {
+                if (! hasNext) {
+                    this.close();
+                }
+            }
+            return hasNext;
+        }
     }
 }

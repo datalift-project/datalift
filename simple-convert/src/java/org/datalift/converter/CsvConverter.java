@@ -55,6 +55,7 @@ import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 import org.datalift.fwk.project.CsvSource;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectModule;
+import org.datalift.fwk.project.Row;
 import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.util.StringUtils;
@@ -147,11 +148,11 @@ public class CsvConverter extends BaseConverterModule
             }
             // Load triples
             i = 0;
-            for (String[] line : src) {
+            for (Row<String> row : src) {
                 String subject = baseUri + i; // + "#_";
-                max = Math.min(line.length, max);
-                for (int j=0; j<max; j++) {
-                    String v = line[j];
+                int l = Math.min(row.size(), max);
+                for (int j=0; j<l; j++) {
+                    String v = row.get(j);
                     if (StringUtils.isSet(v)) {
                         cnx.add(valueFactory.createStatement(
                                         valueFactory.createURI(subject),
