@@ -66,8 +66,10 @@ public abstract class BaseSource extends BaseRdfEntity implements Source
     private String title;
     @RdfProperty("dc:description")
     private String description;
-    
-    private final SourceType type;
+    @RdfProperty("dcterms:source")
+    private String source;
+
+    private transient final SourceType type;
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -108,25 +110,37 @@ public abstract class BaseSource extends BaseRdfEntity implements Source
     /** {@inheritDoc} */
     @Override
     public String getTitle(){
-        return title;
+        return this.title;
     }
-    
+
     /** {@inheritDoc} */
     @Override
-    public void setTitle(String t) {
-        title = t;
+    public void setTitle(String title) {
+        this.title = title;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public String getDescription() {
-    	return description;
+        return this.description;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public void setDescription(String description) {
-    	this.description = description;
+        this.description = description;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public String getSource(){
+        return this.source;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void setSource(String source) {
+        this.source = source;
     }
 
     /** {@inheritDoc} */
@@ -150,5 +164,22 @@ public abstract class BaseSource extends BaseRdfEntity implements Source
     @Override
     protected void setId(String id) {
         this.uri = id;
+    }
+
+    //-------------------------------------------------------------------------
+    // Object contract support
+    //-------------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    @Override
+    public String toString() {
+        return this.uri;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public int hashCode() {
+        return (this.uri != null)? this.uri.hashCode():
+                                   System.identityHashCode(this);
     }
 }
