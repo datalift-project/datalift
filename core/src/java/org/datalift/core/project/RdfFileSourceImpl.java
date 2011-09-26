@@ -36,27 +36,18 @@ package org.datalift.core.project;
 
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedList;
 
 import javax.persistence.Entity;
 
 import org.openrdf.model.Statement;
-import org.openrdf.rio.RDFParser;
-import org.openrdf.rio.helpers.StatementCollector;
 
 import com.clarkparsia.empire.annotation.RdfsClass;
 
-import org.datalift.fwk.Configuration;
+import org.datalift.core.TechnicalException;
+import org.datalift.core.rdf.BoundedAsyncRdfParser;
 import org.datalift.fwk.project.RdfFileSource;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.util.CloseableIterator;
-
-import static org.datalift.fwk.rdf.RdfUtils.*;
 
 
 /**
@@ -69,12 +60,6 @@ import static org.datalift.fwk.rdf.RdfUtils.*;
 public class RdfFileSourceImpl extends BaseFileSource<Statement>
                                implements RdfFileSource
 {
-    //-------------------------------------------------------------------------
-    // Instance members
-    //-------------------------------------------------------------------------
-
-    private transient Collection<Statement> content = null;
-
     //-------------------------------------------------------------------------
     // Constructors
     //-------------------------------------------------------------------------
@@ -101,36 +86,8 @@ public class RdfFileSourceImpl extends BaseFileSource<Statement>
 
     /** {@inheritDoc} */
     @Override
-    public void init(Configuration configuration, URI baseUri)
-                                                            throws IOException {
-        super.init(configuration, baseUri);
-
-        if (this.content == null) {
-            InputStream in = this.getInputStream();
-            if (in != null) {
-                RDFParser parser = RdfUtils.newRdfParser(this.getMimeType());
-                Collection<Statement> l = new LinkedList<Statement>();
-                if (parser != null) {
-                    try {
-                        parser.setRDFHandler(new StatementCollector(l));
-                        parser.parse(in,
-                                     (baseUri != null)? baseUri.toString(): "");
-                    }
-                    catch (Exception e) {
-                        throw new IOException(
-                                        "Error while parsing RDF source", e);
-                    }
-                }
-                this.content = Collections.unmodifiableCollection(l);
-            }
-        }
-        // Else: Already initialized.
-    }
-
-    /** {@inheritDoc} */
-    @Override
     public void setMimeType(String mimeType) {
-        super.setMimeType(parseMimeType(mimeType).toString());
+        super.setMimeType(RdfUtils.parseMimeType(mimeType).toString());
     }
 
     //-------------------------------------------------------------------------
@@ -140,30 +97,12 @@ public class RdfFileSourceImpl extends BaseFileSource<Statement>
     /** {@inheritDoc} */
     @Override
     public CloseableIterator<Statement> iterator() {
-        if (this.content == null) {
-            throw new IllegalStateException("Not initialized");
+        try {
+            return BoundedAsyncRdfParser.parse(this.getInputStream(),
+                                        this.getMimeType(), this.getSource());
         }
-        final Iterator<Statement> i = this.content.iterator();
-        return new CloseableIterator<Statement>() {
-                @Override
-                public boolean hasNext() {
-                    return i.hasNext();
-                }
-    
-                @Override
-                public Statement next() {
-                    return i.next();
-                }
-    
-                @Override
-                public void remove() {
-                    throw new UnsupportedOperationException();
-                }
-
-                @Override
-                public void close() {
-                    // NOP
-                }
-            };
+        catch (IOException e) {
+            throw new TechnicalException(e.getMessage(), e);
+        }
     }
 }
