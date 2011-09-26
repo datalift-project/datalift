@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 #load("workspace/resources")
@@ -10,8 +10,11 @@
 <body>
 #banner
 <div id="workspace" class="ui-widget-content">
-	<h3 class="ui-widget-header dl-widget-header">Workspace #if( $current ) - #i18n("project") $!esc.html($current.title) #end</h3>
-
+#if( $current )
+	<h3 class="ui-widget-header dl-widget-header">#i18n("project") $!esc.html($current.title)</h3>
+#else
+	<h3 class="ui-widget-header dl-widget-header">#i18n("workspace.title")</h3>
+#end
 	<div id="projects_panel" class="ui-widget-content">
 		<div id="project_scroll" style="position:relative">
 			<h3 class="ui-widget-header dl-widget-header">#i18n("project.title.available")</h3>
@@ -38,7 +41,7 @@
 				#i18n("project.creation_s"): $date.format("medium", $current.dateCreation)<br />
 				#i18n("project.modification_s"): $date.format("medium", $current.dateModification)<br />
 				#i18n("project.license"): <a href="$current.getLicense()">$esc.html($!current.license)</a></p>
-#if (!$canHandle.isEmpty())
+#if( !${canHandle.isEmpty()} )
 				<div id="module_can_handle">
 					<p>#i18n("project.module_available")</p>
 					<ol id="selectable_module">
@@ -62,21 +65,21 @@
 			</div>
 
 			<div id="source">
-				<form> 
+				<form>
 					<table id="selectable_sources">
 						<tr><td/></tr>
 					</table>
 					<div id="selectable_sources_toolbar"></div>
-				</form> 
+				</form>
 			</div>
 
 			<div id="ontology">
-				<form> 
+				<form>
 					<table id="selectable_ontologies">
 						<tr><td/></tr>
 					</table>
 					<div id="selectable_ontologies_toolbar"></div>
-				</form> 
+				</form>
 			</div>
 		</div>
 #else
@@ -199,7 +202,7 @@
 			buttonicon:"ui-icon-plus",
 			onClickButton:function(){
 				window.location = currentProject + "/srcupload.html"
-			} 
+			}
 		}).navButtonAdd(
 			'#selectable_sources_toolbar',
 			{
@@ -213,7 +216,7 @@
 				} else {
 					alert('#i18n("project.msg.select_row")');
 				}
-			} 
+			}
 		}).navButtonAdd(
 			'#selectable_sources_toolbar',
 			{
@@ -227,7 +230,7 @@
 				} else {
 					alert('#i18n("project.msg.select_row")');
 				}
-			} 
+			}
 		});
 
 		jQuery("#selectable_sources").jqGrid('hideCol',["uri"]);
@@ -286,7 +289,7 @@
 					} else {
 						alert('#i18n("project.msg.select_row")');
 					}
-				} 
+				}
 			}).navButtonAdd(
 			'#selectable_ontologies_toolbar',
 			{
@@ -300,7 +303,7 @@
 				} else {
 					alert('#i18n("project.msg.select_row")');
 				}
-			} 
+			}
 		});
 		jQuery("#selectable_ontologies").jqGrid('hideCol',["uri"]);
 	}
