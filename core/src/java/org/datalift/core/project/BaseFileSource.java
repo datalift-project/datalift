@@ -61,7 +61,7 @@ import org.datalift.fwk.project.FileSource;
 public abstract class BaseFileSource<T> extends BaseSource
                                         implements FileSource<T>
 {
-    @RdfProperty("datalift:mimeType")
+    @RdfProperty("dc:format")
     private String mimeType;
     @RdfProperty("datalift:path")
     private String filePath;
@@ -143,7 +143,7 @@ public abstract class BaseFileSource<T> extends BaseSource
         if (this.storage == null) {
             throw new IllegalStateException("Not initialized");
         }
-    	return new FileInputStream(this.storage);
+        return new FileInputStream(this.storage);
     }
 
     //-------------------------------------------------------------------------
