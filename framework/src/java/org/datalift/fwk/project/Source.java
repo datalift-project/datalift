@@ -68,19 +68,19 @@ public interface Source
 
     /**
      * Returns the source title.
-     * @return the source title. 
+     * @return the source title.
      */
     public String getTitle();
-    
+
     /**
      * Sets the source title.
      * @param  title   the source title string.
      */
     public void setTitle(String title);
-    
+
     /**
      * Returns the source description.
-     * @return the source description. 
+     * @return the source description.
      */
     public String getDescription();
 
@@ -89,6 +89,18 @@ public interface Source
      * @param  description   the source description string.
      */
     public void setDescription(String description);
+
+    /**
+     * Returns the origin URL for this source.
+     * @return the origin URL.
+     */
+    public String getSource();
+
+    /**
+     * Sets the origin URL for this source.
+     * @param  title   the origin URL.
+     */
+    public void setSource(String source);
 
     /**
      * Returns the {@link SourceType source type}.
