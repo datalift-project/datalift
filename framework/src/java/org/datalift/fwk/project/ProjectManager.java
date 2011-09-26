@@ -165,8 +165,8 @@ public interface ProjectManager
                                                             throws IOException;
 
     public SparqlSource newSparqlSource(URI uri, String title,
-                                String description, String connectionUrl, 
-                                String request, int cacheDuration)
+                                        String description, String endpointUrl,
+                                        String sparqlQuery, int cacheDuration)
                                                             throws IOException;
 
     /**
