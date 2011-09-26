@@ -84,8 +84,27 @@ import static org.datalift.fwk.MediaTypes.*;
  *
  * @author lbihanic
  */
-public class RdfUtils
+public final class RdfUtils
 {
+    //-------------------------------------------------------------------------
+    // Constants
+    //-------------------------------------------------------------------------
+
+    private final static int BATCH_SIZE = 1000;
+
+    //-------------------------------------------------------------------------
+    // Constructors
+    //-------------------------------------------------------------------------
+
+    /** Default constructor, private on purpose. */
+    private RdfUtils() {
+        throw new UnsupportedOperationException();
+    }
+
+    //-------------------------------------------------------------------------
+    // Specific implementation
+    //-------------------------------------------------------------------------
+
     /**
      * Parses the specified file, guessing the RDF data type (RDF/XML,
      * Turtle, N3...) from the file extension and loads the resulting
@@ -224,6 +243,8 @@ public class RdfUtils
             // Load triples, mapping URIs on the fly.
             parser.setRDFHandler(new RDFHandlerBase()
                 {
+                    private long statementCount = 0L;
+
                     @Override
                     public void handleStatement(Statement stmt) {
                         try {
@@ -235,6 +256,11 @@ public class RdfUtils
                                             mapUri(stmt.getObject()));
                             }
                             cnx.add(stmt, ctx);
+                            // Commit transaction every BATCH_SIZE statements.
+                            this.statementCount++;
+                            if ((this.statementCount % BATCH_SIZE) == 0) {
+                                cnx.commit();
+                            }
                         }
                         catch (RepositoryException e) {
                             throw new RuntimeException(
@@ -395,8 +421,8 @@ public class RdfUtils
                 GraphQuery q = in.prepareGraphQuery(QueryLanguage.SPARQL,
                                                     query, baseUri);
                 out.add(q.evaluate(), u);
+                out.commit();
             }
-            out.commit();
             query = null;       // No query in error.
         }
         catch (Exception e) {
