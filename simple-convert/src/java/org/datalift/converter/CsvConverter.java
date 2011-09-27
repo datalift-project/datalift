@@ -117,13 +117,13 @@ public class CsvConverter extends BaseConverterModule
     }
 
     @POST
-    public Response getIndexPage(@QueryParam("project") URI projectId,
-                                 @QueryParam("source") URI sourceId,
-                                 @FormParam("dest_title") String destTitle,
-                                 @FormParam("dest_graph_uri") URI targetGraph,
-                                 @Context UriInfo uriInfo,
-                                 @Context Request request,
-                                 @HeaderParam(ACCEPT) String acceptHdr)
+    public Response loadSourceData(@QueryParam("project") URI projectId,
+                                   @QueryParam("source") URI sourceId,
+                                   @FormParam("dest_title") String destTitle,
+                                   @FormParam("dest_graph_uri") URI targetGraph,
+                                   @Context UriInfo uriInfo,
+                                   @Context Request request,
+                                   @HeaderParam(ACCEPT) String acceptHdr)
                                                 throws WebApplicationException {
         Response response = null;
         try {
