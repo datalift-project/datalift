@@ -37,8 +37,8 @@ package org.datalift.core.security.shiro;
 
 import java.util.Properties;
 
-import org.datalift.core.ApplicationLoader;
 import org.datalift.core.util.VersatileProperties;
+import org.datalift.fwk.Configuration;
 
 
 /**
@@ -65,14 +65,12 @@ public class PropertiesRealm extends org.apache.shiro.realm.text.PropertiesRealm
                 new Properties() {
                     @Override
                     public String getProperty(String key) {
-                        return ApplicationLoader.getConfiguration()
-                                                .getProperty(key);
+                        return Configuration.getDefault().getProperty(key);
                     }
                 
                     @Override
                     public String getProperty(String key, String def) {
-                        return ApplicationLoader.getConfiguration()
-                                                .getProperty(key, def);
+                        return Configuration.getDefault().getProperty(key, def);
                     }
                 });
         props.setProperty(resourcePathKey, path);
