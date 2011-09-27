@@ -68,7 +68,6 @@ public interface SqlSource extends Source, CloseableIterable<Row<Object>>
         }
     }
 
-
     public String getConnectionUrl();
     public void setConnectionUrl(String connectionUrl);
 
@@ -78,14 +77,11 @@ public interface SqlSource extends Source, CloseableIterable<Row<Object>>
     public String getPassword();
     public void setPassword(String password);
 
-    public int getCacheDuration();
-    public void setCacheDuration(int cacheDuration);
-
     public String getDatabase();
     public void setDatabase(String database);
 
-    public String getRequest();
-    public void setRequest(String request);
+    public String getQuery();
+    public void setQuery(String query);
 
     /**
      * Returns the number of data columns returned by the SQL query.

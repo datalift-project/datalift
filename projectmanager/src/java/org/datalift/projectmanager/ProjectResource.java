@@ -330,7 +330,12 @@ public class ProjectResource
         Response response = null;
         try {
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
-            this.projectManager.deleteProject(this.loadProject(projectUri));
+            Project p = this.loadProject(projectUri);
+            for (Source s: p.getSources()) {
+                s.init(this.configuration, uriInfo.getBaseUri());
+                s.delete();
+            }
+            this.projectManager.deleteProject(p);
 
             response = this.displayIndexPage(Response.ok(), null).build();
         }
@@ -721,7 +726,7 @@ public class ProjectResource
             s.setUser(user);
             s.setPassword(password);
             s.setDatabase(database);
-            s.setRequest(request);
+            s.setQuery(request);
             ((CachingSource) s).setCacheDuration(cacheDuration);
             this.projectManager.saveProject(p);
             String redirectUrl = projectUri.toString() + "#source";
@@ -778,14 +783,14 @@ public class ProjectResource
     @POST
     @Path("{id}/sparqluploadModify")
     public Response sparqlUploadModify(@PathParam("id") String id,
-			 						   @FormParam("title") String title,
-			 						   @FormParam("description") String description,
-			 						   @FormParam("connection_url") String connectionUrl,
-			 						   @FormParam("request") String query,
-			 						   @FormParam("cache_duration") int cacheDuration,
-			 						   @Context UriInfo uriInfo,
-			 						   @Context Request request,
-			 						   @FormParam("current_source") URI currentSourceUri) {
+                           @FormParam("title") String title,
+                           @FormParam("description") String description,
+                           @FormParam("connection_url") String connectionUrl,
+                           @FormParam("request") String query,
+                           @FormParam("cache_duration") int cacheDuration,
+                           @Context UriInfo uriInfo,
+                           @Context Request request,
+                           @FormParam("current_source") URI currentSourceUri) {
     	Response response = null;
         try {
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
@@ -793,8 +798,8 @@ public class ProjectResource
             SparqlSource s = (SparqlSource)(p.getSource(currentSourceUri));
             s.setTitle(title);
             s.setDescription(description);
-            s.setRequest(query);
-            s.setConnectionUrl(connectionUrl);
+            s.setQuery(query);
+            s.setEndpointUrl(connectionUrl);
             ((CachingSource) s).setCacheDuration(cacheDuration);
             this.projectManager.saveProject(p);
             String redirectUrl = projectUri.toString() + "#source";
@@ -899,11 +904,15 @@ public class ProjectResource
         try {
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
             Project p = this.loadProject(projectUri);
-            String url = uriInfo.getAbsolutePath().toString()
-                                                  .replace("/delete", "");
+            URI u = new URI(uriInfo.getAbsolutePath().toString()
+                                                     .replace("/delete", ""));
+            Source src = p.getSource(u);
+            src.init(this.configuration, uriInfo.getBaseUri());
             // Delete
-            p.deleteSource(new URI(url));
+            p.removeSource(u);
             this.projectManager.saveProject(p);
+            this.projectManager.deleteSource(src);
+
             String redirectUrl = projectUri.toString() + "#source";
             response = Response.ok()
                                .entity(this.newViewable("/redirect.vm",
@@ -1069,9 +1078,12 @@ public class ProjectResource
         try {
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
             Project p = this.loadProject(projectUri);
+            Ontology o = p.getOntology(ontologyTitle);
             // Delete
-            p.deleteOntology(ontologyTitle);
+            p.removeOntology(ontologyTitle);
             this.projectManager.saveProject(p);
+            this.projectManager.deleteOntology(o);
+
             String redirectUrl = projectUri.toString() + "#ontology";
             response = Response.ok()
                     .entity(this.newViewable("/redirect.vm", redirectUrl))

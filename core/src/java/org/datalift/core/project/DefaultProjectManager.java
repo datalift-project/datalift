@@ -199,7 +199,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         src.setConnectionUrl(srcUrl);
         src.setUser(user);
         src.setPassword(password);
-        src.setRequest(request);
+        src.setQuery(request);
         src.setCacheDuration(cacheDuration);
         // Force source initialization to validate database connection
         // parameters and SQL query.
@@ -210,19 +210,29 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     /** {@inheritDoc} */
     @Override
     public SparqlSource newSparqlSource(URI uri, String title,
-                                    String description, String connectionUrl,
-                                    String request, int cacheDuration)
+                                        String description, String endpointUrl,
+                                        String sparqlQuery, int cacheDuration)
                                                             throws IOException {
         SparqlSourceImpl src = new SparqlSourceImpl(uri.toString());
-        src.setConnectionUrl(connectionUrl);
+        src.setEndpointUrl(endpointUrl);
         src.setTitle(title);
         src.setDescription(description);
-        src.setRequest(request);
+        src.setQuery(sparqlQuery);
         src.setCacheDuration(cacheDuration);
         // Force source initialization to validate SPARQL Endpoint connection
         // parameters and SQL query.
         src.init(this.configuration, uri);
         return src;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void deleteSource(Source s) {
+        if (s == null) {
+            throw new IllegalArgumentException("s");
+        }
+        s.delete();
+        this.projectDao.delete(s);
     }
 
     /** {@inheritDoc} */
@@ -250,6 +260,15 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
          ontology.setDateSubmitted(new Date());
          ontology.setOperator(SecurityContext.getUserPrincipal());
          return ontology;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void deleteOntology(Ontology o) {
+        if (o == null) {
+            throw new IllegalArgumentException("o");
+        }
+        this.entityMgr.remove(o);
     }
 
     /** {@inheritDoc} */
@@ -396,7 +415,6 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
             super(ProjectImpl.class, em);
         }
 
-        @Override
         public Project save(Project entity) {
             entity.setDateModification(new Date());
             return super.save(entity);

@@ -35,10 +35,10 @@
 package org.datalift.core.project;
 
 
-import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URI;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -60,7 +60,6 @@ import org.datalift.fwk.Configuration;
 import org.datalift.fwk.project.Row;
 import org.datalift.fwk.project.SqlSource;
 import org.datalift.fwk.util.CloseableIterator;
-import org.datalift.fwk.util.StringUtils;
 
 
 /**
@@ -76,8 +75,6 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
     // Instance members
     //-------------------------------------------------------------------------
 
-    @RdfProperty("datalift:connectionUrl")
-    private String connectionUrl;
     @RdfProperty("datalift:user")
     private String user;
     @RdfProperty("datalift:password")
@@ -85,9 +82,8 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
     @RdfProperty("datalift:database")
     private String database;
     @RdfProperty("datalift:request")
-    private String request;
+    private String query;
 
-    private transient File cacheFile = null;
     private transient Collection<String> columns = null;
 
     //-------------------------------------------------------------------------
@@ -111,7 +107,7 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
     }
 
     //-------------------------------------------------------------------------
-    // DbSource contract support
+    // SqlSource contract support
     //-------------------------------------------------------------------------
 
     /** {@inheritDoc} */
@@ -122,25 +118,30 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
 
         if (this.columns == null) {
             WebRowSet rowSet = null;
+
+            InputStream in = this.getInputStream(true);
             try {
-                String fileName = this.getClass().getSimpleName() + '-' +
-                                            StringUtils.urlify(this.getTitle());
-                this.cacheFile = new File(configuration.getPrivateStorage(),
-                                          fileName);
                 rowSet = new WebRowSetImpl();
-                InputStream in = this.getCacheStream(this.cacheFile);
                 if (in == null) {
                     // Force loading of database driver.
-                    Class.forName(DatabaseType.valueOf(this.getDatabaseType())
-                                              .getDriver());
+                    String cnxUrl = this.getConnectionUrl();
+                    Class.forName(DatabaseType.valueOf(
+                                    this.getDatabaseType(cnxUrl)).getDriver());
                     // Get table to grid
-                    rowSet.setCommand(request);
-                    rowSet.setUrl(connectionUrl);
-                    rowSet.setUsername(user);
-                    rowSet.setPassword(password);
+                    rowSet.setUrl(cnxUrl);
+                    rowSet.setCommand(this.getQuery());
+                    rowSet.setUsername(this.getUser());
+                    rowSet.setPassword(this.getPassword());
                     rowSet.execute();
-                    rowSet.writeXml(new FileOutputStream(cacheFile));
-                    cacheFile.deleteOnExit();
+
+                    OutputStream out = new FileOutputStream(this.getCacheFile());
+                    try {
+                        rowSet.writeXml(out);
+                        rowSet.close();
+                    }
+                    finally {
+                        out.close();
+                    }
                 }
                 else {
                     rowSet.readXml(in);
@@ -162,6 +163,9 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
                         rowSet.close();
                     } catch (Exception e) { /* Ignore... */ }
                 }
+                if (in != null) {
+                    try { in.close(); } catch (Exception e) { /* Ignore... */ }
+                }
             }
         }
         // Else: Already initialized.
@@ -170,13 +174,15 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
     /** {@inheritDoc} */
     @Override
     public String getConnectionUrl() {
-        return connectionUrl;
+        return this.getSource();
     }
 
     /** {@inheritDoc} */
     @Override
     public void setConnectionUrl(String connectionUrl) {
-        this.connectionUrl = connectionUrl;
+        // Check URL.
+        this.getDatabaseType(connectionUrl);
+        this.setSource(connectionUrl);
     }
 
     /** {@inheritDoc} */
@@ -217,14 +223,14 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
 
     /** {@inheritDoc} */
     @Override
-    public String getRequest() {
-        return request;
+    public String getQuery() {
+        return query;
     }
 
     /** {@inheritDoc} */
     @Override
-    public void setRequest(String request) {
-        this.request = request;
+    public void setQuery(String query) {
+        this.query = query;
     }
 
     /** {@inheritDoc} */
@@ -253,7 +259,7 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
         }
         try {
             WebRowSet rowSet = new WebRowSetImpl();
-            rowSet.readXml(this.getCacheStream(this.cacheFile));
+            rowSet.readXml(this.getInputStream(false));
             return new RowIterator(rowSet);
         }
         catch (Exception e) {
@@ -265,17 +271,14 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
     // Specific implementation
     //-------------------------------------------------------------------------
 
-    private String getDatabaseType() {
+    private String getDatabaseType(String connectionUrl) {
         if (connectionUrl.startsWith("jdbc:")) {
             String[] arrayUrl = connectionUrl.split(":");
             if (arrayUrl[1] != null) {
                 return arrayUrl[1];
             }
-            return null;
         }
-        else {
-            throw new RuntimeException();
-        }
+        throw new TechnicalException("invalid.jdbc.url", connectionUrl);
     }
 
     //-------------------------------------------------------------------------

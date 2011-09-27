@@ -187,6 +187,8 @@ public interface ProjectManager
                                 URI targetGraph, Source parent)
                                                             throws IOException;
 
+    public void deleteSource(Source s);
+
     /**
      * Create a new ontology description.
      * @param  srcUrl   the ontology URL.
@@ -197,6 +199,8 @@ public interface ProjectManager
      *         project.
      */
     public Ontology newOntology(URI srcUrl, String title);
+
+    public void deleteOntology(Ontology o);
 
     public String getProjectFilePath(String projectId, String fileName);
 
