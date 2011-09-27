@@ -62,8 +62,6 @@ public class ApplicationLoader extends LogServletContextListener
     // Class members
     //-------------------------------------------------------------------------
 
-    /** The DataLift configuration. */
-    private static Configuration configuration = null;
     /** The singleton resources managed by this JAX-RS application. */
     private static Set<Object> resources = null;
 
@@ -95,12 +93,13 @@ public class ApplicationLoader extends LogServletContextListener
         Logger log = Logger.getLogger();
 
         try {
+            Configuration cfg = Configuration.getDefault();
             if (resources != null) {
                 for (Object r : resources) {
                     if (r instanceof LifeCycle) {
                         try {
-                            ((LifeCycle)r).shutdown(configuration);
-                            configuration.removeBean(r, null);
+                            ((LifeCycle)r).shutdown(cfg);
+                            cfg.removeBean(r, null);
                         }
                         catch (Exception e) {
                             TechnicalException error = new TechnicalException(
@@ -123,14 +122,6 @@ public class ApplicationLoader extends LogServletContextListener
     //------------------------------------------------------------------------
     // Property accessors
     //------------------------------------------------------------------------
-
-    /**
-     * Returns the DataLift configuration object.
-     * @return the DataLift configuration.
-     */
-    public static Configuration getConfiguration() {
-        return configuration;
-    }
 
     /**
      * Returns the JAX-RS root resource singleton objects to be
@@ -177,7 +168,7 @@ public class ApplicationLoader extends LogServletContextListener
 
         try {
             // Load application configuration.
-            configuration = new DefaultConfiguration(props);
+            Configuration.setDefault(new DefaultConfiguration(props));
             // Initialize resources.
             // First initialization step.
             Set<Object> rsc = new HashSet<Object>();
@@ -212,8 +203,9 @@ public class ApplicationLoader extends LogServletContextListener
     private Object initResource(Object r) {
         if (r instanceof LifeCycle) {
             try {
-                ((LifeCycle)r).init(configuration);
-                configuration.registerBean(r);
+                Configuration cfg = Configuration.getDefault();
+                ((LifeCycle)r).init(cfg);
+                cfg.registerBean(r);
             }
             catch (Exception e) {
                 TechnicalException error = new TechnicalException(
@@ -235,7 +227,7 @@ public class ApplicationLoader extends LogServletContextListener
     private void postInitResource(Object r) {
         if (r instanceof LifeCycle) {
             try {
-                ((LifeCycle)r).postInit(configuration);
+                ((LifeCycle)r).postInit(Configuration.getDefault());
             }
             catch (Exception e) {
                 TechnicalException error = new TechnicalException(

@@ -171,8 +171,6 @@ public class RouterResource implements LifeCycle, ResourceResolver
     // Instance members
     //-------------------------------------------------------------------------
 
-    /** The DataLift configuration. */
-    private Configuration configuration = null;
     /** Cache management informations. */
     private int cacheDuration = 2 * 3600;           // 2 hours in seconds
     private int[] businessDay = { 8, 20 };          // 8 A.M. to 8 P.M.
@@ -211,15 +209,10 @@ public class RouterResource implements LifeCycle, ResourceResolver
      * load them and register the resources they declare.</p>
      */
     @Override
-    public void init(Configuration config) {
-        if (config == null) {
-            throw new IllegalArgumentException("configuration");
-        }
-        this.configuration = config;
-
-        // Step #1: Load configuration.
+    public void init(Configuration configuration) {
+        // Step #1: Load configuration parameters.
         // Cache: duration
-        String s = config.getProperty(CACHE_DURATION_PROPERTY);
+        String s = configuration.getProperty(CACHE_DURATION_PROPERTY);
         if (! isBlank(s)) {
             try {
                 this.cacheDuration = Integer.parseInt(s);
@@ -230,7 +223,7 @@ public class RouterResource implements LifeCycle, ResourceResolver
             }
         }
         // Cache: business day hours
-        s = config.getProperty(BUSINESS_DAY_PROPERTY);
+        s = configuration.getProperty(BUSINESS_DAY_PROPERTY);
         if (! isBlank(s)) {
             if ("-".equals(s.trim())) {
                 // Not business day hours specified.
@@ -266,8 +259,8 @@ public class RouterResource implements LifeCycle, ResourceResolver
         // Load modules embedded in web application first (if any).
         this.loadModules(this.getClass().getClassLoader(), null);
         // Load third-party module bundles.
-        if (config.getModulesPath() != null) {
-            List<File> l = Arrays.asList(config.getModulesPath().listFiles(
+        if (configuration.getModulesPath() != null) {
+            List<File> l = Arrays.asList(configuration.getModulesPath().listFiles(
                     new FileFilter() {
                         @Override
                         public boolean accept(File f) {
@@ -382,8 +375,8 @@ public class RouterResource implements LifeCycle, ResourceResolver
     @Override
     public Response resolveStaticResource(String path, Request request)
                                                 throws WebApplicationException {
-        return this.resolveStaticResource(this.configuration.getPublicStorage(),
-                                          path, request);
+        return this.resolveStaticResource(
+                Configuration.getDefault().getPublicStorage(), path, request);
     }
 
     /** {@inheritDoc} */
@@ -607,9 +600,7 @@ public class RouterResource implements LifeCycle, ResourceResolver
             if (response == null) {
                 // Not a module static resource.
                 // => Try to match a file on local storage.
-                response = this.resolveStaticResource(
-                                        this.configuration.getPublicStorage(),
-                                        path, request);
+                response = this.resolveStaticResource(path, request);
             }
             if ((response == null) && (this.sparqlEndpoint != null)) {
                 // Not a public file. => Check triple store for RDF resource.
@@ -747,12 +738,14 @@ public class RouterResource implements LifeCycle, ResourceResolver
      * @param  f    the module JAR file or directory.
      */
     private void loadModules(ClassLoader cl, File f) {
+        Configuration cfg = Configuration.getDefault();
+
         for (Module m : ServiceLoader.load(Module.class, cl)) {
             String name = m.getName();
             // Initialize module.
             Object[] prevCtx = LogContext.pushContexts(name, "init");
             try {
-                m.init(this.configuration);
+                m.init(cfg);
             }
             finally {
                 LogContext.pushContexts(prevCtx[0], prevCtx[1]);
@@ -763,8 +756,8 @@ public class RouterResource implements LifeCycle, ResourceResolver
                 VelocityTemplateProcessor.addModule(name, f);
             }
             // Make module available thru the Configuration object.
-            this.configuration.registerBean(m);
-            this.configuration.registerBean(name, m);
+            cfg.registerBean(m);
+            cfg.registerBean(name, m);
             // Publish module REST resources.
             ModuleDesc desc = new ModuleDesc(m, f, cl);
             this.modules.put(name, desc);
@@ -785,12 +778,14 @@ public class RouterResource implements LifeCycle, ResourceResolver
      * @param  moduleName   the name of the owning module.
      */
     private void loadUriPolicies(ClassLoader cl, String moduleName) {
+        Configuration cfg = Configuration.getDefault();
+
         int count = 0;
         for (UriPolicy a : ServiceLoader.load(UriPolicy.class, cl)) {
             try {
-                a.init(this.configuration);
+                a.init(cfg);
                 // Make policy available thru the Configuration object.
-                this.configuration.registerBean(a);
+                cfg.registerBean(a);
                 // Register policy.
                 this.policies.add(a);
             }
@@ -1077,8 +1072,8 @@ public class RouterResource implements LifeCycle, ResourceResolver
             try {
                 Map<String,Object> bindings = new HashMap<String,Object>();
                 bindings.put("s", uri);
-                configuration.getDataRepository()
-                             .select(query, bindings, result);
+                Configuration.getDefault().getDataRepository()
+                                          .select(query, bindings, result);
             }
             catch (Exception e) {
                 throw new RuntimeException("Failed to execute query \""

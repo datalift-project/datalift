@@ -69,12 +69,26 @@ import org.datalift.fwk.rdf.Repository;
  */
 public abstract class Configuration
 {
+    //-------------------------------------------------------------------------
+    // Constants
+    //-------------------------------------------------------------------------
+
     /** Configuration key for the default repository. */
     public final static String DEFAULT_REPOSITORY       = "";
     /** Configuration key for the public data repository. */
     public final static String DATA_REPOSITORY          = "data";
     /** Configuration key for the internal repository. */
     public final static String INTERNAL_REPOSITORY      = "internal";
+
+    //-------------------------------------------------------------------------
+    // Class members
+    //-------------------------------------------------------------------------
+
+    private static Configuration defaultConfiguration = null;
+
+    //-------------------------------------------------------------------------
+    // Configuration contract definition
+    //-------------------------------------------------------------------------
 
     /**
      * Return the value of a configuration property as a string.
@@ -288,4 +302,30 @@ public abstract class Configuration
      * @param  key    the optional key the object was associated with.
      */
     abstract public void removeBean(Object bean, String key);
+
+    //-------------------------------------------------------------------------
+    // Singleton access and installation methods
+    //-------------------------------------------------------------------------
+
+    /**
+     * Returns the current DataLift configuration.
+     * @return the current configuration.
+     */
+    public static Configuration getDefault() {
+        return defaultConfiguration;
+    }
+
+    /**
+     * Sets the current DataLift configuration.
+     * @param  configuration   the configuration to install as default.
+     *
+     * @throws IllegalArgumentException if another configuration has
+     *         already been installed.
+     */
+    public static void setDefault(Configuration configuration) {
+        if (defaultConfiguration != null) {
+            throw new IllegalStateException();
+        }
+        defaultConfiguration = configuration;
+    }
 }
