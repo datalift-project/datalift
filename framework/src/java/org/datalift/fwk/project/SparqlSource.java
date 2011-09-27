@@ -37,11 +37,30 @@ package org.datalift.fwk.project;
 
 public interface SparqlSource extends RdfSource
 {
-    public String getConnectionUrl();
+    /**
+     * Returns the URL of the SPARQL endpoint this source reads data
+     * from.
+     * @return the URL of the SPARQL endpoint.
+     */
+    public String getEndpointUrl();
 
-    public void setConnectionUrl(String connectionUrl);
+    /**
+     * Sets the URL of the SPARQL endpoint this source reads data from.
+     * @param  url   the URL of the SPARQL endpoint.
+     */
+    public void setEndpointUrl(String url);
 
-    public String getRequest();
+    /**
+     * Returns the SPARQL query (CONSTRUCT or DESCRIBE) this source
+     * shall execute to retrieve data.
+     * @return the SPARQL query.
+     */
+    public String getQuery();
 
-    public void setRequest(String request);
+    /**
+     * Sets the SPARQL query (CONSTRUCT or DESCRIBE) this source
+     * shall execute to retrieve data.
+     * @param  query   the SPARQL query.
+     */
+    public void setQuery(String query);
 }

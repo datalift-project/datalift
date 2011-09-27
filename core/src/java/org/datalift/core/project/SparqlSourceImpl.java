@@ -36,35 +36,32 @@ package org.datalift.core.project;
 
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.net.HttpURLConnection;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedList;
 
 import javax.persistence.Entity;
+import javax.ws.rs.HttpMethod;
 
 import org.openrdf.model.Statement;
-import org.openrdf.rio.RDFParser;
-import org.openrdf.rio.helpers.StatementCollector;
 
 import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.RdfsClass;
 
+import static javax.ws.rs.core.HttpHeaders.*;
+
 import org.datalift.core.TechnicalException;
+import org.datalift.core.rdf.BoundedAsyncRdfParser;
 import org.datalift.fwk.Configuration;
-import org.datalift.fwk.MediaTypes;
 import org.datalift.fwk.project.SparqlSource;
-import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.util.CloseableIterator;
-import org.datalift.fwk.util.StringUtils;
+
+import static org.datalift.fwk.MediaTypes.*;
 
 
 /**
@@ -74,13 +71,18 @@ import org.datalift.fwk.util.StringUtils;
  */
 @Entity
 @RdfsClass("datalift:sparqlSource")
-public class SparqlSourceImpl extends CachingSourceImpl implements SparqlSource {
-    @RdfProperty("datalift:connectionUrl")
-    private String connectionUrl;
-    @RdfProperty("datalift:request")
-    private String request;
+public class SparqlSourceImpl extends CachingSourceImpl implements SparqlSource
+{
+    //-------------------------------------------------------------------------
+    // Instance members
+    //-------------------------------------------------------------------------
 
-    private transient Collection<Statement> content = null;
+    @RdfProperty("datalift:request")
+    private String query;
+
+    //-------------------------------------------------------------------------
+    // Constructors
+    //-------------------------------------------------------------------------
 
     protected SparqlSourceImpl() {
         super(SourceType.SparqlSource);
@@ -90,28 +92,32 @@ public class SparqlSourceImpl extends CachingSourceImpl implements SparqlSource 
         super(SourceType.SparqlSource, uri);
     }
 
+    //-------------------------------------------------------------------------
+    // SparqlSource contract support
+    //-------------------------------------------------------------------------
+
     /** {@inheritDoc} */
     @Override
-    public String getConnectionUrl() {
-        return connectionUrl;
+    public String getEndpointUrl() {
+        return this.getSource();
     }
 
     /** {@inheritDoc} */
     @Override
-    public void setConnectionUrl(String connectionUrl) {
-        this.connectionUrl = connectionUrl;
+    public void setEndpointUrl(String url) {
+        this.setSource(url);
     }
 
     /** {@inheritDoc} */
     @Override
-    public String getRequest() {
-        return request;
+    public String getQuery() {
+        return this.query;
     }
 
     /** {@inheritDoc} */
     @Override
-    public void setRequest(String request) {
-        this.request = request;
+    public void setQuery(String query) {
+        this.query = query;
     }
 
     /** {@inheritDoc} */
@@ -120,97 +126,107 @@ public class SparqlSourceImpl extends CachingSourceImpl implements SparqlSource 
                                                             throws IOException {
         super.init(configuration, baseUri);
 
-        String fileName = this.getClass().getSimpleName() + '-' +
-                                        StringUtils.urlify(this.getTitle());
-        File cacheFile = new File(configuration.getPrivateStorage(),
-                fileName);
-        InputStream in = this.getCacheStream(cacheFile);
-        if (in == null) {
-            URL u = new URL(this.connectionUrl);
-               // Use URI multi-argument constructor to escape query string.
-               try {
-                u = new URI(u.getProtocol(), null,
-                               u.getHost(), u.getPort(),
-                               u.getPath(), "query=" + this.request, null).toURL();
-            } catch (URISyntaxException e) {
-                //NOP
-            }
-            HttpURLConnection cnx = (HttpURLConnection)(u.openConnection());
-            cnx.setRequestProperty("Accept", MediaTypes.APPLICATION_RDF_XML);
-             // Force server connection.
-            cnx.connect();
-            // Check for error data.
-            in = cnx.getErrorStream();
-            if (in == null) {
-                // No error data available. => get response data.
-                in = cnx.getInputStream();
-            }
-            else
-                throw new TechnicalException("Could not retrieve repository data");
-            in = this.saveFile(cacheFile, in);
-            cacheFile.deleteOnExit();
-        }
-        RDFParser parser = RdfUtils.newRdfParser(MediaTypes.APPLICATION_RDF_XML);
-        Collection<Statement> l = new LinkedList<Statement>();
-        if (parser != null) {
+        if (! this.isCacheValid()) {
+            // Build HTTP SPARQL request.
+            URL u = null;
             try {
-                StatementCollector collector = new StatementCollector(l);
-                parser.setRDFHandler(collector);
-                parser.parse(in, (baseUri != null)? baseUri.toString(): "");
+                u = new URL(this.getEndpointUrl());
+                // Use URI multi-argument constructor to escape query string.
+                u = new URI(u.getProtocol(), null,
+                            u.getHost(), u.getPort(), u.getPath(),
+                            "query=" + this.getQuery(), null).toURL();
             }
             catch (Exception e) {
-                throw new IOException("Error while parsing SPARQL source", e);
+                throw new IOException(
+                        new TechnicalException("invalid.endpoint.url", e,
+                                               this.getEndpointUrl()));
+            }
+            HttpURLConnection cnx = (HttpURLConnection)(u.openConnection());
+            cnx.setRequestProperty(ACCEPT, APPLICATION_RDF_XML);
+            cnx.setRequestProperty(CACHE_CONTROL, "no-cache");
+            // Set HTTP method. For large requests, use HTTP POST
+            // to bypass URL length limitations of GET method.
+            cnx.setRequestMethod((u.toString().length() > 2048)?
+                                            HttpMethod.POST: HttpMethod.GET);
+            // Force server connection.
+            cnx.connect();
+            // Check for error data.
+            InputStream in = cnx.getErrorStream();
+            if (in == null) {
+                // No error data found. => save response data to cache.
+                this.save(cnx.getInputStream());
+            }
+            else {
+                char[] buf = new char[1024];
+                int l = 0;
+                Reader r = null;
+                try {
+                    String[] contentType = this.parseContentType(
+                                                        cnx.getContentType());
+                    r = (contentType[1] == null)?
+                                    new InputStreamReader(in):
+                                    new InputStreamReader(in, contentType[1]);
+                    l = r.read(buf);
+                }
+                catch (Exception e) { /* Ignore... */ }
+                finally {
+                    try { r.close(); } catch (Exception e) { /* Ignore... */ }
+                }
+                throw new IOException(
+                        new TechnicalException("endpoint.access.error",
+                                        this.getEndpointUrl(),
+                                        Integer.valueOf(cnx.getResponseCode()),
+                                        new String(buf, 0, l)));
             }
         }
-        this.content = Collections.unmodifiableCollection(l);
     }
 
     /** {@inheritDoc} */
     @Override
     public CloseableIterator<Statement> iterator() {
-        if (this.content == null) {
+        File cacheFile = this.getCacheFile();
+        if (! cacheFile.isFile()) {
             throw new IllegalStateException("Not initialized");
         }
-        final Iterator<Statement> i = this.content.iterator();
-
-        return new CloseableIterator<Statement>() {
-            @Override
-            public boolean hasNext() {
-                return i.hasNext();
-            }
-
-            @Override
-            public Statement next() {
-                return i.next();
-            }
-
-            @Override
-            public void remove() {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override
-            public void close() {
-                // NOP
-            }
-        };
+        try {
+            return BoundedAsyncRdfParser.parse(this.getInputStream(false),
+                                    APPLICATION_RDF_XML, this.getEndpointUrl());
+        }
+        catch (IOException e) {
+            throw new TechnicalException(e.getMessage(), e);
+        }
     }
 
-    private InputStream saveFile(File file, InputStream in) throws IOException {
+    //-------------------------------------------------------------------------
+    // Specific implementation
+    //-------------------------------------------------------------------------
+
+    private void save(InputStream in) throws IOException {
+        FileOutputStream fos = new FileOutputStream(this.getCacheFile());
         try {
-            FileOutputStream fos = new FileOutputStream(file);
-            try {
-                byte[] buf = new byte[8192];
-                int len;
-                while ( ( len = in.read(buf)) >= 0 ) {
-                    fos.write(buf, 0, len);
-                }
-            } finally {
-                fos.close();
+            byte[] buf = new byte[8192];
+            int l;
+            while ((l = in.read(buf)) != -1) {
+                fos.write(buf, 0, l);
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
-        return new FileInputStream(file);
+        finally {
+            try { fos.close(); } catch (Exception e) { /* Ignore... */ }
+            try { in.close();  } catch (Exception e) { /* Ignore... */ }
+        }
+    }
+
+    private String[] parseContentType(String contentType) {
+        String[] elts = new String[2];
+
+        final String CHARSET_TAG = "charset=";
+        if ((contentType != null) && (contentType.length() != 0)) {
+            String[] s = contentType.split("\\s;\\s");
+            elts[0] = s[0];
+            if ((s.length > 1) && (s[1].startsWith(CHARSET_TAG))) {
+                elts[1] = s[1].substring(CHARSET_TAG.length());
+            }
+        }
+        return elts;
     }
 }
