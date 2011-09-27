@@ -214,7 +214,7 @@ public class ProjectImpl extends BaseRdfEntity implements Project
 
     /** {@inheritDoc} */
     @Override
-    public void deleteSource(URI uri) {
+    public void removeSource(URI uri) {
         Source source = getSource(uri);
         if (source != null) {
             this.sources.remove(source);
@@ -282,9 +282,9 @@ public class ProjectImpl extends BaseRdfEntity implements Project
 
     /** {@inheritDoc} */
     @Override
-    public void deleteOntology(String title) {
+    public void removeOntology(String title) {
         Ontology ontology = getOntology(title);
-        if(ontology != null) {
+        if (ontology != null) {
             this.ontologies.remove(ontology);
         }
     }
