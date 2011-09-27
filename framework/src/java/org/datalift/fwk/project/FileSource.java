@@ -72,15 +72,9 @@ public interface FileSource<T> extends Source, CloseableIterable<T>
 
     /**
      * Returns an input stream for reading the source content.
-     * <p>
-     * This method shall only be invoked once the
-     * {@link #init(org.datalift.fwk.Configuration, java.net.URI) init()}
-     * method has been called.</p>
      * @return an input stream
      * @throws IOException if any error occurred accessing the source
      *         data file.
-     * @throws IllegalStateException if this source object has not been
-     * {@link #init(org.datalift.fwk.Configuration, java.net.URI) initialized}.
      */
     public InputStream getInputStream() throws IOException;
 }

@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
 
 import javax.persistence.MappedSuperclass;
 
@@ -34,7 +33,6 @@ public abstract class CachingSourceImpl extends BaseSource
     @RdfProperty("datalift:cacheDuration")
     private int cacheDuration;
 
-    private transient Configuration configuration = null;
     private transient File cacheFile = null;
 
     //-------------------------------------------------------------------------
@@ -55,16 +53,9 @@ public abstract class CachingSourceImpl extends BaseSource
 
     /** {@inheritDoc} */
     @Override
-    public void init(Configuration configuration, URI baseUri)
-                                                            throws IOException {
-        super.init(configuration, baseUri);
-
-        this.configuration = configuration;
-    }
-
-    /** {@inheritDoc} */
-    @Override
     public void delete() {
+        super.delete();
+
         if (this.cacheFile != null) {
             this.cacheFile.delete();
         }
@@ -98,14 +89,12 @@ public abstract class CachingSourceImpl extends BaseSource
      * @return the cache file.
      */
     protected File getCacheFile() {
-        if (this.configuration == null) {
-            throw new IllegalStateException("Not initialized");
-        }
         if (this.cacheFile == null) {
             String fileName = this.getClass().getSimpleName() + '-' +
                                         StringUtils.urlify(this.getTitle());
-            this.cacheFile = new File(configuration.getPrivateStorage(),
-                                      fileName);
+            this.cacheFile = new File(
+                                Configuration.getDefault().getPrivateStorage(),
+                                fileName);
             log.debug("Created cache file: {}", this.cacheFile);
             cacheFile.deleteOnExit();
         }
@@ -125,19 +114,19 @@ public abstract class CachingSourceImpl extends BaseSource
     }
 
     /**
-     * Get the data of the database form the cache file, if it has
-     * been populated.
-     * @param  checkValid   whether to check for cache validity.
+     * Get an input stream on the local data cache file, populating it
+     * if needed.
      *
-     * @return an input stream on the cache file or <code>null</code>
-     *         if a validity check was done and the cache is missing
-     *         or is no longer valid.
+     * @return an input stream on the cache file.
      * @throws IOException if any error occurred accessing the cache
      *         file.
      */
-    protected InputStream getInputStream(boolean checkValid)
-                                                            throws IOException {
-        return ((! checkValid) || (this.isCacheValid()))?
-                                new FileInputStream(this.getCacheFile()): null;
+    protected InputStream getInputStream() throws IOException {
+        if (! this.isCacheValid()) {
+            this.reloadCache();
+        }
+        return new FileInputStream(this.getCacheFile());
     }
+
+    abstract protected void reloadCache() throws IOException;
 }

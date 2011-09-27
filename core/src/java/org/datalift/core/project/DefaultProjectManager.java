@@ -161,8 +161,6 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
                 break;
             }
         }
-        // Force source initialization to validate uploaded file.
-        src.init(this.configuration, uri);
         return src;
     }
 
@@ -180,8 +178,6 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         src.setDescription(description);
         src.setFilePath(filePath);
         src.setMimeType(mimeType);
-        // Force source initialization to validate uploaded file.
-        src.init(this.configuration, uri);
         return src;
     }
 
@@ -201,9 +197,6 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         src.setPassword(password);
         src.setQuery(request);
         src.setCacheDuration(cacheDuration);
-        // Force source initialization to validate database connection
-        // parameters and SQL query.
-        src.init(this.configuration, uri);
         return src;
     }
 
@@ -219,9 +212,6 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         src.setDescription(description);
         src.setQuery(sparqlQuery);
         src.setCacheDuration(cacheDuration);
-        // Force source initialization to validate SPARQL Endpoint connection
-        // parameters and SQL query.
-        src.init(this.configuration, uri);
         return src;
     }
 
@@ -246,8 +236,6 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         src.setDescription(description);
         src.setTargetGraph(targetGraph.toString());
         src.setParent(parent);
-        // Force source initialization for parameter validation.
-        src.init(this.configuration, uri);
         return src;
     }
 

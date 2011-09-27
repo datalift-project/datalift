@@ -131,9 +131,7 @@ public class CsvConverter extends BaseConverterModule
             Project p = this.getProject(projectId);
             // Load input source.
             CsvSource src = (CsvSource)p.getSource(sourceId);
-            src.init(this.configuration, uriInfo.getBaseUri());
             // Convert CSV data and load generated RDF triples.
-            destTitle = " - " + destTitle;
             this.convert(src, this.internalRepository, targetGraph);
             // Register new transformed RDF source.
             this.addResultSource(p, src, destTitle, targetGraph);

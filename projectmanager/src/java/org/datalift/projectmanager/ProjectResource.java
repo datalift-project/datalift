@@ -97,6 +97,7 @@ import org.datalift.fwk.project.CsvSource.Separator;
 import org.datalift.fwk.project.ProjectModule.UriDesc;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.sparql.SparqlEndpoint;
+import org.datalift.fwk.util.CloseableIterator;
 import org.datalift.fwk.util.StringUtils;
 
 import static org.datalift.fwk.MediaTypes.*;
@@ -332,7 +333,6 @@ public class ProjectResource
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
             Project p = this.loadProject(projectUri);
             for (Source s: p.getSources()) {
-                s.init(this.configuration, uriInfo.getBaseUri());
                 s.delete();
             }
             this.projectManager.deleteProject(p);
@@ -498,14 +498,27 @@ public class ProjectResource
             File storagePath = this.getFileStorage(filePath);
             fileCopy(file, storagePath);
 
-            // Add new source to persistent project
             Separator sep = Separator.valueOf(separator);
             boolean hasTitleRow = ((titleRow != null) &&
                                    (titleRow.toLowerCase().equals("on")));
 
+            // Initialize new source
             CsvSource src = this.projectManager.newCsvSource(sourceUri,
                                                 fileName, description, filePath,
                                                 sep.getValue(), hasTitleRow);
+            // Iterate on source content to validate uploaded file.
+            int n = 0;
+            CloseableIterator<?> i = src.iterator();
+            try {
+                for (; i.hasNext(); ) {
+                    n++;
+                    i.next();   // Throws TechnicalException if data is invalid.
+                }
+            }
+            finally {
+                i.close();
+            }
+            // Add new source to persistent project
             p.addSource(src);
             this.projectManager.saveProject(p);
 
@@ -594,9 +607,22 @@ public class ProjectResource
             File storagePath = this.getFileStorage(filePath);
             fileCopy(file, storagePath);
 
-            // Add new source to persistent project
+            // Initialize new source
             RdfFileSource src = this.projectManager.newRdfSource(
                                     sourceUri, fileName, description, filePath, mimeType);
+            // Iterate on source content to validate uploaded file.
+            int n = 0;
+            CloseableIterator<?> i = src.iterator();
+            try {
+                for (; i.hasNext(); ) {
+                    n++;
+                    i.next();   // Throws TechnicalException if data is invalid.
+                }
+            }
+            finally {
+                i.close();
+            }
+            // Add new source to persistent project
             p.addSource(src);
             this.projectManager.saveProject(p);
 
@@ -679,11 +705,16 @@ public class ProjectResource
                                     null, null);
             Project p = this.loadProject(projectUri);
 
-            // Add new source to persistent project
+            // Initialize new source
             SqlSource src = this.projectManager.newSqlSource(sourceUri,
                                                 title, description, database, srcUrl,
                                                 user, password,
                                                 request, cacheDuration);
+            // Start iterating on source content to validate database
+            // connection parameters and query.
+            CloseableIterator<?> i = src.iterator();
+            i.close();
+            // Add new source to persistent project
             p.addSource(src);
             this.projectManager.saveProject(p);
 
@@ -742,44 +773,51 @@ public class ProjectResource
         }
         return response;
     }
-    
+
     @POST
     @Path("{id}/sparqlupload")
     public Response sparqlUpload(@PathParam("id") String id,
-    							 @FormParam("title") String title,
-    							 @FormParam("description") String description,
-    							 @FormParam("connection_url") String connectionUrl,
-    							 @FormParam("request") String query,
-    							 @FormParam("cache_duration") int cacheDuration,
-    							 @Context UriInfo uriInfo,
-    							 @Context Request request){
-    	 Response response = null;
-         try {
-             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
-             URI sourceUri  = new URI(projectUri.getScheme(), null,
+                                 @FormParam("title") String title,
+                                 @FormParam("description") String description,
+                                 @FormParam("connection_url") String endpointUrl,
+                                 @FormParam("request") String query,
+                                 @FormParam("cache_duration") int cacheDuration,
+                                 @Context UriInfo uriInfo,
+                                 @Context Request request){
+        Response response = null;
+        try {
+            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
+            URI sourceUri  = new URI(projectUri.getScheme(), null,
                                      projectUri.getHost(), projectUri.getPort(),
                                      projectUri.getPath()
                                          + this.getRelativeSourceId(title),
                                      null, null);
-             Project p = this.loadProject(projectUri);
-             SparqlSource s = this.projectManager.newSparqlSource(sourceUri, 
-            		 title, description, connectionUrl, query, cacheDuration);
-             p.addSource(s);
-             this.projectManager.saveProject(p);
-             String redirectUrl = projectUri.toString() + "#source";
-             response = Response.created(sourceUri)
-                                .entity(this.newViewable("/redirect.vm",
-                                                         redirectUrl))
-                                .type(TEXT_HTML)
-                                .build();
-         }
-         catch (Exception e) {
-             this.handleInternalError(e,
+            Project p = this.loadProject(projectUri);
+            // Initialize new source
+            SparqlSource src = this.projectManager.newSparqlSource(sourceUri,
+                    title, description, endpointUrl, query, cacheDuration);
+            // Start iterating on source content to validate database
+            // connection parameters and query.
+            CloseableIterator<?> i = src.iterator();
+            i.close();
+            // Add new source to persistent project
+            p.addSource(src);
+            this.projectManager.saveProject(p);
+
+            String redirectUrl = projectUri.toString() + "#source";
+            response = Response.created(sourceUri)
+                               .entity(this.newViewable("/redirect.vm",
+                                                        redirectUrl))
+                               .type(TEXT_HTML)
+                               .build();
+        }
+        catch (Exception e) {
+            this.handleInternalError(e,
                              "Failed to create SPARQL source for {}", title);
-         }
-    	return response;
+        }
+        return response;
     }
-    
+
     @POST
     @Path("{id}/sparqluploadModify")
     public Response sparqlUploadModify(@PathParam("id") String id,
@@ -791,7 +829,7 @@ public class ProjectResource
                            @Context UriInfo uriInfo,
                            @Context Request request,
                            @FormParam("current_source") URI currentSourceUri) {
-    	Response response = null;
+        Response response = null;
         try {
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
             Project p = this.loadProject(projectUri);
@@ -871,7 +909,6 @@ public class ProjectResource
                 throw new NotFoundException();
             }
             // Initialize source and return grid View
-            src.init(this.configuration, uriInfo.getBaseUri());
             String template = null;
             if ((src instanceof CsvSource) || (src instanceof SqlSource)) {
                 template = "/RowSourceGrid.vm";
@@ -907,7 +944,6 @@ public class ProjectResource
             URI u = new URI(uriInfo.getAbsolutePath().toString()
                                                      .replace("/delete", ""));
             Source src = p.getSource(u);
-            src.init(this.configuration, uriInfo.getBaseUri());
             // Delete
             p.removeSource(u);
             this.projectManager.saveProject(p);

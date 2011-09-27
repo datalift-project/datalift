@@ -88,8 +88,6 @@ public interface SqlSource extends Source, CloseableIterable<Row<Object>>
      * @return the number of data columns.
      * @throws SQLException if any error occurred accessing the
      *         database.
-     * @throws IllegalStateException if this source object has not been
-     *         {@link #init(org.datalift.fwk.Configuration, java.net.URI)}.
      */
     public int getColumnCount() throws SQLException;
 
@@ -98,8 +96,6 @@ public interface SqlSource extends Source, CloseableIterable<Row<Object>>
      * @return the number of data columns.
      * @throws SQLException if any error occurred accessing the
      *         database.
-     * @throws IllegalStateException if this source object has not been
-     *         {@link #init(org.datalift.fwk.Configuration, java.net.URI)}.
      */
     public Collection<String> getColumnNames() throws SQLException;
 }

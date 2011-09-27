@@ -37,7 +37,6 @@ package org.datalift.core.project;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.URI;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -54,7 +53,6 @@ import com.clarkparsia.empire.annotation.RdfsClass;
 import au.com.bytecode.opencsv.CSVReader;
 
 import org.datalift.core.TechnicalException;
-import org.datalift.fwk.Configuration;
 import org.datalift.fwk.project.CsvSource;
 import org.datalift.fwk.project.Row;
 import org.datalift.fwk.util.CloseableIterator;
@@ -103,36 +101,8 @@ public class CsvSourceImpl extends BaseFileSource<Row<String>>
     }
 
     //-------------------------------------------------------------------------
-    // FileSource contract support
+    // CsvSource contract support
     //-------------------------------------------------------------------------
-
-    /** {@inheritDoc} */
-    @Override
-    public void init(Configuration configuration, URI baseUri)
-                                                            throws IOException {
-        super.init(configuration, baseUri);
-
-        if (this.headers == null) {
-            CSVReader reader = this.newReader();
-            try {
-                String[] firstRow = reader.readNext();
-                if ((! this.titleRow) && (firstRow != null)) {
-                    // Generate generic column names (A, B... Z, AA, AB...).
-                    for (int i=0; i<firstRow.length; i++) {
-                        firstRow[i] = this.getColumnName(i);
-                    }
-                }
-                this.headers = Collections.unmodifiableCollection(
-                    Arrays.asList((firstRow != null)? firstRow: new String[0]));
-            }
-            finally {
-                try {
-                    reader.close();
-                } catch (IOException e) { /* Ignore... */ }
-            }
-        }
-        // Else: Already initialized.
-    }
 
     /** {@inheritDoc} */
     @Override
@@ -170,22 +140,14 @@ public class CsvSourceImpl extends BaseFileSource<Row<String>>
     /** {@inheritDoc} */
     @Override
     public Collection<String> getColumnNames() {
-        if (this.headers == null) {
-            throw new IllegalStateException("Not initialized");
-        }
+        this.init();
         return this.headers;
     }
-
-    //-------------------------------------------------------------------------
-    // CsvSource contract support
-    //-------------------------------------------------------------------------
 
     /** {@inheritDoc} */
     @Override
     public final CloseableIterator<Row<String>> iterator() {
-        if (this.headers == null) {
-            throw new IllegalStateException("Not initialized");
-        }
+        this.init();
         try {
             return new RowIterator(this.newReader());
         }
@@ -197,6 +159,35 @@ public class CsvSourceImpl extends BaseFileSource<Row<String>>
     //-------------------------------------------------------------------------
     // Specific implementation
     //-------------------------------------------------------------------------
+
+    private void init() {
+        if (this.headers == null) {
+            CSVReader reader = null;
+            try {
+                reader = this.newReader();
+
+                String[] firstRow = reader.readNext();
+                if ((! this.titleRow) && (firstRow != null)) {
+                    // Generate generic column names (A, B... Z, AA, AB...).
+                    for (int i=0; i<firstRow.length; i++) {
+                        firstRow[i] = this.getColumnName(i);
+                    }
+                }
+                this.headers = Collections.unmodifiableCollection(
+                    Arrays.asList((firstRow != null)? firstRow: new String[0]));
+            }
+            catch (IOException e) {
+                throw new TechnicalException("file.read.error", e,
+                                            this.getFilePath(), e.getMessage());
+            }
+            finally {
+                if (reader != null) {
+                    try { reader.close(); } catch (IOException e) { /* Ignore... */ }
+                }
+            }
+        }
+        // Else: Already initialized.
+    }
 
     private CSVReader newReader() throws IOException {
         return new CSVReader(

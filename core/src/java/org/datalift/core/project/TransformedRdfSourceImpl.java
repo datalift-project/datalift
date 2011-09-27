@@ -35,9 +35,6 @@
 package org.datalift.core.project;
 
 
-import java.io.IOException;
-import java.net.URI;
-
 import javax.persistence.Entity;
 
 import org.openrdf.model.Statement;
@@ -69,9 +66,6 @@ public class TransformedRdfSourceImpl extends BaseSource
     @RdfProperty("datalift:parentSource")
     private Source parent;
 
-    private transient Configuration configuration;
-    private transient String baseUri;
-
     //-------------------------------------------------------------------------
     // Constructors
     //-------------------------------------------------------------------------
@@ -90,26 +84,20 @@ public class TransformedRdfSourceImpl extends BaseSource
 
     /** {@inheritDoc} */
     @Override
-    public void init(Configuration configuration, URI baseUri)
-                                                            throws IOException {
-        super.init(configuration, baseUri);
-
-        this.configuration = configuration;
-        this.baseUri       = (baseUri != null)? baseUri.toString(): "";
-
-        if (this.getTitle() == null) {
-            this.setTitle("<" + targetGraph + '>');
+    public String getSource() {
+        String source = super.getSource();
+        if (source == null) {
+            source = this.getParent().getSource();
         }
+        return source;
     }
 
     /** {@inheritDoc} */
     @Override
     public void delete() {
-        if (this.configuration == null) {
-            throw new IllegalStateException("Not initialized");
-        }
-        RepositoryConnection cnx =
-                    this.configuration.getInternalRepository().newConnection();
+        RepositoryConnection cnx = Configuration.getDefault()
+                                                .getInternalRepository()
+                                                .newConnection();
         try {
             cnx.clear(cnx.getValueFactory().createURI(this.getTargetGraph()));
         }
@@ -139,18 +127,16 @@ public class TransformedRdfSourceImpl extends BaseSource
     /** {@inheritDoc} */
     @Override
     public CloseableIterator<Statement> iterator() {
-        if (this.configuration == null) {
-            throw new IllegalStateException("Not initialized");
-        }
-        final RepositoryConnection cnx =
-                    this.configuration.getInternalRepository().newConnection();
+        final RepositoryConnection cnx = Configuration.getDefault()
+                                                      .getInternalRepository()
+                                                      .newConnection();
         try {
             final GraphQueryResult result =
                         cnx.prepareGraphQuery(QueryLanguage.SPARQL,
                                         "CONSTRUCT { ?s ?p ?o . }" +
                                         " WHERE { GRAPH <" + this.targetGraph +
                                             "> { ?s ?p ?o . } }",
-                                        this.baseUri).evaluate();
+                                        this.getSource()).evaluate();
             return new CloseableIterator<Statement>() {
                     @Override
                     public boolean hasNext() {
@@ -208,6 +194,9 @@ public class TransformedRdfSourceImpl extends BaseSource
 
     public void setTargetGraph(String targetGraph) {
         this.targetGraph = targetGraph;
+        if (this.getTitle() == null) {
+            this.setTitle("<" + targetGraph + '>');
+        }
     }
 
     public void setParent(Source parent) {

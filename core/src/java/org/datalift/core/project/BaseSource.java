@@ -35,12 +35,8 @@
 package org.datalift.core.project;
 
 
-import java.io.IOException;
-import java.net.URI;
-
 import javax.persistence.MappedSuperclass;
 
-import org.datalift.fwk.Configuration;
 import org.datalift.fwk.project.Source;
 
 import com.clarkparsia.empire.annotation.RdfId;
@@ -133,7 +129,7 @@ public abstract class BaseSource extends BaseRdfEntity implements Source
 
     /** {@inheritDoc} */
     @Override
-    public String getSource(){
+    public String getSource() {
         return this.source;
     }
 
@@ -151,8 +147,7 @@ public abstract class BaseSource extends BaseRdfEntity implements Source
 
     /** {@inheritDoc} */
     @Override
-    public void init(Configuration configuration, URI baseUri)
-                                                            throws IOException {
+    public void delete() {
         // NOP
     }
 

@@ -95,8 +95,6 @@ public interface CsvSource extends FileSource<Row<String>>
     /**
      * Returns the number of data columns present in the file.
      * @return the number of data columns.
-     * @throws IllegalStateException if this source object has not been
-     *         {@link #init(org.datalift.fwk.Configuration, java.net.URI)}.
      */
     public int getColumnCount();
 
@@ -104,8 +102,6 @@ public interface CsvSource extends FileSource<Row<String>>
      * Returns the column headings, building Excel-like names
      * (A, B ..., Z, AA, AB ...) if the file has no title row.
      * @return the column headings.
-     * @throws IllegalStateException if this source object has not been
-     *         {@link #init(org.datalift.fwk.Configuration, java.net.URI)}.
      */
     public Collection<String> getColumnNames();
 }

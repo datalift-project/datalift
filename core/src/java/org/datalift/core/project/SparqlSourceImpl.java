@@ -35,7 +35,6 @@
 package org.datalift.core.project;
 
 
-import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -57,7 +56,6 @@ import static javax.ws.rs.core.HttpHeaders.*;
 
 import org.datalift.core.TechnicalException;
 import org.datalift.core.rdf.BoundedAsyncRdfParser;
-import org.datalift.fwk.Configuration;
 import org.datalift.fwk.project.SparqlSource;
 import org.datalift.fwk.util.CloseableIterator;
 
@@ -122,78 +120,72 @@ public class SparqlSourceImpl extends CachingSourceImpl implements SparqlSource
 
     /** {@inheritDoc} */
     @Override
-    public void init(Configuration configuration, URI baseUri)
-                                                            throws IOException {
-        super.init(configuration, baseUri);
-
-        if (! this.isCacheValid()) {
-            // Build HTTP SPARQL request.
-            URL u = null;
-            try {
-                u = new URL(this.getEndpointUrl());
-                // Use URI multi-argument constructor to escape query string.
-                u = new URI(u.getProtocol(), null,
-                            u.getHost(), u.getPort(), u.getPath(),
-                            "query=" + this.getQuery(), null).toURL();
-            }
-            catch (Exception e) {
-                throw new IOException(
-                        new TechnicalException("invalid.endpoint.url", e,
-                                               this.getEndpointUrl()));
-            }
-            HttpURLConnection cnx = (HttpURLConnection)(u.openConnection());
-            cnx.setRequestProperty(ACCEPT, APPLICATION_RDF_XML);
-            cnx.setRequestProperty(CACHE_CONTROL, "no-cache");
-            // Set HTTP method. For large requests, use HTTP POST
-            // to bypass URL length limitations of GET method.
-            cnx.setRequestMethod((u.toString().length() > 2048)?
-                                            HttpMethod.POST: HttpMethod.GET);
-            // Force server connection.
-            cnx.connect();
-            // Check for error data.
-            InputStream in = cnx.getErrorStream();
-            if (in == null) {
-                // No error data found. => save response data to cache.
-                this.save(cnx.getInputStream());
-            }
-            else {
-                char[] buf = new char[1024];
-                int l = 0;
-                Reader r = null;
-                try {
-                    String[] contentType = this.parseContentType(
-                                                        cnx.getContentType());
-                    r = (contentType[1] == null)?
-                                    new InputStreamReader(in):
-                                    new InputStreamReader(in, contentType[1]);
-                    l = r.read(buf);
-                }
-                catch (Exception e) { /* Ignore... */ }
-                finally {
-                    try { r.close(); } catch (Exception e) { /* Ignore... */ }
-                }
-                throw new IOException(
-                        new TechnicalException("endpoint.access.error",
-                                        this.getEndpointUrl(),
-                                        Integer.valueOf(cnx.getResponseCode()),
-                                        new String(buf, 0, l)));
-            }
-        }
-    }
-
-    /** {@inheritDoc} */
-    @Override
     public CloseableIterator<Statement> iterator() {
-        File cacheFile = this.getCacheFile();
-        if (! cacheFile.isFile()) {
-            throw new IllegalStateException("Not initialized");
-        }
         try {
-            return BoundedAsyncRdfParser.parse(this.getInputStream(false),
+            return BoundedAsyncRdfParser.parse(this.getInputStream(),
                                     APPLICATION_RDF_XML, this.getEndpointUrl());
         }
         catch (IOException e) {
             throw new TechnicalException(e.getMessage(), e);
+        }
+    }
+
+    //-------------------------------------------------------------------------
+    // CachingSourceImpl contract support
+    //-------------------------------------------------------------------------
+
+    @Override
+    protected void reloadCache() throws IOException {
+        // Build HTTP SPARQL request.
+        URL u = null;
+        try {
+            u = new URL(this.getEndpointUrl());
+            // Use URI multi-argument constructor to escape query string.
+            u = new URI(u.getProtocol(), null,
+                        u.getHost(), u.getPort(), u.getPath(),
+                        "query=" + this.getQuery(), null).toURL();
+        }
+        catch (Exception e) {
+            throw new IOException(
+                    new TechnicalException("invalid.endpoint.url", e,
+                                           this.getEndpointUrl()));
+        }
+        HttpURLConnection cnx = (HttpURLConnection)(u.openConnection());
+        cnx.setRequestProperty(ACCEPT, APPLICATION_RDF_XML);
+        cnx.setRequestProperty(CACHE_CONTROL, "no-cache");
+        // Set HTTP method. For large requests, use HTTP POST
+        // to bypass URL length limitations of GET method.
+        cnx.setRequestMethod((u.toString().length() > 2048)?
+                                            HttpMethod.POST: HttpMethod.GET);
+        // Force server connection.
+        cnx.connect();
+        // Check for error data.
+        InputStream in = cnx.getErrorStream();
+        if (in == null) {
+            // No error data found. => save response data to cache.
+            this.save(cnx.getInputStream());
+        }
+        else {
+            char[] buf = new char[1024];
+            int l = 0;
+            Reader r = null;
+            try {
+                String[] contentType = this.parseContentType(
+                                                        cnx.getContentType());
+                r = (contentType[1] == null)?
+                                    new InputStreamReader(in):
+                                    new InputStreamReader(in, contentType[1]);
+                l = r.read(buf);
+            }
+            catch (Exception e) { /* Ignore... */ }
+            finally {
+                try { r.close(); } catch (Exception e) { /* Ignore... */ }
+            }
+            throw new IOException(
+                    new TechnicalException("endpoint.access.error",
+                                        this.getEndpointUrl(),
+                                        Integer.valueOf(cnx.getResponseCode()),
+                                        new String(buf, 0, l)));
         }
     }
 

@@ -37,10 +37,8 @@ package org.datalift.core.project;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
 
 import javax.persistence.MappedSuperclass;
 
@@ -96,31 +94,10 @@ public abstract class BaseFileSource<T> extends BaseSource
 
     /** {@inheritDoc} */
     @Override
-    public void init(Configuration configuration, URI baseUri)
-                                                            throws IOException {
-        super.init(configuration, baseUri);
-
-        if (this.storage == null) {
-            File docRoot = configuration.getPublicStorage();
-            if ((docRoot == null) || (! docRoot.isDirectory())) {
-                throw new TechnicalException("public.storage.not.directory",
-                                             docRoot);
-            }
-            File f = new File(docRoot, this.filePath);
-            if (! (f.isFile() && f.canRead())) {
-                throw new FileNotFoundException(this.filePath);
-            }
-            this.storage = f;
-        }
-        // Else: Already initialized.
-    }
-
-    /** {@inheritDoc} */
-    @Override
     public void delete() {
-        if (this.storage == null) {
-            throw new IllegalStateException("Not initialized");
-        }
+        super.delete();
+
+        this.init();
         this.storage.delete();
     }
 
@@ -149,10 +126,24 @@ public abstract class BaseFileSource<T> extends BaseSource
     /** {@inheritDoc} */
     @Override
     public InputStream getInputStream() throws IOException {
-        if (this.storage == null) {
-            throw new IllegalStateException("Not initialized");
-        }
+        this.init();
         return new FileInputStream(this.storage);
+    }
+
+    private void init() {
+        if (this.storage == null) {
+            File docRoot = Configuration.getDefault().getPublicStorage();
+            if ((docRoot == null) || (! docRoot.isDirectory())) {
+                throw new TechnicalException("public.storage.not.directory",
+                                             docRoot);
+            }
+            File f = new File(docRoot, this.filePath);
+            if (! (f.isFile() && f.canRead())) {
+                throw new TechnicalException("file.not.found", this.filePath);
+            }
+            this.storage = f;
+        }
+        // Else: Already initialized.
     }
 
     //-------------------------------------------------------------------------

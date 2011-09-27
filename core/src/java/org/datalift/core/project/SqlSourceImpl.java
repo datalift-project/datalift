@@ -39,7 +39,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URI;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -56,7 +55,6 @@ import com.clarkparsia.empire.annotation.RdfsClass;
 import com.sun.rowset.WebRowSetImpl;
 
 import org.datalift.core.TechnicalException;
-import org.datalift.fwk.Configuration;
 import org.datalift.fwk.project.Row;
 import org.datalift.fwk.project.SqlSource;
 import org.datalift.fwk.util.CloseableIterator;
@@ -109,67 +107,6 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
     //-------------------------------------------------------------------------
     // SqlSource contract support
     //-------------------------------------------------------------------------
-
-    /** {@inheritDoc} */
-    @Override
-    public void init(Configuration configuration, URI baseUri)
-                                                            throws IOException {
-        super.init(configuration, baseUri);
-
-        if (this.columns == null) {
-            WebRowSet rowSet = null;
-
-            InputStream in = this.getInputStream(true);
-            try {
-                rowSet = new WebRowSetImpl();
-                if (in == null) {
-                    // Force loading of database driver.
-                    String cnxUrl = this.getConnectionUrl();
-                    Class.forName(DatabaseType.valueOf(
-                                    this.getDatabaseType(cnxUrl)).getDriver());
-                    // Get table to grid
-                    rowSet.setUrl(cnxUrl);
-                    rowSet.setCommand(this.getQuery());
-                    rowSet.setUsername(this.getUser());
-                    rowSet.setPassword(this.getPassword());
-                    rowSet.execute();
-
-                    OutputStream out = new FileOutputStream(this.getCacheFile());
-                    try {
-                        rowSet.writeXml(out);
-                        rowSet.close();
-                    }
-                    finally {
-                        out.close();
-                    }
-                }
-                else {
-                    rowSet.readXml(in);
-                }
-                ResultSetMetaData metadata = rowSet.getMetaData();
-                String[] cols = new String[metadata.getColumnCount()];
-                for (int i=0, max=cols.length; i<max; i++) {
-                    cols[i] = metadata.getColumnName(i+1);
-                }
-                this.columns = Collections.unmodifiableCollection(
-                                                        Arrays.asList(cols));
-            }
-            catch (Exception e) {
-                throw new IOException(e);
-            }
-            finally {
-                if (rowSet != null) {
-                    try {
-                        rowSet.close();
-                    } catch (Exception e) { /* Ignore... */ }
-                }
-                if (in != null) {
-                    try { in.close(); } catch (Exception e) { /* Ignore... */ }
-                }
-            }
-        }
-        // Else: Already initialized.
-    }
 
     /** {@inheritDoc} */
     @Override
@@ -236,30 +173,24 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
     /** {@inheritDoc} */
     @Override
     public int getColumnCount() {
-        if (this.columns == null) {
-            throw new IllegalStateException("Not initialized");
-        }
+        this.init();
         return this.columns.size();
     }
 
     /** {@inheritDoc} */
     @Override
     public Collection<String> getColumnNames() throws SQLException {
-        if (this.columns == null) {
-            throw new IllegalStateException("Not initialized");
-        }
+        this.init();
         return this.columns;
     }
 
     /** {@inheritDoc} */
     @Override
     public CloseableIterator<Row<Object>> iterator() {
-        if (this.columns == null) {
-            throw new IllegalStateException("Not initialized");
-        }
+        this.init();
         try {
             WebRowSet rowSet = new WebRowSetImpl();
-            rowSet.readXml(this.getInputStream(false));
+            rowSet.readXml(this.getInputStream());
             return new RowIterator(rowSet);
         }
         catch (Exception e) {
@@ -268,8 +199,89 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
     }
 
     //-------------------------------------------------------------------------
+    // CachingSourceImpl contract support
+    //-------------------------------------------------------------------------
+
+    @Override
+    protected synchronized void reloadCache() throws IOException {
+        WebRowSet rowSet = null;
+        String databaseType = null;
+        try {
+            rowSet = new WebRowSetImpl();
+            // Force loading of database driver.
+            String cnxUrl = this.getConnectionUrl();
+            databaseType = this.getDatabaseType(cnxUrl);
+            Class.forName(DatabaseType.valueOf(databaseType).getDriver());
+            // Get table to grid
+            rowSet.setUrl(cnxUrl);
+            rowSet.setCommand(this.getQuery());
+            rowSet.setUsername(this.getUser());
+            rowSet.setPassword(this.getPassword());
+            rowSet.execute();
+            // Force recomputation of column names on next access.
+            this.columns = null;
+
+            OutputStream out = new FileOutputStream(this.getCacheFile());
+            try {
+                rowSet.writeXml(out);
+                rowSet.close();
+            }
+            finally {
+                out.close();
+            }
+        }
+        catch (ClassNotFoundException e) {
+            throw new IOException(
+                    new TechnicalException("jdbc.driver.not.found",
+                                           databaseType));
+        }
+        catch (SQLException e) {
+            throw new IOException(e);
+        }
+        finally {
+            if (rowSet != null) {
+                try { rowSet.close(); } catch (Exception e) { /* Ignore... */ }
+            }
+        }
+    }
+
+    //-------------------------------------------------------------------------
     // Specific implementation
     //-------------------------------------------------------------------------
+
+    private void init() {
+        if (this.columns == null) {
+            WebRowSet rowSet = null;
+            InputStream in = null;
+            try {
+                in = this.getInputStream();
+                rowSet = new WebRowSetImpl();
+                rowSet.readXml(in);
+
+                ResultSetMetaData metadata = rowSet.getMetaData();
+                String[] cols = new String[metadata.getColumnCount()];
+                for (int i=0, max=cols.length; i<max; i++) {
+                    cols[i] = metadata.getColumnName(i+1);
+                }
+                this.columns = Collections.unmodifiableCollection(
+                                                        Arrays.asList(cols));
+            }
+            catch (Exception e) {
+                throw new TechnicalException(null, e);
+            }
+            finally {
+                if (rowSet != null) {
+                    try {
+                        rowSet.close();
+                    } catch (Exception e) { /* Ignore... */ }
+                }
+                if (in != null) {
+                    try { in.close(); } catch (Exception e) { /* Ignore... */ }
+                }
+            }
+        }
+        // Else: Already initialized.
+    }
 
     private String getDatabaseType(String connectionUrl) {
         if (connectionUrl.startsWith("jdbc:")) {

@@ -35,12 +35,6 @@
 package org.datalift.fwk.project;
 
 
-import java.io.IOException;
-import java.net.URI;
-
-import org.datalift.fwk.Configuration;
-
-
 /**
  * A source of data, external (file, URL, database query...) or
  * internal (named graph, SPARQL query...).
@@ -109,28 +103,8 @@ public interface Source
     public SourceType getType();
 
     /**
-     * Initializes this source to make the source data accessible.
-     * This method shall be invoked prior accessing the source data
-     * (e.g. <code>getInputStream()</code>, <code>iterator()</code>...).
-     * @param configuration   the DataLift configuration.
-     * @param baseUri         the base URI for this DataLift deployment.
-     *
-     * @throws IOException if any error occurred loading the source
-     *         data.
-     */
-    public void init(Configuration configuration, URI baseUri)
-                                                            throws IOException;
-
-    /**
      * Deletes all resources associated to this source (uploaded files,
      * temporary files, named graphs...).
-     * <p>
-     * This method shall only be invoked once the
-     * {@link #init(Configuration, URI) init()} method has been
-     * called.</p>
-     *
-     * @throws IllegalStateException if this source has not been
-     *         {@link #init(Configuration, URI) initialized}.
      */
     public void delete();
 }
