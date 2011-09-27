@@ -54,16 +54,63 @@ import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.util.CloseableIterator;
 
 
+/**
+ * A utility class for performing an asynchronous RDF parse populating
+ * a {@link Statement statement} iterator but limiting the number of
+ * statements stored in memory. The iterator client speed controls the
+ * parser speed.
+ *
+ * @author lbihanic
+ */
 public final class BoundedAsyncRdfParser
 {
+    //-------------------------------------------------------------------------
+    // Class members
+    //-------------------------------------------------------------------------
+
     private final static ExecutorService threadPool =
                                             Executors.newCachedThreadPool();
 
+    //-------------------------------------------------------------------------
+    // Constructors
+    //-------------------------------------------------------------------------
+
+    /** Default constructor, private on purpose. */
+    private BoundedAsyncRdfParser() {
+        throw new UnsupportedOperationException();
+    }
+
+    //-------------------------------------------------------------------------
+    // Specific implementation
+    //-------------------------------------------------------------------------
+
+    /**
+     * Parses the specified RDF data stream.
+     * @param  in         the RDF data stream to parse.
+     * @param  mimeType   the expected type of the data.
+     * @param  baseUri    the base URI to translate relative URIs.
+     *
+     * @return an iterator on the parsed RDF statements.
+     *
+     * @see    #parse(InputStream, String, String, int)
+     */
     public static CloseableIterator<Statement> parse(InputStream in,
                                         String mimeType, String baseUri) {
         return parse(in, mimeType, baseUri, 100);
     }
 
+    /**
+     * Parses the specified RDF data stream.
+     * @param  in           the RDF data stream to parse.
+     * @param  mimeType     the expected type of the data.
+     * @param  baseUri      the base URI to translate relative URIs.
+     * @param  bufferSize   the maximum number of RDF statements the
+     *                      iterator can buffer.
+     *
+     * @return an iterator on the parsed RDF statements.
+     *
+     * @see    #parse(InputStream, String, String, int)
+     */
     public static CloseableIterator<Statement> parse(final InputStream in,
                                         String mimeType, final String baseUri,
                                         int bufferSize) {
@@ -79,8 +126,19 @@ public final class BoundedAsyncRdfParser
                 @Override
                 public Void call() {
                     try {
-                        parser.setRDFHandler(
-                                        new QueueingRdfHandler(statements));
+                        parser.setRDFHandler(new RDFHandlerBase()
+                            {
+                                @Override
+                                public void handleStatement(Statement st)
+                                                    throws RDFHandlerException {
+                                    try {
+                                        statements.put(st);
+                                    }
+                                    catch (InterruptedException e) {
+                                        throw new RDFHandlerException(e);
+                                    }
+                                }
+                            });
                         parser.parse(in, (baseUri != null)? baseUri: "");
                     }
                     catch (Exception e) {
@@ -93,7 +151,7 @@ public final class BoundedAsyncRdfParser
 
         return new CloseableIterator<Statement>()
             {
-                private Statement current = null;
+                private Statement current = this.getNextStatement();
 
                 @Override
                 public boolean hasNext() {
@@ -103,21 +161,7 @@ public final class BoundedAsyncRdfParser
                 @Override
                 public Statement next() {
                     Statement next = this.current;
-                    if (! f.isDone()) {
-                        // Get next statement from queue.
-                        try {
-                            this.current = statements.take();
-                        }
-                        catch (InterruptedException e) {
-                            // Thread interrupted.
-                            throw new RuntimeException(e);
-                        }
-                    }
-                    else {
-                        // Parse complete.
-                        this.current = null;
-                        this.close();
-                    }
+                    this.current = this.getNextStatement();
                     return next;
                 }
 
@@ -141,29 +185,26 @@ public final class BoundedAsyncRdfParser
                     }
                     catch (Exception e) { /* Ignore... */ }
                 }
+
+                private Statement getNextStatement() {
+                    Statement stmt = null;
+                    // Get next statement from queue.
+                    if ((statements.peek() == null) && (f.isDone())) {
+                        // Parse complete & queue empty.
+                        this.close();
+                    }
+                    else {
+                        // Consume next statement from queue.
+                        try {
+                            stmt = statements.take();
+                        }
+                        catch (InterruptedException e) {
+                            // Thread interrupted.
+                            throw new RuntimeException(e);
+                        }
+                    }
+                    return stmt;
+                }
             };
-    }
-
-    private final static class QueueingRdfHandler extends RDFHandlerBase
-    {
-        private final BlockingQueue<Statement> statementQueue;
-
-        public QueueingRdfHandler(BlockingQueue<Statement> statementQueue) {
-            if (statementQueue == null) {
-                throw new IllegalArgumentException("statementQueue");
-            }
-            this.statementQueue = statementQueue;
-        }
-
-        /** {@inheritDoc} */
-        @Override
-        public void handleStatement(Statement st) throws RDFHandlerException {
-            try {
-                this.statementQueue.put(st);
-            }
-            catch (InterruptedException e) {
-                throw new RDFHandlerException(e);
-            }
-        }
     }
 }
