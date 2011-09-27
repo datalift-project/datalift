@@ -94,15 +94,15 @@ public abstract class GenericRdfJpaDao<T>
         return entity;
     }
 
-    public void persist(T entity) {
+    public void persist(Object entity) {
         this.entityMgr.persist(entity);
     }
 
-    public T save(T entity) {
+    public <X> X save(X entity) {
         return this.entityMgr.merge(entity);
     }
 
-    public void delete(T entity) {
+    public void delete(Object entity) {
         this.entityMgr.remove(entity);
     }
 
