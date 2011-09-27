@@ -91,7 +91,7 @@ public abstract class BaseFileSource<T> extends BaseSource
     }
 
     //-------------------------------------------------------------------------
-    // BaseSource contract support
+    // Source contract support
     //-------------------------------------------------------------------------
 
     /** {@inheritDoc} */
@@ -113,6 +113,15 @@ public abstract class BaseFileSource<T> extends BaseSource
             this.storage = f;
         }
         // Else: Already initialized.
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void delete() {
+        if (this.storage == null) {
+            throw new IllegalStateException("Not initialized");
+        }
+        this.storage.delete();
     }
 
     //-------------------------------------------------------------------------

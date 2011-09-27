@@ -120,4 +120,17 @@ public interface Source
      */
     public void init(Configuration configuration, URI baseUri)
                                                             throws IOException;
+
+    /**
+     * Deletes all resources associated to this source (uploaded files,
+     * temporary files, named graphs...).
+     * <p>
+     * This method shall only be invoked once the
+     * {@link #init(Configuration, URI) init()} method has been
+     * called.</p>
+     *
+     * @throws IllegalStateException if this source has not been
+     *         {@link #init(Configuration, URI) initialized}.
+     */
+    public void delete();
 }

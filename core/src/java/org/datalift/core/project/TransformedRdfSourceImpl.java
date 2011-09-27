@@ -85,7 +85,7 @@ public class TransformedRdfSourceImpl extends BaseSource
     }
 
     //-------------------------------------------------------------------------
-    // BaseSource contract support
+    // Source contract support
     //-------------------------------------------------------------------------
 
     /** {@inheritDoc} */
@@ -99,6 +99,24 @@ public class TransformedRdfSourceImpl extends BaseSource
 
         if (this.getTitle() == null) {
             this.setTitle("<" + targetGraph + '>');
+        }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void delete() {
+        if (this.configuration == null) {
+            throw new IllegalStateException("Not initialized");
+        }
+        RepositoryConnection cnx =
+                    this.configuration.getInternalRepository().newConnection();
+        try {
+            cnx.clear(cnx.getValueFactory().createURI(this.getTargetGraph()));
+        }
+        catch (Exception e) {
+            try { cnx.close(); } catch (Exception e2) { /* Ignore... */ }
+
+            throw new TechnicalException("rdf.store.access.error", e);
         }
     }
 
@@ -121,6 +139,9 @@ public class TransformedRdfSourceImpl extends BaseSource
     /** {@inheritDoc} */
     @Override
     public CloseableIterator<Statement> iterator() {
+        if (this.configuration == null) {
+            throw new IllegalStateException("Not initialized");
+        }
         final RepositoryConnection cnx =
                     this.configuration.getInternalRepository().newConnection();
         try {
