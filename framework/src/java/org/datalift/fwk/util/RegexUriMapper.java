@@ -83,14 +83,12 @@ public class RegexUriMapper implements UriMapper
     public URI map(URI in) {
         URI mapped = in;
         if (in != null) {
-            Matcher m = this.extractor.matcher(in.toString());
-            if (m.matches()) {
-                try {
-                    mapped = new URI(m.replaceAll(this.replacement));
-                }
-                catch (URISyntaxException e) {
-                    throw new RuntimeException(e);
-                }
+            try {
+            	Matcher m = this.extractor.matcher(in.toString());
+                mapped = new URI(m.replaceAll(this.replacement));
+            }
+            catch (URISyntaxException e) {
+                throw new RuntimeException(e);
             }
         }
         return mapped;

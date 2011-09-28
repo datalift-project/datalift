@@ -56,6 +56,7 @@ import org.openrdf.model.ValueFactory;
 import org.openrdf.repository.RepositoryConnection;
 
 import static javax.ws.rs.core.HttpHeaders.ACCEPT;
+import static javax.ws.rs.core.MediaType.TEXT_HTML;
 
 import org.datalift.fwk.project.CsvSource;
 import org.datalift.fwk.project.Project;
@@ -74,20 +75,20 @@ import org.datalift.fwk.util.StringUtils;
  *
  * @author lbihanic
  */
-public class CsvConverter extends BaseConverterModule
+public class CsvDirectMapper extends BaseConverterModule
 {
     //-------------------------------------------------------------------------
     // Constants
     //-------------------------------------------------------------------------
 
-    private final static String MODULE_NAME = "csvconverter";
+    private final static String MODULE_NAME = "csvdirectmapper";
 
     //-------------------------------------------------------------------------
     // Constructors
     //-------------------------------------------------------------------------
 
     /** Default constructor. */
-    public CsvConverter() {
+    public CsvDirectMapper() {
         super(MODULE_NAME, SourceType.CsvSource);
     }
 
@@ -111,7 +112,7 @@ public class CsvConverter extends BaseConverterModule
         catch (MalformedURLException e) { /* Ignore... */ }
 
         args.put("project", p);
-        response = Response.ok(this.newViewable("/csvConverter.vm", args))
+        response = Response.ok(this.newViewable("/csvDirectMapper.vm", args))
                            .build();
         return response;
     }
@@ -136,8 +137,11 @@ public class CsvConverter extends BaseConverterModule
             // Register new transformed RDF source.
             this.addResultSource(p, src, destTitle, targetGraph);
             // Display generated triples.
-            response = this.displayGraph(this.internalRepository, targetGraph,
-                                         uriInfo, request, acceptHdr);
+            String uri = projectId.toString() + "#source";
+            response = Response.created(projectId)
+                               .entity(this.newViewable("/redirect.vm", uri))
+                               .type(TEXT_HTML)
+                               .build();
         }
         catch (Exception e) {
             this.handleInternalError(e);

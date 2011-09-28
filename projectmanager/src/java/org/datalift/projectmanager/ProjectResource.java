@@ -585,6 +585,7 @@ public class ProjectResource
             @Context UriInfo uriInfo,
             @FormDataParam("description") String description,
             @FormDataParam("source") InputStream file,
+            @FormDataParam("base_uri") URI	baseUri,
             @FormDataParam("source") FormDataContentDisposition fileDisposition,
             @FormDataParam("mime_type") String mimeType)
                                                 throws WebApplicationException {
@@ -609,7 +610,7 @@ public class ProjectResource
 
             // Initialize new source
             RdfFileSource src = this.projectManager.newRdfSource(
-                                    sourceUri, fileName, description, filePath, mimeType);
+                                    baseUri, sourceUri, fileName, description, filePath, mimeType);
             // Iterate on source content to validate uploaded file.
             int n = 0;
             CloseableIterator<?> i = src.iterator();
@@ -651,6 +652,7 @@ public class ProjectResource
                         @Context UriInfo uriInfo,
                         @FormDataParam("description") String description,
                         @FormDataParam("mime_type") String mimeType,
+                        @FormDataParam("base_uri") URI baseUri,
                         @FormDataParam("current_source") URI currentSourceUri)
                                                 throws WebApplicationException {
         Response response = null;
@@ -666,6 +668,7 @@ public class ProjectResource
             }
             Source s = p.getSource(currentSourceUri);
             s.setDescription(description);
+            s.setSource(baseUri.toString());
             ((RdfFileSource) s).setMimeType(mappedType.toString());
             this.projectManager.saveProject(p);
             String redirectUrl = projectUri.toString() + "#source";

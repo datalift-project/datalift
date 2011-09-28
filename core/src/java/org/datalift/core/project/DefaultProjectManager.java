@@ -166,10 +166,11 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
 
     /** {@inheritDoc} */
     @Override
-    public RdfFileSource newRdfSource(URI uri, String title,
+    public RdfFileSource newRdfSource(URI baseUri, URI uri, String title,
                                       String description, String filePath,
                                       String mimeType) throws IOException {
         RdfFileSourceImpl src = new RdfFileSourceImpl(uri.toString());
+        src.setSource(baseUri.toString());
         src.setTitle(title);
         File f = this.getFileStorage(filePath);
         if (!f.isFile()) {

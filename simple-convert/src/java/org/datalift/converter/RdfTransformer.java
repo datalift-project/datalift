@@ -54,6 +54,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import static javax.ws.rs.core.HttpHeaders.ACCEPT;
+import static javax.ws.rs.core.MediaType.TEXT_HTML;
 
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.RdfSource;
@@ -62,19 +63,19 @@ import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.rdf.RdfUtils;
 
 
-public class RdfConverter extends BaseConverterModule
+public class RdfTransformer extends BaseConverterModule
 {
     //-------------------------------------------------------------------------
     // Constants
     //-------------------------------------------------------------------------
 
-    private final static String MODULE_NAME = "rdfconverter";
+    private final static String MODULE_NAME = "rdftransformer";
 
     //-------------------------------------------------------------------------
     // Constructors
     //-------------------------------------------------------------------------
 
-    public RdfConverter() {
+    public RdfTransformer() {
         super(MODULE_NAME, SourceType.TransformedRdfSource);
     }
 
@@ -92,7 +93,7 @@ public class RdfConverter extends BaseConverterModule
         Project p = this.getProject(projectId);
         if (sourceId == null) {
              response = Response.ok(
-                     this.newViewable("/rdfConverter.vm", p)).build();
+                     this.newViewable("/rdfTransformer.vm", p)).build();
          }
         else {
             try {
@@ -137,9 +138,11 @@ public class RdfConverter extends BaseConverterModule
                              this.internalRepository, targetGraph);
             // Register new transformed RDF source.
             this.addResultSource(p, src, srcName, targetGraph);
-            // Display generated triples.
-            response = this.displayGraph(this.internalRepository, targetGraph,
-                                         uriInfo, request, acceptHdr);
+            String uri = projectId.toString() + "#source";
+            response = Response.created(projectId)
+                               .entity(this.newViewable("/redirect.vm", uri))
+                               .type(TEXT_HTML)
+                               .build();
         }
         catch (Exception e) {
             this.handleInternalError(e);

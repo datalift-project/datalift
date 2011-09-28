@@ -2,32 +2,47 @@
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-#load("rdfconverter/resources")
+#load("rdfloader/resources")
 #load_core_resources
-	<title>#i18n("rdfconverter.title") - DataLift</title>
+	<title>#i18n("publisher.title") - DataLift</title>
 #header_links
 </head>
 <body>
 <script>
-	$(function() {
-		$(".source_to_select").button();
+	var form_base_action = "${baseUri}/simple-publisher?project=${it.uri}";
+
+	$(function() {		
+		$("#source_submit").button();
+		$("#source_submit").attr('disabled', true);
+		
+		$("#source").change(function(){
+		 	$("#source option:selected").each(function () {
+		 		if ($(this).attr("name") == "") {
+		 			$("#source_submit").attr('disabled', true);
+		 		}
+		 		else {
+		 			$("#source_form").attr('action', form_base_action + "&source=" + $(this).attr('name'));
+		 			$("#source_submit").removeAttr('disabled');
+		 		}
+		 	});
+		 });
 	});
 </script>
 #banner
 <div class="ui-widget-content" id="workspace">
 <h3 class="ui-widget-header dl-widget-header">RDF Publisher - Project ${it.title}</h3>
 
-Source to publish :
-	<div id="source">
-<div id="source">
+#i18n("source.to_publish")
+<form id="source_form" method="post" action="${baseUri}/simple-publisher?project=${it.uri}">
+<select id="source">
+<option name=""></option>
 #foreach($curSrc in $it.getSources())
-	#if( $curSrc.getType() == $field.RdfFileSource || $curSrc.getType() == $field.TransformedRdfSource )
-	<form method="post" action="${baseUri}/simple-publisher?project=${it.uri}&source=${curSrc.uri}">	
-		<input type="submit" class="source_to_select" value="$esc.html($curSrc.title)"/>
-	</form>
+	#if( $curSrc.getType() == $field.TransformedRdfSource )
+		<option name="${curSrc.uri}">$esc.html($curSrc.title)</option>	
 	#end
 #end
-	</div>
-</div>
+</select>
+<input type="submit" id="source_submit" value="#i18n('submit.label')"/>
+</form>
 </body>
 </html>
