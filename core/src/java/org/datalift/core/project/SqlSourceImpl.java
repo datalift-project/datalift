@@ -347,6 +347,15 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
             // Else: Already closed.
         }
 
+        /**
+         * Ensures resources are released even when
+         * {@link #close()} has not been invoked by user class.
+         */
+        @Override
+        protected void finalize() {
+            this.close();
+        }
+
         private boolean getNextRow() {
             boolean hasNext = false;
             try {

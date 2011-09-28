@@ -283,6 +283,15 @@ public class CsvSourceImpl extends BaseFileSource<Row<String>>
         }
 
         /**
+         * Ensures resources are released even when
+         * {@link #close()} has not been invoked by user class.
+         */
+        @Override
+        protected void finalize() {
+            this.close();
+        }
+
+        /**
          * Reads the new line from the CSV data.
          * @return a {@link Row} object wrapping the read data or
          *         <code>null</code> if the end of data was reached.

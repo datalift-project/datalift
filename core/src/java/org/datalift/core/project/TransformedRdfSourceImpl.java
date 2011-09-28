@@ -170,6 +170,10 @@ public class TransformedRdfSourceImpl extends BaseSource
                         throw new UnsupportedOperationException();
                     }
 
+                    /**
+                     * Ensures resources are released even when
+                     * {@link #close()} has not been invoked by user class.
+                     */
                     @Override
                     protected void finalize() {
                         this.close();
