@@ -44,7 +44,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import org.openrdf.model.Resource;
 import org.openrdf.model.Statement;
+import org.openrdf.model.URI;
+import org.openrdf.model.Value;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.RDFParser;
 import org.openrdf.rio.helpers.RDFHandlerBase;
@@ -112,9 +115,8 @@ public final class BoundedAsyncRdfParser
      * @see    #parse(InputStream, String, String, int)
      */
     public static CloseableIterator<Statement> parse(final InputStream in,
-                                        String mimeType, final String baseUri,
-                                        int bufferSize) {
-        final RDFParser parser = RdfUtils.newRdfParser(mimeType);
+                                    final String mimeType, final String baseUri,
+                                    final int bufferSize) {
         // Use a blocking queue to control the memory alloted to the
         // being-read RDF statements. Let the producer (RDF parser) be
         // ahead of the consumer (iterator client) by bufferSize statements.
@@ -126,6 +128,7 @@ public final class BoundedAsyncRdfParser
                 @Override
                 public Void call() {
                     try {
+                        RDFParser parser = RdfUtils.newRdfParser(mimeType);
                         parser.setRDFHandler(new RDFHandlerBase()
                             {
                                 @Override
@@ -138,6 +141,12 @@ public final class BoundedAsyncRdfParser
                                         throw new RDFHandlerException(e);
                                     }
                                 }
+
+                                @Override
+                                public void endRDF()
+                                                    throws RDFHandlerException {
+                                    this.handleStatement(new NullStatement());
+                                }
                             });
                         parser.parse(in, (baseUri != null)? baseUri: "");
                     }
@@ -148,7 +157,7 @@ public final class BoundedAsyncRdfParser
                     return null;
                 }
             });
-
+        // Return an iterator consuming the statement queue.
         return new CloseableIterator<Statement>()
             {
                 private Statement current = this.getNextStatement();
@@ -186,25 +195,63 @@ public final class BoundedAsyncRdfParser
                     catch (Exception e) { /* Ignore... */ }
                 }
 
+                /**
+                 * Ensures resources are released even when
+                 * {@link #close()} has not been invoked by user class.
+                 */
+                @Override
+                protected void finalize() {
+                    this.close();
+                }
+
+                /**
+                 * Retrieves the next available statement from the
+                 * queue, blocking until one is available.
+                 * @return the next parsed {@link Statement} or
+                 *         <code>null</code> if the parse is complete.
+                 */
                 private Statement getNextStatement() {
                     Statement stmt = null;
-                    // Get next statement from queue.
-                    if ((statements.peek() == null) && (f.isDone())) {
-                        // Parse complete & queue empty.
-                        this.close();
-                    }
-                    else {
-                        // Consume next statement from queue.
-                        try {
-                            stmt = statements.take();
+                    // Consume next statement from queue.
+                    try {
+                        stmt = statements.take();
+                        if (stmt instanceof NullStatement) {
+                            // Parse complete.
+                            stmt = null;
                         }
-                        catch (InterruptedException e) {
-                            // Thread interrupted.
-                            throw new RuntimeException(e);
+                    }
+                    catch (InterruptedException e) {
+                        // Thread interrupted.
+                        throw new RuntimeException(e);
+                    }
+                    finally {
+                        if (stmt == null) {
+                            this.close();
                         }
                     }
                     return stmt;
                 }
             };
+    }
+
+    //-------------------------------------------------------------------------
+    // NullStatement nested class
+    //-------------------------------------------------------------------------
+
+    /**
+     * A specific {@link Statement} implementation to denote RDF parse
+     * completion.
+     */
+    private final static class NullStatement implements Statement
+    {
+        /** Default constructor. */
+        public NullStatement() {
+            super();
+        }
+
+        @Override public Resource getSubject() { return null; }
+        @Override public Value getObject()     { return null; }
+        @Override public URI getPredicate()    { return null; }
+        @Override public Resource getContext() { return null; }
     }
 }
