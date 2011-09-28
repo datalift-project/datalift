@@ -1,0 +1,72 @@
+<script>
+	$(function() {
+		$( "button, input:submit, a", ".demo" ).button();
+		$( "#radio" ).buttonset();
+		$( "#check" ).button();
+		$( "#format" ).buttonset();
+		
+		$( "#rerun" )
+			.button()
+			.click(function() {
+				alert( "Running the last action" );
+			})
+			.next()
+				.button( {
+					text: false,
+					icons: {
+						primary: "ui-icon-triangle-1-s"
+					}
+				})
+				.click(function() {
+					alert( "Could display a menu to select an action" );
+				})
+				.parent()
+					.buttonset();
+		
+		$( "a", ".demo" ).click(function() { return false; });
+	});
+	</script>
+
+
+
+<div class="demo">
+
+<p>Buttons</p>
+<button>A button element</button>
+
+<input value="A submit button" type="submit">
+
+<a href="#">An anchor</a>
+<p>radios</p>
+<form>
+	<div id="radio">
+		<input type="radio" id="radio1" name="radio" /><label for="radio1">Choice 1</label>
+		<input type="radio" id="radio2" name="radio" checked="checked" /><label for="radio2">Choice 2</label>
+		<input type="radio" id="radio3" name="radio" /><label for="radio3">Choice 3</label>
+	</div>
+</form>
+
+<p>Checkboxes</p>
+<input type="checkbox" id="check" /><label for="check">Toggle</label>
+
+<div id="format">
+	<input type="checkbox" id="check1" /><label for="check1">B</label>
+	<input type="checkbox" id="check2" /><label for="check2">I</label>
+	<input type="checkbox" id="check3" /><label for="check3">U</label>
+</div>
+
+<p>Split Button</p>
+
+<div>
+	<button id="rerun">Run last action</button>
+	<button id="select">Select an action</button>
+</div>
+
+
+</div><!-- End demo -->
+
+
+
+<div style="display: none;" class="demo-description">
+<p>Examples of the markup that can be used for buttons: A button element, an input of type submit and an anchor.</p>
+</div><!-- End demo-description -->
