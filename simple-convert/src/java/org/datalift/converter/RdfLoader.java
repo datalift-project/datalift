@@ -35,8 +35,12 @@
 package org.datalift.converter;
 
 
+import java.io.File;
 import java.net.URI;
+import java.util.regex.Pattern;
 
+import javax.ws.rs.FormParam;
+import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.QueryParam;
@@ -46,15 +50,15 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
-import org.openrdf.model.ValueFactory;
-import org.openrdf.repository.RepositoryConnection;
-
 import static javax.ws.rs.core.HttpHeaders.ACCEPT;
+import static javax.ws.rs.core.MediaType.TEXT_HTML;
 
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.RdfFileSource;
 import org.datalift.fwk.project.Source.SourceType;
-import org.datalift.fwk.rdf.Repository;
+import org.datalift.fwk.rdf.RdfUtils;
+import org.datalift.fwk.util.RegexUriMapper;
+import org.datalift.fwk.util.UriMapper;
 
 
 public class RdfLoader extends BaseConverterModule
@@ -70,68 +74,62 @@ public class RdfLoader extends BaseConverterModule
     //-------------------------------------------------------------------------
 
     public RdfLoader() {
-        super(MODULE_NAME, SourceType.RdfFileSource, HttpMethod.POST);
+        super(MODULE_NAME, SourceType.RdfFileSource);
     }
 
     //-------------------------------------------------------------------------
     // Web services
     //-------------------------------------------------------------------------
 
-    @POST
-    public Response publishProject(@QueryParam("project") URI projectId,
+    @GET
+    public Response indexPa(@QueryParam("project") URI projectId,
                                    @Context UriInfo uriInfo,
                                    @Context Request request,
                                    @HeaderParam(ACCEPT) String acceptHdr)
                                                 throws WebApplicationException {
         Response response = null;
-        try {
-            // Retrieve project.
-            Project p = this.getProject(projectId);
-            // Load input source.
-            RdfFileSource src = (RdfFileSource)this.getLastSource(p);
-            // Parse RDF to load triples.
-            String srcName  = this.nextSourceName(p);
-            URI targetGraph = this.newGraphUri(src, srcName);
-            this.convert(src, this.internalRepository, targetGraph);
-            // Register new transformed RDF source.
-            this.addResultSource(p, src, srcName, targetGraph);
-            // Display generated triples.
-            response = this.displayGraph(this.internalRepository, targetGraph,
-                                         uriInfo, request, acceptHdr);
-        }
-        catch (Exception e) {
-            this.handleInternalError(e);
-        }
+        // Retrieve project.
+        Project p = this.getProject(projectId);
+        response = Response.ok(
+                    this.newViewable("/rdfLoader.vm", p)).build();
         return response;
     }
-
-    //-------------------------------------------------------------------------
-    // Specific implementation
-    //-------------------------------------------------------------------------
-
-    private void convert(RdfFileSource src, Repository target,
-                                            URI targetGraph) {
-        final RepositoryConnection cnx = target.newConnection();
-        try {
-            final ValueFactory valueFactory = cnx.getValueFactory();
-
-            // Prevent transaction commit for each triple inserted.
-            cnx.setAutoCommit(false);
-            // Clear target named graph, if any.
-            org.openrdf.model.URI ctx = null;
-            if (targetGraph != null) {
-                ctx = valueFactory.createURI(targetGraph.toString());
-                cnx.clear(ctx);
-            }
-            // Load triples.
-            cnx.add(src, ctx);
-            cnx.commit();
-        }
-        catch (Exception e) {
-            throw new TechnicalException("rdf.conversion.failed", e);
-        }
-        finally {
-            try { cnx.close(); } catch (Exception e) { /* Ignore */ }
-        }
-    }
+    
+    @POST
+    public Response publishProject(@QueryParam("project") URI projectId,
+    						@QueryParam("source") URI sourceId,
+    						@FormParam("dest_title") String destTitle,
+                            @FormParam("dest_graph_uri") URI targetGraph,
+                            @FormParam("uri_translation_src") String uriTranslationSrc,
+                            @FormParam("uri_translation_dest") String uriTranslationDest,
+    						@Context UriInfo uriInfo,
+    						@Context Request request,
+    						@HeaderParam(ACCEPT) String acceptHdr)
+                         		throws WebApplicationException {
+    	Response response = null;
+		// Retrieve project.
+		Project p = this.getProject(projectId);
+		try {
+			RegexUriMapper mapper = new RegexUriMapper(Pattern.compile(uriTranslationSrc), uriTranslationDest);
+			
+			// Load input source.
+			RdfFileSource src = (RdfFileSource) p.getSource(sourceId);
+			
+			RdfUtils.upload(new File(configuration.getPublicStorage() + "/" + src.getFilePath()), 
+					RdfUtils.parseMimeType(src.getMimeType()), 
+					this.internalRepository, targetGraph, 
+					(UriMapper)mapper, src.getSource());
+			// Register new transformed RDF source.
+			this.addResultSource(p, src, destTitle, targetGraph);
+			 String uri = projectId.toString() + "#source";
+	            response = Response.created(projectId)
+	                               .entity(this.newViewable("/redirect.vm", uri))
+	                               .type(TEXT_HTML)
+	                               .build();
+		}
+		catch (Exception e) {
+			this.handleInternalError(e);
+		}
+		return response;
+	}
 }

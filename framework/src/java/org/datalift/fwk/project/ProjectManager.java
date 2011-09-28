@@ -137,7 +137,7 @@ public interface ProjectManager
      * @throws IOException if any error occurred creating the source
      *         or accessing the specified file.
      */
-    public RdfFileSource newRdfSource(URI uri, String title,
+    public RdfFileSource newRdfSource(URI baseUri, URI uri, String title,
                                       String description, String filePath,
                                       String mimeType) throws IOException;
     

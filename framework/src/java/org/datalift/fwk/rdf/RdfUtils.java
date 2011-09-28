@@ -251,9 +251,9 @@ public final class RdfUtils
                             if (mapper != null) {
                                 // Map subject and object URIs
                                 stmt = valueFactory.createStatement(
-                                            (Resource)(mapUri(stmt.getSubject())),
-                                            stmt.getPredicate(),
-                                            mapUri(stmt.getObject()));
+                                            (Resource)(mapValue(stmt.getSubject())),
+                                            mapUri(stmt.getPredicate()),
+                                            mapValue(stmt.getObject()));
                             }
                             cnx.add(stmt, ctx);
                             // Commit transaction every BATCH_SIZE statements.
@@ -268,20 +268,22 @@ public final class RdfUtils
                         }
                     }
 
-                    private Value mapUri(Value v) {
+                    private Value mapValue(Value v) {
                         if (v instanceof org.openrdf.model.URI) {
-                            try {
-                                return valueFactory.createURI(
-                                        mapper.map(new URI(v.stringValue()))
-                                              .toString());
-                            }
-                            catch (URISyntaxException e) {
-                                // Should never happen.
-                                throw new RuntimeException(e);
-                            }
+                        	return mapUri((org.openrdf.model.URI)v);
                         }
                         else {
                             return v;
+                        }
+                    }
+                    private org.openrdf.model.URI mapUri(org.openrdf.model.URI u) {
+                        try {
+                        	return valueFactory.createURI(
+                        			mapper.map(new URI(u.stringValue())).toString());
+                        }
+                        catch (URISyntaxException e) {
+                            // Should never happen.
+                            throw new RuntimeException(e);
                         }
                     }
                 });

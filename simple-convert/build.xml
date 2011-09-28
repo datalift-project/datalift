@@ -290,9 +290,9 @@
     <jar jarfile="${jar.path}">
       <fileset dir="${classes.dir}"/>
       <service type="org.datalift.fwk.Module">
-        <provider classname="org.datalift.converter.CsvConverter"/>
+        <provider classname="org.datalift.converter.CsvDirectMapper"/>
         <provider classname="org.datalift.converter.RdfLoader"/>
-        <provider classname="org.datalift.converter.RdfConverter"/>
+        <provider classname="org.datalift.converter.RdfTransformer"/>
         <provider classname="org.datalift.converter.SimplePublisher"/>
       </service>
     </jar>
