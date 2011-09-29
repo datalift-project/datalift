@@ -44,6 +44,7 @@ import java.net.URI;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -329,9 +330,11 @@ public class ProjectResource
                                   @Context UriInfo uriInfo)
                                             throws WebApplicationException {
         Response response = null;
+
+        URI uri = null;
         try {
-            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
-            Project p = this.loadProject(projectUri);
+            uri = this.newProjectId(uriInfo.getBaseUri(), id);
+            Project p = this.loadProject(uri);
             for (Source s: p.getSources()) {
                 s.delete();
             }
@@ -340,7 +343,7 @@ public class ProjectResource
             response = this.displayIndexPage(Response.ok(), null).build();
         }
         catch (Exception e) {
-            this.handleInternalError(e, "Failed to delete project");
+            this.handleInternalError(e, "Failed to delete project {Ø}", uri);
         }
         return response;
     }
@@ -362,15 +365,23 @@ public class ProjectResource
                                    @Context UriInfo uriInfo,
                                    @Context Request request)
                                                 throws WebApplicationException {
-        Response response = null;
+        ResponseBuilder response = null;
+
+        URI uri = uriInfo.getAbsolutePath();
         try {
-            Project p = this.loadProject(uriInfo.getAbsolutePath());
-            response = this.displayIndexPage(Response.ok(), p).build();
+            Project p = this.loadProject(uri);
+            Date lastModified = p.getDateModification();
+            if (lastModified != null) {
+                response = request.evaluatePreconditions(lastModified);
+            }
+            if (response == null) {
+                response = this.displayIndexPage(Response.ok(), p);
+            }
         }
         catch (Exception e) {
-            this.handleInternalError(e, "Failed to delete project");
+            this.handleInternalError(e, "Error accessing project {0}", uri);
         }
-        return response;
+        return response.build();
     }
 
     /**
@@ -415,9 +426,10 @@ public class ProjectResource
                                       @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
         Response response = null;
+        URI uri = null;
         try {
-            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
-            Project p = this.loadProject(projectUri);
+            uri = this.newProjectId(uriInfo.getBaseUri(), id);
+            Project p = this.loadProject(uri);
 
             Map<String, Object> args = new HashMap<String, Object>();
             args.put("it", p);
@@ -427,7 +439,7 @@ public class ProjectResource
                             TEXT_HTML).build();
         }
         catch (Exception e) {
-            this.handleInternalError(e, "Failed to load project");
+            this.handleInternalError(e, "Failed to load project {0}", uri);
         }
         return response;
     }
@@ -1157,6 +1169,10 @@ public class ProjectResource
             }
             args.put("current", p);
             args.put("canHandle", modules);
+
+            if (p.getDateModification() != null) {
+                response = response.lastModified(p.getDateModification());
+            }
         }
         return response.entity(this.newViewable("/workspace.vm", args))
                        .type(TEXT_HTML);
