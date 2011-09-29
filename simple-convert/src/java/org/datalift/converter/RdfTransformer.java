@@ -56,6 +56,7 @@ import javax.ws.rs.core.UriInfo;
 import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 import static javax.ws.rs.core.MediaType.TEXT_HTML;
 
+import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.RdfSource;
 import org.datalift.fwk.project.TransformedRdfSource;
@@ -85,37 +86,26 @@ public class RdfTransformer extends BaseConverterModule
     
     @GET
     public Response getIndexPage(@QueryParam("project") URI projectId,
-                                 @QueryParam("source") URI sourceId,
                                  @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
         Response response = null;
         // Retrieve project.
         Project p = this.getProject(projectId);
-        if (sourceId == null) {
-             response = Response.ok(
-                     this.newViewable("/rdfTransformer.vm", p)).build();
-         }
-        else {
             try {
-                // Retrieve project.
-                RdfSource s = (RdfSource) p.getSource(sourceId);
-                Map<String, Object> args = new TreeMap<String, Object>();
-                args.put("it", s);
-                args.put("project", p);
                 response = Response.ok(
-                        this.newViewable("/constructQueries.vm", args)).build();
+                        this.newViewable("/constructQueries.vm", p)).build();
             }
             catch (Exception e) {
                 this.handleInternalError(e);
             }
-        }
         return response;
     }
 
     @POST
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public Response convertRdfSource(@FormParam("project") URI projectId,
-                                     @FormParam("source") URI sourceId,
+    public Response convertRdfSource(@QueryParam("project") URI projectId,
+                                     @QueryParam("source") URI sourceId,
+                                     @FormParam("dest_title") String destTitle,
+                                     @FormParam("dest_graph_uri") URI targetGraph,
                                      @FormParam("query[]") List<String> queries,
                                      @Context UriInfo uriInfo,
                                      @Context Request request,
@@ -130,16 +120,13 @@ public class RdfTransformer extends BaseConverterModule
             Project p = this.getProject(projectId);
             // Load input source.
             TransformedRdfSource src =
-                                (TransformedRdfSource)this.getLastSource(p);
-            // Apply SPARQL CONSTRUCT queries to generate new RDF triples.
-            String srcName  = this.nextSourceName(p);
-            URI targetGraph = this.newGraphUri(src, srcName);
+                                (TransformedRdfSource)p.getSource(sourceId);
             RdfUtils.convert(this.internalRepository, queries,
                              this.internalRepository, targetGraph);
             // Register new transformed RDF source.
-            this.addResultSource(p, src, srcName, targetGraph);
-            String uri = projectId.toString() + "#source";
-            response = Response.created(projectId)
+            this.addResultSource(p, src, destTitle, targetGraph);
+            String uri = projectId + "#source";
+            response = Response.created(sourceId)
                                .entity(this.newViewable("/redirect.vm", uri))
                                .type(TEXT_HTML)
                                .build();

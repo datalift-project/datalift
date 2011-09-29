@@ -16,14 +16,14 @@
 	<h3 class="ui-widget-header dl-widget-header">#i18n("workspace.title")</h3>
 #end
 	<div id="projects_panel" class="ui-widget-content">
-		<div id="project_scroll" style="position:relative">
+		<div id="project_scroll">
 			<h3 class="ui-widget-header dl-widget-header">#i18n("project.title.available")</h3>
 #foreach( $item in $it )
 			<a class="ui-state-default dl-project-button" onclick="makeFocus(this);" href="${item.uri}">$!esc.html($item.title)</a><br />
 #end
 
-			<a href="${baseUri}/workspace/project/add.html" class="button" style="position:absolute;bottom:0">#i18n("project.title.new_project")</a>
 		</div>
+			<a href="${baseUri}/workspace/project/add.html" id="add_project" class="button">#i18n("project.title.new_project")</a>
 	</div>
 
 	<div id="workspace-main-panel" class="ui-widget-content">
@@ -48,9 +48,9 @@
 #foreach( $page in $canHandle )
 #set( $pageUrl = $page.getUrl(${baseUri}) )
 #if( $page.method.name() == "GET" )
-						<li><a href="${pageUrl}" class="button" id="${page.label}">#i18n("${page.label}")</a></li>
+						<li><a href="${pageUrl}" class="button projectmodule_button" id="${page.label}">#i18n("${page.label}")</a></li>
 #else
-						<li><form id="${page.label}" method="post" action="${pageUrl}"><input type="submit" value="#i18n("${page.label}")"/></form></li>
+						<li><form id="${page.label}" method="post" action="${pageUrl}"><input type="submit" class="projectmodule_button" value="#i18n("${page.label}")"/></form></li>
 #end
 #end
 					</ol>
