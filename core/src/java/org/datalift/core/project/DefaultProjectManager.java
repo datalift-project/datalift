@@ -295,6 +295,10 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     /** {@inheritDoc} */
     @Override
     public void saveProject(Project p) {
+        if (p == null) {
+            throw new IllegalArgumentException("p");
+        }
+        p.setDateModification(new Date());
         try {
             if (this.findProject(new URL(p.getUri()).toURI()) == null) {
                 this.projectDao.persist(p);
@@ -399,14 +403,10 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     /**
      * A JPA DAO implementation for persisting ProjectImpl objects.
      */
-    public final static class ProjectJpaDao extends GenericRdfJpaDao<Project> {
+    public final static class ProjectJpaDao extends GenericRdfJpaDao<Project>
+    {
         public ProjectJpaDao(EntityManager em) {
             super(ProjectImpl.class, em);
-        }
-
-        public Project save(Project entity) {
-            entity.setDateModification(new Date());
-            return super.save(entity);
         }
     }
 }
