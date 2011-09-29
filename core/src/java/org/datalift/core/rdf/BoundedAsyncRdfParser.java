@@ -117,6 +117,8 @@ public final class BoundedAsyncRdfParser
     public static CloseableIterator<Statement> parse(final InputStream in,
                                     final String mimeType, final String baseUri,
                                     final int bufferSize) {
+        // Validate that provided MIME type is supported.
+        final RDFParser parser = RdfUtils.newRdfParser(mimeType);
         // Use a blocking queue to control the memory alloted to the
         // being-read RDF statements. Let the producer (RDF parser) be
         // ahead of the consumer (iterator client) by bufferSize statements.
@@ -128,33 +130,40 @@ public final class BoundedAsyncRdfParser
                 @Override
                 public Void call() {
                     try {
-                        RDFParser parser = RdfUtils.newRdfParser(mimeType);
                         parser.setRDFHandler(new RDFHandlerBase()
                             {
                                 @Override
-                                public void handleStatement(Statement st)
+                                public void handleStatement(Statement stmt)
                                                     throws RDFHandlerException {
-                                    try {
-                                        statements.put(st);
-                                    }
-                                    catch (InterruptedException e) {
-                                        throw new RDFHandlerException(e);
-                                    }
+                                    publish(stmt);
                                 }
 
                                 @Override
                                 public void endRDF()
                                                     throws RDFHandlerException {
-                                    this.handleStatement(new NullStatement());
+                                    publish(new EndOfParse());
                                 }
                             });
                         parser.parse(in, (baseUri != null)? baseUri: "");
                     }
+                    catch (RuntimeException e) {
+                        throw e;
+                    }
                     catch (Exception e) {
+                        this.publish(new EndOfParse());
                         new TechnicalException(
                                         "rdf.parse.error", e, e.getMessage());
                     }
                     return null;
+                }
+
+                private void publish(Statement stmt) {
+                    try {
+                        statements.put(stmt);
+                    }
+                    catch (InterruptedException e) {
+                        new TechnicalException(null, e);
+                    }
                 }
             });
         // Return an iterator consuming the statement queue.
@@ -215,7 +224,7 @@ public final class BoundedAsyncRdfParser
                     // Consume next statement from queue.
                     try {
                         stmt = statements.take();
-                        if (stmt instanceof NullStatement) {
+                        if (stmt instanceof EndOfParse) {
                             // Parse complete.
                             stmt = null;
                         }
@@ -239,13 +248,13 @@ public final class BoundedAsyncRdfParser
     //-------------------------------------------------------------------------
 
     /**
-     * A specific {@link Statement} implementation to denote RDF parse
-     * completion.
+     * A specific {@link Statement} implementation to denote the end of
+     * the RDF parse.
      */
-    private final static class NullStatement implements Statement
+    private final static class EndOfParse implements Statement
     {
         /** Default constructor. */
-        public NullStatement() {
+        public EndOfParse() {
             super();
         }
 
