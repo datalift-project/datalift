@@ -51,10 +51,12 @@ import org.apache.velocity.exception.ResourceNotFoundException;
 import org.apache.velocity.runtime.directive.Directive;
 import org.apache.velocity.runtime.parser.node.Node;
 
+import org.datalift.core.i18n.jersey.PreferredLocalesProvider;
 import org.datalift.core.util.SimpleCache;
 import org.datalift.core.velocity.i18n.BundleList.Bundle;
 import org.datalift.fwk.log.Logger;
-import org.datalift.fwk.util.StringUtils;
+
+import static org.datalift.core.velocity.jersey.VelocityTemplateProcessor.CTX_HTTP_REQUEST;
 
 import com.sun.jersey.api.core.HttpRequestContext;
 
@@ -106,34 +108,9 @@ public class LoadDirective extends Directive
                         throws IOException, ResourceNotFoundException,
                                ParseErrorException, MethodInvocationException {
         // Get user locales.
-        List<Locale> locales = null;
-        HttpRequestContext httpRequest =
-                                (HttpRequestContext)(context.get("request"));
-        if (httpRequest != null) {
-            // Get acceptable locales from HTTP request.
-            locales = new ArrayList<Locale>(httpRequest.getAcceptableLanguages());
-        }
-        if ((locales == null) || (locales.isEmpty())) {
-            // Not processing an HTTP request. => Get user locales from JVM.
-            locales = new ArrayList<Locale>();
-            Locale l = Locale.getDefault();
-            locales.add(l);
-            // If a variant is present, add a locale without it.
-            String s = l.getVariant();
-            if (! StringUtils.isBlank(s)) {
-                locales.add(new Locale(l.getLanguage(), l.getCountry()));
-            }
-            // If a country is present, add a locale without it. 
-            s = l.getCountry();
-            if (! StringUtils.isBlank(s)) {
-                locales.add(new Locale(l.getLanguage()));
-            }
-            // Add English default locales.
-            locales.add(Locale.US);
-            locales.add(Locale.ENGLISH);
-        }
-        // Add default bundle (no locale).
-        locales.add(Locale.ROOT);
+        List<Locale> locales = new ArrayList<Locale>(
+                PreferredLocalesProvider.getPreferredLocales(
+                        (HttpRequestContext)(context.get(CTX_HTTP_REQUEST))));
         // Reverse locale list to get least wanted locales first.
         Collections.reverse(locales);
         // Get existing bundle list, to add new bundles.

@@ -40,6 +40,7 @@ import java.util.Set;
 
 import javax.ws.rs.core.Application;
 
+import org.datalift.core.i18n.jersey.PreferredLocalesProvider;
 import org.datalift.core.velocity.jersey.VelocityTemplateProcessor;
 import org.datalift.fwk.log.Logger;
 
@@ -72,8 +73,9 @@ public class DataliftApplication extends Application
         // A VelocityTemplateProcessor instance shall be created for
         // each request as it accesses the HTTP request context.
         classes.add(VelocityTemplateProcessor.class);
+        classes.add(PreferredLocalesProvider.class);
 
-        log.debug("Registered {} resource classes: {}",
+        log.debug("Registered {} resource classes/providers: {}",
                                 Integer.valueOf(classes.size()), classes);
         return classes;
     }
@@ -82,7 +84,7 @@ public class DataliftApplication extends Application
     @Override
     public Set<Object> getSingletons() {
         Set<Object> resources = ApplicationLoader.getResources();
-        log.debug("Registered {} singleton resources: {}",
+        log.debug("Registered {} singleton resources/providers: {}",
                                 Integer.valueOf(resources.size()), resources);
         return resources;
     }
