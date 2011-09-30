@@ -9,7 +9,8 @@
 </head>
 <body>
 #banner
-	<p>#i18n("source.grid.desc") $!esc.html($it.title)</p>
+
+	<h3>#i18n("source.grid.desc") $!esc.html($it.title)</h3>
 	<table id="grid">
 		<thead>
 			<tr>

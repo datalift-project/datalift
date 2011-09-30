@@ -69,10 +69,23 @@ body {
 
 #projects_panel {
   width:150px;
+  margin:0;
   margin-left:10px;
   margin-top:10px;
   height:280px;
   float:left;
+text-align:center;
+}
+
+#project_scroll {
+  margin:0;
+  height:245px;
+  overflow:auto;
+}
+
+#add_project {
+  display:inline-block;
+ margin:auto;
 }
 
 #workspace-main-panel {
@@ -93,10 +106,7 @@ body {
   padding:5px;
 }
 
-#project_scroll {
-  height:258px;
-  overflow:auto;
-}
+
 
 /* fixing Jquery tabs Problem */
 .ui-helper-clearfix {
@@ -137,3 +147,34 @@ body {
   margin: 10px 0px;
 }
 
+.projectmodule_button {
+  width:300px;
+}
+
+.automargin {
+  margin:auto;
+}
+
+#converter_form {
+ padding:10px;
+ width:100%;
+}
+
+#converter_form p label {
+  width:30%;
+  display:inline-block; 
+}
+
+#converter_form p input, #converter_form p select  {
+  width:45%;
+}
+
+#converter_form p .button {
+  display:inline-block;
+  margin:auto;
+}
+
+
+.form_formated p input, .form_formated p textarea {
+  width:45%;
+}

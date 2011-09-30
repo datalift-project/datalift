@@ -254,7 +254,7 @@ public abstract class BaseConverterModule
                                               String name, URI namedGraph)
                                                             throws IOException {
         p.addSource(this.projectManager.newTransformedRdfSource(
-                                    namedGraph, parent.getTitle() + name, "",
+                                    namedGraph, name, "",
                                     namedGraph, parent));
         this.projectManager.saveProject(p);
     }

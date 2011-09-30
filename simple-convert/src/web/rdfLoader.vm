@@ -14,77 +14,54 @@
 	
 	$(function() {
 		$("#source_submit").button();
-		$("#source_submit").attr('disabled', true);
-		$("#dest_title").attr('disabled', true);
-		$("#dest_graph_uri").attr('disabled', true);
-		$("#uri_translation_src").attr('disabled', true);
-		$("#uri_translation_dest").attr('disabled', true);
 		
 		$("#source").change(function(){
 		 	$("#source option:selected").each(function () {
-		 		if ($(this).attr("name") == "") {
-		 			$("#converter_form").attr('action', form_base_action);			
-					$("#uri_translation_src").attr('value', '');
-					$("#uri_translation_dest").attr('value', '');
-					$("#uri_translation_src").attr('disabled', true);
-					$("#uri_translation_dest").attr('disabled', true);
-					$("#dest_title").attr('value', '');
-					$("#dest_graph_uri").attr('value', '');
-					$("#dest_title").attr('disabled', true);
-					$("#dest_graph_uri").attr('disabled', true);
-					$("#source_submit").attr('disabled', true);			
-		 		}
-		 		else {
-		 			$("#dest_title").attr("value", "(RDF #" + $(this).attr("count") + ")");
-					$("#dest_graph_uri").attr("value", $(this).attr("name") + "-rdf-" + $(this).attr("count"));
-		 			$("#converter_form").attr('action', form_base_action + "&source=" + $(this).attr('name'));
-		 			$("#source_submit").removeAttr('disabled');
-		 			$("#uri_translation_src").removeAttr('disabled');
-		 			$("#uri_translation_dest").removeAttr('disabled');
-		 			$("#dest_title").removeAttr('disabled');
-					$("#dest_graph_uri").removeAttr('disabled');
-		 		}
+		 		$("#dest_title").attr("value", $(this).attr('name') + " - (RDF #" + $(this).attr("count") + ")");
+				$("#dest_graph_uri").attr("value", $(this).attr("uri") + "-rdf-" + $(this).attr("count"));	
+		 		$("#converter_form").attr('action', form_base_action + "&source=" + $(this).attr('uri'));
 		 	});
 		 });
+		 
+		 $("#source").change();
 	});
 </script>
 #banner
-<div class="ui-widget-content" id="workspace">
+<div class="ui-widget-content converter_main" id="workspace">
 <h3 class="ui-widget-header dl-widget-header">RDF Loader - Project ${it.title}</h3>
 
 
 <form id="converter_form" method="post" action="${baseUri}/rdfloader?project=${it.uri}">
-<label for="source_to_select">#i18n("source.to_convert")</label>
+<p><label for="source_to_select">#i18n("source.to_convert")</label>
 	<select id="source">
-		<option name=""></option>
 	#foreach($curSrc in $it.getSources())
 		#set( $count = 1)
 		#if( $curSrc.getType() == $field.RdfFileSource)
-		#foreach($source in $project.getSources())
+		#foreach($source in $it.getSources())
 			#if( $source.getType() == $field.TransformedRdfSource && $source.getParent().uri == $curSrc.uri)
 				#set( $count = $count + 1)
 			#end
 		#end
-			<option name="${curSrc.uri}" count="$count">$esc.html($curSrc.title)</option>
+			<option uri="${curSrc.uri}" name="${curSrc.title}" count="$count">$esc.html($curSrc.title)</option>
 		#end
 	#end
-	</select>	
-	<br/>
-
-	<label for="dest_title">#i18n("dest.title")</label>
-	<input type="text" name="dest_title" id="dest_title" value=""/><br/>
+	</select></p>
 	
-	<label for="dest_graph_uri" class="hidden">#i18n("dest.uri")</label>
-	<input type="text" name="dest_graph_uri" id="dest_graph_uri" value=""/><br/>
+
+	<p><label for="dest_title">#i18n("dest.title")</label>
+	<input type="text" name="dest_title" id="dest_title" value=""/></p>
+	
+	<p><label for="dest_graph_uri" class="hidden">#i18n("dest.uri")</label>
+	<input type="text" name="dest_graph_uri" id="dest_graph_uri" value=""/></p>
 	
 	<p>#i18n("uri.translation")</p>
-	<label for="uri_translation_src">#i18n("uritranslation.src")</label>
+	<p><label for="uri_translation_src">#i18n("uritranslation.src")</label>
 	<input type="text" name="uri_translation_src" id="uri_translation_src" value=""/>
-	<a href="#">help</a><br/>
+	<a href="#">help</a></p>
 	
-	<label for="uri_translation_dest">#i18n("uritranslation.dest")</label>
+	<p><label for="uri_translation_dest">#i18n("uritranslation.dest")</label>
 	<input type="text" name="uri_translation_dest" id="uri_translation_dest" value=""/>
-	<a href="#">help</a><br/>
+	<a href="#">help</a></p>
 	
 	<input type="submit" id="source_submit" value="#i18n('submit.label')"/>
 </form>
