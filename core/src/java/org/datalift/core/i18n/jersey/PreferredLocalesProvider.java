@@ -27,6 +27,9 @@ import org.datalift.fwk.util.StringUtils;
  * <code>Accept-Language</code> header if such a request is being
  * processed or from the
  * {@link Locale#getDefault() JVM runtime environment}.
+ * <p>
+ * The {@link PreferredLocales} can be injected in JAX-RS resources or
+ * resource methods using the @{@link Context} annotation.</p>
  *
  * @author lbihanic
  */
