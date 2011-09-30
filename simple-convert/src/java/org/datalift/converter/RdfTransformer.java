@@ -37,10 +37,7 @@ package org.datalift.converter;
 
 import java.net.URI;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 
-import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
@@ -48,7 +45,6 @@ import javax.ws.rs.POST;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
@@ -56,9 +52,7 @@ import javax.ws.rs.core.UriInfo;
 import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 import static javax.ws.rs.core.MediaType.TEXT_HTML;
 
-import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.Project;
-import org.datalift.fwk.project.RdfSource;
 import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.rdf.RdfUtils;
