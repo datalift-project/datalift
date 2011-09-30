@@ -69,4 +69,21 @@ public abstract class BaseRdfEntity implements SupportsRdfId
         this.rdfId.setRdfId(id);
         this.setId(String.valueOf(id));
     }
+
+    //-------------------------------------------------------------------------
+    // Object contract support
+    //-------------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    @Override
+    public String toString() {
+        return String.valueOf(this.getRdfId());
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public int hashCode() {
+        return (this.getRdfId() != null)? this.getRdfId().hashCode():
+                                          System.identityHashCode(this);
+    }
 }

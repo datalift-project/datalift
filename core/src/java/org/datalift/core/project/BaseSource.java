@@ -160,21 +160,4 @@ public abstract class BaseSource extends BaseRdfEntity implements Source
     protected void setId(String id) {
         this.uri = id;
     }
-
-    //-------------------------------------------------------------------------
-    // Object contract support
-    //-------------------------------------------------------------------------
-
-    /** {@inheritDoc} */
-    @Override
-    public String toString() {
-        return this.uri;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public int hashCode() {
-        return (this.uri != null)? this.uri.hashCode():
-                                   System.identityHashCode(this);
-    }
 }
