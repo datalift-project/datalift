@@ -254,7 +254,8 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
 
         try {
             // Populate Velocity context from model data.
-            VelocityContext ctx = new VelocityContext();
+            //VelocityContext ctx = new VelocityContext();
+            Map<String,Object> ctx = new HashMap<String,Object>();
             Object m = viewable.getModel();
             if (m instanceof Map<?,?>) {
                 // Copy all map entries with a string as key.
@@ -311,7 +312,8 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
             }
             // Apply Velocity template, using encoding from in HTTP request.
             Writer w = new OutputStreamWriter(out, this.getCharset());
-            t.merge(ctx, w);
+            log.trace("Merging template {} with context {}", t.getName(), ctx);
+            t.merge(new VelocityContext(ctx), w);
             w.flush();
         }
         catch (Exception e) {
