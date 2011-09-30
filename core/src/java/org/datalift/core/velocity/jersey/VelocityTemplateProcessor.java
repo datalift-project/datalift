@@ -79,6 +79,7 @@ import static org.apache.velocity.runtime.log.Log4JLogChute.*;
 import org.datalift.core.velocity.i18n.I18nDirective;
 import org.datalift.core.velocity.i18n.LoadDirective;
 import org.datalift.fwk.log.Logger;
+import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.security.SecurityContext;
 
 import static org.datalift.fwk.util.StringUtils.join;
@@ -254,7 +255,6 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
 
         try {
             // Populate Velocity context from model data.
-            //VelocityContext ctx = new VelocityContext();
             Map<String,Object> ctx = new HashMap<String,Object>();
             Object m = viewable.getModel();
             if (m instanceof Map<?,?>) {
@@ -271,12 +271,35 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
                 // Single object model (may be null).
                 ctx.put(CTX_MODEL, m);
             }
+            UriInfo uriInfo = this.httpContext.getUriInfo();
+            if (ctx.get(CTX_BASE_URI) == null) {
+                String baseUri = uriInfo.getBaseUri().toString();
+                if (baseUri.endsWith("/")) {
+                    baseUri = baseUri.substring(0, baseUri.length() - 1);
+                }
+                ctx.put(CTX_BASE_URI, baseUri);
+            }
+            log.trace("Merging template {} with context {}", t.getName(), ctx);
+            // Add predefined variables, the JSP way.
+            if (ctx.get(CTX_HTTP_REQUEST) == null) {
+                ctx.put(CTX_HTTP_REQUEST, this.httpContext.getRequest());
+            }
+            if (ctx.get(CTX_HTTP_RESPONSE) == null) {
+                ctx.put(CTX_HTTP_RESPONSE, this.httpContext.getResponse());
+            }
+            if (ctx.get(CTX_URI_INFO) == null) {
+                ctx.put(CTX_URI_INFO, uriInfo);
+            }
+            if (ctx.get(CTX_SECURITY_CONTEXT) == null) {
+                ctx.put(CTX_SECURITY_CONTEXT, SecurityContext.getContext());
+            }
             // Add Velocity tools: escaping, date, link, field...
             ctx.put(CTX_ESCAPE_TOOL, new EscapeTool());
             ctx.put(CTX_LINK_TOOL, new LinkTool());
             if (ctx.get(CTX_DATE_TOOL) == null) {
                 Map<String, Object> config = new HashMap<String, Object>();
-                List<Locale> l = this.httpContext.getRequest().getAcceptableLanguages();
+                List<Locale> l = this.httpContext.getRequest()
+                                                 .getAcceptableLanguages();
                 if ((l != null) && (! l.isEmpty())) {
                     config.put(ToolContext.LOCALE_KEY, l.get(0));
                 }
@@ -285,34 +308,11 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
                 ctx.put(CTX_DATE_TOOL, dateTool);
             }
             if (ctx.get(CTX_FIELD_TOOL) == null) {
-                // TODO: TypeSource???
-                ctx.put(CTX_FIELD_TOOL, new FieldTool().in(org.datalift.fwk.project.Source.SourceType.class));
-            }
-
-            // Add predefined variables, the JSP way.
-            if (ctx.get(CTX_HTTP_REQUEST) == null) {
-                ctx.put(CTX_HTTP_REQUEST, this.httpContext.getRequest());
-            }
-            if (ctx.get(CTX_HTTP_RESPONSE) == null) {
-                ctx.put(CTX_HTTP_RESPONSE, this.httpContext.getResponse());
-            }
-            UriInfo uriInfo = this.httpContext.getUriInfo();
-            if (ctx.get(CTX_URI_INFO) == null) {
-                ctx.put(CTX_URI_INFO, uriInfo);
-            }
-            if (ctx.get(CTX_BASE_URI) == null) {
-                String baseUri = uriInfo.getBaseUri().toString();
-                if (baseUri.endsWith("/")) {
-                    baseUri = baseUri.substring(0, baseUri.length() - 1);
-                }
-                ctx.put(CTX_BASE_URI, baseUri);
-            }
-            if (ctx.get(CTX_SECURITY_CONTEXT) == null) {
-                ctx.put(CTX_SECURITY_CONTEXT, SecurityContext.getContext());
+                // Initialize field tool with the known DataLift source types.
+                ctx.put(CTX_FIELD_TOOL, new FieldTool().in(SourceType.class));
             }
             // Apply Velocity template, using encoding from in HTTP request.
             Writer w = new OutputStreamWriter(out, this.getCharset());
-            log.trace("Merging template {} with context {}", t.getName(), ctx);
             t.merge(new VelocityContext(ctx), w);
             w.flush();
         }
