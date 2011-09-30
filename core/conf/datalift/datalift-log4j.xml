@@ -34,7 +34,7 @@
     <level value="info"/>
   </logger>
   <!-- Apache Velocity template engine and view processor -->
-  <logger name="org.datalift.velocity.jersey">
+  <logger name="org.datalift.core.velocity.jersey">
     <level value="info"/>
   </logger>
   <logger name="org.apache.velocity">
