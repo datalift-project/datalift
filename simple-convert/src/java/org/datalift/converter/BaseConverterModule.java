@@ -52,6 +52,7 @@ import com.sun.jersey.api.view.Viewable;
 import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.MediaTypes;
+import org.datalift.fwk.i18n.PreferredLocales;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectManager;
@@ -163,10 +164,12 @@ public abstract class BaseConverterModule
         UriDesc projectPage = null;
         if (this.findSource(p, false) != null) {
             try {
+                String label = PreferredLocales.get().getBundle(
+                        TechnicalException.BUNDLE_NAME, this).getString(this.getName() + ".module.label");
+
                 projectPage = new UriDesc(
                                     this.getName() + "?project=" + p.getUri(),
-                                    this.accessMethod,
-                                    this.getName() + ".module.label");
+                                    this.accessMethod, label);
             }
             catch (Exception e) {
                 throw new TechnicalException(e);

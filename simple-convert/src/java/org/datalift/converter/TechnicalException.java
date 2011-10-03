@@ -40,6 +40,22 @@ import java.text.MessageFormat;
 
 public class TechnicalException extends org.datalift.fwk.TechnicalException
 {
+    //------------------------------------------------------------------------
+    // Constants
+    //------------------------------------------------------------------------
+
+    protected final static String BUNDLE_NAME;
+
+    //-------------------------------------------------------------------------
+    // Class initializer
+    //-------------------------------------------------------------------------
+
+    static {
+        BUNDLE_NAME = TechnicalException.class.getPackage()
+                                              .getName().replace('.', '/')
+                                                                + "/messages";
+    }
+
     //-------------------------------------------------------------------------
     // Constructors
     //-------------------------------------------------------------------------
@@ -104,5 +120,15 @@ public class TechnicalException extends org.datalift.fwk.TechnicalException
      */
     public TechnicalException(String code, Throwable cause, Object... data) {
         super(code, cause, data);
+    }
+
+    //------------------------------------------------------------------------
+    // TechnicalException interface support
+    //------------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    @Override
+    protected String getMessageBundleName() {
+        return BUNDLE_NAME;
     }
 }
