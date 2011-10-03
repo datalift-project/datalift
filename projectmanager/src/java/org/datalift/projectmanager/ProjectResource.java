@@ -63,6 +63,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
@@ -1169,10 +1170,18 @@ public class ProjectResource
             }
             args.put("current", p);
             args.put("canHandle", modules);
-
-            if (p.getDateModification() != null) {
-                response = response.lastModified(p.getDateModification());
+            // Set page expiry & last modification date to force revalidation.
+            Date lastModified = p.getDateModification();
+            if (lastModified != null) {
+                response = response.lastModified(lastModified)
+                                   .expires(lastModified);
             }
+            // Force page revalidation.
+            CacheControl cc = new CacheControl();
+            cc.setPrivate(true);
+            cc.setMustRevalidate(true);
+            response = response.cacheControl(cc);
+
         }
         return response.entity(this.newViewable("/workspace.vm", args))
                        .type(TEXT_HTML);
