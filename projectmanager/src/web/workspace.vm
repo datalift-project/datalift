@@ -48,9 +48,9 @@
 #foreach( $page in $canHandle )
 #set( $pageUrl = $page.getUrl(${baseUri}) )
 #if( $page.method.name() == "GET" )
-						<li><a href="${pageUrl}" class="button projectmodule_button" id="${page.label}">#i18n("${page.label}")</a></li>
+						<li><a href="${pageUrl}" class="button projectmodule_button">${page.label}</a></li>
 #else
-						<li><form id="${page.label}" method="post" action="${pageUrl}"><input type="submit" class="projectmodule_button" value="#i18n("${page.label}")"/></form></li>
+						<li><form method="post" action="${pageUrl}"><input type="submit" class="projectmodule_button" value="${page.label}"/></form></li>
 #end
 #end
 					</ol>
