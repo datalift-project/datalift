@@ -102,15 +102,23 @@
       <param-name>com.sun.jersey.config.property.WebPageContentRegex</param-name>
       <param-value>(/(images|css|js|(WEB-INF/jsp))/.*)</param-value>
     </init-param>
-    <!-- Support GZip content encoding in requests -->
+    <!-- Install some filters to
+          - Honor GZip accepted encoding in response
+          - Make user's preferred locales globally available
+     -->
     <init-param>
       <param-name>com.sun.jersey.spi.container.ContainerRequestFilters</param-name>
-      <param-value>com.sun.jersey.api.container.filter.GZIPContentEncodingFilter</param-value>
+      <param-value>
+        com.sun.jersey.api.container.filter.GZIPContentEncodingFilter;
+        org.datalift.core.i18n.jersey.PreferredLocalesFilter
+      </param-value>
     </init-param>
-    <!-- Honor GZip accepted encoding in response -->
     <init-param>
       <param-name>com.sun.jersey.spi.container.ContainerResponseFilters</param-name>
-      <param-value>com.sun.jersey.api.container.filter.GZIPContentEncodingFilter</param-value>
+      <param-value>
+        com.sun.jersey.api.container.filter.GZIPContentEncodingFilter;
+        org.datalift.core.i18n.jersey.PreferredLocalesFilter
+      </param-value>
     </init-param>
   </filter>
   <!-- Route all service calls to Jersey -->
