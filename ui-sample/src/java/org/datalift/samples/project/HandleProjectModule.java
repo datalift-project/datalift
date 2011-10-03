@@ -57,7 +57,7 @@ public class HandleProjectModule extends BaseModule implements ProjectModule
     public UriDesc canHandle(Project p) {
         try {
             return new UriDesc(this.getName() + "/java-guy.jpg",
-                               this.getName() + ".module.label");
+                               "Sample Project Module");
         }
         catch (Exception e) {
             log.fatal("Uh?", e);
