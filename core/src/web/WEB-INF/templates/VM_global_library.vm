@@ -19,24 +19,11 @@
 #macro( css_links )
 	<meta http-equiv="content-type" content="text/html;charset=utf-8"/>
 	<link rel="icon" type="image/ico" href="${baseUri}/images/semantic-web.ico"/>
-	<link rel="stylesheet" type="text/css" href="${baseUri}/css/datalift.css"/>
-	<link rel="stylesheet" type="text/css" href="${baseUri}/css/jquery/jquery-ui.css"/>
-	<link rel="stylesheet" type="text/css" href="${baseUri}/css/jquery/jquery.jqGrid.css"/>
+	<link rel="stylesheet" type="text/css" href="${baseUri}/wro/main.css"/>
 #end
 
 #macro( script_links )
-	<!-- JQuery + JQuery UI -->
-	<script language="javascript" src="${baseUri}/js/jquery/jquery.js"></script>
-	<script language="javascript" src="${baseUri}/js/jquery/jquery-ui.js"></script>
-	<!-- Jquery Plugins -->
-	<script language="javascript" src="${baseUri}/js/jquery/jquery.jqGrid.locale-en.js"></script>
-	<script language="javascript" src="${baseUri}/js/jquery/jquery.jqGrid.js"></script>
-	<!-- History Plugins (https://github.com/balupton/history.js) -->
-	<script language="javascript" src="${baseUri}/js/history.js/amplify.store.js"></script>
-	<script language="javascript" src="${baseUri}/js/history.js/history.adapter.jquery.js"></script>
-	<script language="javascript" src="${baseUri}/js/history.js/history.js"></script>
-	<!-- Datalift common javascript -->
-	<script language="javascript" src="${baseUri}/js/common.js"></script>
+	<script language="javascript" src="${baseUri}/wro/main.js"></script>
 #end
 
 #macro( footer )

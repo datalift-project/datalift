@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<groups xmlns="http://www.isdc.ro/wro"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.isdc.ro/wro wro.xsd">
+
+  <group name="main">
+    <!-- JQuery UI -->
+    <js>/js/jquery/jquery.js</js>
+    <js>/js/jquery/jquery-ui.js</js>
+    <!-- JQuery plugins -->
+    <js>/js/jquery/jquery.jqGrid.locale-en.js</js>
+    <js>/js/jquery/jquery.jqGrid.js</js>
+    <!-- History plugin (https://github.com/balupton/history.js) -->
+    <js>/js/history.js/amplify.store.js</js>
+    <js>/js/history.js/history.adapter.jquery.js</js>
+    <js>/js/history.js/history.js</js>
+    <!-- Datalift common functions -->
+    <js>/js/common.js</js>
+
+    <!-- Datalift stylesheet -->
+    <css>/css/datalift.css</css>
+    <css>/css/jquery/jquery-ui.css</css>
+    <!-- JQuery UI & plugins stylesheets -->
+    <css>/css/jquery/jquery.jqGrid.css</css>
+  </group>
+
+</groups>
+

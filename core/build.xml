@@ -302,8 +302,9 @@
    -->
   <!-- Copy default locale resource file -->
   <target name="resource-copy" if="locale.exists">
-    <copy todir="${build.home}/WEB-INF/templates/core">
-      <fileset dir="${web.home}/WEB-INF/templates/core" includes="*_${locale.default}.properties"/>
+    <copy todir="${web-inf.dir}/templates/core">
+      <fileset dir="${web.home}/WEB-INF/templates/core"
+      	  includes="*_${locale.default}.properties"/>
       <mapper type="glob"
               from="*_${locale.default}.properties" to="*.properties"/>
       </copy>
@@ -318,7 +319,7 @@
     </copy>
     <!-- Copy web application static content and context definition -->
     <copy todir="${web-inf.dir}" encoding="UTF-8" preservelastmodified="true">
-      <fileset dir="${conf.home}" includes="web.xml"/>
+      <fileset dir="${conf.home}" includes="web.xml,wro.xml"/>
       <filterset refid="webapp.param.filters"/>
     </copy>
     <!-- Copy application configuration files -->
