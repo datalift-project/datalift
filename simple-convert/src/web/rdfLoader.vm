@@ -13,7 +13,7 @@
 	<h3 class="ui-widget-header dl-widget-header">#i18n("rdfloader.title") - #i18n("project.label") ${it.title}</h3>
 
 	<form id="converter_form" method="post" action="${baseUri}/rdfloader?project=${it.uri}">
-		<p><label for="source_to_select">#i18n("source.to_convert"):</label>
+		<p><label for="source">#i18n("source.to_convert"):</label>
 		<select id="source">
 #foreach( $curSrc in $it.getSources() )
 	#set( $count = 1 )
