@@ -76,7 +76,7 @@
 #end
 		<p><label for="description">#i18n("project.upload_source.description"): </label>
 		<input type="text" id="description" name="description" value="$!esc.html($current.description)"/></p>
-		<p><label for="base_uri">#i18n("project.upload_source.base_uri")</label>
+		<p><label for="base_uri">#i18n("project.upload_source.base_uri"): </label>
 		<input type="text" id="base_uri" name="base_uri" value="$!esc.html($current.source)"/></p>
 		<p><label for="mime_type">#i18n("project.upload_rdf_format"): </label>
 		<select id="mime_type" name="mime_type">
