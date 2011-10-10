@@ -34,7 +34,7 @@
 		$("#source_submit").button();
 		$("#source_submit").attr('disabled', true);
 
-		$("#source").change(function(){
+		$("#source").change(function() {
 			$("#source option:selected").each(function () {
 				if ($(this).attr("name") == "") {
 					$("#converter_form").attr('action', form_base_action);
@@ -46,6 +46,7 @@
 				}
 			});
 		});
+		$("#source").change();
 	});
 </script>
 </body>

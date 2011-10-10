@@ -5,67 +5,62 @@
 #load("csvdirectmapper/resources")
 #load_core_resources
 	<title>#i18n("csvdirectmapper.title") - DataLift</title>
-#header_links
+#css_links
 </head>
 <body>
-<script>
+#banner
+<div class="ui-widget-content converter_main" id="workspace">
+	<h3 class="ui-widget-header dl-widget-header">#i18n("csvdirectmapper.title") - #i18n("project.label") ${project.title}</h3>
+
+	<form id="converter_form" method="post" action="${baseUri}/csvconverter?project=${project.uri}">
+		<p><label for="source">#i18n("source.to_convert")</label>
+		<select name="source" id="source">
+#foreach( $curSrc in $project.getSources() )
+	#set( $count = 1 )
+	#if( $curSrc.getType() == $field.CsvSource )
+		#foreach( $source in $project.getSources() )
+			#if( $source.getType() == $field.TransformedRdfSource && $source.getParent().uri == $curSrc.uri )
+				#set( $count = $count + 1 )
+			#end
+		#end
+			<option class="source_to_select" uri="${curSrc.uri}" name="${curSrc.title}" count="$count">$esc.html($curSrc.title)</option>
+	#end
+#end
+		</select></p>
+
+		<p><label for="dest_title">#i18n("dest.title")</label>
+		<input type="text" name="dest_title" id="dest_title" value=""/></p>
+		<p><label for="dest_graph_uri" class="hidden">#i18n("dest.uri")</label>
+		<input type="text" name="dest_graph_uri" id="dest_graph_uri" value=""/></p>
+
+		<input type="submit" id="source_submit" value="#i18n('submit.label')"/>
+	</form>
+</div>
+
+#script_links
+<script type="text/javascript">
 	var form_base_action = "${baseUri}/csvdirectmapper?project=${project.uri}";
 
 	$(function() {
 		$("#source_submit").button();
-		
+
 		$("#source").change(function(){
-		 	$("#source option:selected").each(function () {
+			$("#source option:selected").each(function () {
 					$("#converter_form").attr("action", form_base_action + "&source=" + $(this).attr("uri"));
 					$("#dest_title").attr("value", $(this).attr('name') + " - (RDF #" + $(this).attr("count") + ")");
-					$("#dest_graph_uri").attr("value", $(this).attr("uri") + "-rdf-" + $(this).attr("count"));	
+					$("#dest_graph_uri").attr("value", $(this).attr("uri") + "-rdf-" + $(this).attr("count"));
 			});
 		});
-		
 		$("#source").change();
 	});
-		
-	
+
 	function successQueryPost() {
-		 window.location = '${project.uri}#source';
+		window.location = '${project.uri}#source';
 	}
-	
+
 	function errorQueryPost() {
-		alert("An error occured while querying the server. Please try again.")
+		alert("#i18n('server.ajax.error')")
 	}
 </script>
-
-<style>
-</style>
-#banner
-<div class="ui-widget-content converter_main" id="workspace">
-<h3 class="ui-widget-header dl-widget-header">CSV DirectMapper - Project ${project.title}</h3>
-
-	<form id="converter_form" method="post" action="${baseUri}/csvconverter?project=${project.uri}">
-	<p><label for="source">#i18n("source.to_convert")</label>
-	<select name="source" id="source">
-#foreach($curSrc in $project.getSources())
-	#set( $count = 1)
-	#if( $curSrc.getType() == $field.CsvSource )
-		#foreach($source in $project.getSources())
-			#if( $source.getType() == $field.TransformedRdfSource && $source.getParent().uri == $curSrc.uri)
-				#set( $count = $count + 1)
-			#end
-		#end
-		<option class="source_to_select" uri="${curSrc.uri}" name="${curSrc.title}" count="$count">$esc.html($curSrc.title)</option>
-	#end
-#end
-	</select></p>
-
-	<p><label for="dest_title">#i18n("dest.title")</label>
-	<input type="text" name="dest_title" id="dest_title" value=""/></p>
-	
-	<p><label for="dest_graph_uri" class="hidden">#i18n("dest.uri")</label>
-	<input type="text" name="dest_graph_uri" id="dest_graph_uri" value=""/></p>
-	
-	<input type="submit" id="source_submit" value="#i18n('submit.label')"/>
-			
-	</form>
-</div>
 </body>
 </html>

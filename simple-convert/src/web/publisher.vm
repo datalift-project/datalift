@@ -33,12 +33,11 @@
 	$(function() {
 		$("#source_submit").button();
 
-		$("#source").change(function(){
+		$("#source").change(function() {
 			$("#source option:selected").each(function () {
-					$("#converter_form").attr('action', form_base_action + "&source=" + $(this).attr('name'));
+				$("#converter_form").attr('action', form_base_action + "&source=" + $(this).attr('name'));
 			});
 		});
-
 		$("#source").change();
 	});
 </script>
