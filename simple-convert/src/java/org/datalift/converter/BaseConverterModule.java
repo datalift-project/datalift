@@ -61,7 +61,6 @@ import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.sparql.SparqlEndpoint;
-import org.datalift.fwk.util.StringUtils;
 
 
 /**
@@ -120,7 +119,7 @@ public abstract class BaseConverterModule
 
     /**
      * Creates a new module instance.
-     * @param  name   the module name.
+     * @param  name          the module name.
      * @param  inputSource   the type of source this module expects
      *                       as input.
      * @param  method        the HTTP method (GET or POST) to access
@@ -231,42 +230,20 @@ public abstract class BaseConverterModule
     }
 
     /**
-     * Retrieves the latest source matching the expected input source
-     * type of the module in the specified project.
-     * @param  p   the project.
+     * Creates a new transformed RDF source and attach it to the
+     * specified project.
+     * @param  p            the owning project.
+     * @param  parent       the parent source object.
+     * @param  name         the new source name.
+     * @param  uri          the new source URI.
      *
-     * @return the latest source.
-     * @throws ObjectNotFoundException if the project does not exist.
+     * @throws IOException if any error occurred creating the source.
      */
-    protected final Source getLastSource(Project p) {
-        Source src = this.findSource(p, true);
-        if (src == null) {
-            throw new ObjectNotFoundException("project.source.not.found",
-                                              p.getUri(), this.inputSource);
-        }
-        return src;
-    }
-
-    protected final String nextSourceName(Project p) {
-        return " (RDF #" + p.getSources().size() + ')';
-    }
-    
-
-    protected final URI newGraphUri(Source parent, String name) {
-        try {
-            return new URI(parent.getUri() + '-' + StringUtils.urlify(name));
-        }
-        catch (Exception e) {
-            throw new TechnicalException(e);
-        }
-    }
-
     protected void addResultSource(Project p, Source parent,
-                                              String name, URI namedGraph)
+                                              String name, URI uri)
                                                             throws IOException {
         p.addSource(this.projectManager.newTransformedRdfSource(
-                                    namedGraph, name, "",
-                                    namedGraph, parent));
+                                                uri, name, null, uri, parent));
         this.projectManager.saveProject(p);
     }
 
