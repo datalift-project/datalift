@@ -28,19 +28,21 @@
 #end
 		</select></p>
 
-		<p><label for="dest_title">#i18n("dest.title")</label>
+		<p><label for="dest_title">#i18n("dest.title"):</label>
 		<input type="text" name="dest_title" id="dest_title" value=""/></p>
 
-		<p><label for="dest_graph_uri" class="hidden">#i18n("dest.uri")</label>
+		<p><label for="dest_graph_uri" class="hidden">#i18n("dest.uri"):</label>
 		<input type="text" name="dest_graph_uri" id="dest_graph_uri" value=""/></p>
 
 		<p>#i18n("uri.translation.title")</p>
-		<p><label for="uri_translation_src">#i18n("uri.translation.src"):</label>
-		<input type="text" name="uri_translation_src" id="uri_translation_src" value=""/>
-		<a href="#">#i18n("help.label")</a></p>
-		<p><label for="uri_translation_dest">#i18n("uri.translation.dest"):</label>
-		<input type="text" name="uri_translation_dest" id="uri_translation_dest" value=""/>
-		<a href="#">#i18n("help.label")</a></p>
+		<ul>
+			<li><label for="uri_translation_src">#i18n("uri.translation.src"):</label>
+			<input type="text" name="uri_translation_src" id="uri_translation_src" value=""/>
+			<a href="#">#i18n("help.label")</a></li>
+			<li><label for="uri_translation_dest">#i18n("uri.translation.dest"):</label>
+			<input type="text" name="uri_translation_dest" id="uri_translation_dest" value=""/>
+			<a href="#">#i18n("help.label")</a></li>
+		</ul>
 
 		<input type="submit" id="source_submit" value="#i18n('submit.label')"/>
 	</form>

@@ -13,7 +13,7 @@
 	<h3 class="ui-widget-header dl-widget-header">#i18n("csvdirectmapper.title") - #i18n("project.label") ${project.title}</h3>
 
 	<form id="converter_form" method="post" action="${baseUri}/csvconverter?project=${project.uri}">
-		<p><label for="source">#i18n("source.to_convert")</label>
+		<p><label for="source">#i18n("source.to_convert"):</label>
 		<select name="source" id="source">
 #foreach( $curSrc in $project.getSources() )
 	#set( $count = 1 )
@@ -28,9 +28,9 @@
 #end
 		</select></p>
 
-		<p><label for="dest_title">#i18n("dest.title")</label>
+		<p><label for="dest_title">#i18n("dest.title"):</label>
 		<input type="text" name="dest_title" id="dest_title" value=""/></p>
-		<p><label for="dest_graph_uri" class="hidden">#i18n("dest.uri")</label>
+		<p><label for="dest_graph_uri" class="hidden">#i18n("dest.uri"):</label>
 		<input type="text" name="dest_graph_uri" id="dest_graph_uri" value=""/></p>
 
 		<input type="submit" id="source_submit" value="#i18n('submit.label')"/>

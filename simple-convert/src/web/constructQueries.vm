@@ -6,25 +6,61 @@
 #load_core_resources
 	<title>#i18n("rdftransformer.title") - DataLift</title>
 #header_links
+	<style type="text/css">
+.construct_query { display:block; width:400px; }
+.main_frame { margin:auto; }
+	</style>
 </head>
 <body>
-<script>
+#banner
+	<div class="ui-widget-content" id="workspace">
+		<h3 class="ui-widget-header dl-widget-header">#i18n("rdftransformer.title") - #i18n("project.label") ${it.title}</h3>
+		<form method="post" id="converter_form" action="">
+			<p><label for="source_to_select">#i18n("source.to_convert"):</label>
+			<select id="source">
+#foreach( $curSrc in $it.getSources() )
+	#set( $count = 1 )
+	#if( $curSrc.getType() == $field.TransformedRdfSource )
+		#foreach($source in $project.getSources())
+			#if( $source.getType() == $field.TransformedRdfSource && $source.getParent().uri == $curSrc.uri)
+				#set( $count = $count + 1)
+			#end
+		#end
+				<option uri="${curSrc.uri}" name="${curSrc.title}" count="$count">$esc.html($curSrc.title)</option>
+	#end
+#end
+			</select></p>
+
+			<p><label for="dest_title">#i18n("dest.title"):</label>
+			<input type="text" name="dest_title" id="dest_title" value=""/></p>
+
+			<p><label for="dest_graph_uri" class="hidden">#i18n("dest.uri"):</label>
+			<input type="text" name="dest_graph_uri" id="dest_graph_uri" value=""/></p>
+
+			<p><label for="query[]">#i18n("construct.query.label"):</label><br />
+			<textarea name="query[]" class="construct_query" style="width:600px; height:150px;"></textarea>
+			<input type="button" id="add_query" value="#i18n("add.label")"/></p>
+
+			<input type="submit" id="queries_submit" value="#i18n("submit.label")"/>
+		</form>
+	</div>
+
+#script_links
+<script type="text/javascript">
 	var form_base_action = "${baseUri}/rdftransformer?project=${it.uri}";
-	
+
 	$(function() {
 		$("#queries_submit").button();
-		$("#add_query").button();		
-		
-		
+		$("#add_query").button();
+
 		$("#add_query").click(function(){
 			var firstQuery = $("textarea[name='query[]']");
-			if (typeof firstQuery == 'undefined')
-				return false;
+			if (typeof firstQuery == 'undefined') return false;
 			$("textarea[name='query[]']")
 				.clone()
 				.insertAfter("textarea[name='query[]']");
 		});
-		
+
 		$("#source").change(function(){
 		 	$("#source option:selected").each(function () {
 				$("#converter_form").attr('action', form_base_action + "&source=" + $(this).attr('uri'));
@@ -32,59 +68,16 @@
 				$("#dest_graph_uri").attr("value", $(this).attr("uri") + "-rdf-" + $(this).attr("count"));
 		 	});
 		});
-	
 		$("#source").change();
-
 	});
-	
+
 	function successQueryPost() {
 		 window.location = '${project.uri}#source';
 	}
 
 	function errorQueryPost() {
-		alert("An error occured while querying the server. Please try again.")
+		alert("#i18n('server.ajax.error')")
 	}
 </script>
-
-<style>
-.construct_query {
-	display:block;
-	width:400px;
-.main_frame {
-	margin:auto;
-}
-</style>
-
-#banner
-	<div class="ui-widget-content" id="workspace">
-	<h3 class="ui-widget-header dl-widget-header">#i18n("rdftransformer.title") - Project ${it.title}</h3>
-		<form method="post" id="converter_form" action="">
-			<p><label for="source_to_select">#i18n("source.to_convert")</label>
-			<select id="source">
-			#foreach($curSrc in $it.getSources())
-				#set( $count = 1)
-				#if( $curSrc.getType() == $field.TransformedRdfSource )
-					#foreach($source in $project.getSources())
-						#if( $source.getType() == $field.TransformedRdfSource && $source.getParent().uri == $curSrc.uri)
-							#set( $count = $count + 1)
-						#end
-					#end
-					<option uri="${curSrc.uri}" name="${curSrc.title}" count="$count">$esc.html($curSrc.title)</option>
-				#end
-			#end
-			</select></p>
-			
-			<p><label for="dest_title">#i18n("dest.title")</label>
-			<input type="text" name="dest_title" id="dest_title" value=""/></p>
-	
-			<p><label for="dest_graph_uri" class="hidden">#i18n("dest.uri")</label>
-			<input type="text" name="dest_graph_uri" id="dest_graph_uri" value=""/></p>
-	
-			<p><label for="query[]">#i18n("construct.query.label"): </label><br />
-			<textarea name="query[]" class="construct_query" style="width:600px; height:150px;"></textarea></p>
-			<input type="button" id="add_query" value="#i18n("add.label")"/>
-			<input type="submit" id="queries_submit" value="#i18n("submit.label")"/>
-		</form>
-	</div>
 </body>
 </html>
