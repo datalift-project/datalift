@@ -44,10 +44,13 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
+import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 
 import com.sun.jersey.api.NotFoundException;
 import com.sun.jersey.api.view.Viewable;
+
+import static javax.ws.rs.core.MediaType.TEXT_HTML;
 
 import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
@@ -58,6 +61,7 @@ import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectManager;
 import org.datalift.fwk.project.ProjectModule;
 import org.datalift.fwk.project.Source;
+import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.sparql.SparqlEndpoint;
@@ -232,19 +236,23 @@ public abstract class BaseConverterModule
     /**
      * Creates a new transformed RDF source and attach it to the
      * specified project.
-     * @param  p            the owning project.
-     * @param  parent       the parent source object.
-     * @param  name         the new source name.
-     * @param  uri          the new source URI.
+     * @param  p        the owning project.
+     * @param  parent   the parent source object.
+     * @param  name     the new source name.
+     * @param  uri      the new source URI.
      *
+     * @return the newly created transformed RDF source.
      * @throws IOException if any error occurred creating the source.
      */
-    protected void addResultSource(Project p, Source parent,
-                                              String name, URI uri)
+    protected TransformedRdfSource addResultSource(Project p, Source parent,
+                                                   String name, URI uri)
                                                             throws IOException {
-        p.addSource(this.projectManager.newTransformedRdfSource(
-                                                uri, name, null, uri, parent));
+        TransformedRdfSource newSrc =
+                        this.projectManager.newTransformedRdfSource(
+                                                uri, name, null, uri, parent);
+        p.addSource(newSrc);
         this.projectManager.saveProject(p);
+        return newSrc;
     }
 
     /**
@@ -260,6 +268,28 @@ public abstract class BaseConverterModule
      */
     protected final Viewable newViewable(String templateName, Object it) {
         return new Viewable("/" + this.getName() + templateName, it);
+    }
+
+    /**
+     * Redirects the user's browser to the project main page, notifying
+     * of the creation of the specified source, if any.
+     * @param  p     the project to redirect the browser to.
+     * @param  src   the (optional) source the creation of which shall
+     *               be reported.
+     *
+     * @return an HTTP response redirecting to the project main page.
+     * @throws TechnicalException if any error occurred.
+     */
+    protected final ResponseBuilder redirectTo(Project p, Source src) {
+        try {
+            String targetUrl = p.getUri() + "#source";
+            return Response.created(new URI(src.getUri()))
+                           .entity(this.newViewable("/redirect.vm", targetUrl))
+                           .type(TEXT_HTML);
+        }
+        catch (Exception e) {
+            throw new TechnicalException(e);
+        }
     }
 
     /**

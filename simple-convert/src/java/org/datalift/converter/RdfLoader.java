@@ -41,23 +41,18 @@ import java.util.regex.Pattern;
 
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
-
-import static javax.ws.rs.core.HttpHeaders.ACCEPT;
-import static javax.ws.rs.core.MediaType.TEXT_HTML;
 
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.RdfFileSource;
+import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.util.RegexUriMapper;
+import org.datalift.fwk.util.StringUtils;
 import org.datalift.fwk.util.UriMapper;
 
 
@@ -82,54 +77,52 @@ public class RdfLoader extends BaseConverterModule
     //-------------------------------------------------------------------------
 
     @GET
-    public Response indexPa(@QueryParam("project") URI projectId,
-                                   @Context UriInfo uriInfo,
-                                   @Context Request request,
-                                   @HeaderParam(ACCEPT) String acceptHdr)
-                                                throws WebApplicationException {
-        Response response = null;
+    public Response getIndexPage(@QueryParam("project") URI projectId) {
         // Retrieve project.
         Project p = this.getProject(projectId);
-        response = Response.ok(
-                    this.newViewable("/rdfLoader.vm", p)).build();
+        return Response.ok(this.newViewable("/rdfLoader.vm", p)).build();
+    }
+
+    @POST
+    public Response loadSourceData(
+                    @QueryParam("project") URI projectId,
+                    @QueryParam("source") URI sourceId,
+                    @FormParam("dest_title") String destTitle,
+                    @FormParam("dest_graph_uri") URI targetGraph,
+                    @FormParam("uri_translation_src") String uriPattern,
+                    @FormParam("uri_translation_dest") String uriReplacement)
+                                                throws WebApplicationException {
+        Response response = null;
+        try {
+            // Retrieve project.
+            Project p = this.getProject(projectId);
+            // Check for URI mapping.
+            UriMapper mapper = null;
+            if (StringUtils.isSet(uriPattern)) {
+                try {
+                    mapper = new RegexUriMapper(Pattern.compile(uriPattern),
+                                                uriReplacement);
+                }
+                catch (IllegalArgumentException e) {
+                    this.throwInvalidParamError(
+                                            "uri_translation_src", uriPattern);
+                }
+            }
+            // Load input source.
+            RdfFileSource in = (RdfFileSource) p.getSource(sourceId);
+            RdfUtils.upload(new File(configuration.getPublicStorage(),
+                                     in.getFilePath()),
+                            RdfUtils.parseMimeType(in.getMimeType()),
+                            this.internalRepository, targetGraph,
+                            mapper, in.getSource());
+            // Register new transformed RDF source.
+            Source out = this.addResultSource(p, in, destTitle, targetGraph);
+            // Display generated triples.
+            response = this.redirectTo(p, out).build();
+        }
+        catch (Exception e) {
+            this.handleInternalError(e);
+        }
         return response;
     }
-    
-    @POST
-    public Response publishProject(@QueryParam("project") URI projectId,
-    						@QueryParam("source") URI sourceId,
-    						@FormParam("dest_title") String destTitle,
-                            @FormParam("dest_graph_uri") URI targetGraph,
-                            @FormParam("uri_translation_src") String uriTranslationSrc,
-                            @FormParam("uri_translation_dest") String uriTranslationDest,
-    						@Context UriInfo uriInfo,
-    						@Context Request request,
-    						@HeaderParam(ACCEPT) String acceptHdr)
-                         		throws WebApplicationException {
-    	Response response = null;
-		// Retrieve project.
-		Project p = this.getProject(projectId);
-		try {
-			RegexUriMapper mapper = new RegexUriMapper(Pattern.compile(uriTranslationSrc), uriTranslationDest);
-			
-			// Load input source.
-			RdfFileSource src = (RdfFileSource) p.getSource(sourceId);
-			
-			RdfUtils.upload(new File(configuration.getPublicStorage() + "/" + src.getFilePath()), 
-					RdfUtils.parseMimeType(src.getMimeType()), 
-					this.internalRepository, targetGraph, 
-					(UriMapper)mapper, src.getSource());
-			// Register new transformed RDF source.
-			this.addResultSource(p, src, destTitle, targetGraph);
-			 String uri = projectId.toString() + "#source";
-	            response = Response.created(projectId)
-	                               .entity(this.newViewable("/redirect.vm", uri))
-	                               .type(TEXT_HTML)
-	                               .build();
-		}
-		catch (Exception e) {
-			this.handleInternalError(e);
-		}
-		return response;
-	}
 }

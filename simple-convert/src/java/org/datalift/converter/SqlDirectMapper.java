@@ -36,6 +36,12 @@ package org.datalift.converter;
 
 
 import java.net.URI;
+import java.sql.Date;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.util.GregorianCalendar;
+
+import static java.util.GregorianCalendar.*;
 
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -43,44 +49,60 @@ import javax.ws.rs.POST;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
+import javax.xml.datatype.DatatypeFactory;
 
 import org.openrdf.model.Literal;
 import org.openrdf.model.ValueFactory;
 import org.openrdf.repository.RepositoryConnection;
 
-import org.datalift.fwk.project.CsvSource;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectModule;
 import org.datalift.fwk.project.Row;
 import org.datalift.fwk.project.Source;
+import org.datalift.fwk.project.SqlSource;
 import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.util.StringUtils;
 
 
 /**
- * A {@link ProjectModule project module} that performs CSV to RDF
+ * A {@link ProjectModule project module} that performs SQL to RDF
  * conversion using
  * <a href="http://www.w3.org/TR/2011/WD-rdb-direct-mapping-20110324/">RDF
  * Direct Mapping</a> principles.
  *
  * @author lbihanic
  */
-public class CsvDirectMapper extends BaseConverterModule
+public class SqlDirectMapper extends BaseConverterModule
 {
     //-------------------------------------------------------------------------
     // Constants
     //-------------------------------------------------------------------------
 
-    private final static String MODULE_NAME = "csvdirectmapper";
+    private final static String MODULE_NAME = "sqldirectmapper";
+
+    //-------------------------------------------------------------------------
+    // Class members
+    //-------------------------------------------------------------------------
+
+    private final static DatatypeFactory dtFactory;
+
+    static {
+        try {
+            dtFactory = DatatypeFactory.newInstance();
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     //-------------------------------------------------------------------------
     // Constructors
     //-------------------------------------------------------------------------
 
     /** Default constructor. */
-    public CsvDirectMapper() {
-        super(MODULE_NAME, SourceType.CsvSource);
+    public SqlDirectMapper() {
+        super(MODULE_NAME, SourceType.SqlSource);
     }
 
     //-------------------------------------------------------------------------
@@ -91,7 +113,7 @@ public class CsvDirectMapper extends BaseConverterModule
     public Response getIndexPage(@QueryParam("project") URI projectId) {
         // Retrieve project.
         Project p = this.getProject(projectId);
-        return Response.ok(this.newViewable("/csvDirectMapper.vm", p)).build();
+        return Response.ok(this.newViewable("/sqlDirectMapper.vm", p)).build();
     }
 
     @POST
@@ -105,9 +127,9 @@ public class CsvDirectMapper extends BaseConverterModule
             // Retrieve project.
             Project p = this.getProject(projectId);
             // Load input source.
-            CsvSource in = (CsvSource)p.getSource(sourceId);
+            SqlSource in = (SqlSource)p.getSource(sourceId);
             // Convert CSV data and load generated RDF triples.
-            this.convert(in, this.internalRepository, targetGraph);
+            this.convert(in, null, this.internalRepository, targetGraph);
             // Register new transformed RDF source.
             Source out = this.addResultSource(p, in, destTitle, targetGraph);
             // Display generated triples.
@@ -123,7 +145,8 @@ public class CsvDirectMapper extends BaseConverterModule
     // Specific implementation
     //-------------------------------------------------------------------------
 
-    private void convert(CsvSource src, Repository target, URI targetGraph) {
+    private void convert(SqlSource src, String keyColumn,
+                                        Repository target, URI targetGraph) {
         final RepositoryConnection cnx = target.newConnection();
         try {
             final ValueFactory valueFactory = cnx.getValueFactory();
@@ -143,21 +166,26 @@ public class CsvDirectMapper extends BaseConverterModule
             org.openrdf.model.URI[] predicates = new org.openrdf.model.URI[max];
             int i = 0;
             for (String s : src.getColumnNames()) {
-                predicates[i++] = valueFactory.createURI(
+                if (! keyColumn.equals(s)) {
+                    predicates[i] = valueFactory.createURI(
                                             baseUri + StringUtils.urlify(s));
+                }
+                i++;
             }
             // Load triples
             i = 0;
-            for (Row<String> row : src) {
+            for (Row<Object> row : src) {
+                String key = (keyColumn != null)? row.getString(keyColumn):
+                                                  String.valueOf(i);
                 org.openrdf.model.URI subject =
-                                valueFactory.createURI(baseUri + i); // + "#_";
-                int l = Math.min(row.size(), max);
-                for (int j=0; j<l; j++) {
-                    String v = row.get(j);
-                    if (StringUtils.isSet(v)) {
+                            valueFactory.createURI(baseUri + key); // + "#_";
+
+                for (int j=0; j<max; j++) {
+                    Object o = row.get(j);
+                    if ((o != null) && (predicates[j] != null)) {
                         cnx.add(valueFactory.createStatement(
-                                        subject, predicates[j],
-                                        this.mapValue(v, valueFactory)),
+                                            subject, predicates[j],
+                                            this.mapValue(o, valueFactory)),
                                 ctx);
                     }
                     // Else: ignore cell.
@@ -174,28 +202,65 @@ public class CsvDirectMapper extends BaseConverterModule
         }
     }
 
-    private Literal mapValue(String s, ValueFactory valueFactory) {
+    private Literal mapValue(Object o, ValueFactory valueFactory) {
         Literal v = null;
-        s = s.trim();
-        if ((s.indexOf('.') != -1) || (s.indexOf(',') != -1)) {
-            // Try double.
-            try {
-                v = valueFactory.createLiteral(
-                                    Double.parseDouble(s.replace(',', '.')));
-            }
-            catch (Exception e) { /* Ignore... */ }
+
+        if (o instanceof String) {
+            v = valueFactory.createLiteral(o.toString());
         }
-        if (v == null) {
-            // Try integer.
-            try {
-                v = valueFactory.createLiteral(Long.parseLong(s));
-            }
-            catch (Exception e) { /* Ignore... */ }
+        else if (o instanceof Boolean) {
+            v = valueFactory.createLiteral(((Boolean)o).booleanValue());
         }
-        if (v == null) {
-            // Assume string literal.
-            v = valueFactory.createLiteral(s);
+        else if (o instanceof Byte) {
+            v = valueFactory.createLiteral(((Byte)o).byteValue());
+        }
+        else if ((o instanceof Double) || (o instanceof Float)) {
+            v = valueFactory.createLiteral(((Number)o).doubleValue());
+        }
+        else if ((o instanceof Integer) || (o instanceof Short)) {
+            v = valueFactory.createLiteral(((Number)o).intValue());
+        }
+        else if (o instanceof Long) {
+            v = valueFactory.createLiteral(((Long)o).longValue());
+        }
+        else if (o instanceof Date) {
+            GregorianCalendar c = new GregorianCalendar();
+            c.setTimeInMillis(((Date)o).getTime());
+
+            v = valueFactory.createLiteral(
+                    dtFactory.newXMLGregorianCalendarDate(this.getYear(c),
+                                        c.get(MONTH) + 1, c.get(DAY_OF_MONTH),
+                                        this.getTimeZoneOffsetInMinutes(c)));
+        }
+        else if (o instanceof Time) {
+            GregorianCalendar c = new GregorianCalendar();
+            c.setTimeInMillis(((Time)o).getTime());
+
+            v = valueFactory.createLiteral(
+                    dtFactory.newXMLGregorianCalendarTime(
+                                        c.get(HOUR_OF_DAY), c.get(MINUTE),
+                                        c.get(SECOND), c.get(MILLISECOND),
+                                        this.getTimeZoneOffsetInMinutes(c)));
+        }
+        else if (o instanceof Timestamp) {
+            GregorianCalendar c = new GregorianCalendar();
+            c.setTimeInMillis(((Timestamp)o).getTime());
+
+            v = valueFactory.createLiteral(
+                                        dtFactory.newXMLGregorianCalendar(c));
         }
         return v;
+    }
+
+    private final int getYear(GregorianCalendar c) {
+        int year = c.get(YEAR);
+        if (c.get(ERA) == BC) {
+            year = -year;
+        }
+        return year;
+    }
+
+    private final int getTimeZoneOffsetInMinutes(GregorianCalendar c) {
+        return (c.get(ZONE_OFFSET) + c.get(DST_OFFSET)) / (60*1000);
     }
 }

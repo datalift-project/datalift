@@ -79,10 +79,7 @@ public class SimplePublisher extends BaseConverterModule
     //-------------------------------------------------------------------------
 
     @GET
-    public Response getIndexPage(@QueryParam("project") URI projectId,
-                                 @Context UriInfo uriInfo,
-                                 @Context Request request,
-                                 @HeaderParam(ACCEPT) String acceptHdr) {
+    public Response getIndexPage(@QueryParam("project") URI projectId) {
         // Retrieve project.
         Project p = this.getProject(projectId);
         return Response.ok(this.newViewable("/publisher.vm", p))
@@ -101,12 +98,12 @@ public class SimplePublisher extends BaseConverterModule
             // Retrieve project.
             Project p = this.getProject(projectId);
             // Load input source.
-            TransformedRdfSource src =
+            TransformedRdfSource in =
                                     (TransformedRdfSource)p.getSource(sourceId);
             // Get the source (CSV, RDF/XML, database...) at the origin of the
             // transformations and use its name as target named graph.
             Source origin = null;
-            TransformedRdfSource current = src;
+            TransformedRdfSource current = in;
             while (current != null) {
                 origin = current.getParent();
                 current = (origin instanceof TransformedRdfSource)?
@@ -117,7 +114,7 @@ public class SimplePublisher extends BaseConverterModule
             // Publish input source triples in public repository.
             List<String> constructs = Arrays.asList(
                             "CONSTRUCT { ?s ?p ?o . } WHERE { GRAPH <"
-                                + src.getTargetGraph() + "> { ?s ?p ?o . } }");
+                                + in.getTargetGraph() + "> { ?s ?p ?o . } }");
             RdfUtils.convert(this.internalRepository, constructs,
                          this.configuration.getDataRepository(), targetGraph);
             // Display generated triples.

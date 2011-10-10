@@ -40,19 +40,13 @@ import java.util.List;
 
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
-
-import static javax.ws.rs.core.HttpHeaders.ACCEPT;
-import static javax.ws.rs.core.MediaType.TEXT_HTML;
 
 import org.datalift.fwk.project.Project;
+import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.rdf.RdfUtils;
@@ -79,20 +73,11 @@ public class RdfTransformer extends BaseConverterModule
     //-------------------------------------------------------------------------
     
     @GET
-    public Response getIndexPage(@QueryParam("project") URI projectId,
-                                 @Context UriInfo uriInfo)
-                                                throws WebApplicationException {
-        Response response = null;
+    public Response getIndexPage(@QueryParam("project") URI projectId) {
         // Retrieve project.
         Project p = this.getProject(projectId);
-            try {
-                response = Response.ok(
-                        this.newViewable("/constructQueries.vm", p)).build();
-            }
-            catch (Exception e) {
-                this.handleInternalError(e);
-            }
-        return response;
+        return Response.ok(this.newViewable("/constructQueries.vm", p))
+                       .build();
     }
 
     @POST
@@ -100,10 +85,7 @@ public class RdfTransformer extends BaseConverterModule
                                      @QueryParam("source") URI sourceId,
                                      @FormParam("dest_title") String destTitle,
                                      @FormParam("dest_graph_uri") URI targetGraph,
-                                     @FormParam("query[]") List<String> queries,
-                                     @Context UriInfo uriInfo,
-                                     @Context Request request,
-                                     @HeaderParam(ACCEPT) String acceptHdr)
+                                     @FormParam("query[]") List<String> queries)
                                                 throws WebApplicationException {
         Response response = null;
         try {
@@ -113,17 +95,14 @@ public class RdfTransformer extends BaseConverterModule
             // Retrieve project.
             Project p = this.getProject(projectId);
             // Load input source.
-            TransformedRdfSource src =
+            TransformedRdfSource in =
                                 (TransformedRdfSource)p.getSource(sourceId);
             RdfUtils.convert(this.internalRepository, queries,
                              this.internalRepository, targetGraph);
             // Register new transformed RDF source.
-            this.addResultSource(p, src, destTitle, targetGraph);
-            String uri = projectId + "#source";
-            response = Response.created(sourceId)
-                               .entity(this.newViewable("/redirect.vm", uri))
-                               .type(TEXT_HTML)
-                               .build();
+            Source out = this.addResultSource(p, in, destTitle, targetGraph);
+            // Display generated triples.
+            response = this.redirectTo(p, out).build();
         }
         catch (Exception e) {
             this.handleInternalError(e);
