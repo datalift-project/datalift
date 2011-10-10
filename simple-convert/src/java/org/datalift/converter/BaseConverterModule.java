@@ -73,6 +73,13 @@ public abstract class BaseConverterModule
                                 extends BaseModule implements ProjectModule
 {
     //-------------------------------------------------------------------------
+    // Constants
+    //-------------------------------------------------------------------------
+
+    /** Base name of the resource bundle for converter GUI. */
+    protected final static String GUI_RESOURCES_BUNDLE = "resources";
+
+    //-------------------------------------------------------------------------
     // Class members
     //-------------------------------------------------------------------------
 
@@ -164,8 +171,9 @@ public abstract class BaseConverterModule
         UriDesc projectPage = null;
         if (this.findSource(p, false) != null) {
             try {
-                String label = PreferredLocales.get().getBundle(
-                        TechnicalException.BUNDLE_NAME, this).getString(this.getName() + ".module.label");
+                String label = PreferredLocales.get()
+                                .getBundle(GUI_RESOURCES_BUNDLE, this)
+                                .getString(this.getName() + ".module.label");
 
                 projectPage = new UriDesc(
                                     this.getName() + "?project=" + p.getUri(),
