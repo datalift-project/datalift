@@ -80,6 +80,8 @@ import com.sun.jersey.api.view.Viewable;
 import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.FormDataParam;
 
+import static javax.ws.rs.core.MediaType.TEXT_HTML;
+
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.MediaTypes;
 import org.datalift.fwk.ResourceResolver;
@@ -114,6 +116,22 @@ import static org.datalift.fwk.util.StringUtils.*;
  */
 public class ProjectResource
 {
+    //-------------------------------------------------------------------------
+    // Project page tabs enumeration
+    //-------------------------------------------------------------------------
+
+    public enum ProjectTab {
+        Description     ("description"),
+        Sources         ("source"),
+        Ontologies      ("ontology");
+
+        public final String anchor;
+
+        ProjectTab(String id) {
+            this.anchor = "#" + id;
+        }
+    }
+
     //-------------------------------------------------------------------------
     // Class members
     //-------------------------------------------------------------------------
@@ -176,21 +194,19 @@ public class ProjectResource
                                 @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
         Response response = null;
-        // Check that project is unique.
+        // Check that project does not yet exist.
         URI projectId = this.newProjectId(uriInfo.getBaseUri(), title);
         if (this.findProject(projectId) == null) {
-            // Create new project.
-            License l = License.valueOf(license);
-            Project p = this.projectManager.newProject(projectId, title,
-                                                       description, l.uri);
-            // Persist project to RDF store.
             try {
+                // Create new project.
+                License l = License.valueOf(license);
+                Project p = this.projectManager.newProject(projectId, title,
+                                                           description, l.uri);
+                // Persist project to RDF store.
                 this.projectManager.saveProject(p);
-                String uri = projectId.toString();
-                response = Response.created(projectId)
-                                   .entity(this.newViewable("/redirect.vm", uri))
-                                   .type(TEXT_HTML)
-                                   .build();
+                // Notify user of successful creation, redirecting HTML clients
+                // (browsers) to the project page.
+                response = this.created(p, null, null).build();
             }
             catch (Exception e) {
                 this.handleInternalError(e, "Failed to persist project");
@@ -240,10 +256,14 @@ public class ProjectResource
         try {
             Map<String, Object> args = new TreeMap<String, Object>();
             if (id != null) {
+                // Retrieve project.
                 URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
                 args.put("it", this.loadProject(projectUri));
             }
+            // Else: new project.
+
             args.put("licenses", License.values());
+            // Display project modification page.
             response = Response.ok(
                         this.newViewable("/workspaceModifyProject.vm", args),
                         TEXT_HTML).build();
@@ -307,7 +327,7 @@ public class ProjectResource
                 if (modified) {
                     this.projectManager.saveProject(p);
                 }
-                response = Response.seeOther(projectUri).build();
+                response = this.redirect(p, null).build();
             }
             catch (Exception e) {
                 this.handleInternalError(e, "Failed to update project");
@@ -456,7 +476,7 @@ public class ProjectResource
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
             Project p = this.loadProject(projectUri);
 
-            // Search for requested source in project
+            // Search for requested source in project.
             Source src = p.getSource(
                 new URL(projectUri + this.getRelativeSourceId(srcId)).toURI());
             if (src == null) {
@@ -480,14 +500,15 @@ public class ProjectResource
     @POST
     @Path("{id}/csvupload")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    public Response csvUpload(
-            @PathParam("id") String id,
-            @FormDataParam("description") String description,
-            @FormDataParam("source") InputStream file,
-            @FormDataParam("source") FormDataContentDisposition fileDisposition,
-            @FormDataParam("separator") String separator,
-            @FormDataParam("title_row") String titleRow,
-            @Context UriInfo uriInfo) throws WebApplicationException {
+    public Response csvUpload(@PathParam("id") String projectId,
+                              @FormDataParam("description") String description,
+                              @FormDataParam("source") InputStream file,
+                              @FormDataParam("source")
+                              FormDataContentDisposition fileDisposition,
+                              @FormDataParam("separator") String separator,
+                              @FormDataParam("title_row") String titleRow,
+                              @Context UriInfo uriInfo)
+                                                throws WebApplicationException {
         if (file == null) {
             this.throwInvalidParamError("source", null);
         }
@@ -498,25 +519,25 @@ public class ProjectResource
 
         String fileName = fileDisposition.getFileName();
         try {
-            URI projectUri  = this.newProjectId(uriInfo.getBaseUri(), id);
-            URI sourceUri   = new URI(projectUri.getScheme(), null,
+            // Build object URIs from request path.
+            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
+            URI sourceUri = new URI(projectUri.getScheme(), null,
                                     projectUri.getHost(), projectUri.getPort(),
                                     projectUri.getPath()
                                         + this.getRelativeSourceId(fileName),
                                     null, null);
+            // Retrieve project.
             Project p = this.loadProject(projectUri);
-
-            // Save new source to public project storage
-            String filePath = this.getProjectFilePath(id, fileName);
+            // Save new source data to public project storage.
+            String filePath = this.getProjectFilePath(projectId, fileName);
             File storagePath = this.getFileStorage(filePath);
             fileCopy(file, storagePath);
 
             Separator sep = Separator.valueOf(separator);
             boolean hasTitleRow = ((titleRow != null) &&
                                    (titleRow.toLowerCase().equals("on")));
-
-            // Initialize new source
-            CsvSource src = this.projectManager.newCsvSource(sourceUri,
+            // Initialize new source.
+            CsvSource src = this.projectManager.newCsvSource(p, sourceUri,
                                                 fileName, description, filePath,
                                                 sep.getValue(), hasTitleRow);
             // Iterate on source content to validate uploaded file.
@@ -531,16 +552,11 @@ public class ProjectResource
             finally {
                 i.close();
             }
-            // Add new source to persistent project
-            p.addSource(src);
+            // Persist new source.
             this.projectManager.saveProject(p);
-
-            String redirectUrl = projectUri.toString() + "#source";
-            response = Response.created(sourceUri)
-                               .entity(this.newViewable("/redirect.vm",
-                                                        redirectUrl))
-                               .type(TEXT_HTML)
-                               .build();
+            // Notify user of successful creation, redirecting HTML clients
+            // (browsers) to the source tab of the project page.
+            response = this.created(p, sourceUri, ProjectTab.Sources).build();
         }
         catch (IOException e) {
             this.throwInvalidParamError(fileName, e.getLocalizedMessage());
@@ -556,12 +572,12 @@ public class ProjectResource
     @Path("{id}/csvuploadModify")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     public Response csvUploadModify(
-                        @PathParam("id") String id,
-                        @FormDataParam("description") String description,
-                        @FormDataParam("separator") String separator,
-                        @FormDataParam("title_row") String titleRow,
-                        @FormDataParam("current_source") URI currentSourceUri,
-                        @Context UriInfo uriInfo)
+                            @PathParam("id") String projectId,
+                            @FormDataParam("current_source") URI sourceUri,
+                            @FormDataParam("description") String description,
+                            @FormDataParam("separator") String separator,
+                            @FormDataParam("title_row") String titleRow,
+                            @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
         if (!isSet(separator)) {
             this.throwInvalidParamError("separator", separator);
@@ -569,23 +585,24 @@ public class ProjectResource
         Response response = null;
 
         try {
-            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
-            Project p = this.loadProject(projectUri);
-            Source s = p.getSource(currentSourceUri);
+            // Retrieve source.
+            CsvSource s = this.loadSource(CsvSource.class, sourceUri);
+            // Update source data.
+            s.setDescription(description);
+            s.setSeparator(separator);
             boolean hasTitleRow = ((titleRow != null) &&
                                    (titleRow.toLowerCase().equals("on")));
-            ((CsvSource)s).setSeparator(separator);
-            ((CsvSource)s).setTitleRow(hasTitleRow);
+            s.setTitleRow(hasTitleRow);
+            // Save updated source.
+            Project p = s.getProject();
             this.projectManager.saveProject(p);
-            String redirectUrl = projectUri.toString() + "#source";
-            response = Response.ok(currentSourceUri)
-                               .entity(this.newViewable("/redirect.vm",
-                                                        redirectUrl))
-                               .type(TEXT_HTML).build();
+            // Notify user of successful update, redirecting HTML clients
+            // (browsers) to the source tab of the project page.
+            response = this.redirect(p, ProjectTab.Sources).build();
         }
         catch (Exception e) {
             this.handleInternalError(e, "Could not modify CSV source {}",
-                                        currentSourceUri);
+                                        sourceUri);
         }
         return response;
     }
@@ -593,14 +610,14 @@ public class ProjectResource
     @POST
     @Path("{id}/rdfupload")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    public Response rdfUpload(
-            @PathParam("id") String id,
-            @Context UriInfo uriInfo,
-            @FormDataParam("description") String description,
-            @FormDataParam("source") InputStream file,
-            @FormDataParam("base_uri") URI	baseUri,
-            @FormDataParam("source") FormDataContentDisposition fileDisposition,
-            @FormDataParam("mime_type") String mimeType)
+    public Response rdfUpload(@PathParam("id") String projectId,
+                              @FormDataParam("description") String description,
+                              @FormDataParam("base_uri") URI baseUri,
+                              @FormDataParam("source") InputStream file,
+                              @FormDataParam("source")
+                              FormDataContentDisposition fileDisposition,
+                              @FormDataParam("mime_type") String mimeType,
+                              @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
         if (file == null) {
             this.throwInvalidParamError("source", null);
@@ -608,22 +625,23 @@ public class ProjectResource
         String fileName = fileDisposition.getFileName();
         Response response = null;
         try {
-            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
+            // Build object URIs from request path.
+            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
             URI sourceUri  = new URI(projectUri.getScheme(), null,
                                     projectUri.getHost(), projectUri.getPort(),
                                     projectUri.getPath()
                                         + this.getRelativeSourceId(fileName),
                                     null, null);
+            // Retrieve project.
             Project p = this.loadProject(projectUri);
-
-            // Save new source to public project storage
-            String filePath = this.getProjectFilePath(id, fileName);
+            // Save new source to public project storage.
+            String filePath = this.getProjectFilePath(projectId, fileName);
             File storagePath = this.getFileStorage(filePath);
             fileCopy(file, storagePath);
-
-            // Initialize new source
-            RdfFileSource src = this.projectManager.newRdfSource(
-                                    baseUri, sourceUri, fileName, description, filePath, mimeType);
+            // Initialize new source.
+            RdfFileSource src = this.projectManager.newRdfSource(p,
+                                            sourceUri, fileName, description,
+                                            baseUri, filePath, mimeType);
             // Iterate on source content to validate uploaded file.
             int n = 0;
             CloseableIterator<?> i = src.iterator();
@@ -636,16 +654,11 @@ public class ProjectResource
             finally {
                 i.close();
             }
-            // Add new source to persistent project
-            p.addSource(src);
+            // Persist new source.
             this.projectManager.saveProject(p);
-
-            String redirectUrl = projectUri.toString() + "#source";
-            response = Response.created(sourceUri)
-                               .entity(this.newViewable("/redirect.vm",
-                                                        redirectUrl))
-                               .type(TEXT_HTML)
-                               .build();
+            // Notify user of successful creation, redirecting HTML clients
+            // (browsers) to the source tab of the project page.
+            response = this.created(p, sourceUri, ProjectTab.Sources).build();
         }
         catch (IOException e) {
             this.throwInvalidParamError(fileName, e.getLocalizedMessage());
@@ -661,17 +674,21 @@ public class ProjectResource
     @Path("{id}/rdfuploadModify")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     public Response rdfUploadModify(
-                        @PathParam("id") String id,
-                        @Context UriInfo uriInfo,
-                        @FormDataParam("description") String description,
-                        @FormDataParam("mime_type") String mimeType,
-                        @FormDataParam("base_uri") URI baseUri,
-                        @FormDataParam("current_source") URI currentSourceUri)
+                            @PathParam("id") String projectId,
+                            @FormDataParam("description") String description,
+                            @FormDataParam("mime_type") String mimeType,
+                            @FormDataParam("base_uri") URI baseUri,
+                            @FormDataParam("current_source") URI sourceUri,
+                            @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
         Response response = null;
         try {
-            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
-            Project p = this.loadProject(projectUri);
+            // Retrieve source.
+            RdfFileSource s = this.loadSource(RdfFileSource.class, sourceUri);
+            // Update source data.
+            s.setDescription(description);
+            s.setSourceUrl(baseUri.toString());
+
             MediaType mappedType = null;
             try {
                 mappedType = RdfUtils.parseMimeType(mimeType);
@@ -679,67 +696,59 @@ public class ProjectResource
             catch (Exception e) {
                 this.throwInvalidParamError("mime_type", mimeType);
             }
-            Source s = p.getSource(currentSourceUri);
-            s.setDescription(description);
-            s.setSource(baseUri.toString());
-            ((RdfFileSource) s).setMimeType(mappedType.toString());
+            s.setMimeType(mappedType.toString());
+            // Save updated source.
+            Project p = s.getProject();
             this.projectManager.saveProject(p);
-            String redirectUrl = projectUri.toString() + "#source";
-            response = Response.ok()
-                               .entity(this.newViewable("/redirect.vm",
-                                                        redirectUrl))
-                               .type(TEXT_HTML)
-                               .build();
+            // Notify user of successful update, redirecting HTML clients
+            // (browsers) to the source tab of the project page.
+            response = this.redirect(p, ProjectTab.Sources).build();
         }
         catch (Exception e) {
             this.handleInternalError(e, "Could not modify RDF source {}",
-                                        currentSourceUri);
+                                        sourceUri);
         }
         return response;
     }
 
     @POST
     @Path("{id}/dbupload")
-    public Response dbUpload(@PathParam("id") String id,
-                             @FormParam("database") String database,
-                             @FormParam("source_url") String srcUrl,
+    public Response dbUpload(@PathParam("id") String projectId,
                              @FormParam("title") String title,
                              @FormParam("description") String description,
+                             @FormParam("database") String databaseName,
+                             @FormParam("source_url") String cnxUrl,
                              @FormParam("user") String user,
-                             @FormParam("request") String request,
                              @FormParam("password") String password,
+                             @FormParam("request") String sqlQuery,
                              @FormParam("cache_duration") int cacheDuration,
                              @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
         Response response = null;
         try {
-            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
+            // Build object URIs from request path.
+            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
             URI sourceUri  = new URI(projectUri.getScheme(), null,
                                     projectUri.getHost(), projectUri.getPort(),
                                     projectUri.getPath()
                                         + this.getRelativeSourceId(title),
                                     null, null);
+            // Retrieve project.
             Project p = this.loadProject(projectUri);
-
-            // Initialize new source
-            SqlSource src = this.projectManager.newSqlSource(sourceUri,
-                                                title, description, database, srcUrl,
-                                                user, password,
-                                                request, cacheDuration);
+            // Initialize new source.
+            SqlSource src = this.projectManager.newSqlSource(p,
+                                        sourceUri, title, description,
+                                        databaseName, cnxUrl, user, password,
+                                        sqlQuery, cacheDuration);
             // Start iterating on source content to validate database
             // connection parameters and query.
             CloseableIterator<?> i = src.iterator();
             i.close();
-            // Add new source to persistent project
-            p.addSource(src);
+            // Persist new source.
             this.projectManager.saveProject(p);
-
-            String redirectUrl = projectUri.toString() + "#source";
-            response = Response.created(sourceUri)
-                               .entity(this.newViewable("/redirect.vm",
-                                                        redirectUrl))
-                               .type(TEXT_HTML)
-                               .build();
+            // Notify user of successful creation, redirecting HTML clients
+            // (browsers) to the source tab of the project page.
+            response = this.created(p, sourceUri, ProjectTab.Sources).build();
         }
         catch (Exception e) {
             this.handleInternalError(e,
@@ -751,37 +760,39 @@ public class ProjectResource
     @POST
     @Path("{id}/dbuploadModify")
     public Response dbUploadModify(
-                            @PathParam("id") String id,
-                            @Context UriInfo uriInfo,
-                            @FormParam("database") String database,
-                            @FormParam("source_url") String srcUrl,
+                            @PathParam("id") String projectId,
+                            @FormParam("current_source") URI sourceUri,
                             @FormParam("title") String title,
                             @FormParam("description") String description,
+                            @FormParam("database") String databaseName,
+                            @FormParam("source_url") String cnxUrl,
                             @FormParam("user") String user,
-                            @FormParam("request") String request,
                             @FormParam("password") String password,
+                            @FormParam("request") String sqlQuery,
                             @FormParam("cache_duration") int cacheDuration,
-                            @FormParam("current_source") URI currentSourceUri)
+                            @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
         Response response = null;
         try {
-            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
-            Project p = this.loadProject(projectUri);
-            SqlSource s = (SqlSource)(p.getSource(currentSourceUri));
+            // Retrieve source.
+            SqlSource s = this.loadSource(SqlSource.class, sourceUri);
+            // Update source data.
             s.setTitle(title);
-            s.setConnectionUrl(srcUrl);
+            s.setDescription(description);
+            s.setDatabase(databaseName);
+            s.setConnectionUrl(cnxUrl);
             s.setUser(user);
             s.setPassword(password);
-            s.setDatabase(database);
-            s.setQuery(request);
-            ((CachingSource) s).setCacheDuration(cacheDuration);
+            s.setQuery(sqlQuery);
+            if (s instanceof CachingSource) {
+                ((CachingSource)s).setCacheDuration(cacheDuration);
+            }
+            // Save updated source.
+            Project p = s.getProject();
             this.projectManager.saveProject(p);
-            String redirectUrl = projectUri.toString() + "#source";
-            response = Response.ok()
-                               .entity(this.newViewable("/redirect.vm",
-                                                        redirectUrl))
-                               .type(TEXT_HTML)
-                               .build();
+            // Notify user of successful update, redirecting HTML clients
+            // (browsers) to the source tab of the project page.
+            response = this.redirect(p, ProjectTab.Sources).build();
         }
         catch (Exception e) {
             this.handleInternalError(e, "Failed to create SQL source for {}",
@@ -792,40 +803,40 @@ public class ProjectResource
 
     @POST
     @Path("{id}/sparqlupload")
-    public Response sparqlUpload(@PathParam("id") String id,
-                                 @FormParam("title") String title,
-                                 @FormParam("description") String description,
-                                 @FormParam("connection_url") String endpointUrl,
-                                 @FormParam("request") String query,
-                                 @FormParam("cache_duration") int cacheDuration,
-                                 @Context UriInfo uriInfo,
-                                 @Context Request request){
+    public Response sparqlUpload(
+                            @PathParam("id") String id,
+                            @FormParam("title") String title,
+                            @FormParam("description") String description,
+                            @FormParam("connection_url") String endpointUrl,
+                            @FormParam("request") String sparqlQuery,
+                            @FormParam("cache_duration") int cacheDuration,
+                            @Context UriInfo uriInfo)
+                                                throws WebApplicationException {
         Response response = null;
         try {
+            // Build object URIs from request path.
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
             URI sourceUri  = new URI(projectUri.getScheme(), null,
                                      projectUri.getHost(), projectUri.getPort(),
                                      projectUri.getPath()
                                          + this.getRelativeSourceId(title),
                                      null, null);
+            // Retrieve project.
             Project p = this.loadProject(projectUri);
-            // Initialize new source
-            SparqlSource src = this.projectManager.newSparqlSource(sourceUri,
-                    title, description, endpointUrl, query, cacheDuration);
+            // Initialize new source.
+            SparqlSource src = this.projectManager.newSparqlSource(p, sourceUri,
+                                        title, description,
+                                        endpointUrl, sparqlQuery,
+                                        cacheDuration);
             // Start iterating on source content to validate database
             // connection parameters and query.
             CloseableIterator<?> i = src.iterator();
             i.close();
-            // Add new source to persistent project
-            p.addSource(src);
+            // Persist new source.
             this.projectManager.saveProject(p);
-
-            String redirectUrl = projectUri.toString() + "#source";
-            response = Response.created(sourceUri)
-                               .entity(this.newViewable("/redirect.vm",
-                                                        redirectUrl))
-                               .type(TEXT_HTML)
-                               .build();
+            // Notify user of successful creation, redirecting HTML clients
+            // (browsers) to the source tab of the project page.
+            response = this.created(p, sourceUri, ProjectTab.Sources).build();
         }
         catch (Exception e) {
             this.handleInternalError(e,
@@ -836,32 +847,34 @@ public class ProjectResource
 
     @POST
     @Path("{id}/sparqluploadModify")
-    public Response sparqlUploadModify(@PathParam("id") String id,
-                           @FormParam("title") String title,
-                           @FormParam("description") String description,
-                           @FormParam("connection_url") String connectionUrl,
-                           @FormParam("request") String query,
-                           @FormParam("cache_duration") int cacheDuration,
-                           @Context UriInfo uriInfo,
-                           @Context Request request,
-                           @FormParam("current_source") URI currentSourceUri) {
+    public Response sparqlUploadModify(
+                            @PathParam("id") String projectId,
+                            @FormParam("current_source") URI sourceUri,
+                            @FormParam("title") String title,
+                            @FormParam("description") String description,
+                            @FormParam("connection_url") String endpointUrl,
+                            @FormParam("request") String sparqlQuery,
+                            @FormParam("cache_duration") int cacheDuration,
+                            @Context UriInfo uriInfo)
+                                                throws WebApplicationException {
         Response response = null;
         try {
-            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
-            Project p = this.loadProject(projectUri);
-            SparqlSource s = (SparqlSource)(p.getSource(currentSourceUri));
+            // Retrieve source.
+            SparqlSource s = this.loadSource(SparqlSource.class, sourceUri);
+            // Update source data.
             s.setTitle(title);
             s.setDescription(description);
-            s.setQuery(query);
-            s.setEndpointUrl(connectionUrl);
-            ((CachingSource) s).setCacheDuration(cacheDuration);
+            s.setQuery(sparqlQuery);
+            s.setEndpointUrl(endpointUrl);
+            if (s instanceof CachingSource) {
+                ((CachingSource)s).setCacheDuration(cacheDuration);
+            }
+            // Save updated source.
+            Project p = s.getProject();
             this.projectManager.saveProject(p);
-            String redirectUrl = projectUri.toString() + "#source";
-            response = Response.ok()
-                               .entity(this.newViewable("/redirect.vm",
-                                                        redirectUrl))
-                               .type(TEXT_HTML)
-                               .build();
+            // Notify user of successful update, redirecting HTML clients
+            // (browsers) to the source tab of the project page.
+            response = this.redirect(p, ProjectTab.Sources).build();
         }
         catch (Exception e) {
             this.handleInternalError(e, "Failed to create SPARQL source for {}",
@@ -949,31 +962,28 @@ public class ProjectResource
     @GET
     @Path("{id}/source/{srcid}/delete")
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
-    public Response deleteSource(@PathParam("id") String id,
-                                 @PathParam("srcid") String srcId,
+    public Response deleteSource(@PathParam("id") String projectId,
+                                 @PathParam("srcid") String sourceId,
                                  @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
         Response response = null;
         try {
-            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
+            // Retrieve source.
+            // As we can't infer the source type (CSV, SPARQL...), we have
+            // to load the whole project and search it using its URI.
+            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
             Project p = this.loadProject(projectUri);
             URI u = new URI(uriInfo.getAbsolutePath().toString()
                                                      .replace("/delete", ""));
-            Source src = p.getSource(u);
-            // Delete
-            p.removeSource(u);
-            this.projectManager.saveProject(p);
-            this.projectManager.deleteSource(src);
-
-            String redirectUrl = projectUri.toString() + "#source";
-            response = Response.ok()
-                               .entity(this.newViewable("/redirect.vm",
-                                                        redirectUrl))
-                               .type(TEXT_HTML)
-                               .build();
+            Source s = p.getSource(u);
+            // Delete source.
+            this.projectManager.delete(s);
+            // Notify user of successful update, redirecting HTML clients
+            // (browsers) to the source tab of the project page.
+            response = this.redirect(p, ProjectTab.Sources).build();
         }
         catch (Exception e) {
-            this.handleInternalError(e, "Failed to load source {}", srcId);
+            this.handleInternalError(e, "Failed to load source {}", sourceId);
         }
         return response;
     }
@@ -1024,25 +1034,24 @@ public class ProjectResource
 
     @POST
     @Path("{id}/ontologyUpload")
-    public Response ontologyUpload(@PathParam("id") String id,
+    public Response ontologyUpload(@PathParam("id") String projectId,
                                    @FormParam("source_url") URL srcUrl,
                                    @FormParam("title") String title,
                                    @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
         Response response = null;
         try {
-            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
+            // Retrieve project.
+            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
             Project p = this.loadProject(projectUri);
-
-            // Add ontology to persistent project
-            p.addOntology(this.projectManager.newOntology(srcUrl.toURI(), title));
+            // Add ontology to project.
+            p.addOntology(this.projectManager.newOntology(p,
+                                                        srcUrl.toURI(), title));
+            // Persist new ontology.
             this.projectManager.saveProject(p);
-
-            String redirectUrl = projectUri.toString() + "#ontology";
-            response = Response.ok(this.newViewable("/redirect.vm",
-                                                    redirectUrl))
-                               .type(TEXT_HTML)
-                               .build();
+            // Notify user of successful update, redirecting HTML clients
+            // (browsers) to the ontology tab of the project page.
+            response = this.redirect(p, ProjectTab.Ontologies).build();
         }
         catch (Exception e) {
             this.handleInternalError(e, "Failed to add ontology {}", srcUrl);
@@ -1060,12 +1069,11 @@ public class ProjectResource
                                                 throws WebApplicationException {
         Response response = null;
         try {
+            // Retrieve project.
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
             Project p = this.loadProject(projectUri);
-
             // Search for requested ontology in project.
             Ontology ontology = p.getOntology(ontologyTitle);
-
             if (ontology == null) {
                 // Not found.
                 throw new NotFoundException();
@@ -1092,25 +1100,23 @@ public class ProjectResource
             throws WebApplicationException {
         Response response = null;
         try {
+            // Retrieve project.
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
             Project p = this.loadProject(projectUri);
-
-            // Get ontology to persistent project
+            // Search for requested ontology in project.
             Ontology ontology = p.getOntology(currentOntologyTitle);
             if (ontology == null) {
                 // Not found.
                 throw new NotFoundException();
             }
-
-            // Save informations
+            // Update ontology data.
             ontology.setTitle(title);
             ontology.setSource(source);
+            // Save updated ontology.
             this.projectManager.saveProject(p);
-
-            String redirectUrl = projectUri.toString() + "#ontology";
-            response = Response.ok()
-                    .entity(this.newViewable("/redirect.vm", redirectUrl))
-                    .type(TEXT_HTML).build();
+            // Notify user of successful update, redirecting HTML clients
+            // (browsers) to the ontology tab of the project page.
+            response = this.redirect(p, ProjectTab.Ontologies).build();
         }
         catch (Exception e) {
             this.handleInternalError(e, "Failed to create SQL source for {}",
@@ -1122,27 +1128,25 @@ public class ProjectResource
     @GET
     @Path("{id}/ontology/{ontologyTitle}/delete")
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
-    public Response deleteOntology(@PathParam("id") String id,
-            @PathParam("ontologyTitle") String ontologyTitle,
-            @Context UriInfo uriInfo) throws WebApplicationException {
-
+    public Response deleteOntology(
+                            @PathParam("id") String projectId,
+                            @PathParam("ontologyTitle") String ontologyTitle,
+                            @Context UriInfo uriInfo)
+                                                throws WebApplicationException {
         Response response = null;
         try {
-            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
+            // Retrieve ontology.
+            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
             Project p = this.loadProject(projectUri);
             Ontology o = p.getOntology(ontologyTitle);
-            // Delete
-            p.removeOntology(ontologyTitle);
-            this.projectManager.saveProject(p);
-            this.projectManager.deleteOntology(o);
-
-            String redirectUrl = projectUri.toString() + "#ontology";
-            response = Response.ok()
-                    .entity(this.newViewable("/redirect.vm", redirectUrl))
-                    .type(TEXT_HTML).build();
+            // Delete ontology.
+            this.projectManager.deleteOntology(p, o);
+            // Notify user of successful update, redirecting HTML clients
+            // (browsers) to the ontology tab of the project page.
+            response = this.redirect(p, ProjectTab.Ontologies).build();
         }
         catch (Exception e) {
-            this.handleInternalError(e, "Failed to delete source {}",
+            this.handleInternalError(e, "Failed to delete ontology \"{}\"",
                                         ontologyTitle);
         }
         return response;
@@ -1211,6 +1215,32 @@ public class ProjectResource
         return p;
     }
 
+    private <C extends Source> C findSource(Class<C> clazz, URI uri)
+                                                throws WebApplicationException {
+        try {
+            return this.projectManager.findSource(clazz, uri);
+        }
+        catch (Exception e) {
+            TechnicalException error = new TechnicalException(
+                                        "ws.internal.error", e, e.getMessage());
+            log.error(error.getMessage(), e);
+            throw new WebApplicationException(
+                                Response.status(Status.INTERNAL_SERVER_ERROR)
+                                        .type(MediaTypes.TEXT_PLAIN_TYPE)
+                                        .entity(error.getMessage()).build());
+        }
+    }
+
+    private <C extends Source> C loadSource(Class<C> clazz, URI uri)
+                                                throws WebApplicationException {
+        C s = this.findSource(clazz, uri);
+        if (s == null) {
+            // Not found.
+            throw new NotFoundException(uri);
+        }
+        return s;
+    }
+
     private Viewable newViewable(String templateName, Object it) {
         return this.parent.newViewable(templateName, it);
     }
@@ -1239,6 +1269,56 @@ public class ProjectResource
 
     private String getRelativeSourceId(String sourceName) {
         return "/source/" + urlify(sourceName);
+    }
+
+    /**
+     * Notifies the user of successful object creation, redirecting
+     * HTML clients (i.e. browsers) to the source tab of the project
+     * main page.
+     * @param  p     the modified project.
+     * @param  uri   the URI of the object the creation of which shall
+     *               be reported.
+     * @param  tab   the project page tab to display or
+     *               <code>null</code> (default tab).
+     *
+     * @return an HTTP response redirecting to the project main page.
+     * @throws TechnicalException if any error occurred.
+     */
+    private ResponseBuilder created(Project p, URI uri, ProjectTab tab) {
+        try {
+            if (uri == null) {
+                uri = new URI(p.getUri());
+            }
+            String targetUrl = (tab != null)? p.getUri() + tab.anchor:
+                                              p.getUri();
+            return Response.created(uri)
+                           .entity(this.newViewable("/redirect.vm", targetUrl))
+                           .type(TEXT_HTML);
+        }
+        catch (Exception e) {
+            throw new TechnicalException(e);
+        }
+    }
+
+    /**
+     * Notifies the user of successful request execution, redirecting
+     * HTML clients (i.e. browsers) to the source tab of the project
+     * main page.
+     * @param  p     the modified project.
+     * @param  tab   the project page tab to display or
+     *               <code>null</code> (default tab).
+     *
+     * @return an HTTP response redirecting to the project main page.
+     * @throws TechnicalException if any error occurred.
+     */
+    private ResponseBuilder redirect(Project p, ProjectTab tab) {
+        try {
+            return Response.seeOther(new URI(
+                        (tab != null)? p.getUri() + tab.anchor: p.getUri()));
+        }
+        catch (Exception e) {
+            throw new TechnicalException(e);
+        }
     }
 
     private static void fileCopy(InputStream src, File dest)

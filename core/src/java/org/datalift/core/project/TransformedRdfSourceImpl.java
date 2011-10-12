@@ -47,6 +47,7 @@ import com.clarkparsia.empire.annotation.RdfsClass;
 
 import org.datalift.core.TechnicalException;
 import org.datalift.fwk.Configuration;
+import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.util.CloseableIterator;
@@ -70,12 +71,27 @@ public class TransformedRdfSourceImpl extends BaseSource
     // Constructors
     //-------------------------------------------------------------------------
 
+    /**
+     * Creates a new transformed RDF source with the specified
+     * identifier.
+     */
     public TransformedRdfSourceImpl() {
         super(SourceType.TransformedRdfSource);
     }
 
-    public TransformedRdfSourceImpl(String uri) {
-        super(SourceType.TransformedRdfSource, uri);
+    /**
+     * Creates a new transformed RDF source with the specified
+     * identifier and owning project.
+     * @param  uri       the source unique identifier (URI) or
+     *                   <code>null</code> if not known at this stage.
+     * @param  project   the owning project or <code>null</code> if not
+     *                   known at this stage.
+     *
+     * @throws IllegalArgumentException if either <code>uri</code> or
+     *         <code>project</code> is <code>null</code>.
+     */
+    public TransformedRdfSourceImpl(String uri, Project project) {
+        super(SourceType.TransformedRdfSource, uri, project);
     }
 
     //-------------------------------------------------------------------------
@@ -84,10 +100,10 @@ public class TransformedRdfSourceImpl extends BaseSource
 
     /** {@inheritDoc} */
     @Override
-    public String getSource() {
-        String source = super.getSource();
+    public String getSourceUrl() {
+        String source = super.getSourceUrl();
         if (source == null) {
-            source = this.getParent().getSource();
+            source = this.getParent().getSourceUrl();
         }
         return source;
     }
@@ -136,7 +152,7 @@ public class TransformedRdfSourceImpl extends BaseSource
                                         "CONSTRUCT { ?s ?p ?o . }" +
                                         " WHERE { GRAPH <" + this.targetGraph +
                                             "> { ?s ?p ?o . } }",
-                                        this.getSource()).evaluate();
+                                        this.getSourceUrl()).evaluate();
             return new CloseableIterator<Statement>() {
                     @Override
                     public boolean hasNext() {

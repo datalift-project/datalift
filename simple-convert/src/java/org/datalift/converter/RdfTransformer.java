@@ -102,7 +102,7 @@ public class RdfTransformer extends BaseConverterModule
             // Register new transformed RDF source.
             Source out = this.addResultSource(p, in, destTitle, targetGraph);
             // Display generated triples.
-            response = this.redirectTo(p, out).build();
+            response = this.created(out).build();
         }
         catch (Exception e) {
             this.handleInternalError(e);

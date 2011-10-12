@@ -54,6 +54,7 @@ import au.com.bytecode.opencsv.CSVReader;
 
 import org.datalift.core.TechnicalException;
 import org.datalift.fwk.project.CsvSource;
+import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.Row;
 import org.datalift.fwk.util.CloseableIterator;
 import org.datalift.fwk.util.StringUtils;
@@ -92,12 +93,18 @@ public class CsvSourceImpl extends BaseFileSource<Row<String>>
     }
 
     /**
-     * Creates a new CSV source with the specified identifier.
-     * @param  uri    the source unique identifier (URI) or
-     *                <code>null</code> if not known at this stage.
+     * Creates a new CSV source with the specified identifier and
+     * owning project.
+     * @param  uri       the source unique identifier (URI) or
+     *                   <code>null</code> if not known at this stage.
+     * @param  project   the owning project or <code>null</code> if not
+     *                   known at this stage.
+     *
+     * @throws IllegalArgumentException if either <code>uri</code> or
+     *         <code>project</code> is <code>null</code>.
      */
-    public CsvSourceImpl(String uri) {
-        super(SourceType.CsvSource, uri);
+    public CsvSourceImpl(String uri, Project project) {
+        super(SourceType.CsvSource, uri, project);
     }
 
     //-------------------------------------------------------------------------

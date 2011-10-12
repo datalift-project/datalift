@@ -45,6 +45,7 @@ import com.clarkparsia.empire.annotation.RdfsClass;
 
 import org.datalift.core.TechnicalException;
 import org.datalift.core.rdf.BoundedAsyncRdfParser;
+import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.RdfFileSource;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.util.CloseableIterator;
@@ -65,19 +66,25 @@ public class RdfFileSourceImpl extends BaseFileSource<Statement>
     //-------------------------------------------------------------------------
 
     /**
-     * Creates a new RDF source.
+     * Creates a new RDF file source.
      */
     public RdfFileSourceImpl() {
         super(SourceType.RdfFileSource);
     }
 
     /**
-     * Creates a new RDF source with the specified identifier.
-     * @param  uri    the source unique identifier (URI) or
-     *                <code>null</code> if not known at this stage.
+     * Creates a new RDF file source with the specified identifier and
+     * owning project.
+     * @param  uri       the source unique identifier (URI) or
+     *                   <code>null</code> if not known at this stage.
+     * @param  project   the owning project or <code>null</code> if not
+     *                   known at this stage.
+     *
+     * @throws IllegalArgumentException if either <code>uri</code> or
+     *         <code>project</code> is <code>null</code>.
      */
-    public RdfFileSourceImpl(String uri) {
-        super(SourceType.RdfFileSource, uri);
+    public RdfFileSourceImpl(String uri, Project project) {
+        super(SourceType.RdfFileSource, uri, project);
     }
 
     //-------------------------------------------------------------------------
@@ -99,7 +106,7 @@ public class RdfFileSourceImpl extends BaseFileSource<Statement>
     public CloseableIterator<Statement> iterator() {
         try {
             return BoundedAsyncRdfParser.parse(this.getInputStream(),
-                                        this.getMimeType(), this.getSource());
+                                    this.getMimeType(), this.getSourceUrl());
         }
         catch (IOException e) {
             throw new TechnicalException(e.getMessage(), e);

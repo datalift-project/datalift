@@ -13,6 +13,7 @@ import com.clarkparsia.empire.annotation.RdfProperty;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.CachingSource;
+import org.datalift.fwk.project.Project;
 import org.datalift.fwk.util.StringUtils;
 
 
@@ -39,12 +40,32 @@ public abstract class CachingSourceImpl extends BaseSource
     // Constructors
     //-------------------------------------------------------------------------
 
+    /**
+     * Creates a new source of the specified type.
+     * @param  type   the {@link SourceType source type}.
+     *
+     * @throws IllegalArgumentException if <code>type</code> is
+     *         <code>null</code>.
+     */
     protected CachingSourceImpl(SourceType type) {
-            super(type, null);
+            super(type);
     }
 
-    protected CachingSourceImpl(SourceType type, String uri) {
-        super(type, uri);
+    /**
+     * Creates a new source of the specified type, identifier and
+     * owning project.
+     * @param  type      the {@link SourceType source type}.
+     * @param  uri       the source unique identifier (URI) or
+     *                   <code>null</code> if not known at this stage.
+     * @param  project   the owning project or <code>null</code> if not
+     *                   known at this stage.
+     *
+     * @throws IllegalArgumentException if <code>type</code> is
+     *         <code>null</code> or if <code>uri</code> is specified
+     *         but <code>project</code> is <code>null</code>.
+     */
+    protected CachingSourceImpl(SourceType type, String uri, Project project) {
+        super(type, uri, project);
     }
 
     //-------------------------------------------------------------------------

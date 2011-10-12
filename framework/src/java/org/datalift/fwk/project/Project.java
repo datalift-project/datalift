@@ -58,10 +58,11 @@ public interface Project
     public String getDescription();
     public void setDescription(String d);
 
-    public void addSource(Source s);
+    public void add(Source source);
     public Collection<Source> getSources();
     public Source getSource(URI uri);
-    public void removeSource(URI uri);
+    public Source getSource(String uri);
+    public void remove(Source source);
 
     public Date getDateCreation();
     public void setDateCreation(Date date);
@@ -73,7 +74,7 @@ public interface Project
     public void setLicense(URI license);
 
     public Collection<Ontology> getOntologies();
-    public void addOntology(Ontology vocabulary);
+    public void addOntology(Ontology ontology);
     public Ontology getOntology(String title);
     public void removeOntology(String title);
 

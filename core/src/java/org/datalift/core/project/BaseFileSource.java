@@ -47,6 +47,8 @@ import com.clarkparsia.empire.annotation.RdfProperty;
 import org.datalift.core.TechnicalException;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.project.FileSource;
+import org.datalift.fwk.project.Project;
+import org.datalift.fwk.util.StringUtils;
 
 
 /**
@@ -73,19 +75,32 @@ public abstract class BaseFileSource<T> extends BaseSource
     /**
      * Creates a new source of the specified type.
      * @param  type   the {@link SourceType source type}.
+     *
+     * @throws IllegalArgumentException if <code>type</code> is
+     *         <code>null</code>.
      */
     protected BaseFileSource(SourceType type) {
         super(type);
     }
 
     /**
-     * Creates a new source of the specified type and identifier.
-     * @param  type   the {@link SourceType source type}.
-     * @param  uri    the source unique identifier (URI) or
-     *                <code>null</code> if not known at this stage.
+     * Creates a new source of the specified type, identifier and
+     * owning project.
+     * @param  type      the {@link SourceType source type}.
+     * @param  uri       the source unique identifier (URI) or
+     *                   <code>null</code> if not known at this stage.
+     * @param  project   the owning project or <code>null</code> if not
+     *                   known at this stage.
+     *
+     * @throws IllegalArgumentException if any of <code>type</code>,
+     *         <code>uri</code> or <code>project</code> is
+     *         <code>null</code>.
      */
-    protected BaseFileSource(SourceType type, String uri) {
-        super(type, uri);
+    protected BaseFileSource(SourceType type, String uri, Project project) {
+        super(type, uri, project);
+        if (StringUtils.isBlank(uri)) {
+            throw new IllegalArgumentException("uri");
+        }
     }
 
     //-------------------------------------------------------------------------

@@ -114,11 +114,11 @@ public class RdfLoader extends BaseConverterModule
                                      in.getFilePath()),
                             RdfUtils.parseMimeType(in.getMimeType()),
                             this.internalRepository, targetGraph,
-                            mapper, in.getSource());
+                            mapper, in.getSourceUrl());
             // Register new transformed RDF source.
             Source out = this.addResultSource(p, in, destTitle, targetGraph);
             // Display generated triples.
-            response = this.redirectTo(p, out).build();
+            response = this.created(out).build();
         }
         catch (Exception e) {
             this.handleInternalError(e);

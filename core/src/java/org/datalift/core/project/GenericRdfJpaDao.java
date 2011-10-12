@@ -47,6 +47,8 @@ import javax.persistence.Query;
 import com.clarkparsia.empire.annotation.RdfsClass;
 import com.clarkparsia.empire.impl.RdfQuery;
 
+import org.datalift.fwk.util.StringUtils;
+
 
 public abstract class GenericRdfJpaDao<T>
 {
@@ -69,27 +71,30 @@ public abstract class GenericRdfJpaDao<T>
         this.entityMgr = entityMgr;
     }
 
-    @SuppressWarnings("unchecked")
-    public Collection<T> getAll() {
-        List<T> results = new LinkedList<T>();
-
-        Query query = this.entityMgr.createQuery(
-                       "where { ?result rdf:type " + this.rdfType + " . }");
-        query.setHint(RdfQuery.HINT_ENTITY_CLASS, this.persistentClass);
-        for (Object p : query.getResultList()) {
-            results.add((T)p);
-        }
-        return results;
+    public Collection<? extends T> getAll() {
+        return this.getAll(this.persistentClass, this.rdfType);
     }
 
     public T find(URI id) {
-        return this.entityMgr.find(this.persistentClass, id);
+        return this.find(this.persistentClass, id);
     }
 
     public T get(URI id) {
-        T entity = this.entityMgr.find(this.persistentClass, id);
+        return this.get(this.persistentClass, id);
+    }
+
+    public <C> Collection<? extends C> getAll(Class<C> entityClass) {
+        return this.getAll(entityClass, null);
+    }
+
+    public <C> C find(Class<C> entityClass, URI primaryKey) {
+        return this.entityMgr.find(entityClass, primaryKey);
+    }
+
+    public <C> C get(Class<C> entityClass, URI primaryKey) {
+        C entity = this.entityMgr.find(entityClass, primaryKey);
         if (entity == null) {
-            throw new EntityNotFoundException(id.toString());
+            throw new EntityNotFoundException(String.valueOf(primaryKey));
         }
         return entity;
     }
@@ -98,7 +103,7 @@ public abstract class GenericRdfJpaDao<T>
         this.entityMgr.persist(entity);
     }
 
-    public <X> X save(X entity) {
+    public <C> C save(C entity) {
         return this.entityMgr.merge(entity);
     }
 
@@ -110,10 +115,40 @@ public abstract class GenericRdfJpaDao<T>
         this.delete(this.get(id));
     }
 
+    protected List<? extends T> executeQuery(String query) {
+        return this.executeQuery(query, this.persistentClass);
+    }
+
     @SuppressWarnings("unchecked")
-    protected List<T> executeQuery(String query) {
+    protected <C> List<C> executeQuery(String query, Class<C> entityClass) {
+        if (StringUtils.isBlank(query)) {
+            throw new IllegalArgumentException("query");
+        }
         Query q = this.entityMgr.createQuery(query);
-        q.setHint(RdfQuery.HINT_ENTITY_CLASS, this.persistentClass);
-        return (List<T>)(q.getResultList());
+        q.setHint(RdfQuery.HINT_ENTITY_CLASS, entityClass);
+        return (List<C>)(q.getResultList());
+    }
+
+    @SuppressWarnings("unchecked")
+    private <C> Collection<C> getAll(Class<C> entityClass, String rdfType) {
+        if (entityClass == null) {
+            throw new IllegalArgumentException("entityClass");
+        }
+        if (rdfType == null) {
+            RdfsClass rdfsClass = entityClass.getAnnotation(RdfsClass.class);
+            if (rdfsClass == null) {
+                throw new IllegalArgumentException(entityClass.getName());
+            }
+            rdfType = rdfsClass.value();
+        }
+        List<C> results = new LinkedList<C>();
+
+        Query query = this.entityMgr.createQuery(
+                                "where { ?result rdf:type " + rdfType + " . }");
+        query.setHint(RdfQuery.HINT_ENTITY_CLASS, entityClass);
+        for (Object p : query.getResultList()) {
+            results.add((C)p);
+        }
+        return results;
     }
 }

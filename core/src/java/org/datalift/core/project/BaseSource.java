@@ -37,7 +37,9 @@ package org.datalift.core.project;
 
 import javax.persistence.MappedSuperclass;
 
+import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.Source;
+import org.datalift.fwk.util.StringUtils;
 
 import com.clarkparsia.empire.annotation.RdfId;
 import com.clarkparsia.empire.annotation.RdfProperty;
@@ -64,6 +66,8 @@ public abstract class BaseSource extends BaseRdfEntity implements Source
     private String description;
     @RdfProperty("dcterms:source")
     private String source;
+    @RdfProperty("datalift:project")
+    private Project project;
 
     private transient final SourceType type;
 
@@ -74,23 +78,43 @@ public abstract class BaseSource extends BaseRdfEntity implements Source
     /**
      * Creates a new source of the specified type.
      * @param  type   the {@link SourceType source type}.
+     *
+     * @throws IllegalArgumentException if <code>type</code> is
+     *         <code>null</code>.
      */
     protected BaseSource(SourceType type) {
-        this(type, null);
+        this(type, null, null);
     }
 
     /**
-     * Creates a new source of the specified type and identifier.
-     * @param  type   the {@link SourceType source type}.
-     * @param  uri    the source unique identifier (URI) or
-     *                <code>null</code> if not known at this stage.
+     * Creates a new source of the specified type, identifier and
+     * owning project.
+     * @param  type      the {@link SourceType source type}.
+     * @param  uri       the source unique identifier (URI) or
+     *                   <code>null</code> if not known at this stage.
+     * @param  project   the owning project or <code>null</code> if not
+     *                   known at this stage.
+     *
+     * @throws IllegalArgumentException if <code>type</code> is
+     *         <code>null</code> or if <code>uri</code> is specified
+     *         but <code>project</code> is <code>null</code>.
      */
-    protected BaseSource(SourceType type, String uri) {
+    protected BaseSource(SourceType type, String uri, Project project) {
         if (type == null) {
             throw new IllegalArgumentException("type");
         }
-        this.type = type;
-        this.uri  = uri;
+        if (uri != null) {
+            uri = uri.trim();
+            if (uri.length() == 0) {
+                throw new IllegalArgumentException("uri");
+            }
+        }
+        if ((StringUtils.isSet(uri)) && (project == null)) {
+            throw new IllegalArgumentException("project");
+        }
+        this.type    = type;
+        this.uri     = uri;
+        this.project = project;
     }
 
     //-------------------------------------------------------------------------
@@ -129,13 +153,13 @@ public abstract class BaseSource extends BaseRdfEntity implements Source
 
     /** {@inheritDoc} */
     @Override
-    public String getSource() {
+    public String getSourceUrl() {
         return this.source;
     }
 
     /** {@inheritDoc} */
     @Override
-    public void setSource(String source) {
+    public void setSourceUrl(String source) {
         this.source = source;
     }
 
@@ -143,6 +167,12 @@ public abstract class BaseSource extends BaseRdfEntity implements Source
     @Override
     public final SourceType getType() {
         return this.type;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public final Project getProject() {
+        return this.project;
     }
 
     /** {@inheritDoc} */

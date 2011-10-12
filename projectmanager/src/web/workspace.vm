@@ -176,15 +176,15 @@
 			uri:"$curSrc.uri",
 			title:"<a href='$curSrc.uri'>$esc.html($curSrc.title)</a>",
 	#if( $curSrc.getType() == $field.CsvSource )
-				infos: "#i18n('project.upload_csv_separator'): $!esc.html($curSrc.separator)<br />#i18n('project.upload_csv_activate'): #i18n("boolean.${curSrc.hasTitleRow()}")"
+			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.html($curSrc.description)<br />#end#i18n('project.upload_source.file'): $!esc.html($curSrc.filePath)<br />#i18n('project.upload_csv_separator'): $!esc.html($curSrc.separator)<br />#i18n('project.upload_csv_activate'): #i18n("boolean.${curSrc.hasTitleRow()}")"
 	#elseif( $curSrc.getType() == $field.RdfFileSource )
-				infos: "$!esc.html($curSrc.filePath)"
+			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.html($curSrc.description)<br />#end#i18n('project.upload_source.file'): $!esc.html($curSrc.filePath)<br />#i18n('project.upload_rdf_format'): $!esc.html($curSrc.mimeType)"
 	#elseif( $curSrc.getType() == $field.SqlSource )
-				infos: "#i18n("project.upload_db.source_url"): $!esc.html($curSrc.connectionUrl)<br />#i18n("project.upload_db.request"): $!esc.html($curSrc.request)<br />#i18n("project.upload_source.cache_duration"): $!esc.html($curSrc.cacheDuration)"
+			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.html($curSrc.description)<br />#end#i18n('project.upload_db.source_url'): $!esc.html($curSrc.connectionUrl)<br />#i18n('project.upload_db.request'): $!esc.html($curSrc.request)<br />#i18n('project.upload_source.cache_duration'): $!esc.html($curSrc.cacheDuration)"
 	#elseif( $curSrc.getType() == $field.TransformedRdfSource )
-				infos: "$!esc.html($curSrc.targetGraph.toString())"
+			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.html($curSrc.description)<br />#end#i18n('project.upload_source.graph'): $!esc.html($curSrc.targetGraph.toString())"
 	#elseif ( $curSrc.getType() == $field.SparqlSource )
-				infos: "#i18n('project.upload_sparql.connection_url'): $!esc.html($curSrc.connectionUrl)<br />#i18n("project.upload_sparql.request"): $!esc.html($curSrc.request)<br />#i18n("project.upload_source.cache_duration"): $!esc.html($curSrc.cacheDuration)"
+			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.html($curSrc.description)<br />#end#i18n('project.upload_sparql.connection_url'): $!esc.html($curSrc.connectionUrl)<br />#i18n('project.upload_sparql.request'): $!esc.html($curSrc.request)<br />#i18n('project.upload_source.cache_duration'): $!esc.html($curSrc.cacheDuration)"
 	#end
 		},
 #end

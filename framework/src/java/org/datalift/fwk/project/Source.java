@@ -88,19 +88,25 @@ public interface Source
      * Returns the origin URL for this source.
      * @return the origin URL.
      */
-    public String getSource();
+    public String getSourceUrl();
 
     /**
      * Sets the origin URL for this source.
-     * @param  title   the origin URL.
+     * @param  url   the origin URL.
      */
-    public void setSource(String source);
+    public void setSourceUrl(String url);
 
     /**
      * Returns the {@link SourceType source type}.
      * @return the source type.
      */
     public SourceType getType();
+
+    /**
+     * Returns the {@link Project} object this source belongs to.
+     * @return the owning project.
+     */
+    public Project getProject();
 
     /**
      * Deletes all resources associated to this source (uploaded files,

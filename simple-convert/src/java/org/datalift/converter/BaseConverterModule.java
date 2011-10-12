@@ -248,9 +248,8 @@ public abstract class BaseConverterModule
                                                    String name, URI uri)
                                                             throws IOException {
         TransformedRdfSource newSrc =
-                        this.projectManager.newTransformedRdfSource(
-                                                uri, name, null, uri, parent);
-        p.addSource(newSrc);
+                        this.projectManager.newTransformedRdfSource(p, uri,
+                                                    name, null, uri, parent);
         this.projectManager.saveProject(p);
         return newSrc;
     }
@@ -271,18 +270,18 @@ public abstract class BaseConverterModule
     }
 
     /**
-     * Redirects the user's browser to the project main page, notifying
-     * of the creation of the specified source, if any.
-     * @param  p     the project to redirect the browser to.
-     * @param  src   the (optional) source the creation of which shall
+     * Notifies the user of successful source creation, redirecting
+     * HTML clients (i.e. browsers) to the source tab of the project
+     * main page.
+     * @param  src   the source the creation of which shall
      *               be reported.
      *
      * @return an HTTP response redirecting to the project main page.
      * @throws TechnicalException if any error occurred.
      */
-    protected final ResponseBuilder redirectTo(Project p, Source src) {
+    protected final ResponseBuilder created(Source src) {
         try {
-            String targetUrl = p.getUri() + "#source";
+            String targetUrl = src.getProject().getUri() + "#source";
             return Response.created(new URI(src.getUri()))
                            .entity(this.newViewable("/redirect.vm", targetUrl))
                            .type(TEXT_HTML);

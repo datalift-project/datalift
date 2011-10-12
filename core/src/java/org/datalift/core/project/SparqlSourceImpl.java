@@ -56,6 +56,7 @@ import static javax.ws.rs.core.HttpHeaders.*;
 
 import org.datalift.core.TechnicalException;
 import org.datalift.core.rdf.BoundedAsyncRdfParser;
+import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.SparqlSource;
 import org.datalift.fwk.util.CloseableIterator;
 
@@ -82,12 +83,26 @@ public class SparqlSourceImpl extends CachingSourceImpl implements SparqlSource
     // Constructors
     //-------------------------------------------------------------------------
 
+    /**
+     * Creates a new SPARQL source.
+     */
     protected SparqlSourceImpl() {
         super(SourceType.SparqlSource);
     }
 
-    protected SparqlSourceImpl(String uri) {
-        super(SourceType.SparqlSource, uri);
+    /**
+     * Creates a new SPARQL source with the specified identifier and
+     * owning project.
+     * @param  uri       the source unique identifier (URI) or
+     *                   <code>null</code> if not known at this stage.
+     * @param  project   the owning project or <code>null</code> if not
+     *                   known at this stage.
+     *
+     * @throws IllegalArgumentException if either <code>uri</code> or
+     *         <code>project</code> is <code>null</code>.
+     */
+    protected SparqlSourceImpl(String uri, Project project) {
+        super(SourceType.SparqlSource, uri, project);
     }
 
     //-------------------------------------------------------------------------
@@ -97,13 +112,13 @@ public class SparqlSourceImpl extends CachingSourceImpl implements SparqlSource
     /** {@inheritDoc} */
     @Override
     public String getEndpointUrl() {
-        return this.getSource();
+        return this.getSourceUrl();
     }
 
     /** {@inheritDoc} */
     @Override
     public void setEndpointUrl(String url) {
-        this.setSource(url);
+        this.setSourceUrl(url);
     }
 
     /** {@inheritDoc} */

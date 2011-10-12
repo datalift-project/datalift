@@ -134,17 +134,42 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
 
     /** {@inheritDoc} */
     @Override
-    public Collection<Project> listProjects() {
+    public Collection<? extends Project> listProjects() {
         return this.projectDao.getAll();
     }
 
     /** {@inheritDoc} */
+    @Override @SuppressWarnings("unchecked")
+    public <C extends Source> C findSource(Class<C> clazz, URI uri) {
+        Class<? extends Source> implClass = clazz;
+        // Map the source interface to the default implementation class.
+        if (clazz.equals(CsvSource.class)) {
+            implClass = CsvSourceImpl.class;
+        }
+        else if (clazz.equals(RdfFileSource.class)) {
+            implClass = RdfFileSourceImpl.class;
+        }
+        else if (clazz.equals(SqlSource.class)) {
+            implClass = SqlSourceImpl.class;
+        }
+        else if (clazz.equals(SparqlSource.class)) {
+            implClass = SparqlSourceImpl.class;
+        }
+        else if (clazz.equals(TransformedRdfSource.class)) {
+            implClass = TransformedRdfSourceImpl.class;
+        }
+        return (C)(this.projectDao.find(implClass, uri));
+    }
+
+    /** {@inheritDoc} */
     @Override
-    public CsvSource newCsvSource(URI uri, String title,
+    public CsvSource newCsvSource(Project project, URI uri, String title,
                                   String description, String filePath,
                                   char separator, boolean hasTitleRow)
                                                             throws IOException {
-        CsvSourceImpl src = new CsvSourceImpl(uri.toString());
+        // Create new CSV source.
+        CsvSourceImpl src = new CsvSourceImpl(uri.toString(), project);
+        // Set source parameters.
         src.setTitle(title);
         File f = this.getFileStorage(filePath);
         if (!f.isFile()) {
@@ -161,16 +186,21 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
                 break;
             }
         }
+        // Add source to project.
+        project.add(src);
         return src;
     }
 
     /** {@inheritDoc} */
     @Override
-    public RdfFileSource newRdfSource(URI baseUri, URI uri, String title,
-                                      String description, String filePath,
-                                      String mimeType) throws IOException {
-        RdfFileSourceImpl src = new RdfFileSourceImpl(uri.toString());
-        src.setSource(baseUri.toString());
+    public RdfFileSource newRdfSource(Project project, URI uri, String title,
+                                      String description, URI baseUri,
+                                      String filePath, String mimeType)
+                                                            throws IOException {
+        // Create new CSV source.
+        RdfFileSourceImpl src = new RdfFileSourceImpl(uri.toString(), project);
+        // Set source parameters.
+        src.setSourceUrl(baseUri.toString());
         src.setTitle(title);
         File f = this.getFileStorage(filePath);
         if (!f.isFile()) {
@@ -179,17 +209,21 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         src.setDescription(description);
         src.setFilePath(filePath);
         src.setMimeType(mimeType);
+        // Add source to project.
+        project.add(src);
         return src;
     }
 
     /** {@inheritDoc} */
     @Override
-    public SqlSource newSqlSource(URI uri, String title,
+    public SqlSource newSqlSource(Project project, URI uri, String title,
                                   String description, String database,
                                   String srcUrl, String user, String password,
                                   String request, int cacheDuration)
                                                             throws IOException {
-        SqlSourceImpl src = new SqlSourceImpl(uri.toString());
+        // Create new CSV source.
+        SqlSourceImpl src = new SqlSourceImpl(uri.toString(), project);
+        // Set source parameters.
         src.setTitle(title);
         src.setDescription(description);
         src.setDatabase(database);
@@ -198,66 +232,95 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         src.setPassword(password);
         src.setQuery(request);
         src.setCacheDuration(cacheDuration);
+        // Add source to project.
+        project.add(src);
         return src;
     }
 
     /** {@inheritDoc} */
     @Override
-    public SparqlSource newSparqlSource(URI uri, String title,
+    public SparqlSource newSparqlSource(Project project, URI uri, String title,
                                         String description, String endpointUrl,
                                         String sparqlQuery, int cacheDuration)
                                                             throws IOException {
-        SparqlSourceImpl src = new SparqlSourceImpl(uri.toString());
+        // Create new CSV source.
+        SparqlSourceImpl src = new SparqlSourceImpl(uri.toString(), project);
+        // Set source parameters.
         src.setEndpointUrl(endpointUrl);
         src.setTitle(title);
         src.setDescription(description);
         src.setQuery(sparqlQuery);
         src.setCacheDuration(cacheDuration);
+        // Add source to project.
+        project.add(src);
         return src;
     }
 
     /** {@inheritDoc} */
     @Override
-    public void deleteSource(Source s) {
-        if (s == null) {
-            throw new IllegalArgumentException("s");
-        }
-        s.delete();
-        this.projectDao.delete(s);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public TransformedRdfSource newTransformedRdfSource(URI uri, String title,
-                            String description, URI targetGraph, Source parent)
+    public TransformedRdfSource newTransformedRdfSource(Project project,
+                                    URI uri, String title, String description,
+                                    URI targetGraph, Source parent)
                                                             throws IOException {
+        // Create new CSV source.
         TransformedRdfSourceImpl src =
-                                new TransformedRdfSourceImpl(uri.toString());
+                        new TransformedRdfSourceImpl(uri.toString(), project);
+        // Set source parameters.
         src.setTitle(title);
         src.setDescription(description);
         src.setTargetGraph(targetGraph.toString());
         src.setParent(parent);
+        // Add source to project.
+        project.add(src);
         return src;
     }
 
     /** {@inheritDoc} */
     @Override
-    public Ontology newOntology(URI srcUrl, String title) {
-         OntologyImpl ontology = new OntologyImpl();
-         ontology.setTitle(title);
-         ontology.setSource(srcUrl);
-         ontology.setDateSubmitted(new Date());
-         ontology.setOperator(SecurityContext.getUserPrincipal());
-         return ontology;
+    public void delete(Source source) {
+        if (source == null) {
+            throw new IllegalArgumentException("source");
+        }
+        // Remove source from project.
+        Project p = source.getProject();
+        p.remove(source);
+        this.saveProject(p);
+        // Release source resources (files, caches...).
+        source.delete();
+        // Delete source from persistent store.
+        this.projectDao.delete(source);
     }
 
     /** {@inheritDoc} */
     @Override
-    public void deleteOntology(Ontology o) {
-        if (o == null) {
-            throw new IllegalArgumentException("o");
+    public Ontology newOntology(Project project, URI url, String title) {
+        // Create new ontology.
+        OntologyImpl ontology = new OntologyImpl();
+        // Set ontology parameters.
+        ontology.setTitle(title);
+        ontology.setSource(url);
+        ontology.setDateSubmitted(new Date());
+        ontology.setOperator(SecurityContext.getUserPrincipal());
+        // Add ontology to project.
+        project.addOntology(ontology);
+        return ontology;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void deleteOntology(Project project, Ontology ontology) {
+        if (project == null) {
+            throw new IllegalArgumentException("project");
         }
-        this.entityMgr.remove(o);
+        if (ontology == null) {
+            throw new IllegalArgumentException("ontology");
+        }
+        // Remove ontology from project.
+        project.removeOntology(ontology.getTitle());
+        // Delete ontology from persistent store.
+        this.projectDao.delete(ontology);
+        // Update project.
+        this.saveProject(project);
     }
 
     /** {@inheritDoc} */
@@ -357,9 +420,11 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     @SuppressWarnings("unchecked")
     private Collection<Class<?>> getPersistentClasses() {
         Collection<Class<?>> classes = new LinkedList<Class<?>>();
-        classes.addAll(Arrays.asList(ProjectImpl.class, CsvSourceImpl.class,
-                RdfFileSourceImpl.class, SqlSourceImpl.class, OntologyImpl.class,
-                TransformedRdfSourceImpl.class, SparqlSourceImpl.class));
+        classes.addAll(Arrays.asList(
+                    ProjectImpl.class, OntologyImpl.class,
+                    CsvSourceImpl.class, RdfFileSourceImpl.class,
+                    SqlSourceImpl.class, SparqlSourceImpl.class,
+                    TransformedRdfSourceImpl.class));
         return classes;
     }
 

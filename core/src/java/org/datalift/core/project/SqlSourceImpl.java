@@ -55,6 +55,7 @@ import com.clarkparsia.empire.annotation.RdfsClass;
 import com.sun.rowset.WebRowSetImpl;
 
 import org.datalift.core.TechnicalException;
+import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.Row;
 import org.datalift.fwk.project.SqlSource;
 import org.datalift.fwk.util.CloseableIterator;
@@ -96,12 +97,18 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
     }
 
     /**
-     * Creates a new SQL source with the specified identifier.
-     * @param  uri    the source unique identifier (URI) or
-     *                <code>null</code> if not known at this stage.
+     * Creates a new SQL source with the specified identifier and
+     * owning project.
+     * @param  uri       the source unique identifier (URI) or
+     *                   <code>null</code> if not known at this stage.
+     * @param  project   the owning project or <code>null</code> if not
+     *                   known at this stage.
+     *
+     * @throws IllegalArgumentException if either <code>uri</code> or
+     *         <code>project</code> is <code>null</code>.
      */
-    public SqlSourceImpl(String uri) {
-        super(SourceType.SqlSource, uri);
+    public SqlSourceImpl(String uri, Project project) {
+        super(SourceType.SqlSource, uri, project);
     }
 
     //-------------------------------------------------------------------------
@@ -111,7 +118,7 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
     /** {@inheritDoc} */
     @Override
     public String getConnectionUrl() {
-        return this.getSource();
+        return this.getSourceUrl();
     }
 
     /** {@inheritDoc} */
@@ -119,7 +126,8 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
     public void setConnectionUrl(String connectionUrl) {
         // Check URL.
         this.getDatabaseType(connectionUrl);
-        this.setSource(connectionUrl);
+        // Store URL.
+        this.setSourceUrl(connectionUrl);
     }
 
     /** {@inheritDoc} */

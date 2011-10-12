@@ -38,6 +38,7 @@ package org.datalift.core.project;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedList;
 
@@ -53,6 +54,7 @@ import com.clarkparsia.empire.annotation.RdfsClass;
 import org.datalift.fwk.project.Ontology;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.Source;
+import org.datalift.fwk.util.StringUtils;
 
 import static org.datalift.fwk.rdf.RdfNamespace.VDPP;
 
@@ -85,17 +87,18 @@ public class ProjectImpl extends BaseRdfEntity implements Project
 {
 
     public enum Execution {
-        Selection(VDPP.uri + "Selection"),
-        Publication(VDPP.uri + "Publication"),
-        Interlinking(VDPP.uri + "Interlinking"),
-        Convertion(VDPP.uri + "Convertion");
+        Selection       (VDPP.uri + "Selection"),
+        Publication     (VDPP.uri + "Publication"),
+        Interlinking    (VDPP.uri + "Interlinking"),
+        Convertion      (VDPP.uri + "Convertion");
 
         public final URI uri;
 
         Execution(String s) {
             try {
                 this.uri = new URI(s);
-            } catch (URISyntaxException e) {
+            }
+            catch (URISyntaxException e) {
                 throw new IllegalArgumentException(e);
             }
         }
@@ -191,21 +194,36 @@ public class ProjectImpl extends BaseRdfEntity implements Project
 
     /** {@inheritDoc} */
     @Override
-    public void addSource(Source s) {
-        sources.add(s);
+    public void add(Source source) {
+        if (source == null) {
+            throw new IllegalArgumentException("source");
+        }
+        sources.add(source);
     }
 
     /** {@inheritDoc} */
     @Override
     public Collection<Source> getSources() {
-        return sources;
+        return Collections.unmodifiableCollection(this.sources);
     }
 
     /** {@inheritDoc} */
     @Override
     public Source getSource(URI uri) {
+        if (uri == null) {
+            throw new IllegalArgumentException("uri");
+        }
+        return this.getSource(uri.toString());
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Source getSource(String uri) {
+        if (StringUtils.isBlank(uri)) {
+            throw new IllegalArgumentException("uri");
+        }
         for (Source source : this.sources) {
-            if (source.getUri().toString().equals(uri.toString())) {
+            if (source.getUri().equals(uri)) {
                 return source;
             }
         }
@@ -214,17 +232,18 @@ public class ProjectImpl extends BaseRdfEntity implements Project
 
     /** {@inheritDoc} */
     @Override
-    public void removeSource(URI uri) {
-        Source source = getSource(uri);
-        if (source != null) {
-            this.sources.remove(source);
+    public void remove(Source source) {
+        if (source == null) {
+            throw new IllegalArgumentException("source");
         }
+        this.sources.remove(source);
     }
 
     /** {@inheritDoc} */
     @Override
     public Date getDateCreation() {
-        return dateCreated;
+        return (this.dateCreated != null)?
+                                new Date(this.dateCreated.getTime()): null;
     }
 
     /** {@inheritDoc} */
@@ -236,7 +255,8 @@ public class ProjectImpl extends BaseRdfEntity implements Project
     /** {@inheritDoc} */
     @Override
     public Date getDateModification() {
-        return dateModified;
+        return (this.dateModified != null)?
+                                new Date(this.dateModified.getTime()): null;
     }
 
     /** {@inheritDoc} */
@@ -266,7 +286,7 @@ public class ProjectImpl extends BaseRdfEntity implements Project
     /** {@inheritDoc} */
     @Override
     public Collection<Ontology> getOntologies() {
-        return ontologies;
+        return Collections.unmodifiableCollection(this.ontologies);
     }
 
     /** {@inheritDoc} */

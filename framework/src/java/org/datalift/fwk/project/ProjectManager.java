@@ -74,7 +74,18 @@ public interface ProjectManager
      * RDF repository.
      * @return a list of all known projects, possible empty.
      */
-    public Collection<Project> listProjects();
+    public Collection<? extends Project> listProjects();
+
+    /**
+     * Finds a source object in the DataLift internal RDF repository
+     * from its URI.
+     * @param  clazz   the expected implementation class.
+     * @param  uri     the source URI.
+     *
+     * @return a source object or <code>null</code> if no Source
+     *         object matching the specified URI was found.
+     */
+    public <C extends Source> C findSource(Class<C> clazz, URI uri);
 
     /**
      * Creates a new project.
@@ -103,91 +114,119 @@ public interface ProjectManager
 
     /**
      * Creates a new CSV source object.
+     * @param  project       the owning project.
      * @param  uri           the source URI.
-     * @param  title         the source labelProject p = .
+     * @param  title         the source label.
      * @param  filePath      the CSV file path in the public storage.
      * @param  separator     the column separator character.
      * @param  hasTitleRow   whether the first row holds the column
      *                       titles.
-     * @return a new CSV source, ready to be
-     *         {@link Project#addSource(Source) associated} to a
-     *         project.
+     * @return a new CSV source, associated to the specified project.
      * @throws IOException if any error occurred creating the source
      *         or accessing the specified file.
      */
-    public CsvSource newCsvSource(URI uri, String title,
+    public CsvSource newCsvSource(Project project, URI uri, String title,
                                   String description, String filePath,
                                   char separator, boolean hasTitleRow)
                                                             throws IOException;
 
     /**
      * Creates a new RDF source object.
-     * @param  uri        the source URI.
-     * @param  title      the source label.
-     * @param  filePath   the RDF file path in the public storage.
-     * @param  mimeType   the RDF data format as a MIME type. Supported
-     *                    types are: {@link MediaTypes#TEXT_TURTLE},
-     *                    {@link MediaTypes#TEXT_N3},
-     *                    {@link MediaTypes#APPLICATION_RDF_XML}
-     *                    and {@link MediaTypes#APPLICATION_XML}.
+     * @param  project       the owning project.
+     * @param  uri           the source URI.
+     * @param  title         the source label.
+     * @param  description   the description of the source content or
+     *                       intent.
+     * @param  baseUri       the base URI for resolving relative URIs or
+     *                       </code>null</code>.
+     * @param  filePath      the RDF file path in the public storage.
+     * @param  mimeType      the RDF data format as a MIME type.
+     *                       Supported types are:
+     *                       {@link MediaTypes#TEXT_TURTLE},
+     *                       {@link MediaTypes#TEXT_N3},
+     *                       {@link MediaTypes#APPLICATION_RDF_XML}
+     *                       and {@link MediaTypes#APPLICATION_XML}.
      *
-     * @return a new RDF source, ready to be
-     *         {@link Project#addSource(Source) associated} to a
-     *         project.
+     * @return a new RDF source, associated to the specified project.
      * @throws IOException if any error occurred creating the source
      *         or accessing the specified file.
      */
-    public RdfFileSource newRdfSource(URI baseUri, URI uri, String title,
-                                      String description, String filePath,
-                                      String mimeType) throws IOException;
+    public RdfFileSource newRdfSource(Project project, URI uri, String title, 
+                                      String description, URI baseUri,
+                                      String filePath, String mimeType)
+                                                            throws IOException;
     
     /**
      * Creates a new database source object.
-     * @param  uri           the source URI.
-     * @param  title         the source label.
-     * @param  database      the name of the database
-     * @param  srcUrl        the connection string of the database
-     * @param  user          username for connection
-     * @param  password      password for connection
-     * @param  request       SQL query to extract data
-     * @param  cacheDuration duration of local data cache
+     * @param  project         the owning project.
+     * @param  uri             the source URI.
+     * @param  title           the source label.
+     * @param  description     the description of the source content or
+     *                         intent.
+     * @param  database        the name of the database.
+     * @param  connectionUrl   the connection string of the database.
+     * @param  user            username for connection.
+     * @param  password        password for connection.
+     * @param  request         SQL query to extract data.
+     * @param  cacheDuration   duration of local data cache.
      *
-     * @return a new Database source, ready to be
-     *         {@link Project#addSource(Source) associated} to a
+     * @return a new SQL database source, associated to the specified
      *         project.
      * @throws IOException if any error occurred creating the source
      *         or accessing the configured database.
      */
-    public SqlSource newSqlSource(URI uri, String title,
+    public SqlSource newSqlSource(Project project, URI uri, String title,
                                   String description, String database, 
                                   String srcUrl, String user, String password, 
                                   String request, int cacheDuration)
                                                             throws IOException;
 
-    public SparqlSource newSparqlSource(URI uri, String title,
+    /**
+     * Creates a new SPARQL source object.
+     * @param  project         the owning project.
+     * @param  uri             the source URI.
+     * @param  title           the source label.
+     * @param  description     the description of the source content or
+     *                         intent.
+     * @param  endpointUrl     the URL of the HTTP SPARQL endpoint.
+     * @param  sparqlQuery     the SPARQL query (SELECT, CONSTRUCT or
+     *                         DESCRIBE).
+     * @param  cacheDuration   duration of local data cache.
+     *
+     * @return a new SPARQL source, associated to the specified
+     *         project.
+     * @throws IOException if any error occurred creating the source
+     *         or accessing the underlying data.
+     */
+    public SparqlSource newSparqlSource(Project project, URI uri, String title,
                                         String description, String endpointUrl,
                                         String sparqlQuery, int cacheDuration)
                                                             throws IOException;
 
     /**
      * Creates a new transformed RDF source object.
+     * @param  project       the owning project.
      * @param  uri           the source URI.
      * @param  title         the source label.
      * @param  targetGraph   the URI of the target named graph.
      * @param  parent        the parent source.
      *
-     * @return a new transformed RDF source, ready to be
-     *         {@link Project#addSource(Source) associated} to a
+     * @return a new transformed RDF source, associated to the specified
      *         project.
      * @throws IOException if any error occurred creating the source
      *         or accessing the underlying data.
      */
-    public TransformedRdfSource newTransformedRdfSource(URI uri, String title,
-                                String description, 
+    public TransformedRdfSource newTransformedRdfSource(Project project,
+                                URI uri, String title, String description, 
                                 URI targetGraph, Source parent)
                                                             throws IOException;
 
-    public void deleteSource(Source s);
+    /**
+     * Deletes the specified source object and the associated resources
+     * (local files, cached data...).
+     * @param  source   the source object to delete.
+     */
+    public void delete(Source source);
 
     /**
      * Create a new ontology description.
@@ -198,9 +237,9 @@ public interface ProjectManager
      *         {@link Project#addOntology(Ontology) associated} to a
      *         project.
      */
-    public Ontology newOntology(URI srcUrl, String title);
+    public Ontology newOntology(Project project, URI srcUrl, String title);
 
-    public void deleteOntology(Ontology o);
+    public void deleteOntology(Project project, Ontology ontology);
 
     public String getProjectFilePath(String projectId, String fileName);
 
