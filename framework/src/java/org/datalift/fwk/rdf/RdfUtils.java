@@ -227,19 +227,19 @@ public final class RdfUtils
         }
         RDFParser parser = newRdfParser(mimeType);
 
+        org.openrdf.model.URI targetGraph = null;
         final RepositoryConnection cnx = target.newConnection();
         try {
-            final ValueFactory valueFactory = cnx.getValueFactory();
-
             // Prevent transaction commit for each triple inserted.
             cnx.setAutoCommit(false);
+
+            final ValueFactory valueFactory = cnx.getValueFactory();
             // Clear target named graph, if any.
-            org.openrdf.model.URI u = null;
             if (namedGraph != null) {
-                u = valueFactory.createURI(namedGraph.toString());
-                cnx.clear(u);
+                targetGraph = valueFactory.createURI(namedGraph.toString());
+                cnx.clear(targetGraph);
             }
-            final org.openrdf.model.URI ctx = u;
+            final org.openrdf.model.URI ctx = targetGraph;
             // Load triples, mapping URIs on the fly.
             parser.setRDFHandler(new RDFHandlerBase()
                 {
@@ -289,11 +289,15 @@ public final class RdfUtils
                 });
             parser.parse(new FileInputStream(source),
                          (baseUri != null)? baseUri.toString(): "");
-            cnx.commit();
         }
         catch (Exception e) {
             try {
+                // Forget pending triples.
                 cnx.rollback();
+                // Clear target named graph, if any.
+                if (targetGraph != null) {
+                    cnx.clear(targetGraph);
+                }
             }
             catch (Exception e2) { /* Ignore... */ }
 
@@ -301,7 +305,10 @@ public final class RdfUtils
                                    + source.getPath(), e);
         }
         finally {
-            try { cnx.close(); } catch (Exception e) { /* Ignore... */ }
+            // Commit pending data (including graph removal in case of error).
+            try { cnx.commit(); } catch (Exception e) { /* Ignore... */ }
+            // Close repository connection.
+            try { cnx.close();  } catch (Exception e) { /* Ignore... */ }
         }
     }
 
