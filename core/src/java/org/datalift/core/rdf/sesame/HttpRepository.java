@@ -69,6 +69,10 @@ public final class HttpRepository extends BaseRepository
      */
     public HttpRepository(Configuration configuration, String name) {
         super(configuration, name);
+        if (this.url == null) {
+            throw new TechnicalException("repository.invalid.url",
+                                                        this.name, this.url);
+        }
     }
 
     //-------------------------------------------------------------------------
@@ -80,7 +84,7 @@ public final class HttpRepository extends BaseRepository
                                              String name) {
         Repository repository = null;
         try {
-            repository = new HTTPRepository(this.url.toString());
+            repository = new HTTPRepository(String.valueOf(this.url));
             repository.initialize();
         }
         catch (Exception e) {
