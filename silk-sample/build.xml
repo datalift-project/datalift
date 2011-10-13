@@ -103,6 +103,13 @@
   <property name="src.home"             location="${basedir}/src/java"/>
   <property name="web.home"             location="${basedir}/src/web"/>
 
+  <property name="lib.home"             location="${basedir}/lib"/>
+  <property name="run.lib.home"         location="${lib.home}/runtime"/>
+
+  <property name="silk.version"         value="2.5"/>
+  <property name="silk.jar"
+            location="${run.lib.home}/silk-${silk.version}/silk.jar"/>
+
   <property name="fwk.web.home"         location="${fwk.home}/src/web"/>
   <property name="fwk.lib.home"         location="${fwk.home}/lib"/>
   <property name="fwk.dist.home"        location="${fwk.home}/dist"/>
@@ -152,6 +159,9 @@
   <path id="runtime.classpath">
     <!-- Include all JAR files that will be included in webapp WAR -->
     <fileset dir="${fwk.run.libs}">
+      <include name="**/*.jar"/>
+    </fileset>
+    <fileset dir="${run.lib.home}">
       <include name="**/*.jar"/>
     </fileset>
     <fileset dir="${fwk.dist.home}">
@@ -287,7 +297,8 @@
   <target name="dist" depends="compile,prepare-dist,resource-copy"
                       description="Create binary distribution">
     <!-- Create module JAR file -->
-    <jar jarfile="${jar.path}">
+    <copy file="${silk.jar}" tofile="${jar.path}" overwrite="true"/>
+    <jar jarfile="${jar.path}" update="true">
       <fileset dir="${classes.dir}"/>
       <service type="org.datalift.fwk.Module">
         <provider classname="org.datalift.samples.ui.UIModule"/>

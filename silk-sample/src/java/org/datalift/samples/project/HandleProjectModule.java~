@@ -75,13 +75,12 @@ public class HandleProjectModule extends BaseModule implements ProjectModule
             String repositoryID = "lifted";
             
             Repository myRepositoryin = new HTTPRepository(sesameServer, repositoryID);
-            //cannot initialize, otherwise the result could not be written
             ValueFactory f = myRepositoryin.getValueFactory();
             
-            File filein1 = new File("E:\\datalift_2.1_1.1\\datalift\\silk-sample\\src\\java\\org\\datalift\\samples\\project\\regions-2010.rdf");
+            File filein1 = new File("/home/exmo/zhfan/PHD/datalift_new/datalift/silk-sample/src/java/org/datalift/samples/project/regions-2010.rdf");
             String baseURIin1 = "http://rdf.insee.fr/geo/";
             org.openrdf.model.URI contextin1 = f.createURI(baseURIin1);	
-            File filein2 = new File("E:\\datalift_2.1_1.1\\datalift\\silk-sample\\src\\java\\org\\datalift\\samples\\project\\nuts2008_complete.rdf");
+            File filein2 = new File("/home/exmo/zhfan/PHD/datalift_new/datalift/silk-sample/src/java/org/datalift/samples/project/nuts2008_complete.rdf");
             String baseURIin2 = "http://ec.europa.eu/eurostat/ramon/ontologies/geographic.rdf#";
             org.openrdf.model.URI contextin2 = f.createURI(baseURIin2);
             
@@ -98,7 +97,7 @@ public class HandleProjectModule extends BaseModule implements ProjectModule
             catch (OpenRDFException e) {  // handle exception                      	
                    }
                 	
-            File fspec = new File("E:\\datalift_2.1_1.1\\datalift\\silk-sample\\src\\java\\org\\datalift\\samples\\project\\insee_eurostat.xml");
+            File fspec = new File("/home/exmo/zhfan/PHD/datalift_new/datalift/silk-sample/src/java/org/datalift/samples/project/insee_eurostat_with_heuristic_on_level.xml");
         	Silk.executeFile(fspec, "region", 1, true);
             //System.out.println("I AM HERE: " + System.getProperty("user.dir"));                          
             //store the result in the Repository API
@@ -111,7 +110,7 @@ public class HandleProjectModule extends BaseModule implements ProjectModule
                try {
                   conout.add(fileout, baseURIout, RDFFormat.RDFXML);                 
                   //query using CONSTRUCT and form a owl:sameAs graph
-                  File filelink = new File("E:\\datalift_2.1_1.1\\datalift\\silk-sample\\src\\java\\org\\datalift\\samples\\project\\result.xml");
+                  File filelink = new File("/home/exmo/zhfan/PHD/datalift_new/datalift/silk-sample/src/java/org/datalift/samples/project/result.xml");
                   FileOutputStream out = new FileOutputStream(filelink);
                   String sparqlQuery = " PREFIX owl: <http://www.w3.org/2002/07/owl#> " +
                   		               " CONSTRUCT { ?a owl:sameAs ?b } " +
