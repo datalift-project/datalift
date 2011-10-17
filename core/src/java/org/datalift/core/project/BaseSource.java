@@ -35,6 +35,8 @@
 package org.datalift.core.project;
 
 
+import java.util.Date;
+
 import javax.persistence.MappedSuperclass;
 
 import org.datalift.fwk.project.Project;
@@ -68,6 +70,10 @@ public abstract class BaseSource extends BaseRdfEntity implements Source
     private String source;
     @RdfProperty("datalift:project")
     private Project project;
+    @RdfProperty("dcterms:issued")
+    private Date creationDate;
+    @RdfProperty("dc:creator")
+    private String operator;
 
     private transient final SourceType type;
 
@@ -165,6 +171,18 @@ public abstract class BaseSource extends BaseRdfEntity implements Source
 
     /** {@inheritDoc} */
     @Override
+    public final Date getCreationDate() {
+        return this.creationDate;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public final String getOperator() {
+        return this.operator;
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public final SourceType getType() {
         return this.type;
     }
@@ -189,5 +207,25 @@ public abstract class BaseSource extends BaseRdfEntity implements Source
     @Override
     protected void setId(String id) {
         this.uri = id;
+    }
+
+    //-------------------------------------------------------------------------
+    // Specific implementation
+    //-------------------------------------------------------------------------
+
+    /**
+     * Sets the name of the operator that created this source.
+     * @param  operator   the operator name.
+     */
+    public final void setOperator(String operator) {
+        this.operator = operator;
+    }
+
+    /**
+     * Sets the creation date of this source.
+     * @param  date   the source creation date.
+     */
+    public final void setCreationDate(Date creationDate) {
+        this.creationDate = creationDate;
     }
 }

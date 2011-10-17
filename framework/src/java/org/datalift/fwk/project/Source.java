@@ -34,6 +34,8 @@
 
 package org.datalift.fwk.project;
 
+import java.util.Date;
+
 
 /**
  * A source of data, external (file, URL, database query...) or
@@ -43,6 +45,10 @@ package org.datalift.fwk.project;
  */
 public interface Source
 {
+    //-------------------------------------------------------------------------
+    // SourceType enumeration
+    //-------------------------------------------------------------------------
+
     /**
      * The supported DataLift source types.
      */
@@ -53,6 +59,10 @@ public interface Source
         TransformedRdfSource,
         SparqlSource;
     }
+
+    //-------------------------------------------------------------------------
+    // Source contract definition
+    //-------------------------------------------------------------------------
 
     /**
      * Returns the source identifier as a URI.
@@ -95,6 +105,18 @@ public interface Source
      * @param  url   the origin URL.
      */
     public void setSourceUrl(String url);
+
+    /**
+     * Returns the creation date of this source.
+     * @return the creation date.
+     */
+    public Date getCreationDate();
+
+    /**
+     * Returns the operator that created this source.
+     * @return the operator name.
+     */
+    public String getOperator();
 
     /**
      * Returns the {@link SourceType source type}.

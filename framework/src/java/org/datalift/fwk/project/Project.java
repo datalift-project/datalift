@@ -53,7 +53,6 @@ public interface Project
     public void setTitle(String t);
 
     public String getOwner();
-    public void setOwner(String o);
 
     public String getDescription();
     public void setDescription(String d);
@@ -64,11 +63,10 @@ public interface Project
     public Source getSource(String uri);
     public void remove(Source source);
 
-    public Date getDateCreation();
-    public void setDateCreation(Date date);
+    public Date getCreationDate();
 
-    public Date getDateModification();
-    public void setDateModification(Date date);
+    public Date getModificationDate();
+    public void setModificationDate(Date date);
 
     public URI getLicense();
     public void setLicense(URI license);

@@ -170,12 +170,11 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         // Create new CSV source.
         CsvSourceImpl src = new CsvSourceImpl(uri.toString(), project);
         // Set source parameters.
-        src.setTitle(title);
+        this.initSource(src, title, description, null);
         File f = this.getFileStorage(filePath);
         if (!f.isFile()) {
             throw new FileNotFoundException(filePath);
         }
-        src.setDescription(description);
         src.setTitleRow(hasTitleRow);
         src.setFilePath(filePath);
         src.setMimeType("text/csv");
@@ -200,13 +199,12 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         // Create new CSV source.
         RdfFileSourceImpl src = new RdfFileSourceImpl(uri.toString(), project);
         // Set source parameters.
-        src.setSourceUrl(baseUri.toString());
-        src.setTitle(title);
+        this.initSource(src, title, description,
+                             (baseUri != null)? baseUri.toString(): null);
         File f = this.getFileStorage(filePath);
         if (!f.isFile()) {
             throw new FileNotFoundException(filePath);
         }
-        src.setDescription(description);
         src.setFilePath(filePath);
         src.setMimeType(mimeType);
         // Add source to project.
@@ -224,10 +222,9 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         // Create new CSV source.
         SqlSourceImpl src = new SqlSourceImpl(uri.toString(), project);
         // Set source parameters.
-        src.setTitle(title);
-        src.setDescription(description);
-        src.setDatabase(database);
+        this.initSource(src, title, description, null);
         src.setConnectionUrl(srcUrl);
+        src.setDatabase(database);
         src.setUser(user);
         src.setPassword(password);
         src.setQuery(request);
@@ -246,9 +243,8 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         // Create new CSV source.
         SparqlSourceImpl src = new SparqlSourceImpl(uri.toString(), project);
         // Set source parameters.
+        this.initSource(src, title, description, null);
         src.setEndpointUrl(endpointUrl);
-        src.setTitle(title);
-        src.setDescription(description);
         src.setQuery(sparqlQuery);
         src.setCacheDuration(cacheDuration);
         // Add source to project.
@@ -266,8 +262,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         TransformedRdfSourceImpl src =
                         new TransformedRdfSourceImpl(uri.toString(), project);
         // Set source parameters.
-        src.setTitle(title);
-        src.setDescription(description);
+        this.initSource(src, title, description, null);
         src.setTargetGraph(targetGraph.toString());
         src.setParent(parent);
         // Add source to project.
@@ -328,14 +323,15 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     public Project newProject(URI projectId, String title,
                               String description, URI license) {
         // Create new project.
-        Project p = new ProjectImpl(projectId.toString());
+        ProjectImpl p = new ProjectImpl(projectId.toString());
         p.setTitle(title);
-        p.setOwner(SecurityContext.getUserPrincipal());
         p.setDescription(description);
         p.setLicense(license);
+
         Date date = new Date();
-        p.setDateCreation(date);
-        p.setDateModification(date);
+        p.setCreationDate(date);
+        p.setModificationDate(date);
+        p.setOwner(SecurityContext.getUserPrincipal());
         return p;
     }
 
@@ -361,7 +357,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         if (p == null) {
             throw new IllegalArgumentException("p");
         }
-        p.setDateModification(new Date());
+        p.setModificationDate(new Date());
         try {
             if (this.findProject(new URL(p.getUri()).toURI()) == null) {
                 this.projectDao.persist(p);
@@ -386,7 +382,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     }
 
     //-------------------------------------------------------------------------
-    // ProjectManager contract support
+    // Object contract support
     //-------------------------------------------------------------------------
 
     /** {@inheritDoc} */
@@ -401,13 +397,22 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     // Specific implementation
     //-------------------------------------------------------------------------
 
+    /**
+     * Adds the specified namespace to the list of RDF namespaces
+     * known of Empire persistence manager.
+     * @param  ns   the RDF namespace to add.
+     */
     public void registerRdfNamespace(RdfNamespace ns) {
         NamespaceUtils.addNamespace(ns.prefix, ns.uri);
     }
 
+    /**
+     * Registers all {@link RdfNamespace pre-defined RDF namespaces}
+     * to Empire persistence manager.
+     */
     private void registerRdfNamespaces() {
         for (RdfNamespace ns : RdfNamespace.values()) {
-            NamespaceUtils.addNamespace(ns.prefix, ns.uri);
+            this.registerRdfNamespace(ns);
         }
     }
 
@@ -428,6 +433,13 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         return classes;
     }
 
+    /**
+     * Returns the {@link File} object associated to the specified
+     * path in the DataLift public storage.
+     * @param  path   the file path.
+     *
+     * @return the File object in the DataLift public storage.
+     */
     private File getFileStorage(String path) {
         return new File(this.configuration.getPublicStorage(), path);
     }
@@ -459,6 +471,15 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         // Create Empire JPA persistence provider.
         PersistenceProvider provider = Empire.get().persistenceProvider();
         return provider.createEntityManagerFactory("", map);
+    }
+
+    private void initSource(BaseSource src, String title, String description,
+                                            String sourceUrl) {
+        src.setTitle(title);
+        src.setDescription(description);
+        src.setSourceUrl(sourceUrl);
+        src.setCreationDate(new Date());
+        src.setOperator(SecurityContext.getUserPrincipal());
     }
 
     //-------------------------------------------------------------------------

@@ -47,8 +47,12 @@ import com.clarkparsia.empire.annotation.RdfsClass;
 
 @Entity
 @RdfsClass("void:vocabulary")
-public class OntologyImpl extends BaseRdfEntity implements Ontology 
+public class OntologyImpl extends BaseRdfEntity implements Ontology
 {
+    //-------------------------------------------------------------------------
+    // Instance members
+    //-------------------------------------------------------------------------
+
     @RdfProperty("dc:title")
     private String title;
     @RdfProperty("dcterms:source")
@@ -57,65 +61,72 @@ public class OntologyImpl extends BaseRdfEntity implements Ontology
     private Date dateSubmitted;
     @RdfProperty("dc:publisher")
     private String operator;
-    
+
     //-------------------------------------------------------------------------
-    // Constructors
+    // Ontology contract support
     //-------------------------------------------------------------------------
 
-    public OntologyImpl() {
-    	super();
+    /** {@inheritDoc} */
+    @Override
+    public void setTitle(String title) {
+        this.title = title;
     }
-    
-	@Override
-	public void setTitle(String title) {
-		this.title = title;
-	}
 
-	@Override
-	public String getTitle() {
-		return title;
-	}
-	
-	@Override
-	public URI getSource() {
-		return source; 
-	}
+    /** {@inheritDoc} */
+    @Override
+    public String getTitle() {
+        return this.title;
+    }
 
-	@Override
-	public void setSource(URI source) {
-		this.source = source;
-	}
-	
-	@Override
-	public Date getDateSubmitted() {
-		return this.dateSubmitted;
-	}
+    /** {@inheritDoc} */
+    @Override
+    public URI getSource() {
+        return this.source;
+    }
 
-	@Override
-	public void setDateSubmitted(Date dateSubmitted) {
-		this.dateSubmitted = dateSubmitted;
-	}
+    /** {@inheritDoc} */
+    @Override
+    public void setSource(URI source) {
+        this.source = source;
+    }
 
-	@Override
-	public String getOperator() {
-		return this.operator;
-	}
+    /** {@inheritDoc} */
+    @Override
+    public Date getDateSubmitted() {
+        return this.dateSubmitted;
+    }
 
-	@Override
-	public void setOperator(String operator) {
-		this.operator = operator;
-	}
+    /** {@inheritDoc} */
+    @Override
+    public String getOperator() {
+        return this.operator;
+    }
 
-	@Override
-	protected void setId(String id) {
-	    // NOP
-	}
+    /** {@inheritDoc} */
+    @Override
+    public String getUri() {
+        return this.getRdfId().toString();
+    }
 
-	@Override
-	public String getUri() {
-		return this.getRdfId().toString();
-	}
+    //-------------------------------------------------------------------------
+    // BaseRdfEntity contract support
+    //-------------------------------------------------------------------------
 
+    /** {@inheritDoc} */
+    @Override
+    protected void setId(String id) {
+        // NOP
+    }
 
-	
+    //-------------------------------------------------------------------------
+    // Specific implementation
+    //-------------------------------------------------------------------------
+
+    public final void setDateSubmitted(Date dateSubmitted) {
+        this.dateSubmitted = dateSubmitted;
+    }
+
+    public final void setOperator(String operator) {
+        this.operator = operator;
+    }
 }

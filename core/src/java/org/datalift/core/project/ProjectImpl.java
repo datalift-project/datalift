@@ -85,6 +85,9 @@ import static org.datalift.fwk.rdf.RdfNamespace.VDPP;
 @RdfsClass("vdpp:Project")
 public class ProjectImpl extends BaseRdfEntity implements Project
 {
+    //-------------------------------------------------------------------------
+    // Enumeration of project execution steps
+    //-------------------------------------------------------------------------
 
     public enum Execution {
         Selection       (VDPP.uri + "Selection"),
@@ -176,12 +179,6 @@ public class ProjectImpl extends BaseRdfEntity implements Project
 
     /** {@inheritDoc} */
     @Override
-    public void setOwner(String o) {
-        owner = o;
-    }
-
-    /** {@inheritDoc} */
-    @Override
     public String getDescription() {
         return description;
     }
@@ -241,27 +238,21 @@ public class ProjectImpl extends BaseRdfEntity implements Project
 
     /** {@inheritDoc} */
     @Override
-    public Date getDateCreation() {
+    public Date getCreationDate() {
         return (this.dateCreated != null)?
                                 new Date(this.dateCreated.getTime()): null;
     }
 
     /** {@inheritDoc} */
     @Override
-    public void setDateCreation(Date date) {
-        dateCreated = date;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public Date getDateModification() {
+    public Date getModificationDate() {
         return (this.dateModified != null)?
                                 new Date(this.dateModified.getTime()): null;
     }
 
     /** {@inheritDoc} */
     @Override
-    public void setDateModification(Date date) {
+    public void setModificationDate(Date date) {
         this.dateModified = date;
     }
 
@@ -327,7 +318,27 @@ public class ProjectImpl extends BaseRdfEntity implements Project
 
     /** {@inheritDoc} */
     @Override
-    protected void setId(String id) {
+    protected final void setId(String id) {
         this.uri = id;
+    }
+
+    //-------------------------------------------------------------------------
+    // Specific implementation
+    //-------------------------------------------------------------------------
+
+    /**
+     * Sets the name of the operator that initiated this project.
+     * @param  o   the project owner.
+     */
+    public final void setOwner(String o) {
+        this.owner = o;
+    }
+
+    /**
+     * Sets the creation date of this project.
+     * @param  date   the project creation date.
+     */
+    public final void setCreationDate(Date date) {
+        this.dateCreated = date;
     }
 }
