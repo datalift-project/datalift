@@ -282,6 +282,7 @@ public class RouterResource implements LifeCycle, ResourceResolver
         }
     }
 
+    /** {@inheritDoc} */
     @Override
     public void postInit(Configuration configuration) {
         // Post-init each module, ignoring errors.
@@ -501,6 +502,8 @@ public class RouterResource implements LifeCycle, ResourceResolver
             Class<?> clazz = m.get(resource);
             if (clazz != null) {
                 try {
+                    // Matching resource found.
+                    LogContext.setContexts(module, resource);
                     // Look for a constructor with the module as argument.
                     try {
                         Constructor<?> c = clazz.getConstructor(
@@ -511,8 +514,9 @@ public class RouterResource implements LifeCycle, ResourceResolver
                         // Constructor not found. => Use default constructor.
                         target = clazz.newInstance();
                     }
-                    // Matching resource successfully created.
-                    LogContext.setContexts(module, resource);
+                    // Resource successfully created.
+                    log.debug("Forwarding request on \"{}\" to module \"{}\"",
+                                                    uriInfo.getPath(), m.name);
                 }
                 catch (Exception e) {
                     log.error("Failed to create resource of type {}", e, clazz);
