@@ -22,6 +22,12 @@ public abstract class CachingSourceImpl extends BaseSource
                                         implements CachingSource
 {
     //-------------------------------------------------------------------------
+    // Constants
+    //-------------------------------------------------------------------------
+
+    private final static long HOURS_TO_MILLIS = 3600L * 1000L;
+
+    //-------------------------------------------------------------------------
     // Class members
     //-------------------------------------------------------------------------
 
@@ -94,8 +100,8 @@ public abstract class CachingSourceImpl extends BaseSource
 
     /** {@inheritDoc} */
     @Override
-    public void setCacheDuration(int cacheDuration) {
-        this.cacheDuration = cacheDuration;
+    public void setCacheDuration(int durationInHours) {
+        this.cacheDuration = durationInHours;
     }
 
     //-------------------------------------------------------------------------
@@ -123,13 +129,13 @@ public abstract class CachingSourceImpl extends BaseSource
     }
 
     protected boolean isCacheValid() {
-        boolean cacheValid = false;
-
         File f = this.getCacheFile();
-        if (this.cacheDuration > 0) {
-            long now = System.currentTimeMillis();
-            cacheValid = ((f.exists()) &&
-                          (f.lastModified() < (now + this.cacheDuration)));
+
+        boolean cacheValid = f.exists();
+        if ((cacheValid) && (this.cacheDuration > 0)) {
+            long oldestUpdate = System.currentTimeMillis() -
+                                        (this.cacheDuration * HOURS_TO_MILLIS);
+            cacheValid = (f.lastModified() > oldestUpdate);
         }
         return cacheValid;
     }

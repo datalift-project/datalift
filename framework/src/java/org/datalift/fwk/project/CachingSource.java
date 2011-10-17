@@ -35,8 +35,24 @@
 package org.datalift.fwk.project;
 
 
+/**
+ * A CachingSource is a {@link Source} that retrieves remote data and
+ * caches them locally to save network bandwidth and data retrieval
+ * delay.
+ *
+ * @author lbihanic
+ */
 public interface CachingSource extends Source
 {
+    /**
+     * Returns the cache data validity duration, in hours.
+     * @return the cache data validity duration, in hours.
+     */
     public int getCacheDuration();
-    public void setCacheDuration(int cacheDuration);
+
+    /**
+     * Sets the cache data validity duration, in hours.
+     * @param  durationInHours   cache data validity duration.
+     */
+    public void setCacheDuration(int durationInHours);
 }
