@@ -116,8 +116,8 @@
     <init-param>
       <param-name>com.sun.jersey.spi.container.ContainerResponseFilters</param-name>
       <param-value>
-        com.sun.jersey.api.container.filter.GZIPContentEncodingFilter;
-        org.datalift.core.i18n.jersey.PreferredLocalesFilter
+        org.datalift.core.i18n.jersey.PreferredLocalesFilter;
+        com.sun.jersey.api.container.filter.GZIPContentEncodingFilter
       </param-value>
     </init-param>
   </filter>
