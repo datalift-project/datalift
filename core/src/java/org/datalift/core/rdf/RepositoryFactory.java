@@ -32,65 +32,56 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 
-package org.datalift.core.rdf.sesame;
+package org.datalift.core.rdf;
 
 
-import org.openrdf.repository.Repository;
-import org.openrdf.repository.http.HTTPRepository;
-
-import org.datalift.core.TechnicalException;
-import org.datalift.core.rdf.BaseRepository;
 import org.datalift.fwk.Configuration;
+import org.datalift.fwk.rdf.Repository;
 
 
 /**
- * A Repository implementation to access remote repositories over
- * HTTP using the
- * <a href="http://www.openrdf.org/">Open RDF Sesame 2</a> API.
+ * A factory class for instantiating
+ * {@link Repository DataLift repositories}.
+ * <p>
+ * RepositoryFactories are loaded using the
+ * {@link java.util.ServiceLoader Java service provider} mechanism.</p>
+ * <p>
+ * The Java classpath is searched for UTF-8 encoded
+ * <i>provider-configuration files</i> named
+ * <code>META-INF/services/org.datalift.core.rdf.RepositoryFactory</code>
+ * that contains a list of fully-qualified implementation class
+ * names.</p>
  *
- * @author hdevos
+ * @author lbihanic
  */
-public final class HttpRepository extends BaseRepository
+public abstract class RepositoryFactory
 {
     //-------------------------------------------------------------------------
     // Constructors
     //-------------------------------------------------------------------------
 
     /**
-     * Build a new repository.
-     * @param  configuration   the DataLift configuration
+     * Creates a new repository factory instance.
+     */
+    protected RepositoryFactory() {
+        // NOP
+    }
+
+    //-------------------------------------------------------------------------
+    // RepositoryFactory contract definition
+    //-------------------------------------------------------------------------
+
+    /**
+     * Builds a new {@link Repository DataLift repository}.
      * @param  name            the repository name in DataLift
      *                         configuration.
+     * @param  url             the repository URL.
+     * @param  configuration   the DataLift configuration.
      *
-     * @throws IllegalArgumentException if either <code>name</code> or
-     *         <code>configuration</code> is null.
-     * @throws RuntimeException if any error occurred connecting the
-     *         repository.
+     * @return a ready-to-use {@link Repository} or <code>null</code>
+     *         if the configuration for the specified repository can
+     *         not be handled by this factory.
      */
-    public HttpRepository(Configuration configuration, String name) {
-        super(configuration, name);
-        if (this.url == null) {
-            throw new TechnicalException("repository.invalid.url",
-                                                        this.name, this.url);
-        }
-    }
-
-    //-------------------------------------------------------------------------
-    // BaseRepository contract support
-    //-------------------------------------------------------------------------
-
-    @Override
-    protected Repository newNativeRepository(Configuration configuration,
-                                             String name) {
-        Repository repository = null;
-        try {
-            repository = new HTTPRepository(String.valueOf(this.url));
-            repository.initialize();
-        }
-        catch (Exception e) {
-            throw new TechnicalException("repository.connect.error", e,
-                                         name, this.url, e.getMessage());
-        }
-        return repository;
-    }
+    abstract public Repository newRepository(String name, String url,
+                                             Configuration configuration);
 }

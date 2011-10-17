@@ -67,6 +67,7 @@ import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.security.SecurityContext;
 import org.datalift.fwk.sparql.SparqlEndpoint;
+import org.datalift.fwk.util.StringUtils;
 
 import static org.datalift.fwk.util.StringUtils.isBlank;
 
@@ -248,14 +249,8 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                                                 throws WebApplicationException {
         ResponseBuilder response = null;
 
-        // Check for empty query and render HTML query input form.
-        if ((query == null) || (query.trim().length() == 0)) {
-            response = Response.ok(this.newViewable("/sparqlEndpoint.vm",
-                                        this.configuration.getRepositories()),
-                                   MediaType.TEXT_HTML);
-            return response.build();
-        }
-        else {
+        // Check for empty query.
+        if (StringUtils.isSet(query)) {
             try {
                 response = this.executeQuery(defaultGraphUris, namedGraphUris,
                                         query, startOffset, endOffset, gridJson,
@@ -264,6 +259,16 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
             catch (Exception e) {
                 this.handleError(query, e);
             }
+        }
+        else {
+            // No query. => Render HTML query input form.
+            // Get a list of available repositories for user.
+            boolean userAuthenticated = SecurityContext.isUserAuthenticated();
+            Collection<Repository> c =
+                        this.configuration.getRepositories(! userAuthenticated);
+            response = Response.ok(this.newViewable("/sparqlEndpoint.vm", c),
+                                   MediaType.TEXT_HTML);
+            return response.build();
         }
         return response.build();
     }
@@ -305,15 +310,14 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         Repository repo = this.configuration.getRepository(targetRepo);
         if (repo == null) {
             // No repository found for first default graph.
-            // => Use default repository: public data.
+            // => Use default DataLift repository.
             defaultGraphUris.add(0, targetRepo);
-            repo = this.configuration.getDataRepository();
+            repo = this.configuration.getDefaultRepository();
         }
         else {
-            if ((repo != this.configuration.getDefaultRepository()) &&
-                (! SecurityContext.isUserAuthenticated())) {
-                // Unauthenticated user are not allowed to access
-                // any repository but the public one.
+            if (! ((repo.isPublic) ||
+                   (SecurityContext.isUserAuthenticated()))) {
+                // Repository is not public and user is not authenticated.
                 throw new java.lang.SecurityException();
             }
         }

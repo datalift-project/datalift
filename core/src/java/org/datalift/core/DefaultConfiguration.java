@@ -42,19 +42,22 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.MissingResourceException;
 import java.util.Properties;
+import java.util.ServiceConfigurationError;
+import java.util.ServiceLoader;
 import java.util.TreeMap;
 
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.rdf.Repository;
 
-import org.datalift.core.rdf.sesame.HttpRepository;
+import org.datalift.core.rdf.RepositoryFactory;
 import org.datalift.core.util.VersatileProperties;
 
 
@@ -79,10 +82,11 @@ public class DefaultConfiguration extends Configuration
                                             "datalift-application.properties";
 
     /** The property to define the list of repository names. */
-    public final static String REPOSITORY_URIS         =
-                                            "datalift.rdf.repositories";
+    public final static String REPOSITORY_URIS = "datalift.rdf.repositories";
+    /** The property suffix for repository URL. */
+    public final static String REPOSITORY_URL           = ".repository.url";
     /** The property suffix for repository default flag. */
-    public final static String REPOSITORY_DEFAULT_FLAG = ".repository.default";
+    public final static String REPOSITORY_DEFAULT_FLAG  = ".repository.default";
 
     /** The property to define the module directory path. */
     public final static String MODULES_PATH         = "datalift.modules.path";
@@ -92,6 +96,14 @@ public class DefaultConfiguration extends Configuration
     /** The property to define the private file storage directory path. */
     public final static String PRIVATE_STORAGE_PATH =
                                             "datalift.private.storage.path";
+
+    /**
+     * Former property suffix for repository URL.
+     * <p>
+     * Support for this property will be removed in the next release
+     * of DataLift.</p>
+     */
+    private final static String REPOSITORY_HTTP_URL = ".repository.http.url";
 
     //-------------------------------------------------------------------------
     // Class members
@@ -173,14 +185,14 @@ public class DefaultConfiguration extends Configuration
 
     /** {@inheritDoc} */
     @Override
-    public Collection<Repository> getRepositories() {
+    public Collection<Repository> getRepositories(boolean publicOnly) {
         // Defensive copy.
         List<Repository> l = new LinkedList<Repository>();
-        // Always place the default repository at the top
+        // Always place the default (public) repository at the top.
         Repository def = this.getDefaultRepository();
         l.add(def);
         for (Repository r : this.repositories.values()) {
-            if (! r.equals(def)) {
+            if ((! r.equals(def)) && ((! publicOnly) || (r.isPublic))) {
                 l.add(r);
             }
         }
@@ -343,6 +355,14 @@ public class DefaultConfiguration extends Configuration
     // Specific implementation
     //-------------------------------------------------------------------------
 
+    /**
+     * Loads the DataLift configuration, reading the configuration file
+     * path from the specified properties.
+     * @param  props   the bootstrap properties.
+     *
+     * @throws TechnicalException if any error occurred accessing or
+     *         parsing the DataLift configuration file.
+     */
     private VersatileProperties loadConfiguration(Properties props) {
         VersatileProperties config = null;
         try {
@@ -367,8 +387,17 @@ public class DefaultConfiguration extends Configuration
         return config;
     }
 
+    /**
+     * Reads the configuration for the RDF stores and initializes them.
+     * @return the configured {@link Repository repositories}.
+     * @throws TechnicalException if any error occurred initializing
+     *         one of the repositories.
+     */
     private Map<String,Repository> initRepositories() {
-        // Preserve configuration declaration order.
+        // Load all available repository factories.
+        Collection<RepositoryFactory> factories =
+                                            this.loadRepositoryFactories();
+        // Preserve repository configuration declaration order.
         Map<String,Repository> m = new LinkedHashMap<String,Repository>();
 
         for (String name : this.getConfigurationEntry(REPOSITORY_URIS, true)
@@ -376,11 +405,27 @@ public class DefaultConfiguration extends Configuration
             if (name.length() == 0) continue;           // Ignore...
 
             try {
-                Repository r = new HttpRepository(this, name);
-                // Repository r = new org.datalift.core.rdf.virtuoso.VirtuosoRepository(this, name);
+                // Get repository connection URL from configuration.
+                // Try with former URL property name first.
+                String url = this.getConfigurationEntry(
+                                            name + REPOSITORY_HTTP_URL, false);
+                if (url == null) {
+                    // Old URL property not found. => Try with new name.
+                    url = this.getConfigurationEntry(
+                                            name + REPOSITORY_URL, true);
+                }
+                Repository r = null;
+                for (RepositoryFactory f : factories) {
+                    r = f.newRepository(name, url, this);
+                    if (r != null) break;
+                }
+                if (r == null) {
+                    throw new TechnicalException(
+                                        "repository.unknown.type", name, url);
+                }
                 m.put(name, r);
                 if (this.props.getBoolean(
-                                name + REPOSITORY_DEFAULT_FLAG, false)) {
+                                    name + REPOSITORY_DEFAULT_FLAG, false)) {
                     m.put(DEFAULT_REPOSITORY, r);
                 }
             }
@@ -404,6 +449,46 @@ public class DefaultConfiguration extends Configuration
         return Collections.unmodifiableMap(m);
     }
 
+    /**
+     * Loads all available {@link RepositoryFactory} classes using the
+     * Java {@link ServiceLoader service provider} mechanism. 
+     * @return the available repository factories.
+     */
+    private Collection<RepositoryFactory> loadRepositoryFactories() {
+        Collection<RepositoryFactory> factories =
+                                        new LinkedList<RepositoryFactory>();
+        // Make a fault-tolerant loading of listed factories.
+        Iterator<RepositoryFactory> i =
+                        ServiceLoader.load(RepositoryFactory.class).iterator();
+        boolean hasNext = true;
+        do {
+            try {
+                hasNext = i.hasNext();
+                if (hasNext) {
+                    factories.add(i.next());
+                }
+            }
+            catch (ServiceConfigurationError e) {
+                // Skip factory...
+                log.warn("Failed to load {}", e.getMessage());
+            }
+        }
+        while (hasNext);
+        // Check that at least one provider was found.
+        if (factories.isEmpty()) {
+            throw new TechnicalException("repository.missing.factory");
+        }
+        return factories;
+    }
+
+    /**
+     * Reads the DataLift configuration for the specified directory
+     * property and ensures it exists on the local file system.
+     * @param  key        the configuration key for the directory.
+     * @param  required   whether the configuration entry is required.
+     *
+     * @return the directory path on the local file system.
+     */
     private File initLocalPath(String key, boolean required) {
         File f = null;
         String path = this.getConfigurationEntry(key, required);
@@ -424,6 +509,20 @@ public class DefaultConfiguration extends Configuration
         return f;
     }
 
+    /**
+     * Loads the specified Java {@link Properties properties file} on
+     * behalf of the specified class.
+     * @param  filePath   the properties file path, relative to the
+     *                    classloader of the owner class
+     * @param  defaults   the (optional) parent properties.
+     * @param  owner      the class on behalf of which loading the file
+     *                    or <code>null</code> to use the default
+     *                    class loader.
+     *
+     * @return the properties, loaded from the file.
+     * @throws IOException if any error occurred accessing the file or
+     *         parsing the property values.
+     */
     private VersatileProperties loadFromClasspath(String filePath,
                                         Properties defaults, Class<?> owner)
                                                             throws IOException {
@@ -450,6 +549,19 @@ public class DefaultConfiguration extends Configuration
         return p;
     }
 
+    /**
+     * Returns the value of the configuration entry specified by
+     * <code>key</code>
+     * @param  key        the configuration entry key.
+     * @param  required   whether the entry shall be present in
+     *                    configuration.
+     *
+     * @return the value associate with <code>key</code> in this
+     *         DataLift configuration or <code>null</code> if
+     *         <code>key</code> is not bound.
+     * @throws TechnicalException if <code>key</code> is not bound
+     *         and <code>required</code> is set to <code>true</code>.
+     */
     private String getConfigurationEntry(String key, boolean required) {
         String s = this.props.getProperty(key);
         if ((required) && ((s == null) || (s.length() == 0))) {
@@ -458,8 +570,23 @@ public class DefaultConfiguration extends Configuration
         return s;
     }
 
+    /**
+     * Registers the specified object as a
+     * {@link Configuration#getBean(Class) bean} in the DataLift
+     * configuration for the specified class, its superclasses and all
+     * the interfaces the class implements.
+     * @param  o  the object to register.
+     * @param  c  the class to associate the object with.
+     *
+     * @throws TechnicalException if <code>o</code> is not an instance
+     *         of <code>c</code>.
+     */
     private void registerForClass(Object o, Class<?> c) {
-        if ((c != null) && (c != Object.class)) {
+        if ((o != null) && (c != null) && (c != Object.class)) {
+            if (! c.isInstance(o)) {
+                throw new TechnicalException("inconsistent.object.class",
+                                                                o, c.getName());
+            }
             this.registerForType(o, c);
             for (Class<?> i : c.getInterfaces()) {
                 this.registerForInterface(o, i);
@@ -498,8 +625,17 @@ public class DefaultConfiguration extends Configuration
         log.trace("Registered bean {} as type {}", o, clazz);
     }
 
+    /**
+     * Removes the specified object from the DataLift
+     * {@link Configuration#getBean(Class) configuration} for the
+     * specified class, its superclasses and all the interfaces the
+     * class implements.
+     * @param  o  the object to remove.
+     * @param  c  the class to which the object shall no longer be
+     *            associated with.
+     */
     private void removeForClass(Object o, Class<?> c) {
-        if ((c != null) && (c != Object.class)) {
+        if ((o != null) && (c != null) && (c != Object.class)) {
             this.removeForType(o, c);
             for (Class<?> i : c.getInterfaces()) {
                 this.removeForInterface(o, i);

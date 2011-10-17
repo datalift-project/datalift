@@ -63,11 +63,13 @@ import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.rdf.RdfException;
 import org.datalift.fwk.rdf.Repository;
 
+import static org.datalift.core.DefaultConfiguration.REPOSITORY_DEFAULT_FLAG;
+import static org.datalift.fwk.util.StringUtils.isBlank;
+
 
 /**
- * A Repository implementation to access remote repositories over
- * HTTP using the
- * <a href="http://www.openrdf.org/">Open RDF Sesame 2</a> API.
+ * An abstract superclass for {@link Repository} implementations based
+ * on the <a href="http://www.openrdf.org/">Open RDF Sesame 2</a> API.
  *
  * @author hdevos
  */
@@ -79,14 +81,12 @@ abstract public class BaseRepository extends Repository
 
     /** The property suffix for repository display label. */
     public final static String REPOSITORY_LABEL        = ".repository.label";
-    /** The property suffix for repository URL. */
-    public final static String REPOSITORY_HTTP_URL     = ".repository.http.url";
     /** The property suffix for repository login. */
     public final static String REPOSITORY_USERNAME     = ".repository.username";
     /** The property suffix for repository password. */
     public final static String REPOSITORY_PASSWORD     = ".repository.password";
-    /** The property suffix for repository default flag. */
-    public final static String REPOSITORY_DEFAULT_FLAG = ".repository.default";
+    /** The property suffix for repository visibility flag. */
+    public final static String REPOSITORY_PUBLIC_FLAG  = ".repository.public";
 
     //-------------------------------------------------------------------------
     // Class members
@@ -109,33 +109,48 @@ abstract public class BaseRepository extends Repository
 
     /**
      * Build a new repository.
-     * @param  configuration   the DataLift configuration
      * @param  name            the repository name in DataLift
      *                         configuration.
+     * @param  url             the repository URL.
+     * @param  configuration   the DataLift configuration.
      *
      * @throws IllegalArgumentException if either <code>name</code> or
      *         <code>configuration</code> is null.
      * @throws RuntimeException if any error occurred connecting the
      *         repository.
      */
-    protected BaseRepository(Configuration configuration, String name) {
+    protected BaseRepository(String name, String url,
+                                          Configuration configuration) {
         // Read repository connection URL and display label. If label is
         // absent from configuration, use the label property name as key
         // for retrieving internationalized text from resource bundles.
-        super(name, configuration.getProperty(name + REPOSITORY_HTTP_URL),
-                    configuration.getProperty(name + REPOSITORY_LABEL,
-                                              name + REPOSITORY_LABEL));
-
-        this.target = this.newNativeRepository(configuration, name);
+        super(name, url, configuration.getProperty(name + REPOSITORY_LABEL,
+                                                   name + REPOSITORY_LABEL),
+                         parseAccessControlFlag(name, configuration));
+        if (isBlank(this.url)) {
+            throw new TechnicalException("repository.invalid.url",
+                                                        this.name, this.url);
+        }
+        this.target = this.newNativeRepository(configuration);
         this.valueFactory = this.target.getValueFactory();
     }
 
     //-------------------------------------------------------------------------
-    // BaseRepository interface definition
+    // BaseRepository contract definition
     //-------------------------------------------------------------------------
 
+    /**
+     * Creates and configures the underlying OpenRDF Sesame 2
+     * repository.
+     * <p>
+     * This method is invoked after all common repository parameters
+     * ({@link #name}, {@link #url}...) have been set.</p>
+     * @param  configuration   the DataLift configuration.
+     *
+     * @return a configured native repository.
+     */
     abstract protected org.openrdf.repository.Repository
-                newNativeRepository(Configuration configuration, String name);
+                            newNativeRepository(Configuration configuration);
 
     //-------------------------------------------------------------------------
     // Repository contract support
@@ -297,5 +312,39 @@ abstract public class BaseRepository extends Repository
             throw new UnsupportedOperationException(o.getClass().getName());
         }
         return v;
+    }
+
+    /**
+     * Reads and parses the repository
+     * {@link #REPOSITORY_PUBLIC_FLAG access control flag}.
+     * @param  name            the repository name in DataLift
+     *                         configuration.
+     * @param  configuration   the DataLift configuration.
+     *
+     * @return <code>true</code> if the repository is publicly
+     *         accessible, <code>false</code> otherwise.
+     */
+    private static boolean parseAccessControlFlag(String name,
+                                                  Configuration configuration) {
+        // Default repository is always public.
+        boolean publicFlag = parseBoolean(
+                    configuration.getProperty(name + REPOSITORY_DEFAULT_FLAG));
+        if (! publicFlag) {
+            // Not the default repository. => Check for public flag.
+            publicFlag = parseBoolean(
+                    configuration.getProperty(name + REPOSITORY_PUBLIC_FLAG));
+        }
+        return publicFlag;
+    }
+
+    private static boolean parseBoolean(String s) {
+        boolean b = false;
+
+        if (! isBlank(s)) {
+            s = s.trim().toLowerCase();
+            b = ((s.equals(Boolean.TRUE.toString()))
+                                    || (s.equals("yes")) || (s.equals("1")));
+        }
+        return b;
     }
 }

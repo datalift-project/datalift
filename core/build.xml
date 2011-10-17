@@ -205,7 +205,6 @@
   </path>
 
 
-
   <!-- ================ Filter sets for file copy ========================= -->
 
   <filterset id="webapp.param.filters">
@@ -277,7 +276,12 @@
 
   <target name="compile" depends="prepare"
                          description="Compiles Java sources">
-    <!-- Compile Java classes as necessary -->
+    <!-- Compile the Virtuoso repository wrapper only
+         if the Virtuoso Sesame driver classes are present -->
+    <available property="virtuoso.present"
+              classname="virtuoso.sesame2.driver.VirtuosoRepository"
+           classpathref="compile.classpath"/>
+    <!-- Compile Java classes -->
     <javac srcdir="${src.home}"
           destdir="${classes.dir}"
          encoding="${compile.encoding}"
@@ -285,6 +289,7 @@
       deprecation="${compile.deprecation}"
          optimize="${compile.optimize}">
       <classpath refid="compile.classpath"/>
+      <exclude name="**/Virtuoso*" unless="virtuoso.present"/>
     </javac>
     <!-- Copy application resources -->
     <copy todir="${classes.dir}" includeEmptyDirs="false"

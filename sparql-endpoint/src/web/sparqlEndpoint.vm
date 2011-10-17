@@ -13,7 +13,7 @@
 		<h3 class="ui-widget-header dl-widget-header">#i18n("sparql.query.full")</h3>
 		<div class="dl-panel">
 		    <form id="query_form" action="${baseUri}/sparql" method="get">
-#if( ${securityCtx.isAuthenticated()} )
+#if( ${it.size()} > 1 )
 			<div class="dl-form-elt">
 				<label for="default-graph-uri">#i18n("sparql.repository"): </label>
 				<select id="default-graph-uri" name="default-graph-uri">
@@ -74,7 +74,7 @@
 				$("#format_save").val(fmt);
 				var requestUrl = $("#query_form").attr("action")
 							+ "?" + $("#query").serialize();
-#if( ${securityCtx.isAuthenticated()} )
+#if( ${it.size()} > 1 )
 				requestUrl += "&" + $("#default-graph-uri").serialize();
 #end
 				if (fmt.match(/json/)) {

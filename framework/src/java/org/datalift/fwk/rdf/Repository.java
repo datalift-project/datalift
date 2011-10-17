@@ -35,8 +35,6 @@
 package org.datalift.fwk.rdf;
 
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.Map;
 
 import org.openrdf.query.Dataset;
@@ -45,7 +43,8 @@ import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.rio.RDFHandler;
 
 import org.datalift.fwk.TechnicalException;
-import org.datalift.fwk.util.StringUtils;
+
+import static org.datalift.fwk.util.StringUtils.isBlank;
 
 
 /**
@@ -57,7 +56,7 @@ import org.datalift.fwk.util.StringUtils;
  * Initial variable bindings can be specified. The mapping between Java
  * types and RDF data types is the following:</p>
  * <dl>
- *  <dt>{@link java.net.URI}, {@link URL}</dt><dd>URI</dd>
+ *  <dt>{@link java.net.URI}, {@link java.net.URL}</dt><dd>URI</dd>
  *  <dt>String, Integer, Long, Boolean, Double, Byte</dt><dd>Literal</dd>
  * </dl>
  *
@@ -71,10 +70,12 @@ public abstract class Repository
 
     /** The repository name in the DataLift configuration. */
     public final String name;
-    /** The repository connection URL. */
-    public final URL url;
-   /** The repository display label. */
+    /** The repository connection string. */
+    public final String url;
+    /** The repository display label. */
     public final String label;
+    /** Whether this repository is publicly accessible. */
+    public final boolean isPublic;
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -87,23 +88,19 @@ public abstract class Repository
      * @param  label   the repository display label. If
      *                 <code>null</code>, <code>name</code> is used.
      *
-     * @throws IllegalArgumentException if either <code>name</code> or
-     *         <code>url</code> is null.
+     * @throws IllegalArgumentException if either <code>name</code> is
+     *         <code>null</code>.
      * @throws RuntimeException if any error occurred connecting the
      *         repository.
      */
-    public Repository(String name, String url, String label) {
-        if ((name == null) || (name.length() == 0)) {
+    public Repository(String name, String url, String label, boolean isPublic) {
+        if (isBlank(name)) {
             throw new IllegalArgumentException("name");
         }
-        try {
-            this.name  = name;
-            this.url   = (StringUtils.isSet(url))? new URL(url): null;
-            this.label = ((label != null) && (label.length() != 0))? label: name;
-        }
-        catch (MalformedURLException e) {
-            throw new IllegalArgumentException(url, e);
-        }
+        this.name     = name;
+        this.url      = url;
+        this.label    = (! isBlank(label))? label: name;
+        this.isPublic = isPublic;
     }
 
     //-------------------------------------------------------------------------
@@ -296,7 +293,7 @@ public abstract class Repository
      * Returns the connection URL to the repository.
      * @return the connection URL to the repository.
      */
-    public URL getUrl() {
+    public String getUrl() {
         return this.url;
     }
 
@@ -306,6 +303,15 @@ public abstract class Repository
      */
     public String getLabel() {
         return this.label;
+    }
+
+    /**
+     * Returns Whether this repository is publicly accessible.
+     * @return <code>true</code> is this repository is publicly
+     *         accessible; <code>false</code> otherwise.
+     */
+    public boolean isPublic() {
+        return this.isPublic;
     }
 
     //-------------------------------------------------------------------------
@@ -332,6 +338,6 @@ public abstract class Repository
     /** {@inheritDoc} */
     @Override
     public String toString() {
-        return this.name + ": " + this.url.toString();
+        return this.name + ": " + this.url;
     }
 }

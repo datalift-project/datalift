@@ -112,10 +112,30 @@ public abstract class Configuration
     abstract public String getProperty(String key, String def);
 
     /**
-     * Returns a list of the configured repositories.
+     * Returns a list of all configured repositories. The default
+     * repository is always the first entry.
+     * <p>
+     * Calling this method is equivalent to calling</p>
+     * <blockquote><pre>
+     *    getRepositories(false)</code>
+     * </pre></blockquote>
+     *
+     * @return a list of all configured repositories.
+     * @see    #getRepositories(boolean)
+     */
+    public Collection<Repository> getRepositories() {
+        return this.getRepositories(false);
+    }
+
+    /**
+     * Returns a list of the configured repositories. The default
+     * repository is always the first entry.
+     * @param  publicOnly   whether to return only the public
+     *                      repositories or all configured repositories.
+     *
      * @return a list of the configured repositories.
      */
-    abstract public Collection<Repository> getRepositories();
+    abstract public Collection<Repository> getRepositories(boolean publicOnly);
 
     /**
      * Returns the names of the configured repositories.
