@@ -855,11 +855,12 @@ public class VersatileProperties extends Properties
 
         if ((s != null) && (s.length() != 0)) {
             s = s.toLowerCase();
-            if ((s.equals("true")) || (s.equals("yes")) || (s.equals("1"))) {
+            if ((s.equals(Boolean.TRUE.toString())) || (s.equals("yes"))
+                                                    || (s.equals("1"))) {
                 value = true;
             }
-            else if ((s.equals("false")) || (s.equals("no"))
-                                         || (s.equals("0"))) {
+            else if ((s.equals(Boolean.FALSE.toString())) || (s.equals("no"))
+                                                          || (s.equals("0"))) {
                 value = false;
             }
             // Else: use default value.
