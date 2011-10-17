@@ -60,6 +60,7 @@ import org.openrdf.rio.trix.TriXParser;
 import org.openrdf.rio.turtle.TurtleParser;
 
 import org.datalift.fwk.MediaTypes;
+import org.datalift.fwk.util.CloseableIterable;
 import org.datalift.fwk.util.StringUtils;
 import org.datalift.fwk.util.UriMapper;
 
@@ -239,54 +240,9 @@ public final class RdfUtils
                 targetGraph = valueFactory.createURI(namedGraph.toString());
                 cnx.clear(targetGraph);
             }
-            final org.openrdf.model.URI ctx = targetGraph;
             // Load triples, mapping URIs on the fly.
-            parser.setRDFHandler(new RDFHandlerBase()
-                {
-                    private long statementCount = 0L;
-
-                    @Override
-                    public void handleStatement(Statement stmt) {
-                        try {
-                            if (mapper != null) {
-                                // Map subject and object URIs
-                                stmt = valueFactory.createStatement(
-                                            (Resource)(mapValue(stmt.getSubject())),
-                                            mapUri(stmt.getPredicate()),
-                                            mapValue(stmt.getObject()));
-                            }
-                            cnx.add(stmt, ctx);
-                            // Commit transaction every BATCH_SIZE statements.
-                            this.statementCount++;
-                            if ((this.statementCount % BATCH_SIZE) == 0) {
-                                cnx.commit();
-                            }
-                        }
-                        catch (RepositoryException e) {
-                            throw new RuntimeException(
-                                            "RDF triple insertion failed", e);
-                        }
-                    }
-
-                    private Value mapValue(Value v) {
-                        if (v instanceof org.openrdf.model.URI) {
-                        	return mapUri((org.openrdf.model.URI)v);
-                        }
-                        else {
-                            return v;
-                        }
-                    }
-                    private org.openrdf.model.URI mapUri(org.openrdf.model.URI u) {
-                        try {
-                        	return valueFactory.createURI(
-                        			mapper.map(new URI(u.stringValue())).toString());
-                        }
-                        catch (URISyntaxException e) {
-                            // Should never happen.
-                            throw new RuntimeException(e);
-                        }
-                    }
-                });
+            parser.setRDFHandler(
+                            new StatementAppender(cnx, targetGraph, mapper));
             parser.parse(new FileInputStream(source),
                          (baseUri != null)? baseUri.toString(): "");
         }
@@ -303,6 +259,56 @@ public final class RdfUtils
 
             throw new RdfException("Failed to upload RDF triples from "
                                    + source.getPath(), e);
+        }
+        finally {
+            // Commit pending data (including graph removal in case of error).
+            try { cnx.commit(); } catch (Exception e) { /* Ignore... */ }
+            // Close repository connection.
+            try { cnx.close();  } catch (Exception e) { /* Ignore... */ }
+        }
+    }
+
+    public static void upload(CloseableIterable<Statement> source,
+                              Repository target, URI namedGraph,
+                              final UriMapper mapper, String baseUri)
+                                                        throws RdfException {
+        if (source == null) {
+            throw new IllegalArgumentException("source");
+        }
+        if (target == null) {
+            throw new IllegalArgumentException("target");
+        }
+        org.openrdf.model.URI targetGraph = null;
+        final RepositoryConnection cnx = target.newConnection();
+        try {
+            // Prevent transaction commit for each triple inserted.
+            cnx.setAutoCommit(false);
+
+            final ValueFactory valueFactory = cnx.getValueFactory();
+            // Clear target named graph, if any.
+            if (namedGraph != null) {
+                targetGraph = valueFactory.createURI(namedGraph.toString());
+                cnx.clear(targetGraph);
+            }
+            // Load triples, mapping URIs on the fly.
+            StatementAppender appender =
+                                new StatementAppender(cnx, targetGraph, mapper);
+            for (Statement stmt : source) {
+                appender.handleStatement(stmt);
+            }
+        }
+        catch (Exception e) {
+            try {
+                // Forget pending triples.
+                cnx.rollback();
+                // Clear target named graph, if any.
+                if (targetGraph != null) {
+                    cnx.clear(targetGraph);
+                }
+            }
+            catch (Exception e2) { /* Ignore... */ }
+
+            throw new RdfException("Failed to upload RDF triples", e);
         }
         finally {
             // Commit pending data (including graph removal in case of error).
@@ -597,5 +603,64 @@ public final class RdfUtils
                             "Unsupported MIME type for RDF data: " + mimeType);
         }
         return mappedType;
+    }
+
+    
+    private final static class StatementAppender extends RDFHandlerBase
+    {
+        private final RepositoryConnection cnx;
+        private final ValueFactory valueFactory;
+        private final org.openrdf.model.URI targetGraph;
+        private final UriMapper mapper;
+
+        private long statementCount = 0L;
+
+        public StatementAppender(RepositoryConnection cnx,
+                                 org.openrdf.model.URI targetGraph,
+                                 UriMapper mapper) {
+            this.cnx = cnx;
+            this.valueFactory = cnx.getValueFactory();
+            this.targetGraph = targetGraph;
+            this.mapper = mapper;
+        }
+
+        @Override
+        public void handleStatement(Statement stmt) {
+            try {
+                if (mapper != null) {
+                    // Map subject and object URIs
+                    stmt = this.valueFactory.createStatement(
+                                (Resource)(this.mapValue(stmt.getSubject())),
+                                this.mapUri(stmt.getPredicate()),
+                                this.mapValue(stmt.getObject()));
+                }
+                this.cnx.add(stmt, this.targetGraph);
+                // Commit transaction every BATCH_SIZE statements.
+                this.statementCount++;
+                if ((this.statementCount % BATCH_SIZE) == 0) {
+                    this.cnx.commit();
+                }
+            }
+            catch (RepositoryException e) {
+                throw new RuntimeException(
+                                "RDF triple insertion failed", e);
+            }
+        }
+
+        private Value mapValue(Value v) {
+            return (v instanceof org.openrdf.model.URI)?
+                                    this.mapUri((org.openrdf.model.URI)v): v;
+        }
+
+        private org.openrdf.model.URI mapUri(org.openrdf.model.URI u) {
+            try {
+                return this.valueFactory.createURI(
+                        this.mapper.map(new URI(u.stringValue())).toString());
+            }
+            catch (URISyntaxException e) {
+                // Should never happen.
+                throw new RuntimeException(e);
+            }
+        }
     }
 }

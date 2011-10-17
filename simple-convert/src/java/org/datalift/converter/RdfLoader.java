@@ -37,6 +37,8 @@ package org.datalift.converter;
 
 import java.io.File;
 import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 import javax.ws.rs.FormParam;
@@ -48,7 +50,9 @@ import javax.ws.rs.core.Response;
 
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.RdfFileSource;
+import org.datalift.fwk.project.RdfSource;
 import org.datalift.fwk.project.Source;
+import org.datalift.fwk.project.SparqlSource;
 import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.util.RegexUriMapper;
@@ -69,7 +73,7 @@ public class RdfLoader extends BaseConverterModule
     //-------------------------------------------------------------------------
 
     public RdfLoader() {
-        super(MODULE_NAME, SourceType.RdfFileSource);
+        super(MODULE_NAME, SourceType.RdfFileSource, SourceType.SparqlSource);
     }
 
     //-------------------------------------------------------------------------
@@ -80,7 +84,12 @@ public class RdfLoader extends BaseConverterModule
     public Response getIndexPage(@QueryParam("project") URI projectId) {
         // Retrieve project.
         Project p = this.getProject(projectId);
-        return Response.ok(this.newViewable("/rdfLoader.vm", p)).build();
+        // Display conversion configuration page.
+        Map<String, Object> args = new HashMap<String, Object>();
+        args.put("it", p);
+        args.put("converter", this);
+        return Response.ok(this.newViewable("/rdfLoader.vm", args))
+                       .build();
     }
 
     @POST
@@ -109,12 +118,19 @@ public class RdfLoader extends BaseConverterModule
                 }
             }
             // Load input source.
-            RdfFileSource in = (RdfFileSource) p.getSource(sourceId);
-            RdfUtils.upload(new File(configuration.getPublicStorage(),
-                                     in.getFilePath()),
-                            RdfUtils.parseMimeType(in.getMimeType()),
-                            this.internalRepository, targetGraph,
-                            mapper, in.getSourceUrl());
+            RdfSource in = (RdfSource)(p.getSource(sourceId));
+            if (in instanceof RdfFileSource) {
+                RdfFileSource s = (RdfFileSource)in;
+                RdfUtils.upload(new File(configuration.getPublicStorage(),
+                                         s.getFilePath()),
+                                RdfUtils.parseMimeType(s.getMimeType()),
+                                this.internalRepository, targetGraph,
+                                mapper, s.getSourceUrl());
+            }
+            else if (in instanceof SparqlSource) {
+                RdfUtils.upload(in, this.internalRepository,
+                                targetGraph, mapper, uriReplacement);
+            }
             // Register new transformed RDF source.
             Source out = this.addResultSource(p, in, destTitle, targetGraph);
             // Display generated triples.

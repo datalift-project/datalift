@@ -37,6 +37,10 @@ package org.datalift.converter;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -93,7 +97,7 @@ public abstract class BaseConverterModule
     //-------------------------------------------------------------------------
 
     /** The type of input source this module can handle. */
-    protected final SourceType inputSource;
+    protected final Collection<SourceType> inputSources;
     /** The HTTP method to access the module entry page. */
     protected final HttpMethod accessMethod;
 
@@ -117,29 +121,32 @@ public abstract class BaseConverterModule
      * @param  inputSource   the type of source this module expects
      *                       as input.
      */
-    public BaseConverterModule(String name, SourceType inputSource) {
-        this(name, inputSource, HttpMethod.GET);
+    public BaseConverterModule(String name, SourceType... inputSource) {
+        this(name, HttpMethod.GET, inputSource);
     }
 
     /**
      * Creates a new module instance.
-     * @param  name          the module name.
-     * @param  inputSource   the type of source this module expects
-     *                       as input.
-     * @param  method        the HTTP method (GET or POST) to access
-     *                       the module entry page.
+     * @param  name           the module name.
+     * @param  method         the HTTP method (GET or POST) to access
+     *                        the module entry page.
+     * @param  inputSources   the types of sources this module expects
+     *                        as input.
      */
-    public BaseConverterModule(String name, SourceType inputSource,
-                                            HttpMethod method) {
+    public BaseConverterModule(String name, HttpMethod method,
+                                            SourceType... inputSources) {
         super(name, true);
-        if (inputSource == null) {
-            throw new IllegalArgumentException("inputSource");
-        }
         if (method == null) {
             throw new IllegalArgumentException("method");
         }
-        this.inputSource = inputSource;
         this.accessMethod = method;
+
+        if ((inputSources == null) || (inputSources.length == 0)) {
+            throw new IllegalArgumentException("inputSource");
+        }
+        Collection<SourceType> srcTypes = new HashSet<SourceType>();
+        srcTypes.addAll(Arrays.asList(inputSources));
+        this.inputSources = Collections.unmodifiableCollection(srcTypes);
     }
 
     //-------------------------------------------------------------------------
@@ -194,6 +201,21 @@ public abstract class BaseConverterModule
     //-------------------------------------------------------------------------
 
     /**
+     * Returns whether the specified source can be handled by this
+     * converter.
+     * @param  s   the source.
+     *
+     * @return <code>true</code> if this converter supports the source;
+     *         <code>false</code> otherwise.
+     */
+    public boolean canHandle(Source s) {
+        if (s == null) {
+            throw new IllegalArgumentException("s");
+        }
+        return (this.inputSources.contains(s.getType()));
+    }
+
+    /**
      * Retrieves a {@link Project} using its URI.
      * @param  projectId   the project URI.
      *
@@ -224,7 +246,7 @@ public abstract class BaseConverterModule
         }
         Source src = null;
         for (Source s : p.getSources()) {
-            if (s.getType() == this.inputSource) {
+            if (this.canHandle(s)) {
                 src = s;
                 if (! findLast) break;
                 // Else: continue to get last source of type in project...

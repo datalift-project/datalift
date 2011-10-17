@@ -37,7 +37,9 @@ package org.datalift.converter;
 
 import java.net.URI;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
@@ -82,7 +84,11 @@ public class SimplePublisher extends BaseConverterModule
     public Response getIndexPage(@QueryParam("project") URI projectId) {
         // Retrieve project.
         Project p = this.getProject(projectId);
-        return Response.ok(this.newViewable("/publisher.vm", p))
+        // Display conversion configuration page.
+        Map<String, Object> args = new HashMap<String, Object>();
+        args.put("it", p);
+        args.put("converter", this);
+        return Response.ok(this.newViewable("/publisher.vm", args))
                        .build();
     }
 

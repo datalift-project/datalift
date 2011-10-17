@@ -17,7 +17,7 @@
 		<select id="source">
 #foreach( $curSrc in $it.getSources() )
 	#set( $count = 1 )
-	#if( $curSrc.getType() == $field.RdfFileSource )
+	#if( $converter.canHandle($curSrc) )
 		#foreach( $source in $it.getSources() )
 			#if( $source.getType() == $field.TransformedRdfSource && $source.getParent().uri == $curSrc.uri )
 				#set( $count = $count + 1 )

@@ -36,6 +36,8 @@ package org.datalift.converter;
 
 
 import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -91,7 +93,12 @@ public class CsvDirectMapper extends BaseConverterModule
     public Response getIndexPage(@QueryParam("project") URI projectId) {
         // Retrieve project.
         Project p = this.getProject(projectId);
-        return Response.ok(this.newViewable("/csvDirectMapper.vm", p)).build();
+        // Display conversion configuration page.
+        Map<String, Object> args = new HashMap<String, Object>();
+        args.put("it", p);
+        args.put("converter", this);
+        return Response.ok(this.newViewable("/csvDirectMapper.vm", args))
+                       .build();
     }
 
     @POST
@@ -147,7 +154,7 @@ public class CsvDirectMapper extends BaseConverterModule
                                             baseUri + StringUtils.urlify(s));
             }
             // Load triples
-            i = 0;
+            i = 1;                              // Start lines at 1.
             for (Row<String> row : src) {
                 org.openrdf.model.URI subject =
                                 valueFactory.createURI(baseUri + i); // + "#_";

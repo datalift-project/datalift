@@ -16,7 +16,7 @@
 		<p><label for="source">#i18n("source.to_publish"):</label>
 		<select id="source" name="source">
 #foreach( $curSrc in $it.getSources() )
-	#if( $curSrc.getType() == $field.TransformedRdfSource )
+	#if( $converter.canHandle($curSrc) )
 			<option name="${curSrc.uri}">$esc.html($curSrc.title)</option>
 	#end
 #end
