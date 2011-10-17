@@ -163,13 +163,13 @@ public class ProjectResource
      */
     @GET
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
-    public Response getIndex() throws WebApplicationException {
+    public Response displayIndexPage() throws WebApplicationException {
         Response response = null;
         try {
             response = this.displayIndexPage(Response.ok(), null).build();
         }
         catch (Exception e) {
-            this.handleInternalError(e, "Failed to delete project");
+            this.handleInternalError(e, null);
         }
         return response;
     }
@@ -230,11 +230,11 @@ public class ProjectResource
      * @throws WebApplicationException if any error occurred.
      */
     @GET
-    @Path("add.html")
+    @Path("add")
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
     public Response getNewProjectPage(@Context UriInfo uriInfo)
                                                 throws WebApplicationException {
-        return this.getModifyProjectPage(null, uriInfo);
+        return this.getProjectModifyPage(null, uriInfo);
     }
 
     /**
@@ -247,9 +247,9 @@ public class ProjectResource
      * @throws WebApplicationException if any error occurred.
      */
     @GET
-    @Path("{id}/modify.html")
+    @Path("{id}/modify")
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
-    public Response getModifyProjectPage(@PathParam("id") String id,
+    public Response getProjectModifyPage(@PathParam("id") String id,
                                          @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
         Response response = null;
@@ -303,7 +303,7 @@ public class ProjectResource
         Response response = null;
         if (delete) {
             this.deleteProject(id, uriInfo);
-            response = this.getIndex();
+            response = this.displayIndexPage();
         }
         else {
             try {
@@ -382,7 +382,7 @@ public class ProjectResource
     @GET
     @Path("{id}")
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
-    public Response getProjectPage(@PathParam("id") String id,
+    public Response displayProject(@PathParam("id") String id,
                                    @Context UriInfo uriInfo,
                                    @Context Request request)
                                                 throws WebApplicationException {
@@ -391,7 +391,7 @@ public class ProjectResource
         URI uri = uriInfo.getAbsolutePath();
         try {
             Project p = this.loadProject(uri);
-            Date lastModified = p.getDateModification();
+            Date lastModified = p.getModificationDate();
             if (lastModified != null) {
                 response = request.evaluatePreconditions(lastModified);
             }
@@ -422,12 +422,11 @@ public class ProjectResource
     @Produces({ APPLICATION_RDF_XML, TEXT_TURTLE, APPLICATION_TURTLE,
                 TEXT_N3, TEXT_RDF_N3, APPLICATION_N3, APPLICATION_NTRIPLES,
                 APPLICATION_JSON })
-    public Response getProjectDesc(@PathParam("id") String id,
-                                   @Context UriInfo uriInfo,
-                                   @Context Request request,
-                                   @HeaderParam(ACCEPT) String acceptHdr)
+    public Response describeProject(@PathParam("id") String id,
+                                    @Context UriInfo uriInfo,
+                                    @Context Request request,
+                                    @HeaderParam(ACCEPT) String acceptHdr)
                                                 throws WebApplicationException {
-
         // Check that projects exists in internal data store.
         URI uri = uriInfo.getAbsolutePath();
         this.loadProject(uri);
@@ -441,7 +440,7 @@ public class ProjectResource
     }
 
     @GET
-    @Path("{id}/srcupload.html")
+    @Path("{id}/srcupload")
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
     public Object getSourceUploadPage(@PathParam("id") String id,
                                       @Context UriInfo uriInfo)
@@ -466,7 +465,7 @@ public class ProjectResource
     }
 
     @GET
-    @Path("{id}/source/{srcid}/modify.html")
+    @Path("{id}/source/{srcid}/modify")
     public Response getSourceModifyPage(@PathParam("id") String id,
                                         @PathParam("srcid") String srcId,
                                         @Context UriInfo uriInfo)
@@ -500,14 +499,15 @@ public class ProjectResource
     @POST
     @Path("{id}/csvupload")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    public Response csvUpload(@PathParam("id") String projectId,
-                              @FormDataParam("description") String description,
-                              @FormDataParam("source") InputStream file,
-                              @FormDataParam("source")
-                              FormDataContentDisposition fileDisposition,
-                              @FormDataParam("separator") String separator,
-                              @FormDataParam("title_row") String titleRow,
-                              @Context UriInfo uriInfo)
+    public Response uploadCsvSource(
+                            @PathParam("id") String projectId,
+                            @FormDataParam("description") String description,
+                            @FormDataParam("source") InputStream file,
+                            @FormDataParam("source")
+                            FormDataContentDisposition fileDisposition,
+                            @FormDataParam("separator") String separator,
+                            @FormDataParam("title_row") String titleRow,
+                            @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
         if (file == null) {
             this.throwInvalidParamError("source", null);
@@ -569,9 +569,9 @@ public class ProjectResource
     }
 
     @POST
-    @Path("{id}/csvuploadModify")
+    @Path("{id}/csvmodify")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    public Response csvUploadModify(
+    public Response modifyCsvSource(
                             @PathParam("id") String projectId,
                             @FormDataParam("current_source") URI sourceUri,
                             @FormDataParam("description") String description,
@@ -610,14 +610,15 @@ public class ProjectResource
     @POST
     @Path("{id}/rdfupload")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    public Response rdfUpload(@PathParam("id") String projectId,
-                              @FormDataParam("description") String description,
-                              @FormDataParam("base_uri") URI baseUri,
-                              @FormDataParam("source") InputStream file,
-                              @FormDataParam("source")
-                              FormDataContentDisposition fileDisposition,
-                              @FormDataParam("mime_type") String mimeType,
-                              @Context UriInfo uriInfo)
+    public Response uploadRdfSource(
+                            @PathParam("id") String projectId,
+                            @FormDataParam("description") String description,
+                            @FormDataParam("base_uri") URI baseUri,
+                            @FormDataParam("source") InputStream file,
+                            @FormDataParam("source")
+                            FormDataContentDisposition fileDisposition,
+                            @FormDataParam("mime_type") String mimeType,
+                            @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
         if (file == null) {
             this.throwInvalidParamError("source", null);
@@ -671,9 +672,9 @@ public class ProjectResource
     }
 
     @POST
-    @Path("{id}/rdfuploadModify")
+    @Path("{id}/rdfmodify")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    public Response rdfUploadModify(
+    public Response modifyRdfSource(
                             @PathParam("id") String projectId,
                             @FormDataParam("description") String description,
                             @FormDataParam("mime_type") String mimeType,
@@ -713,16 +714,17 @@ public class ProjectResource
 
     @POST
     @Path("{id}/dbupload")
-    public Response dbUpload(@PathParam("id") String projectId,
-                             @FormParam("title") String title,
-                             @FormParam("description") String description,
-                             @FormParam("database") String databaseName,
-                             @FormParam("source_url") String cnxUrl,
-                             @FormParam("user") String user,
-                             @FormParam("password") String password,
-                             @FormParam("request") String sqlQuery,
-                             @FormParam("cache_duration") int cacheDuration,
-                             @Context UriInfo uriInfo)
+    public Response uploadSqlSource(
+                            @PathParam("id") String projectId,
+                            @FormParam("title") String title,
+                            @FormParam("description") String description,
+                            @FormParam("database") String databaseName,
+                            @FormParam("source_url") String cnxUrl,
+                            @FormParam("user") String user,
+                            @FormParam("password") String password,
+                            @FormParam("request") String sqlQuery,
+                            @FormParam("cache_duration") int cacheDuration,
+                            @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
         Response response = null;
         try {
@@ -758,8 +760,8 @@ public class ProjectResource
     }
 
     @POST
-    @Path("{id}/dbuploadModify")
-    public Response dbUploadModify(
+    @Path("{id}/dbmodify")
+    public Response modifySqlSource(
                             @PathParam("id") String projectId,
                             @FormParam("current_source") URI sourceUri,
                             @FormParam("title") String title,
@@ -803,7 +805,7 @@ public class ProjectResource
 
     @POST
     @Path("{id}/sparqlupload")
-    public Response sparqlUpload(
+    public Response uploadSparqlSource(
                             @PathParam("id") String id,
                             @FormParam("title") String title,
                             @FormParam("description") String description,
@@ -846,8 +848,8 @@ public class ProjectResource
     }
 
     @POST
-    @Path("{id}/sparqluploadModify")
-    public Response sparqlUploadModify(
+    @Path("{id}/sparqlmodify")
+    public Response modifySparqlSource(
                             @PathParam("id") String projectId,
                             @FormParam("current_source") URI sourceUri,
                             @FormParam("title") String title,
@@ -902,8 +904,8 @@ public class ProjectResource
     @GET
     @Path("{id}/source")
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
-    public Response getSources(@PathParam("id") String id,
-                               @Context UriInfo uriInfo)
+    public Response displaySources(@PathParam("id") String id,
+                                   @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
         Response response = null;
         try {
@@ -921,7 +923,7 @@ public class ProjectResource
     @GET
     @Path("{id}/source/{srcid}")
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
-    public Response getSourcePage(@PathParam("id") String id,
+    public Response displaySource(@PathParam("id") String id,
                                   @PathParam("srcid") String srcId,
                                   @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
@@ -993,11 +995,11 @@ public class ProjectResource
     @Produces({ APPLICATION_RDF_XML, TEXT_TURTLE, APPLICATION_TURTLE,
                 TEXT_N3, TEXT_RDF_N3, APPLICATION_N3, APPLICATION_NTRIPLES,
                 APPLICATION_JSON })
-    public Response getSourceDesc(@PathParam("id") String id,
-                                  @PathParam("srcid") String srcId,
-                                  @Context UriInfo uriInfo,
-                                  @Context Request request,
-                                  @HeaderParam(ACCEPT) String acceptHdr)
+    public Response describeSource(@PathParam("id") String id,
+                                   @PathParam("srcid") String srcId,
+                                   @Context UriInfo uriInfo,
+                                   @Context Request request,
+                                   @HeaderParam(ACCEPT) String acceptHdr)
                                                 throws WebApplicationException {
         // Check that projects exists in internal data store.
         this.loadProject(this.newProjectId(uriInfo.getBaseUri(), id));
@@ -1012,7 +1014,7 @@ public class ProjectResource
     }
 
     @GET
-    @Path("{id}/ontologyUpload.html")
+    @Path("{id}/ontologyupload")
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
     public Object getOntologyUploadPage(@PathParam("id") String id,
                                         @Context UriInfo uriInfo)
@@ -1033,8 +1035,8 @@ public class ProjectResource
     }
 
     @POST
-    @Path("{id}/ontologyUpload")
-    public Response ontologyUpload(@PathParam("id") String projectId,
+    @Path("{id}/ontologyupload")
+    public Response uploadOntology(@PathParam("id") String projectId,
                                    @FormParam("source_url") URL srcUrl,
                                    @FormParam("title") String title,
                                    @Context UriInfo uriInfo)
@@ -1060,7 +1062,7 @@ public class ProjectResource
     }
 
     @GET
-    @Path("{id}/ontology/{ontologyTitle}/modify.html")
+    @Path("{id}/ontology/{ontologyTitle}/modify")
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
     public Response getOntologyModifyPage(
                             @PathParam("id") String id,
@@ -1093,7 +1095,7 @@ public class ProjectResource
 
     @POST
     @Path("{id}/ontology/{ontologyTitle}/modify")
-    public Response ontologyModify(@PathParam("id") String id,
+    public Response modifyOntology(@PathParam("id") String id,
             @Context UriInfo uriInfo, @FormParam("title") String title,
             @FormParam("source_url") URI source,
             @FormParam("oldTitle") String currentOntologyTitle)
@@ -1175,7 +1177,7 @@ public class ProjectResource
             args.put("current", p);
             args.put("canHandle", modules);
             // Set page expiry & last modification date to force revalidation.
-            Date lastModified = p.getDateModification();
+            Date lastModified = p.getModificationDate();
             if (lastModified != null) {
                 response = response.lastModified(lastModified)
                                    .expires(lastModified);

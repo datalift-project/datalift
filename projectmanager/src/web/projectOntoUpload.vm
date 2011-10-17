@@ -11,7 +11,7 @@
 #else
 	#set( $title  = "project.title.add_ontology" )
 	#set( $submit = "create" )
-	#set( $target = "ontologyUpload" )
+	#set( $target = "ontologyupload" )
 #end
 	<title>#i18n($title) - #i18n("workspace.title") - DataLift</title>
 #css_links
@@ -26,8 +26,8 @@
 	<h3><a href="#">Ontology</a></h3>
 	<div>
 	  <form method="post" action="${it.uri}/$target" class="form_formated">
-		<input type="hidden" name="oldTitle" id="oldTitle" value="$current.title" />
-		<p>#i18n("project.upload_ontology"): $esc.html($it.getTitle())</p>
+		<input type="hidden" name="oldTitle" id="oldTitle" value="$!{current.title}" />
+		<p>#i18n("project.upload_ontology"): $!esc.html($it.getTitle())</p>
 		<p><label for="title">#i18n("project.upload_ontology.title"):</label>
 		<input type="text" id="title" name="title" value="$!esc.html($current.title)" /></p>
 		<p><label for="source_url">#i18n("project.upload_ontology.source"):</label>

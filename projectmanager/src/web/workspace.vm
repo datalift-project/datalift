@@ -23,7 +23,7 @@
 #end
 
 		</div>
-			<a href="${baseUri}/workspace/project/add.html" id="add_project" class="button">#i18n("project.title.new_project")</a>
+			<a href="${baseUri}/workspace/project/add" id="add_project" class="button">#i18n("project.title.new_project")</a>
 	</div>
 
 	<div id="workspace-main-panel" class="ui-widget-content">
@@ -36,11 +36,10 @@
 			</ul>
 
 			<div id="description"><p>
-				#i18n("project.owner_s"): $!esc.html($current.owner)<br />
 				#i18n("project.description"): $!esc.html($current.description)<br />
-				#i18n("project.creation_s"): $date.format("medium", $current.dateCreation)<br />
-				#i18n("project.modification_s"): $date.format("medium", $current.dateModification)<br />
-				#i18n("project.license"): <a href="$current.getLicense()">$esc.html($!current.license)</a></p>
+				#i18n("project.license"): <a href="$current.getLicense()">$esc.html($!current.license)</a><br />
+				#i18n("project.modification_s") $date.format("medium", $current.modificationDate)<br />
+				#i18n("project.creation_s") $date.format("medium", $current.creationDate) #i18n("project.owner_s") $!esc.html($current.owner)</p>
 #if( !${canHandle.isEmpty()} )
 				<div id="module_can_handle">
 					<p>#i18n("project.module_available")</p>
@@ -58,7 +57,7 @@
 #end
 				<p><br /></p>
 				<form method="post" action="$current.uri" class="form_formated">
-					<a href="${current.uri}/modify.html" class="button">#i18n("modify")</a>
+					<a href="${current.uri}/modify" class="button">#i18n("modify")</a>
 					<input type="hidden" id="delete" name="delete" value="true" />
 					<input type="submit" value="#i18n("delete")"/>
 				</form>
@@ -201,7 +200,7 @@
 			caption:"",
 			buttonicon:"ui-icon-plus",
 			onClickButton:function(){
-				window.location = currentProject + "/srcupload.html"
+				window.location = currentProject + "/srcupload"
 			}
 		}).navButtonAdd(
 			'#selectable_sources_toolbar',
@@ -212,7 +211,7 @@
 				var id = jQuery("#selectable_sources").getGridParam('selrow');
 				if(id) {
 					var ret = jQuery("#selectable_sources").getRowData(id);
-					window.location = ret.uri+"/modify.html";
+					window.location = ret.uri+"/modify";
 				} else {
 					alert('#i18n("project.msg.select_row")');
 				}
@@ -276,7 +275,7 @@
 				caption:"",
 				buttonicon:"ui-icon-plus",
 				onClickButton:function() {
-					window.location = currentProject + "/ontologyUpload.html"
+					window.location = currentProject + "/ontologyupload"
 				}
 			}).navButtonAdd('#selectable_ontologies_toolbar',
 				{caption:"",
@@ -285,7 +284,7 @@
 					var id = jQuery("#selectable_ontologies").getGridParam('selrow');
 					if(id){
 						var ret = jQuery("#selectable_ontologies").getRowData(id);
-						window.location = currentProject + "/ontology/"+ret.title+"/modify.html";
+						window.location = currentProject + "/ontology/"+ret.title+"/modify";
 					} else {
 						alert('#i18n("project.msg.select_row")');
 					}
