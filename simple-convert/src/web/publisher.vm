@@ -4,13 +4,13 @@
 <head>
 #load("rdfloader/resources")
 #load_core_resources
-	<title>#i18n("publisher.title") - DataLift</title>
+	<title>#i18n("simple-publisher.title") - DataLift</title>
 #css_links
 </head>
 <body>
 #banner
 <div class="ui-widget-content converter_main" id="workspace">
-	<h3 class="ui-widget-header dl-widget-header">#i18n("publisher.title") - #i18n("project.label") ${it.title}</h3>
+	<h3 class="ui-widget-header dl-widget-header">#i18n("simple-publisher.title") - #i18n("project.label") ${it.title}</h3>
 
 	<form id="converter_form" method="post" action="${baseUri}/simple-publisher?project=${it.uri}">
 		<p><label for="source">#i18n("source.to_publish"):</label>
