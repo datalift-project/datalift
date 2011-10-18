@@ -117,12 +117,12 @@ public abstract class BaseConverterModule
     /**
      * Creates a new module instance, accepting the specified type of
      * input source, with an entry page accessed using HTTP GET.
-     * @param  name          the module name.
-     * @param  inputSource   the type of source this module expects
-     *                       as input.
+     * @param  name           the module name.
+     * @param  inputSources   the types of sources this module expects
+     *                        as input.
      */
-    public BaseConverterModule(String name, SourceType... inputSource) {
-        this(name, HttpMethod.GET, inputSource);
+    public BaseConverterModule(String name, SourceType... inputSources) {
+        this(name, HttpMethod.GET, inputSources);
     }
 
     /**
