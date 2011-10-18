@@ -718,7 +718,6 @@ public class ProjectResource
                             @PathParam("id") String projectId,
                             @FormParam("title") String title,
                             @FormParam("description") String description,
-                            @FormParam("database") String databaseName,
                             @FormParam("source_url") String cnxUrl,
                             @FormParam("user") String user,
                             @FormParam("password") String password,
@@ -740,7 +739,7 @@ public class ProjectResource
             // Initialize new source.
             SqlSource src = this.projectManager.newSqlSource(p,
                                         sourceUri, title, description,
-                                        databaseName, cnxUrl, user, password,
+                                        cnxUrl, user, password,
                                         sqlQuery, cacheDuration);
             // Start iterating on source content to validate database
             // connection parameters and query.
@@ -766,7 +765,6 @@ public class ProjectResource
                             @FormParam("current_source") URI sourceUri,
                             @FormParam("title") String title,
                             @FormParam("description") String description,
-                            @FormParam("database") String databaseName,
                             @FormParam("source_url") String cnxUrl,
                             @FormParam("user") String user,
                             @FormParam("password") String password,
@@ -781,7 +779,6 @@ public class ProjectResource
             // Update source data.
             s.setTitle(title);
             s.setDescription(description);
-            s.setDatabase(databaseName);
             s.setConnectionUrl(cnxUrl);
             s.setUser(user);
             s.setPassword(password);

@@ -163,7 +163,6 @@ public interface ProjectManager
      * @param  title           the source label.
      * @param  description     the description of the source content or
      *                         intent.
-     * @param  database        the name of the database.
      * @param  connectionUrl   the connection string of the database.
      * @param  user            username for connection.
      * @param  password        password for connection.
@@ -175,8 +174,8 @@ public interface ProjectManager
      * @throws IOException if any error occurred creating the source
      *         or accessing the configured database.
      */
-    public SqlSource newSqlSource(Project project, URI uri, String title,
-                                  String description, String database, 
+    public SqlSource newSqlSource(Project project, URI uri,
+                                  String title, String description, 
                                   String srcUrl, String user, String password, 
                                   String request, int cacheDuration)
                                                             throws IOException;
