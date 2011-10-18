@@ -78,8 +78,6 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
     private String user;
     @RdfProperty("datalift:password")
     private String password;
-    @RdfProperty("datalift:database")
-    private String database;
     @RdfProperty("datalift:request")
     private String query;
 
@@ -152,18 +150,6 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
     @Override
     public void setPassword(String password) {
         this.password = password;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public String getDatabase() {
-        return database;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public void setDatabase(String database) {
-        this.database = database;
     }
 
     /** {@inheritDoc} */

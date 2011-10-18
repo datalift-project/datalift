@@ -214,8 +214,8 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
 
     /** {@inheritDoc} */
     @Override
-    public SqlSource newSqlSource(Project project, URI uri, String title,
-                                  String description, String database,
+    public SqlSource newSqlSource(Project project, URI uri,
+                                  String title, String description,
                                   String srcUrl, String user, String password,
                                   String request, int cacheDuration)
                                                             throws IOException {
@@ -224,7 +224,6 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         // Set source parameters.
         this.initSource(src, title, description, null);
         src.setConnectionUrl(srcUrl);
-        src.setDatabase(database);
         src.setUser(user);
         src.setPassword(password);
         src.setQuery(request);

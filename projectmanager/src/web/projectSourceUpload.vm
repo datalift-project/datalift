@@ -99,8 +99,6 @@
 		<input type="text" id="title" name="title" value="$!esc.html($current.title)"/></p>
 		<p><label for="description">#i18n("project.upload_source.description"): </label>
 		<input type="text" id="description" name="description" value="$!esc.html($current.description)"/></p>
-		<p><label for="database">#i18n("project.upload_db.db"): </label>
-		<input type="text" name="database" id="database" value="$!esc.html($current.database)"/></p>
 		<p><label for="source_url">#i18n("project.upload_db.source_url"): </label>
 		<input type="text" name="source_url" id="source_url" value="$!esc.html($current.connectionUrl)"/></p>
 		<p><label for="user">#i18n("project.upload_db.user"): </label>

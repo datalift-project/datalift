@@ -172,7 +172,7 @@ public abstract class BaseSource extends BaseRdfEntity implements Source
     /** {@inheritDoc} */
     @Override
     public final Date getCreationDate() {
-        return this.creationDate;
+        return this.copy(this.creationDate);
     }
 
     /** {@inheritDoc} */
@@ -225,7 +225,11 @@ public abstract class BaseSource extends BaseRdfEntity implements Source
      * Sets the creation date of this source.
      * @param  date   the source creation date.
      */
-    public final void setCreationDate(Date creationDate) {
-        this.creationDate = creationDate;
+    public final void setCreationDate(Date date) {
+        this.creationDate = this.copy(date);
+    }
+
+    protected final Date copy(Date date) {
+        return (date != null)? new Date(date.getTime()): null;
     }
 }

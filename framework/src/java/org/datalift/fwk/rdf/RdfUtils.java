@@ -229,17 +229,12 @@ public final class RdfUtils
         RDFParser parser = newRdfParser(mimeType);
 
         org.openrdf.model.URI targetGraph = null;
-        final RepositoryConnection cnx = target.newConnection();
+        RepositoryConnection cnx = target.newConnection();
         try {
             // Prevent transaction commit for each triple inserted.
             cnx.setAutoCommit(false);
-
-            final ValueFactory valueFactory = cnx.getValueFactory();
             // Clear target named graph, if any.
-            if (namedGraph != null) {
-                targetGraph = valueFactory.createURI(namedGraph.toString());
-                cnx.clear(targetGraph);
-            }
+            targetGraph = clearGraph(namedGraph, cnx);
             // Load triples, mapping URIs on the fly.
             parser.setRDFHandler(
                             new StatementAppender(cnx, targetGraph, mapper));
@@ -279,23 +274,20 @@ public final class RdfUtils
             throw new IllegalArgumentException("target");
         }
         org.openrdf.model.URI targetGraph = null;
-        final RepositoryConnection cnx = target.newConnection();
+        RepositoryConnection cnx = target.newConnection();
         try {
             // Prevent transaction commit for each triple inserted.
             cnx.setAutoCommit(false);
-
-            final ValueFactory valueFactory = cnx.getValueFactory();
             // Clear target named graph, if any.
-            if (namedGraph != null) {
-                targetGraph = valueFactory.createURI(namedGraph.toString());
-                cnx.clear(targetGraph);
-            }
+            targetGraph = clearGraph(namedGraph, cnx);
             // Load triples, mapping URIs on the fly.
             StatementAppender appender =
                                 new StatementAppender(cnx, targetGraph, mapper);
+            appender.startRDF();
             for (Statement stmt : source) {
                 appender.handleStatement(stmt);
             }
+            appender.endRDF();
         }
         catch (Exception e) {
             try {
@@ -605,6 +597,17 @@ public final class RdfUtils
         return mappedType;
     }
 
+    private static org.openrdf.model.URI clearGraph(URI graphName,
+                                                    RepositoryConnection cnx)
+                                                    throws RepositoryException {
+        org.openrdf.model.URI namedGraph = null;
+        // Clear target named graph, if any.
+        if (graphName != null) {
+            namedGraph = cnx.getValueFactory().createURI(graphName.toString());
+            cnx.clear(namedGraph);
+        }
+        return namedGraph;
+    }
     
     private final static class StatementAppender extends RDFHandlerBase
     {
@@ -612,16 +615,30 @@ public final class RdfUtils
         private final ValueFactory valueFactory;
         private final org.openrdf.model.URI targetGraph;
         private final UriMapper mapper;
+        private final int batchSize;
 
         private long statementCount = 0L;
 
         public StatementAppender(RepositoryConnection cnx,
                                  org.openrdf.model.URI targetGraph,
                                  UriMapper mapper) {
+            this(cnx, targetGraph, mapper, -1);
+        }
+
+        public StatementAppender(RepositoryConnection cnx,
+                                 org.openrdf.model.URI targetGraph,
+                                 UriMapper mapper, int batchSize) {
+            super();
+
+            if (cnx == null) {
+                throw new IllegalArgumentException("cnx");
+            }
             this.cnx = cnx;
             this.valueFactory = cnx.getValueFactory();
             this.targetGraph = targetGraph;
             this.mapper = mapper;
+            // Batches can't be too small.
+            this.batchSize = (batchSize < BATCH_SIZE)? BATCH_SIZE: batchSize;
         }
 
         @Override
@@ -637,13 +654,12 @@ public final class RdfUtils
                 this.cnx.add(stmt, this.targetGraph);
                 // Commit transaction every BATCH_SIZE statements.
                 this.statementCount++;
-                if ((this.statementCount % BATCH_SIZE) == 0) {
+                if ((this.statementCount % this.batchSize) == 0) {
                     this.cnx.commit();
                 }
             }
             catch (RepositoryException e) {
-                throw new RuntimeException(
-                                "RDF triple insertion failed", e);
+                throw new RuntimeException("RDF triple insertion failed", e);
             }
         }
 

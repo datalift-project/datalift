@@ -77,9 +77,6 @@ public interface SqlSource extends Source, CloseableIterable<Row<Object>>
     public String getPassword();
     public void setPassword(String password);
 
-    public String getDatabase();
-    public void setDatabase(String database);
-
     public String getQuery();
     public void setQuery(String query);
 

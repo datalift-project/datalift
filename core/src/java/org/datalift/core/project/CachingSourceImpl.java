@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Date;
 
 import javax.persistence.MappedSuperclass;
 
@@ -104,6 +105,13 @@ public abstract class CachingSourceImpl extends BaseSource
         this.cacheDuration = durationInHours;
     }
 
+    /** {@inheritDoc} */
+    @Override
+    public Date getLastCacheUpdate() {
+        File f = this.getCacheFile();
+        return (f.exists())? new Date(f.lastModified()): null;
+    }
+
     //-------------------------------------------------------------------------
     // Specific implementation
     //-------------------------------------------------------------------------
@@ -123,7 +131,8 @@ public abstract class CachingSourceImpl extends BaseSource
                                 Configuration.getDefault().getPrivateStorage(),
                                 fileName);
             log.debug("Created cache file: {}", this.cacheFile);
-            cacheFile.deleteOnExit();
+            // Don't mark cache file for deletion. Let's reuse it!
+            // this.cacheFile.deleteOnExit();
         }
         return this.cacheFile;
     }
