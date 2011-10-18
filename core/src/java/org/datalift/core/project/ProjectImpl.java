@@ -239,21 +239,19 @@ public class ProjectImpl extends BaseRdfEntity implements Project
     /** {@inheritDoc} */
     @Override
     public Date getCreationDate() {
-        return (this.dateCreated != null)?
-                                new Date(this.dateCreated.getTime()): null;
+        return this.copy(this.dateCreated);
     }
 
     /** {@inheritDoc} */
     @Override
     public Date getModificationDate() {
-        return (this.dateModified != null)?
-                                new Date(this.dateModified.getTime()): null;
+        return this.copy(this.dateModified);
     }
 
     /** {@inheritDoc} */
     @Override
     public void setModificationDate(Date date) {
-        this.dateModified = date;
+        this.dateModified = this.copy(date);
     }
 
     /** {@inheritDoc} */
@@ -339,6 +337,10 @@ public class ProjectImpl extends BaseRdfEntity implements Project
      * @param  date   the project creation date.
      */
     public final void setCreationDate(Date date) {
-        this.dateCreated = date;
+        this.dateCreated = this.copy(date);
+    }
+
+    protected final Date copy(Date date) {
+        return (date != null)? new Date(date.getTime()): null;
     }
 }
