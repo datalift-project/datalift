@@ -179,11 +179,11 @@
 	#elseif( $curSrc.getType() == $field.RdfFileSource )
 			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.html($curSrc.description)<br />#end#i18n('project.upload_source.file'): $!esc.html($curSrc.filePath)<br />#i18n('project.upload_rdf_format'): $!esc.html($curSrc.mimeType)"
 	#elseif( $curSrc.getType() == $field.SqlSource )
-			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.html($curSrc.description)<br />#end#i18n('project.upload_db.source_url'): $!esc.html($curSrc.connectionUrl)<br />#i18n('project.upload_db.request'): $!esc.html($curSrc.request)<br />#i18n('project.upload_source.cache_duration'): $!esc.html($curSrc.cacheDuration)"
+			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.html($curSrc.description)<br />#end#i18n('project.upload_db.source_url'): $!esc.html($curSrc.connectionUrl)<br />#i18n('project.upload_db.request'): $!esc.html($curSrc.request)<br />#i18n('project.upload_source.cache_duration'): $!esc.html($curSrc.cacheDuration)<br />#i18n('project.upload_source.cache_update'): $!date.format('medium', $curSrc.lastCacheUpdate)"
 	#elseif( $curSrc.getType() == $field.TransformedRdfSource )
-			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.html($curSrc.description)<br />#end#i18n('project.upload_source.graph'): $!esc.html($curSrc.targetGraph.toString())"
+			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.html($curSrc.description)<br />#end#i18n('project.upload_source.graph'): $!esc.html($curSrc.targetGraph.toString())<br />#i18n('project.upload_source.parent'): $!esc.html($curSrc.parent.title)<br />#i18n('project.upload_source.created'): $!date.format('medium', $curSrc.creationDate)"
 	#elseif ( $curSrc.getType() == $field.SparqlSource )
-			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.html($curSrc.description)<br />#end#i18n('project.upload_sparql.connection_url'): $!esc.html($curSrc.endpointUrl)<br />#i18n('project.upload_source.cache_duration'): $!esc.html($curSrc.cacheDuration)"
+			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.html($curSrc.description)<br />#end#i18n('project.upload_sparql.connection_url'): $!esc.html($curSrc.endpointUrl)<br />#i18n('project.upload_source.cache_duration'): $!esc.html($curSrc.cacheDuration)<br />#i18n('project.upload_source.cache_update'): $!date.format('medium', $curSrc.lastCacheUpdate)"
 	#end
 		},
 #end
