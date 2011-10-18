@@ -3,6 +3,7 @@ body {
   background-color:#FFFFFF;
   font-family: Lucida Grande, Lucida Sans, Arial, sans-serif;
   font-size:.9em;
+  overflow-y:scroll;
 /*
   width:95%;
   margin:auto;
@@ -68,10 +69,10 @@ body {
 }
 
 #projects_panel {
-  width:150px;
+  width:10%;
   margin:0;
-  margin-left:10px;
-  margin-top:10px;
+  margin-left:1%;
+  margin-top:1%;
   height:280px;
   float:left;
 text-align:center;
@@ -89,14 +90,18 @@ text-align:center;
 }
 
 #workspace-main-panel {
-  min-height:290px;
+  height:370px;
   margin-right:10px;
   margin-top:10px;  
-  margin-left:180px;
+  margin-left:13%;
+  width:85%;
+  overflow:hidden;
 }
 
 #workspace {
   padding-bottom:10px;
+  color:blue;
+  width:100%;
 }
 
 .dl-project-button {
@@ -115,7 +120,6 @@ text-align:center;
 
 /* Project description */
 #tabs {
-  min-height:290px;
   border:none;
 }
 
@@ -174,7 +178,16 @@ text-align:center;
   margin:auto;
 }
 
-
 .form_formated p input, .form_formated p textarea {
   width:45%;
 }
+
+.grid_form, #source, #ontology {
+  margin:auto;
+  padding:0;
+}
+
+#selectable_sources_toolbar_center, #selectable_ontologies_toolbar_center {
+  display:none;
+}
+
