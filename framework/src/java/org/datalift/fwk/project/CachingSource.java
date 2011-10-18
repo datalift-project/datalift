@@ -34,6 +34,8 @@
 
 package org.datalift.fwk.project;
 
+import java.util.Date;
+
 
 /**
  * A CachingSource is a {@link Source} that retrieves remote data and
@@ -55,4 +57,11 @@ public interface CachingSource extends Source
      * @param  durationInHours   cache data validity duration.
      */
     public void setCacheDuration(int durationInHours);
+
+    /**
+     * Returns the date of the last cache update.
+     * @return the last cache update date or <code>null</code> if
+     *         no cached data are available.
+     */
+    public Date getLastCacheUpdate();
 }
