@@ -64,4 +64,11 @@ public interface CachingSource extends Source
      *         no cached data are available.
      */
     public Date getLastCacheUpdate();
+
+    /**
+     * Returns the date of next cache expiry.
+     * @return the next cache expiration date or <code>null</code> if
+     *         no cached data are available.
+     */
+    public Date getCacheExpiryDate();
 }

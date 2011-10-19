@@ -26,7 +26,10 @@ public abstract class CachingSourceImpl extends BaseSource
     // Constants
     //-------------------------------------------------------------------------
 
-    private final static long HOURS_TO_MILLIS = 3600L * 1000L;
+    private final static long MINUTES_TO_MILLIS = 60 * 1000L;
+    private final static long HOURS_TO_MILLIS   = 60 * MINUTES_TO_MILLIS;
+
+    private final static long MIN_CACHE_DURATION = 3 * MINUTES_TO_MILLIS;
 
     //-------------------------------------------------------------------------
     // Class members
@@ -112,15 +115,21 @@ public abstract class CachingSourceImpl extends BaseSource
         return (f.exists())? new Date(f.lastModified()): null;
     }
 
+    /** {@inheritDoc} */
+    @Override
+    public Date getCacheExpiryDate() {
+        long expiry = this.getCacheExpiry();
+        return (expiry > 0L)? new Date(expiry): null;
+    }
+
     //-------------------------------------------------------------------------
     // Specific implementation
     //-------------------------------------------------------------------------
 
     /**
      * Returns the cache file this source shall use to store temporary
-     * data.
-     * @param configuration   the DataLift configuration.
-     *
+     * data. The file may not exist depending on whether data have been
+     * loaded.
      * @return the cache file.
      */
     protected File getCacheFile() {
@@ -137,25 +146,22 @@ public abstract class CachingSourceImpl extends BaseSource
         return this.cacheFile;
     }
 
-    protected boolean isCacheValid() {
-        File f = this.getCacheFile();
+    protected long getCacheDurationMillis() {
+        int durationInHours = this.getCacheDuration();
+        return (durationInHours > 0)? durationInHours * HOURS_TO_MILLIS:
+                                      MIN_CACHE_DURATION;
+    }
 
-        boolean cacheValid = f.exists();
-        if ((cacheValid) && (this.cacheDuration > 0)) {
-            long oldestUpdate = System.currentTimeMillis() -
-                                        (this.cacheDuration * HOURS_TO_MILLIS);
-            cacheValid = (f.lastModified() > oldestUpdate);
-        }
-        return cacheValid;
+    protected boolean isCacheValid() {
+        return (this.getCacheExpiry() > System.currentTimeMillis());
     }
 
     /**
      * Get an input stream on the local data cache file, populating it
      * if needed.
-     *
      * @return an input stream on the cache file.
-     * @throws IOException if any error occurred accessing the cache
-     *         file.
+     * @throws IOException if any error occurred accessing the local
+     *         cache or saving the data into it.
      */
     protected InputStream getInputStream() throws IOException {
         if (! this.isCacheValid()) {
@@ -164,5 +170,21 @@ public abstract class CachingSourceImpl extends BaseSource
         return new FileInputStream(this.getCacheFile());
     }
 
+    /**
+     * Loads or reloads source remote data in the local cache file.
+     * @throws IOException if any error occurred accessing the local
+     *         cache or saving the data into it.
+     */
     abstract protected void reloadCache() throws IOException;
+
+    /**
+     * Return the local cached data expiry date as a number of
+     * milliseconds since midnight, January 1, 1970 UTC.
+     * @return the local cached data expiry date in milliseconds.
+     */
+    private long getCacheExpiry() {
+        File f = this.getCacheFile();
+        return ((f.exists()) && (this.getCacheDuration() > 0))?
+                        f.lastModified() + this.getCacheDurationMillis(): -1L;
+    }
 }
