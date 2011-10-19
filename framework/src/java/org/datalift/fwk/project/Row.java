@@ -78,7 +78,7 @@ public interface Row<V> extends Iterable<V>
 
     /**
      * Return the row data at the specified index, in native format.
-     * @param  index   the column index.
+     * @param  index   the (zero-based) column index.
      *
      * @return the data associated to the column at index
      *         <code>index</code>.
@@ -87,7 +87,7 @@ public interface Row<V> extends Iterable<V>
 
     /**
      * Return the row data at the specified index as a string.
-     * @param  index   the column index.
+     * @param  index   the (zero-based) column index.
      *
      * @return the string representation of the data associated to
      *         the column at index <code>index</code>.
