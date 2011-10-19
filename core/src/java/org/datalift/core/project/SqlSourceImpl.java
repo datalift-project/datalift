@@ -35,10 +35,10 @@
 package org.datalift.core.project;
 
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -46,6 +46,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 import javax.persistence.Entity;
 import javax.sql.rowset.WebRowSet;
@@ -55,6 +56,7 @@ import com.clarkparsia.empire.annotation.RdfsClass;
 import com.sun.rowset.WebRowSetImpl;
 
 import org.datalift.core.TechnicalException;
+import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.Row;
 import org.datalift.fwk.project.SqlSource;
@@ -71,6 +73,19 @@ import org.datalift.fwk.util.CloseableIterator;
 public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
 {
     //-------------------------------------------------------------------------
+    // Constants
+    //-------------------------------------------------------------------------
+
+    /** The scheme for JDBC URLs. */
+    public final static String JDBC_URL_SCHEME  = "jdbc:";
+
+    //-------------------------------------------------------------------------
+    // Class members
+    //-------------------------------------------------------------------------
+
+    private final static Logger log = Logger.getLogger();
+
+    //-------------------------------------------------------------------------
     // Instance members
     //-------------------------------------------------------------------------
 
@@ -81,6 +96,7 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
     @RdfProperty("datalift:request")
     private String query;
 
+    private transient WebRowSet rowSet = null;
     private transient Collection<String> columns = null;
 
     //-------------------------------------------------------------------------
@@ -131,7 +147,7 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
     /** {@inheritDoc} */
     @Override
     public String getUser() {
-        return user;
+        return this.user;
     }
 
     /** {@inheritDoc} */
@@ -143,7 +159,7 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
     /** {@inheritDoc} */
     @Override
     public String getPassword() {
-        return password;
+        return this.password;
     }
 
     /** {@inheritDoc} */
@@ -155,7 +171,7 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
     /** {@inheritDoc} */
     @Override
     public String getQuery() {
-        return query;
+        return this.query;
     }
 
     /** {@inheritDoc} */
@@ -181,15 +197,21 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
     /** {@inheritDoc} */
     @Override
     public CloseableIterator<Row<Object>> iterator() {
+        CloseableIterator<Row<Object>> i = null;
+
         this.init();
-        try {
-            WebRowSet rowSet = new WebRowSetImpl();
-            rowSet.readXml(this.getInputStream());
-            return new RowIterator(rowSet);
+        if (this.columns != null) {
+            try {
+                // Get a cursor on the shared copy of locally cached data.
+                return new RowIterator(this.rowSet.createShared());
+            }
+            catch (Exception e) {
+                throw new TechnicalException(null, e);
+            }
         }
-        catch (Exception e) {
-            throw new TechnicalException(null, e);
-        }
+        // Else: No data available.
+
+        return i;
     }
 
     //-------------------------------------------------------------------------
@@ -198,31 +220,39 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
 
     @Override
     protected synchronized void reloadCache() throws IOException {
-        WebRowSet rowSet = null;
+        // Release any data held in memory.
+        if (this.rowSet != null) {
+            try { this.rowSet.close(); } catch (Exception e) { /* Ignore... */ }
+            this.rowSet = null;
+        }
+        // Force recomputation of column names on next access.
+        this.columns = null;
+
+        WebRowSet webRowSet = null;
         String databaseType = null;
         try {
-            rowSet = new WebRowSetImpl();
             // Force loading of database driver.
             String cnxUrl = this.getConnectionUrl();
             databaseType = this.getDatabaseType(cnxUrl);
             Class.forName(DatabaseType.valueOf(databaseType).getDriver());
-            // Get table to grid
-            rowSet.setUrl(cnxUrl);
-            rowSet.setCommand(this.getQuery());
-            rowSet.setUsername(this.getUser());
-            rowSet.setPassword(this.getPassword());
-            rowSet.execute();
-            // Force recomputation of column names on next access.
-            this.columns = null;
-
-            OutputStream out = new FileOutputStream(this.getCacheFile());
-            try {
-                rowSet.writeXml(out);
-                rowSet.close();
-            }
-            finally {
-                out.close();
-            }
+            log.debug("Database driver loaded for {}", databaseType);
+            // Execute SQL query to retrieve data.
+            webRowSet = new WebRowSetImpl();
+            webRowSet.setUrl(cnxUrl);
+            webRowSet.setCommand(this.getQuery());
+            webRowSet.setUsername(this.getUser());
+            webRowSet.setPassword(this.getPassword());
+            webRowSet.execute();
+            log.debug("Successfully executed query: {}", this.getQuery());
+            // Save query results into local cache file.
+            File localCache = this.getCacheFile();
+            webRowSet.writeXml(new FileOutputStream(localCache));
+            // Do not close WebRowSet to use it as a shared memory cache.
+            // Do not close the output stream: WebRowSet takes care of it.
+            log.debug("Query results saved to {}", localCache);
+            // Keep cached data in memory.
+            webRowSet.setReadOnly(true);
+            this.rowSet = webRowSet;
         }
         catch (ClassNotFoundException e) {
             throw new IOException(
@@ -230,12 +260,12 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
                                            databaseType));
         }
         catch (SQLException e) {
-            throw new IOException(e);
-        }
-        finally {
-            if (rowSet != null) {
-                try { rowSet.close(); } catch (Exception e) { /* Ignore... */ }
+            if (webRowSet != null) {
+                try {
+                    webRowSet.close();
+                } catch (Exception e1) { /* Ignore... */ }
             }
+            throw new IOException(e);
         }
     }
 
@@ -243,33 +273,49 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
     // Specific implementation
     //-------------------------------------------------------------------------
 
+    /**
+     * Ensures resources are released even when object gets
+     * garbage-collected.
+     */
+    @Override
+    protected void finalize() {
+        if (this.rowSet != null) {
+            try { this.rowSet.close(); } catch (Exception e) { /* Ignore... */ }
+            this.rowSet = null;
+        }
+    }
+
     private void init() {
         if (this.columns == null) {
-            WebRowSet rowSet = null;
             InputStream in = null;
             try {
-                in = this.getInputStream();
-                rowSet = new WebRowSetImpl();
-                rowSet.readXml(in);
-
-                ResultSetMetaData metadata = rowSet.getMetaData();
+                if (this.rowSet == null) {
+                    // Read data from local cache file.
+                    in = this.getInputStream();
+                    WebRowSet webRowSet = new WebRowSetImpl();
+                    webRowSet.readXml(in);
+                    // Keep cached data in memory.
+                    webRowSet.setReadOnly(true);
+                    this.rowSet = webRowSet;
+                    log.debug("Loaded RowSet from local cache file");
+                }
+                // Extract column names from cached data.
+                ResultSetMetaData metadata = this.rowSet.getMetaData();
                 String[] cols = new String[metadata.getColumnCount()];
                 for (int i=0, max=cols.length; i<max; i++) {
                     cols[i] = metadata.getColumnName(i+1);
                 }
                 this.columns = Collections.unmodifiableCollection(
                                                         Arrays.asList(cols));
+                log.debug("Extracted column names: {}", this.columns);
             }
             catch (Exception e) {
                 throw new TechnicalException(null, e);
             }
             finally {
-                if (rowSet != null) {
-                    try {
-                        rowSet.close();
-                    } catch (Exception e) { /* Ignore... */ }
-                }
-                if (in != null) {
+                if ((this.rowSet == null) && (in != null)) {
+                    // Only close the input stream if it is not being taken
+                    // care of by the WebRowSet.
                     try { in.close(); } catch (Exception e) { /* Ignore... */ }
                 }
             }
@@ -278,10 +324,10 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
     }
 
     private String getDatabaseType(String connectionUrl) {
-        if (connectionUrl.startsWith("jdbc:")) {
-            String[] arrayUrl = connectionUrl.split(":");
-            if (arrayUrl[1] != null) {
-                return arrayUrl[1];
+        if (connectionUrl.startsWith(JDBC_URL_SCHEME)) {
+            String[] urlElts = connectionUrl.split(":");
+            if ((urlElts.length > 1) && (urlElts[1] != null)) {
+                return urlElts[1];
             }
         }
         throw new TechnicalException("invalid.jdbc.url", connectionUrl);
@@ -296,29 +342,44 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
      */
     private final class RowIterator implements CloseableIterator<Row<Object>>
     {
-        private final WebRowSet rowSet;
-        private boolean hasNext = false;
+        private final ResultSet rs;
+        private int rowCount = 0;
         private boolean closed = false;
 
-        public RowIterator(WebRowSet rowSet) {
-            this.rowSet  = rowSet;
-            this.hasNext = this.getNextRow();
+        public RowIterator(ResultSet rs) {
+            this.rs = rs;
         }
 
         /** {@inheritDoc} */
         @Override
         public boolean hasNext() {
-            return this.hasNext;
+            boolean hasNext = false;
+            try {
+                hasNext = ! ((this.closed) || (this.rs.isLast()));
+            }
+            catch (SQLException e) {
+                this.rethrow(e);
+            }
+            return hasNext;
         }
 
         /** {@inheritDoc} */
         @Override
         public Row<Object> next() {
-            Row<Object> row = null;
-            if (this.hasNext) {
-                row = new ResultSetRow(this.rowSet, columns);
-                this.hasNext = this.getNextRow();
+            if (! this.hasNext()) {
+                throw new NoSuchElementException();
             }
+            Row<Object> row = null;
+            try {
+                this.rs.next();
+                this.rowCount++;
+                row = new ResultSetRow(this.rs, columns);
+            }
+            catch (SQLException e) {
+                this.rethrow(e);
+            }
+            log.debug("RowIterator.next() ({}): {}",
+                                        Integer.valueOf(this.rowCount), row);
             return row;
         }
 
@@ -334,7 +395,7 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
             if (! this.closed) {
                 this.closed = true;
                 try {
-                    this.rowSet.close();
+                    this.rs.close();
                 }
                 catch (SQLException e) { /* Ignore... */ }
             }
@@ -347,23 +408,22 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
          */
         @Override
         protected void finalize() {
+            log.debug("RowIterator.finalize()");
             this.close();
         }
 
-        private boolean getNextRow() {
-            boolean hasNext = false;
-            try {
-                hasNext = this.rowSet.next();
-            }
-            catch (SQLException e) {
-                throw new TechnicalException(null, e);
-            }
-            finally {
-                if (! hasNext) {
-                    this.close();
-                }
-            }
-            return hasNext;
+        /**
+         * Translates a {@link SQLException} into a
+         * {@link TechnicalException.
+         * @param  e   an <code>SQLException</code>.
+         *
+         * @throws TechnicalException always. 
+         */
+        private void rethrow(SQLException e) {
+            // Release resources.
+            this.close();
+            // Rethrow exception.
+            throw new TechnicalException(null, e);
         }
     }
 
@@ -421,7 +481,7 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
         @Override
         public Object get(int index) {
             try {
-                return this.rs.getObject(index);
+                return this.rs.getObject(index + 1); // SQL index is 1-based.
             }
             catch (SQLException e) {
                 throw new TechnicalException(null, e);
@@ -431,7 +491,7 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
         @Override
         public String getString(int index) {
             try {
-                return this.rs.getString(index);
+                return this.rs.getString(index + 1); // SQL index is 1-based.
             }
             catch (SQLException e) {
                 throw new TechnicalException(null, e);
@@ -450,6 +510,9 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
 
                 @Override
                 public Object next() {
+                    if (! this.hasNext()) {
+                        throw new NoSuchElementException();
+                    }
                     return get(this.curPos++);
                 }
 
