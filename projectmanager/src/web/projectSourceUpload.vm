@@ -105,8 +105,8 @@
 		<input type="text" id="user" name="user" value="$!esc.html($current.user)"/></p>
 		<p><label for="password">#i18n("project.upload_db.password"): </label>
 		<input type="password" name="password" id="password" value="$!esc.html($current.password)"/></p>
-		<p><label for="request">#i18n("project.upload_db.request"): </label>
-		<textarea id="request" name="request" value="$!esc.html($current.request)"></textarea></p>
+		<p><label for="sql_query">#i18n("project.upload_db.query"): </label>
+		<textarea id="sql_query" name="sql_query" value="$!esc.html($current.query)"></textarea></p>
 		<p><label for="cache_duration">#i18n("project.upload_source.cache_duration"): </label></p>
 		<p><input type="text" id="cache_duration" name="cache_duration" value="$!esc.html($current.cacheDuration)"/></p>
 		<input type="submit" value="#i18n("$submit")"/>
@@ -123,8 +123,8 @@
 		<input type="text" id="description" name="description" value="$!esc.html($current.description)"/></p>
 		<p><label for="connection_url">#i18n("project.upload_sparql.connection_url"): </label>
 		<input type="text" id="connection_url" name="connection_url" value="$!esc.html($current.connectionUrl)"/></p>
-		<p><label for="request">#i18n("project.upload_sparql.request"):</label>
-		<textarea id="request" name="request" value="$!esc.html($current.request)"></textarea></p>
+		<p><label for="sparql_query">#i18n("project.upload_sparql.query"):</label>
+		<textarea id="sparql_query" name="sparql_query" value="$!esc.html($current.query)"></textarea></p>
 		<p><label for="cache_duration">#i18n("project.upload_source.cache_duration"): </label>
 		<input type="text" id="cache_duration" name="cache_duration" value="$!esc.html($current.cacheDuration)"/></p>
 		<input type="submit" value="#i18n("$submit")"/>

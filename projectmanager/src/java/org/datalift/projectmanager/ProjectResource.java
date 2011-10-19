@@ -364,7 +364,7 @@ public class ProjectResource
             response = this.displayIndexPage(Response.ok(), null).build();
         }
         catch (Exception e) {
-            this.handleInternalError(e, "Failed to delete project {Ø}", uri);
+            this.handleInternalError(e, "Failed to delete project {}", uri);
         }
         return response;
     }
@@ -391,16 +391,18 @@ public class ProjectResource
         URI uri = uriInfo.getAbsolutePath();
         try {
             Project p = this.loadProject(uri);
+            // Check data freshness HTTP headers (If-Modified-Since & ETags)
             Date lastModified = p.getModificationDate();
             if (lastModified != null) {
                 response = request.evaluatePreconditions(lastModified);
             }
             if (response == null) {
+                // Page not (yet) cached or staled cache. => Return page.
                 response = this.displayIndexPage(Response.ok(), p);
             }
         }
         catch (Exception e) {
-            this.handleInternalError(e, "Error accessing project {0}", uri);
+            this.handleInternalError(e, "Error accessing project {}", uri);
         }
         return response.build();
     }
@@ -459,7 +461,7 @@ public class ProjectResource
                             TEXT_HTML).build();
         }
         catch (Exception e) {
-            this.handleInternalError(e, "Failed to load project {0}", uri);
+            this.handleInternalError(e, "Failed to load project {}", uri);
         }
         return response;
     }
@@ -721,7 +723,7 @@ public class ProjectResource
                             @FormParam("source_url") String cnxUrl,
                             @FormParam("user") String user,
                             @FormParam("password") String password,
-                            @FormParam("request") String sqlQuery,
+                            @FormParam("sql_query") String sqlQuery,
                             @FormParam("cache_duration") int cacheDuration,
                             @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
@@ -768,7 +770,7 @@ public class ProjectResource
                             @FormParam("source_url") String cnxUrl,
                             @FormParam("user") String user,
                             @FormParam("password") String password,
-                            @FormParam("request") String sqlQuery,
+                            @FormParam("sql_query") String sqlQuery,
                             @FormParam("cache_duration") int cacheDuration,
                             @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
@@ -794,8 +796,8 @@ public class ProjectResource
             response = this.redirect(p, ProjectTab.Sources).build();
         }
         catch (Exception e) {
-            this.handleInternalError(e, "Failed to create SQL source for {}",
-                                        title);
+            this.handleInternalError(e,
+                                "Failed to modify SQL source {}", sourceUri);
         }
         return response;
     }
@@ -807,7 +809,7 @@ public class ProjectResource
                             @FormParam("title") String title,
                             @FormParam("description") String description,
                             @FormParam("connection_url") String endpointUrl,
-                            @FormParam("request") String sparqlQuery,
+                            @FormParam("sparql_query") String sparqlQuery,
                             @FormParam("cache_duration") int cacheDuration,
                             @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
@@ -852,7 +854,7 @@ public class ProjectResource
                             @FormParam("title") String title,
                             @FormParam("description") String description,
                             @FormParam("connection_url") String endpointUrl,
-                            @FormParam("request") String sparqlQuery,
+                            @FormParam("sparql_query") String sparqlQuery,
                             @FormParam("cache_duration") int cacheDuration,
                             @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
@@ -876,8 +878,8 @@ public class ProjectResource
             response = this.redirect(p, ProjectTab.Sources).build();
         }
         catch (Exception e) {
-            this.handleInternalError(e, "Failed to create SPARQL source for {}",
-                                        title);
+            this.handleInternalError(e,
+                                "Failed to modify SPARQL source {}", sourceUri);
         }
         return response;
     }
@@ -902,19 +904,27 @@ public class ProjectResource
     @Path("{id}/source")
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
     public Response displaySources(@PathParam("id") String id,
-                                   @Context UriInfo uriInfo)
+                                   @Context UriInfo uriInfo,
+                                   @Context Request request)
                                                 throws WebApplicationException {
-        Response response = null;
+        ResponseBuilder response = null;
         try {
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
             Project p = this.loadProject(projectUri);
-
-            response = this.displayIndexPage(Response.ok(), p).build();
+            // Check data freshness HTTP headers (If-Modified-Since & ETags)
+            Date lastModified = p.getModificationDate();
+            if (lastModified != null) {
+                response = request.evaluatePreconditions(lastModified);
+            }
+            if (response == null) {
+                // Page not (yet) cached or staled cache. => Return page.
+                response = this.displayIndexPage(Response.ok(), p);
+            }
         }
         catch (Exception e) {
             this.handleInternalError(e, null);
         }
-        return response;
+        return response.build();
     }
 
     @GET
@@ -982,7 +992,7 @@ public class ProjectResource
             response = this.redirect(p, ProjectTab.Sources).build();
         }
         catch (Exception e) {
-            this.handleInternalError(e, "Failed to load source {}", sourceId);
+            this.handleInternalError(e, "Failed to delete source {}", sourceId);
         }
         return response;
     }
@@ -1118,8 +1128,8 @@ public class ProjectResource
             response = this.redirect(p, ProjectTab.Ontologies).build();
         }
         catch (Exception e) {
-            this.handleInternalError(e, "Failed to create SQL source for {}",
-                                        title);
+            this.handleInternalError(e, "Failed to modify ontology \"{}\"",
+                                        currentOntologyTitle);
         }
         return response;
     }
@@ -1184,7 +1194,6 @@ public class ProjectResource
             cc.setPrivate(true);
             cc.setMustRevalidate(true);
             response = response.cacheControl(cc);
-
         }
         return response.entity(this.newViewable("/workspace.vm", args))
                        .type(TEXT_HTML);
