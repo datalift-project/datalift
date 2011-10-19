@@ -36,9 +36,9 @@ package org.datalift.converter;
 
 
 import java.net.URI;
-import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Map;
@@ -48,15 +48,23 @@ import static java.util.GregorianCalendar.*;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.xml.datatype.DatatypeFactory;
 
 import org.openrdf.model.Literal;
 import org.openrdf.model.ValueFactory;
 import org.openrdf.repository.RepositoryConnection;
 
+import org.datalift.fwk.MediaTypes;
+import org.datalift.fwk.log.Logger;
+import org.datalift.fwk.project.CachingSource;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectModule;
 import org.datalift.fwk.project.Row;
@@ -88,6 +96,7 @@ public class SqlDirectMapper extends BaseConverterModule
     //-------------------------------------------------------------------------
 
     private final static DatatypeFactory dtFactory;
+    private final static Logger log = Logger.getLogger();
 
     static {
         try {
@@ -108,6 +117,18 @@ public class SqlDirectMapper extends BaseConverterModule
     }
 
     //-------------------------------------------------------------------------
+    // Module contract support
+    //-------------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    @Override
+    public Map<String,Class<?>> getResources() {
+        Map<String, Class<?>> rsc = new HashMap<String, Class<?>>();
+        rsc.put("columns", SqlSourceResource.class);
+        return rsc;
+    }
+
+    //-------------------------------------------------------------------------
     // Web services
     //-------------------------------------------------------------------------
 
@@ -123,11 +144,59 @@ public class SqlDirectMapper extends BaseConverterModule
                        .build();
     }
 
+    @GET
+    @Path("columns")
+    @Produces(MediaTypes.APPLICATION_JSON)
+    public Response getColumnNames(@QueryParam("project") URI projectId,
+                                   @QueryParam("source") URI sourceId,
+                                   @Context Request request)
+                                                throws WebApplicationException {
+        ResponseBuilder response = null;
+        try {
+            // Retrieve project.
+            Project p = this.getProject(projectId);
+            // Load input source.
+            SqlSource in = (SqlSource)p.getSource(sourceId);
+            // Check data freshness HTTP headers (If-Modified-Since & ETags)
+            CachingSource cs = null;
+            Date lastModified = null;
+            if (in instanceof CachingSource) {
+                cs = (CachingSource)in;
+                lastModified = cs.getLastCacheUpdate();
+                if (lastModified != null) {
+                    response = request.evaluatePreconditions(lastModified);
+                }
+            }
+            if (response == null) {
+                // Data not (yet) cached or staled cache. => Return data.
+                StringBuilder sb = new StringBuilder(512).append('[');
+                for (String s : in.getColumnNames()) {
+                    sb.append('"').append(s).append("\",");
+                }
+
+                sb.setLength(sb.length() - 1);  // Remove last separator.
+                sb.append(']');                 // End JSON array.
+
+                response = Response.ok(sb.toString());
+                // Set page expiry & last modification date.
+                if (lastModified != null) {
+                    response = response.lastModified(lastModified)
+                                       .expires(cs.getCacheExpiryDate());
+                }
+            }
+        }
+        catch (Exception e) {
+            this.handleInternalError(e);
+        }
+        return response.build();
+    }
+
     @POST
     public Response loadSourceData(@QueryParam("project") URI projectId,
                                    @QueryParam("source") URI sourceId,
                                    @FormParam("dest_title") String destTitle,
-                                   @FormParam("dest_graph_uri") URI targetGraph)
+                                   @FormParam("dest_graph_uri") URI targetGraph,
+                                   @FormParam("key_column") String keyColumn)
                                                 throws WebApplicationException {
         Response response = null;
         try {
@@ -136,7 +205,7 @@ public class SqlDirectMapper extends BaseConverterModule
             // Load input source.
             SqlSource in = (SqlSource)p.getSource(sourceId);
             // Convert CSV data and load generated RDF triples.
-            this.convert(in, null, this.internalRepository, targetGraph);
+            this.convert(in, keyColumn, this.internalRepository, targetGraph);
             // Register new transformed RDF source.
             Source out = this.addResultSource(p, in, destTitle, targetGraph);
             // Display generated triples.
@@ -154,6 +223,9 @@ public class SqlDirectMapper extends BaseConverterModule
 
     private void convert(SqlSource src, String keyColumn,
                                         Repository target, URI targetGraph) {
+        if (StringUtils.isBlank(keyColumn)) {
+            keyColumn = null;
+        }
         final RepositoryConnection cnx = target.newConnection();
         try {
             final ValueFactory valueFactory = cnx.getValueFactory();
@@ -173,14 +245,14 @@ public class SqlDirectMapper extends BaseConverterModule
             org.openrdf.model.URI[] predicates = new org.openrdf.model.URI[max];
             int i = 0;
             for (String s : src.getColumnNames()) {
-                if (! keyColumn.equals(s)) {
+                if (! s.equals(keyColumn)) {
                     predicates[i] = valueFactory.createURI(
                                             baseUri + StringUtils.urlify(s));
                 }
                 i++;
             }
             // Load triples
-            i = 0;
+            i = 1;              // Start numbering lines at 1.
             for (Row<Object> row : src) {
                 String key = (keyColumn != null)? row.getString(keyColumn):
                                                   String.valueOf(i);
@@ -190,10 +262,12 @@ public class SqlDirectMapper extends BaseConverterModule
                 for (int j=0; j<max; j++) {
                     Object o = row.get(j);
                     if ((o != null) && (predicates[j] != null)) {
+                        Literal value = this.mapValue(o, valueFactory);
                         cnx.add(valueFactory.createStatement(
                                             subject, predicates[j],
-                                            this.mapValue(o, valueFactory)),
+                                            value),
                                 ctx);
+log.debug("{}: {} -> {}", subject, o, value);
                     }
                     // Else: ignore cell.
                 }
@@ -202,7 +276,7 @@ public class SqlDirectMapper extends BaseConverterModule
             cnx.commit();
         }
         catch (Exception e) {
-            throw new TechnicalException("csv.conversion.failed", e);
+            throw new TechnicalException("sql.conversion.failed", e);
         }
         finally {
             try { cnx.close(); } catch (Exception e) { /* Ignore */ }
@@ -230,9 +304,9 @@ public class SqlDirectMapper extends BaseConverterModule
         else if (o instanceof Long) {
             v = valueFactory.createLiteral(((Long)o).longValue());
         }
-        else if (o instanceof Date) {
+        else if (o instanceof java.sql.Date) {
             GregorianCalendar c = new GregorianCalendar();
-            c.setTimeInMillis(((Date)o).getTime());
+            c.setTimeInMillis(((java.sql.Date)o).getTime());
 
             v = valueFactory.createLiteral(
                     dtFactory.newXMLGregorianCalendarDate(this.getYear(c),
@@ -269,5 +343,24 @@ public class SqlDirectMapper extends BaseConverterModule
 
     private final int getTimeZoneOffsetInMinutes(GregorianCalendar c) {
         return (c.get(ZONE_OFFSET) + c.get(DST_OFFSET)) / (60*1000);
+    }
+
+
+    public static class SqlSourceResource
+    {
+        private final SqlDirectMapper parent;
+
+        public SqlSourceResource(SqlDirectMapper parent) {
+            this.parent = parent;
+        }
+
+        @GET
+        @Produces(MediaTypes.APPLICATION_JSON)
+        public Response getColumnNames(@QueryParam("project") URI projectId,
+                                       @QueryParam("source") URI sourceId,
+                                       @Context Request request)
+                                                throws WebApplicationException {
+            return this.parent.getColumnNames(projectId, sourceId, request);
+        }
     }
 }

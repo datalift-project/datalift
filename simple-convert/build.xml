@@ -294,6 +294,7 @@
         <provider classname="org.datalift.converter.RdfLoader"/>
         <provider classname="org.datalift.converter.RdfTransformer"/>
         <provider classname="org.datalift.converter.SimplePublisher"/>
+        <provider classname="org.datalift.converter.SqlDirectMapper"/>
       </service>
     </jar>
   </target>
