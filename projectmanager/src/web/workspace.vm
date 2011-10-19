@@ -28,7 +28,7 @@
 
 	<div id="workspace-main-panel" class="ui-widget-content">
 #if( $current )
-		<div id="tabs">
+		<div id="tabs" style="margin:0;">
 			<ul>
 				<li><a onclick="historyPush('${current.uri}#description');" href="#description">#i18n("project.title.description")</a></li>
 				<li><a onclick="historyPush('${current.uri}#source');" href="#source">#i18n("project.title.sources")</a></li>
@@ -64,7 +64,7 @@
 			</div>
 
 			<div id="source">
-				<form>
+				<form class="grid_form">
 					<table id="selectable_sources">
 						<tr><td/></tr>
 					</table>
@@ -73,7 +73,7 @@
 			</div>
 
 			<div id="ontology">
-				<form>
+				<form class="grid_form">
 					<table id="selectable_ontologies">
 						<tr><td/></tr>
 					</table>
@@ -109,8 +109,9 @@
 			if (typeof(currentProject) != 'undefined') {
 				if (History.getHash() == "")
 					$("#tabs").tabs('select', "#description");
-				else
+				else {
 					$("#tabs").tabs('select', "#"+History.getHash());
+				}
 			}
 		});
 
@@ -118,8 +119,8 @@
 		loadGridOntologies();
 
 		$(window).bind('resize', function() {
-			$("#selectable_sources").setGridWidth($("#tabs").width() - 50);
-		$("#selectable_ontologies").setGridWidth($("#tabs").width() - 50);
+				$("#selectable_sources").setGridWidth($("#tabs").width());
+				$("#selectable_ontologies").setGridWidth($("#tabs").width());			
 		}).trigger('resize');
 	});
 
@@ -165,8 +166,9 @@
 				{name:'infos',index:'infos', sorttype:"text"} ],
 			caption: "",
 			rowNum:10, rowList:[10,20,30], pager: '#selectable_sources_toolbar',
-			autowidth: true,
-			gridview: true
+			autowidth: false,
+			gridview: true,
+			height: 275
 		});
 
 		var mydata = [
@@ -193,8 +195,8 @@
 			jQuery("#selectable_sources").jqGrid('addRowData',i+1,mydata[i]);
 		}
 
-		jQuery("#selectable_sources").navGrid('#selectable_sources_toolbar',
-			{edit:false,add:false,del:false}).navButtonAdd(
+		jQuery("#selectable_sources").jqGrid('navGrid', '#selectable_sources_toolbar',
+			{edit:false,add:false,del:false, refresh:false, search:false}).navButtonAdd(
 			'#selectable_sources_toolbar',
 			{
 			caption:"",
@@ -248,8 +250,9 @@
 				{name:'operator',index:'operator', sorttype:"text",editable:true,editoptions:{size:50}} ],
 			caption: "",
 			rowNum:10, rowList:[10,20,30], pager: '#selectable_ontologies_toolbar',
-			autowidth: true,
-			gridview: true
+			autowidth: false,
+			gridview: true,
+			height: 275
 		});
 
 		var mydataOntology = [
@@ -267,8 +270,8 @@
 			jQuery("#selectable_ontologies").jqGrid('addRowData',i+1,mydataOntology[i]);
 		}
 		jQuery("#selectable_ontologies")
-			.navGrid('#selectable_ontologies_toolbar',
-				{ edit:false,add:false,del:false
+			.jqGrid('navGrid', '#selectable_ontologies_toolbar',
+				{ edit:false,add:false,del:false, refresh:false, search:false,
 			}).navButtonAdd(
 			'#selectable_ontologies_toolbar',
 			{
