@@ -136,6 +136,7 @@ public abstract class BaseConverterModule
     public BaseConverterModule(String name, HttpMethod method,
                                             SourceType... inputSources) {
         super(name, true);
+
         if (method == null) {
             throw new IllegalArgumentException("method");
         }
@@ -179,19 +180,25 @@ public abstract class BaseConverterModule
     @Override
     public UriDesc canHandle(Project p) {
         UriDesc projectPage = null;
-        if (this.findSource(p, false) != null) {
-            try {
-                String label = PreferredLocales.get()
+        try {
+            if (this.findSource(p, false) != null) {
+                try {
+                    String label = PreferredLocales.get()
                                 .getBundle(GUI_RESOURCES_BUNDLE, this)
                                 .getString(this.getName() + ".module.label");
 
-                projectPage = new UriDesc(
+                    projectPage = new UriDesc(
                                     this.getName() + "?project=" + p.getUri(),
                                     this.accessMethod, label);
+                }
+                catch (Exception e) {
+                    throw new TechnicalException(e);
+                }
             }
-            catch (Exception e) {
-                throw new TechnicalException(e);
-            }
+        }
+        catch (Exception e) {
+            log.fatal("Failed to check status of project {}: {}", e,
+                                                p.getUri(), e.getMessage());
         }
         return projectPage;
     }
