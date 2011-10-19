@@ -403,6 +403,9 @@ public class CsvSourceImpl extends BaseFileSource<Row<String>>
 
                 @Override
                 public String next() {
+                    if (! this.hasNext()) {
+                        throw new NoSuchElementException();
+                    }
                     return get(this.curPos++);
                 }
 
