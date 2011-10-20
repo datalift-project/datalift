@@ -267,7 +267,7 @@ public class SqlDirectMapper extends BaseConverterModule
                                             subject, predicates[j],
                                             value),
                                 ctx);
-log.debug("{}: {} -> {}", subject, o, value);
+                        log.trace("{}: {} -> {}", subject, o, value);
                     }
                     // Else: ignore cell.
                 }

@@ -297,7 +297,8 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
                     // Keep cached data in memory.
                     webRowSet.setReadOnly(true);
                     this.rowSet = webRowSet;
-                    log.debug("Loaded RowSet from local cache file");
+                    log.debug("Loaded RowSet from local cache file: {}",
+                                                        this.getCacheFile());
                 }
                 // Extract column names from cached data.
                 ResultSetMetaData metadata = this.rowSet.getMetaData();
@@ -307,7 +308,7 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
                 }
                 this.columns = Collections.unmodifiableCollection(
                                                         Arrays.asList(cols));
-                log.debug("Extracted column names: {}", this.columns);
+                log.debug("Extracted query result columns: {}", this.columns);
             }
             catch (Exception e) {
                 throw new TechnicalException(null, e);
@@ -378,8 +379,6 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
             catch (SQLException e) {
                 this.rethrow(e);
             }
-            log.debug("RowIterator.next() ({}): {}",
-                                        Integer.valueOf(this.rowCount), row);
             return row;
         }
 
@@ -408,7 +407,6 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
          */
         @Override
         protected void finalize() {
-            log.debug("RowIterator.finalize()");
             this.close();
         }
 
