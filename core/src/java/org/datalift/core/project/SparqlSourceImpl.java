@@ -57,6 +57,7 @@ import static javax.ws.rs.core.HttpHeaders.*;
 
 import org.datalift.core.TechnicalException;
 import org.datalift.core.rdf.BoundedAsyncRdfParser;
+import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.SparqlSource;
 import org.datalift.fwk.util.Base64;
@@ -85,11 +86,19 @@ public class SparqlSourceImpl extends CachingSourceImpl implements SparqlSource
     public final static String BASIC_AUTH_ENCODING = "ISO-8859-1";
 
     //-------------------------------------------------------------------------
+    // Class members
+    //-------------------------------------------------------------------------
+
+    private final static Logger log = Logger.getLogger();
+
+    //-------------------------------------------------------------------------
     // Instance members
     //-------------------------------------------------------------------------
 
     @RdfProperty("datalift:request")
     private String query;
+    @RdfProperty("datalift:default-graph-uri")
+    private String defaultGraphUri;
     @RdfProperty("datalift:user")
     private String user;
     @RdfProperty("datalift:password")
@@ -152,13 +161,13 @@ public class SparqlSourceImpl extends CachingSourceImpl implements SparqlSource
     /** {@inheritDoc} */
     @Override
     public String getDefaultGraphUri() {
-        return this.getSourceUrl();
+        return this.defaultGraphUri;
     }
 
     /** {@inheritDoc} */
     @Override
     public void setDefaultGraphUri(String uri) {
-        this.setSourceUrl(uri);
+        this.defaultGraphUri = uri;
     }
 
     /** {@inheritDoc} */
@@ -207,6 +216,8 @@ public class SparqlSourceImpl extends CachingSourceImpl implements SparqlSource
         URL u = null;
         String query = null;
         HttpURLConnection cnx = null;
+        log.debug("Reloading cache from {}, query: {}",
+                                        this.getEndpointUrl(), this.getQuery());
         try {
             // Build HTTP query string.
             StringBuilder buf = new StringBuilder(2048);
@@ -231,9 +242,9 @@ public class SparqlSourceImpl extends CachingSourceImpl implements SparqlSource
                 u = new URI(u.getProtocol(), null,
                             u.getHost(), u.getPort(), u.getPath(),
                             query, null).toURL();
-                query = null;           // Mark query as consumed.
                 cnx = (HttpURLConnection)(u.openConnection());
                 cnx.setRequestMethod(HttpMethod.GET);
+                query = null;           // Mark query as consumed.
             }
         }
         catch (Exception e) {
@@ -251,6 +262,7 @@ public class SparqlSourceImpl extends CachingSourceImpl implements SparqlSource
         }
         cnx.setUseCaches(false);
         cnx.setDoOutput(true);
+        log.debug("Connecting to: {}", u);
         // Append query string in case of HTTP POST.
         if (query != null) {
             OutputStream out = cnx.getOutputStream();
@@ -265,6 +277,7 @@ public class SparqlSourceImpl extends CachingSourceImpl implements SparqlSource
         if (in == null) {
             // No error data found. => save response data to cache.
             this.save(cnx.getInputStream());
+            log.debug("Query results saved to {}", this.getCacheFile());
         }
         else {
             char[] buf = new char[1024];
