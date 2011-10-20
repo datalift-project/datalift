@@ -3,531 +3,1002 @@
 	xmlns:owl="http://www.w3.org/2002/07/owl#"
 	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
 
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_01">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR910"/>
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR91"/>
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR910"/>
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR91"/>
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR910"/>
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR91"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_971">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR910"/>
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR91"/>
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR910"/>
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR91"/>
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR910"/>
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR91"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_02">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR920"/>
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR92"/>
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR920"/>
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR92"/>
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR920"/>
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR92"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_972">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR920"/>
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR92"/>
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR920"/>
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR92"/>
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR920"/>
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR92"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_03">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR930"/>
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR93"/>
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR930"/>
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR93"/>
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR930"/>
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR93"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_973">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR930"/>
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR93"/>
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR930"/>
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR93"/>
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR930"/>
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR93"/>
-</rdf:Description>
-
 <rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/COM_75056">
 	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR101"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_75">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR101"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_77">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR102"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_78">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR103"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_91">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR104"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_92">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR105"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_93">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR106"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_94">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR107"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_95">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR108"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_21">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR21"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_08">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR211"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_10">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR212"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_51">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR213"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_52">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR214"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_22">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR22"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_02">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR221"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_60">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR222"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_80">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR223"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_23">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR23"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_27">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR231"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_76">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR232"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_24">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR24"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_18">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR241"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_28">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR242"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_36">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR243"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_37">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR244"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_41">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR245"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_45">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR246"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_25">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR25"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_14">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR251"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_50">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR252"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_61">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR253"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_26">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR26"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_21">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR261"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_58">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR262"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_71">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR263"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_89">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR264"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_59">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR301"/>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_62">
 	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR302"/>
 </rdf:Description>
 
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_41">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR41"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_54">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR411"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_55">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR412"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_57">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR413"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_88">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR414"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_42">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR42"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_67">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR421"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_68">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR422"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_43">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR43"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_25">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR431"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_39">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/CH025"/>
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR432"/>
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/CH025"/>
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR432"/>
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/CH025"/>
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR432"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_70">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR433"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_90">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR434"/>
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_75">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR101"/>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_52">
 	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR51"/>
 </rdf:Description>
 
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_44">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR511"/>
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_90">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR434"/>
 </rdf:Description>
 
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_49">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR512"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_53">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR513"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_72">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR514"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_85">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR515"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_53">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR52"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_22">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR521"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_29">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR522"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_35">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR523"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_56">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR524"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_54">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR53"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_16">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR531"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_17">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR532"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_79">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR533"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_86">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR534"/>
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_91">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR104"/>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_72">
 	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR61"/>
 </rdf:Description>
 
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_24">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR611"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_33">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR612"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_40">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR613"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_47">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR614"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_64">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR615"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_73">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR62"/>
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_07">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR712"/>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_09">
 	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR621"/>
 </rdf:Description>
 
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_12">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR622"/>
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_40">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR613"/>
 </rdf:Description>
 
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_31">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR623"/>
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_28">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR242"/>
 </rdf:Description>
 
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_32">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR624"/>
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_27">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR231"/>
 </rdf:Description>
 
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_46">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR625"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_65">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR626"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_81">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR627"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_82">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR628"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_74">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR63"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_19">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR631"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_23">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR632"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_87">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR633"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_82">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR71"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_01">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR711"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_07">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR712"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_26">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR713"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_38">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR714"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_42">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR715"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_69">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR716"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_73">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR717"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_74">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR718"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_83">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR72"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_03">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR721"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_15">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR722"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_43">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR723"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_63">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR724"/>
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_08">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR211"/>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_91">
 	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR81"/>
 </rdf:Description>
 
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_11">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR811"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_30">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR812"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_34">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR813"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_48">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR814"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_66">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR815"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_93">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR82"/>
-</rdf:Description>
-
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_04">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR821"/>
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_2B">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR832"/>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_05">
 	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR822"/>
 </rdf:Description>
 
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_06">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR823"/>
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_11">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR811"/>
 </rdf:Description>
 
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_13">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR824"/>
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_43">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR723"/>
 </rdf:Description>
 
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_83">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR825"/>
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_74">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR718"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_87">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR633"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_65">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR626"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_31">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR623"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_70">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR433"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_68">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR422"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_52">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR214"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_10">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR212"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_92">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR105"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_83">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR72"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_23">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR23"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_12">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR622"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_22">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR22"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_74">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR63"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_79">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR533"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_54">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR53"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_48">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR814"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_42">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR715"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_46">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR625"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_47">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR614"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_44">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR511"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_45">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR246"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_41">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR245"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_93">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR82"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_41">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR41"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_63">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR724"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_73">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR717"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_24">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR611"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_72">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR514"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_25">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR431"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_71">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR263"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_66">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR815"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_64">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR615"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_26">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR713"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_76">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR232"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_93">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR106"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_77">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR102"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_34">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR813"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_30">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR812"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_60">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR222"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_15">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR722"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_14">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR251"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_32">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR624"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_80">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR223"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_24">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR24"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_33">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR612"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_17">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR532"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_16">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR531"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_18">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR241"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_21">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR21"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_61">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR253"/>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_84">
 	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR826"/>
 </rdf:Description>
 
-<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_94">
-	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR83"/>
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_83">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR825"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_95">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR108"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_94">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR107"/>
 </rdf:Description>
 
 <rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_2A">
 	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR831"/>
 </rdf:Description>
 
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_19">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR631"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_94">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR83"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_85">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR515"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_23">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR632"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_973">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR930"/>
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR93"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_971">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR910"/>
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR91"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_03">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR930"/>
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR93"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_01">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR910"/>
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR91"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_86">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR534"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_69">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR716"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_82">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR71"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_22">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR521"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_88">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR414"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_58">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR262"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_21">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR261"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_67">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR421"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_25">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR25"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_29">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR522"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_59">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR301"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_13">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR824"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_39">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/CH025"/>
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR432"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_43">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR43"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_26">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR26"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_53">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR513"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_49">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR512"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_50">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR252"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_51">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR213"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_972">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR920"/>
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR92"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_53">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR52"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_02">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR920"/>
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR92"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_55">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR412"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_54">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR411"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_89">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR264"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_73">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR62"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_78">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR103"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_56">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR524"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_35">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR523"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_57">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR413"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_37">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR244"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_36">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR243"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_01">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR711"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_02">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR221"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_06">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR823"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_04">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR821"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_03">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR721"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_82">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR628"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_81">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR627"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_42">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR42"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_38">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR714"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/COM_75056">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR101"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_62">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR302"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_75">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR101"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_52">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR51"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_90">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR434"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_91">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR104"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_72">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR61"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_07">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR712"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_09">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR621"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_40">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR613"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_28">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR242"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_27">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR231"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_08">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR211"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_91">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR81"/>
+</rdf:Description>
+
 <rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_2B">
 	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR832"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_05">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR822"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_11">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR811"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_43">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR723"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_74">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR718"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_87">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR633"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_65">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR626"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_31">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR623"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_70">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR433"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_68">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR422"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_52">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR214"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_10">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR212"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_92">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR105"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_83">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR72"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_23">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR23"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_12">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR622"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_22">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR22"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_74">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR63"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_79">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR533"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_54">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR53"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_48">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR814"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_42">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR715"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_46">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR625"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_47">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR614"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_44">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR511"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_45">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR246"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_41">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR245"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_93">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR82"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_41">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR41"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_63">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR724"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_73">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR717"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_24">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR611"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_72">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR514"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_25">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR431"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_71">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR263"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_66">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR815"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_64">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR615"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_26">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR713"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_76">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR232"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_93">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR106"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_77">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR102"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_34">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR813"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_30">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR812"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_60">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR222"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_15">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR722"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_14">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR251"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_32">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR624"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_80">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR223"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_24">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR24"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_33">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR612"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_17">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR532"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_16">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR531"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_18">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR241"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_21">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR21"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_61">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR253"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_84">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR826"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_83">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR825"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_95">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR108"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_94">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR107"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_2A">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR831"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_19">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR631"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_94">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR83"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_85">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR515"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_23">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR632"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_973">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR930"/>
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR93"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_971">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR910"/>
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR91"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_03">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR930"/>
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR93"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_01">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR910"/>
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR91"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_86">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR534"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_69">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR716"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_82">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR71"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_22">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR521"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_88">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR414"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_58">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR262"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_21">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR261"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_67">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR421"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_25">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR25"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_29">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR522"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_59">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR301"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_13">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR824"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_39">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/CH025"/>
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR432"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_43">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR43"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_26">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR26"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_53">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR513"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_49">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR512"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_50">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR252"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_51">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR213"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_972">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR920"/>
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR92"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_53">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR52"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_02">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR920"/>
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR92"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_55">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR412"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_54">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR411"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_89">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR264"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_73">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR62"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_78">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR103"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_56">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR524"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_35">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR523"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_57">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR413"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_37">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR244"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_36">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR243"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_01">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR711"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_02">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR221"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_06">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR823"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_04">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR821"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_03">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR721"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_82">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR628"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_81">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR627"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/REG_42">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR42"/>
+</rdf:Description>
+
+<rdf:Description rdf:about="http://rdf.insee.fr/geo/2010/DEP_38">
+	<owl:sameAs rdf:resource="http://ec.europa.eu/eurostat/ramon/rdfdata/nuts2008/FR714"/>
 </rdf:Description>
 
 </rdf:RDF>
