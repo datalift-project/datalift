@@ -810,6 +810,9 @@ public class ProjectResource
                             @FormParam("description") String description,
                             @FormParam("connection_url") String endpointUrl,
                             @FormParam("sparql_query") String sparqlQuery,
+                            @FormParam("default_graph_uri") String defaultGraph,
+                            @FormParam("user") String user,
+                            @FormParam("password") String password,
                             @FormParam("cache_duration") int cacheDuration,
                             @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
@@ -829,6 +832,9 @@ public class ProjectResource
                                         title, description,
                                         endpointUrl, sparqlQuery,
                                         cacheDuration);
+            src.setDefaultGraphUri(defaultGraph);
+            src.setUser(user);
+            src.setPassword(password);
             // Start iterating on source content to validate database
             // connection parameters and query.
             CloseableIterator<?> i = src.iterator();
@@ -855,6 +861,9 @@ public class ProjectResource
                             @FormParam("description") String description,
                             @FormParam("connection_url") String endpointUrl,
                             @FormParam("sparql_query") String sparqlQuery,
+                            @FormParam("default_graph_uri") String defaultGraph,
+                            @FormParam("user") String user,
+                            @FormParam("password") String password,
                             @FormParam("cache_duration") int cacheDuration,
                             @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
@@ -865,8 +874,11 @@ public class ProjectResource
             // Update source data.
             s.setTitle(title);
             s.setDescription(description);
-            s.setQuery(sparqlQuery);
             s.setEndpointUrl(endpointUrl);
+            s.setQuery(sparqlQuery);
+            s.setDefaultGraphUri(defaultGraph);
+            s.setUser(user);
+            s.setPassword(password);
             if (s instanceof CachingSource) {
                 ((CachingSource)s).setCacheDuration(cacheDuration);
             }

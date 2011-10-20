@@ -63,4 +63,56 @@ public interface SparqlSource extends RdfSource
      * @param  query   the SPARQL query.
      */
     public void setQuery(String query);
+
+    /**
+     * Returns the default graph URI to insert in the HTTP request to
+     * the SPARQL endpoint. Only one default graph URI is supported for
+     * the time being.
+     * @return the default graph URI or <code>null</code> if none was
+     *         specified.
+     */
+    public String getDefaultGraphUri();
+
+    /**
+     * Sets the (single) default graph URI to insert in the HTTP request to
+     * the SPARQL endpoint. Only one default graph URI is supported for
+     * the time being.
+     * @param  uri   the default graph URI or <code>null</code> if no
+     *               value shall be set for the
+     *               <code>default-graph-uri</code> HTTP query
+     *               parameter.
+     */
+    public void setDefaultGraphUri(String uri);
+
+    /**
+     * Returns the user name used to perform HTTP basic authentication
+     * when accessing the SPARQL endpoint.
+     * @return the user name for HTTP basic authentication.
+     */
+    public String getUser();
+
+    /**
+     * Sets the user name used to perform HTTP basic authentication
+     * (see <a href="http://www.ietf.org/rfc/rfc2617.txt">RFC 2617</a>)
+     * when accessing the SPARQL endpoint.
+     * @param  user   the user name or <code>null</code> if no HTTP
+     *                basic authentication shall take place.
+     */
+    public void setUser(String user);
+
+    /**
+     * Sets the password associated to the
+     * {@link #getUser() specified user name} for HTTP basic
+     * authentication.
+     * @return the user password.
+     */
+    public String getPassword();
+
+    /**
+     * Sets the password associated to the
+     * {@link #setUser(String) specified user name} for HTTP basic
+     * authentication.
+     * @param  password   the user password.
+     */
+    public void setPassword(String password);
 }

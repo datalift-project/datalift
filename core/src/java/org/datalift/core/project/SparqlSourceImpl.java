@@ -39,6 +39,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.Reader;
 import java.net.HttpURLConnection;
 import java.net.URI;
@@ -58,9 +59,11 @@ import org.datalift.core.TechnicalException;
 import org.datalift.core.rdf.BoundedAsyncRdfParser;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.SparqlSource;
+import org.datalift.fwk.util.Base64;
 import org.datalift.fwk.util.CloseableIterator;
 
 import static org.datalift.fwk.MediaTypes.*;
+import static org.datalift.fwk.util.StringUtils.isBlank;
 
 
 /**
@@ -73,11 +76,24 @@ import static org.datalift.fwk.MediaTypes.*;
 public class SparqlSourceImpl extends CachingSourceImpl implements SparqlSource
 {
     //-------------------------------------------------------------------------
+    // Constants
+    //-------------------------------------------------------------------------
+
+    /** The scheme name for HTTP Basic authentication. */
+    public final static String BASIC_AUTH_SCHEME = "Basic";
+    /** The character encoding for HTTP Basic authentication: ISO-8859-1. */
+    public final static String BASIC_AUTH_ENCODING = "ISO-8859-1";
+
+    //-------------------------------------------------------------------------
     // Instance members
     //-------------------------------------------------------------------------
 
     @RdfProperty("datalift:request")
     private String query;
+    @RdfProperty("datalift:user")
+    private String user;
+    @RdfProperty("datalift:password")
+    private String password;
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -135,6 +151,42 @@ public class SparqlSourceImpl extends CachingSourceImpl implements SparqlSource
 
     /** {@inheritDoc} */
     @Override
+    public String getDefaultGraphUri() {
+        return this.getSourceUrl();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void setDefaultGraphUri(String uri) {
+        this.setSourceUrl(uri);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public String getUser() {
+        return this.user;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void setUser(String user) {
+        this.user = user;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public String getPassword() {
+        return this.password;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public CloseableIterator<Statement> iterator() {
         try {
             return BoundedAsyncRdfParser.parse(this.getInputStream(),
@@ -153,25 +205,59 @@ public class SparqlSourceImpl extends CachingSourceImpl implements SparqlSource
     protected void reloadCache() throws IOException {
         // Build HTTP SPARQL request.
         URL u = null;
+        String query = null;
+        HttpURLConnection cnx = null;
         try {
+            // Build HTTP query string.
+            StringBuilder buf = new StringBuilder(2048);
+            if (! isBlank(this.getDefaultGraphUri())) {
+                buf.append("default-graph-uri")
+                     .append(this.getDefaultGraphUri())
+                     .append('&');
+            }
+            query = buf.append("query=").append(this.getQuery()).toString();
+            // Use HTTP GET or POST depending on query length: use HTTP POST
+            // to bypass URL length limitations of GET method.
             u = new URL(this.getEndpointUrl());
-            // Use URI multi-argument constructor to escape query string.
-            u = new URI(u.getProtocol(), null,
-                        u.getHost(), u.getPort(), u.getPath(),
-                        "query=" + this.getQuery(), null).toURL();
+            if ((this.getEndpointUrl() + '?' + query).length() > 2048) {
+                // Use HTTP POST.
+                cnx = (HttpURLConnection)(u.openConnection());
+                cnx.setRequestMethod(HttpMethod.POST);
+                cnx.setDoInput(true);
+            }
+            else {
+                // HTTP GET will do...
+                // Use URI multi-argument constructor to escape query string.
+                u = new URI(u.getProtocol(), null,
+                            u.getHost(), u.getPort(), u.getPath(),
+                            query, null).toURL();
+                query = null;           // Mark query as consumed.
+                cnx = (HttpURLConnection)(u.openConnection());
+                cnx.setRequestMethod(HttpMethod.GET);
+            }
         }
         catch (Exception e) {
             throw new IOException(
                     new TechnicalException("invalid.endpoint.url", e,
                                            this.getEndpointUrl()));
         }
-        HttpURLConnection cnx = (HttpURLConnection)(u.openConnection());
         cnx.setRequestProperty(ACCEPT, APPLICATION_RDF_XML);
-        cnx.setRequestProperty(CACHE_CONTROL, "no-cache");
-        // Set HTTP method. For large requests, use HTTP POST
-        // to bypass URL length limitations of GET method.
-        cnx.setRequestMethod((u.toString().length() > 2048)?
-                                            HttpMethod.POST: HttpMethod.GET);
+        if (! isBlank(this.getUser())) {
+            String token = this.getUser() + ':' +
+                    ((isBlank(this.getPassword()))? "" : this.getPassword());
+            cnx.setRequestProperty(AUTHORIZATION,
+                    BASIC_AUTH_SCHEME + ' ' +
+                    Base64.encode(token.getBytes(BASIC_AUTH_ENCODING), null));
+        }
+        cnx.setUseCaches(false);
+        cnx.setDoOutput(true);
+        // Append query string in case of HTTP POST.
+        if (query != null) {
+            OutputStream out = cnx.getOutputStream();
+            out.write(query.getBytes("UTF-8"));
+            out.flush();
+            out.close();
+        }
         // Force server connection.
         cnx.connect();
         // Check for error data.
@@ -209,8 +295,9 @@ public class SparqlSourceImpl extends CachingSourceImpl implements SparqlSource
     //-------------------------------------------------------------------------
 
     private void save(InputStream in) throws IOException {
-        FileOutputStream fos = new FileOutputStream(this.getCacheFile());
+        FileOutputStream fos = null;
         try {
+            fos = new FileOutputStream(this.getCacheFile());
             byte[] buf = new byte[8192];
             int l;
             while ((l = in.read(buf)) != -1) {
@@ -218,7 +305,9 @@ public class SparqlSourceImpl extends CachingSourceImpl implements SparqlSource
             }
         }
         finally {
-            try { fos.close(); } catch (Exception e) { /* Ignore... */ }
+            if (fos != null) {
+                try { fos.close(); } catch (Exception e) { /* Ignore... */ }
+            }
             try { in.close();  } catch (Exception e) { /* Ignore... */ }
         }
     }
