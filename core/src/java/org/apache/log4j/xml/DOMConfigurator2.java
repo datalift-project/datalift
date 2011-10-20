@@ -1403,13 +1403,18 @@ public class DOMConfigurator2 extends DOMConfigurator
         /** {@inheritDoc} */
         public InputSource resolveEntity(String publicId, String systemId)
                                             throws SAXException, IOException {
+            if ((systemId == null) || (systemId.length() == 0)) {
+                // System id required.
+                return null;
+            }
             InputSource is = null;
 
             String localId = null;
             boolean configFile = false;
             // Substitute variable references if any. Check out for
             // URL escape sequences in replacement of curly braces.
-            String vars = systemId.replace("%7B", "{").replace("%7D", "}");
+            final String vars = systemId.replace("%7B", "{")
+                                        .replace("%7D", "}");
             if (! vars.equals(systemId)) {
                 // Try to resolve variables.
                 String resolved = subst(vars);
