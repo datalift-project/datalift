@@ -187,19 +187,62 @@ public interface ProjectModule extends Module
             return this.label;
         }
 
+        /**
+         * Sets the position where the module page shall appear in
+         * the list of modules applicable to a project.
+         * <p>
+         * There's no hard-coded rule for the position value. Yet the
+         * following informal rules are recommended:</p>
+         * <ul>
+         *  <li>From 0 to 999 for modules transforming non RDF data
+         *   into RDF data</li>
+         *  <li>From 1000 to 9999 for modules transforming RDF data
+         *   (ontology alignment, interlinking...)</li>
+         *  <li>Above 10000 for modules publishing data</li>
+         * </ul>
+         * @param  position   the position as a positive integer.
+         */
         public void setPosition(int position) {
+            if (position < 0) {
+                throw new IllegalArgumentException("position ("
+                                    + position + ") shall not be negative");
+            }
             this.position = position;
         }
+
+        /**
+         * Returns the position at which the module page shall appear
+         * in the list of modules applicable to a project.
+         * @return the module page position.
+         */
         public int getPosition() {
             return this.position;
         }
 
+        /**
+         * <i>Reserved for future use</i>.
+         * @param  icon   the module icon or <code>null</code>.
+         */
         public void setIcon(URI icon) {
             this.icon = icon;
         }
+
+        /**
+         * <i>Reserved for future use</i>.
+         * @return the module icon or <code>null</code>.
+         */
         public URI getIcon() {
             return this.icon;
         }
+
+        /**
+         * <i>Reserved for future use</i>.
+         * @param  baseUri   the application base URI.
+         *
+         * @return the absolute URL of the module icon file.
+         * @throws MalformedURLException if an error occurred building
+         *         the icon file URL.
+         */
         public String getIcon(String baseUri) throws MalformedURLException {
             return this.toUrl(baseUri, this.getIcon());
         }
@@ -221,14 +264,16 @@ public interface ProjectModule extends Module
         private String toUrl(String baseUri, URI uri)
                                                 throws MalformedURLException {
             String url = null;
-            if (baseUri != null) {
-                if (! baseUri.endsWith("/")) {
-                    baseUri += '/';
+            if (uri != null) {
+                if (baseUri != null) {
+                    if (! baseUri.endsWith("/")) {
+                        baseUri += '/';
+                    }
+                    url = new URL(new URL(baseUri), uri.toString()).toString();
                 }
-                url = new URL(new URL(baseUri), uri.toString()).toString();
-            }
-            else {
-                url = this.getUri().toString();
+                else {
+                    url = this.getUri().toString();
+                }
             }
             return url;
         }

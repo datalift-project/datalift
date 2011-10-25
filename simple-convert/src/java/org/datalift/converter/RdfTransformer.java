@@ -69,7 +69,7 @@ public class RdfTransformer extends BaseConverterModule
     //-------------------------------------------------------------------------
 
     public RdfTransformer() {
-        super(MODULE_NAME, 500, SourceType.TransformedRdfSource);
+        super(MODULE_NAME, 1000, SourceType.TransformedRdfSource);
     }
 
     //-------------------------------------------------------------------------

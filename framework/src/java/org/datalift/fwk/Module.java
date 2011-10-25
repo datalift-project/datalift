@@ -113,6 +113,21 @@ public interface Module extends LifeCycle
      */
     public boolean isResource();
 
+    /**
+     * Returns whether the module is publicly accessible (i.e. without
+     * user authentication.
+     * @return <code>true</code> if unauthenticated invocation of module
+     *         web services is allowed; <code>false</code> otherwise.
+     */
     public boolean allowsAnonymousAccess();
+
+    /**
+     * Returns the list of roles a user shall have in her profile to
+     * be allowed to access the module web services and resources.
+     * @return a list of user roles, <code>null</code> or an empty
+     *         collection if no specific role is required (i.e.
+     *         all authenticated users are allowed to access the
+     *         module web services).
+     */
     public Collection<String> getAuthorizedRoles();
 }
