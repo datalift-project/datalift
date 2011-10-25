@@ -25,6 +25,9 @@
   <logger name="org.datalift.framework">
     <level value="info"/>
   </logger>
+  <logger name="org.datalift.core.security">
+    <level value="warn"/>
+  </logger>
 
   <!-- Jersey & JAX-RS -->
   <logger name="javax.ws.rs">
@@ -47,6 +50,10 @@
   <!-- Empire RDF JPA provider -->
   <logger name="com.clarkparsia.empire">
     <level value="info"/>
+  </logger>
+  <!-- Web Resource (CSS & JS) Optimizer filter -->
+  <logger name="ro.isdc.wro">
+    <level value="warn"/>
   </logger>
 
 </configuration>

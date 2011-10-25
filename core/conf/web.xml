@@ -56,9 +56,8 @@
   <filter>
     <filter-name>SecurityFilter</filter-name>
     <filter-class>
-      org.apache.shiro.web.servlet.IniShiroFilter
+      org.datalift.core.security.shiro.ShiroSecurityFilter
     </filter-class>
-    <!-- No init-param: load Shiro configuration from classpath:shiro.ini -->
   </filter>
   <!-- Apply security filter to all resources -->
   <filter-mapping>
@@ -104,12 +103,15 @@
     </init-param>
     <!-- Install some filters to
           - Honor GZip accepted encoding in response
+          - Replace POST method by PUT or DELETE according to extended HTTP
+            header or _method request parameter
           - Make user's preferred locales globally available
      -->
     <init-param>
       <param-name>com.sun.jersey.spi.container.ContainerRequestFilters</param-name>
       <param-value>
         com.sun.jersey.api.container.filter.GZIPContentEncodingFilter;
+        com.sun.jersey.api.container.filter.PostReplaceFilter;
         org.datalift.core.i18n.jersey.PreferredLocalesFilter
       </param-value>
     </init-param>
