@@ -42,6 +42,7 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -181,6 +182,18 @@ public class DefaultConfiguration extends Configuration
     @Override
     public String getProperty(String key, String def) {
         return this.props.getProperty(key, def);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Collection<String> getPropertyNames() {
+        Collection<String> names = new HashSet<String>();
+        for (Object o : this.props.keySet()) {
+            if (o instanceof String) {
+                names.add((String)o);
+            }
+        }
+        return Collections.unmodifiableCollection(names);
     }
 
     /** {@inheritDoc} */
@@ -620,7 +633,9 @@ public class DefaultConfiguration extends Configuration
                 l.add(x);
                 this.beansByType.put(clazz, l);
             }
-            l.add(o);
+            if (! l.contains(o)) {
+                l.add(o);
+            }
         }
         log.trace("Registered bean {} as type {}", o, clazz);
     }

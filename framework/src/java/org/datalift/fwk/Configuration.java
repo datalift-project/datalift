@@ -112,6 +112,14 @@ public abstract class Configuration
     abstract public String getProperty(String key, String def);
 
     /**
+     * Returns the names of all properties in this {@link Configuration}
+     * or an empty collection if there are no properties.
+     *
+     * @return the names of all properties.
+     */
+    abstract public Collection<String> getPropertyNames();
+
+    /**
      * Returns a list of all configured repositories. The default
      * repository is always the first entry.
      * <p>
