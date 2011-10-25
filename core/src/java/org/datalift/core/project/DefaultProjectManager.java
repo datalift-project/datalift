@@ -80,6 +80,12 @@ import static org.datalift.fwk.util.StringUtils.*;
 public class DefaultProjectManager implements ProjectManager, LifeCycle
 {
     //-------------------------------------------------------------------------
+    // Constants
+    //-------------------------------------------------------------------------
+
+    /* package */ final static String PROJECT_DIRECTORY_NAME = "project";
+
+    //-------------------------------------------------------------------------
     // Instance members
     //-------------------------------------------------------------------------
 
@@ -337,9 +343,9 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     /** {@inheritDoc} */
     @Override
     public String getProjectFilePath(String projectId, String fileName) {
-        String path = "project/" + projectId;
+        String path = PROJECT_DIRECTORY_NAME + File.separatorChar + projectId;
         if (isSet(fileName)) {
-            path += "/" + fileName;
+            path = path + File.separatorChar + fileName;
         }
         return path;
     }
