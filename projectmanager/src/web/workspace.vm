@@ -56,9 +56,8 @@
 				</div>
 #end
 				<p><br /></p>
-				<form method="post" action="$current.uri" class="form_formated">
+				<form method="post" action="${current.uri}?_method=DELETE" class="form_formated">
 					<a href="${current.uri}/modify" class="button">#i18n("modify")</a>
-					<input type="hidden" id="delete" name="delete" value="true" />
 					<input type="submit" value="#i18n("delete")"/>
 				</form>
 			</div>
@@ -211,10 +210,11 @@
 			buttonicon:"ui-icon-pencil",
 			onClickButton:function(){
 				var id = jQuery("#selectable_sources").getGridParam('selrow');
-				if(id) {
+				if (id) {
 					var ret = jQuery("#selectable_sources").getRowData(id);
 					window.location = ret.uri+"/modify";
-				} else {
+				}
+				else {
 					alert('#i18n("project.msg.select_row")');
 				}
 			}
@@ -223,12 +223,13 @@
 			{
 			caption:"",
 			buttonicon:"ui-icon-trash",
-			onClickButton:function(){
+			onClickButton:function() {
 				var id = jQuery("#selectable_sources").getGridParam('selrow');
-				if(id) {
+				if (id) {
 					var ret = jQuery("#selectable_sources").getRowData(id);
 					window.location = ret.uri+"/delete";
-				} else {
+				}
+				else {
 					alert('#i18n("project.msg.select_row")');
 				}
 			}
@@ -299,10 +300,11 @@
 			buttonicon:"ui-icon-trash",
 			onClickButton:function() {
 				var id = jQuery("#selectable_ontologies").getGridParam('selrow');
-				if(id){
+				if (id) {
 					var ret = jQuery("#selectable_ontologies").getRowData(id);
 					window.location = currentProject + "/ontology/"+ret.title+"/delete";
-				} else {
+				}
+				else {
 					alert('#i18n("project.msg.select_row")');
 				}
 			}

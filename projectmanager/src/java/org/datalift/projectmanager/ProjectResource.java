@@ -44,17 +44,17 @@ import java.net.URI;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 import javax.persistence.EntityNotFoundException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
@@ -102,7 +102,6 @@ import org.datalift.fwk.project.ProjectModule.UriDesc;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.sparql.SparqlEndpoint;
 import org.datalift.fwk.util.CloseableIterator;
-import org.datalift.fwk.util.StringUtils;
 
 import static org.datalift.fwk.MediaTypes.*;
 import static org.datalift.fwk.util.StringUtils.*;
@@ -298,40 +297,36 @@ public class ProjectResource
                     @FormParam("title") String title,
                     @FormParam("description") String description,
                     @FormParam("license") String license,
-                    @FormParam("delete") @DefaultValue("false") boolean delete,
                     @Context UriInfo uriInfo) throws WebApplicationException {
         Response response = null;
-        if (delete) {
-            this.deleteProject(id, uriInfo);
-            response = this.displayIndexPage();
-        }
-        else {
-            try {
-                URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
-                Project p = this.loadProject(projectUri);
 
-                boolean modified = false;
-                if (!StringUtils.isBlank(title)) {
-                    p.setTitle(title);
-                    modified = true;
-                }
-                if (!StringUtils.isBlank(description)) {
-                    p.setDescription(description);
-                    modified = true;
-                }
+        try {
+            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
+            Project p = this.loadProject(projectUri);
+
+            boolean modified = false;
+            if (! isBlank(title)) {
+                p.setTitle(title);
+                modified = true;
+            }
+            if (! isBlank(description)) {
+                p.setDescription(description);
+                modified = true;
+            }
+            if (! isBlank(license)) {
                 URI li = License.valueOf(license).uri;
                 if (!p.getLicense().equals(li)) {
                     p.setLicense(li);
                     modified = true;
                 }
-                if (modified) {
-                    this.projectManager.saveProject(p);
-                }
-                response = this.redirect(p, null).build();
             }
-            catch (Exception e) {
-                this.handleInternalError(e, "Failed to update project");
+            if (modified) {
+                this.projectManager.saveProject(p);
             }
+            response = this.redirect(p, null).build();
+        }
+        catch (Exception e) {
+            this.handleInternalError(e, "Failed to update project");
         }
         return response;
     }
@@ -779,12 +774,22 @@ public class ProjectResource
             // Retrieve source.
             SqlSource s = this.loadSource(SqlSource.class, sourceUri);
             // Update source data.
-            s.setTitle(title);
-            s.setDescription(description);
-            s.setConnectionUrl(cnxUrl);
-            s.setUser(user);
-            s.setPassword(password);
-            s.setQuery(sqlQuery);
+            if ((s.getTitle() == null) || (! s.getTitle().equals(title))) {
+                s.setTitle(title);
+            }
+            if ((s.getDescription() == null) ||
+                                (! s.getDescription().equals(description))) {
+                s.setDescription(description);
+            }
+            if ((s.getConnectionUrl() == null) ||
+                                (! s.getConnectionUrl().equals(cnxUrl))) {
+                s.setConnectionUrl(cnxUrl);
+                s.setUser(user);
+                s.setPassword(password);
+            }
+            if ((s.getQuery() == null) || (! s.getQuery().equals(sqlQuery))) {
+                s.setQuery(sqlQuery);
+            }
             if (s instanceof CachingSource) {
                 ((CachingSource)s).setCacheDuration(cacheDuration);
             }
@@ -872,13 +877,27 @@ public class ProjectResource
             // Retrieve source.
             SparqlSource s = this.loadSource(SparqlSource.class, sourceUri);
             // Update source data.
-            s.setTitle(title);
-            s.setDescription(description);
-            s.setEndpointUrl(endpointUrl);
-            s.setQuery(sparqlQuery);
-            s.setDefaultGraphUri(defaultGraph);
-            s.setUser(user);
-            s.setPassword(password);
+            if ((s.getTitle() == null) || (! s.getTitle().equals(title))) {
+                s.setTitle(title);
+            }
+            if ((s.getDescription() == null) ||
+                                (! s.getDescription().equals(description))) {
+                s.setDescription(description);
+            }
+            if ((s.getEndpointUrl() == null) ||
+                                (! s.getEndpointUrl().equals(endpointUrl))) {
+                s.setEndpointUrl(endpointUrl);
+                s.setUser(user);
+                s.setPassword(password);
+            }
+            if ((s.getQuery() == null) ||
+                                (! s.getQuery().equals(sparqlQuery))) {
+                s.setQuery(sparqlQuery);
+            }
+            if ((s.getDefaultGraphUri() == null) ||
+                            (! s.getDefaultGraphUri().equals(defaultGraph))) {
+                s.setDefaultGraphUri(defaultGraph);
+            }
             if (s instanceof CachingSource) {
                 ((CachingSource)s).setCacheDuration(cacheDuration);
             }
@@ -1185,11 +1204,18 @@ public class ProjectResource
         // Display selected project.
         if (p != null) {
             // Search for modules accepting the selected project.
-            Collection<UriDesc> modules = new LinkedList<UriDesc>();
+            Collection<UriDesc> modules = new TreeSet<UriDesc>(
+                    new Comparator<UriDesc>() {
+                        @Override
+                        public int compare(UriDesc u1, UriDesc u2) {
+                            int v = u1.getPosition() - u2.getPosition();
+                            return (v != 0)? v: u1.getLabel().compareToIgnoreCase(u2.getLabel());
+                        }
+                    });
             for (ProjectModule m : this.configuration.getBeans(
                                                         ProjectModule.class)) {
                 UriDesc modulePage = m.canHandle(p);
-                if (m.canHandle(p) != null) {
+                if (modulePage != null) {
                     modules.add(modulePage);
                 }
             }
@@ -1387,7 +1413,7 @@ public class ProjectResource
             throw new NotFoundException();
         }
         else {
-            if (StringUtils.isSet(logMsg)) {
+            if (isSet(logMsg)) {
                 log.fatal(logMsg, e, logArgs);
             }
             else {
