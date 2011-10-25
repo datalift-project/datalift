@@ -106,7 +106,7 @@
 		<p><label for="password">#i18n("project.upload_source.password"): </label>
 		<input type="password" name="password" id="password" value="$!esc.html($current.password)"/></p>
 		<p><label for="sql_query">#i18n("project.upload_db.query"): </label>
-		<textarea id="sql_query" name="sql_query">$!esc.html($current.query)"</textarea></p>
+		<textarea id="sql_query" name="sql_query">$!esc.html($current.query)</textarea></p>
 		<p><label for="cache_duration">#i18n("project.upload_source.cache_duration"): </label></p>
 		<p><input type="text" id="cache_duration" name="cache_duration" value="$!esc.html($current.cacheDuration)"/></p>
 		<input type="submit" value="#i18n("$submit")"/>
