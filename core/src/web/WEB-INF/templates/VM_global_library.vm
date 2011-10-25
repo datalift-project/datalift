@@ -26,13 +26,10 @@
 	<!-- JQuery + JQuery UI -->
 	<script language="javascript" src="${baseUri}/js/jquery/jquery.js"></script>
 	<script language="javascript" src="${baseUri}/js/jquery/jquery-ui.js"></script>
-	<!-- Jquery Plugins -->
+	<!-- JQuery Plugins -->
 	<script language="javascript" src="${baseUri}/js/jquery/jquery.jqGrid.locale-en.js"></script>
 	<script language="javascript" src="${baseUri}/js/jquery/jquery.jqGrid.js"></script>
-	<!-- History Plugins (https://github.com/balupton/history.js) -->
-	<script language="javascript" src="${baseUri}/js/history.js/amplify.store.js"></script>
-	<script language="javascript" src="${baseUri}/js/history.js/history.adapter.jquery.js"></script>
-	<script language="javascript" src="${baseUri}/js/history.js/history.js"></script>
+	<script language="javascript" src="${baseUri}/js/jquery/jquery.history.js"></script>
 	<!-- Datalift common javascript -->
 	<script language="javascript" src="${baseUri}/js/common.js"></script>
 #end

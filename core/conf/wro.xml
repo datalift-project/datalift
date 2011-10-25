@@ -8,13 +8,11 @@
     <!-- JQuery UI -->
     <js>/js/jquery/jquery.js</js>
     <js>/js/jquery/jquery-ui.js</js>
-    <!-- JQuery plugins -->
+    <!-- JQuery Grid plugin (http://www.trirand.com/blog/) -->
     <js>/js/jquery/jquery.jqGrid.locale-en.js</js>
     <js>/js/jquery/jquery.jqGrid.js</js>
-    <!-- History plugin (https://github.com/balupton/history.js) -->
-    <js>/js/history.js/amplify.store.js</js>
-    <js>/js/history.js/history.adapter.jquery.js</js>
-    <js>/js/history.js/history.js</js>
+    <!-- JQuery History plugin (https://github.com/balupton/history.js) -->
+    <!-- js>/js/jquery/jquery.history.js</js -->
     <!-- Datalift common functions -->
     <js>/js/common.js</js>
 
