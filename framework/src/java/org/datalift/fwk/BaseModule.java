@@ -35,6 +35,7 @@
 package org.datalift.fwk;
 
 
+import java.util.Collection;
 import java.util.Map;
 
 
@@ -148,5 +149,35 @@ public abstract class BaseModule implements Module
     @Override
     public Map<String,Class<?>> getResources() {
         return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>This implementation returns <code>false</code>
+     * (authentication required).</p>
+     */
+    @Override
+    public boolean allowsAnonymousAccess() {
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>This implementation returns <code>null</code> (no
+     * roles required).</p>
+     */
+    @Override
+    public Collection<String> getAuthorizedRoles() {
+        return null;
+    }
+
+    //-------------------------------------------------------------------------
+    // Object contract support
+    //-------------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    @Override
+    public String toString() {
+        return this.getName();
     }
 }

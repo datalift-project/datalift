@@ -35,6 +35,7 @@
 package org.datalift.fwk;
 
 
+import java.util.Collection;
 import java.util.Map;
 
 
@@ -111,4 +112,7 @@ public interface Module extends LifeCycle
      *         <code>false</code> otherwise.
      */
     public boolean isResource();
+
+    public boolean allowsAnonymousAccess();
+    public Collection<String> getAuthorizedRoles();
 }
