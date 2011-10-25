@@ -144,6 +144,8 @@ public class SparqlSourceImpl extends CachingSourceImpl implements SparqlSource
     @Override
     public void setEndpointUrl(String url) {
         this.setSourceUrl(url);
+        // Invalidate cache to force data reload.
+        this.invalidateCache();
     }
 
     /** {@inheritDoc} */
@@ -156,6 +158,8 @@ public class SparqlSourceImpl extends CachingSourceImpl implements SparqlSource
     @Override
     public void setQuery(String query) {
         this.query = query;
+        // Invalidate cache to force data reload.
+        this.invalidateCache();
     }
 
     /** {@inheritDoc} */
@@ -168,6 +172,8 @@ public class SparqlSourceImpl extends CachingSourceImpl implements SparqlSource
     @Override
     public void setDefaultGraphUri(String uri) {
         this.defaultGraphUri = uri;
+        // Invalidate cache to force data reload.
+        this.invalidateCache();
     }
 
     /** {@inheritDoc} */
@@ -301,6 +307,12 @@ public class SparqlSourceImpl extends CachingSourceImpl implements SparqlSource
                                         Integer.valueOf(cnx.getResponseCode()),
                                         new String(buf, 0, l)));
         }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected String getCacheFileExtension() {
+        return "xml";           // Saving SPARQL results as RDF+XML.
     }
 
     //-------------------------------------------------------------------------

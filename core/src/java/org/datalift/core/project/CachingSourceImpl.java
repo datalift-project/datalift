@@ -15,7 +15,8 @@ import org.datalift.fwk.Configuration;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.CachingSource;
 import org.datalift.fwk.project.Project;
-import org.datalift.fwk.util.StringUtils;
+
+import static org.datalift.fwk.util.StringUtils.urlify;
 
 
 @MappedSuperclass
@@ -30,6 +31,8 @@ public abstract class CachingSourceImpl extends BaseSource
     private final static long HOURS_TO_MILLIS   = 60 * MINUTES_TO_MILLIS;
 
     private final static long MIN_CACHE_DURATION = 3 * MINUTES_TO_MILLIS;
+
+    private final static String CACHE_DIRECTORY_NAME    = "caches";
 
     //-------------------------------------------------------------------------
     // Class members
@@ -87,9 +90,7 @@ public abstract class CachingSourceImpl extends BaseSource
     public void delete() {
         super.delete();
 
-        if (this.cacheFile != null) {
-            this.cacheFile.delete();
-        }
+        this.invalidateCache();
     }
 
     //-------------------------------------------------------------------------
@@ -134,14 +135,23 @@ public abstract class CachingSourceImpl extends BaseSource
      */
     protected File getCacheFile() {
         if (this.cacheFile == null) {
-            String fileName = this.getClass().getSimpleName() + '-' +
-                                        StringUtils.urlify(this.getTitle());
-            this.cacheFile = new File(
-                                Configuration.getDefault().getPrivateStorage(),
-                                fileName);
-            log.debug("Created cache file: {}", this.cacheFile);
+            String ext = this.getCacheFileExtension();
+            ext = (ext != null)? "." + ext: "";
+            String filePath = CACHE_DIRECTORY_NAME
+                                + File.separatorChar
+                                + DefaultProjectManager.PROJECT_DIRECTORY_NAME
+                                + File.separatorChar
+                                + urlify(this.getProject().getTitle())
+                                + File.separatorChar
+                                + urlify(this.getTitle()) + "-cache" + ext;
+            File f = new File(Configuration.getDefault().getPrivateStorage(),
+                              filePath);
+            // Make sure parent directories exist.
+            f.getParentFile().mkdirs();
+            log.trace("Cache file for \"{}\": {}", this.getTitle(), f);
             // Don't mark cache file for deletion. Let's reuse it!
-            // this.cacheFile.deleteOnExit();
+            // f.deleteOnExit();
+            this.cacheFile = f;
         }
         return this.cacheFile;
     }
@@ -154,6 +164,16 @@ public abstract class CachingSourceImpl extends BaseSource
 
     protected boolean isCacheValid() {
         return (this.getCacheExpiry() > System.currentTimeMillis());
+    }
+
+    /**
+     * Invalidates the local cache to force data reload.
+     */
+    protected void invalidateCache() {
+        File f = this.getCacheFile();
+        if (f.exists()) {
+            f.delete();
+        }
     }
 
     /**
@@ -176,6 +196,16 @@ public abstract class CachingSourceImpl extends BaseSource
      *         cache or saving the data into it.
      */
     abstract protected void reloadCache() throws IOException;
+
+    /**
+     * Returns the file name extension for the cache file.
+     * <p>
+     * The default implementation returns <code>tmp</code>.</p>
+     * @return the file name extension for the cache file.
+     */
+    protected String getCacheFileExtension() {
+        return "tmp";
+    }
 
     /**
      * Return the local cached data expiry date as a number of

@@ -142,6 +142,8 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
         this.getDatabaseType(connectionUrl);
         // Store URL.
         this.setSourceUrl(connectionUrl);
+        // Invalidate cache to force data reload.
+        this.invalidateCache();
     }
 
     /** {@inheritDoc} */
@@ -178,6 +180,8 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
     @Override
     public void setQuery(String query) {
         this.query = query;
+        // Invalidate cache to force data reload.
+        this.invalidateCache();
     }
 
     /** {@inheritDoc} */
@@ -218,6 +222,7 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
     // CachingSourceImpl contract support
     //-------------------------------------------------------------------------
 
+    /** {@inheritDoc} */
     @Override
     protected synchronized void reloadCache() throws IOException {
         // Release any data held in memory.
@@ -267,6 +272,12 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
             }
             throw new IOException(e);
         }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected String getCacheFileExtension() {
+        return "xml";           // Sun's WebRowSet stores ResultSets as XML.
     }
 
     //-------------------------------------------------------------------------
