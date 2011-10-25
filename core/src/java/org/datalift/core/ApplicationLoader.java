@@ -35,15 +35,32 @@
 package org.datalift.core;
 
 
+import java.io.File;
+import java.io.FileFilter;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+import java.util.ServiceLoader;
 import java.util.Set;
+import java.util.TreeMap;
+
+import javax.ws.rs.Path;
 
 import org.datalift.core.log.LogContext;
 import org.datalift.core.project.DefaultProjectManager;
+import org.datalift.core.velocity.jersey.VelocityTemplateProcessor;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.LifeCycle;
+import org.datalift.fwk.Module;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.log.web.LogServletContextListener;
 
@@ -59,12 +76,48 @@ import static org.datalift.core.DefaultConfiguration.DATALIFT_HOME;
 public class ApplicationLoader extends LogServletContextListener
 {
     //-------------------------------------------------------------------------
+    // Constants
+    //-------------------------------------------------------------------------
+
+    /**
+     * The module sub-directory where to look for classes first. If
+     * no present, root-level JAR files will be searched.
+     */
+    public final static String MODULE_CLASSES_DIR = "classes";
+    /** The module sub-directory where to look for third-party JAR files. */
+    public final static String MODULE_LIB_DIR     = "lib";
+
+    //-------------------------------------------------------------------------
     // Class members
     //-------------------------------------------------------------------------
 
+    /** A FileFilter to select directories. */
+    private final static FileFilter directoryFilter = new FileFilter() {
+            @Override
+            public boolean accept(File f) {
+                return ((f.isDirectory()) && (f.canRead()));
+            }
+        };
+    /** A FileFilter to select JAR files. */
+    private final static FileFilter jarFilter = new FileFilter() {
+            @Override
+            public boolean accept(File f) {
+                return ((f.isFile()) && (f.getName().endsWith(".jar")));
+            }
+        };
+
+    /** DataLift Core components. */
+    private static final Set<LifeCycle> components = new HashSet<LifeCycle>();
+    /** Application modules. */
+    private static final Map<String,ModuleDesc> modules =
+                                            new TreeMap<String,ModuleDesc>();
     /** The singleton resources managed by this JAX-RS application. */
     private static Set<Object> resources = null;
 
+    /**
+     * Log initialization shall be delayed until the log configuration
+     * has been loaded.
+     */
     private static Logger log = null;
 
     //------------------------------------------------------------------------
@@ -89,34 +142,7 @@ public class ApplicationLoader extends LogServletContextListener
      */
     @Override
     public void shutdown() {
-        LogContext.resetContexts("Core", "shutdown");
-        Logger log = Logger.getLogger();
-
-        try {
-            Configuration cfg = Configuration.getDefault();
-            if (resources != null) {
-                for (Object r : resources) {
-                    if (r instanceof LifeCycle) {
-                        try {
-                            ((LifeCycle)r).shutdown(cfg);
-                            cfg.removeBean(r, null);
-                        }
-                        catch (Exception e) {
-                            TechnicalException error = new TechnicalException(
-                                            "resource.shutdown.error", e,
-                                            r, e.getMessage());
-                            log.error(error.getMessage(), e);
-                            throw error;
-                        }
-                    }
-                }
-            }
-            log.info("DataLift shutdown complete");
-        }
-        finally {
-            LogContext.resetContexts();
-            super.shutdown();
-        }
+        this.shutdownApplication();
     }
 
     //------------------------------------------------------------------------
@@ -129,6 +155,23 @@ public class ApplicationLoader extends LogServletContextListener
      * @return the JAX-RS root resources.
      */
     public static Set<Object> getResources() {
+        if (resources == null) {
+            Set<Object> rsc = new HashSet<Object>();
+            // Check modules for registration as JAX-RS root resources.
+            for (ModuleDesc desc : modules.values()) {
+                Module m = desc.module;
+                if (m.getClass().isAnnotationPresent(Path.class)) {
+                    // JAX-RS annotation @Path found on module class.
+                    rsc.add(m);
+                }
+            }
+            for (LifeCycle l : components) {
+                if (l.getClass().isAnnotationPresent(Path.class)) {
+                    rsc.add(l);
+                }
+            }
+            resources = rsc;
+        }
         return resources;
     }
 
@@ -154,7 +197,6 @@ public class ApplicationLoader extends LogServletContextListener
         }
     }
 
-
     /**
      * Loads the DataLift configuration and initializes the application
      * root resources.
@@ -168,18 +210,20 @@ public class ApplicationLoader extends LogServletContextListener
 
         try {
             // Load application configuration.
-            Configuration.setDefault(new DefaultConfiguration(props));
+            Configuration cfg = new DefaultConfiguration(props);
+            Configuration.setDefault(cfg);
+            // Load available application modules.
+            this.loadModules(cfg);
             // Initialize resources.
             // First initialization step.
-            Set<Object> rsc = new HashSet<Object>();
-            rsc.add(this.initResource(new RouterResource()));
-            rsc.add(this.initResource(new DefaultProjectManager()));
+            components.add(this.initResource(new RouterResource(modules), cfg));
+            components.add(this.initResource(new DefaultProjectManager(), cfg));
             // Second initialization step.
-            for (Object r : rsc) {
-                this.postInitResource(r);
+            for (LifeCycle r : components) {
+                this.postInitResource(r, cfg);
             }
-            // So far, so good. => Install singletons
-            resources = Collections.unmodifiableSet(rsc);
+            this.postInitModules(cfg);
+            // So far, so good.
             log.info("DataLift initialization complete");
         }
         catch (Throwable e) {
@@ -194,47 +238,349 @@ public class ApplicationLoader extends LogServletContextListener
     }
 
     /**
+     * Shuts the DataLift application down.
+     * @throws TechnicalException if any error occurred.
+     */
+    private void shutdownApplication() {
+        LogContext.resetContexts("Core", "shutdown");
+        Logger log = Logger.getLogger();
+
+        try {
+            Configuration cfg = Configuration.getDefault();
+            if (resources != null) {
+                for (Object r : resources) {
+                    if (r instanceof LifeCycle) {
+                        try {
+                            ((LifeCycle)r).shutdown(cfg);
+                            cfg.removeBean(r, null);
+                        }
+                        catch (Exception e) {
+                            TechnicalException error = new TechnicalException(
+                                            "resource.shutdown.error", e,
+                                            r, e.getMessage());
+                            log.error(error.getMessage(), e);
+                            throw error;
+                        }
+                    }
+                }
+            }
+            // Shutdown each module, ignoring errors.
+            for (ModuleDesc desc : modules.values()) {
+                Module m = desc.module;
+                Object[] prevCtx = LogContext.pushContexts(desc.name, "shutdown");
+                try {
+                    m.shutdown(cfg);
+                    cfg.removeBean(desc.module, desc.name);                
+                }
+                catch (Exception e) {
+                    log.error("Failed to properly shutdown module {}: {}", e,
+                              m.getName(), e.getMessage());
+                    // Continue with next module.
+                }
+                finally {
+                    LogContext.pushContexts(prevCtx[0], prevCtx[1]);
+                }
+            }
+            log.info("DataLift shutdown complete");
+        }
+        finally {
+            LogContext.resetContexts();
+            super.shutdown();
+        }
+    }
+
+    /**
      * Initializes (step #1) a resource object.
-     * @param  r   the resource to configure.
+     * @param  r     the resource to configure.
+     * @param  cfg   the DataLift configuration.
      *
      * @return the resource, configured.
      * @throws TechnicalException if any error occurred.
      */
-    private Object initResource(Object r) {
-        if (r instanceof LifeCycle) {
-            try {
-                Configuration cfg = Configuration.getDefault();
-                ((LifeCycle)r).init(cfg);
-                cfg.registerBean(r);
-            }
-            catch (Exception e) {
-                TechnicalException error = new TechnicalException(
-                                "resource.init.error", e, r, e.getMessage());
-                log.error(error.getMessage(), e);
-                throw error;
-            }
+    private LifeCycle initResource(LifeCycle r, Configuration cfg) {
+        try {
+            ((LifeCycle)r).init(cfg);
+            cfg.registerBean(r);
+        }
+        catch (Exception e) {
+            TechnicalException error = new TechnicalException(
+                            "resource.init.error", e, r, e.getMessage());
+            log.error(error.getMessage(), e);
+            throw error;
         }
         return r;
     }
 
     /**
      * Initializes (step #2) a resource object.
-     * @param  r   the resource to configure.
+     * @param  r     the resource to configure.
+     * @param  cfg   the DataLift configuration.
      *
      * @return the resource, ready for processing requests.
      * @throws TechnicalException if any error occurred.
      */
-    private void postInitResource(Object r) {
-        if (r instanceof LifeCycle) {
+    private void postInitResource(LifeCycle r, Configuration cfg) {
+        try {
+            ((LifeCycle)r).postInit(cfg);
+        }
+        catch (Exception e) {
+            TechnicalException error = new TechnicalException(
+                            "resource.init.error", e, r, e.getMessage());
+            log.error(error.getMessage(), e);
+            throw error;
+        }
+    }
+
+    private void postInitModules(Configuration configuration) {
+        // Post-init each module, ignoring errors.
+        for (Iterator<ModuleDesc> i=modules.values().iterator();
+                                                                i.hasNext(); ) {
+            ModuleDesc desc = i.next();
+            Object[] prevCtx = LogContext.pushContexts(desc.name, "postInit");
             try {
-                ((LifeCycle)r).postInit(Configuration.getDefault());
+                // Complete module initialization.
+                desc.module.postInit(configuration);
             }
             catch (Exception e) {
-                TechnicalException error = new TechnicalException(
-                                "resource.init.error", e, r, e.getMessage());
-                log.error(error.getMessage(), e);
-                throw error;
+                log.error("Post-init failed for module {}: {}", e,
+                          desc.name, e.getMessage());
+                // Disable module.
+                i.remove();
+                configuration.removeBean(desc.module, desc.name);
+                // Continue with next module.
             }
-    	}
+            finally {
+                LogContext.pushContexts(prevCtx[0], prevCtx[1]);
+            }
+        }
+    }
+
+    private void loadModules(Configuration cfg) {
+        modules.clear();
+        // Load modules embedded in web application first (if any).
+        this.loadModules(this.getClass().getClassLoader(), null);
+        // Load third-party module bundles.
+        if (cfg.getModulesPath() != null) {
+            List<File> l = Arrays.asList(cfg.getModulesPath().listFiles(
+                    new FileFilter() {
+                        @Override
+                        public boolean accept(File f) {
+                            return (jarFilter.accept(f) ||
+                                    directoryFilter.accept(f));
+                        }
+                    }));
+            Collections.sort(l);
+            for (File m : l) {
+                try {
+                    this.loadModules(m);
+                }
+                catch (Exception e) {
+                    log.fatal("Failed to load modules from {}: {}. Skipping...",
+                              e, m.getName(), e.getMessage());
+                    // Continue with next module.
+                }
+            }
+        }
+    }
+
+    /**
+     * Loads a DataLift module from the specified path and registers it.
+     * @param  f   the directory or JAR file for the module.
+     *
+     * @throws TechnicalException if any error occurred while loading
+     *         or configuring the module.
+     */
+    private void loadModules(File f) {
+        log.info("Loading module(s) from: {}", f);
+        try {
+            this.loadModules(new URLClassLoader(this.getModulePaths(f),
+                                        this.getClass().getClassLoader()), f);
+        }
+        catch (Exception e) {
+            TechnicalException error = new TechnicalException(
+                                                "module.load.error", e,
+                                                f.getName(), e.getMessage());
+            log.fatal(error.getMessage(), e);
+            throw error;
+        }
+    }
+
+    /**
+     * Loads all {@link Module} implementation classes from the
+     * specified JAR file or directory, initializing and registering
+     * them as well as their Velocity templates.
+     * @param  cl   the classloader to load the module classes.
+     * @param  f    the module JAR file or directory.
+     */
+    private void loadModules(ClassLoader cl, File f) {
+        Configuration cfg = Configuration.getDefault();
+
+        for (Module m : ServiceLoader.load(Module.class, cl)) {
+            String name = m.getName();
+            // Initialize module.
+            Object[] prevCtx = LogContext.pushContexts(name, "init");
+            try {
+                m.init(cfg);
+            }
+            finally {
+                LogContext.pushContexts(prevCtx[0], prevCtx[1]);
+            }
+            // Register module root (directory or JAR file) as
+            // a Velocity template source, if available.
+            if (f != null) {
+                VelocityTemplateProcessor.addModule(name, f);
+            }
+            // Make module available thru the Configuration object.
+            cfg.registerBean(m);
+            cfg.registerBean(name, m);
+            // Publish module REST resources.
+            ModuleDesc desc = new ModuleDesc(m, f, cl);
+            modules.put(name, desc);
+            // Notify module registration.
+            int resourceCount = desc.ressourceClasses.size();
+            if (desc.isResource) {
+                resourceCount++;
+            }
+            if (resourceCount > 0) {
+                log.info("Registered module \"{}\" as \"{}\" ({} resource(s))",
+                                        m.getClass().getSimpleName(),
+                                        name, Integer.valueOf(resourceCount));
+            }
+            else {
+                log.info("Registered module \"{}\" as \"{}\"",
+                                        m.getClass().getSimpleName(), name);
+            }
+        }
+    }
+
+    /**
+     * Analyzes a module structure to match the expected elements and
+     * returns the paths to be added to the module classpath.
+     * <p>
+     * Recognized elements include:</p>
+     * <ul>
+     *  <li>For JAR files: the JAR file itself.</li>
+     *  <li>For directories:
+     *   <dl>
+     *    <dt><code>/</code></dt>
+     *    <dd>The module root directory</dd>
+     *    <dt><code>/classes</code></dt>
+     *    <dd>The default directory for module classes</dd>
+     *    <dt><code>/*.jar</code></dt>
+     *    <dd>JAR files containing the module classes</dd>
+     *    <dt><code>/lib/**&#47;*.jar</code></dt>
+     *    <dd>All the JAR files in the <code>/lib</code> directory tree
+     *        (module classes and third-party libraries)</dd>
+     *   </dl></li>
+     * </ul>
+     * @param  path   the directory or JAR file for the module.
+     *
+     * @return the URLs of the paths to be added to the module
+     *         classpath.
+     */
+    private URL[] getModulePaths(File path) {
+        List<URL> urls = new LinkedList<URL>();
+
+        if (path.isDirectory()) {
+            // Add module root directory.
+            urls.add(this.getFileUrl(path));
+            // Look for module classes as a directory tree.
+            File classesDir = new File(path, MODULE_CLASSES_DIR);
+            if (classesDir.isDirectory()) {
+                urls.add(this.getFileUrl(classesDir));
+            }
+            // Look for root-level JAR files.
+            for (File jar : path.listFiles(jarFilter)) {
+                urls.add(this.getFileUrl(jar));
+            }
+            // Look for module dependencies as library JAR files.
+            File libDir = new File(path, MODULE_LIB_DIR);
+            if (classesDir.isDirectory()) {
+                urls.addAll(this.findFiles(libDir, jarFilter));
+            }
+        }
+        else {
+            // JAR file. => Add the JAR file itself to the classpath.
+            urls.add(this.getFileUrl(path));
+        }
+        return urls.toArray(new URL[urls.size()]);
+    }
+
+    /**
+     * Scans a directory tree and returns the files matching the
+     * specified filter.
+     * @param  root     the root of directory tree.
+     * @param  filter   the file filer.
+     *
+     * @return the URLs of the matched files.
+     */
+    private Collection<URL> findFiles(File root, FileFilter filter) {
+        return this.findFiles(root, filter, new LinkedList<URL>());
+    }
+
+    /**
+     * Recursively scans a directory tree and returns the files
+     * matching the specified filter.
+     * @param  root      the root of directory tree.
+     * @param  filter    the file filer.
+     * @param  results   the collection to append the matched files to.
+     *
+     * @return the <code>results</code> collection updated with the
+     *         matched files.
+     */
+    private Collection<URL> findFiles(File root, FileFilter filter,
+                                                 Collection<URL> results) {
+        List<File> dirs = new LinkedList<File>();
+        // Scan first-level directory content.
+        for (File f : root.listFiles()) {
+            if (filter.accept(f)) {
+                results.add(this.getFileUrl(f));
+            }
+            else if ((f.isDirectory()) && (f.canRead())) {
+                // Child directory not handled by filter.
+                // => Mark for recursive scan.
+                dirs.add(f);
+            }
+            // Else: ignore...
+        }
+        // Recursively scan child directories.
+        for (File child : dirs) {
+            this.findFiles(child, filter, results);
+        }
+        return results;
+    }
+
+    /**
+     * Returns the URL of the specified file, compliant with the
+     * requirements of {@link URLClassLoader#URLClassLoader(URL[])}.
+     * @param  f   the file or directory to convert.
+     *
+     * @return the URL of the file.
+     * @throws TechnicalException if <code>f</code> if neither a
+     *         regular file nor a directory.
+     */
+    private URL getFileUrl(File f) {
+        URL u = null;
+        try {
+            if (f.isFile()) {
+                u = f.toURI().toURL();
+            }
+            else if (f.isDirectory()) {
+                String uri = f.toURI().toString();
+                if (! uri.endsWith("/")) {
+                    uri += "/";
+                }
+                u = new URL(uri);
+            }
+            else {
+                throw new TechnicalException("invalid.file.type", f.getPath());
+            }
+        }
+        catch (MalformedURLException e) {
+            // Should never happen...
+            throw new UnsupportedOperationException(e.getMessage(), e);
+        }
+        log.debug("Added resource \"{}\" to module classpath", u);
+        return u;
     }
 }

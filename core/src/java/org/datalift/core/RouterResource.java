@@ -36,15 +36,9 @@ package org.datalift.core;
 
 
 import java.io.File;
-import java.io.FileFilter;
 import java.lang.reflect.Constructor;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
-import java.net.URLClassLoader;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
@@ -81,7 +75,6 @@ import org.openrdf.query.BindingSet;
 import org.openrdf.query.TupleQueryResultHandlerBase;
 
 import org.datalift.core.log.LogContext;
-import org.datalift.core.velocity.jersey.VelocityTemplateProcessor;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.LifeCycle;
 import org.datalift.fwk.MediaTypes;
@@ -152,19 +145,6 @@ public class RouterResource implements LifeCycle, ResourceResolver
     // Class members
     //-------------------------------------------------------------------------
 
-    private final static FileFilter directoryFilter = new FileFilter() {
-            @Override
-            public boolean accept(File f) {
-                return ((f.isDirectory()) && (f.canRead()));
-            }
-        };
-    private final static FileFilter jarFilter = new FileFilter() {
-            @Override
-            public boolean accept(File f) {
-                return ((f.isFile()) && (f.getName().endsWith(".jar")));
-            }
-        };
-
     private final static Logger log = Logger.getLogger();
 
     //-------------------------------------------------------------------------
@@ -198,6 +178,17 @@ public class RouterResource implements LifeCycle, ResourceResolver
         };
 
     //-------------------------------------------------------------------------
+    // Constructors
+    //-------------------------------------------------------------------------
+
+    public RouterResource(Map<String,ModuleDesc> modules) {
+        if (modules == null) {
+            throw new IllegalArgumentException("modules");
+        }
+        this.modules.putAll(modules);
+    }
+
+    //-------------------------------------------------------------------------
     // LifeCycle contract support
     //-------------------------------------------------------------------------
 
@@ -210,7 +201,6 @@ public class RouterResource implements LifeCycle, ResourceResolver
      */
     @Override
     public void init(Configuration configuration) {
-        // Step #1: Load configuration parameters.
         // Cache: duration
         String s = configuration.getProperty(CACHE_DURATION_PROPERTY);
         if (! isBlank(s)) {
@@ -252,76 +242,22 @@ public class RouterResource implements LifeCycle, ResourceResolver
                 }
             }
         }
-
-        // Step #2: Load available modules.
-        this.modules.clear();
-        this.policies.clear();
-        // Load modules embedded in web application first (if any).
-        this.loadModules(this.getClass().getClassLoader(), null);
-        // Load third-party module bundles.
-        if (configuration.getModulesPath() != null) {
-            List<File> l = Arrays.asList(configuration.getModulesPath().listFiles(
-                    new FileFilter() {
-                        @Override
-                        public boolean accept(File f) {
-                            return (jarFilter.accept(f) ||
-                                    directoryFilter.accept(f));
-                        }
-                    }));
-            Collections.sort(l);
-            for (File m : l) {
-                try {
-                    this.loadModules(m);
-                }
-                catch (Exception e) {
-                    log.fatal("Failed to load modules from {}: {}. Skipping...",
-                              e, m.getName(), e.getMessage());
-                    // Continue with next module.
-                }
-            }
-        }
     }
 
     /** {@inheritDoc} */
     @Override
     public void postInit(Configuration configuration) {
-        // Post-init each module, ignoring errors.
-        for (Iterator<ModuleDesc> i=this.modules.values().iterator();
-                                                                i.hasNext(); ) {
-            ModuleDesc desc = i.next();
-            Object[] prevCtx = LogContext.pushContexts(desc.name, "postInit");
+        // Loading URI policies for each module, ignoring errors.
+        this.policies.clear();
+        for (ModuleDesc desc : this.modules.values()) {
             try {
                 // Load & install module-specific URI policies, if any.
                 this.loadUriPolicies(desc.classLoader, desc.name);
-                // Complete module initialization.
-                desc.module.postInit(configuration);
             }
             catch (Exception e) {
-                log.error("Post-init failed for module {}: {}", e,
+                log.error("URI policy loading failed for module {}: {}", e,
                           desc.name, e.getMessage());
-                // Disable module.
-                i.remove();
-                configuration.removeBean(desc.module, desc.name);
                 // Continue with next module.
-            }
-            finally {
-                LogContext.pushContexts(prevCtx[0], prevCtx[1]);
-            }
-        }
-
-        // Post-init each URI policy, ignoring errors.
-        for (Iterator<UriPolicy> i=this.policies.iterator(); i.hasNext(); ) {
-            UriPolicy p = i.next();
-            try {
-                p.postInit(configuration);
-            }
-            catch (Exception e) {
-                log.error("Post-init failed for URI policy {}: {}", e,
-                          p.getClass(), e.getMessage());
-                // Disable URI policy.
-                i.remove();
-                configuration.removeBean(p, null);
-                // Continue with next policy.
             }
         }
 
@@ -347,23 +283,6 @@ public class RouterResource implements LifeCycle, ResourceResolver
                 log.error("Failed to properly shutdown URI policy {}: {}", e,
                           p.getClass(), e.getMessage());
                 // Continue with next policy.
-            }
-        }
-        // Shutdown each module, ignoring errors.
-        for (ModuleDesc desc : this.modules.values()) {
-            Module m = desc.module;
-            Object[] prevCtx = LogContext.pushContexts(m.getName(), "shutdown");
-            try {
-                m.shutdown(configuration);
-                configuration.removeBean(desc.module, desc.name);                
-            }
-            catch (Exception e) {
-                log.error("Failed to properly shutdown module {}: {}", e,
-                          m.getName(), e.getMessage());
-                // Continue with next module.
-            }
-            finally {
-                LogContext.pushContexts(prevCtx[0], prevCtx[1]);
             }
         }
     }
@@ -586,10 +505,11 @@ public class RouterResource implements LifeCycle, ResourceResolver
                 if (src != null) {
                     // Module static resource found.
                     // => Check whether data shall be returned.
-                    Date lastModified = new Date((module.isJarPackage())?
-                                    module.root.lastModified():
-                                    new File(src.getFile()).lastModified());
-                    ResponseBuilder b = request.evaluatePreconditions(lastModified);
+                    File f = (module.isJarPackage())? module.root:
+                                                      new File(src.getFile());
+                    Date lastModified = new Date(f.lastModified());
+                    ResponseBuilder b = request.evaluatePreconditions(
+                                                                lastModified);
                     if (b == null) {
                         // Get MIME type from file extension.
                         String mt = new MimetypesFileTypeMap().getContentType(rsc);
@@ -713,69 +633,6 @@ public class RouterResource implements LifeCycle, ResourceResolver
     }
 
     /**
-     * Loads a DataLift module from the specified path and registers it.
-     * @param  f   the directory or JAR file for the module.
-     *
-     * @throws TechnicalException if any error occurred while loading
-     *         or configuring the module.
-     */
-    private void loadModules(File f) {
-        log.info("Loading module(s) from: {}", f);
-        try {
-            this.loadModules(new URLClassLoader(this.getModulePaths(f),
-                                        this.getClass().getClassLoader()), f);
-        }
-        catch (Exception e) {
-            TechnicalException error = new TechnicalException(
-                                                "module.load.error", e,
-                                                f.getName(), e.getMessage());
-            log.fatal(error.getMessage(), e);
-            throw error;
-        }
-    }
-
-    /**
-     * Loads all {@link Module} implementation classes from the
-     * specified JAR file or directory, initializing and registering
-     * them as well as their Velocity templates.
-     * @param  cl   the classloader to load the module classes.
-     * @param  f    the module JAR file or directory.
-     */
-    private void loadModules(ClassLoader cl, File f) {
-        Configuration cfg = Configuration.getDefault();
-
-        for (Module m : ServiceLoader.load(Module.class, cl)) {
-            String name = m.getName();
-            // Initialize module.
-            Object[] prevCtx = LogContext.pushContexts(name, "init");
-            try {
-                m.init(cfg);
-            }
-            finally {
-                LogContext.pushContexts(prevCtx[0], prevCtx[1]);
-            }
-            // Register module root (directory or JAR file) as
-            // a Velocity template source, if available.
-            if (f != null) {
-                VelocityTemplateProcessor.addModule(name, f);
-            }
-            // Make module available thru the Configuration object.
-            cfg.registerBean(m);
-            cfg.registerBean(name, m);
-            // Publish module REST resources.
-            ModuleDesc desc = new ModuleDesc(m, f, cl);
-            this.modules.put(name, desc);
-            // Notify module registration.
-            int resourceCount = desc.ressourceClasses.size();
-            if (desc.isResource) {
-                resourceCount++;
-            }
-            log.info("Registered module \"{}\" ({} resource(s))",
-                                        name, Integer.valueOf(resourceCount));
-        }
-    }
-
-    /**
      * Loads all available {@link UriPolicy} implementation
      * classes for a given module (referenced by its class loader).
      * @param  cl           the classloader to load the URI policies.
@@ -784,157 +641,38 @@ public class RouterResource implements LifeCycle, ResourceResolver
     private void loadUriPolicies(ClassLoader cl, String moduleName) {
         Configuration cfg = Configuration.getDefault();
 
+        // Make a fault-tolerant loading of module's URI policies.
+        Iterator<UriPolicy> i = ServiceLoader.load(UriPolicy.class, cl)
+                                             .iterator();
         int count = 0;
-        for (UriPolicy a : ServiceLoader.load(UriPolicy.class, cl)) {
+        boolean hasNext = true;
+        do {
             try {
-                a.init(cfg);
-                // Make policy available thru the Configuration object.
-                cfg.registerBean(a);
-                // Register policy.
-                this.policies.add(a);
+                hasNext = i.hasNext();
+                if (hasNext) {
+                    UriPolicy p = i.next();
+                    p.init(cfg);
+                    // Make policy available thru the Configuration object.
+                    cfg.registerBean(p);
+                    p.postInit(cfg);
+                    // Register policy.
+                    this.policies.add(p);
+                    count++;
+                }
             }
-            catch (RuntimeException e) {
-                log.error("Failed to initialize URI policy {} for module \"{}\"",
-                          a.getClass(), moduleName);
-                throw e;
+            catch (Exception e) {
+                // Skip policy...
+                log.error("Failed to load URI policy for module {}: {}", e,
+                          moduleName, e.getMessage());
             }
         }
+        while (hasNext);
+
         if (count != 0) {
             // Notify whether URI policies were installed.
             log.info("Registered {} URI policy(ies) for module \"{}\"",
                      Integer.valueOf(this.policies.size()), moduleName);
         }
-    }
-
-    /**
-     * Analyzes a module structure to match the expected elements and
-     * returns the paths to be added to the module classpath.
-     * <p>
-     * Recognized elements include:</p>
-     * <ul>
-     *  <li>For JAR files: the JAR file itself.</li>
-     *  <li>For directories:
-     *   <dl>
-     *    <dt><code>/</code></dt>
-     *    <dd>The module root directory</dd>
-     *    <dt><code>/classes</code></dt>
-     *    <dd>The default directory for module classes</dd>
-     *    <dt><code>/*.jar</code></dt>
-     *    <dd>JAR files containing the module classes</dd>
-     *    <dt><code>/lib/**&#47;*.jar</code></dt>
-     *    <dd>All the JAR files in the <code>/lib</code> directory tree
-     *        (module classes and third-party libraries)</dd>
-     *   </dl></li>
-     * </ul>
-     * @param  path   the directory or JAR file for the module.
-     *
-     * @return the URLs of the paths to be added to the module
-     *         classpath.
-     */
-    private URL[] getModulePaths(File path) {
-        List<URL> urls = new LinkedList<URL>();
-
-        if (path.isDirectory()) {
-            // Add module root directory.
-            urls.add(this.getFileUrl(path));
-            // Look for module classes as a directory tree.
-            File classesDir = new File(path, MODULE_CLASSES_DIR);
-            if (classesDir.isDirectory()) {
-                urls.add(this.getFileUrl(classesDir));
-            }
-            // Look for root-level JAR files.
-            for (File jar : path.listFiles(jarFilter)) {
-                urls.add(this.getFileUrl(jar));
-            }
-            // Look for module dependencies as library JAR files.
-            File libDir = new File(path, MODULE_LIB_DIR);
-            if (classesDir.isDirectory()) {
-                urls.addAll(this.findFiles(libDir, jarFilter));
-            }
-        }
-        else {
-            // JAR file. => Add the JAR file itself to the classpath.
-            urls.add(this.getFileUrl(path));
-        }
-        return urls.toArray(new URL[urls.size()]);
-    }
-
-    /**
-     * Scans a directory tree and returns the files matching the
-     * specified filter.
-     * @param  root     the root of directory tree.
-     * @param  filter   the file filer.
-     *
-     * @return the URLs of the matched files.
-     */
-    private Collection<URL> findFiles(File root, FileFilter filter) {
-        return this.findFiles(root, filter, new LinkedList<URL>());
-    }
-
-    /**
-     * Recursively scans a directory tree and returns the files
-     * matching the specified filter.
-     * @param  root      the root of directory tree.
-     * @param  filter    the file filer.
-     * @param  results   the collection to append the matched files to.
-     *
-     * @return the <code>results</code> collection updated with the
-     *         matched files.
-     */
-    private Collection<URL> findFiles(File root, FileFilter filter,
-                                                 Collection<URL> results) {
-        List<File> dirs = new LinkedList<File>();
-        // Scan first-level directory content.
-        for (File f : root.listFiles()) {
-            if (filter.accept(f)) {
-                results.add(this.getFileUrl(f));
-            }
-            else if ((f.isDirectory()) && (f.canRead())) {
-                // Child directory not handled by filter.
-                // => Mark for recursive scan.
-                dirs.add(f);
-            }
-            // Else: ignore...
-        }
-        // Recursively scan child directories.
-        for (File child : dirs) {
-            this.findFiles(child, filter, results);
-        }
-        return results;
-    }
-
-    /**
-     * Returns the URL of the specified file, compliant with the
-     * requirements of {@link URLClassLoader#URLClassLoader(URL[])}.
-     * @param  f   the file or directory to convert.
-     *
-     * @return the URL of the file.
-     * @throws TechnicalException if <code>f</code> if neither a
-     *         regular file nor a directory.
-     */
-    private URL getFileUrl(File f) {
-        URL u = null;
-        try {
-            if (f.isFile()) {
-                u = f.toURI().toURL();
-            }
-            else if (f.isDirectory()) {
-                String uri = f.toURI().toString();
-                if (! uri.endsWith("/")) {
-                    uri += "/";
-                }
-                u = new URL(uri);
-            }
-            else {
-                throw new TechnicalException("invalid.file.type", f.getPath());
-            }
-        }
-        catch (MalformedURLException e) {
-            // Should never happen...
-            throw new UnsupportedOperationException(e.getMessage(), e);
-        }
-        log.debug("Added resource \"{}\" to module classpath", u);
-        return u;
     }
 
     //-------------------------------------------------------------------------
@@ -947,60 +685,6 @@ public class RouterResource implements LifeCycle, ResourceResolver
         return this.getClass().getSimpleName()
                         + " (" + this.modules.size()
                         + " modules: " + this.modules.keySet() + ')';
-    }
-
-    //-------------------------------------------------------------------------
-    // ModuleDesc nested class
-    //-------------------------------------------------------------------------
-
-    /**
-     * The descriptor for a registered module that acts as a cache for
-     * module-provided data.
-     */
-    private final static class ModuleDesc
-    {
-        public final String name;
-        public final Module module;
-        public final File root;
-        public final ClassLoader classLoader;
-        public final Map<String,Class<?>> ressourceClasses;
-        public final boolean isResource;
-
-        public ModuleDesc(Module module, File root, ClassLoader classLoader) {
-            if (module == null) {
-                throw new IllegalArgumentException("module");
-            }
-            if ((root == null) || (! root.exists())) {
-                throw new IllegalArgumentException("root");
-            }
-            if (classLoader == null) {
-                throw new IllegalArgumentException("classLoader");
-            }
-            this.module      = module;
-            this.name        = module.getName();
-            this.root        = root;
-            this.classLoader = classLoader;
-            this.ressourceClasses = new TreeMap<String,Class<?>>();
-            Map<String,Class<?>> resources = module.getResources();
-            if (resources != null) {
-                this.ressourceClasses.putAll(resources);
-            }
-            this.isResource = module.isResource();
-        }
-
-        public Class<?> get(String key) {
-            return this.ressourceClasses.get(key);
-        }
-
-        public boolean isJarPackage() {
-            return this.root.isFile();
-        }
-
-        /** {@inheritDoc} */
-        @Override
-        public String toString() {
-            return this.name;
-        }
     }
 
     //-------------------------------------------------------------------------
