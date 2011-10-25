@@ -105,7 +105,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
 
     /** Default constructor. */
     protected AbstractSparqlEndpoint() {
-        super(MODULE_NAME, true);
+        super(MODULE_NAME, false);
     }
 
     //-------------------------------------------------------------------------
@@ -117,6 +117,16 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     public void init(Configuration cfg) {
         super.init(cfg);
         this.configuration = cfg;
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>This implementation returns <code>true</code> (no
+     * authentication required).</p>
+     */
+    @Override
+    public boolean allowsAnonymousAccess() {
+        return true;
     }
 
     //-------------------------------------------------------------------------
@@ -153,6 +163,16 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         return this.executeQuery(defaultGraphUris, namedGraphUris, query,
                                 startOffset, endOffset, gridJson, null,
                                 uriInfo, request, acceptHdr);
+    }
+
+    //-------------------------------------------------------------------------
+    // Object contract support
+    //-------------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    @Override
+    public String toString() {
+        return this.getClass().getSimpleName();
     }
 
     //-------------------------------------------------------------------------
