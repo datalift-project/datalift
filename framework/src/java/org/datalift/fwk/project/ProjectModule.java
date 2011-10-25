@@ -83,6 +83,7 @@ public interface ProjectModule extends Module
         private final HttpMethod method;
         private final String label;
         private URI icon;
+        private int position = 1000;
 
         /**
          * Creates the description of a URI accessible using the HTTP
@@ -186,6 +187,13 @@ public interface ProjectModule extends Module
             return this.label;
         }
 
+        public void setPosition(int position) {
+            this.position = position;
+        }
+        public int getPosition() {
+            return this.position;
+        }
+
         public void setIcon(URI icon) {
             this.icon = icon;
         }
@@ -195,6 +203,20 @@ public interface ProjectModule extends Module
         public String getIcon(String baseUri) throws MalformedURLException {
             return this.toUrl(baseUri, this.getIcon());
         }
+
+        //---------------------------------------------------------------------
+        // Object contract support
+        //---------------------------------------------------------------------
+
+        /** {@inheritDoc} */
+        @Override
+        public String toString() {
+            return this.label + " -> " + this.method + ' ' + this.uri;
+        }
+
+        //---------------------------------------------------------------------
+        // Specific implementation
+        //---------------------------------------------------------------------
 
         private String toUrl(String baseUri, URI uri)
                                                 throws MalformedURLException {

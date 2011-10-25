@@ -42,6 +42,7 @@ import java.util.Map;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
@@ -68,6 +69,7 @@ import org.datalift.fwk.util.StringUtils;
  *
  * @author lbihanic
  */
+@Path("/" + CsvDirectMapper.MODULE_NAME)
 public class CsvDirectMapper extends BaseConverterModule
 {
     //-------------------------------------------------------------------------
@@ -82,7 +84,7 @@ public class CsvDirectMapper extends BaseConverterModule
 
     /** Default constructor. */
     public CsvDirectMapper() {
-        super(MODULE_NAME, SourceType.CsvSource);
+        super(MODULE_NAME, 100, SourceType.CsvSource);
     }
 
     //-------------------------------------------------------------------------

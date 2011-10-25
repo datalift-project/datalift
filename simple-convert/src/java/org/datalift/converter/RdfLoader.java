@@ -44,6 +44,7 @@ import java.util.regex.Pattern;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
@@ -60,6 +61,7 @@ import org.datalift.fwk.util.StringUtils;
 import org.datalift.fwk.util.UriMapper;
 
 
+@Path("/" + RdfLoader.MODULE_NAME)
 public class RdfLoader extends BaseConverterModule
 {
     //-------------------------------------------------------------------------
@@ -73,7 +75,8 @@ public class RdfLoader extends BaseConverterModule
     //-------------------------------------------------------------------------
 
     public RdfLoader() {
-        super(MODULE_NAME, SourceType.RdfFileSource, SourceType.SparqlSource);
+        super(MODULE_NAME, 200, SourceType.RdfFileSource,
+                                SourceType.SparqlSource);
     }
 
     //-------------------------------------------------------------------------

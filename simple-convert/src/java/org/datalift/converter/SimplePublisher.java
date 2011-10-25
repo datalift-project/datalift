@@ -44,6 +44,7 @@ import java.util.Map;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
+import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
@@ -60,6 +61,7 @@ import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.rdf.RdfUtils;
 
 
+@Path("/" + SimplePublisher.MODULE_NAME)
 public class SimplePublisher extends BaseConverterModule
 {
     //-------------------------------------------------------------------------
@@ -73,7 +75,7 @@ public class SimplePublisher extends BaseConverterModule
     //-------------------------------------------------------------------------
 
     public SimplePublisher() {
-        super(MODULE_NAME, SourceType.TransformedRdfSource);
+        super(MODULE_NAME, 10000, SourceType.TransformedRdfSource);
     }
 
     //-------------------------------------------------------------------------

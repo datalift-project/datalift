@@ -43,6 +43,7 @@ import java.util.Map;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
@@ -54,6 +55,7 @@ import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.rdf.RdfUtils;
 
 
+@Path("/" + RdfTransformer.MODULE_NAME)
 public class RdfTransformer extends BaseConverterModule
 {
     //-------------------------------------------------------------------------
@@ -67,7 +69,7 @@ public class RdfTransformer extends BaseConverterModule
     //-------------------------------------------------------------------------
 
     public RdfTransformer() {
-        super(MODULE_NAME, SourceType.TransformedRdfSource);
+        super(MODULE_NAME, 500, SourceType.TransformedRdfSource);
     }
 
     //-------------------------------------------------------------------------

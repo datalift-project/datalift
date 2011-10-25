@@ -83,6 +83,7 @@ import org.datalift.fwk.util.StringUtils;
  *
  * @author lbihanic
  */
+@Path("/" + SqlDirectMapper.MODULE_NAME)
 public class SqlDirectMapper extends BaseConverterModule
 {
     //-------------------------------------------------------------------------
@@ -113,19 +114,7 @@ public class SqlDirectMapper extends BaseConverterModule
 
     /** Default constructor. */
     public SqlDirectMapper() {
-        super(MODULE_NAME, SourceType.SqlSource);
-    }
-
-    //-------------------------------------------------------------------------
-    // Module contract support
-    //-------------------------------------------------------------------------
-
-    /** {@inheritDoc} */
-    @Override
-    public Map<String,Class<?>> getResources() {
-        Map<String, Class<?>> rsc = new HashMap<String, Class<?>>();
-        rsc.put("columns", SqlSourceResource.class);
-        return rsc;
+        super(MODULE_NAME, 100, SourceType.SqlSource);
     }
 
     //-------------------------------------------------------------------------
@@ -343,24 +332,5 @@ public class SqlDirectMapper extends BaseConverterModule
 
     private final int getTimeZoneOffsetInMinutes(GregorianCalendar c) {
         return (c.get(ZONE_OFFSET) + c.get(DST_OFFSET)) / (60*1000);
-    }
-
-
-    public static class SqlSourceResource
-    {
-        private final SqlDirectMapper parent;
-
-        public SqlSourceResource(SqlDirectMapper parent) {
-            this.parent = parent;
-        }
-
-        @GET
-        @Produces(MediaTypes.APPLICATION_JSON)
-        public Response getColumnNames(@QueryParam("project") URI projectId,
-                                       @QueryParam("source") URI sourceId,
-                                       @Context Request request)
-                                                throws WebApplicationException {
-            return this.parent.getColumnNames(projectId, sourceId, request);
-        }
     }
 }

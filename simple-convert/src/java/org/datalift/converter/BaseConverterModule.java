@@ -98,6 +98,8 @@ public abstract class BaseConverterModule
 
     /** The type of input source this module can handle. */
     protected final Collection<SourceType> inputSources;
+    /** The requested module position in menu. */
+    protected final int position;
     /** The HTTP method to access the module entry page. */
     protected final HttpMethod accessMethod;
 
@@ -118,29 +120,33 @@ public abstract class BaseConverterModule
      * Creates a new module instance, accepting the specified type of
      * input source, with an entry page accessed using HTTP GET.
      * @param  name           the module name.
+     * @param  position       the requested module position in menu.
      * @param  inputSources   the types of sources this module expects
      *                        as input.
      */
-    public BaseConverterModule(String name, SourceType... inputSources) {
-        this(name, HttpMethod.GET, inputSources);
+    public BaseConverterModule(String name, int position,
+                                            SourceType... inputSources) {
+        this(name, position, HttpMethod.GET, inputSources);
     }
 
     /**
      * Creates a new module instance.
      * @param  name           the module name.
+     * @param  position       the requested module position in menu.
      * @param  method         the HTTP method (GET or POST) to access
      *                        the module entry page.
      * @param  inputSources   the types of sources this module expects
      *                        as input.
      */
-    public BaseConverterModule(String name, HttpMethod method,
-                                            SourceType... inputSources) {
-        super(name, true);
+    public BaseConverterModule(String name, int position,
+                               HttpMethod method, SourceType... inputSources) {
+        super(name, false);
 
         if (method == null) {
             throw new IllegalArgumentException("method");
         }
         this.accessMethod = method;
+        this.position = position;
 
         if ((inputSources == null) || (inputSources.length == 0)) {
             throw new IllegalArgumentException("inputSource");
@@ -190,6 +196,9 @@ public abstract class BaseConverterModule
                     projectPage = new UriDesc(
                                     this.getName() + "?project=" + p.getUri(),
                                     this.accessMethod, label);
+                    if (this.position > 0) {
+                        projectPage.setPosition(this.position);
+                    }
                 }
                 catch (Exception e) {
                     throw new TechnicalException(e);
@@ -201,6 +210,17 @@ public abstract class BaseConverterModule
                                                 p.getUri(), e.getMessage());
         }
         return projectPage;
+    }
+
+    //-------------------------------------------------------------------------
+    // Object contract support
+    //-------------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    @Override
+    public String toString() {
+        return this.getClass().getSimpleName()
+                + " (" + this.getName() + this.inputSources + ')';
     }
 
     //-------------------------------------------------------------------------
