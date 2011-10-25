@@ -83,7 +83,7 @@ public interface ProjectModule extends Module
         private final HttpMethod method;
         private final String label;
         private URI icon;
-        private int position = 1000;
+        private int position = 5000;
 
         /**
          * Creates the description of a URI accessible using the HTTP
@@ -213,6 +213,8 @@ public interface ProjectModule extends Module
         /**
          * Returns the position at which the module page shall appear
          * in the list of modules applicable to a project.
+         * <p>
+         * Default value is 5000.</p>
          * @return the module page position.
          */
         public int getPosition() {

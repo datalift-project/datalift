@@ -36,6 +36,7 @@ package org.datalift.samples.project;
 
 
 import javax.ws.rs.GET;
+import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
@@ -45,19 +46,48 @@ import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectModule;
 
 
+/**
+ * A very simple {@link ProjectModule} capable of handling all
+ * DataLift projects regardless their state or content (sources) just
+ * to display a funny pictures.
+ *
+ * @author lbihanic
+ */
+@Path("/" + HandleProjectModule.MODULE_NAME)
 public class HandleProjectModule extends BaseModule implements ProjectModule
 {
+    //-------------------------------------------------------------------------
+    // Constants
+    //-------------------------------------------------------------------------
+
+    private final static String MODULE_NAME = "sample-project";
+
+    //-------------------------------------------------------------------------
+    // Class members
+    //-------------------------------------------------------------------------
+
     private final static Logger log = Logger.getLogger();
 
+    //-------------------------------------------------------------------------
+    // Constructors
+    //-------------------------------------------------------------------------
+
     public HandleProjectModule() {
-        super("sample-project", true);
+        super(MODULE_NAME);
     }
 
+    //-------------------------------------------------------------------------
+    // ProjectModule contract support
+    //-------------------------------------------------------------------------
+
+    /** {@inheritDoc} */
     @Override
     public UriDesc canHandle(Project p) {
         try {
-            return new UriDesc(this.getName() + "/java-guy.jpg",
-                               "Sample Project Module");
+            UriDesc desc = new UriDesc(this.getName() + "/java-guy.jpg",
+                                       "Sample Project Module");
+            desc.setPosition(1000000);
+            return desc;
         }
         catch (Exception e) {
             log.fatal("Uh?", e);
@@ -65,6 +95,10 @@ public class HandleProjectModule extends BaseModule implements ProjectModule
         }
     }
 
+    //-------------------------------------------------------------------------
+    // Web services
+    //-------------------------------------------------------------------------
+    
     @GET
     @Produces(MediaType.TEXT_PLAIN)
     public String doGet() {

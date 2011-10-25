@@ -140,7 +140,7 @@ public abstract class BaseConverterModule
      */
     public BaseConverterModule(String name, int position,
                                HttpMethod method, SourceType... inputSources) {
-        super(name, false);
+        super(name);
 
         if (method == null) {
             throw new IllegalArgumentException("method");
