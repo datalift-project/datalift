@@ -44,7 +44,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.HashSet;
 import java.util.Map;
 
 import javax.persistence.EntityManager;
@@ -95,7 +95,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     private EntityManager entityMgr = null;
     private ProjectJpaDao projectDao = null;
 
-    private final Collection<Class<?>> classes = new LinkedList<Class<?>>();
+    private final Collection<Class<?>> classes = new HashSet<Class<?>>();
 
     //-------------------------------------------------------------------------
     // LifeCycle contract support
@@ -429,7 +429,9 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
      */
     @SuppressWarnings("unchecked")
     private Collection<Class<?>> getPersistentClasses() {
-        Collection<Class<?>> classes = new LinkedList<Class<?>>();
+        // Use intermediate collection to bypass generics typing issue
+        // with the compiler-computed return type of Arrays.asList().
+        Collection<Class<?>> classes = new HashSet<Class<?>>();
         classes.addAll(Arrays.asList(
                     ProjectImpl.class, OntologyImpl.class,
                     CsvSourceImpl.class, RdfFileSourceImpl.class,
