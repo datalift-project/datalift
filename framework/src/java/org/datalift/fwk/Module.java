@@ -42,6 +42,23 @@ import java.util.Map;
 /**
  * Base interface for DataLift application modules.
  * <p>
+ * Modules can be either JAX-RS root resources on simple Java classes
+ * (legacy).<br />
+ * In the first case (the module class is annotated with JAX-RS
+ * {@link javax.ws.rs.Path @Path}), an instance of the class is created
+ * and {@link LifeCycle initialized} to be handed over to the underlying
+ * JAX-RS implementation. In the latter case, an instance of the class
+ * is created and queried for the resources it wish to expose:
+ * {@link #isResource() itself} and/or
+ * {@link #getResources() sub-resources}.
+ * <p>
+ * JAX-RS root resource modules have access to all the JAX-RS features
+ * for defining resource paths. Non JAX-RS root resource modules are
+ * required to provide paths with at least 2 levels:
+ * <code>&lt;module&gt;/&lt;resource&gt;</code>; sub-resources can
+ * make use of JAX-RS {@link javax.ws.rs.Path @Path}-annotated methods
+ * but the main module class can't.
+ * <p>
  * Modules can be packaged as a JAR file or a directory (a deployment
  * unit) and are loaded using the
  * {@link java.util.ServiceLoader Java service provider} mechanism.</p>
@@ -72,8 +89,8 @@ import java.util.Map;
  * <p>
  * The DataLift application loads each deployment unit in dedicated a
  * class loader. Hence, modules from the same deployment unit can access
- * each others (i.e. perform Java methods calls) but cannot invoke
- * methods on modules from other deployment units except through
+ * each others directly (i.e. through Java methods calls) but cannot
+ * invoke methods on modules from other deployment units except through
  * framework-defined interfaces such as the
  * {@link org.datalift.fwk.sparql.SparqlEndpoint SPARQL endpoint}
  * interface.</p>
@@ -91,6 +108,8 @@ public interface Module extends LifeCycle
 
     /**
      * Returns the resource classes this module makes available.
+     * Modules that are JAX-RS root resources should return
+     * <code>null</code>.
      * <p>
      * Resource classes shall be JAX-RS resources and offer one of
      * the following two constructors:</p>
@@ -100,14 +119,16 @@ public interface Module extends LifeCycle
      *      as argument</li>
      * </ul>
      * @return the resource classes as a map using the resource URL
-     *         path element as key.
+     *         path element as key or <code>null</code> if this module
+     *         has no sub-resources.
      */
     public Map<String,Class<?>> getResources();
 
     /**
      * Returns whether this module is itself a JAX-RS root resource.
      * Registering as a root resource enabled a module to process
-     * request targeting no resource.
+     * request targeting no resource. Modules that are JAX-RS root
+     * resources should always return <code>false</code>.
      * @return <code>true</code> if this module is a JAX-RS resource,
      *         <code>false</code> otherwise.
      */

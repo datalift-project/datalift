@@ -144,7 +144,8 @@ public abstract class BaseModule implements Module
 
     /**
      * {@inheritDoc}
-     * <p>This implementation returns <code>null</code> (no resources).</p>
+     * <p>This implementation returns <code>null</code> (no
+     * sub-resources).</p>
      */
     @Override
     public Map<String,Class<?>> getResources() {
