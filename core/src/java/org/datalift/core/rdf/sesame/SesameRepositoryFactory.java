@@ -47,6 +47,7 @@ import org.datalift.core.TechnicalException;
 import org.datalift.core.rdf.BaseRepository;
 import org.datalift.core.rdf.RepositoryFactory;
 import org.datalift.fwk.Configuration;
+import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.rdf.Repository;
 
 
@@ -82,6 +83,12 @@ public final class SesameRepositoryFactory extends RepositoryFactory
     public final static String FILE_URL_SCHEME  = "file:";
 
     //-------------------------------------------------------------------------
+    // Class members
+    //-------------------------------------------------------------------------
+
+    private final static Logger log = Logger.getLogger();
+
+    //-------------------------------------------------------------------------
     // RepositoryFactory contract support
     //-------------------------------------------------------------------------
 
@@ -91,15 +98,22 @@ public final class SesameRepositoryFactory extends RepositoryFactory
                                                  Configuration configuration) {
         Repository r = null;
 
-        if (url.startsWith(HTTP_URL_SCHEME)) {
-            r = new SesameHttpRepository(name, url, configuration);
+        try {
+            if (url.startsWith(HTTP_URL_SCHEME)) {
+                r = new SesameHttpRepository(name, url, configuration);
+            }
+            else if ((url.startsWith(SAIL_URL_SCHEME)) ||
+                     (url.startsWith(FILE_URL_SCHEME))) {
+                r = new SesameSailRepository(name, url, configuration);
+            }
+            // Else: Not a Sesame repository.
         }
-        else if ((url.startsWith(SAIL_URL_SCHEME)) ||
-                 (url.startsWith(FILE_URL_SCHEME))) {
-            r = new SesameSailRepository(name, url, configuration);
+        catch (Exception e) {
+            // Repository not available or not a native Sesame repository
+            // (e.g. maybe a Virtuoso or AllegroGraph wrapper).
+            // => Ignore error and return null (i.e. not for me!).
+            log.warn("Failed to connect to {}: {}", e, url, e.getMessage());
         }
-        // Else: Not a Sesame repository.
-
         return r;
     }
 
