@@ -335,7 +335,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
             repo = this.configuration.getDefaultRepository();
         }
         else {
-            if (! ((repo.isPublic) ||
+            if (! ((repo.isPublic()) ||
                    (SecurityContext.isUserAuthenticated()))) {
                 // Repository is not public and user is not authenticated.
                 throw new java.lang.SecurityException();

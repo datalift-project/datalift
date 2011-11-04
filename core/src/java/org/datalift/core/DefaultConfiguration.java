@@ -205,7 +205,7 @@ public class DefaultConfiguration extends Configuration
         Repository def = this.getDefaultRepository();
         l.add(def);
         for (Repository r : this.repositories.values()) {
-            if ((! r.equals(def)) && ((! publicOnly) || (r.isPublic))) {
+            if ((! r.equals(def)) && ((! publicOnly) || (r.isPublic()))) {
                 l.add(r);
             }
         }
@@ -426,6 +426,10 @@ public class DefaultConfiguration extends Configuration
                     // Old URL property not found. => Try with new name.
                     url = this.getConfigurationEntry(
                                             name + REPOSITORY_URL, true);
+                }
+                else {
+                    log.warn("Property {} is deprecated. Use {} instead.",
+                             name + REPOSITORY_HTTP_URL, name + REPOSITORY_URL);
                 }
                 Repository r = null;
                 for (RepositoryFactory f : factories) {

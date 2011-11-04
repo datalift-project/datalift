@@ -71,11 +71,11 @@ public abstract class Repository
     /** The repository name in the DataLift configuration. */
     public final String name;
     /** The repository connection string. */
-    public final String url;
+    protected final String url;
     /** The repository display label. */
-    public final String label;
+    protected final String label;
     /** Whether this repository is publicly accessible. */
-    public final boolean isPublic;
+    protected final boolean isPublic;
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -295,6 +295,17 @@ public abstract class Repository
      */
     public String getUrl() {
         return this.url;
+    }
+
+    /**
+     * Returns the URL of the repository SPARQL endpoint.
+     * <p>
+     * The default implementation returns the repository
+     * {@link #getUrl() connection URL}.</p>
+     * @return the URL of the repository SPARQL endpoint.
+     */
+    public String getEndpointUrl() {
+        return this.getUrl();
     }
 
     /**

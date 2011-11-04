@@ -78,7 +78,8 @@ public class HttpSparqlEndpoint extends AbstractSparqlEndpoint
                                         throws IOException, URISyntaxException {
         log.trace("Processing SPARQL query: \"{}\"", query);
         // Forward query to the SPARQL endpoint.
-        URL u = new URL(this.getTargetRepository(defaultGraphUris).url);
+        URL u = new URL(this.getTargetRepository(defaultGraphUris)
+                            .getEndpointUrl());
         // Use URI multi-argument constructor to escape query string.
         u = new URI(u.getProtocol(), null,
                     u.getHost(), u.getPort(),

@@ -80,13 +80,22 @@ abstract public class BaseRepository extends Repository
     //-------------------------------------------------------------------------
 
     /** The property suffix for repository display label. */
-    public final static String REPOSITORY_LABEL        = ".repository.label";
+    public final static String REPOSITORY_LABEL = ".repository.label";
     /** The property suffix for repository login. */
-    public final static String REPOSITORY_USERNAME     = ".repository.username";
+    public final static String REPOSITORY_USERNAME = ".repository.username";
     /** The property suffix for repository password. */
-    public final static String REPOSITORY_PASSWORD     = ".repository.password";
+    public final static String REPOSITORY_PASSWORD = ".repository.password";
     /** The property suffix for repository visibility flag. */
-    public final static String REPOSITORY_PUBLIC_FLAG  = ".repository.public";
+    public final static String REPOSITORY_PUBLIC_FLAG = ".repository.public";
+    /**
+     * The property suffix for the URL of the repository SPARQL
+     * endpoint. If the property is not set, the repository
+     * {@link #getUrl() connection URL} is assume to support the
+     * <a href="http://www.w3.org/TR/sparql11-protocol/#query-bindings-http">SPARQL
+     * protocol HTTP interface</a>.
+     */
+    public final static String REPOSITORY_ENDPOINT_URL =
+                                                    ".repository.sparql.url";
 
     //-------------------------------------------------------------------------
     // Class members
@@ -98,6 +107,8 @@ abstract public class BaseRepository extends Repository
     // Instance members
     //-------------------------------------------------------------------------
 
+    /** The URL of the repository SPARQL endpoint. */
+    private final String endpointUrl;
     /** The native repository. */
     private final org.openrdf.repository.Repository target;
     /** The value factory to map initial bindings. */
@@ -131,6 +142,9 @@ abstract public class BaseRepository extends Repository
             throw new TechnicalException("repository.invalid.url",
                                                         this.name, this.url);
         }
+        String sparqlEndpoint = configuration.getProperty(
+                                                name + REPOSITORY_ENDPOINT_URL);
+        this.endpointUrl = (isBlank(sparqlEndpoint))? this.url: sparqlEndpoint;
         this.target = this.newNativeRepository(configuration);
         this.valueFactory = this.target.getValueFactory();
     }
@@ -253,6 +267,17 @@ abstract public class BaseRepository extends Repository
         finally {
             try { cnx.close(); } catch (Exception e) { /* Ignore... */ }
         }
+    }
+
+    /** {@inheritDoc}
+     * @return the URL of the repository SPARQL endpoint, as defined by
+     * the {@link #REPOSITORY_ENDPOINT_URL} configuration property or
+     * the {@link #getUrl() repository connection URL} if the property
+     * is not set.
+     */
+    @Override
+    public String getEndpointUrl() {
+        return this.endpointUrl;
     }
 
     //-------------------------------------------------------------------------
