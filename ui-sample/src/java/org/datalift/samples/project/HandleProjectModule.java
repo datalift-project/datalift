@@ -60,7 +60,7 @@ public class HandleProjectModule extends BaseModule implements ProjectModule
     // Constants
     //-------------------------------------------------------------------------
 
-    private final static String MODULE_NAME = "sample-project";
+    public final static String MODULE_NAME = "sample-project";
 
     //-------------------------------------------------------------------------
     // Class members

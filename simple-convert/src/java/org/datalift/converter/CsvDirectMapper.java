@@ -76,7 +76,7 @@ public class CsvDirectMapper extends BaseConverterModule
     // Constants
     //-------------------------------------------------------------------------
 
-    private final static String MODULE_NAME = "csvdirectmapper";
+    public final static String MODULE_NAME = "csvdirectmapper";
 
     //-------------------------------------------------------------------------
     // Constructors

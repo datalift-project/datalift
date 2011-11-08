@@ -68,7 +68,7 @@ public class SimplePublisher extends BaseConverterModule
     // Constants
     //-------------------------------------------------------------------------
 
-    private final static String MODULE_NAME = "simple-publisher";
+    public final static String MODULE_NAME = "simple-publisher";
 
     //-------------------------------------------------------------------------
     // Constructors

@@ -90,7 +90,7 @@ public class SqlDirectMapper extends BaseConverterModule
     // Constants
     //-------------------------------------------------------------------------
 
-    private final static String MODULE_NAME = "sqldirectmapper";
+    public final static String MODULE_NAME = "sqldirectmapper";
 
     //-------------------------------------------------------------------------
     // Class members

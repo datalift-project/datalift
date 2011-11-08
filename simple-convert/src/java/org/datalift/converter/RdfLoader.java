@@ -68,7 +68,7 @@ public class RdfLoader extends BaseConverterModule
     // Constants
     //-------------------------------------------------------------------------
 
-    private final static String MODULE_NAME = "rdfloader";
+    public final static String MODULE_NAME = "rdfloader";
 
     //-------------------------------------------------------------------------
     // Constructors

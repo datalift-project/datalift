@@ -62,7 +62,7 @@ public class RdfTransformer extends BaseConverterModule
     // Constants
     //-------------------------------------------------------------------------
 
-    private final static String MODULE_NAME = "rdftransformer";
+    public final static String MODULE_NAME = "rdftransformer";
 
     //-------------------------------------------------------------------------
     // Constructors
