@@ -96,6 +96,8 @@ abstract public class BaseRepository extends Repository
      */
     public final static String REPOSITORY_ENDPOINT_URL =
                                                     ".repository.sparql.url";
+    /** The property suffix for repository type. */
+    public final static String REPOSITORY_TYPE = ".repository.type";
 
     //-------------------------------------------------------------------------
     // Class members

@@ -50,6 +50,8 @@ import org.datalift.fwk.Configuration;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.rdf.Repository;
 
+import static org.datalift.fwk.util.StringUtils.isBlank;
+
 
 /**
  * A repository factory implementation for instantiating
@@ -72,8 +74,6 @@ public final class SesameRepositoryFactory extends RepositoryFactory
     // Constants
     //-------------------------------------------------------------------------
 
-    /** The URL scheme for Sesame HTTP repositories. */
-    public final static String HTTP_URL_SCHEME  = "http:";
     /**
      * The URL scheme for Sesame SAIL repositories (both in-memory and
      * file-based).
@@ -81,6 +81,12 @@ public final class SesameRepositoryFactory extends RepositoryFactory
     public final static String SAIL_URL_SCHEME  = "sail:";
     /** The URL scheme for Sesame file-based SAIL repositories. */
     public final static String FILE_URL_SCHEME  = "file:";
+    /**
+     * The (optional) type string to
+     * {@link BaseRepository#REPOSITORY_TYPE flag} native Sesame
+     * repositories in configuration.
+     */
+    public final static String SESAME_REPOSITORY_TYPE = "sesame";
 
     //-------------------------------------------------------------------------
     // Class members
@@ -99,12 +105,17 @@ public final class SesameRepositoryFactory extends RepositoryFactory
         Repository r = null;
 
         try {
-            if (url.startsWith(HTTP_URL_SCHEME)) {
-                r = new SesameHttpRepository(name, url, configuration);
-            }
-            else if ((url.startsWith(SAIL_URL_SCHEME)) ||
-                     (url.startsWith(FILE_URL_SCHEME))) {
-                r = new SesameSailRepository(name, url, configuration);
+            String type = configuration.getProperty(
+                                        name + BaseRepository.REPOSITORY_TYPE);
+            if ((isBlank(type)) || (SESAME_REPOSITORY_TYPE.equals(type))) {
+                if (url.startsWith(HTTP_URL_SCHEME)) {
+                    r = new SesameHttpRepository(name, url, configuration);
+                }
+                else if ((url.startsWith(SAIL_URL_SCHEME)) ||
+                         (url.startsWith(FILE_URL_SCHEME))) {
+                    r = new SesameSailRepository(name, url, configuration);
+                }
+                // Else: Not a Sesame repository.
             }
             // Else: Not a Sesame repository.
         }
@@ -161,6 +172,8 @@ public final class SesameRepositoryFactory extends RepositoryFactory
             try {
                 repository = new HTTPRepository(this.url);
                 repository.initialize();
+                log.info("Sesame HTTP repository successfully connected: {}",
+                         this.url);
             }
             catch (OpenRDFException e) {
                 throw new TechnicalException("repository.connect.error", e,
@@ -221,6 +234,9 @@ public final class SesameRepositoryFactory extends RepositoryFactory
                                     new MemoryStore();
                 repository = new SailRepository(store);
                 repository.initialize();
+                log.info("Sesame SAIL repository successfully connected: {}",
+                         this.url);
+
             }
             catch (IllegalArgumentException e) {
                 // File path URI rejected by File constructor.

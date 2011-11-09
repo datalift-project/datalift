@@ -57,6 +57,13 @@ import org.datalift.fwk.rdf.Repository;
 public abstract class RepositoryFactory
 {
     //-------------------------------------------------------------------------
+    // Constants
+    //-------------------------------------------------------------------------
+
+    /** The URL scheme for HTTP repositories. */
+    public final static String HTTP_URL_SCHEME  = "http:";
+
+    //-------------------------------------------------------------------------
     // Constructors
     //-------------------------------------------------------------------------
 
