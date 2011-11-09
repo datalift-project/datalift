@@ -83,7 +83,7 @@ public class DataliftApplication extends Application
     /** {@inheritDoc} */
     @Override
     public Set<Object> getSingletons() {
-        Set<Object> resources = ApplicationLoader.getResources();
+        Set<Object> resources = ApplicationLoader.getDefault().getResources();
         log.debug("Registered {} singleton resources/providers: {}",
                                 Integer.valueOf(resources.size()), resources);
         return resources;

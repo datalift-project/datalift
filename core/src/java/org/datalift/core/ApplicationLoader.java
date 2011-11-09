@@ -84,7 +84,11 @@ public class ApplicationLoader extends LogServletContextListener
      * no present, root-level JAR files will be searched.
      */
     public final static String MODULE_CLASSES_DIR = "classes";
-    /** The module sub-directory where to look for third-party JAR files. */
+    /**
+     * The module sub-directory where to look for third-party JAR files.
+     * Regardless the presence of this directory, root-level JARs will
+     * be loaded.
+     */
     public final static String MODULE_LIB_DIR     = "lib";
 
     //-------------------------------------------------------------------------
@@ -106,19 +110,29 @@ public class ApplicationLoader extends LogServletContextListener
             }
         };
 
-    /** DataLift Core components. */
-    private static final Set<LifeCycle> components = new HashSet<LifeCycle>();
-    /** Application modules. */
-    private static final Map<String,ModuleDesc> modules =
-                                            new TreeMap<String,ModuleDesc>();
-    /** The singleton resources managed by this JAX-RS application. */
-    private static Set<Object> resources = null;
+    /**
+     * The singleton instance of this class for each deployment of the
+     * application, initialized by the application server.
+     */
+    private static ApplicationLoader defaultLoader = null;
 
     /**
      * Log initialization shall be delayed until the log configuration
      * has been loaded.
      */
     private static Logger log = null;
+
+    //------------------------------------------------------------------------
+    // Instance members
+    //------------------------------------------------------------------------
+
+    /** DataLift Core components. */
+    private final Set<LifeCycle> components = new HashSet<LifeCycle>();
+    /** Application modules. */
+    private final Map<String,ModuleDesc> modules =
+                                            new TreeMap<String,ModuleDesc>();
+    /** The singleton resources managed by this JAX-RS application. */
+    private Set<Object> resources = null;
 
     //------------------------------------------------------------------------
     // LogServletContextListener contract support
@@ -135,6 +149,8 @@ public class ApplicationLoader extends LogServletContextListener
         super.init(props);
         // Initialize DataLift application.
         this.initApplication(props);
+        // Install this instance as default loader.
+        defaultLoader = this;
     }
 
     /**
@@ -154,25 +170,38 @@ public class ApplicationLoader extends LogServletContextListener
      * registered at startup.
      * @return the JAX-RS root resources.
      */
-    public static Set<Object> getResources() {
-        if (resources == null) {
+    public Set<Object> getResources() {
+        if (this.resources == null) {
             Set<Object> rsc = new HashSet<Object>();
             // Check modules for registration as JAX-RS root resources.
-            for (ModuleDesc desc : modules.values()) {
+            for (ModuleDesc desc : this.modules.values()) {
                 Module m = desc.module;
                 if (m.getClass().isAnnotationPresent(Path.class)) {
                     // JAX-RS annotation @Path found on module class.
                     rsc.add(m);
                 }
             }
-            for (LifeCycle l : components) {
+            for (LifeCycle l : this.components) {
                 if (l.getClass().isAnnotationPresent(Path.class)) {
                     rsc.add(l);
                 }
             }
-            resources = rsc;
+            this.resources = rsc;
         }
-        return resources;
+        return this.resources;
+    }
+
+    //-------------------------------------------------------------------------
+    // Singleton access method
+    //-------------------------------------------------------------------------
+
+    /**
+     * Returns the current DataLift
+     * {@link ApplicationLoader application loader}.
+     * @return the current application loader.
+     */
+    public static ApplicationLoader getDefault() {
+        return defaultLoader;
     }
 
     //------------------------------------------------------------------------
@@ -184,7 +213,7 @@ public class ApplicationLoader extends LogServletContextListener
      * from the corresponding environment variable (DATALIFT_HOME) if
      * not set
      */
-    private void setupEnvironment() {
+    protected void setupEnvironment() {
         if (System.getProperty(DATALIFT_HOME) == null) {
             // Try to define datalift.home system property from environment.
             String homePath = System.getenv(
@@ -204,22 +233,24 @@ public class ApplicationLoader extends LogServletContextListener
      *
      * @throws TechnicalException if any error occurred.
      */
-    private void initApplication(Properties props) {
+    protected void initApplication(Properties props) {
         LogContext.resetContexts("Core", "init");
         log = Logger.getLogger();
 
         try {
             // Load application configuration.
-            Configuration cfg = new DefaultConfiguration(props);
+            Configuration cfg = this.loadConfiguration(props);
             Configuration.setDefault(cfg);
             // Load available application modules.
             this.loadModules(cfg);
             // Initialize resources.
             // First initialization step.
-            components.add(this.initResource(new RouterResource(modules), cfg));
-            components.add(this.initResource(new DefaultProjectManager(), cfg));
+            this.components.add(
+                    this.initResource(new RouterResource(this.modules), cfg));
+            this.components.add(
+                    this.initResource(new DefaultProjectManager(), cfg));
             // Second initialization step.
-            for (LifeCycle r : components) {
+            for (LifeCycle r : this.components) {
                 this.postInitResource(r, cfg);
             }
             this.postInitModules(cfg);
@@ -238,17 +269,35 @@ public class ApplicationLoader extends LogServletContextListener
     }
 
     /**
+     * Locates the DataLift configuration from the specified properties
+     * or environment variables and returns the corresponding
+     * {@link Configuration} object.
+     * <p>
+     * This default implementation return an instance of
+     * {@link DefaultConfiguration}.</p>
+     * @param  props   the properties describing the application runtime
+     *                 environment.
+     *
+     * @return a DataLift {@Link Configuration} populated from the
+     *         found configuration file(s).
+     * @throws TechnicalException if any error occurred.
+     */
+    protected Configuration loadConfiguration(Properties props) {
+        return new DefaultConfiguration(props);
+    }
+
+    /**
      * Shuts the DataLift application down.
      * @throws TechnicalException if any error occurred.
      */
-    private void shutdownApplication() {
+    protected void shutdownApplication() {
         LogContext.resetContexts("Core", "shutdown");
         Logger log = Logger.getLogger();
 
         try {
             Configuration cfg = Configuration.getDefault();
-            if (resources != null) {
-                for (Object r : resources) {
+            if (this.resources != null) {
+                for (Object r : this.resources) {
                     if (r instanceof LifeCycle) {
                         try {
                             ((LifeCycle)r).shutdown(cfg);
@@ -265,7 +314,7 @@ public class ApplicationLoader extends LogServletContextListener
                 }
             }
             // Shutdown each module, ignoring errors.
-            for (ModuleDesc desc : modules.values()) {
+            for (ModuleDesc desc : this.modules.values()) {
                 Module m = desc.module;
                 Object[] prevCtx = LogContext.pushContexts(desc.name, "shutdown");
                 try {
@@ -333,7 +382,7 @@ public class ApplicationLoader extends LogServletContextListener
 
     private void postInitModules(Configuration configuration) {
         // Post-init each module, ignoring errors.
-        for (Iterator<ModuleDesc> i=modules.values().iterator();
+        for (Iterator<ModuleDesc> i=this.modules.values().iterator();
                                                                 i.hasNext(); ) {
             ModuleDesc desc = i.next();
             Object[] prevCtx = LogContext.pushContexts(desc.name, "postInit");
@@ -356,7 +405,7 @@ public class ApplicationLoader extends LogServletContextListener
     }
 
     private void loadModules(Configuration cfg) {
-        modules.clear();
+        this.modules.clear();
         // Load modules embedded in web application first (if any).
         this.loadModules(this.getClass().getClassLoader(), null);
         // Load third-party module bundles.
@@ -435,7 +484,7 @@ public class ApplicationLoader extends LogServletContextListener
             cfg.registerBean(name, m);
             // Publish module REST resources.
             ModuleDesc desc = new ModuleDesc(m, f, cl);
-            modules.put(name, desc);
+            this.modules.put(name, desc);
             // Notify module registration.
             int resourceCount = desc.ressourceClasses.size();
             if (desc.isResource) {
