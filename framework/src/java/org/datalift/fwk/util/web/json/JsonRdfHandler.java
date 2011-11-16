@@ -1,4 +1,4 @@
-package org.datalift.sparql;
+package org.datalift.fwk.util.web.json;
 
 
 import java.io.IOException;

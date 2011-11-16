@@ -93,13 +93,6 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     protected final static Logger log = Logger.getLogger();
 
     //-------------------------------------------------------------------------
-    // Instance members
-    //-------------------------------------------------------------------------
-
-    /** The DataLift configuration. */
-    protected Configuration configuration = null;
-
-    //-------------------------------------------------------------------------
     // Constructors
     //-------------------------------------------------------------------------
 
@@ -111,13 +104,6 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     //-------------------------------------------------------------------------
     // Module contract support
     //-------------------------------------------------------------------------
-
-    /** {@inheritDoc} */
-    @Override
-    public void init(Configuration cfg) {
-        super.init(cfg);
-        this.configuration = cfg;
-    }
 
     /**
      * {@inheritDoc}
@@ -284,8 +270,8 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
             // No query. => Render HTML query input form.
             // Get a list of available repositories for user.
             boolean userAuthenticated = SecurityContext.isUserAuthenticated();
-            Collection<Repository> c =
-                        this.configuration.getRepositories(! userAuthenticated);
+            Collection<Repository> c = Configuration.getDefault()
+                                        .getRepositories(! userAuthenticated);
             response = Response.ok(this.newViewable("/sparqlEndpoint.vm", c),
                                    MediaType.TEXT_HTML);
             return response.build();
@@ -327,12 +313,13 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         if ((defaultGraphUris != null) && (! defaultGraphUris.isEmpty())) {
             targetRepo = defaultGraphUris.remove(0);
         }
-        Repository repo = this.configuration.getRepository(targetRepo);
+        Configuration cfg = Configuration.getDefault();
+        Repository repo = cfg.getRepository(targetRepo);
         if (repo == null) {
             // No repository found for first default graph.
             // => Use default DataLift repository.
             defaultGraphUris.add(0, targetRepo);
-            repo = this.configuration.getDefaultRepository();
+            repo = cfg.getDefaultRepository();
         }
         else {
             if (! ((repo.isPublic()) ||

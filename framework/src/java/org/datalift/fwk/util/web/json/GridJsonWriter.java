@@ -32,7 +32,7 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 
-package org.datalift.sparql;
+package org.datalift.fwk.util.web.json;
 
 
 import java.io.IOException;
@@ -50,6 +50,8 @@ import org.openrdf.query.resultio.TupleQueryResultFormat;
 import org.openrdf.query.resultio.TupleQueryResultWriter;
 import org.openrdf.rio.RDFHandler;
 import org.openrdf.rio.RDFHandlerException;
+
+import org.datalift.fwk.project.Row;
 
 
 public class GridJsonWriter extends AbstractJsonWriter
@@ -109,7 +111,7 @@ public class GridJsonWriter extends AbstractJsonWriter
             while (bindingIter.hasNext() && headerIter.hasNext()) {
                 Binding binding = bindingIter.next();
                 this.writeKeyValue(headerIter.next(), binding.getValue());
-                if (bindingIter.hasNext()) {
+                if (bindingIter.hasNext() && headerIter.hasNext()) {
                     this.writeComma();
                 }
             }
@@ -193,4 +195,16 @@ public class GridJsonWriter extends AbstractJsonWriter
     // Specific implementation
     //-------------------------------------------------------------------------
 
+    public void handleRow(Row<?> row) throws IOException {
+        this.startSolution();           // start of new solution
+
+        for (Iterator<String> i=this.columnHeaders.iterator(); i.hasNext(); ) {
+            String key = i.next();
+            this.writeKeyValue(key, row.getString(key));
+            if (i.hasNext()) {
+                this.writeComma();
+            }
+        }
+        this.endSolution();             // end solution
+    }
 }

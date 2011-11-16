@@ -84,6 +84,8 @@ import static org.openrdf.query.QueryLanguage.SPARQL;
 
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.rdf.Repository;
+import org.datalift.fwk.util.web.json.GridJsonWriter;
+import org.datalift.fwk.util.web.json.JsonRdfHandler;
 
 import static org.datalift.fwk.MediaTypes.*;
 
@@ -152,9 +154,9 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
 
     /** {@inheritDoc} */
     @Override
-    public void init(Configuration cfg) {
-        super.init(cfg);
-        this.cfgBaseUri = cfg.getProperty(BASE_URI_PROPERTY);
+    public void init(Configuration configuration) {
+        super.init(configuration);
+        this.cfgBaseUri = configuration.getProperty(BASE_URI_PROPERTY);
     }
 
     //-------------------------------------------------------------------------
@@ -551,7 +553,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                             throw new TupleQueryResultHandlerException(
                                                     new QueryDoneException());
                         }
-                        if (this.count >= endOffset) {
+                        if (this.count >= startOffset) {
                             // Result in request range. => Process...
                             handler.handleSolution(b);
                         }

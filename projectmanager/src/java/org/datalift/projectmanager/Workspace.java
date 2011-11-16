@@ -47,6 +47,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -55,6 +56,7 @@ import java.util.TreeSet;
 import javax.persistence.EntityNotFoundException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
@@ -62,15 +64,21 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
+
+import org.openrdf.model.Statement;
+import org.openrdf.query.TupleQueryResultHandlerException;
+import org.openrdf.rio.RDFHandlerException;
 
 import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 
@@ -82,12 +90,15 @@ import com.sun.jersey.multipart.FormDataParam;
 
 import static javax.ws.rs.core.MediaType.TEXT_HTML;
 
+import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.MediaTypes;
 import org.datalift.fwk.ResourceResolver;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.CachingSource;
 import org.datalift.fwk.project.CsvSource;
+import org.datalift.fwk.project.RdfSource;
+import org.datalift.fwk.project.Row;
 import org.datalift.fwk.project.SparqlSource;
 import org.datalift.fwk.project.SqlSource;
 import org.datalift.fwk.project.Ontology;
@@ -96,24 +107,26 @@ import org.datalift.fwk.project.ProjectManager;
 import org.datalift.fwk.project.ProjectModule;
 import org.datalift.fwk.project.RdfFileSource;
 import org.datalift.fwk.project.Source;
-import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.project.CsvSource.Separator;
 import org.datalift.fwk.project.ProjectModule.UriDesc;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.sparql.SparqlEndpoint;
 import org.datalift.fwk.util.CloseableIterator;
+import org.datalift.fwk.util.web.json.GridJsonWriter;
 
 import static org.datalift.fwk.MediaTypes.*;
 import static org.datalift.fwk.util.StringUtils.*;
 
 
+
 /**
- * The web resource providing an HTML interface for managing data
- * lifting projects.
+ * The web resource providing an HTML interface for managing
+ * data-lifting projects.
  *
  * @author hdevos
  */
-public class ProjectResource
+@Path("/" + Workspace.PROJECT_URI_PREFIX)
+public class Workspace extends BaseModule
 {
     //-------------------------------------------------------------------------
     // Project page tabs enumeration
@@ -132,6 +145,24 @@ public class ProjectResource
     }
 
     //-------------------------------------------------------------------------
+    // Constants
+    //-------------------------------------------------------------------------
+
+    /** The name of this module in the DataLift configuration. */
+    public final static String MODULE_NAME = "workspace";
+    /** The prefix for the URI of the project objects. */
+    public final static String PROJECT_URI_PREFIX = "project";
+    /** The prefix for the URI of the source objects, within projects. */
+    public final static String SOURCE_URI_PREFIX  = "source";
+
+    /** The relative path prefix for project objects and resources. */
+    private final static String REL_PROJECT_PATH = PROJECT_URI_PREFIX + '/';
+    /** The relative path prefix for source objects, within projects. */
+    private final static String SOURCE_PATH = "/" + SOURCE_URI_PREFIX  + '/';
+    /** The path prefix for HTML page Velocity templates. */
+    private final static String TEMPLATE_PATH = "/" + MODULE_NAME  + '/';
+
+    //-------------------------------------------------------------------------
     // Class members
     //-------------------------------------------------------------------------
 
@@ -141,15 +172,26 @@ public class ProjectResource
     // Instance members
     //-------------------------------------------------------------------------
 
-    private final WorkspaceModule parent;
-    private final Configuration configuration;
-    private final ProjectManager projectManager;
+    /** Project Manager bean. */
+    private ProjectManager projectManager = null;
 
-    /** Default resource constructor. */
-    public ProjectResource(WorkspaceModule module) {
-        this.parent = module;
-        this.configuration  = module.getConfiguration();
-        this.projectManager = module.getProjectManager();
+    //-------------------------------------------------------------------------
+    // Constructors
+    //-------------------------------------------------------------------------
+
+    /** Default constructor. */
+    public Workspace() {
+        super(MODULE_NAME);
+    }
+
+    //-------------------------------------------------------------------------
+    // Module contract support
+    //-------------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    @Override
+    public void postInit(Configuration configuration) {
+        this.projectManager = configuration.getBean(ProjectManager.class);
     }
 
     // ------------------------------------------------------------------------
@@ -264,7 +306,7 @@ public class ProjectResource
             args.put("licenses", License.values());
             // Display project modification page.
             response = Response.ok(
-                        this.newViewable("/workspaceModifyProject.vm", args),
+                        this.newViewable("workspaceModifyProject.vm", args),
                         TEXT_HTML).build();
         }
         catch (Exception e) {
@@ -428,12 +470,12 @@ public class ProjectResource
         URI uri = uriInfo.getAbsolutePath();
         this.loadProject(uri);
         // Forward request for project RDF description to the SPARQL endpoint.
-        List<String> defGraph = Arrays.asList(
-                            this.configuration.getInternalRepository().name);
-        return this.configuration.getBean(SparqlEndpoint.class)
-                   .executeQuery(defGraph, null,
-                                 "DESCRIBE <" + uri + '>',
-                                 uriInfo, request, acceptHdr).build();
+        Configuration cfg = Configuration.getDefault();
+        List<String> defGraph = Arrays.asList(cfg.getInternalRepository().name);
+        return cfg.getBean(SparqlEndpoint.class)
+                  .executeQuery(defGraph, null,
+                                "DESCRIBE <" + uri + '>',
+                                uriInfo, request, acceptHdr).build();
     }
 
     @GET
@@ -452,7 +494,7 @@ public class ProjectResource
             args.put("it", p);
             args.put("sep", Separator.values());
             response = Response.ok(
-                            this.newViewable("/projectSourceUpload.vm", args),
+                            this.newViewable("projectSourceUpload.vm", args),
                             TEXT_HTML).build();
         }
         catch (Exception e) {
@@ -474,7 +516,7 @@ public class ProjectResource
 
             // Search for requested source in project.
             Source src = p.getSource(
-                new URL(projectUri + this.getRelativeSourceId(srcId)).toURI());
+                new URL(this.getSourceId(projectUri, srcId)).toURI());
             if (src == null) {
                 // Not found.
                 throw new NotFoundException();
@@ -484,7 +526,7 @@ public class ProjectResource
             args.put("current", src);
             args.put("sep", Separator.values());
             response = Response.ok(
-                            this.newViewable("/projectSourceUpload.vm", args),
+                            this.newViewable("projectSourceUpload.vm", args),
                             TEXT_HTML).build();
         }
         catch (Exception e) {
@@ -520,8 +562,7 @@ public class ProjectResource
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
             URI sourceUri = new URI(projectUri.getScheme(), null,
                                     projectUri.getHost(), projectUri.getPort(),
-                                    projectUri.getPath()
-                                        + this.getRelativeSourceId(fileName),
+                                    this.getSourceId(projectUri.getPath(), fileName),
                                     null, null);
             // Retrieve project.
             Project p = this.loadProject(projectUri);
@@ -625,10 +666,9 @@ public class ProjectResource
         try {
             // Build object URIs from request path.
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
-            URI sourceUri  = new URI(projectUri.getScheme(), null,
+            URI sourceUri = new URI(projectUri.getScheme(), null,
                                     projectUri.getHost(), projectUri.getPort(),
-                                    projectUri.getPath()
-                                        + this.getRelativeSourceId(fileName),
+                                    this.getSourceId(projectUri.getPath(), fileName),
                                     null, null);
             // Retrieve project.
             Project p = this.loadProject(projectUri);
@@ -726,10 +766,9 @@ public class ProjectResource
         try {
             // Build object URIs from request path.
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
-            URI sourceUri  = new URI(projectUri.getScheme(), null,
+            URI sourceUri = new URI(projectUri.getScheme(), null,
                                     projectUri.getHost(), projectUri.getPort(),
-                                    projectUri.getPath()
-                                        + this.getRelativeSourceId(title),
+                                    this.getSourceId(projectUri.getPath(), title),
                                     null, null);
             // Retrieve project.
             Project p = this.loadProject(projectUri);
@@ -825,11 +864,10 @@ public class ProjectResource
         try {
             // Build object URIs from request path.
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
-            URI sourceUri  = new URI(projectUri.getScheme(), null,
-                                     projectUri.getHost(), projectUri.getPort(),
-                                     projectUri.getPath()
-                                         + this.getRelativeSourceId(title),
-                                     null, null);
+            URI sourceUri = new URI(projectUri.getScheme(), null,
+                                    projectUri.getHost(), projectUri.getPort(),
+                                    this.getSourceId(projectUri.getPath(), title),
+                                    null, null);
             // Retrieve project.
             Project p = this.loadProject(projectUri);
             // Initialize new source.
@@ -923,8 +961,9 @@ public class ProjectResource
                                   @Context Request request)
                                                 throws WebApplicationException {
         String filePath = this.getProjectFilePath(id, fileName);
-        Response response = this.configuration.getBean(ResourceResolver.class)
-                                .resolveStaticResource(filePath, request);
+        Response response = Configuration.getDefault()
+                                    .getBean(ResourceResolver.class)
+                                    .resolveStaticResource(filePath, request);
         if (response == null) {
             throw new NotFoundException();
         }
@@ -971,27 +1010,72 @@ public class ProjectResource
             Project p = this.loadProject(projectUri);
 
             // Search for requested source in project.
-            Source src = p.getSource(
-                new URL(projectUri + this.getRelativeSourceId(srcId)).toURI());
+            Source src = p.getSource(new URL(
+                                this.getSourceId(projectUri, srcId)).toURI());
             if (src == null) {
                 // Not found.
                 throw new NotFoundException();
             }
-            // Initialize source and return grid View
+            // Return the HTML template matching the source type.
             String template = null;
             if ((src instanceof CsvSource) || (src instanceof SqlSource)) {
-                template = "/RowSourceGrid.vm";
+                template = "RowSourceGrid.vm";
             }
-            else if ((src instanceof RdfFileSource) ||
-                     (src instanceof TransformedRdfSource) ||
-                     (src instanceof SparqlSource)) {
-                template = "/RdfSourceGrid.vm";
+            else if (src instanceof RdfSource) {
+                template = "RdfSourceGrid.vm";
             }
             else {
                 throw new TechnicalException("unknown.source.type",
                                              src.getClass());
             }
             response = Response.ok(this.newViewable(template, src)).build();
+        }
+        catch (Exception e) {
+            this.handleInternalError(e, "Failed to load source {}", srcId);
+        }
+        return response;
+    }
+
+    @GET
+    @Path("{id}/source/{srcid}")
+    @Produces(APPLICATION_JSON)
+    public Response displaySource(
+                    @PathParam("id") String id,
+                    @PathParam("srcid") String srcId,
+                    @QueryParam("min")  @DefaultValue("-1") int startOffset,
+                    @QueryParam("max")  @DefaultValue("-1") int endOffset,
+                    @Context UriInfo uriInfo) throws WebApplicationException {
+        Response response = null;
+        try {
+            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
+            Project p = this.loadProject(projectUri);
+
+            // Search for requested source in project.
+            Source src = p.getSource(new URL(
+                                this.getSourceId(projectUri, srcId)).toURI());
+            if (src == null) {
+                // Not found.
+                throw new NotFoundException();
+            }
+            // Return a JSON serializer for the source data.
+            StreamingOutput out = null;
+            if (src instanceof CsvSource) {
+                out = new RowJsonSerializer<String>(((CsvSource)src).iterator(),
+                                                    startOffset, endOffset);
+            }
+            else if (src instanceof SqlSource) {
+                out = new RowJsonSerializer<Object>(((SqlSource)src).iterator(),
+                                                    startOffset, endOffset);
+            }
+            else if (src instanceof RdfSource) {
+                out = new RdfJsonSerializer(((RdfSource)src).iterator(),
+                                            startOffset, endOffset);
+            }
+            else {
+                throw new TechnicalException("unknown.source.type",
+                                             src.getClass());
+            }
+            response = Response.ok(out).build();
         }
         catch (Exception e) {
             this.handleInternalError(e, "Failed to load source {}", srcId);
@@ -1043,12 +1127,12 @@ public class ProjectResource
         this.loadProject(this.newProjectId(uriInfo.getBaseUri(), id));
         // Forward request for source RDF description to the SPARQL endpoint.
         URI uri = uriInfo.getAbsolutePath();
-        List<String> defGraph = Arrays.asList(
-                            this.configuration.getInternalRepository().name);
-        return this.configuration.getBean(SparqlEndpoint.class)
-                   .executeQuery(defGraph, null,
-                                 "DESCRIBE <" + uri + '>',
-                                 uriInfo, request, acceptHdr).build();
+        Configuration cfg = Configuration.getDefault();
+        List<String> defGraph = Arrays.asList(cfg.getInternalRepository().name);
+        return cfg.getBean(SparqlEndpoint.class)
+                  .executeQuery(defGraph, null,
+                                "DESCRIBE <" + uri + '>',
+                                uriInfo, request, acceptHdr).build();
     }
 
     @GET
@@ -1062,7 +1146,7 @@ public class ProjectResource
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
             Project p = this.loadProject(projectUri);
 
-            response = Response.ok(this.newViewable("/projectOntoUpload.vm", p),
+            response = Response.ok(this.newViewable("projectOntoUpload.vm", p),
                                    TEXT_HTML)
                                .build();
         }
@@ -1121,7 +1205,7 @@ public class ProjectResource
             Map<String, Object> args = new TreeMap<String, Object>();
             args.put("it", p);
             args.put("current", ontology);
-            response = Response.ok(this.newViewable("/projectOntoUpload.vm", args),
+            response = Response.ok(this.newViewable("projectOntoUpload.vm", args),
                                    TEXT_HTML).build();
         }
         catch (Exception e) {
@@ -1212,7 +1296,7 @@ public class ProjectResource
                             return (v != 0)? v: u1.getLabel().compareToIgnoreCase(u2.getLabel());
                         }
                     });
-            for (ProjectModule m : this.configuration.getBeans(
+            for (ProjectModule m : Configuration.getDefault().getBeans(
                                                         ProjectModule.class)) {
                 UriDesc modulePage = m.canHandle(p);
                 if (modulePage != null) {
@@ -1233,7 +1317,7 @@ public class ProjectResource
             cc.setMustRevalidate(true);
             response = response.cacheControl(cc);
         }
-        return response.entity(this.newViewable("/workspace.vm", args))
+        return response.entity(this.newViewable("workspace.vm", args))
                        .type(TEXT_HTML);
     }
 
@@ -1287,14 +1371,25 @@ public class ProjectResource
         return s;
     }
 
-    private Viewable newViewable(String templateName, Object it) {
-        return this.parent.newViewable(templateName, it);
+    /**
+     * Return a viewable for the specified template, populated with the
+     * specified model object.
+     * <p>
+     * The template name shall be relative to the module, the module
+     * name is automatically prepended.</p>
+     * @param  templateName   the relative template name.
+     * @param  it             the model object to pass on to the view.
+     *
+     * @return a populated viewable.
+     */
+    protected final Viewable newViewable(String templateName, Object it) {
+        return new Viewable(TEMPLATE_PATH + templateName, it);
     }
 
     private URI newProjectId(URI baseUri, String name) {
         try {
             return new URL(baseUri.toURL(),
-                           "workspace/project/" + urlify(name)).toURI();
+                           REL_PROJECT_PATH + urlify(name)).toURI();
         }
         catch (Exception e) {
             throw new RuntimeException("Invalid base URI: " + baseUri);
@@ -1302,19 +1397,24 @@ public class ProjectResource
     }
 
     private File getFileStorage(String path) {
-        return new File(this.configuration.getPublicStorage(), path);
+        return new File(Configuration.getDefault().getPublicStorage(), path);
     }
 
     private String getProjectFilePath(String projectId, String fileName) {
-        String path = "project/" + projectId;
+        StringBuilder buf = new StringBuilder(80);
+        buf.append(REL_PROJECT_PATH).append(projectId);
         if (isSet(fileName)) {
-            path += "/" + fileName;
+            buf.append('/').append(fileName);
         }
-        return path;
+        return buf.toString();
     }
 
-    private String getRelativeSourceId(String sourceName) {
-        return "/source/" + urlify(sourceName);
+    private String getSourceId(URI projectUri, String sourceName) {
+        return this.getSourceId(projectUri.toString(), sourceName);
+    }
+
+    private String getSourceId(String projectUri, String sourceName) {
+        return projectUri + SOURCE_PATH + urlify(sourceName);
     }
 
     /**
@@ -1338,7 +1438,7 @@ public class ProjectResource
             String targetUrl = (tab != null)? p.getUri() + tab.anchor:
                                               p.getUri();
             return Response.created(uri)
-                           .entity(this.newViewable("/redirect.vm", targetUrl))
+                           .entity(this.newViewable("redirect.vm", targetUrl))
                            .type(TEXT_HTML);
         }
         catch (Exception e) {
@@ -1425,6 +1525,103 @@ public class ProjectResource
                             Response.status(Status.INTERNAL_SERVER_ERROR)
                                     .type(MediaTypes.TEXT_PLAIN_TYPE)
                                     .entity(error.getMessage()).build());
+        }
+    }
+
+    private final static class RowJsonSerializer<T> implements StreamingOutput
+    {
+        private final CloseableIterator<Row<T>> data;
+        private final int min;
+        private final int max;
+
+        public RowJsonSerializer(CloseableIterator<Row<T>> data,
+                                                            int min, int max) {
+            this.data = data;
+            this.min  = min;
+            this.max  = (max > 0)? max: Integer.MAX_VALUE;
+        }
+
+        @Override
+        public void write(OutputStream out)
+                                throws IOException, WebApplicationException {
+            try {
+                GridJsonWriter writer = new GridJsonWriter(out);
+
+                int i = 0;
+                while ((this.data.hasNext()) && (i < max)) {
+                    Row<T> row = this.data.next();
+                    if (i == 0) {
+                        writer.startQueryResult(
+                                        new LinkedList<String>(row.keys()));
+                    }
+                    i++;
+                    if (i >= min) {
+                        // Within requested range.
+                        writer.handleRow(row);
+                    }
+                    // Else: Not yet in range => Skip.
+                }
+                writer.endQueryResult();
+            }
+            catch (TupleQueryResultHandlerException e) {
+                Throwable cause = e;
+                while ((cause = cause.getCause()) != null) {
+                    if (cause instanceof IOException) {
+                        throw (IOException)cause;
+                    }
+                }
+                throw new IOException(e);
+            }
+            finally {
+                this.data.close();
+            }
+        }
+    }
+
+    private final static class RdfJsonSerializer implements StreamingOutput
+    {
+        private final CloseableIterator<Statement> data;
+        private final int min;
+        private final int max;
+
+        public RdfJsonSerializer(CloseableIterator<Statement> data,
+                                                            int min, int max) {
+            this.data = data;
+            this.min  = min;
+            this.max  = (max > 0)? max: Integer.MAX_VALUE;
+        }
+
+        @Override
+        public void write(OutputStream out)
+                                throws IOException, WebApplicationException {
+            try {
+                GridJsonWriter writer = new GridJsonWriter(out);
+                writer.startRDF();
+
+                int i = 0;
+                while ((this.data.hasNext()) && (i < max)) {
+                    i++;
+                    Statement s = this.data.next();
+                    if (i >= min) {
+                        // Within requested range.
+                        writer.handleStatement(s);
+                    }
+                    // Else: not yet in range => Skip.
+                }
+                writer.endRDF();
+            }
+            catch (RDFHandlerException e) {
+                Throwable cause = e;
+                while ((cause = cause.getCause()) != null) {
+                    if (cause instanceof IOException) {
+                        throw (IOException)cause;
+                    }
+                }
+                throw new IOException(e);
+            }
+            finally {
+                this.data.close();
+            }
         }
     }
 }

@@ -23,7 +23,7 @@
 #end
 
 		</div>
-			<a href="${baseUri}/workspace/project/add" id="add_project" class="button">#i18n("project.title.new_project")</a>
+			<a href="${baseUri}/project/add" id="add_project" class="button">#i18n("project.title.new_project")</a>
 	</div>
 
 	<div id="workspace-main-panel" class="ui-widget-content">

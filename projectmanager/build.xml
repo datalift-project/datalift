@@ -291,7 +291,7 @@
     <jar jarfile="${jar.path}">
       <fileset dir="${classes.dir}"/>
       <service type="org.datalift.fwk.Module">
-        <provider classname="org.datalift.projectmanager.WorkspaceModule"/>
+        <provider classname="org.datalift.projectmanager.Workspace"/>
       </service>
     </jar>
   </target>
