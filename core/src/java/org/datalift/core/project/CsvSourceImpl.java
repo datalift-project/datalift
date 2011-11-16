@@ -40,8 +40,8 @@ import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
@@ -233,7 +233,7 @@ public class CsvSourceImpl extends BaseFileSource<Row<String>>
          */
         public RowIterator(CSVReader reader) throws IOException {
             this.reader = reader;
-            Map<String,Integer> m = new HashMap<String,Integer>();
+            Map<String,Integer> m = new LinkedHashMap<String,Integer>();
             int i = 0;
             for (String s : headers) {
                 m.put(s, Integer.valueOf(i++));
