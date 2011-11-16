@@ -446,11 +446,8 @@ public class ApplicationLoader extends LogServletContextListener
                                         this.getClass().getClassLoader()), f);
         }
         catch (Exception e) {
-            TechnicalException error = new TechnicalException(
-                                                "module.load.error", e,
-                                                f.getName(), e.getMessage());
-            log.fatal(error.getMessage(), e);
-            throw error;
+            throw new TechnicalException("module.load.error", e,
+                                         f.getName(), e.getMessage());
         }
     }
 
