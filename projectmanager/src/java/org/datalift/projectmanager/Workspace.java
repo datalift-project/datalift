@@ -1036,16 +1036,17 @@ public class Workspace extends BaseModule
         return response;
     }
 
+/*
     @GET
     @Path("{id}/source/{srcid}")
     @Produces(APPLICATION_JSON)
-    public Response displaySource(
+    public StreamingOutput displaySource(
                     @PathParam("id") String id,
                     @PathParam("srcid") String srcId,
                     @QueryParam("min")  @DefaultValue("-1") int startOffset,
                     @QueryParam("max")  @DefaultValue("-1") int endOffset,
                     @Context UriInfo uriInfo) throws WebApplicationException {
-        Response response = null;
+        StreamingOutput out = null;
         try {
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
             Project p = this.loadProject(projectUri);
@@ -1058,7 +1059,6 @@ public class Workspace extends BaseModule
                 throw new NotFoundException();
             }
             // Return a JSON serializer for the source data.
-            StreamingOutput out = null;
             if (src instanceof CsvSource) {
                 out = new RowJsonSerializer<String>(((CsvSource)src).iterator(),
                                                     startOffset, endOffset);
@@ -1075,13 +1075,13 @@ public class Workspace extends BaseModule
                 throw new TechnicalException("unknown.source.type",
                                              src.getClass());
             }
-            response = Response.ok(out).build();
         }
         catch (Exception e) {
             this.handleInternalError(e, "Failed to load source {}", srcId);
         }
-        return response;
+        return out;
     }
+*/
 
     @GET
     @Path("{id}/source/{srcid}/delete")
@@ -1528,6 +1528,7 @@ public class Workspace extends BaseModule
         }
     }
 
+/*
     private final static class RowJsonSerializer<T> implements StreamingOutput
     {
         private final CloseableIterator<Row<T>> data;
@@ -1624,4 +1625,5 @@ public class Workspace extends BaseModule
             }
         }
     }
+*/
 }
