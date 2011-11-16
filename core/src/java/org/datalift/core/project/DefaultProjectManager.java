@@ -89,8 +89,6 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     // Instance members
     //-------------------------------------------------------------------------
 
-    private Configuration configuration;
-
     private EntityManagerFactory emf = null;
     private EntityManager entityMgr = null;
     private ProjectJpaDao projectDao = null;
@@ -101,13 +99,14 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     // LifeCycle contract support
     //-------------------------------------------------------------------------
 
+    /** {@inheritDoc} */
     @Override
     public void init(Configuration configuration) {
-        this.configuration = configuration;
         this.classes.addAll(this.getPersistentClasses());
         this.registerRdfNamespaces();
     }
 
+    /** {@inheritDoc} */
     @Override
     public void postInit(Configuration configuration) {
         this.emf = this.createEntityManagerFactory(
@@ -117,6 +116,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         this.projectDao = new ProjectJpaDao(this.entityMgr);
     }
 
+    /** {@inheritDoc} */
     @Override
     public void shutdown(Configuration configuration) {
         // Shutdown JPA persistence provider.
@@ -393,9 +393,8 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     /** {@inheritDoc} */
     @Override
     public String toString() {
-        return this.getClass().getSimpleName()
-                        + " (" + configuration.getInternalRepository() + ')';
-
+        return this.getClass().getSimpleName() +
+                " (" + Configuration.getDefault().getInternalRepository() + ')';
     }
 
     //-------------------------------------------------------------------------
@@ -448,7 +447,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
      * @return the File object in the DataLift public storage.
      */
     private File getFileStorage(String path) {
-        return new File(this.configuration.getPublicStorage(), path);
+        return new File(Configuration.getDefault().getPublicStorage(), path);
     }
 
     /**

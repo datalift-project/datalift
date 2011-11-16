@@ -103,14 +103,10 @@ public abstract class BaseConverterModule
     /** The HTTP method to access the module entry page. */
     protected final HttpMethod accessMethod;
 
-    /** The DataLift configuration. */
-    protected Configuration configuration   = null;
     /** The DataLift project manager. */
     protected ProjectManager projectManager = null;
     /** The DataLift SPARQL endpoint. */
     protected SparqlEndpoint sparqlEndpoint = null;
-    /** The DataLift internal RDF store. */
-    protected Repository internalRepository = null;
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -164,9 +160,6 @@ public abstract class BaseConverterModule
     @Override
     public void postInit(Configuration configuration) {
         super.postInit(configuration);
-
-        this.configuration = configuration;
-        this.internalRepository = configuration.getInternalRepository();
 
         this.projectManager = configuration.getBean(ProjectManager.class);
         if (this.projectManager == null) {

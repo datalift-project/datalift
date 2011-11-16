@@ -51,6 +51,7 @@ import org.openrdf.model.Literal;
 import org.openrdf.model.ValueFactory;
 import org.openrdf.repository.RepositoryConnection;
 
+import org.datalift.fwk.Configuration;
 import org.datalift.fwk.project.CsvSource;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectModule;
@@ -76,6 +77,7 @@ public class CsvDirectMapper extends BaseConverterModule
     // Constants
     //-------------------------------------------------------------------------
 
+    /** The name of this module in the DataLift configuration. */
     public final static String MODULE_NAME = "csvdirectmapper";
 
     //-------------------------------------------------------------------------
@@ -116,7 +118,8 @@ public class CsvDirectMapper extends BaseConverterModule
             // Load input source.
             CsvSource in = (CsvSource)p.getSource(sourceId);
             // Convert CSV data and load generated RDF triples.
-            this.convert(in, this.internalRepository, targetGraph);
+            this.convert(in, Configuration.getDefault().getInternalRepository(),
+                             targetGraph);
             // Register new transformed RDF source.
             Source out = this.addResultSource(p, in, destTitle, targetGraph);
             // Display generated triples.

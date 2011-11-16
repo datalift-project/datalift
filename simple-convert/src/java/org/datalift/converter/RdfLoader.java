@@ -49,6 +49,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 
+import org.datalift.fwk.Configuration;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.RdfFileSource;
 import org.datalift.fwk.project.RdfSource;
@@ -56,6 +57,7 @@ import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.SparqlSource;
 import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.rdf.RdfUtils;
+import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.util.RegexUriMapper;
 import org.datalift.fwk.util.StringUtils;
 import org.datalift.fwk.util.UriMapper;
@@ -68,12 +70,14 @@ public class RdfLoader extends BaseConverterModule
     // Constants
     //-------------------------------------------------------------------------
 
+    /** The name of this module in the DataLift configuration. */
     public final static String MODULE_NAME = "rdfloader";
 
     //-------------------------------------------------------------------------
     // Constructors
     //-------------------------------------------------------------------------
 
+    /** Default constructor. */
     public RdfLoader() {
         super(MODULE_NAME, 200, SourceType.RdfFileSource,
                                 SourceType.SparqlSource);
@@ -120,18 +124,21 @@ public class RdfLoader extends BaseConverterModule
                                             "uri_translation_src", uriPattern);
                 }
             }
+            Configuration cfg = Configuration.getDefault();
+            Repository internal = cfg.getInternalRepository();
+            
             // Load input source.
             RdfSource in = (RdfSource)(p.getSource(sourceId));
             if (in instanceof RdfFileSource) {
                 RdfFileSource s = (RdfFileSource)in;
-                RdfUtils.upload(new File(configuration.getPublicStorage(),
+                RdfUtils.upload(new File(cfg.getPublicStorage(),
                                          s.getFilePath()),
                                 RdfUtils.parseMimeType(s.getMimeType()),
-                                this.internalRepository, targetGraph,
+                                internal, targetGraph,
                                 mapper, s.getSourceUrl());
             }
             else if (in instanceof SparqlSource) {
-                RdfUtils.upload(in, this.internalRepository,
+                RdfUtils.upload(in, internal,
                                 targetGraph, mapper, uriReplacement);
             }
             // Register new transformed RDF source.

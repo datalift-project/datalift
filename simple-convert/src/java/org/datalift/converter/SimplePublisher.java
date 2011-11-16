@@ -54,6 +54,7 @@ import javax.ws.rs.core.UriInfo;
 
 import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 
+import org.datalift.fwk.Configuration;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.TransformedRdfSource;
@@ -68,12 +69,14 @@ public class SimplePublisher extends BaseConverterModule
     // Constants
     //-------------------------------------------------------------------------
 
+    /** The name of this module in the DataLift configuration. */
     public final static String MODULE_NAME = "simple-publisher";
 
     //-------------------------------------------------------------------------
     // Constructors
     //-------------------------------------------------------------------------
 
+    /** Default constructor. */
     public SimplePublisher() {
         super(MODULE_NAME, 10000, SourceType.TransformedRdfSource);
     }
@@ -119,12 +122,13 @@ public class SimplePublisher extends BaseConverterModule
             }
             URI targetGraph = (origin != null)? new URI(origin.getUri()):
                                                 projectId;
+            Configuration cfg = Configuration.getDefault();
             // Publish input source triples in public repository.
             List<String> constructs = Arrays.asList(
                             "CONSTRUCT { ?s ?p ?o . } WHERE { GRAPH <"
                                 + in.getTargetGraph() + "> { ?s ?p ?o . } }");
-            RdfUtils.convert(this.internalRepository, constructs,
-                         this.configuration.getDataRepository(), targetGraph);
+            RdfUtils.convert(cfg.getInternalRepository(), constructs,
+                             cfg.getDataRepository(), targetGraph);
             // Display generated triples.
             response = this.displayGraph(null, targetGraph,
                                          uriInfo, request, acceptHdr);

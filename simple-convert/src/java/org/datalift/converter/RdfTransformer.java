@@ -48,11 +48,13 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 
+import org.datalift.fwk.Configuration;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.rdf.RdfUtils;
+import org.datalift.fwk.rdf.Repository;
 
 
 @Path("/" + RdfTransformer.MODULE_NAME)
@@ -62,12 +64,14 @@ public class RdfTransformer extends BaseConverterModule
     // Constants
     //-------------------------------------------------------------------------
 
+    /** The name of this module in the DataLift configuration. */
     public final static String MODULE_NAME = "rdftransformer";
 
     //-------------------------------------------------------------------------
     // Constructors
     //-------------------------------------------------------------------------
 
+    /** Default constructor. */
     public RdfTransformer() {
         super(MODULE_NAME, 1000, SourceType.TransformedRdfSource);
     }
@@ -102,12 +106,13 @@ public class RdfTransformer extends BaseConverterModule
             }
             // Retrieve project.
             Project p = this.getProject(projectId);
-            // Load input source.
+            // Execute SPARQL Construct queries.
+            Repository internal = Configuration.getDefault()
+                                               .getInternalRepository();
+            RdfUtils.convert(internal, queries, internal, targetGraph);
+            // Register new transformed RDF source.
             TransformedRdfSource in =
                                 (TransformedRdfSource)p.getSource(sourceId);
-            RdfUtils.convert(this.internalRepository, queries,
-                             this.internalRepository, targetGraph);
-            // Register new transformed RDF source.
             Source out = this.addResultSource(p, in, destTitle, targetGraph);
             // Display generated triples.
             response = this.created(out).build();

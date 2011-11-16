@@ -62,6 +62,7 @@ import org.openrdf.model.Literal;
 import org.openrdf.model.ValueFactory;
 import org.openrdf.repository.RepositoryConnection;
 
+import org.datalift.fwk.Configuration;
 import org.datalift.fwk.MediaTypes;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.CachingSource;
@@ -90,6 +91,7 @@ public class SqlDirectMapper extends BaseConverterModule
     // Constants
     //-------------------------------------------------------------------------
 
+    /** The name of this module in the DataLift configuration. */
     public final static String MODULE_NAME = "sqldirectmapper";
 
     //-------------------------------------------------------------------------
@@ -194,7 +196,9 @@ public class SqlDirectMapper extends BaseConverterModule
             // Load input source.
             SqlSource in = (SqlSource)p.getSource(sourceId);
             // Convert CSV data and load generated RDF triples.
-            this.convert(in, keyColumn, this.internalRepository, targetGraph);
+            Repository internal = Configuration.getDefault()
+                                               .getInternalRepository();
+            this.convert(in, keyColumn, internal, targetGraph);
             // Register new transformed RDF source.
             Source out = this.addResultSource(p, in, destTitle, targetGraph);
             // Display generated triples.
