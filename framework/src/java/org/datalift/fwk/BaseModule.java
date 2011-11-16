@@ -120,7 +120,7 @@ public abstract class BaseModule implements Module
      * <p>This implementation is empty.</p>
      */
     @Override
-    public void init(Configuration cfg) {
+    public void init(Configuration configuration) {
         // NOP
     }
 
@@ -129,7 +129,7 @@ public abstract class BaseModule implements Module
      * <p>This implementation is empty.</p>
      */
     @Override
-    public void postInit(Configuration cfg) {
+    public void postInit(Configuration configuration) {
         // NOP
     }
     
@@ -138,7 +138,7 @@ public abstract class BaseModule implements Module
      * {@inheritDoc}
      * <p>This implementation is empty.</p>
      */
-    public void shutdown(Configuration cfg) {
+    public void shutdown(Configuration configuration) {
         // NOP
     }
 
