@@ -68,6 +68,15 @@ import org.datalift.fwk.util.CloseableIterator;
 public final class BoundedAsyncRdfParser
 {
     //-------------------------------------------------------------------------
+    // Constants
+    //-------------------------------------------------------------------------
+
+    /** The default buffer size for parsed RDF statements. */
+    public final static int DEFAULT_BUFFER_SIZE = 1000;
+    /** The minimum buffer size for parsed RDF statements. */
+    public final static int MIN_BUFFER_SIZE = 100;
+
+    //-------------------------------------------------------------------------
     // Class members
     //-------------------------------------------------------------------------
 
@@ -99,7 +108,7 @@ public final class BoundedAsyncRdfParser
      */
     public static CloseableIterator<Statement> parse(InputStream in,
                                         String mimeType, String baseUri) {
-        return parse(in, mimeType, baseUri, 100);
+        return parse(in, mimeType, baseUri, DEFAULT_BUFFER_SIZE);
     }
 
     /**
@@ -107,16 +116,19 @@ public final class BoundedAsyncRdfParser
      * @param  in           the RDF data stream to parse.
      * @param  mimeType     the expected type of the data.
      * @param  baseUri      the base URI to translate relative URIs.
-     * @param  bufferSize   the maximum number of RDF statements the
-     *                      iterator can buffer.
+     * @param  bufferSize   the number of RDF statements the iterator
+     *                      can buffer.
      *
      * @return an iterator on the parsed RDF statements.
      *
      * @see    #parse(InputStream, String, String, int)
      */
     public static CloseableIterator<Statement> parse(final InputStream in,
-                                    final String mimeType, final String baseUri,
-                                    final int bufferSize) {
+                                        String mimeType, final String baseUri,
+                                        int bufferSize) {
+        if (bufferSize < MIN_BUFFER_SIZE) {
+            bufferSize = MIN_BUFFER_SIZE;
+        }
         // Validate that provided MIME type is supported.
         final RDFParser parser = RdfUtils.newRdfParser(mimeType);
         // Use a blocking queue to control the memory alloted to the
