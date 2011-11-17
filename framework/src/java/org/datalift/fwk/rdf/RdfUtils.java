@@ -496,23 +496,25 @@ public final class RdfUtils
         if (mimeType == null) {
             throw new IllegalArgumentException("mimeType");
         }
+        ValueFactory valueFactory = new UriCachingValueFactory();
+
         RDFParser parser = null;
         if ((TEXT_TURTLE_TYPE.equals(mimeType)) ||
             (TEXT_N3_TYPE.equals(mimeType))) {
-            parser = new TurtleParser();
+            parser = new TurtleParser(valueFactory);
         }
         else if (APPLICATION_NTRIPLES_TYPE.equals(mimeType)) {
-            parser = new NTriplesParser();
+            parser = new NTriplesParser(valueFactory);
         }
         else if (APPLICATION_TRIG_TYPE.equals(mimeType)) {
-            parser = new TriGParser();
+            parser = new TriGParser(valueFactory);
         }
         else if (APPLICATION_TRIX_TYPE.equals(mimeType)) {
-            parser = new TriXParser();
+            parser = new TriXParser(valueFactory);
         }
         else if ((APPLICATION_RDF_XML_TYPE.equals(mimeType)) ||
                  (APPLICATION_XML_TYPE.equals(mimeType))) {
-            parser = new RDFXMLParser();
+            parser = new RDFXMLParser(valueFactory);
         }
         else {
             throw new IllegalArgumentException(
