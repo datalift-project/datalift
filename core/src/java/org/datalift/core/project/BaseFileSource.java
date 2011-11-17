@@ -35,6 +35,7 @@
 package org.datalift.core.project;
 
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -61,12 +62,26 @@ import org.datalift.fwk.util.StringUtils;
 public abstract class BaseFileSource<T> extends BaseSource
                                         implements FileSource<T>
 {
+    //-------------------------------------------------------------------------
+    // Constants
+    //-------------------------------------------------------------------------
+
+    /** The default input buffer size for reading source file. */
+    private final static int DEFAULT_BUFFER_SIZE = 32768;       // 32 KB
+    /** The minimum input buffer size for reading source file. */
+    private final static int MIN_BUFFER_SIZE = 4096;            // 4 KB
+
+    //-------------------------------------------------------------------------
+    // Instance members
+    //-------------------------------------------------------------------------
+
     @RdfProperty("dc:format")
     private String mimeType;
     @RdfProperty("datalift:path")
     private String filePath;
 
     private transient File storage = null;
+    private transient int bufferSize = DEFAULT_BUFFER_SIZE;
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -142,7 +157,8 @@ public abstract class BaseFileSource<T> extends BaseSource
     @Override
     public InputStream getInputStream() throws IOException {
         this.init();
-        return new FileInputStream(this.storage);
+        return new BufferedInputStream(new FileInputStream(this.storage),
+                                       this.getBufferSize());
     }
 
     private void init() {
@@ -172,5 +188,22 @@ public abstract class BaseFileSource<T> extends BaseSource
      */
     public void setFilePath(String path) {
         this.filePath = path;
+    }
+
+    /**
+     * Returns the size of the file input buffer for this source.
+     * @return the size of the file input buffer.
+     */
+    public int getBufferSize() {
+        return this.bufferSize;
+    }
+
+    /**
+     * Sets the size of the file input buffer for this source.
+     * @param  size   the requested size for the file input buffer,
+     *                as a number of bytes.
+     */
+    public void setBufferSize(int size) {
+        this.bufferSize = (size < MIN_BUFFER_SIZE)? MIN_BUFFER_SIZE: size;
     }
 }

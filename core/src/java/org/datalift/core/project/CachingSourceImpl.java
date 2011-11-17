@@ -1,6 +1,7 @@
 package org.datalift.core.project;
 
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -34,6 +35,11 @@ public abstract class CachingSourceImpl extends BaseSource
 
     private final static String CACHE_DIRECTORY_NAME    = "caches";
 
+    /** The default input buffer size for reading cache file. */
+    private final static int DEFAULT_BUFFER_SIZE = 32768;       // 32 KB
+    /** The minimum input buffer size for reading cache file. */
+    private final static int MIN_BUFFER_SIZE = 4096;            // 4 KB
+
     //-------------------------------------------------------------------------
     // Class members
     //-------------------------------------------------------------------------
@@ -48,6 +54,7 @@ public abstract class CachingSourceImpl extends BaseSource
     private int cacheDuration;
 
     private transient File cacheFile = null;
+    private transient int bufferSize = DEFAULT_BUFFER_SIZE;
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -127,6 +134,24 @@ public abstract class CachingSourceImpl extends BaseSource
     // Specific implementation
     //-------------------------------------------------------------------------
 
+
+    /**
+     * Returns the size of the cache input buffer for this source.
+     * @return the size of the cache input buffer.
+     */
+    public int getBufferSize() {
+        return this.bufferSize;
+    }
+
+    /**
+     * Sets the size of the file cache buffer for this source.
+     * @param  size   the requested size for the cache input buffer,
+     *                as a number of bytes.
+     */
+    public void setBufferSize(int size) {
+        this.bufferSize = (size < MIN_BUFFER_SIZE)? MIN_BUFFER_SIZE: size;
+    }
+
     /**
      * Returns the cache file this source shall use to store temporary
      * data. The file may not exist depending on whether data have been
@@ -187,7 +212,8 @@ public abstract class CachingSourceImpl extends BaseSource
         if (! this.isCacheValid()) {
             this.reloadCache();
         }
-        return new FileInputStream(this.getCacheFile());
+        return new BufferedInputStream(new FileInputStream(this.getCacheFile()),
+                                       this.getBufferSize());
     }
 
     /**

@@ -35,6 +35,7 @@
 package org.datalift.fwk.rdf;
 
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.net.URI;
@@ -51,6 +52,7 @@ import org.openrdf.query.GraphQuery;
 import org.openrdf.query.QueryLanguage;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
+import org.openrdf.rio.RDFFormat;
 import org.openrdf.rio.RDFParser;
 import org.openrdf.rio.helpers.RDFHandlerBase;
 import org.openrdf.rio.ntriples.NTriplesParser;
@@ -91,7 +93,13 @@ public final class RdfUtils
     // Constants
     //-------------------------------------------------------------------------
 
-    private final static int BATCH_SIZE = 1000;
+    /** The default batch size of uncommitted RDF statements. */
+    private final static int DEFAULT_BATCH_SIZE = 10000;
+    /** The minimum batch size of uncommitted RDF statements. */
+    private final static int MIN_BATCH_SIZE = 1000;
+
+    /** The default input buffer size for reading RDF files. */
+    private final static int DEFAULT_BUFFER_SIZE = 32768;       // 32 KB
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -226,8 +234,9 @@ public final class RdfUtils
         if (target == null) {
             throw new IllegalArgumentException("target");
         }
-        RDFParser parser = newRdfParser(mimeType);
-
+        if (baseUri == null) {
+            baseUri = "";
+        }
         org.openrdf.model.URI targetGraph = null;
         RepositoryConnection cnx = target.newConnection();
         try {
@@ -235,11 +244,16 @@ public final class RdfUtils
             cnx.setAutoCommit(false);
             // Clear target named graph, if any.
             targetGraph = clearGraph(namedGraph, cnx);
+
             // Load triples, mapping URIs on the fly.
+            // Note: we're using an RDF parser and directly adding statements
+            //       because Sesame RepositoryConnection.add(File, ...) is
+            //       really not optimized for perf. and high throughput...
+            RDFParser parser = newRdfParser(mimeType);
             parser.setRDFHandler(
                             new StatementAppender(cnx, targetGraph, mapper));
-            parser.parse(new FileInputStream(source),
-                         (baseUri != null)? baseUri.toString(): "");
+            parser.parse(new BufferedInputStream(
+                    new FileInputStream(source), DEFAULT_BUFFER_SIZE), baseUri);
         }
         catch (Exception e) {
             try {
@@ -265,8 +279,7 @@ public final class RdfUtils
 
     public static void upload(CloseableIterable<Statement> source,
                               Repository target, URI namedGraph,
-                              final UriMapper mapper, String baseUri)
-                                                        throws RdfException {
+                              final UriMapper mapper) throws RdfException {
         if (source == null) {
             throw new IllegalArgumentException("source");
         }
@@ -597,6 +610,35 @@ public final class RdfUtils
         return mappedType;
     }
 
+    public static RDFFormat getRdfFormat(MediaType mimeType) {
+        RDFFormat mappedFormat = null;
+        if (mimeType != null) {
+            if (mimeType == TEXT_TURTLE_TYPE) {
+                mappedFormat = RDFFormat.TURTLE;
+            }
+            else if (mimeType == TEXT_N3_TYPE) {
+                mappedFormat = RDFFormat.N3;
+            }
+            else if (mimeType == APPLICATION_RDF_XML_TYPE) {
+                mappedFormat = RDFFormat.RDFXML;
+            }
+            else if (mimeType == APPLICATION_TRIG_TYPE) {
+                mappedFormat = RDFFormat.TRIG;
+            }
+            else if (mimeType == APPLICATION_TRIX_TYPE) {
+                mappedFormat = RDFFormat.TRIX;
+            }
+            else if (mimeType == APPLICATION_NTRIPLES_TYPE) {
+                mappedFormat = RDFFormat.NTRIPLES;
+            }
+        }
+        if (mappedFormat == null) {
+            throw new IllegalArgumentException(
+                            "Unsupported MIME type for RDF data: " + mimeType);
+        }
+        return mappedFormat;
+    }
+
     private static org.openrdf.model.URI clearGraph(URI graphName,
                                                     RepositoryConnection cnx)
                                                     throws RepositoryException {
@@ -622,7 +664,7 @@ public final class RdfUtils
         public StatementAppender(RepositoryConnection cnx,
                                  org.openrdf.model.URI targetGraph,
                                  UriMapper mapper) {
-            this(cnx, targetGraph, mapper, -1);
+            this(cnx, targetGraph, mapper, DEFAULT_BATCH_SIZE);
         }
 
         public StatementAppender(RepositoryConnection cnx,
@@ -638,7 +680,8 @@ public final class RdfUtils
             this.targetGraph = targetGraph;
             this.mapper = mapper;
             // Batches can't be too small.
-            this.batchSize = (batchSize < BATCH_SIZE)? BATCH_SIZE: batchSize;
+            this.batchSize = (batchSize < MIN_BATCH_SIZE)?
+                                                    MIN_BATCH_SIZE: batchSize;
         }
 
         @Override

@@ -35,6 +35,7 @@
 package org.datalift.core.project;
 
 
+import java.io.BufferedInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -205,7 +206,8 @@ public class SparqlSourceImpl extends CachingSourceImpl implements SparqlSource
     public CloseableIterator<Statement> iterator() {
         try {
             return BoundedAsyncRdfParser.parse(this.getInputStream(),
-                                    APPLICATION_RDF_XML, this.getEndpointUrl());
+                                    APPLICATION_RDF_XML, this.getEndpointUrl(),
+                                    DEFAULT_STATEMENT_BUFFER_SIZE);
         }
         catch (IOException e) {
             throw new TechnicalException(e.getMessage(), e);
@@ -292,6 +294,7 @@ public class SparqlSourceImpl extends CachingSourceImpl implements SparqlSource
             try {
                 String[] contentType = this.parseContentType(
                                                         cnx.getContentType());
+                in = new BufferedInputStream(in, this.getBufferSize());
                 r = (contentType[1] == null)?
                                     new InputStreamReader(in):
                                     new InputStreamReader(in, contentType[1]);

@@ -39,6 +39,18 @@ import org.openrdf.model.Statement;
 import org.datalift.fwk.util.CloseableIterable;
 
 
-public interface RdfSource extends Source, CloseableIterable<Statement> {
+public interface RdfSource extends Source, CloseableIterable<Statement>
+{
+    //-------------------------------------------------------------------------
+    // Constants
+    //-------------------------------------------------------------------------
+
+    /** The default buffer size for parsed RDF statements. */
+    public final static int DEFAULT_STATEMENT_BUFFER_SIZE = 10000;
+
+    //-------------------------------------------------------------------------
+    // RdfSource contract definition
+    //-------------------------------------------------------------------------
+
     // No specific method other than iterator().
 }

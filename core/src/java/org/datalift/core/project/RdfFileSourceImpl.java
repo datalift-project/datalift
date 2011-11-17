@@ -106,7 +106,8 @@ public class RdfFileSourceImpl extends BaseFileSource<Statement>
     public CloseableIterator<Statement> iterator() {
         try {
             return BoundedAsyncRdfParser.parse(this.getInputStream(),
-                                    this.getMimeType(), this.getSourceUrl());
+                                    this.getMimeType(), this.getSourceUrl(),
+                                    DEFAULT_STATEMENT_BUFFER_SIZE);
         }
         catch (IOException e) {
             throw new TechnicalException(e.getMessage(), e);
