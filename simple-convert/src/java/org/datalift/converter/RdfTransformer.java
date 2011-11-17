@@ -114,7 +114,7 @@ public class RdfTransformer extends BaseConverterModule
             TransformedRdfSource in =
                                 (TransformedRdfSource)p.getSource(sourceId);
             Source out = this.addResultSource(p, in, destTitle, targetGraph);
-            // Display generated triples.
+            // Display project source tab, including the newly created source.
             response = this.created(out).build();
         }
         catch (Exception e) {

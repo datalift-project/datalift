@@ -122,7 +122,7 @@ public class CsvDirectMapper extends BaseConverterModule
                              targetGraph);
             // Register new transformed RDF source.
             Source out = this.addResultSource(p, in, destTitle, targetGraph);
-            // Display generated triples.
+            // Display project source tab, including the newly created source.
             response = this.created(out).build();
         }
         catch (Exception e) {
