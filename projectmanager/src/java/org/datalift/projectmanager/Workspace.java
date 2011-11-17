@@ -557,6 +557,7 @@ public class Workspace extends BaseModule
         Response response = null;
 
         String fileName = fileDisposition.getFileName();
+        log.debug("Processing CSV source creation request for {}", fileName);
         try {
             // Build object URIs from request path.
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
@@ -595,6 +596,8 @@ public class Workspace extends BaseModule
             // Notify user of successful creation, redirecting HTML clients
             // (browsers) to the source tab of the project page.
             response = this.created(p, sourceUri, ProjectTab.Sources).build();
+
+            log.info("New CSV source \"{}\" created", sourceUri);
         }
         catch (IOException e) {
             this.throwInvalidParamError(fileName, e.getLocalizedMessage());
@@ -661,8 +664,10 @@ public class Workspace extends BaseModule
         if (file == null) {
             this.throwInvalidParamError("source", null);
         }
-        String fileName = fileDisposition.getFileName();
         Response response = null;
+
+        String fileName = fileDisposition.getFileName();
+        log.debug("Processing RDF source creation request for {}", fileName);
         try {
             // Build object URIs from request path.
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
@@ -697,6 +702,8 @@ public class Workspace extends BaseModule
             // Notify user of successful creation, redirecting HTML clients
             // (browsers) to the source tab of the project page.
             response = this.created(p, sourceUri, ProjectTab.Sources).build();
+
+            log.info("New RDF source \"{}\" created", sourceUri);
         }
         catch (IOException e) {
             this.throwInvalidParamError(fileName, e.getLocalizedMessage());
@@ -764,6 +771,8 @@ public class Workspace extends BaseModule
                                                 throws WebApplicationException {
         Response response = null;
         try {
+            log.debug("Processing SQL source creation request for \"{}\"",
+                      title);
             // Build object URIs from request path.
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
             URI sourceUri = new URI(projectUri.getScheme(), null,
@@ -786,6 +795,8 @@ public class Workspace extends BaseModule
             // Notify user of successful creation, redirecting HTML clients
             // (browsers) to the source tab of the project page.
             response = this.created(p, sourceUri, ProjectTab.Sources).build();
+
+            log.info("New SQL source \"{}\" created", sourceUri);
         }
         catch (Exception e) {
             this.handleInternalError(e,
@@ -862,6 +873,8 @@ public class Workspace extends BaseModule
                                                 throws WebApplicationException {
         Response response = null;
         try {
+            log.debug("Processing SPARQL source creation request for \"{}\"",
+                      title);
             // Build object URIs from request path.
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
             URI sourceUri = new URI(projectUri.getScheme(), null,
@@ -887,6 +900,8 @@ public class Workspace extends BaseModule
             // Notify user of successful creation, redirecting HTML clients
             // (browsers) to the source tab of the project page.
             response = this.created(p, sourceUri, ProjectTab.Sources).build();
+
+            log.info("New SPARQL source \"{}\" created", sourceUri);
         }
         catch (Exception e) {
             this.handleInternalError(e,
@@ -1092,6 +1107,7 @@ public class Workspace extends BaseModule
                                                 throws WebApplicationException {
         Response response = null;
         try {
+            log.debug("Processing source deletion request for {}", sourceId);
             // Retrieve source.
             // As we can't infer the source type (CSV, SPARQL...), we have
             // to load the whole project and search it using its URI.
@@ -1105,6 +1121,8 @@ public class Workspace extends BaseModule
             // Notify user of successful update, redirecting HTML clients
             // (browsers) to the source tab of the project page.
             response = this.redirect(p, ProjectTab.Sources).build();
+
+            log.info("Source \"{}\" deleted", u);
         }
         catch (Exception e) {
             this.handleInternalError(e, "Failed to delete source {}", sourceId);
