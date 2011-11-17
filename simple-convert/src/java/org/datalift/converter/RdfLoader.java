@@ -35,7 +35,6 @@
 package org.datalift.converter;
 
 
-import java.io.File;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
@@ -50,11 +49,10 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 
 import org.datalift.fwk.Configuration;
+import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.Project;
-import org.datalift.fwk.project.RdfFileSource;
 import org.datalift.fwk.project.RdfSource;
 import org.datalift.fwk.project.Source;
-import org.datalift.fwk.project.SparqlSource;
 import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
@@ -72,6 +70,12 @@ public class RdfLoader extends BaseConverterModule
 
     /** The name of this module in the DataLift configuration. */
     public final static String MODULE_NAME = "rdfloader";
+
+    //-------------------------------------------------------------------------
+    // Class members
+    //-------------------------------------------------------------------------
+
+    private final static Logger log = Logger.getLogger();
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -110,11 +114,13 @@ public class RdfLoader extends BaseConverterModule
                                                 throws WebApplicationException {
         Response response = null;
         try {
+            log.debug("Loading RDF data from \"{}\" into graph \"{}\"",
+                                                        sourceId, targetGraph);
             // Retrieve project.
             Project p = this.getProject(projectId);
             // Check for URI mapping.
             UriMapper mapper = null;
-            if (StringUtils.isSet(uriPattern)) {
+            if (! StringUtils.isBlank(uriPattern)) {
                 try {
                     mapper = new RegexUriMapper(Pattern.compile(uriPattern),
                                                 uriReplacement);
@@ -124,27 +130,17 @@ public class RdfLoader extends BaseConverterModule
                                             "uri_translation_src", uriPattern);
                 }
             }
-            Configuration cfg = Configuration.getDefault();
-            Repository internal = cfg.getInternalRepository();
-            
+            Repository internal = Configuration.getDefault()
+                                               .getInternalRepository();
             // Load input source.
             RdfSource in = (RdfSource)(p.getSource(sourceId));
-            if (in instanceof RdfFileSource) {
-                RdfFileSource s = (RdfFileSource)in;
-                RdfUtils.upload(new File(cfg.getPublicStorage(),
-                                         s.getFilePath()),
-                                RdfUtils.parseMimeType(s.getMimeType()),
-                                internal, targetGraph,
-                                mapper, s.getSourceUrl());
-            }
-            else if (in instanceof SparqlSource) {
-                RdfUtils.upload(in, internal,
-                                targetGraph, mapper, uriReplacement);
-            }
+            RdfUtils.upload(in, internal, targetGraph, mapper);
             // Register new transformed RDF source.
             Source out = this.addResultSource(p, in, destTitle, targetGraph);
-            // Display generated triples.
+            // Display project source tab, including the newly created source.
             response = this.created(out).build();
+
+            log.info("RDF data successfully loaded into \"{}\"", targetGraph);
         }
         catch (Exception e) {
             this.handleInternalError(e);
