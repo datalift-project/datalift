@@ -297,11 +297,10 @@
   <target name="dist" depends="compile,prepare-dist,resource-copy"
                       description="Create binary distribution">
     <!-- Create module JAR file -->
-    <copy file="${silk.jar}" tofile="${jar.path}" overwrite="true"/>
+    <copy file="${silk.jar}" tofile="${jar.path}"/>
     <jar jarfile="${jar.path}" update="true">
       <fileset dir="${classes.dir}"/>
       <service type="org.datalift.fwk.Module">
-        <provider classname="org.datalift.samples.ui.UIModule"/>
         <provider classname="org.datalift.samples.project.HandleProjectModule"/>
       </service>
     </jar>
