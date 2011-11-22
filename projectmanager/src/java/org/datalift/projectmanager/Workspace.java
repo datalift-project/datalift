@@ -1405,13 +1405,15 @@ public class Workspace extends BaseModule
     }
 
     private URI newProjectId(URI baseUri, String name) {
+        URI u = null;
         try {
-            return new URL(baseUri.toURL(),
+            u = new URL(baseUri.toURL(),
                            REL_PROJECT_PATH + urlify(name)).toURI();
         }
         catch (Exception e) {
-            throw new RuntimeException("Invalid base URI: " + baseUri);
+            this.throwInvalidParamError("id", name);
         }
+        return u;
     }
 
     private File getFileStorage(String path) {
