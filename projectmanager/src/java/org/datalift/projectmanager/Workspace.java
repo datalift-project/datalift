@@ -47,7 +47,6 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -56,7 +55,6 @@ import java.util.TreeSet;
 import javax.persistence.EntityNotFoundException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
@@ -64,21 +62,15 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
-
-import org.openrdf.model.Statement;
-import org.openrdf.query.TupleQueryResultHandlerException;
-import org.openrdf.rio.RDFHandlerException;
 
 import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 
@@ -98,7 +90,6 @@ import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.CachingSource;
 import org.datalift.fwk.project.CsvSource;
 import org.datalift.fwk.project.RdfSource;
-import org.datalift.fwk.project.Row;
 import org.datalift.fwk.project.SparqlSource;
 import org.datalift.fwk.project.SqlSource;
 import org.datalift.fwk.project.Ontology;
@@ -112,7 +103,6 @@ import org.datalift.fwk.project.ProjectModule.UriDesc;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.sparql.SparqlEndpoint;
 import org.datalift.fwk.util.CloseableIterator;
-import org.datalift.fwk.util.web.json.GridJsonWriter;
 
 import static org.datalift.fwk.MediaTypes.*;
 import static org.datalift.fwk.util.StringUtils.*;
@@ -1051,53 +1041,6 @@ public class Workspace extends BaseModule
         return response;
     }
 
-/*
-    @GET
-    @Path("{id}/source/{srcid}")
-    @Produces(APPLICATION_JSON)
-    public StreamingOutput displaySource(
-                    @PathParam("id") String id,
-                    @PathParam("srcid") String srcId,
-                    @QueryParam("min")  @DefaultValue("-1") int startOffset,
-                    @QueryParam("max")  @DefaultValue("-1") int endOffset,
-                    @Context UriInfo uriInfo) throws WebApplicationException {
-        StreamingOutput out = null;
-        try {
-            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
-            Project p = this.loadProject(projectUri);
-
-            // Search for requested source in project.
-            Source src = p.getSource(new URL(
-                                this.getSourceId(projectUri, srcId)).toURI());
-            if (src == null) {
-                // Not found.
-                throw new NotFoundException();
-            }
-            // Return a JSON serializer for the source data.
-            if (src instanceof CsvSource) {
-                out = new RowJsonSerializer<String>(((CsvSource)src).iterator(),
-                                                    startOffset, endOffset);
-            }
-            else if (src instanceof SqlSource) {
-                out = new RowJsonSerializer<Object>(((SqlSource)src).iterator(),
-                                                    startOffset, endOffset);
-            }
-            else if (src instanceof RdfSource) {
-                out = new RdfJsonSerializer(((RdfSource)src).iterator(),
-                                            startOffset, endOffset);
-            }
-            else {
-                throw new TechnicalException("unknown.source.type",
-                                             src.getClass());
-            }
-        }
-        catch (Exception e) {
-            this.handleInternalError(e, "Failed to load source {}", srcId);
-        }
-        return out;
-    }
-*/
-
     @GET
     @Path("{id}/source/{srcid}/delete")
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
@@ -1547,103 +1490,4 @@ public class Workspace extends BaseModule
                                     .entity(error.getMessage()).build());
         }
     }
-
-/*
-    private final static class RowJsonSerializer<T> implements StreamingOutput
-    {
-        private final CloseableIterator<Row<T>> data;
-        private final int min;
-        private final int max;
-
-        public RowJsonSerializer(CloseableIterator<Row<T>> data,
-                                                            int min, int max) {
-            this.data = data;
-            this.min  = min;
-            this.max  = (max > 0)? max: Integer.MAX_VALUE;
-        }
-
-        @Override
-        public void write(OutputStream out)
-                                throws IOException, WebApplicationException {
-            try {
-                GridJsonWriter writer = new GridJsonWriter(out);
-
-                int i = 0;
-                while ((this.data.hasNext()) && (i < max)) {
-                    Row<T> row = this.data.next();
-                    if (i == 0) {
-                        writer.startQueryResult(
-                                        new LinkedList<String>(row.keys()));
-                    }
-                    i++;
-                    if (i >= min) {
-                        // Within requested range.
-                        writer.handleRow(row);
-                    }
-                    // Else: Not yet in range => Skip.
-                }
-                writer.endQueryResult();
-            }
-            catch (TupleQueryResultHandlerException e) {
-                Throwable cause = e;
-                while ((cause = cause.getCause()) != null) {
-                    if (cause instanceof IOException) {
-                        throw (IOException)cause;
-                    }
-                }
-                throw new IOException(e);
-            }
-            finally {
-                this.data.close();
-            }
-        }
-    }
-
-    private final static class RdfJsonSerializer implements StreamingOutput
-    {
-        private final CloseableIterator<Statement> data;
-        private final int min;
-        private final int max;
-
-        public RdfJsonSerializer(CloseableIterator<Statement> data,
-                                                            int min, int max) {
-            this.data = data;
-            this.min  = min;
-            this.max  = (max > 0)? max: Integer.MAX_VALUE;
-        }
-
-        @Override
-        public void write(OutputStream out)
-                                throws IOException, WebApplicationException {
-            try {
-                GridJsonWriter writer = new GridJsonWriter(out);
-                writer.startRDF();
-
-                int i = 0;
-                while ((this.data.hasNext()) && (i < max)) {
-                    i++;
-                    Statement s = this.data.next();
-                    if (i >= min) {
-                        // Within requested range.
-                        writer.handleStatement(s);
-                    }
-                    // Else: not yet in range => Skip.
-                }
-                writer.endRDF();
-            }
-            catch (RDFHandlerException e) {
-                Throwable cause = e;
-                while ((cause = cause.getCause()) != null) {
-                    if (cause instanceof IOException) {
-                        throw (IOException)cause;
-                    }
-                }
-                throw new IOException(e);
-            }
-            finally {
-                this.data.close();
-            }
-        }
-    }
-*/
 }
