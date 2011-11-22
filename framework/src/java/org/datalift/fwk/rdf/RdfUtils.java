@@ -690,13 +690,15 @@ public final class RdfUtils
         public void handleStatement(Statement stmt) {
             try {
                 if (mapper != null) {
-                    // Map subject and object URIs
-                    stmt = this.valueFactory.createStatement(
-                                (Resource)(this.mapValue(stmt.getSubject())),
-                                this.mapUri(stmt.getPredicate()),
-                                this.mapValue(stmt.getObject()));
+                    // Map subject and object URIs.
+                    this.cnx.add((Resource)(this.mapValue(stmt.getSubject())),
+                                 this.mapUri(stmt.getPredicate()),
+                                 this.mapValue(stmt.getObject()),
+                                 this.targetGraph);
                 }
-                this.cnx.add(stmt, this.targetGraph);
+                else {
+                    this.cnx.add(stmt, this.targetGraph);
+                }
                 // Commit transaction every BATCH_SIZE statements.
                 this.statementCount++;
                 if ((this.statementCount % this.batchSize) == 0) {
