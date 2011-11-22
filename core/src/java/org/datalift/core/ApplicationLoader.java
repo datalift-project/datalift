@@ -424,8 +424,8 @@ public class ApplicationLoader extends LogServletContextListener
                     this.loadModules(m);
                 }
                 catch (Exception e) {
-                    log.fatal("Failed to load modules from {}: {}. Skipping...",
-                              e, m.getName(), e.getMessage());
+                    log.fatal("Failed to load modules from {}. Skipping...",
+                              e, m.getName());
                     // Continue with next module.
                 }
             }
