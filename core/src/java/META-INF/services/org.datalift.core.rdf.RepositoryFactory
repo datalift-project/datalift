@@ -1,2 +1,3 @@
+#org.datalift.core.rdf.virtuoso.VirtuosoRepositoryFactory
+#org.datalift.core.rdf.allegrograph.AllegroGraphRepositoryFactory
 org.datalift.core.rdf.sesame.SesameRepositoryFactory
-org.datalift.core.rdf.virtuoso.VirtuosoRepositoryFactory

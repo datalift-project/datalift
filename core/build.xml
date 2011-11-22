@@ -276,10 +276,13 @@
 
   <target name="compile" depends="prepare"
                          description="Compiles Java sources">
-    <!-- Compile the Virtuoso repository wrapper only
-         if the Virtuoso Sesame driver classes are present -->
+    <!-- Compile optional repository wrappers only if
+         the corresponding driver classes is present -->
     <available property="virtuoso.present"
               classname="virtuoso.sesame2.driver.VirtuosoRepository"
+           classpathref="compile.classpath"/>
+    <available property="allegrograph.present"
+              classname="com.franz.agraph.repository.AGServer"
            classpathref="compile.classpath"/>
     <!-- Compile Java classes -->
     <javac srcdir="${src.home}"
@@ -289,7 +292,8 @@
       deprecation="${compile.deprecation}"
          optimize="${compile.optimize}">
       <classpath refid="compile.classpath"/>
-      <exclude name="**/Virtuoso*" unless="virtuoso.present"/>
+      <exclude name="**/Virtuoso*"     unless="virtuoso.present"/>
+      <exclude name="**/AllegroGraph*" unless="allegrograph.present"/>
     </javac>
     <!-- Copy application resources -->
     <copy todir="${classes.dir}" includeEmptyDirs="false"
@@ -419,7 +423,7 @@
       <fileset dir="${src.home}"/>
       <classpath refid="compile.classpath"/>
 
-      <group title="DataLift Franework Packages"
+      <group title="DataLift Framework Packages"
           packages="org.datalift.fwk*"/>
       <group title="DataLift Core Packages"
           packages="org.datalift.core*"/>
