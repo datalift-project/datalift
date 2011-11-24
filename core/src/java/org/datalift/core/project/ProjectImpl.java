@@ -93,7 +93,7 @@ public class ProjectImpl extends BaseRdfEntity implements Project
         Selection       (VDPP.uri + "Selection"),
         Publication     (VDPP.uri + "Publication"),
         Interlinking    (VDPP.uri + "Interlinking"),
-        Convertion      (VDPP.uri + "Convertion");
+        Conversion      (VDPP.uri + "Conversion");
 
         public final URI uri;
 
