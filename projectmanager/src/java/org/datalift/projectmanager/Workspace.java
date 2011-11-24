@@ -1259,9 +1259,18 @@ public class Workspace extends BaseModule
                     });
             for (ProjectModule m : Configuration.getDefault().getBeans(
                                                         ProjectModule.class)) {
-                UriDesc modulePage = m.canHandle(p);
-                if (modulePage != null) {
-                    modules.add(modulePage);
+                try {
+                    UriDesc modulePage = m.canHandle(p);
+                    if (modulePage != null) {
+                        modules.add(modulePage);
+                    }
+                }
+                catch (Exception e) {
+                    TechnicalException error = new TechnicalException(
+                                                "module.internal.error", e,
+                                                m.getName(), e.getMessage());
+                    log.error(error.getMessage(), e);
+                    // Ignore module error...
                 }
             }
             args.put("current", p);
