@@ -51,6 +51,8 @@ import org.datalift.fwk.project.FileSource;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.util.StringUtils;
 
+import static org.datalift.fwk.util.Env.*;
+
 
 /**
  * An abstract superclass for implementations of the {@link FileSource}
@@ -63,15 +65,6 @@ public abstract class BaseFileSource<T> extends BaseSource
                                         implements FileSource<T>
 {
     //-------------------------------------------------------------------------
-    // Constants
-    //-------------------------------------------------------------------------
-
-    /** The default input buffer size for reading source file. */
-    private final static int DEFAULT_BUFFER_SIZE = 32768;       // 32 KB
-    /** The minimum input buffer size for reading source file. */
-    private final static int MIN_BUFFER_SIZE = 4096;            // 4 KB
-
-    //-------------------------------------------------------------------------
     // Instance members
     //-------------------------------------------------------------------------
 
@@ -81,7 +74,7 @@ public abstract class BaseFileSource<T> extends BaseSource
     private String filePath;
 
     private transient File storage = null;
-    private transient int bufferSize = DEFAULT_BUFFER_SIZE;
+    private transient int bufferSize = getFileBufferSize();
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -204,6 +197,7 @@ public abstract class BaseFileSource<T> extends BaseSource
      *                as a number of bytes.
      */
     public void setBufferSize(int size) {
-        this.bufferSize = (size < MIN_BUFFER_SIZE)? MIN_BUFFER_SIZE: size;
+        this.bufferSize = (size < MIN_FILE_BUFFER_SIZE)?
+                                                MIN_FILE_BUFFER_SIZE: size;
     }
 }

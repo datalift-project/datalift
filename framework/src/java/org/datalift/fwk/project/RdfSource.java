@@ -39,15 +39,14 @@ import org.openrdf.model.Statement;
 import org.datalift.fwk.util.CloseableIterable;
 
 
+/**
+ * A object describing an abstract RDF source, regardless the actual
+ * triple storage (file, local RDF store, SPARQL endpoint...).
+ *
+ * @author hdevos
+ */
 public interface RdfSource extends Source, CloseableIterable<Statement>
 {
-    //-------------------------------------------------------------------------
-    // Constants
-    //-------------------------------------------------------------------------
-
-    /** The default buffer size for parsed RDF statements. */
-    public final static int DEFAULT_STATEMENT_BUFFER_SIZE = 10000;
-
     //-------------------------------------------------------------------------
     // RdfSource contract definition
     //-------------------------------------------------------------------------

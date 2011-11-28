@@ -63,6 +63,7 @@ import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.SparqlSource;
 import org.datalift.fwk.util.Base64;
 import org.datalift.fwk.util.CloseableIterator;
+import org.datalift.fwk.util.Env;
 
 import static org.datalift.fwk.MediaTypes.*;
 import static org.datalift.fwk.util.StringUtils.isBlank;
@@ -207,7 +208,7 @@ public class SparqlSourceImpl extends CachingSourceImpl implements SparqlSource
         try {
             return BoundedAsyncRdfParser.parse(this.getInputStream(),
                                     APPLICATION_RDF_XML, this.getEndpointUrl(),
-                                    DEFAULT_STATEMENT_BUFFER_SIZE);
+                                    Env.getRdfBatchSize());
         }
         catch (IOException e) {
             throw new TechnicalException(e.getMessage(), e);

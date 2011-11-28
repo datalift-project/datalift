@@ -67,6 +67,7 @@ import org.datalift.fwk.util.StringUtils;
 import org.datalift.fwk.util.UriMapper;
 
 import static org.datalift.fwk.MediaTypes.*;
+import static org.datalift.fwk.util.Env.*;
 
 
 /**
@@ -89,18 +90,6 @@ import static org.datalift.fwk.MediaTypes.*;
  */
 public final class RdfUtils
 {
-    //-------------------------------------------------------------------------
-    // Constants
-    //-------------------------------------------------------------------------
-
-    /** The default batch size of uncommitted RDF statements. */
-    private final static int DEFAULT_BATCH_SIZE = 10000;
-    /** The minimum batch size of uncommitted RDF statements. */
-    private final static int MIN_BATCH_SIZE = 1000;
-
-    /** The default input buffer size for reading RDF files. */
-    private final static int DEFAULT_BUFFER_SIZE = 32768;       // 32 KB
-
     //-------------------------------------------------------------------------
     // Constructors
     //-------------------------------------------------------------------------
@@ -252,8 +241,8 @@ public final class RdfUtils
             RDFParser parser = newRdfParser(mimeType);
             parser.setRDFHandler(
                             new StatementAppender(cnx, targetGraph, mapper));
-            parser.parse(new BufferedInputStream(
-                    new FileInputStream(source), DEFAULT_BUFFER_SIZE), baseUri);
+            parser.parse(new BufferedInputStream(new FileInputStream(source),
+                                                 getFileBufferSize()), baseUri);
         }
         catch (Exception e) {
             try {
@@ -666,7 +655,7 @@ public final class RdfUtils
         public StatementAppender(RepositoryConnection cnx,
                                  org.openrdf.model.URI targetGraph,
                                  UriMapper mapper) {
-            this(cnx, targetGraph, mapper, DEFAULT_BATCH_SIZE);
+            this(cnx, targetGraph, mapper, getRdfBatchSize());
         }
 
         public StatementAppender(RepositoryConnection cnx,
@@ -682,8 +671,8 @@ public final class RdfUtils
             this.targetGraph = targetGraph;
             this.mapper = mapper;
             // Batches can't be too small.
-            this.batchSize = (batchSize < MIN_BATCH_SIZE)?
-                                                    MIN_BATCH_SIZE: batchSize;
+            this.batchSize = (batchSize < MIN_RDF_IO_BATCH_SIZE)?
+                                            MIN_RDF_IO_BATCH_SIZE: batchSize;
         }
 
         @Override
@@ -699,7 +688,7 @@ public final class RdfUtils
                 else {
                     this.cnx.add(stmt, this.targetGraph);
                 }
-                // Commit transaction every BATCH_SIZE statements.
+                // Commit transaction according to the configured batch size.
                 this.statementCount++;
                 if ((this.statementCount % this.batchSize) == 0) {
                     this.cnx.commit();

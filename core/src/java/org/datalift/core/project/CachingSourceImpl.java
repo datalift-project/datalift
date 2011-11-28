@@ -18,6 +18,7 @@ import org.datalift.fwk.project.CachingSource;
 import org.datalift.fwk.project.Project;
 
 import static org.datalift.fwk.util.StringUtils.urlify;
+import static org.datalift.fwk.util.Env.*;
 
 
 @MappedSuperclass
@@ -35,11 +36,6 @@ public abstract class CachingSourceImpl extends BaseSource
 
     private final static String CACHE_DIRECTORY_NAME    = "caches";
 
-    /** The default input buffer size for reading cache file. */
-    private final static int DEFAULT_BUFFER_SIZE = 32768;       // 32 KB
-    /** The minimum input buffer size for reading cache file. */
-    private final static int MIN_BUFFER_SIZE = 4096;            // 4 KB
-
     //-------------------------------------------------------------------------
     // Class members
     //-------------------------------------------------------------------------
@@ -54,7 +50,7 @@ public abstract class CachingSourceImpl extends BaseSource
     private int cacheDuration;
 
     private transient File cacheFile = null;
-    private transient int bufferSize = DEFAULT_BUFFER_SIZE;
+    private transient int bufferSize = getFileBufferSize();
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -149,7 +145,8 @@ public abstract class CachingSourceImpl extends BaseSource
      *                as a number of bytes.
      */
     public void setBufferSize(int size) {
-        this.bufferSize = (size < MIN_BUFFER_SIZE)? MIN_BUFFER_SIZE: size;
+        this.bufferSize = (size < MIN_FILE_BUFFER_SIZE)?
+                                                MIN_FILE_BUFFER_SIZE: size;
     }
 
     /**

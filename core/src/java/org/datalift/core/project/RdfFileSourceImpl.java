@@ -49,6 +49,7 @@ import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.RdfFileSource;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.util.CloseableIterator;
+import org.datalift.fwk.util.Env;
 
 
 /**
@@ -107,7 +108,7 @@ public class RdfFileSourceImpl extends BaseFileSource<Statement>
         try {
             return BoundedAsyncRdfParser.parse(this.getInputStream(),
                                     this.getMimeType(), this.getSourceUrl(),
-                                    DEFAULT_STATEMENT_BUFFER_SIZE);
+                                    Env.getRdfBatchSize());
         }
         catch (IOException e) {
             throw new TechnicalException(e.getMessage(), e);
