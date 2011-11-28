@@ -45,6 +45,7 @@ import java.util.LinkedList;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.MappedSuperclass;
 import javax.persistence.OneToMany;
 
 import com.clarkparsia.empire.annotation.RdfId;
@@ -82,6 +83,7 @@ import static org.datalift.fwk.rdf.RdfNamespace.VDPP;
  * @author hdevos
  */
 @Entity
+@MappedSuperclass
 @RdfsClass("vdpp:Project")
 public class ProjectImpl extends BaseRdfEntity implements Project
 {

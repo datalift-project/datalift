@@ -51,12 +51,15 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.spi.PersistenceProvider;
 
+import com.clarkparsia.common.util.PrefixMapping;
 import com.clarkparsia.empire.Empire;
 import com.clarkparsia.empire.config.ConfigKeys;
 import com.clarkparsia.empire.config.EmpireConfiguration;
 import com.clarkparsia.empire.sesametwo.OpenRdfEmpireModule;
 import com.clarkparsia.empire.sesametwo.RepositoryFactoryKeys;
-import com.clarkparsia.utils.NamespaceUtils;
+
+import javassist.ClassClassPath;
+import javassist.ClassPool;
 
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.LifeCycle;
@@ -123,8 +126,10 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         if (this.emf != null) {
             if (this.entityMgr != null) {
                 this.entityMgr.close();
+                this.entityMgr = null;
             }
             this.emf.close();
+            this.emf = null;
         }
     }
 
@@ -383,6 +388,10 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     /** {@inheritDoc} */
     @Override
     public void addPersistentClasses(Collection<Class<?>> classes) {
+        if (this.entityMgr != null) {
+            // Too late! empire is already started.
+            throw new IllegalStateException("Already started");
+        }
         this.classes.addAll(classes);
     }
 
@@ -407,7 +416,11 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
      * @param  ns   the RDF namespace to add.
      */
     public void registerRdfNamespace(RdfNamespace ns) {
-        NamespaceUtils.addNamespace(ns.prefix, ns.uri);
+        if (this.entityMgr != null) {
+            // Too late! empire is already started.
+            throw new IllegalStateException("Already started");
+        }
+        PrefixMapping.GLOBAL.addMapping(ns.prefix, ns.uri);
     }
 
     /**
@@ -467,6 +480,13 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         Map<String,String> props = empireCfg.getGlobalConfig();
         props.put(CustomAnnotationProvider.ANNOTATED_CLASSES_PROP,
                   join(this.classes, ",").replace("class ", ""));
+        // Register the path of each persistent class to Javassist bytecode
+        // generation tool (otherwise object instantiation will fail in
+        // multi-classloader environments (such as web apps)).
+        ClassPool cp = ClassPool.getDefault();
+        for (Class<?> c : this.classes) {
+            cp.insertClassPath(new ClassClassPath(c));
+        }
         // Initialize Empire.
         Empire.init(empireCfg, new OpenRdfEmpireModule());
         // Configure target repository.
