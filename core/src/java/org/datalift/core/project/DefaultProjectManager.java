@@ -288,6 +288,15 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         }
         // Remove source from project.
         Project p = source.getProject();
+        String srcId = source.getUri();
+        for (Source s : p.getSources()) {
+            if (s instanceof TransformedRdfSource) {
+                TransformedRdfSource trs = (TransformedRdfSource)s;
+                if (trs.getParent().getUri().equals(srcId)) {
+                    trs.setParent(null);
+                }
+            }
+        }
         p.remove(source);
         this.saveProject(p);
         // Release source resources (files, caches...).

@@ -142,6 +142,12 @@ public class TransformedRdfSourceImpl extends BaseSource
 
     /** {@inheritDoc} */
     @Override
+    public void setParent(Source parent) {
+        this.parent = parent;
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public CloseableIterator<Statement> iterator() {
         final RepositoryConnection cnx = Configuration.getDefault()
                                                       .getInternalRepository()
@@ -217,9 +223,5 @@ public class TransformedRdfSourceImpl extends BaseSource
         if (this.getTitle() == null) {
             this.setTitle("<" + targetGraph + '>');
         }
-    }
-
-    public void setParent(Source parent) {
-        this.parent = parent;
     }
 }

@@ -56,4 +56,10 @@ public interface TransformedRdfSource extends RdfSource
      * @return the parent source.
      */
     public Source getParent();
+
+    /**
+     * Sets the parent source object.
+     * @param  parent   the parent source object.
+     */
+    public void setParent(Source parent);
 }

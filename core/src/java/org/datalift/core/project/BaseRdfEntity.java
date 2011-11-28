@@ -35,10 +35,13 @@
 package org.datalift.core.project;
 
 
+import javax.persistence.MappedSuperclass;
+
 import com.clarkparsia.empire.SupportsRdfId;
 import com.clarkparsia.empire.annotation.SupportsRdfIdImpl;
 
 
+@MappedSuperclass
 public abstract class BaseRdfEntity implements SupportsRdfId
 {
     //-------------------------------------------------------------------------
