@@ -387,8 +387,11 @@ public class Workspace extends BaseModule
                 s.delete();
             }
             this.projectManager.deleteProject(p);
-
-            response = this.displayIndexPage(Response.ok(), null).build();
+            // Notify user of successful deletion, redirecting HTML clients
+            // (browsers) to the project page.
+            URI targetUri = uriInfo.getBaseUriBuilder()
+                                   .path(PROJECT_URI_PREFIX).build();
+            response = Response.seeOther(targetUri).build();
         }
         catch (Exception e) {
             this.handleInternalError(e, "Failed to delete project {}", uri);
