@@ -124,7 +124,7 @@ public class DefaultConfiguration extends Configuration
      */
     private VersatileProperties props = new VersatileProperties();
     /** The configured repositories. */
-    private final Map<String,Repository> repositories;
+    private Map<String,Repository> repositories;
     /** The private (i.e. accessible to server modules only) file storage. */
     private final File privateStorage;
     /** The public (i.e. remotely accessible) file storage. */
@@ -152,7 +152,6 @@ public class DefaultConfiguration extends Configuration
      */
     public DefaultConfiguration(Properties props) {
         this.props          = this.loadConfiguration(props);
-        this.repositories   = this.initRepositories();
         this.modulesPath    = this.initLocalPath(MODULES_PATH, false);
         this.privateStorage = this.initLocalPath(PRIVATE_STORAGE_PATH, true);
         this.publicStorage  = this.initLocalPath(PUBLIC_STORAGE_PATH, false);
@@ -402,17 +401,44 @@ public class DefaultConfiguration extends Configuration
 
     /**
      * Reads the configuration for the RDF stores and initializes them.
-     * @return the configured {@link Repository repositories}.
      * @throws TechnicalException if any error occurred initializing
      *         one of the repositories.
      */
-    private Map<String,Repository> initRepositories() {
-        // Load all available repository factories.
+    protected void initRepositories(Collection<PackageDesc> packages) {
+        // Use an ordered collection to consider the default (core) factories
+        // only when all third-party factories have failed.
         Collection<RepositoryFactory> factories =
-                                            this.loadRepositoryFactories();
+                                            new LinkedList<RepositoryFactory>();
+        // Get default (core-provided) repository factories.
+        Collection<RepositoryFactory> defaultFactories =
+                this.loadRepositoryFactories(this.getClass().getClassLoader());
+        // Build the list of factory classes to ignore.
+        Collection<Class<?>> defaultClasses = new HashSet<Class<?>>();
+        for (RepositoryFactory f : defaultFactories) {
+            defaultClasses.add(f.getClass());
+        }
+        // Load available repository factories from third-party packages,
+        // ignoring default (core-provided) ones, retrieved through
+        // classloader parentage.
+        if ((packages != null) && (! packages.isEmpty())) {
+            for (PackageDesc p : packages) {
+                // Find non-default third-party repository factories.
+                for (RepositoryFactory f :
+                                this.loadRepositoryFactories(p.classLoader)) {
+                    if (! defaultClasses.contains(f.getClass())) {
+                        log.debug("Found repository connector {} from {}",
+                                        f.getClass().getSimpleName(), p.root);
+                        factories.add(f);
+                    }
+                }
+            }
+        }
+        // Append default factories.
+        factories.addAll(defaultFactories);
+
         // Preserve repository configuration declaration order.
         Map<String,Repository> m = new LinkedHashMap<String,Repository>();
-
+        // Connect repositories.
         for (String name : this.getConfigurationEntry(REPOSITORY_URIS, true)
                                .split("\\s*,\\s*")) {
             if (name.length() == 0) continue;           // Ignore...
@@ -463,20 +489,23 @@ public class DefaultConfiguration extends Configuration
             log.fatal(error.getMessage());
             throw error;
         }
-        return Collections.unmodifiableMap(m);
+        this.repositories = Collections.unmodifiableMap(m);
     }
 
     /**
      * Loads all available {@link RepositoryFactory} classes using the
-     * Java {@link ServiceLoader service provider} mechanism. 
+     * Java {@link ServiceLoader service provider} mechanism.
+     * @param  cl   the classloader to scan for factories.
+     *
      * @return the available repository factories.
      */
-    private Collection<RepositoryFactory> loadRepositoryFactories() {
+    private Collection<RepositoryFactory> loadRepositoryFactories(
+                                                            ClassLoader cl) {
         Collection<RepositoryFactory> factories =
                                         new LinkedList<RepositoryFactory>();
-        // Make a fault-tolerant loading of listed factories.
+        // Make a fault-tolerant loading of available factories.
         Iterator<RepositoryFactory> i =
-                        ServiceLoader.load(RepositoryFactory.class).iterator();
+                    ServiceLoader.load(RepositoryFactory.class, cl).iterator();
         boolean hasNext = true;
         do {
             try {

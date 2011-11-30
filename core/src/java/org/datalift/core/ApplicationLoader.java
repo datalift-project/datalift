@@ -239,10 +239,15 @@ public class ApplicationLoader extends LogServletContextListener
 
         try {
             // Load application configuration.
-            Configuration cfg = this.loadConfiguration(props);
+            DefaultConfiguration cfg = this.loadConfiguration(props);
             Configuration.setDefault(cfg);
-            // Load available application modules.
-            this.loadModules(cfg);
+            // Find available third-party modules.
+            Collection<PackageDesc> packages = this.findPackages(cfg);
+            // Initialize RDF store connections
+            // (connectors may be provided as part of third-party modules).
+            cfg.initRepositories(packages);
+            // Load modules form third-party packages.
+            this.loadModules(packages);
             // Initialize resources.
             // First initialization step.
             this.components.add(
@@ -282,7 +287,7 @@ public class ApplicationLoader extends LogServletContextListener
      *         found configuration file(s).
      * @throws TechnicalException if any error occurred.
      */
-    protected Configuration loadConfiguration(Properties props) {
+    protected DefaultConfiguration loadConfiguration(Properties props) {
         return new DefaultConfiguration(props);
     }
 
@@ -404,10 +409,9 @@ public class ApplicationLoader extends LogServletContextListener
         }
     }
 
-    private void loadModules(Configuration cfg) {
-        this.modules.clear();
-        // Load modules embedded in web application first (if any).
-        this.loadModules(this.getClass().getClassLoader(), null);
+    private Collection<PackageDesc> findPackages(Configuration cfg) {
+        Collection<PackageDesc> packages = new LinkedList<PackageDesc>();
+
         // Load third-party module bundles.
         if (cfg.getModulesPath() != null) {
             List<File> l = Arrays.asList(cfg.getModulesPath().listFiles(
@@ -419,35 +423,37 @@ public class ApplicationLoader extends LogServletContextListener
                         }
                     }));
             Collections.sort(l);
-            for (File m : l) {
-                try {
-                    this.loadModules(m);
-                }
-                catch (Exception e) {
-                    log.fatal("Failed to load modules from {}. Skipping...",
-                              e, m.getName());
-                    // Continue with next module.
-                }
+            for (File f : l) {
+                packages.add(new PackageDesc(new URLClassLoader(
+                                        this.getModulePaths(f),
+                                        this.getClass().getClassLoader()), f));
             }
         }
+        return packages;
     }
 
-    /**
-     * Loads a DataLift module from the specified path and registers it.
-     * @param  f   the directory or JAR file for the module.
-     *
-     * @throws TechnicalException if any error occurred while loading
-     *         or configuring the module.
-     */
-    private void loadModules(File f) {
-        log.info("Loading module(s) from: {}", f);
-        try {
-            this.loadModules(new URLClassLoader(this.getModulePaths(f),
-                                        this.getClass().getClassLoader()), f);
-        }
-        catch (Exception e) {
-            throw new TechnicalException("module.load.error", e,
-                                         f.getName(), e.getMessage());
+    private void loadModules(Collection<PackageDesc> packages) {
+        this.modules.clear();
+        // Load modules embedded in web application first (if any).
+        this.loadModules(this.getClass().getClassLoader(), null);
+        // Load third-party packages.
+        for (PackageDesc p : packages) {
+            File f = p.root;
+            try {
+                log.debug("Loading modules from: {}", f);
+                try {
+                    this.loadModules(p.classLoader, f);
+                }
+                catch (Exception e) {
+                    throw new TechnicalException("module.load.error", e,
+                                                 f.getName(), e.getMessage());
+                }
+            }
+            catch (Exception e) {
+                log.fatal("Failed to load modules from {}. Skipping...",
+                          e, f.getName());
+                // Continue with next module.
+            }
         }
     }
 
@@ -461,40 +467,34 @@ public class ApplicationLoader extends LogServletContextListener
     private void loadModules(ClassLoader cl, File f) {
         Configuration cfg = Configuration.getDefault();
 
-        for (Module m : ServiceLoader.load(Module.class, cl)) {
-            String name = m.getName();
-            // Initialize module.
-            Object[] prevCtx = LogContext.pushContexts(name, "init");
-            try {
+        Object[] prevCtx = null;
+        if (f != null) {
+            prevCtx = LogContext.pushContexts(f.getName(), "init");
+        }
+        try {
+            for (Module m : ServiceLoader.load(Module.class, cl)) {
+                String name = m.getName();
+                // Initialize module.
                 m.init(cfg);
+                // Register module root (directory or JAR file) as
+                // a Velocity template source, if available.
+                if (f != null) {
+                    VelocityTemplateProcessor.addModule(name, f);
+                }
+                // Make module available thru the Configuration object.
+                cfg.registerBean(m);
+                cfg.registerBean(name, m);
+                // Publish module REST resources.
+                ModuleDesc desc = new ModuleDesc(m, cl, f);
+                this.modules.put(name, desc);
+                // Notify module registration.
+                log.info("Registered module \"{}\" with path \"{}\"",
+                                            m.getClass().getSimpleName(), name);
             }
-            finally {
+        }
+        finally {
+            if (prevCtx != null) {
                 LogContext.pushContexts(prevCtx[0], prevCtx[1]);
-            }
-            // Register module root (directory or JAR file) as
-            // a Velocity template source, if available.
-            if (f != null) {
-                VelocityTemplateProcessor.addModule(name, f);
-            }
-            // Make module available thru the Configuration object.
-            cfg.registerBean(m);
-            cfg.registerBean(name, m);
-            // Publish module REST resources.
-            ModuleDesc desc = new ModuleDesc(m, f, cl);
-            this.modules.put(name, desc);
-            // Notify module registration.
-            int resourceCount = desc.ressourceClasses.size();
-            if (desc.isResource) {
-                resourceCount++;
-            }
-            if (resourceCount > 0) {
-                log.info("Registered module \"{}\" as \"{}\" ({} resource(s))",
-                                        m.getClass().getSimpleName(),
-                                        name, Integer.valueOf(resourceCount));
-            }
-            else {
-                log.info("Registered module \"{}\" as \"{}\"",
-                                        m.getClass().getSimpleName(), name);
             }
         }
     }
@@ -527,27 +527,28 @@ public class ApplicationLoader extends LogServletContextListener
     private URL[] getModulePaths(File path) {
         List<URL> urls = new LinkedList<URL>();
 
+        String srcName = path.getName();
         if (path.isDirectory()) {
             // Add module root directory.
-            urls.add(this.getFileUrl(path));
+            urls.add(this.getFileUrl(path, srcName));
             // Look for module classes as a directory tree.
             File classesDir = new File(path, MODULE_CLASSES_DIR);
             if (classesDir.isDirectory()) {
-                urls.add(this.getFileUrl(classesDir));
+                urls.add(this.getFileUrl(classesDir, srcName));
             }
             // Look for root-level JAR files.
             for (File jar : path.listFiles(jarFilter)) {
-                urls.add(this.getFileUrl(jar));
+                urls.add(this.getFileUrl(jar, srcName));
             }
             // Look for module dependencies as library JAR files.
             File libDir = new File(path, MODULE_LIB_DIR);
             if (classesDir.isDirectory()) {
-                urls.addAll(this.findFiles(libDir, jarFilter));
+                urls.addAll(this.findFiles(libDir, jarFilter, srcName));
             }
         }
         else {
             // JAR file. => Add the JAR file itself to the classpath.
-            urls.add(this.getFileUrl(path));
+            urls.add(this.getFileUrl(path, srcName));
         }
         return urls.toArray(new URL[urls.size()]);
     }
@@ -556,31 +557,34 @@ public class ApplicationLoader extends LogServletContextListener
      * Scans a directory tree and returns the files matching the
      * specified filter.
      * @param  root     the root of directory tree.
-     * @param  filter   the file filer.
+     * @param  filter   the file filter.
+     * @param  source   the source package name.
      *
      * @return the URLs of the matched files.
      */
-    private Collection<URL> findFiles(File root, FileFilter filter) {
-        return this.findFiles(root, filter, new LinkedList<URL>());
+    private Collection<URL> findFiles(File root,
+                                      FileFilter filter, String source) {
+        return this.findFiles(root, filter, source, new LinkedList<URL>());
     }
 
     /**
      * Recursively scans a directory tree and returns the files
      * matching the specified filter.
      * @param  root      the root of directory tree.
-     * @param  filter    the file filer.
+     * @param  filter    the file filter.
+     * @param  source    the source package name.
      * @param  results   the collection to append the matched files to.
      *
      * @return the <code>results</code> collection updated with the
      *         matched files.
      */
     private Collection<URL> findFiles(File root, FileFilter filter,
-                                                 Collection<URL> results) {
+                                      String source, Collection<URL> results) {
         List<File> dirs = new LinkedList<File>();
         // Scan first-level directory content.
         for (File f : root.listFiles()) {
             if (filter.accept(f)) {
-                results.add(this.getFileUrl(f));
+                results.add(this.getFileUrl(f, source));
             }
             else if ((f.isDirectory()) && (f.canRead())) {
                 // Child directory not handled by filter.
@@ -591,7 +595,7 @@ public class ApplicationLoader extends LogServletContextListener
         }
         // Recursively scan child directories.
         for (File child : dirs) {
-            this.findFiles(child, filter, results);
+            this.findFiles(child, filter, source, results);
         }
         return results;
     }
@@ -599,13 +603,14 @@ public class ApplicationLoader extends LogServletContextListener
     /**
      * Returns the URL of the specified file, compliant with the
      * requirements of {@link URLClassLoader#URLClassLoader(URL[])}.
-     * @param  f   the file or directory to convert.
+     * @param  f        the file or directory to convert.
+     * @param  source   the source package name.
      *
      * @return the URL of the file.
      * @throws TechnicalException if <code>f</code> if neither a
      *         regular file nor a directory.
      */
-    private URL getFileUrl(File f) {
+    private URL getFileUrl(File f, String source) {
         URL u = null;
         try {
             if (f.isFile()) {
@@ -626,7 +631,7 @@ public class ApplicationLoader extends LogServletContextListener
             // Should never happen...
             throw new UnsupportedOperationException(e.getMessage(), e);
         }
-        log.debug("Added resource \"{}\" to module classpath", u);
+        log.trace("Added resource \"{}\" to package {} classpath", u, source);
         return u;
     }
 }

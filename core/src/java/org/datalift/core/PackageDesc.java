@@ -36,84 +36,66 @@ package org.datalift.core;
 
 
 import java.io.File;
-import java.util.Collections;
-import java.util.Map;
-import java.util.TreeMap;
-
-import org.datalift.fwk.Module;
 
 
 /**
- * A descriptor for a registered module that acts as a cache for
- * module-provided data.
+ * A descriptor for a DataLift package, i.e. the file system artifact
+ * that contains DataLift modules or components.
  *
  * @author lbihanic
  */
-/* package */ final class ModuleDesc extends PackageDesc
+/* package */ class PackageDesc
 {
     //-------------------------------------------------------------------------
     // Instance members
     //-------------------------------------------------------------------------
 
-    /** The module name. */
-    public final String name;
-    /** The module instance. */
-    public final Module module;
-    /** The module sub-resources. */
-    public final Map<String,Class<?>> ressourceClasses;
-    /** Whether the module main class is itself a JAX-RS resource. */
-    public final boolean isResource;
+    /** The classloader for the package. */
+    public final ClassLoader classLoader;
+    /**
+     * The file or directory of the package, or <code>null</code> if
+     * classes are loaded directly from the DataLift WAR.
+     */
+    public final File root;
 
     //-------------------------------------------------------------------------
     // Constructors
     //-------------------------------------------------------------------------
 
     /**
-     * Creates a new module descriptor.
-     * @param  module        the module.
+     * Creates a new package descriptor.
      * @param  classLoader   the classloader for the module.
-     * @param  root          the file or directory from which the module
-     *                       was loaded, or <code>null</code> if the
-     *                       module was loaded from the DataLift WAR.
+     * @param  root          the file or directory of the package, or
+     *                       <code>null</code> if classes are loaded
+     *                       directly from the DataLift WAR.
      *
-     * @throws IllegalArgumentException if either <code>module</code>
-     *         of <code>classLoader</code> is <code>null</code>.
+     * @throws IllegalArgumentException if <code>classLoader</code> is
+     *         <code>null</code>.
      */
-    public ModuleDesc(Module module, ClassLoader classLoader, File root) {
-        super(classLoader, root);
-
-        if (module == null) {
-            throw new IllegalArgumentException("module");
+    public PackageDesc(ClassLoader classLoader, File root) {
+        if (classLoader == null) {
+            throw new IllegalArgumentException("classLoader");
         }
-        this.module      = module;
-        this.name        = module.getName();
-        Map<String,Class<?>> resources = new TreeMap<String,Class<?>>();
-        Map<String,Class<?>> r = module.getResources();
-        if (r != null) {
-            resources.putAll(r);
-        }
-        this.ressourceClasses = Collections.unmodifiableMap(resources);
-        this.isResource = module.isResource();
+        this.root        = root;
+        this.classLoader = classLoader;
     }
 
     //-------------------------------------------------------------------------
-    // ModuleDesc contract definition
+    // PackageDesc contract definition
     //-------------------------------------------------------------------------
 
     /**
-     * Returns the resource associated to the specified path
-     * @param  path   the resource path.
-     *
-     * @return the resource associated to the specified path or
-     *         <code>null</code> if none matches.
+     * Returns whether the module was loaded from a JAR file.
+     * @return <code>true</code> if the module was loaded from its
+     *         own JAR file; <code>false</code> otherwise.
      */
-    public Class<?> get(String  path) {
-        return this.ressourceClasses.get( path);
+    public boolean isJarPackage() {
+        return ((this.root != null) && (this.root.isFile()));
     }
 
     /** {@inheritDoc} */
     @Override
     public String toString() {
-        return this.name;
+        return this.getClass().getSimpleName() + " { " + this.root + " }";
     }
 }
