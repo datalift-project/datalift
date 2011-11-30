@@ -549,6 +549,7 @@ public class Workspace extends BaseModule
         }
         Response response = null;
 
+        File storagePath = null;
         String fileName = fileDisposition.getFileName();
         log.debug("Processing CSV source creation request for {}", fileName);
         try {
@@ -562,7 +563,7 @@ public class Workspace extends BaseModule
             Project p = this.loadProject(projectUri);
             // Save new source data to public project storage.
             String filePath = this.getProjectFilePath(projectId, fileName);
-            File storagePath = this.getFileStorage(filePath);
+            storagePath = this.getFileStorage(filePath);
             fileCopy(file, storagePath);
 
             Separator sep = Separator.valueOf(separator);
@@ -593,7 +594,9 @@ public class Workspace extends BaseModule
             log.info("New CSV source \"{}\" created", sourceUri);
         }
         catch (IOException e) {
-            this.throwInvalidParamError(fileName, e.getLocalizedMessage());
+            this.handleInternalError(e,
+                            "Failed to save source file {} to \"{}\"",
+                                                        fileName, storagePath);
         }
         catch (Exception e) {
             this.handleInternalError(e,
@@ -659,6 +662,7 @@ public class Workspace extends BaseModule
         }
         Response response = null;
 
+        File storagePath = null;
         String fileName = fileDisposition.getFileName();
         log.debug("Processing RDF source creation request for {}", fileName);
         try {
@@ -672,7 +676,7 @@ public class Workspace extends BaseModule
             Project p = this.loadProject(projectUri);
             // Save new source to public project storage.
             String filePath = this.getProjectFilePath(projectId, fileName);
-            File storagePath = this.getFileStorage(filePath);
+            storagePath = this.getFileStorage(filePath);
             fileCopy(file, storagePath);
             // Initialize new source.
             RdfFileSource src = this.projectManager.newRdfSource(p,
@@ -699,7 +703,9 @@ public class Workspace extends BaseModule
             log.info("New RDF source \"{}\" created", sourceUri);
         }
         catch (IOException e) {
-            this.throwInvalidParamError(fileName, e.getLocalizedMessage());
+            this.handleInternalError(e,
+                            "Failed to save source file {} to \"{}\"",
+                                                        fileName, storagePath);
         }
         catch (Exception e) {
             this.handleInternalError(e,
@@ -1455,6 +1461,8 @@ public class Workspace extends BaseModule
                 out.write(buffer, 0, l);
             }
             out.flush();
+            out.close();
+            out = null;
         }
         catch (IOException e) {
             dest.delete();
