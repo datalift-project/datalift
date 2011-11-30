@@ -231,6 +231,11 @@ public class DOMConfigurator2 extends DOMConfigurator
     public final static String VALIDATE_CONFIGURATION_KEY =
                                             "log4j.validateConfiguration";
 
+    // Log4J DTD name and path.
+    private final static String LOG4J_DTD_NAME = "log4j.dtd";
+    private final static String LOG4J_DTD_PATH =
+                                    "org/apache/log4j/xml/" + LOG4J_DTD_NAME;
+
     // XML tag local and namespace-qualified names.
     private final static String NEW_CONFIGURATION_TAG   = "configuration";
     private final static String THROWABLE_RENDERER_TAG  = "throwableRenderer";
@@ -1411,44 +1416,48 @@ public class DOMConfigurator2 extends DOMConfigurator
 
             String localId = null;
             boolean configFile = false;
-            // Substitute variable references if any. Check out for
-            // URL escape sequences in replacement of curly braces.
-            final String vars = systemId.replace("%7B", "{")
-                                        .replace("%7D", "}");
-            if (! vars.equals(systemId)) {
-                // Try to resolve variables.
-                String resolved = subst(vars);
-                if (! resolved.equals(vars)) {
-                    // Substitutions occurred. => Use resolved system id.
-                    systemId = resolved;
+            try {
+                // Substitute variable references if any. Check out for
+                // URL escape sequences in replacement of curly braces.
+                final String vars = systemId.replace("%7B", "{")
+                                            .replace("%7D", "}");
+                if (! vars.equals(systemId)) {
+                    // Try to resolve variables.
+                    String resolved = subst(vars);
+                    if (! resolved.equals(vars)) {
+                        // Substitutions occurred. => Use resolved system id.
+                        systemId = resolved;
+                    }
+                }
+                // Check for Log4J DTD and schema first. 
+                if (LOG4J_XSD_PATTERN.matcher(systemId).matches()) {
+                    // Log4J configuration schema.
+                    localId = LOG4J_XSD_PATH;
+                }
+                else if ((systemId.endsWith(LOG4J_DTD_NAME)) ||
+                         ("-//APACHE//DTD LOG4J 1.2//EN".equals(publicId))) {
+                    // Log4J configuration schema.
+                    localId = LOG4J_DTD_PATH;
+                }
+                // Check for URLs.
+                else if (systemId.startsWith(CLASSPATH_URI_SCHEME)) {
+                    // Classpath URI, not handled by XInclude processors.
+                    configFile = true;
+                    localId = systemId.substring(CLASSPATH_URI_SCHEME.length());
+                }
+                else if (systemId.startsWith(FILE_URI_SCHEME)) {
+                    // File URI: handled to manage configuration reload.
+                    configFile = true;
+                    localId = systemId.substring(FILE_URI_SCHEME.length());
+                }
+                else {
+                    // Assume local file.
+                    configFile = true;
+                    localId = systemId;
                 }
             }
-            // Check for Log4J DTD and schema first. 
-            if (LOG4J_XSD_PATTERN.matcher(systemId).matches()) {
-                // Log4J configuration schema.
-                localId = LOG4J_XSD_PATH;
-            }
-            else if ((systemId.endsWith("log4j.dtd")) ||
-                     ("-//APACHE//DTD LOG4J 1.2//EN".equals(publicId))) {
-                // Log4J configuration schema.
-                localId = "org/apache/log4j/xml/log4j.dtd";
-            }
-            // Check for URLs.
-            else if (systemId.startsWith(CLASSPATH_URI_SCHEME)) {
-                // Classpath URI, not handled by XInclude processors.
-                configFile = true;
-                localId = systemId.substring(CLASSPATH_URI_SCHEME.length());
-            }
-            else if (systemId.startsWith(FILE_URI_SCHEME)) {
-                // File URI: handled to manage configuration reload.
-                configFile = true;
-                localId = systemId.substring(FILE_URI_SCHEME.length());
-            }
-            else {
-                // Assume local file.
-                configFile = true;
-                localId = systemId;
-            }
+            catch (Exception e) { /* Ignore... */ }
+
             // Try to resolve resource. 
             if (localId != null) {
                 URL resolved = findResource(localId);
