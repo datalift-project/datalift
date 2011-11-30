@@ -276,14 +276,6 @@
 
   <target name="compile" depends="prepare"
                          description="Compiles Java sources">
-    <!-- Compile optional repository wrappers only if
-         the corresponding driver classes is present -->
-    <available property="virtuoso.present"
-              classname="virtuoso.sesame2.driver.VirtuosoRepository"
-           classpathref="compile.classpath"/>
-    <available property="allegrograph.present"
-              classname="com.franz.agraph.repository.AGServer"
-           classpathref="compile.classpath"/>
     <!-- Compile Java classes -->
     <javac srcdir="${src.home}"
           destdir="${classes.dir}"
@@ -292,8 +284,6 @@
       deprecation="${compile.deprecation}"
          optimize="${compile.optimize}">
       <classpath refid="compile.classpath"/>
-      <exclude name="**/Virtuoso*"     unless="virtuoso.present"/>
-      <exclude name="**/AllegroGraph*" unless="allegrograph.present"/>
     </javac>
     <!-- Copy application resources -->
     <copy todir="${classes.dir}" includeEmptyDirs="false"
