@@ -3,7 +3,7 @@ In order to run silk-sample in datalift, the following steps should be done:
 2. compile datalift
 3. create a folder named "silk" in datalift-home/modules
 4. put the silk-sample.jar in datalift-home/modules/silk
-5. download sesame 2.6.0, put openrdf-sesame.war and openrdf-workbench.war into tomcat/webapps
+5. download sesame 2.6.1, put openrdf-sesame.war and openrdf-workbench.war into tomcat/webapps
 6. restart tomcat
 7. go to http://localhost:8080/datalift/workspace and create a project
 8. go to http://localhost:8080/datalift/sparql and query by
