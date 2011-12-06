@@ -37,7 +37,9 @@
 	<form method="post" action="$target_csv" enctype="multipart/form-data" class="form_formated">
 #if(!$current)
 		<p>#i18n("project.upload_csv") $esc.html($it.getTitle())</p>
-		<p><input type="file" name="source" size="64"/></p>
+		<p><input type="file" name="source" size="64"/><br />
+		<label for="file_url">#i18n("project.upload_source.file_url"): </label>
+		<input type="text" id="file_url" name="file_url"/></p>
 #else
 		<input type="hidden" name="current_source" value="$current.uri"/>
 #end
@@ -70,7 +72,9 @@
 	<form method="post" action="$target_rdf" enctype="multipart/form-data" class="form_formated">
 #if (!$current)
 		<p>#i18n("project.upload_rdf") $esc.html($it.getTitle())</p>
-		<p><input type="file" name="source" size="64"/></p>
+		<p><input type="file" name="source" size="64"/><br />
+		<label for="file_url">#i18n("project.upload_source.file_url"): </label>
+		<input type="text" id="file_url" name="file_url"/></p>
 #else
 		<input type="hidden" id="current_source" name="current_source" value="$current.uri"/>
 #end

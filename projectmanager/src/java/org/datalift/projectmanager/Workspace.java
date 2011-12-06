@@ -36,10 +36,8 @@ package org.datalift.projectmanager;
 
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.URI;
 import java.net.URL;
 import java.util.Arrays;
@@ -103,6 +101,7 @@ import org.datalift.fwk.project.ProjectModule.UriDesc;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.sparql.SparqlEndpoint;
 import org.datalift.fwk.util.CloseableIterator;
+import org.datalift.fwk.util.io.FileUtils;
 
 import static org.datalift.fwk.MediaTypes.*;
 import static org.datalift.fwk.util.StringUtils.*;
@@ -115,7 +114,7 @@ import static org.datalift.fwk.util.StringUtils.*;
  *
  * @author hdevos
  */
-@Path("/" + Workspace.PROJECT_URI_PREFIX)
+@Path(Workspace.PROJECT_URI_PREFIX)
 public class Workspace extends BaseModule
 {
     //-------------------------------------------------------------------------
@@ -534,23 +533,42 @@ public class Workspace extends BaseModule
     public Response uploadCsvSource(
                             @PathParam("id") String projectId,
                             @FormDataParam("description") String description,
-                            @FormDataParam("source") InputStream file,
+                            @FormDataParam("source") InputStream fileData,
                             @FormDataParam("source")
-                            FormDataContentDisposition fileDisposition,
+                                    FormDataContentDisposition fileDisposition,
+                            @FormDataParam("file_url") String sourceUrl,
                             @FormDataParam("separator") String separator,
                             @FormDataParam("title_row") String titleRow,
                             @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
-        if (file == null) {
-            this.throwInvalidParamError("source", null);
-        }
         if (!isSet(separator)) {
             this.throwInvalidParamError("separator", separator);
         }
         Response response = null;
 
-        File storagePath = null;
-        String fileName = fileDisposition.getFileName();
+        String fileName = null;
+        URL fileUrl = null;
+        if (! isBlank(sourceUrl)) {
+            // Not uploaded data. => A file URL must be provided.
+            try {
+                fileUrl = new URL(sourceUrl);
+                fileName = this.extractFileName(fileUrl, "csv");
+                // Reset input stream to force downloading data from URL.
+                fileData = null;
+            }
+            catch (Exception e) {
+                // Conversion of source base URI to URL failed.
+                this.throwInvalidParamError("file_url", null);
+            }
+        }
+        else {
+            fileName = fileDisposition.getFileName();
+            if (isBlank(fileName)) {
+                this.throwInvalidParamError("source", null);
+            }
+        }
+        // Else: File data have been uploaded.
+
         log.debug("Processing CSV source creation request for {}", fileName);
         try {
             // Build object URIs from request path.
@@ -563,24 +581,28 @@ public class Workspace extends BaseModule
             Project p = this.loadProject(projectUri);
             // Save new source data to public project storage.
             String filePath = this.getProjectFilePath(projectId, fileName);
-            storagePath = this.getFileStorage(filePath);
-            fileCopy(file, storagePath);
+            this.getFileData(fileData, fileUrl,
+                                       this.getFileStorage(filePath), uriInfo);
 
             Separator sep = Separator.valueOf(separator);
             boolean hasTitleRow = ((titleRow != null) &&
                                    (titleRow.toLowerCase().equals("on")));
             // Initialize new source.
             CsvSource src = this.projectManager.newCsvSource(p, sourceUri,
-                                                fileName, description, filePath,
-                                                sep.getValue(), hasTitleRow);
+                                        fileName, description,
+                                        filePath, sep.getValue(), hasTitleRow);
             // Iterate on source content to validate uploaded file.
             int n = 0;
             CloseableIterator<?> i = src.iterator();
             try {
                 for (; i.hasNext(); ) {
                     n++;
+                    if (n > 1000) break;        // 1000 lines is enough!
                     i.next();   // Throws TechnicalException if data is invalid.
                 }
+            }
+            catch (Exception e) {
+                throw new IOException("Invalid or empty source data", e);
             }
             finally {
                 i.close();
@@ -594,9 +616,10 @@ public class Workspace extends BaseModule
             log.info("New CSV source \"{}\" created", sourceUri);
         }
         catch (IOException e) {
-            this.handleInternalError(e,
-                            "Failed to save source file {} to \"{}\"",
-                                                        fileName, storagePath);
+            String src = (fileData != null)? fileName:
+                        (fileUrl != null)? fileUrl.toString(): "file_url";
+            log.fatal("Failed to save source data from {}", e, src);
+            this.throwInvalidParamError(src, e.getLocalizedMessage());
         }
         catch (Exception e) {
             this.handleInternalError(e,
@@ -651,19 +674,41 @@ public class Workspace extends BaseModule
                             @PathParam("id") String projectId,
                             @FormDataParam("description") String description,
                             @FormDataParam("base_uri") URI baseUri,
-                            @FormDataParam("source") InputStream file,
+                            @FormDataParam("source") InputStream fileData,
                             @FormDataParam("source")
-                            FormDataContentDisposition fileDisposition,
+                                    FormDataContentDisposition fileDisposition,
+                            @FormDataParam("file_url") String sourceUrl,
                             @FormDataParam("mime_type") String mimeType,
                             @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
-        if (file == null) {
+        if (fileData == null) {
             this.throwInvalidParamError("source", null);
         }
         Response response = null;
 
-        File storagePath = null;
-        String fileName = fileDisposition.getFileName();
+        String fileName = null;
+        URL fileUrl = null;
+        if (! isBlank(sourceUrl)) {
+            // Not uploaded data. => A file URL must be provided.
+            try {
+                fileUrl = new URL(sourceUrl);
+                fileName = this.extractFileName(fileUrl, "rdf");
+                // Reset input stream to force downloading data from URL.
+                fileData = null;
+            }
+            catch (Exception e) {
+                // Conversion of source base URI to URL failed.
+                this.throwInvalidParamError("file_url", null);
+            }
+        }
+        else {
+            fileName = fileDisposition.getFileName();
+            if (isBlank(fileName)) {
+                this.throwInvalidParamError("source", null);
+            }
+        }
+        // Else: File data have been uploaded.
+
         log.debug("Processing RDF source creation request for {}", fileName);
         try {
             // Build object URIs from request path.
@@ -674,10 +719,10 @@ public class Workspace extends BaseModule
                                     null, null);
             // Retrieve project.
             Project p = this.loadProject(projectUri);
-            // Save new source to public project storage.
+            // Save new source data to public project storage.
             String filePath = this.getProjectFilePath(projectId, fileName);
-            storagePath = this.getFileStorage(filePath);
-            fileCopy(file, storagePath);
+            this.getFileData(fileData, fileUrl,
+                                       this.getFileStorage(filePath), uriInfo);
             // Initialize new source.
             RdfFileSource src = this.projectManager.newRdfSource(p,
                                             sourceUri, fileName, description,
@@ -688,8 +733,12 @@ public class Workspace extends BaseModule
             try {
                 for (; i.hasNext(); ) {
                     n++;
+                    if (n > 100000) break;      // 100000 triples is enough!
                     i.next();   // Throws TechnicalException if data is invalid.
                 }
+            }
+            catch (Exception e) {
+                throw new IOException("Invalid or empty source data", e);
             }
             finally {
                 i.close();
@@ -703,9 +752,10 @@ public class Workspace extends BaseModule
             log.info("New RDF source \"{}\" created", sourceUri);
         }
         catch (IOException e) {
-            this.handleInternalError(e,
-                            "Failed to save source file {} to \"{}\"",
-                                                        fileName, storagePath);
+            String src = (fileData != null)? fileName:
+                        (fileUrl != null)? fileUrl.toString(): "file_url";
+            log.fatal("Failed to save source data from {}", e, src);
+            this.throwInvalidParamError(src, e.getLocalizedMessage());
         }
         catch (Exception e) {
             this.handleInternalError(e,
@@ -1377,8 +1427,14 @@ public class Workspace extends BaseModule
         return u;
     }
 
-    private File getFileStorage(String path) {
-        return new File(Configuration.getDefault().getPublicStorage(), path);
+    private File getFileStorage(String path) throws IOException {
+        File f = new File(Configuration.getDefault().getPublicStorage(), path);
+        if (! f.isFile()) {
+            if (! f.createNewFile()) {
+                throw new TechnicalException("file.create.error", f);
+            }
+        }
+        return f;
     }
 
     private String getProjectFilePath(String projectId, String fileName) {
@@ -1396,6 +1452,34 @@ public class Workspace extends BaseModule
 
     private String getSourceId(String projectUri, String sourceName) {
         return projectUri + SOURCE_PATH + urlify(sourceName);
+    }
+
+    private String extractFileName(URL url, String suffix) {
+        if (url == null) {
+            throw new IllegalArgumentException("url");
+        }
+
+        String[] elts = url.getPath().split("/");
+        String fileName = elts[elts.length-1];
+        if ((suffix != null) && (fileName.indexOf('.') == -1)) {
+            fileName += "." + suffix;
+        }
+        log.debug("{} -> {}", url, fileName);
+        return fileName;
+    }
+
+    private String isLocalFile(URL fileUrl, UriInfo uriInfo) {
+        String localPath = null;
+
+        String path = fileUrl.toString();
+        String appUrl = uriInfo.getBaseUri().toString();
+        if (path.startsWith(appUrl)) {
+            localPath = path.substring(appUrl.length());
+            if (localPath.charAt(0) == '/') {
+                localPath = localPath.substring(1);
+            }
+        }
+        return localPath;
     }
 
     /**
@@ -1448,30 +1532,33 @@ public class Workspace extends BaseModule
         }
     }
 
-    private static void fileCopy(InputStream src, File dest)
+    private void getFileData(InputStream in, URL u,
+                             File destFile, UriInfo uriInfo)
                                                         throws IOException {
-        OutputStream out = null;
-        try {
-            dest.createNewFile();
-            out = new FileOutputStream(dest);
+        if (in != null) {
+            FileUtils.save(in, destFile);
+        }
+        else {
+            // No data input stream provided. => Check for local file.
+            File f = null;
 
-            byte buffer[] = new byte[4096];
-            int l;
-            while ((l = src.read(buffer)) != -1) {
-                out.write(buffer, 0, l);
+            String localPath = this.isLocalFile(u, uriInfo);
+            if (localPath != null) {
+                f = this.getFileStorage(localPath);
             }
-            out.flush();
-            out.close();
-            out = null;
-        }
-        catch (IOException e) {
-            dest.delete();
-            throw e;
-        }
-        finally {
-            try { src.close(); } catch (Exception e) { /* Ignore... */ }
-            if (out != null) {
-                try { out.close(); } catch (Exception e) { /* Ignore... */ }
+            if ((f.isFile()) && (f.canRead())) {
+                // File has already been uploaded.
+                if (! f.equals(destFile)) {
+                    // Make a local copy to prevent data deletion.
+                    log.debug("Copying source data from \"{}\" to \"{}\"",
+                              f, destFile);
+                    FileUtils.copy(f, destFile, false);
+                }
+                // Else: already where it shall be!
+            }
+            else {
+                // Not a local file. => Download data from the provided URL.
+                FileUtils.save(u, destFile);
             }
         }
     }
