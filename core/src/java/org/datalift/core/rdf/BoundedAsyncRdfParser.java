@@ -149,12 +149,6 @@ public final class BoundedAsyncRdfParser
                                                     throws RDFHandlerException {
                                     publish(stmt);
                                 }
-
-                                @Override
-                                public void endRDF()
-                                                    throws RDFHandlerException {
-                                    publish(new EndOfParse());
-                                }
                             });
                         parser.parse(in, (baseUri != null)? baseUri: "");
                     }
@@ -162,9 +156,15 @@ public final class BoundedAsyncRdfParser
                         throw e;
                     }
                     catch (Exception e) {
-                        this.publish(new EndOfParse());
                         new TechnicalException(
                                         "rdf.parse.error", e, e.getMessage());
+                    }
+                    finally {
+                        this.publish(new EndOfParse());
+                        try {
+                            in.close();
+                        }
+                        catch (Exception e) { /* Ignore... */ }
                     }
                     return null;
                 }
@@ -214,6 +214,13 @@ public final class BoundedAsyncRdfParser
                         throw (RuntimeException)(e.getCause());
                     }
                     catch (Exception e) { /* Ignore... */ }
+                    finally {
+                        // Make sure all resources are properly released.
+                        try {
+                            in.close();
+                        }
+                        catch (Exception e) { /* Ignore... */ }
+                    }
                 }
 
                 /**
