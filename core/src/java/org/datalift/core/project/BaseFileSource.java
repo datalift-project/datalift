@@ -35,9 +35,7 @@
 package org.datalift.core.project;
 
 
-import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -50,6 +48,7 @@ import org.datalift.fwk.Configuration;
 import org.datalift.fwk.project.FileSource;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.util.StringUtils;
+import org.datalift.fwk.util.io.FileUtils;
 
 import static org.datalift.fwk.util.Env.*;
 
@@ -150,8 +149,7 @@ public abstract class BaseFileSource<T> extends BaseSource
     @Override
     public InputStream getInputStream() throws IOException {
         this.init();
-        return new BufferedInputStream(new FileInputStream(this.storage),
-                                       this.getBufferSize());
+        return FileUtils.getInputStream(this.storage, this.getBufferSize());
     }
 
     private void init() {
