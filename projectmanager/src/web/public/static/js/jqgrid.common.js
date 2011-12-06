@@ -28,6 +28,7 @@ function gridSearch(searchString) {
 
 }
 
+
 function searchAllColumns(searchString) {
 	if (searchString != "") {
 		var c = 0;
@@ -63,7 +64,7 @@ function searchOneColumn(searchString, searchColumn) {
 		searchData = gridData;
 }
 
-function htmlTableTojQGrid(lineColumn) {
+function htmlTableTojQGrid(params) {
 		getHeaderColumns();
 		jQuery.extend(jQuery.jgrid.defaults, {
 			caption: $('#searchnav').html(),
@@ -73,23 +74,17 @@ function htmlTableTojQGrid(lineColumn) {
 				caption: '#i18n("grid.search.value.label")'
 			},
 		});
-		var params = { 
+		
+		gridParams = { 
 	 			datatype: "local", 
 	 			pager: $('#pagernav'), 
 	 			rowNum: 200,
 				rowList: [50,100,200,500,1000,2000],
 		}
-		if (lineColumn == true) {
-			tableToGrid("#grid", params, {
-				colModel: [{ 
-					name: '#i18n("source.grid.row.heading")', 
-					index: '#i18n("source.grid.row.heading")', 
-					sorttype:'int', }]
-			});
+		if (params != null) {
+			gridParams = jsonConcat(params, gridParams);
 		}
-		else {
-			tableToGrid("#grid", params);
-		}
+		tableToGrid("#grid", gridParams);
 		$("#grid").trigger("reloadGrid");
 		gridData = $("#grid").getRowData();
 		// Function called when modifying search text
@@ -100,4 +95,11 @@ function htmlTableTojQGrid(lineColumn) {
 		$("#searchColumn").change(function() {
 			gridSearch($("#gridsearch").val().toLowerCase());
 		});
+}
+
+function jsonConcat(o1, o2) {
+	for ( var key in o2) {
+		o1[key] = o2[key];
+	}
+	return o1;
 }

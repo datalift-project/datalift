@@ -42,7 +42,11 @@
 	<script language="javascript" src="${baseUri}/project/static/js/jqgrid.common.js"></script>
 	<script type="text/javascript">
 		$(function() {
-			htmlTableTojQGrid(true);
+			var params = [{ 
+				name: '#i18n("source.grid.row.heading")', 
+				index: '#i18n("source.grid.row.heading")', 
+				sorttype:'int' }];
+			htmlTableTojQGrid(params);
 		});
 	</script>
 </body>
