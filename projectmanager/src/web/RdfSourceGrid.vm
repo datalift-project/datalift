@@ -2,7 +2,7 @@
 	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-#load("workspace/resources")
+#load("project/resources")
 #load_core_resources
 	<title>$!esc.html($it.title) - #i18n("source.grid.title") - DataLift</title>
 #css_links
@@ -41,7 +41,7 @@
 	</div>
 
 #script_links
-<script language="javascript" src="${baseUri}/project/jqGrid.common.js"></script>
+<script language="javascript" src="${baseUri}/project/static/js/jqgrid.common.js"></script>
 <script type="text/javascript">
 		$(function() {
 			htmlTableTojQGrid();

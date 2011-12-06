@@ -5,6 +5,7 @@ var gridHeader = new Array();
 function getHeaderColumns() {
 	var cols = $(".dl-grid-header-column");
 	for ( var i = 0; cols[i]; i++) {
+		alert(cols[i].innerHTML);
 		gridHeader[i] = normalizeHeaderName(cols[i].innerHTML);
 	}
 }
@@ -63,7 +64,7 @@ function searchOneColumn(searchString, searchColumn) {
 		searchData = gridData;
 }
 
-function htmlTableTojQGrid(csvGrid = false) {
+function htmlTableTojQGrid(lineColumn) {
 		getHeaderColumns();
 		jQuery.extend(jQuery.jgrid.defaults, {
 			caption: $('#searchnav').html(),
@@ -77,15 +78,15 @@ function htmlTableTojQGrid(csvGrid = false) {
 	 			datatype: "local", 
 	 			pager: $('#pagernav'), 
 	 			rowNum: 200,
-				rowList: [50,100,200,500,1000,2000]
-		};
-		if (csvGrid == true) {
+				rowList: [50,100,200,500,1000,2000],
+		}
+		if (lineColumn == true) {
 			params.colModel = [{ 
 				name: '#i18n("source.grid.row.heading")', 
 				index: '#i18n("source.grid.row.heading")', 
-				sorttype:'int' }];
+				sorttype:'int', }];
 		}
-	 	tableToGrid("#grid", params);
+		tableToGrid("#grid", params);
 		$("#grid").trigger("reloadGrid");
 		gridData = $("#grid").getRowData();
 		// Function called when modifying search text

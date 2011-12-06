@@ -138,12 +138,12 @@ public class Workspace extends BaseModule
     // Constants
     //-------------------------------------------------------------------------
 
-    /** The name of this module in the DataLift configuration. */
-    public final static String MODULE_NAME = "workspace";
     /** The prefix for the URI of the project objects. */
     public final static String PROJECT_URI_PREFIX = "project";
     /** The prefix for the URI of the source objects, within projects. */
     public final static String SOURCE_URI_PREFIX  = "source";
+    /** The name of this module in the DataLift configuration. */
+    public final static String MODULE_NAME = PROJECT_URI_PREFIX;
 
     /** The relative path prefix for project objects and resources. */
     private final static String REL_PROJECT_PATH = PROJECT_URI_PREFIX + '/';
@@ -528,7 +528,7 @@ public class Workspace extends BaseModule
         return response;
     }
 
-    @POST
+    @POST 
     @Path("{id}/csvupload")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     public Response uploadCsvSource(
@@ -1246,6 +1246,20 @@ public class Workspace extends BaseModule
         return response;
     }
 
+    @GET
+    @Path("static/js/{path: .*$}")
+    public Object getStaticResource(@PathParam("path") String path,
+                                    @Context UriInfo uriInfo,
+                                    @Context Request request,
+                                    @HeaderParam(ACCEPT) String acceptHdr)
+                                                throws WebApplicationException {
+    	log.debug("Going to get static resource with Path : {}", path);
+        return Configuration.getDefault()
+                            .getBean(ResourceResolver.class)
+                            .resolveModuleResource(this.getName(),
+                                                   uriInfo, request, acceptHdr);
+    }
+    
     //-------------------------------------------------------------------------
     // Specific implementation
     //-------------------------------------------------------------------------
@@ -1510,4 +1524,5 @@ public class Workspace extends BaseModule
                                     .entity(error.getMessage()).build());
         }
     }
+   
 }

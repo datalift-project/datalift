@@ -2,7 +2,7 @@
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-#load("workspace/resources")
+#load("project/resources")
 #load_core_resources
 	<title>$!esc.html($it.title) - #i18n("source.grid.title") - DataLift</title>
 #css_links
@@ -16,7 +16,6 @@
 				<th>#i18n("source.grid.row.heading")</th>
 #foreach( $i in $it.getColumnNames() )
 				<th class="dl-grid-header-column">$esc.html($i)</th>
-#set($totalHeaderColumns = $velocityCount)
 #end
 			</tr>
 		</thead>
@@ -24,7 +23,6 @@
 #foreach( $row in $it )
 			<tr><td>$velocityCount</td>
 #foreach( $i in $row ) <td>$!esc.html($i)</td> #end
-#end
 			</tr>
 #end
 		</tbody>
@@ -41,10 +39,10 @@
 	</div>
 
 #script_links
-	<script language="javascript" src="${baseUri}/project/jqGrid.common.js"></script>
+	<script language="javascript" src="${baseUri}/project/static/js/jqgrid.common.js"></script>
 	<script type="text/javascript">
 		$(function() {
-			htmlTableTojQGrid();
+			htmlTableTojQGrid(true);
 		});
 	</script>
 </body>
