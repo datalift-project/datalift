@@ -84,4 +84,22 @@ public interface ResourceResolver
     public Response resolveRdfResource(UriInfo uriInfo, Request request,
                                        String acceptHdr)
                                                 throws WebApplicationException;
+    /**
+     * Attempts to resolve a request as a module public resource.
+     * @param  module      the target module.
+     * @param  uriInfo     the requested URI.
+     * @param  request     the JAX-RS request object.
+     * @param  acceptHdr   the HTTP "Accept" header value.
+     *
+     * @return a {@link Response service response} with the result of
+     *         the SPARQL DESCRIBE query on the RDF resource or
+     *         <code>null</code> if the request resource was not found
+     *         in the RDF store.
+     * @throws WebApplicationException if any error occurred accessing
+     *         the RDF resource.
+     */
+    public Response resolveModuleResource(String module,
+                                          UriInfo uriInfo, Request request,
+                                          String acceptHdr)
+                                                throws WebApplicationException;
 }
