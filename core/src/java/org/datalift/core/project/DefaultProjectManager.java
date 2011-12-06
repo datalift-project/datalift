@@ -292,7 +292,8 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         for (Source s : p.getSources()) {
             if (s instanceof TransformedRdfSource) {
                 TransformedRdfSource trs = (TransformedRdfSource)s;
-                if (trs.getParent().getUri().equals(srcId)) {
+                Source parent = trs.getParent();
+                if ((parent != null) && (parent.getUri().equals(srcId))) {
                     trs.setParent(null);
                 }
             }
