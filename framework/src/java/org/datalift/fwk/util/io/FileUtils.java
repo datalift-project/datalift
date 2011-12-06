@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.nio.channels.Channels;
-import java.nio.channels.FileChannel;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
@@ -60,11 +59,13 @@ public final class FileUtils
         }
         InputStream in = null;
         try {
-            FileChannel channel = new RandomAccessFile(f, "r").getChannel();
-            in = new BufferedInputStream(
-                            new ByteCounterInputStream(
-                                    Channels.newInputStream(channel), f),
-                             bufferSize);
+            // Get a buffered input stream on file data.
+            in = Channels.newInputStream(
+                                    new RandomAccessFile(f, "r").getChannel());
+            if (log.isDebugEnabled()) {
+                in = new ByteCounterInputStream(in, f);
+            }
+            in = new BufferedInputStream(in, bufferSize);
             // Read file magic number, if any.
             byte[] buf = new byte[4];
             in.mark(32);
