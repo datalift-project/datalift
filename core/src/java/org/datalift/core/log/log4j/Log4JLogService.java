@@ -35,8 +35,11 @@
 package org.datalift.core.log.log4j;
 
 
+import java.lang.reflect.Array;
 import java.net.URL;
 import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.MissingResourceException;
 import java.util.Properties;
 import java.util.ResourceBundle;
@@ -296,10 +299,24 @@ public final class Log4JLogService extends LogService
         /** {@inheritDoc} */
         @Override
         protected String render(Object o) {
-            return (o instanceof String)? (String)o:
-                   (o != null)?
-                        loggerRepository.getRendererMap().get(o).doRender(o):
-                        "";
+            String s = "null";
+            if (o instanceof String) {
+                s = (String)o;
+            }
+            else if (o != null) {
+                if (o.getClass().isArray()) {
+                    int n = Array.getLength(o);
+                    List<Object> l = new ArrayList<Object>(n);
+                    for (int i=0; i<n; i++) {
+                        l.add(Array.get(o, i));
+                    }
+                    s = l.toString();
+                }
+                else {
+                    s = loggerRepository.getRendererMap().get(o).doRender(o);
+                }
+            }
+            return s;
         }
 
         //---------------------------------------------------------------------
