@@ -243,7 +243,6 @@ public class SparqlSourceImpl extends CachingSourceImpl implements SparqlSource
                 // Use HTTP POST.
                 cnx = (HttpURLConnection)(u.openConnection());
                 cnx.setRequestMethod(HttpMethod.POST);
-                cnx.setDoInput(true);
             }
             else {
                 // HTTP GET will do...
@@ -270,10 +269,11 @@ public class SparqlSourceImpl extends CachingSourceImpl implements SparqlSource
                     Base64.encode(token.getBytes(BASIC_AUTH_ENCODING), null));
         }
         cnx.setUseCaches(false);
-        cnx.setDoOutput(true);
+        cnx.setDoInput(true);
         log.debug("Connecting to: {}", u);
         // Append query string in case of HTTP POST.
         if (query != null) {
+            cnx.setDoOutput(true);
             OutputStream out = cnx.getOutputStream();
             out.write(query.getBytes("UTF-8"));
             out.flush();
