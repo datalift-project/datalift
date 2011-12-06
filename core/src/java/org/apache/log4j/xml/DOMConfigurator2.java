@@ -1385,6 +1385,12 @@ public class DOMConfigurator2 extends DOMConfigurator
         }
     }
 
+  @Override
+  protected
+  String subst(final String value) {
+      // Workaround DOM issue: Element.getAttribute() sometimes returns null.
+      return ((value != null) && (value.length() != 0))? subst(value, props): "";
+  }
 
     //-------------------------------------------------------------------------
     // Specific entity resolver to support classpath URIs
