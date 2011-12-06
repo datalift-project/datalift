@@ -16,6 +16,7 @@
 				<th>#i18n("source.grid.row.heading")</th>
 #foreach( $i in $it.getColumnNames() )
 				<th class="dl-grid-header-column">$esc.html($i)</th>
+#set($totalHeaderColumns = $velocityCount)
 #end
 			</tr>
 		</thead>
@@ -23,6 +24,7 @@
 #foreach( $row in $it )
 			<tr><td>$velocityCount</td>
 #foreach( $i in $row ) <td>$!esc.html($i)</td> #end
+#end
 			</tr>
 #end
 		</tbody>
@@ -39,97 +41,11 @@
 	</div>
 
 #script_links
+	<script language="javascript" src="${baseUri}/project/jqGrid.common.js"></script>
 	<script type="text/javascript">
-		var gridData = new Array();
-		var searchData = new Array();
-		var gridHeader = new Array();
-
 		$(function() {
-			getHeaderColumns();
-			jQuery.extend(jQuery.jgrid.defaults, {
-				caption: $('#searchnav').html(),
-				rowNum: 1000000,
-				height: 450,
-				search:{
-					caption: "#i18n("grid.search.value.label")"
-				},
-				colModel: [
-					{ name: '#i18n("source.grid.row.heading")', index: '#i18n("source.grid.row.heading")', sorttype:'int'  }
-				]
-			});
-			tableToGrid("#grid", { datatype: "local" });
-			$("#grid").trigger("reloadGrid");
-
-			gridData = $("#grid").getRowData();
-			// Function called when modifying search text
-			$("#gridsearch").keyup(function () {
-				gridSearch($(this).val().toLowerCase());
-			});
-			// Function called when modifying search Column
-			$("#searchColumn").change(function() {
-				gridSearch($("#gridsearch").val().toLowerCase());
-			});
+			htmlTableTojQGrid();
 		});
-
-		function getHeaderColumns() {
-			var cols = $(".dl-grid-header-column");
-			for (var i = 0; cols[i]; i++) {
-				gridHeader[i] = normalizeHeaderName(cols[i].innerHTML);
-			}
-		}
-
-		function normalizeHeaderName(colTitle) {
-			return colTitle.replace(/ /g, "_")
-			               .replace(/&/g, "&amp;")
-			               .replace(/</g, "&lt;")
-			               .replace(/>/g, "&gt;");
-		}
-
-		function gridSearch(searchString) {
-			searchData = [];
-			if ($("#searchColumn").val() == "all") {
-				searchAllColumns(searchString);
-			}
-			else {
-				searchOneColumn(searchString, $("#searchColumn").val());
-			}
-			$("#grid").jqGrid('clearGridData', true);
-			$("#grid").jqGrid('setGridParam',{data:searchData}).trigger("reloadGrid");
-
-		}
-
-		function searchAllColumns(searchString) {
-			if (searchString != "") {
-				var c = 0;
-				var obj = gridHeader;
-				for (var i = 0; i < gridData.length; i++) {
-					for (var k = 0; k < obj.length; k++) {
-						var toCmp = gridData[i][obj[k]];
-						if ((toCmp != undefined) && (toCmp.toLowerCase().indexOf(searchString) != -1)) {
-							searchData[c] = gridData[i];
-							c++;
-							k = obj.length;
-						}
-					}
-				}
-			}
-			else searchData = gridData;
-		}
-
-		function searchOneColumn(searchString, searchColumn) {
-			if (searchString != "") {
-				var p = normalizeHeaderName(searchColumn);
-				var c = 0;
-				for (var i = 0; i < gridData.length; i++) {
-					var toCmp = gridData[i][p];
-					if ((toCmp != undefined) && (toCmp.toLowerCase().indexOf(searchString) != -1)) {
-						searchData[c] = gridData[i];
-						c++;
-					}
-				}
-			}
-			else searchData = gridData;
-		}
 	</script>
 </body>
 </html>

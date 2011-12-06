@@ -118,8 +118,8 @@
 		loadGridOntologies();
 
 		$(window).bind('resize', function() {
-				$("#selectable_sources").setGridWidth($("#tabs").width());
-				$("#selectable_ontologies").setGridWidth($("#tabs").width());			
+				$("#selectable_sources").setGridWidth($("#tabs").width() - 30);
+				$("#selectable_ontologies").setGridWidth($("#tabs").width() - 30);			
 		}).trigger('resize');
 	});
 
@@ -165,9 +165,8 @@
 				{name:'infos',index:'infos', sorttype:"text"} ],
 			caption: "",
 			rowNum:10, rowList:[10,20,30], pager: '#selectable_sources_toolbar',
-			autowidth: false,
 			gridview: true,
-			height: 275
+			height: 250
 		});
 
 		var mydata = [
@@ -251,9 +250,8 @@
 				{name:'operator',index:'operator', sorttype:"text",editable:true,editoptions:{size:50}} ],
 			caption: "",
 			rowNum:10, rowList:[10,20,30], pager: '#selectable_ontologies_toolbar',
-			autowidth: false,
 			gridview: true,
-			height: 275
+			height: 250
 		});
 
 		var mydataOntology = [

@@ -100,7 +100,6 @@ text-align:center;
 
 #workspace {
   padding-bottom:10px;
-  color:blue;
   width:100%;
 }
 
@@ -183,8 +182,6 @@ text-align:center;
 }
 
 .grid_form, #source, #ontology {
-  margin:auto;
-  padding:0;
 }
 
 #selectable_sources_toolbar_center, #selectable_ontologies_toolbar_center {
