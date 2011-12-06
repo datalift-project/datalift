@@ -352,7 +352,7 @@ public class CsvSourceImpl extends BaseFileSource<Row<String>>
         /** {@inheritDoc} */
         @Override
         public int size() {
-            return this.data.length;
+            return Math.min(this.data.length, this.keyMapping.size());
         }
 
         /** {@inheritDoc} */
@@ -381,7 +381,16 @@ public class CsvSourceImpl extends BaseFileSource<Row<String>>
         /** {@inheritDoc} */
         @Override
         public String get(int index) {
-            return this.data[index];
+            if ((index < 0) || (index > this.size())) {
+                throw new ArrayIndexOutOfBoundsException(index);
+            }
+            String v = null;
+            if (index < this.data.length) {
+                v = this.data[index];
+            }
+            // Else: Row has fewer data than announced in header => return null.
+
+            return v;
         }
 
         /** {@inheritDoc} */

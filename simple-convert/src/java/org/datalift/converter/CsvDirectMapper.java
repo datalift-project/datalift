@@ -59,7 +59,8 @@ import org.datalift.fwk.project.Row;
 import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.rdf.Repository;
-import org.datalift.fwk.util.StringUtils;
+
+import static org.datalift.fwk.util.StringUtils.*;
 
 
 /**
@@ -116,7 +117,7 @@ public class CsvDirectMapper extends BaseConverterModule
             // Retrieve project.
             Project p = this.getProject(projectId);
             // Load input source.
-            CsvSource in = (CsvSource)p.getSource(sourceId);
+            CsvSource in = (CsvSource)(p.getSource(sourceId));
             // Convert CSV data and load generated RDF triples.
             this.convert(in, Configuration.getDefault().getInternalRepository(),
                              targetGraph);
@@ -155,8 +156,7 @@ public class CsvDirectMapper extends BaseConverterModule
             org.openrdf.model.URI[] predicates = new org.openrdf.model.URI[max];
             int i = 0;
             for (String s : src.getColumnNames()) {
-                predicates[i++] = valueFactory.createURI(
-                                            baseUri + StringUtils.urlify(s));
+                predicates[i++] = valueFactory.createURI(baseUri + urlify(s));
             }
             // Load triples
             i = 1;                              // Start lines at 1.
@@ -166,7 +166,7 @@ public class CsvDirectMapper extends BaseConverterModule
                 int l = Math.min(row.size(), max);
                 for (int j=0; j<l; j++) {
                     String v = row.get(j);
-                    if (StringUtils.isSet(v)) {
+                    if (isSet(v)) {
                         cnx.add(valueFactory.createStatement(
                                         subject, predicates[j],
                                         this.mapValue(v, valueFactory)),
