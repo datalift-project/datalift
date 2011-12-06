@@ -35,9 +35,7 @@
 package org.datalift.fwk.rdf;
 
 
-import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
@@ -65,6 +63,7 @@ import org.datalift.fwk.MediaTypes;
 import org.datalift.fwk.util.CloseableIterable;
 import org.datalift.fwk.util.StringUtils;
 import org.datalift.fwk.util.UriMapper;
+import org.datalift.fwk.util.io.FileUtils;
 
 import static org.datalift.fwk.MediaTypes.*;
 import static org.datalift.fwk.util.Env.*;
@@ -241,8 +240,7 @@ public final class RdfUtils
             RDFParser parser = newRdfParser(mimeType);
             parser.setRDFHandler(
                             new StatementAppender(cnx, targetGraph, mapper));
-            parser.parse(new BufferedInputStream(new FileInputStream(source),
-                                                 getFileBufferSize()), baseUri);
+            parser.parse(FileUtils.getInputStream(source), baseUri);
         }
         catch (Exception e) {
             try {

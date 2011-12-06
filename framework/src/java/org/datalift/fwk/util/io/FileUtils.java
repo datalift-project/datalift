@@ -183,7 +183,7 @@ public final class FileUtils
             if (log.isDebugEnabled()) {
                 long delay = System.currentTimeMillis() - this.startTime;
                 if (delay > 0L) {
-                    log.trace("Read {} MBs from {} in {} seconds ({} MB/s)",
+                    log.debug("Read {} MBs from {} in {} seconds ({} MB/s)",
                           Double.valueOf((this.readBytes / 1000L) / 1000.0),
                           this.file,
                           Double.valueOf(delay / 1000.0),
