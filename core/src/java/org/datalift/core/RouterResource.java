@@ -335,6 +335,14 @@ public class RouterResource implements LifeCycle, ResourceResolver
         return response;
     }
 
+    public Response resolveModuleResource(String module,
+                                          UriInfo uriInfo, Request request,
+                                          String acceptHdr)
+                                                throws WebApplicationException {
+        return this.resolveUnmappedResource(this.modules.get(module),
+                                            uriInfo, request, acceptHdr);
+    }
+
     //-------------------------------------------------------------------------
     // Resource web services
     //-------------------------------------------------------------------------
@@ -379,8 +387,9 @@ public class RouterResource implements LifeCycle, ResourceResolver
         else {
             // Unknown module or direct module query not supported.
             // => Try resolving URL as a file or an RDF resource.
-            target = this.resolveUnmappedResource(m, uriInfo,
-                                                     request, acceptHdr);
+            Response response = this.resolveUnmappedResource(m, uriInfo,
+                                                            request, acceptHdr);
+            target = (response != null)? new ResponseWrapper(response): null;
         }
         return target;
     }
@@ -451,8 +460,9 @@ public class RouterResource implements LifeCycle, ResourceResolver
         if (target == null) {
             // No matching module or resource found.
             // => Try resolving URL as a file or an RDF resource.
-            target = this.resolveUnmappedResource(m, uriInfo,
-                                                     request, acceptHdr);
+            Response response = this.resolveUnmappedResource(m, uriInfo,
+                                                            request, acceptHdr);
+            target = (response != null)? new ResponseWrapper(response): null;
         }
         return target;
     }
@@ -480,7 +490,7 @@ public class RouterResource implements LifeCycle, ResourceResolver
      * @throws WebApplicationException if the request path can not be
      *         resolved.
      */
-    private ResponseWrapper resolveUnmappedResource(ModuleDesc module,
+    private Response resolveUnmappedResource(ModuleDesc module,
                                                     UriInfo uriInfo,
                                                     Request request,
                                                     String acceptHdr)
@@ -548,7 +558,7 @@ public class RouterResource implements LifeCycle, ResourceResolver
                                         .type(MediaTypes.TEXT_PLAIN_TYPE)
                                         .entity(error.getMessage()).build());
         }
-        return (response != null)? new ResponseWrapper(response): null;
+        return response;
     }
 
     /**

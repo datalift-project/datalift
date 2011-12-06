@@ -36,11 +36,21 @@ package org.datalift.samples.project;
 
 
 import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Request;
+import javax.ws.rs.core.UriInfo;
+
+import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 
 import org.datalift.fwk.BaseModule;
+import org.datalift.fwk.Configuration;
+import org.datalift.fwk.ResourceResolver;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectModule;
@@ -103,5 +113,18 @@ public class HandleProjectModule extends BaseModule implements ProjectModule
     @Produces(MediaType.TEXT_PLAIN)
     public String doGet() {
         return "Test HandleProjectModule index";
+    }
+
+    @GET
+    @Path("{path: .*$}")
+    public Object getStaticResource(@PathParam("path") String path,
+                                    @Context UriInfo uriInfo,
+                                    @Context Request request,
+                                    @HeaderParam(ACCEPT) String acceptHdr)
+                                                throws WebApplicationException {
+        return Configuration.getDefault()
+                            .getBean(ResourceResolver.class)
+                            .resolveModuleResource(this.getName(),
+                                                   uriInfo, request, acceptHdr);
     }
 }
