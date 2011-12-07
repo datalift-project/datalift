@@ -58,6 +58,7 @@ import org.datalift.fwk.project.ProjectModule;
 import org.datalift.fwk.project.Row;
 import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.Source.SourceType;
+import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
 
 import static org.datalift.fwk.util.StringUtils.*;
@@ -149,8 +150,8 @@ public class CsvDirectMapper extends BaseConverterModule
                 ctx = valueFactory.createURI(targetGraph.toString());
                 cnx.clear(ctx);
             }
-            String baseUri = (targetGraph != null)?
-                                            targetGraph.toString() + '/': "";
+            String baseUri = RdfUtils.getBaseUri(
+                        (targetGraph != null)? targetGraph.toString(): null);
             // Build predicates URIs.
             int max = src.getColumnNames().size();
             org.openrdf.model.URI[] predicates = new org.openrdf.model.URI[max];

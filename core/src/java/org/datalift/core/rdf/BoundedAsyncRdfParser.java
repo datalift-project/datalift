@@ -150,7 +150,7 @@ public final class BoundedAsyncRdfParser
                                     publish(stmt);
                                 }
                             });
-                        parser.parse(in, (baseUri != null)? baseUri: "");
+                        parser.parse(in, RdfUtils.getBaseUri(baseUri));
                     }
                     catch (RuntimeException e) {
                         throw e;
