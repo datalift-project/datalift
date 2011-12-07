@@ -222,9 +222,8 @@ public final class RdfUtils
         if (target == null) {
             throw new IllegalArgumentException("target");
         }
-        if (baseUri == null) {
-            baseUri = "";
-        }
+        baseUri = getBaseUri(baseUri);
+
         org.openrdf.model.URI targetGraph = null;
         RepositoryConnection cnx = target.newConnection();
         try {
@@ -626,6 +625,21 @@ public final class RdfUtils
                             "Unsupported MIME type for RDF data: " + mimeType);
         }
         return mappedFormat;
+    }
+
+    public static String getBaseUri(String uri) {
+        return getBaseUri(uri, '/');
+    }
+
+    public static String getBaseUri(String uri, char sep) {
+        String baseUri = "";
+        if (StringUtils.isSet(uri)) {
+            int n = uri.length() - 1;
+            if (! ((uri.charAt(n) == '/') || (uri.charAt(n) == '#'))) {
+                baseUri = uri + sep;
+            }
+        }
+        return baseUri;
     }
 
     private static org.openrdf.model.URI clearGraph(URI graphName,
