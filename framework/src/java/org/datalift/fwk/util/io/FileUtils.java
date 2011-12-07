@@ -2,16 +2,31 @@ package org.datalift.fwk.util.io;
 
 
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.Closeable;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.RandomAccessFile;
+import java.io.Reader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLConnection;
 import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
+import java.util.Map;
 import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
+
+import javax.ws.rs.HttpMethod;
 
 import org.itadaki.bzip2.BZip2InputStream;
 
@@ -95,23 +110,217 @@ public final class FileUtils
             // Else: regular file!
         }
         catch (IOException e) {
-            if (in != null) {
-                try { in.close(); } catch (Exception e1) { /* Ignore... */ }
-            }
+            close(in);
             throw e;
         }
         return in;
+    }
+
+    public static void save(URL u, File to) throws IOException {
+        save(u, null, null, to);
+    }
+
+    public static void save(URL u, String query,
+                            Map<String,String> properties, File to)
+                                                            throws IOException {
+        OutputStream out = null;
+        try {
+            URLConnection cnx = u.openConnection();
+            if ((properties != null) && (! properties.isEmpty())) {
+                for (Map.Entry<String,String> e : properties.entrySet()) {
+                    cnx.setRequestProperty(e.getKey(), e.getValue());
+                }
+            }
+            // Append query string in case of HTTP POST.
+            if (query != null) {
+                cnx.setDoOutput(true);
+                if (cnx instanceof HttpURLConnection) {
+                    ((HttpURLConnection)cnx).setRequestMethod(HttpMethod.POST);
+                }
+                out = cnx.getOutputStream();
+                out.write(query.getBytes("UTF-8"));
+                out.flush();
+                out.close();
+                out = null;
+            }
+            // Force server connection.
+            log.debug("Connecting to \"{}\"...", u);
+            cnx.connect();
+            // Check for error data.
+            InputStream in = null;
+            if (cnx instanceof HttpURLConnection) {
+                in = ((HttpURLConnection)cnx).getErrorStream();
+            }
+            if (in == null) {
+                // No error. => Save data locally.
+                log.debug("Downloading source data from \"{}\"...", u);
+                save(cnx.getInputStream(), to);
+            }
+            else {
+                // Error. => Gather (first 1024 characters of) error message.
+                char[] buf = new char[1024];
+                int l = 0;
+                Reader r = null;
+                try {
+                    String[] ct = parseContentType(cnx.getContentType());
+                    r = (ct[1] == null)? new InputStreamReader(in):
+                                         new InputStreamReader(in, ct[1]);
+                    l = r.read(buf);
+                }
+                catch (Exception e) { /* Ignore... */ }
+                finally {
+                    close(r);
+                }
+                IOException e = new IOException(
+                                        "Failed to connect to \"" + u + '"');
+                log.fatal("{}: {}", e, e.getMessage(), new String(buf, 0, l));
+                throw e;
+            }
+        }
+        finally {
+            close(out);
+        }
+    }
+
+    public static void save(InputStream from, File to) throws IOException {
+        if (from == null) {
+            throw new IllegalArgumentException("from");
+        }
+        if (to == null) {
+            throw new IllegalArgumentException("to");
+        }
+        final int chunkSize = Env.getFileBufferSize();
+        boolean copyFailed = true;
+
+        InputStream in = null;
+        OutputStream out = null;
+        try {
+            in  = new BufferedInputStream(from, chunkSize);
+            out = new BufferedOutputStream(new FileOutputStream(to), chunkSize);
+
+            byte[] buf = new byte[chunkSize];
+            int l;
+            while ((l = in.read(buf)) != -1) {
+                out.write(buf, 0, l);
+            }
+            out.flush();
+            out.close();
+            out = null;
+            copyFailed = false;
+        }
+        finally {
+            close(in);
+            close(out);
+            if (copyFailed) {
+                to.delete();
+            }
+        }
+    }
+    
+    public final static void copy(File from, File to, boolean compress)
+                                                            throws IOException {
+        if ((from == null) || (! from.canRead())) {
+            throw new IllegalArgumentException("from");
+        }
+        if (to == null) {
+            throw new IllegalArgumentException("to");
+        }
+        final int chunkSize = Env.getFileBufferSize();
+        boolean copyFailed = true;
+        try {
+            if (compress) {
+                InputStream  in  = null;
+                OutputStream out = null;
+                try {
+                    in  = new BufferedInputStream(new FileInputStream(from),
+                                                  chunkSize);
+                    out = new GZIPOutputStream(new FileOutputStream(to),
+                                               chunkSize);
+                    byte[] buf = new byte[chunkSize];
+                    int l;
+                    while ((l = in.read(buf)) != -1) {
+                        out.write(buf, 0, l);
+                    }
+                    out.flush();
+                    out.close();
+                    out = null;
+                    copyFailed = false;
+                }
+                finally {
+                    close(in);
+                    close(out);
+                }
+            }
+            else {
+                FileChannel in  = null;
+                FileChannel out = null;
+                try {
+                    in  = new FileInputStream(from).getChannel();
+                    out = new FileOutputStream(to).getChannel();
+        
+                    long start = 0L;
+                    long end   = in.size();
+                    while (end != 0L) {
+                        long l = Math.min(end, chunkSize);
+                        l = in.transferTo(start, l, out);
+                        if (l == 0L) {
+                            // Should at least copy one byte!
+                            throw new IOException(
+                                    "Copy stalled after " + start + " bytes");
+                        }
+                        start += l;
+                        end   -= l;
+                    }
+                    out.force(true);  // Sync data on disk.
+                    out.close();
+                    out = null;
+                    copyFailed = false;
+                }
+                finally {
+                    close(in);
+                    close(out);
+                }
+            }
+        }
+        finally {
+            if (copyFailed) {
+                to.delete();
+            }
+        }
     }
 
     //-------------------------------------------------------------------------
     // Specific implementation
     //-------------------------------------------------------------------------
 
+    private static String[] parseContentType(String contentType) {
+        String[] elts = new String[2];
+
+        final String CHARSET_TAG = "charset=";
+        if ((contentType != null) && (contentType.length() != 0)) {
+            String[] s = contentType.split("\\s;\\s");
+            elts[0] = s[0];
+            if ((s.length > 1) && (s[1].startsWith(CHARSET_TAG))) {
+                elts[1] = s[1].substring(CHARSET_TAG.length());
+            }
+        }
+        return elts;
+    }
+
+    private final static void close(Closeable c) {
+        if (c != null) {
+            try {
+                c.close();
+            }
+            catch (Exception e) { /* Ignore... */ }
+        }
+    }
+
     /**
      * Fetches unsigned 16-bit value from byte array at specified offset.
      * The bytes are assumed to be in Intel (little-endian) byte order.
      */
-    private static final int get16(byte b[], int offset) {
+    private final static int get16(byte b[], int offset) {
         return (b[offset] & 0xff) | ((b[offset+1] & 0xff) << 8);
     }
 
@@ -119,12 +328,12 @@ public final class FileUtils
      * Fetches unsigned 32-bit value from byte array at specified offset.
      * The bytes are assumed to be in Intel (little-endian) byte order.
      */
-    private static final long get32(byte b[], int offset) {
+    private final static long get32(byte b[], int offset) {
         return get16(b, offset) | ((long)get16(b, offset+2) << 16);
     }
 
     //-------------------------------------------------------------------------
-    // Specific implementation
+    // ByteCounterInputStream nested class
     //-------------------------------------------------------------------------
 
     private final static class ByteCounterInputStream extends FilterInputStream
@@ -212,7 +421,7 @@ public final class FileUtils
     }
 
     //-------------------------------------------------------------------------
-    // Specific implementation
+    // ZipWrapperInputStream nested class
     //-------------------------------------------------------------------------
 
     private final static class ZipWrapperInputStream extends FilterInputStream

@@ -63,7 +63,7 @@ import org.datalift.fwk.project.ProjectModule;
  *
  * @author lbihanic
  */
-@Path("/" + HandleProjectModule.MODULE_NAME)
+@Path(HandleProjectModule.MODULE_NAME)
 public class HandleProjectModule extends BaseModule implements ProjectModule
 {
     //-------------------------------------------------------------------------
