@@ -424,5 +424,11 @@ public class CsvSourceImpl extends BaseFileSource<Row<String>>
                 }
             };
         }
+
+        /** {@inheritDoc} */
+        @Override
+        public String toString() {
+            return Arrays.asList(this.data).toString();
+        }
     }
 }
