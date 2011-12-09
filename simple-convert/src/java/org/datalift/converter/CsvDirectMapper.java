@@ -52,6 +52,7 @@ import org.openrdf.model.ValueFactory;
 import org.openrdf.repository.RepositoryConnection;
 
 import org.datalift.fwk.Configuration;
+import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.CsvSource;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectModule;
@@ -60,6 +61,7 @@ import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
+import org.datalift.fwk.util.Env;
 
 import static org.datalift.fwk.util.StringUtils.*;
 
@@ -81,6 +83,12 @@ public class CsvDirectMapper extends BaseConverterModule
 
     /** The name of this module in the DataLift configuration. */
     public final static String MODULE_NAME = "csvdirectmapper";
+
+    //-------------------------------------------------------------------------
+    // Class members
+    //-------------------------------------------------------------------------
+
+    private final static Logger log = Logger.getLogger();
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -111,7 +119,8 @@ public class CsvDirectMapper extends BaseConverterModule
     public Response loadSourceData(@QueryParam("project") URI projectId,
                                    @QueryParam("source") URI sourceId,
                                    @FormParam("dest_title") String destTitle,
-                                   @FormParam("dest_graph_uri") URI targetGraph)
+                                   @FormParam("dest_graph_uri") URI targetGraph,
+                                   @FormParam("base_uri") URI baseUri)
                                                 throws WebApplicationException {
         Response response = null;
         try {
@@ -121,7 +130,7 @@ public class CsvDirectMapper extends BaseConverterModule
             CsvSource in = (CsvSource)(p.getSource(sourceId));
             // Convert CSV data and load generated RDF triples.
             this.convert(in, Configuration.getDefault().getInternalRepository(),
-                             targetGraph);
+                             targetGraph, baseUri);
             // Register new transformed RDF source.
             Source out = this.addResultSource(p, in, destTitle, targetGraph);
             // Display project source tab, including the newly created source.
@@ -137,53 +146,81 @@ public class CsvDirectMapper extends BaseConverterModule
     // Specific implementation
     //-------------------------------------------------------------------------
 
-    private void convert(CsvSource src, Repository target, URI targetGraph) {
+    private void convert(CsvSource src, Repository target,
+                                        URI targetGraph, URI baseUri) {
         final RepositoryConnection cnx = target.newConnection();
+        org.openrdf.model.URI ctx = null;
         try {
             final ValueFactory valueFactory = cnx.getValueFactory();
 
             // Prevent transaction commit for each triple inserted.
             cnx.setAutoCommit(false);
             // Clear target named graph, if any.
-            org.openrdf.model.URI ctx = null;
             if (targetGraph != null) {
                 ctx = valueFactory.createURI(targetGraph.toString());
                 cnx.clear(ctx);
             }
-            String baseUri = RdfUtils.getBaseUri(
-                        (targetGraph != null)? targetGraph.toString(): null);
+            if (baseUri == null) {
+                baseUri = targetGraph;
+            }
+            String root = RdfUtils.getBaseUri(
+                                (baseUri != null)? baseUri.toString(): null);
             // Build predicates URIs.
             int max = src.getColumnNames().size();
             org.openrdf.model.URI[] predicates = new org.openrdf.model.URI[max];
             int i = 0;
             for (String s : src.getColumnNames()) {
-                predicates[i++] = valueFactory.createURI(baseUri + urlify(s));
+                predicates[i++] = valueFactory.createURI(root + urlify(s));
             }
             // Load triples
-            i = 1;                              // Start lines at 1.
+            long statementCount = 0L;
+            int  batchSize = Env.getRdfBatchSize();
+            i = 1;                              // Start line numbering at 1.
             for (Row<String> row : src) {
                 org.openrdf.model.URI subject =
-                                valueFactory.createURI(baseUri + i); // + "#_";
-                int l = Math.min(row.size(), max);
-                for (int j=0; j<l; j++) {
+                                valueFactory.createURI(root + i); // + "#_";
+                log.trace("Mapping {} to \"{}\"", row, subject);
+                for (int j=0, l=row.size(); j<l; j++) {
                     String v = row.get(j);
                     if (isSet(v)) {
                         cnx.add(valueFactory.createStatement(
                                         subject, predicates[j],
                                         this.mapValue(v, valueFactory)),
                                 ctx);
+
+                        // Commit transaction according to the configured batch size.
+                        statementCount++;
+                        if ((statementCount % batchSize) == 0) {
+                            cnx.commit();
+                        }
                     }
                     // Else: ignore cell.
                 }
                 i++;
             }
             cnx.commit();
+            log.debug("Inserted {} RDF triples into {} from {} CSV lines",
+                      Long.valueOf(statementCount), targetGraph,
+                      Integer.valueOf(i));
         }
         catch (Exception e) {
+            try {
+                // Forget pending triples.
+                cnx.rollback();
+                // Clear target named graph, if any.
+                if (ctx != null) {
+                    cnx.clear(ctx);
+                }
+            }
+            catch (Exception e2) { /* Ignore... */ }
+
             throw new TechnicalException("csv.conversion.failed", e);
         }
         finally {
-            try { cnx.close(); } catch (Exception e) { /* Ignore */ }
+            // Commit pending data (including graph removal in case of error).
+            try { cnx.commit(); } catch (Exception e) { /* Ignore... */ }
+            // Close repository connection.
+            try { cnx.close();  } catch (Exception e) { /* Ignore... */ }
         }
     }
 
