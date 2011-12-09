@@ -42,6 +42,7 @@ import java.util.List;
 
 import javax.ws.rs.core.MediaType;
 
+import org.openrdf.model.Literal;
 import org.openrdf.model.Resource;
 import org.openrdf.model.Statement;
 import org.openrdf.model.Value;
@@ -99,7 +100,7 @@ public final class RdfUtils
     }
 
     //-------------------------------------------------------------------------
-    // Specific implementation
+    // RdfUtils contract definition
     //-------------------------------------------------------------------------
 
     /**
@@ -401,22 +402,18 @@ public final class RdfUtils
         if ((constructQueries == null) || (constructQueries.isEmpty())) {
             throw new IllegalArgumentException("constructQueries");
         }
-        if (baseUri == null) {
-            baseUri = "";
-        }
+        baseUri = getBaseUri(baseUri);
 
         RepositoryConnection in  = null;
         RepositoryConnection out = null;
+        org.openrdf.model.URI u  = null;
         String query = null;
         try {
             in  = source.newConnection();
             out = target.newConnection();
 
             final ValueFactory valueFactory = out.getValueFactory();
-            // Prevent transaction commit for each triple inserted.
-            out.setAutoCommit(false);
             // Clear target named graph, if any.
-            org.openrdf.model.URI u = null;
             if (namedGraph != null) {
                 u = valueFactory.createURI(namedGraph.toString());
                 out.clear(u);
@@ -427,13 +424,15 @@ public final class RdfUtils
                 GraphQuery q = in.prepareGraphQuery(QueryLanguage.SPARQL,
                                                     query, baseUri);
                 out.add(q.evaluate(), u);
-                out.commit();
             }
             query = null;       // No query in error.
         }
         catch (Exception e) {
             try {
-                out.rollback();
+                // Clear target named graph, if any.
+                if (out != null) {
+                    out.clear(u);
+                }
             }
             catch (Exception e2) { /* Ignore... */ }
 
@@ -441,10 +440,10 @@ public final class RdfUtils
         }
         finally {
             if (in != null) {
-                try { in.close();  } catch (Exception e) { /* Ignore... */ }
+                try { in.close(); } catch (Exception e) { /* Ignore... */ }
             }
-            if (in != null) {
-                try { out.close(); } catch (Exception e) { /* Ignore... */ }
+            if (out != null) {
+                try { out.close();  } catch (Exception e) { /* Ignore... */ }
             }
         }
     }
@@ -627,11 +626,29 @@ public final class RdfUtils
         return mappedFormat;
     }
 
+    /**
+     * Ensure that the provided URI is a valid base URI for RDF data.
+     * If no ending '/' of '#' character is present, a slash '/' is
+     * appended.
+     * @param  uri   the URI to check, possibly <code>null</code>
+     *
+     * @return a valid base URI.
+     * @see    #getBaseUri(String, char)
+     */
     public static String getBaseUri(String uri) {
         return getBaseUri(uri, '/');
     }
 
-    public static String getBaseUri(String uri, char sep) {
+    /**
+     * Ensure that the provided URI is a valid base URI for RDF data.
+     * If no ending '/' of '#' character is present, the specified
+     * separator character is appended.
+     * @param  uri   the URI to check, possibly <code>null</code>
+     * @param  sep   the separator to append to the URI if need be.
+     *
+     * @return a valid base URI.
+     */
+    public final static String getBaseUri(String uri, char sep) {
         String baseUri = "";
         if (StringUtils.isSet(uri)) {
             int n = uri.length() - 1;
@@ -641,6 +658,70 @@ public final class RdfUtils
         }
         return baseUri;
     }
+
+    public final static boolean isValidStringLiteral(String s) {
+        boolean valid = true;
+        for (int i=0, max=s.length(); i<max; i++) {
+            if (! isValidDataCharacter(s.charAt(i))) {
+                valid = false;
+                break;
+            }
+        }
+        return valid;
+    }
+
+    /**
+     * Removes all non-valid XML data characters from the specified
+     * string as W3C RDF spec states that
+     * <a href="http://www.w3.org/TR/rdf-syntax-grammar/#literal">RDF
+     * literals shall only contain valid XML character</a>. If all
+     * characters are valid, the input string is returned unchanged.
+     * @param  s   the string to sanitize.
+     *
+     * @return a string expunged of all invalid XML data characters.
+     */
+    public final static String removeInvalidDataCharacter(String s) {
+        StringBuilder buf = null;
+        for (int i=0, max=s.length(); i<max; i++) {
+            char c = s.charAt(i);
+            if (isValidDataCharacter(c)) {
+                if (buf != null) {
+                    buf.append(c);
+                }
+                // Else: continue until an invalid character is encountered.
+            }
+            else {
+                if (buf == null) {
+                    // First invalid character. => Initiate clean copy.
+                    buf = new StringBuilder(max);
+                    buf.append(s.substring(0, i)); // Skip invalid.
+                }
+                // Else: skip invalid character.
+            }
+        }
+        return (buf == null)? s: buf.toString();
+    }
+
+    public static void clearGraph(Repository r, URI graphName)
+                                                        throws RdfException {
+        RepositoryConnection cnx = null;
+        try {
+            cnx = r.newConnection();
+            clearGraph(graphName, cnx);
+        }
+        catch (Exception e) {
+            throw new RdfException(String.valueOf(graphName), e);
+        }
+        finally {
+            if (cnx != null) {
+                try { cnx.close(); } catch (Exception e) { /* Ignore... */ }
+            }
+        }
+    }
+
+    //-------------------------------------------------------------------------
+    // Specific implementation
+    //-------------------------------------------------------------------------
 
     private static org.openrdf.model.URI clearGraph(URI graphName,
                                                     RepositoryConnection cnx)
@@ -653,7 +734,27 @@ public final class RdfUtils
         }
         return namedGraph;
     }
-    
+
+    /**
+     * Returns whether the specified character can appear in XML
+     * character data. The integer encoding also makes the
+     * representation of supplementary Unicode characters possible.
+     * @param  c   the character to check.
+     * 
+     * @return <code>true</code> if the character is valid;
+     *         <code>false</code> otherwise.
+     */
+    private final static boolean isValidDataCharacter(int c) {
+        // Char ::= #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] |
+        // [#x10000-#x10FFFF]
+        return (c >= 32 && c <= 55295) || (c >= 57344 && c <= 65533) ||
+               (c >= 65536 && c <= 1114111) || c == 9 || c == 10 || c == 13;
+    }
+
+    //-------------------------------------------------------------------------
+    // StatementAppender nested class
+    //-------------------------------------------------------------------------
+
     private final static class StatementAppender extends RDFHandlerBase
     {
         private final RepositoryConnection cnx;
@@ -690,16 +791,18 @@ public final class RdfUtils
         @Override
         public void handleStatement(Statement stmt) {
             try {
+                Resource s = stmt.getSubject();
+                org.openrdf.model.URI p = stmt.getPredicate();
+                Value o = checkStringLitteral(stmt.getObject());
+
                 if (mapper != null) {
-                    // Map subject and object URIs.
-                    this.cnx.add((Resource)(this.mapValue(stmt.getSubject())),
-                                 this.mapUri(stmt.getPredicate()),
-                                 this.mapValue(stmt.getObject()),
-                                 this.targetGraph);
+                    // Map URIs.
+                    s = (Resource)(this.mapValue(s));
+                    p = this.mapUri(p);
+                    o = this.mapValue(o);
                 }
-                else {
-                    this.cnx.add(stmt, this.targetGraph);
-                }
+                this.cnx.add(s, p, o, this.targetGraph);
+
                 // Commit transaction according to the configured batch size.
                 this.statementCount++;
                 if ((this.statementCount % this.batchSize) == 0) {
@@ -709,6 +812,20 @@ public final class RdfUtils
             catch (RepositoryException e) {
                 throw new RuntimeException("RDF triple insertion failed", e);
             }
+        }
+
+        private Value checkStringLitteral(Value v) {
+            if (v instanceof Literal) {
+                Literal l = (Literal)v;
+                if (l.getDatatype() == null) {
+                    String s = l.stringValue();
+                    if (! isValidStringLiteral(s)) {
+                        v = valueFactory.createLiteral(
+                                removeInvalidDataCharacter(s), l.getLanguage());
+                    }
+                }
+            }
+            return v;
         }
 
         private Value mapValue(Value v) {
