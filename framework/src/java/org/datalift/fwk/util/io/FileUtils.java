@@ -189,9 +189,11 @@ public final class FileUtils
         if (to == null) {
             throw new IllegalArgumentException("to");
         }
+        long t0 = System.currentTimeMillis();
+        long byteCount = 0L;
+
         final int chunkSize = Env.getFileBufferSize();
         boolean copyFailed = true;
-
         InputStream in = null;
         OutputStream out = null;
         try {
@@ -201,6 +203,7 @@ public final class FileUtils
             byte[] buf = new byte[chunkSize];
             int l;
             while ((l = in.read(buf)) != -1) {
+                byteCount += l;
                 out.write(buf, 0, l);
             }
             out.flush();
@@ -214,6 +217,12 @@ public final class FileUtils
             if (copyFailed) {
                 to.delete();
             }
+            else {
+                long delay = System.currentTimeMillis() - t0;
+                log.debug("Saved {} MBs of data to {} in {} seconds",
+                          Double.valueOf((byteCount / 1000) / 1000.0), to,
+                          Double.valueOf(delay / 1000.0));
+            }
         }
     }
     
@@ -225,6 +234,9 @@ public final class FileUtils
         if (to == null) {
             throw new IllegalArgumentException("to");
         }
+        long t0 = System.currentTimeMillis();
+        long byteCount = 0L;
+
         final int chunkSize = Env.getFileBufferSize();
         boolean copyFailed = true;
         try {
@@ -239,6 +251,7 @@ public final class FileUtils
                     byte[] buf = new byte[chunkSize];
                     int l;
                     while ((l = in.read(buf)) != -1) {
+                        byteCount += l;
                         out.write(buf, 0, l);
                     }
                     out.flush();
@@ -275,6 +288,7 @@ public final class FileUtils
                     out.close();
                     out = null;
                     copyFailed = false;
+                    byteCount = start;
                 }
                 finally {
                     close(in);
@@ -285,6 +299,12 @@ public final class FileUtils
         finally {
             if (copyFailed) {
                 to.delete();
+            }
+            else {
+                long delay = System.currentTimeMillis() - t0;
+                log.debug("Copied {} MBs of data from {} to {} in {} seconds",
+                          Double.valueOf((byteCount / 1000) / 1000.0),
+                          from, to, Double.valueOf(delay / 1000.0));
             }
         }
     }
