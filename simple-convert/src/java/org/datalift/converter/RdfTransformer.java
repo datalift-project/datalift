@@ -100,6 +100,9 @@ public class RdfTransformer extends BaseConverterModule
                                      @FormParam("query[]") List<String> queries)
                                                 throws WebApplicationException {
         Response response = null;
+
+        Repository internal = Configuration.getDefault()
+                                           .getInternalRepository();
         try {
             if ((queries == null) || (queries.size() == 0)) {
                 this.throwInvalidParamError("queries", null);
@@ -107,8 +110,6 @@ public class RdfTransformer extends BaseConverterModule
             // Retrieve project.
             Project p = this.getProject(projectId);
             // Execute SPARQL Construct queries.
-            Repository internal = Configuration.getDefault()
-                                               .getInternalRepository();
             RdfUtils.convert(internal, queries, internal, targetGraph);
             // Register new transformed RDF source.
             TransformedRdfSource in =
@@ -118,6 +119,11 @@ public class RdfTransformer extends BaseConverterModule
             response = this.created(out).build();
         }
         catch (Exception e) {
+            try {
+                RdfUtils.clearGraph(internal, targetGraph);
+            }
+            catch (Exception e1) { /* Ignore... */ }
+
             this.handleInternalError(e);
         }
         return response;
