@@ -126,10 +126,15 @@ public final class FileUtils
         OutputStream out = null;
         try {
             URLConnection cnx = u.openConnection();
+            // Set HTTP headers as request properties.
             if ((properties != null) && (! properties.isEmpty())) {
                 for (Map.Entry<String,String> e : properties.entrySet()) {
                     cnx.setRequestProperty(e.getKey(), e.getValue());
                 }
+            }
+            // Follow HTTP redirects, if any.
+            if (cnx instanceof HttpURLConnection) {
+                ((HttpURLConnection)cnx).setInstanceFollowRedirects(true);
             }
             // Append query string in case of HTTP POST.
             if (query != null) {
