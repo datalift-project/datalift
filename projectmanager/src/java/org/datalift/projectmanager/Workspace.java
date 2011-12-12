@@ -1560,7 +1560,7 @@ public class Workspace extends BaseModule
             if (localPath != null) {
                 f = this.getFileStorage(localPath);
             }
-            if ((f.isFile()) && (f.canRead())) {
+            if ((f != null) && (f.isFile()) && (f.canRead())) {
                 // File has already been uploaded.
                 if (! f.equals(destFile)) {
                     // Make a local copy to prevent data deletion.
