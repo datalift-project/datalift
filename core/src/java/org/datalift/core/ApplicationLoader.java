@@ -413,8 +413,10 @@ public class ApplicationLoader extends LogServletContextListener
         Collection<PackageDesc> packages = new LinkedList<PackageDesc>();
 
         // Load third-party module bundles.
-        if (cfg.getModulesPath() != null) {
-            List<File> l = Arrays.asList(cfg.getModulesPath().listFiles(
+        File modulesDir = cfg.getModulesPath();
+        if (modulesDir != null) {
+            log.debug("Searching \"{}\" for modules...", modulesDir);
+            List<File> l = Arrays.asList(modulesDir.listFiles(
                     new FileFilter() {
                         @Override
                         public boolean accept(File f) {

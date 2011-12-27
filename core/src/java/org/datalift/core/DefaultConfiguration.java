@@ -152,9 +152,9 @@ public class DefaultConfiguration extends Configuration
      */
     public DefaultConfiguration(Properties props) {
         this.props          = this.loadConfiguration(props);
-        this.modulesPath    = this.initLocalPath(MODULES_PATH, false);
-        this.privateStorage = this.initLocalPath(PRIVATE_STORAGE_PATH, true);
-        this.publicStorage  = this.initLocalPath(PUBLIC_STORAGE_PATH, false);
+        this.modulesPath    = this.initLocalPath(MODULES_PATH, false, false);
+        this.privateStorage = this.initLocalPath(PRIVATE_STORAGE_PATH, true, true);
+        this.publicStorage  = this.initLocalPath(PUBLIC_STORAGE_PATH, false, true);
 
         // Check configuration to warn against potential problems.
         if (this.modulesPath == null) {
@@ -532,18 +532,30 @@ public class DefaultConfiguration extends Configuration
      * property and ensures it exists on the local file system.
      * @param  key        the configuration key for the directory.
      * @param  required   whether the configuration entry is required.
+     * @param  create     whether the directory shall be created if it
+     *                    does not exist.
      *
      * @return the directory path on the local file system.
      */
-    private File initLocalPath(String key, boolean required) {
+    private File initLocalPath(String key, boolean required,
+                                           boolean create) {
         File f = null;
         String path = this.getConfigurationEntry(key, required);
         if (path != null) {
             f = new File(path);
             if (! f.exists()) {
-                if (f.mkdirs() == false) {
-                    throw new TechnicalException(
+                if (create) {
+                    if (f.mkdirs() == false) {
+                        throw new TechnicalException(
                                             "local.path.creation.failed", f);
+                    }
+                    else {
+                        log.warn("Created storage directory \"{}\" " +
+                            "(required for configuration entry \"{}\")", f, key);
+                    }
+                }
+                else {
+                    throw new TechnicalException("local.path.not.directory", f);
                 }
             }
             else {
