@@ -35,10 +35,6 @@
 package org.datalift.fwk.log;
 
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-
 /**
  * A abstract class that defines the Logger contract and acts as
  * a factory to access concrete implementations.
@@ -96,7 +92,8 @@ public abstract class Logger
         FATAL, ERROR, WARN, INFO, DEBUG, TRACE
     }
 
-    private final static Pattern FORMAT_ELT_PATTERN = Pattern.compile("\\{}");
+    private final static String FORMAT_ELT_PATTERN = "{}";
+    // private final static Pattern FORMAT_ELT_PATTERN = Pattern.compile("\\{}");
 
     //-------------------------------------------------------------------------
     // Logger contract definition
@@ -526,21 +523,24 @@ public abstract class Logger
         String msg = null;
         if ((args != null) && (args.length != 0)
                            && (message instanceof String)) {
-            Matcher m = FORMAT_ELT_PATTERN.matcher((String)message);
-            if (m.find()) {
-                StringBuffer buf = new StringBuffer(128);
+            String fmt = (String)message;
+            int p = fmt.indexOf(FORMAT_ELT_PATTERN);
+            if (p != -1) {
+                // Substitution pattern found. => Replace it with arguments.
+                final StringBuilder b = new StringBuilder(256);
+                final int l = FORMAT_ELT_PATTERN.length();
                 int i = 0;
+                int n = 0;
                 do {
-                    String v = this.render(args[i]);
-                    // Make sure the value is value for regex substitution.
-                    v = v.replace("$", "\\$");
-                    // Substitute value.
-                    m.appendReplacement(buf, v);
+                    b.append(fmt.substring(n, p))
+                     .append(this.render(args[i]));
                     i++;
+                    n = p + l;
+                    p = fmt.indexOf(FORMAT_ELT_PATTERN, p + 1);
                 }
-                while ((m.find()) && (i < args.length));
+                while ((p != -1) && (i < args.length));
 
-                msg = m.appendTail(buf).toString();
+                msg = b.append(fmt.substring(n)).toString();
             }
             // Else: return null as no formatting was performed.
         }
