@@ -491,9 +491,9 @@ public class RouterResource implements LifeCycle, ResourceResolver
      *         resolved.
      */
     private Response resolveUnmappedResource(ModuleDesc module,
-                                                    UriInfo uriInfo,
-                                                    Request request,
-                                                    String acceptHdr)
+                                             UriInfo uriInfo,
+                                             Request request,
+                                             String acceptHdr)
                                                 throws WebApplicationException {
         Response response = null;
 
@@ -509,9 +509,14 @@ public class RouterResource implements LifeCycle, ResourceResolver
             if (module != null) {
                 // Path prefix was resolved as a module name.
                 // => Try to resolve resource as a module static resource.
-                String rsc = MODULE_PUBLIC_DIR
-                                        + path.substring(module.name.length());
-                URL src = module.classLoader.getResource(rsc);
+                URL src = null;
+                String rsc = path.substring(module.name.length());
+                if ((rsc.length() != 0) && (! "/".equals(rsc))) {
+                    rsc = MODULE_PUBLIC_DIR + rsc;
+                    src = module.classLoader.getResource(rsc);
+                }
+                // Else: Empty path after module name. => Ignore.
+
                 if (src != null) {
                     // Module static resource found.
                     // => Check whether data shall be returned.
