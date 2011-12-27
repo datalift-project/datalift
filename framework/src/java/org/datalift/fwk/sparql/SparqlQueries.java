@@ -104,6 +104,7 @@ public class SparqlQueries
     public SparqlQueries(Object owner) {
         this(QUERIES_DEFAULT_FILE, owner.getClass());
     }
+
     /**
      * Loads SPARQL queries from the
      * {@link SparqlQueries#QUERIES_DEFAULT_FILE default queries file}
@@ -181,7 +182,9 @@ public class SparqlQueries
                 if ((key != null) && (key.length() != 0)) {
                     String query = p.getProperty(key);
                     if ((query != null) && (query.length() != 0)) {
-                        queries.put(key, namespacePrefixes + query);
+                        String fullQuery = namespacePrefixes + query;
+                        log.trace("Loaded query: {} -> {}", key, fullQuery);
+                        queries.put(key, fullQuery);
                     }
                     else {
                         log.warn("No SPARQL query defined for {}", key);
