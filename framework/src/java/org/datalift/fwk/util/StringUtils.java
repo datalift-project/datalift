@@ -47,7 +47,7 @@ import java.util.regex.Pattern;
  *
  * @author lbihanic
  */
-public class StringUtils
+public final class StringUtils
 {
     /**
      * Default constructor, private on purpose.
@@ -89,7 +89,7 @@ public class StringUtils
      *         whitespaces removed. If the input string is
      *         <code>null</code>, an empty string is returned.
      */
-    public static String trimToEmpty(String s) {
+    public static String trim(String s) {
         return (s == null)? "": s.trim();
     }
 
@@ -104,7 +104,7 @@ public class StringUtils
      *         result is an empty string.
      */
     public static String trimToNull(String s) {
-        s = trimToEmpty(s);
+        s = trim(s);
         return (s.length() == 0)? null: s;
     }
     
