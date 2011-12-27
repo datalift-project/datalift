@@ -77,7 +77,7 @@ public interface ProjectModule extends Module
     /**
      * A description of the access to a module page.
      */
-    public final class UriDesc
+    public class UriDesc
     {
         private final URI uri;
         private final HttpMethod method;
