@@ -43,7 +43,7 @@ import java.util.Arrays;
 /**
  * A fast Java class to encode and decode to and from Base64 in
  * full accordance with
- * <a href=http://www.ietf.org/rfc/rfc2045.txt>RFC 2045</a>.
+ * <a href="http://www.ietf.org/rfc/rfc2045.txt">RFC 2045</a>.
  * <p>
  * The encoder produces the same output as the Sun one except that
  * the Sun's encoder appends a trailing line separator if the last
@@ -231,7 +231,7 @@ public final class Base64
      *
      * @param  s         the string to decode. <code>null</code> or
      *                   empty string ("") will return an empty array.
-     * @param  lenient   whether to silenty ignore illegal characters.
+     * @param  lenient   whether to silently ignore illegal characters.
      *
      * @return the decoded array of bytes. Never <code>null</code>
      *         but may be of length 0.
@@ -246,7 +246,7 @@ public final class Base64
             return new byte[0];
         }
 
-        // Note. Making an array of s is faster somtimes but slower sometimes.
+        // Note. Making an array of s is faster sometimes but slower sometimes.
         // Timing values are more uneven due to garbage creation.
 
         // Count '=' at end and disregard them
