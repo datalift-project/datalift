@@ -93,7 +93,6 @@ public abstract class Logger
     }
 
     private final static String FORMAT_ELT_PATTERN = "{}";
-    // private final static Pattern FORMAT_ELT_PATTERN = Pattern.compile("\\{}");
 
     //-------------------------------------------------------------------------
     // Logger contract definition
