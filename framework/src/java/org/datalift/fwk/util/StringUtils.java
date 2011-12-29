@@ -49,6 +49,10 @@ import java.util.regex.Pattern;
  */
 public final class StringUtils
 {
+    //-------------------------------------------------------------------------
+    // Constructors
+    //-------------------------------------------------------------------------
+
     /**
      * Default constructor, private on purpose.
      * @throws UnsupportedOperationException always.
@@ -56,6 +60,10 @@ public final class StringUtils
     private StringUtils() {
         throw new UnsupportedOperationException();
     }
+
+    //-------------------------------------------------------------------------
+    // StringUtils contract definition
+    //-------------------------------------------------------------------------
 
     /**
      * Checks if a string is neither empty ("") nor <code>null</code>.
@@ -259,5 +267,43 @@ public final class StringUtils
             throw new IllegalArgumentException(s);
         }
         return u;
+    }
+
+    /**
+     * Returns whether two strings are equals, taking care of null
+     * references.
+     * @param  s1   the first string to compare, may be
+     *              <code>null</code>.
+     * @param  s2   the second string to compare, may be
+     *              <code>null</code>.
+     *
+     * @return <code>true</code> if both strings are <code>null</code>
+               or equal; <code>false</code> otherwise.
+     */
+    public static boolean equals(String s1, String s2) {
+        return (s1 == null)? (s2 == null): s1.equals(s2);
+    }
+
+    private static final String HEX_CHARS = "0123456789abcdef";
+
+    /**
+     * Returns the hexadecimal string representation of the specified
+     * byte array.
+     * @param  raw   a byte array, may be <code>null</code>.
+     *
+     * @return the hexadecimal string representation of the byte array
+     *         content or <code>null</code>.
+     */
+    public static String toString(byte[] raw) {
+        String v = null;
+        if (raw != null) {
+            final StringBuilder hex = new StringBuilder(2 * raw.length);
+            for (final byte b : raw) {
+                hex.append(HEX_CHARS.charAt((b & 0xF0) >> 4))
+                   .append(HEX_CHARS.charAt((b & 0x0F)));
+            }
+            v = hex.toString();
+        }
+        return v;
     }
 }
