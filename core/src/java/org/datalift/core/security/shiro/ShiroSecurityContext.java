@@ -38,6 +38,7 @@ package org.datalift.core.security.shiro;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
 
+import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.security.SecurityContext;
 
 
@@ -49,6 +50,12 @@ import org.datalift.fwk.security.SecurityContext;
  */
 public class ShiroSecurityContext extends SecurityContext
 {
+    //-------------------------------------------------------------------------
+    // Class members
+    //-------------------------------------------------------------------------
+
+    private final static Logger log = Logger.getLogger();
+
     //-------------------------------------------------------------------------
     // SecurityContext contract support
     //-------------------------------------------------------------------------
@@ -70,8 +77,19 @@ public class ShiroSecurityContext extends SecurityContext
     /** {@inheritDoc} */
     @Override
     public boolean hasRole(String role) {
+        boolean hasRole = false;
         Subject s = this.getSubject();
-        return (s != null)? s.hasRole(role): false;
+        if (s != null) {
+            hasRole = s.hasRole(role);
+            if (! hasRole) {
+                hasRole = s.isPermitted(role);
+            }
+        }
+        if (log.isDebugEnabled()) {
+            log.debug("{} has role {}: {}", s.getPrincipal(), role,
+                                                    Boolean.valueOf(hasRole));
+        }
+        return hasRole;
     }
 
     //-------------------------------------------------------------------------
