@@ -106,7 +106,7 @@
   <property name="lib.home"             location="${basedir}/lib"/>
   <property name="run.lib.home"         location="${lib.home}/runtime"/>
 
-  <property name="silk.version"         value="2.5"/>
+  <property name="silk.version"         value="snapshot"/>
   <property name="silk.jar"
             location="${run.lib.home}/silk-${silk.version}/silk.jar"/>
 

@@ -40,13 +40,19 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import org.datalift.fwk.BaseModule;
+import org.datalift.fwk.Configuration;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectModule;
 import org.openrdf.OpenRDFException;
+import org.openrdf.model.Statement;
+import org.openrdf.model.URI;
 import org.openrdf.model.ValueFactory;
 import org.openrdf.query.GraphQuery;
+import org.openrdf.query.GraphQueryResult;
 import org.openrdf.query.QueryLanguage;
+import org.openrdf.query.TupleQuery;
+import org.openrdf.query.resultio.sparqlxml.SPARQLResultsXMLWriter;
 import org.openrdf.repository.Repository;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.http.HTTPRepository;
@@ -65,8 +71,9 @@ public class HandleProjectModule extends BaseModule implements ProjectModule
 
     @Override
     public UriDesc canHandle(Project p) {
-        try {       	
-            //store two interlinking RDF datasets
+        try {     
+        	
+            //store two interlinking RDF data sets into datalift
             String sesameServer = "http://localhost:8080/openrdf-sesame";
             String repositoryID = "lifted";
             
@@ -92,41 +99,11 @@ public class HandleProjectModule extends BaseModule implements ProjectModule
                 }
             catch (OpenRDFException e) {  // handle exception                      	
                    }
-                	
-            File fspec = new File("/home/exmo/zhfan/PHD/datalift_new/datalift/silk-sample/src/java/org/datalift/samples/project/insee_eurostat_without_heuristic.xml");
-        	Silk.executeFile(fspec, "region", 1, true);
-            //System.out.println("I AM HERE: " + System.getProperty("user.dir"));                          
-            //store the result in the Repository API
-            File fileout = new File(System.getProperty("user.dir")+ "/insee_eurostat_accepted_links.xml");
-            String baseURIout = "http://knowledgeweb.semanticweb.org/heterogeneity/alignment#";
             
-            Repository myRepositoryout = new HTTPRepository(sesameServer, repositoryID);
-            try {
-               RepositoryConnection conout = myRepositoryout.getConnection();              
-               try {
-                  conout.add(fileout, baseURIout, RDFFormat.RDFXML);                 
-                  //query using CONSTRUCT and form a owl:sameAs graph
-                  File filelink = new File("/home/exmo/zhfan/PHD/datalift_new/datalift/silk-sample/src/java/org/datalift/samples/project/result.xml");
-                  FileOutputStream out = new FileOutputStream(filelink);
-                  String sparqlQuery = " PREFIX owl: <http://www.w3.org/2002/07/owl#> " +
-                  		               " CONSTRUCT { ?a owl:sameAs ?b } " +
-                  		               " WHERE {" +
-                  		               " ?d <http://knowledgeweb.semanticweb.org/heterogeneity/alignment#entity1> ?a . " +
-                  		               " ?d <http://knowledgeweb.semanticweb.org/heterogeneity/alignment#entity2> ?b . " +
-                  		               " ?d <http://knowledgeweb.semanticweb.org/heterogeneity/alignment#relation> \'=\'" +
-                  		         	   " } ";
-                  RDFXMLWriter result = new RDFXMLWriter(out);
-                  GraphQuery query = conout.prepareGraphQuery(QueryLanguage.SPARQL, sparqlQuery);
-                  query.evaluate(result);                                  
-                  conout.add(filelink, "http://www.w3.org/1999/02/22-rdf-syntax-ns#", RDFFormat.RDFXML); 
-               }
-               finally {
-                  conout.close();
-               }
-            }
-            catch (OpenRDFException e) {               // handle exception                      	
-            }
-                 	
+            //link the data sets
+            File fspec = new File("/home/exmo/zhfan/PHD/datalift_new/datalift/silk-sample/src/java/org/datalift/samples/project/script.xml");
+            Silk.executeFile(fspec, "region", 1, true);
+        	  	
             return new UriDesc(this.getName() + "/cat.jpg",
                                this.getName() + ".module.label");     	
             
