@@ -236,10 +236,8 @@ public final class StringUtils
         u = DIACRITICS_AND_FRIENDS.matcher(u).replaceAll("");
         // Convert to lower cases.
         u = u.toLowerCase();
-        // Remove punctuation characters and convert multiple spaces/hyphens
-        // into a single space.
-        u = u.replaceAll("[\\s-./'\"_]+", " ").trim()
-             .replaceAll("[\\p{Punct}§()]", "");
+        // Convert punctuation characters and spaces into a single space.
+        u = u.replaceAll("[\\s\\p{Punct}§]+", " ").trim();
         // Cut if requested.
         if (maxLength > 0) {
             u = u.substring(0, Math.min(u.length(), maxLength)).trim();
@@ -258,10 +256,10 @@ public final class StringUtils
         }
         // Remove heading and trailing dashes.
         int i = 0;
-        while (t.charAt(i) == '-') i++;
         int j = t.length() - 1;
-        while (t.charAt(j) == '-') j--;
-        u = (j > i)? t.substring(i, j + 1): "";
+        while ((i <= j) && (t.charAt(i) == '-')) i++;
+        while ((j >= 0) && (t.charAt(j) == '-')) j--;
+        u = (j >= i)? t.substring(i, j + 1): "";
         // Check there's something left with all those characters removed!
         if (u.length() == 0) {
             throw new IllegalArgumentException(s);
