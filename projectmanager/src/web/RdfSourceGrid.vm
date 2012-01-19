@@ -9,8 +9,8 @@
 </head>
 <body>
 #banner
-
-	<h3>#i18n("source.grid.desc") $!esc.html($it.title)</h3>
+#set( $maxEntries = 10000 )
+	<h3>#i18n("source.grid.desc") $!esc.html($it.title) ($maxEntries #i18n("source.grid.displayed_entries"))</h3>
 	<table id="grid">
 		<thead>
 			<tr>
@@ -21,6 +21,7 @@
 		</thead>
 		<tbody>
 #foreach( $item in $it )
+  #if( $foreach.count > $maxEntries ) #break #end
 			<tr>
 				<td>$!esc.html($item.subject)</td>
 				<td>$!esc.html($item.predicate)</td>
