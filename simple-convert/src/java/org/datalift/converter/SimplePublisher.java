@@ -62,7 +62,7 @@ import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.rdf.RdfUtils;
 
 
-@Path("/" + SimplePublisher.MODULE_NAME)
+@Path(SimplePublisher.MODULE_NAME)
 public class SimplePublisher extends BaseConverterModule
 {
     //-------------------------------------------------------------------------

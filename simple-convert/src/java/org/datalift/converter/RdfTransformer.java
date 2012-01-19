@@ -57,7 +57,7 @@ import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
 
 
-@Path("/" + RdfTransformer.MODULE_NAME)
+@Path(RdfTransformer.MODULE_NAME)
 public class RdfTransformer extends BaseConverterModule
 {
     //-------------------------------------------------------------------------

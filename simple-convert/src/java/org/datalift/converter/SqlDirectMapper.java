@@ -84,7 +84,7 @@ import org.datalift.fwk.util.StringUtils;
  *
  * @author lbihanic
  */
-@Path("/" + SqlDirectMapper.MODULE_NAME)
+@Path(SqlDirectMapper.MODULE_NAME)
 public class SqlDirectMapper extends BaseConverterModule
 {
     //-------------------------------------------------------------------------

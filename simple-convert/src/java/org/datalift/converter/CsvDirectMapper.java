@@ -74,7 +74,7 @@ import static org.datalift.fwk.util.StringUtils.*;
  *
  * @author lbihanic
  */
-@Path("/" + CsvDirectMapper.MODULE_NAME)
+@Path(CsvDirectMapper.MODULE_NAME)
 public class CsvDirectMapper extends BaseConverterModule
 {
     //-------------------------------------------------------------------------

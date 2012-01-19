@@ -60,8 +60,10 @@ import org.datalift.fwk.util.RegexUriMapper;
 import org.datalift.fwk.util.StringUtils;
 import org.datalift.fwk.util.UriMapper;
 
+import static org.datalift.fwk.util.StringUtils.*;
 
-@Path("/" + RdfLoader.MODULE_NAME)
+
+@Path(RdfLoader.MODULE_NAME)
 public class RdfLoader extends BaseConverterModule
 {
     //-------------------------------------------------------------------------
@@ -116,6 +118,9 @@ public class RdfLoader extends BaseConverterModule
         try {
             log.debug("Loading RDF data from \"{}\" into graph \"{}\"",
                                                         sourceId, targetGraph);
+            if (isBlank(targetGraph.toString())) {
+                targetGraph = null;
+            }
             // Retrieve project.
             Project p = this.getProject(projectId);
             // Check for URI mapping.

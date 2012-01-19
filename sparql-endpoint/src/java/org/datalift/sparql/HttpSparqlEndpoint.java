@@ -60,7 +60,7 @@ import static org.datalift.fwk.util.StringUtils.isBlank;
  *
  * @author lbihanic
  */
-@Path("/" + AbstractSparqlEndpoint.MODULE_NAME)
+@Path(AbstractSparqlEndpoint.MODULE_NAME)
 public class HttpSparqlEndpoint extends AbstractSparqlEndpoint
 {
     //-------------------------------------------------------------------------

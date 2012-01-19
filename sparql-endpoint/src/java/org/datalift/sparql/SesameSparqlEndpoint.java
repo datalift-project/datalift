@@ -97,7 +97,7 @@ import static org.datalift.fwk.MediaTypes.*;
  *
  * @author lbihanic
  */
-@Path("/" + AbstractSparqlEndpoint.MODULE_NAME)
+@Path(AbstractSparqlEndpoint.MODULE_NAME)
 public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
 {
     //-------------------------------------------------------------------------
