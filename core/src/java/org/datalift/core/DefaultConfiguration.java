@@ -161,9 +161,18 @@ public class DefaultConfiguration extends Configuration
             log.warn("No module directory defined. " +
                      "Modules will only be loaded from application WAR");
         }
+        else {
+            log.info("Modules directory: {}", this.modulesPath);
+        }
         if (this.publicStorage == null) {
             log.warn("No public file store defined. " +
                      "No file can be made remotely available.");
+        }
+        else {
+            log.info("Public storage directory: {}", this.publicStorage);
+        }
+        if (this.privateStorage != null) {
+            log.info("Private storage directory: {}", this.privateStorage);
         }
     }
 

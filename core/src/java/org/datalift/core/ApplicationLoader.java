@@ -442,7 +442,7 @@ public class ApplicationLoader extends LogServletContextListener
         for (PackageDesc p : packages) {
             File f = p.root;
             try {
-                log.debug("Loading modules from: {}", f);
+                log.debug("Searching \"{}\" for modules...", f.getName());
                 try {
                     this.loadModules(p.classLoader, f);
                 }
@@ -476,6 +476,7 @@ public class ApplicationLoader extends LogServletContextListener
         try {
             for (Module m : ServiceLoader.load(Module.class, cl)) {
                 String name = m.getName();
+                log.debug("Initializing module \"{}\"...", name);
                 // Initialize module.
                 m.init(cfg);
                 // Register module root (directory or JAR file) as
@@ -490,7 +491,7 @@ public class ApplicationLoader extends LogServletContextListener
                 ModuleDesc desc = new ModuleDesc(m, cl, f);
                 this.modules.put(name, desc);
                 // Notify module registration.
-                log.info("Registered module \"{}\" with path \"{}\"",
+                log.info("Registered module \"{}\" with URL path \"{}\"",
                                             m.getClass().getSimpleName(), name);
             }
         }
