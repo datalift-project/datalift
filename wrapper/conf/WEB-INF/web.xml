@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<web-app version="2.4"
+    xmlns="http://java.sun.com/xml/ns/j2ee"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+        http://java.sun.com/xml/ns/j2ee
+          http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
+
+  <display-name>datalift</display-name>
+  <description>DataLift</description>
+
+  <!-- ===== Lifecycle event listeners ===== -->
+
+  <!-- DataLift application initialisation and shutdown listener -->
+  <listener>
+    <listener-class>
+      org.datalift.core.ApplicationLoader
+    </listener-class>
+  </listener>
+
+ <context-param>
+    <param-name>velocity.templates.path</param-name>
+    <param-value>WEB-INF/templates</param-value>
+  </context-param>
+  <context-param>
+    <param-name>velocity.templates.encoding</param-name>
+    <param-value>UTF-8</param-value>
+  </context-param>
+  <context-param>
+    <param-name>velocity.templates.update.check</param-name>
+    <param-value>-1</param-value>
+  </context-param>
+
+  <!-- ===== Filter definitions & URL mappings ===== -->
+
+  <!-- Character encoding filter -->
+  <filter>
+    <filter-name>CharacterEncodingFilter</filter-name>
+    <filter-class>
+      org.datalift.core.util.web.CharacterEncodingFilter
+    </filter-class>
+    <init-param>
+      <!-- Set character encoding (UTF-8) only if no encoding is specified. -->
+      <param-name>ignore</param-name>
+      <param-value>false</param-value>
+    </init-param>
+  </filter>
+  <!-- Apply ccharacter encoding filter to all resources -->
+  <filter-mapping>
+    <filter-name>CharacterEncodingFilter</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
+
+  <!-- Log context initialization and clean-up filter -->
+  <filter>
+    <filter-name>LogContextFilter</filter-name>
+    <filter-class>
+      org.datalift.core.log.web.LogContextFilter
+    </filter-class>
+  </filter>
+  <!-- Apply log context filter to all resources -->
+  <filter-mapping>
+    <filter-name>LogContextFilter</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
+
+  <!-- Jersey (JAS-RS framework) entry point configuration -->
+  <!-- Note: Using Jersey as a filter is required as:
+              1. There is no way to have the Jersey servlet not handling the
+                 requests passed on to it (for example /css/...)
+              2. It is not possible to use several servlet-mappings as
+                 any prefix declared in a servlet-mapping (e.g. /resource)
+                 directly impacts the URI of the deployed resources.
+   -->
+  <filter>
+    <filter-name>Jersey</filter-name>
+    <filter-class>
+      com.sun.jersey.spi.container.servlet.ServletContainer
+    </filter-class>
+    <!-- Configuration of the JAX-RS application -->
+    <init-param>
+      <param-name>javax.ws.rs.Application</param-name>
+      <param-value>org.datalift.core.DataliftApplication</param-value>
+    </init-param>
+    <!-- Prevent Jersey from serving static files -->
+    <init-param>
+      <param-name>com.sun.jersey.config.property.WebPageContentRegex</param-name>
+      <param-value>(/(images|css|js|wro|(WEB-INF/jsp))/.*)|(.*\.html)</param-value>
+    </init-param>
+    <!-- Activation of automatic redirection for URLs ending with slash -->
+    <init-param>
+      <param-name>com.sun.jersey.config.feature.Redirect</param-name>
+      <param-value>true</param-value>
+    </init-param>
+    <!-- Install some filters to
+          - Honor GZip accepted encoding in response
+          - Replace POST method by PUT or DELETE according to extended HTTP
+            header or _method request parameter
+          - Make user's preferred locales globally available
+     -->
+    <init-param>
+      <param-name>com.sun.jersey.spi.container.ContainerRequestFilters</param-name>
+      <param-value>
+        com.sun.jersey.api.container.filter.GZIPContentEncodingFilter;
+        com.sun.jersey.api.container.filter.PostReplaceFilter;
+        org.datalift.core.i18n.jersey.PreferredLocalesFilter
+      </param-value>
+    </init-param>
+    <init-param>
+      <param-name>com.sun.jersey.spi.container.ContainerResponseFilters</param-name>
+      <param-value>
+        org.datalift.core.i18n.jersey.PreferredLocalesFilter;
+        com.sun.jersey.api.container.filter.GZIPContentEncodingFilter
+      </param-value>
+    </init-param>
+  </filter>
+  <!-- Route all service calls to Jersey -->
+  <filter-mapping>
+    <filter-name>Jersey</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
+
+  <!-- Web Resource Optimizer, merges and minifies JS and CSS -->
+  <filter>
+    <filter-name>WebResourceOptimizer</filter-name>
+    <filter-class>
+      ro.isdc.wro.http.WroFilter
+    </filter-class>
+    <init-param>
+      <param-name>configuration</param-name>
+      <param-value>DEPLOYMENT</param-value>
+    </init-param>
+    <init-param>
+      <param-name>jmxEnabled</param-name>
+      <param-value>false</param-value>
+    </init-param>
+  </filter>
+  <filter-mapping>
+    <filter-name>WebResourceOptimizer</filter-name>
+    <url-pattern>/wro/*</url-pattern>
+  </filter-mapping>
+
+  <!-- Client-side cache management filter -->
+  <filter>
+    <filter-name>CacheForWeek</filter-name>
+    <filter-class>
+      org.datalift.core.util.web.ResponseHeaderFilter
+    </filter-class>
+    <init-param>
+      <param-name>Cache-Control</param-name>
+      <param-value>public, max-age=604800</param-value>
+    </init-param>
+  </filter>
+  <!-- Cache all static resource for a week -->
+  <filter-mapping>
+    <filter-name>CacheForWeek</filter-name>
+    <url-pattern>*.css</url-pattern>
+  </filter-mapping>
+  <filter-mapping>
+    <filter-name>CacheForWeek</filter-name>
+    <url-pattern>*.js</url-pattern>
+  </filter-mapping>
+  <filter-mapping>
+    <filter-name>CacheForWeek</filter-name>
+    <url-pattern>*.gif</url-pattern>
+  </filter-mapping>
+  <filter-mapping>
+    <filter-name>CacheForWeek</filter-name>
+    <url-pattern>*.jpg</url-pattern>
+  </filter-mapping>
+  <filter-mapping>
+    <filter-name>CacheForWeek</filter-name>
+    <url-pattern>*.png</url-pattern>
+  </filter-mapping>
+  <filter-mapping>
+    <filter-name>CacheForWeek</filter-name>
+    <url-pattern>*.ico</url-pattern>
+  </filter-mapping>
+
+  <!-- ===== Servlets definition & URL mapping ===== -->
+
+  <!-- None. Tomcat default servlet will take care of static files. -->
+
+  <!-- ===== Security constraints ===== -->
+
+  <!-- Taken care of by Shiro security filter above. -->
+
+  <!-- ===== Welcome files ===== -->
+
+  <welcome-file-list>
+    <welcome-file>index.html</welcome-file>
+  </welcome-file-list> 
+
+  <!-- ===== MIME type mappings for RDF data and associated files ===== -->
+
+  <mime-mapping>
+    <extension>csv</extension>
+    <mime-type>text/csv</mime-type>
+  </mime-mapping>
+  <mime-mapping>
+    <extension>n3</extension>
+    <mime-type>text/n3</mime-type>
+  </mime-mapping>
+  <mime-mapping>
+    <extension>nt</extension>
+    <mime-type>application/n-triples</mime-type>
+  </mime-mapping>
+  <mime-mapping>
+    <extension>rdf</extension>
+    <mime-type>application/rdf+xml</mime-type>
+  </mime-mapping>
+  <mime-mapping>
+    <extension>ttl</extension>
+    <mime-type>text/turtle</mime-type>
+  </mime-mapping>
+  <mime-mapping>
+    <extension>trig</extension>
+    <mime-type>application/x-trig</mime-type>
+  </mime-mapping>
+  <mime-mapping>
+    <extension>trix</extension>
+    <mime-type>application/trix</mime-type>
+  </mime-mapping>
+
+</web-app>
