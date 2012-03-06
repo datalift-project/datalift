@@ -60,10 +60,18 @@
   <property name="src.home"             location="${basedir}/src/java"/>
 
   <property name="lib.home"             location="${basedir}/lib"/>
-  <property name="ant.lib.home"         location="${lib.home}/ant"/>
   <property name="run.lib.home"         location="${lib.home}/runtime"/>
 
   <property name="classes.dir"          location="${build.home}/classes"/>
+
+  <property name="conf.home"            location="${basedir}/conf"/>
+  <property name="runtime.conf"         location="${conf.home}/runtime"/>
+  <property name="webapp.conf"          location="${conf.home}/webapp"/>
+
+  <property name="core.home"            location="${basedir}/../core"/>
+  <property name="datalift.war.name"    value="datalift.war"/>
+  <property name="datalift.war.path"
+            location="${core.home}/dist/${datalift.war.name}"/>
 
 
   <!-- ================ Compilation Control Options ======================= -->
@@ -189,17 +197,40 @@
 
   <!-- ================ Distribution Target =============================== -->
 
-  <target name="dist" depends="compile"
-                      description="Creates a binary distribution">
-
+  <target name="prepare-dist" depends="prepare">
     <mkdir dir="${dist.home}"/>
+    <!-- Copy runtime directory strcuture -->
+    <copy todir="${dist.home}" preservelastmodified="true">
+      <fileset dir="${runtime.conf}"/>
+    </copy>
+    <!-- Copy DataLift main web application -->
+    <copy file="${datalift.war.path}" todir="${dist.home}/webapps"/>
+    <!-- Patch DataLift webapp to install standalon app. security config. -->
+    <jar jarfile="${dist.home}/webapps/${datalift.war.name}" update="true">
+      <fileset dir="${webapp.conf}"/>
+    </jar>
+  </target>
+
+  <!--
+    The "dist" target creates a binary distribution of your application
+    in a directory structure ready to be archived in a jar, war, ear,
+    tar.gz or zip file.
+    Note that this target depends on two other targets:
+      - "compile" to build the the entire web application (including
+        external dependencies);
+      - "prepare-dist" to prepare web application configuration for
+        deployement.
+   -->
+
+  <target name="dist" depends="compile,prepare-dist"
+                      description="Creates a binary distribution">
 
     <pathconvert property="jar.classpath"
                     refid="runtime.classpath" pathsep=" ">
       <flattenmapper/>
     </pathconvert>
 
-    <jar jarfile="${dist.home}/${app.name}.jar">
+    <jar jarfile="${dist.home}/bin/${app.name}.jar">
       <fileset dir="${classes.dir}"/>
       <manifest>
         <attribute name="Main-Class" value="org.datalift.wrapper.Wrapper"/>
