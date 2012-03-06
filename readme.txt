@@ -1,13 +1,15 @@
 In order to run silk-sample in datalift, the following steps should be done:
-1. go to datalift/silk-sample/src/java/org/datalift/samples/project, open the HandleProjectModule.java file, change the path of the files: regions-2010.rdf, nuts2008_complete.rdf and script.xml to the path of your computer environment. regions-2010.rdf and nuts2008_complete.rdf are two input RDF data sets, you can change them to other RDF data sets files. But pay attention, you also need to specify the basic uri of your data sets to variables baseURIin1 and baseURIin2. script.xml is the silk script that link the data sets. 
-2. compile datalift
-3. create a folder named "silk" in datalift-home/modules
-4. put the silk-sample.jar in datalift-home/modules/silk
-5. download sesame 2.6.1, put openrdf-sesame.war and openrdf-workbench.war into tomcat/webapps
-6. restart tomcat
-7. go to http://localhost:8080/datalift/workspace and create a project
-8. go to http://localhost:8080/datalift/sparql and query by
+1. create a project
+2. go to "Sources" to upload two RDF data sets
+3. go back to "Description", press button "RDF source file loading", loading the RDF data sets that you upload at 2nd step
+4. go back to "Description", press button "Data publishing to public RDF store", publishing the RDF data sets that you load at 3nd step
+5. go back to "Description", press button "Interconnection", upload the SILK script file, and file the linkSPecId, number of Threadshold and reload or not(true or false). For example, in our case, they are "region", 1 and true respectively. Finally, press button "Run SILK!" 
+6. if a page shows "OK~~" comes, go to http://localhost:8080/datalift/sparql and query by
 SELECT * WHERE {
   ?s <http://www.w3.org/2002/07/owl#sameAs> ?o .
 }
-9. the link result comes.
+the link result comes.
+
+PAY ATTENTION: 
+i. download sesame 2.6.1, put openrdf-sesame.war and openrdf-workbench.war into tomcat/webapps
+ii. we put two RDF data sets and a SILK script file in the folder datalift/silk-sample/src/java/org/datalift/samples/project for users to test
