@@ -111,9 +111,7 @@ public class TransformedRdfSourceImpl extends BaseSource
     /** {@inheritDoc} */
     @Override
     public void delete() {
-        RepositoryConnection cnx = Configuration.getDefault()
-                                                .getInternalRepository()
-                                                .newConnection();
+        RepositoryConnection cnx = this.getRepositoryConnection();
         try {
             cnx.clear(cnx.getValueFactory().createURI(this.getTargetGraph()));
         }
@@ -149,9 +147,7 @@ public class TransformedRdfSourceImpl extends BaseSource
     /** {@inheritDoc} */
     @Override
     public CloseableIterator<Statement> iterator() {
-        final RepositoryConnection cnx = Configuration.getDefault()
-                                                      .getInternalRepository()
-                                                      .newConnection();
+        final RepositoryConnection cnx = this.getRepositoryConnection();
         try {
             final GraphQueryResult result =
                         cnx.prepareGraphQuery(QueryLanguage.SPARQL,
@@ -223,5 +219,10 @@ public class TransformedRdfSourceImpl extends BaseSource
         if (this.getTitle() == null) {
             this.setTitle("<" + targetGraph + '>');
         }
+    }
+
+    protected RepositoryConnection getRepositoryConnection() {
+        return Configuration.getDefault()
+                            .getInternalRepository().newConnection();
     }
 }
