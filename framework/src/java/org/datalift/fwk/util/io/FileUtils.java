@@ -151,12 +151,15 @@ public final class FileUtils
             // Force server connection.
             log.debug("Connecting to \"{}\"...", u);
             cnx.connect();
-            // Check for error data.
-            InputStream in = null;
+            // Check for HTTP status code.
+            int status = 0;
             if (cnx instanceof HttpURLConnection) {
-                in = ((HttpURLConnection)cnx).getErrorStream();
+                status = ((HttpURLConnection)cnx).getResponseCode();
+                if (((status / 100) * 100) == 200) {
+                    status = 0;                 // Success!
+                }
             }
-            if (in == null) {
+            if (status == 0) {
                 // No error. => Save data locally.
                 log.debug("Downloading source data from \"{}\"...", u);
                 save(cnx.getInputStream(), to);
@@ -168,6 +171,7 @@ public final class FileUtils
                 Reader r = null;
                 try {
                     String[] ct = parseContentType(cnx.getContentType());
+                    InputStream in = ((HttpURLConnection)cnx).getErrorStream();
                     r = (ct[1] == null)? new InputStreamReader(in):
                                          new InputStreamReader(in, ct[1]);
                     l = r.read(buf);
@@ -176,9 +180,10 @@ public final class FileUtils
                 finally {
                     close(r);
                 }
-                IOException e = new IOException(
-                                        "Failed to connect to \"" + u + '"');
-                log.fatal("{}: {}", e, e.getMessage(), new String(buf, 0, l));
+                IOException e = new IOException("Failed to connect to \"" +
+                                                u + "\": status=" + status);
+                log.fatal("{}, message=\"{}\"", e,
+                                        e.getMessage(), new String(buf, 0, l));
                 throw e;
             }
         }
