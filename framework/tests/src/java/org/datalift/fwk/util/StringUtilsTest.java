@@ -51,7 +51,7 @@ public class StringUtilsTest
     public void testUrlifyOk() throws Exception {
         String in = "¿ Iñtërnâtiônàlîzætiøn\u00a0: ç'Æßt \"dùr\" (éê) ?";
         String out = StringUtils.urlify(in);
-        assertEquals("internationalizaetion--c-aesst-dur-ee", out);
+        assertEquals("internationalizaetion-c-aesst-dur-ee", out);
     }
 
     @Test(expected=IllegalArgumentException.class)
