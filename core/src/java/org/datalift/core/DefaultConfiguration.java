@@ -130,7 +130,7 @@ public class DefaultConfiguration extends Configuration
     /** The public (i.e. remotely accessible) file storage. */
     private final File publicStorage;
     /** The module directory. */
-    private final File modulesPath;
+    private final Collection<File> modulePaths = new LinkedList<File>();
 
     /** The registry for beans indexed by name. */
     private final Map<String,Object> beansByName =
@@ -152,17 +152,18 @@ public class DefaultConfiguration extends Configuration
      */
     public DefaultConfiguration(Properties props) {
         this.props          = this.loadConfiguration(props);
-        this.modulesPath    = this.initLocalPath(MODULES_PATH, false, false);
+        this.modulePaths.clear();
+        this.modulePaths.addAll(this.initLocalPaths(MODULES_PATH, false, false));
         this.privateStorage = this.initLocalPath(PRIVATE_STORAGE_PATH, true, true);
         this.publicStorage  = this.initLocalPath(PUBLIC_STORAGE_PATH, false, true);
 
         // Check configuration to warn against potential problems.
-        if (this.modulesPath == null) {
+        if (this.modulePaths.isEmpty()) {
             log.warn("No module directory defined. " +
                      "Modules will only be loaded from application WAR");
         }
         else {
-            log.info("Modules directory: {}", this.modulesPath);
+            log.info("Module directories: {}", this.modulePaths);
         }
         if (this.publicStorage == null) {
             log.warn("No public file store defined. " +
@@ -253,8 +254,8 @@ public class DefaultConfiguration extends Configuration
 
     /** {@inheritDoc} */
     @Override
-    public File getModulesPath() {
-        return this.modulesPath;
+    public Collection<File> getModulePaths() {
+        return this.modulePaths;
     }
 
     /** {@inheritDoc} */
@@ -548,8 +549,28 @@ public class DefaultConfiguration extends Configuration
      */
     private File initLocalPath(String key, boolean required,
                                            boolean create) {
+        return this.checkLocalPath(this.getConfigurationEntry(key, required),
+                                   required, create);
+    }
+
+    private Collection<File> initLocalPaths(String key, boolean required,
+                                                        boolean create) {
+        Collection<File> files = new LinkedList<File>();
+
+        String paths = this.getConfigurationEntry(key, required);
+        for (String p : paths.split("\\s*,\\s*")) {
+            files.add(this.checkLocalPath(p, false, create));
+        }
+        if ((required) && (files.isEmpty())) {
+            // At least one existing path is mandated.
+            throw new TechnicalException("local.paths.not.directories", paths);
+        }
+        return files;
+    }
+
+    private File checkLocalPath(String path, boolean required, boolean create) {
         File f = null;
-        String path = this.getConfigurationEntry(key, required);
+
         if (path != null) {
             f = new File(path);
             if (! f.exists()) {
@@ -559,12 +580,14 @@ public class DefaultConfiguration extends Configuration
                                             "local.path.creation.failed", f);
                     }
                     else {
-                        log.warn("Created storage directory \"{}\" " +
-                            "(required for configuration entry \"{}\")", f, key);
+                        log.warn("Created configured directory: {}", f);
                     }
                 }
                 else {
-                    throw new TechnicalException("local.path.not.directory", f);
+                    if (required) {
+                        // Path does not exist, is required but can not be created.
+                        throw new TechnicalException("local.path.not.directory", f);
+                    }
                 }
             }
             else {

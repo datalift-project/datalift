@@ -231,8 +231,8 @@ public abstract class Configuration
     abstract public File getPrivateStorage();
 
     /**
-     * Return the path of the directory where the DataLift application
-     * expects to find the {@link Module module} components.
+     * Return the paths of the directories where the DataLift
+     * application expects to find the {@link Module module} components.
      * <p>
      * A module can be packaged either as a single JAR or as a
      * directory with the following first-level sub-directories:</p>
@@ -243,12 +243,12 @@ public abstract class Configuration
      *   libraries</li>
      * </ul>
      *
-     * @return Return the path of the module storage directory or
-     *         <code>null</code> if loading of third-party modules is
+     * @return Return the paths of the module storage directories. The
+     *         collection is empty if loading of third-party modules is
      *         disabled (i.e. modules are only loaded from the
      *         application archive (WAR).
      */
-    abstract public File getModulesPath();
+    abstract public Collection<File> getModulePaths();
 
     /**
      * Loads a third-party properties file.
