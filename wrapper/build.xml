@@ -199,7 +199,13 @@
 
   <target name="prepare-dist" depends="prepare">
     <mkdir dir="${dist.home}"/>
-    <!-- Copy runtime directory strcuture -->
+    <!-- Copy runtime directory structure -->
+    <copy todir="${dist.home}/bin" flatten="true" preservelastmodified="true">
+      <fileset dir="${run.lib.home}">
+        <include name="**/*.jar"/>
+      </fileset>
+    </copy>
+    <!-- Copy wrapper runtime dependencies -->
     <copy todir="${dist.home}" preservelastmodified="true">
       <fileset dir="${runtime.conf}"/>
     </copy>
