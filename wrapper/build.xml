@@ -73,6 +73,10 @@
   <property name="datalift.war.path"
             location="${core.home}/dist/${datalift.war.name}"/>
 
+  <property name="modules"
+            value="sparql-endpoint,projectmanager,simple-convert"/>
+  <property name="datalift.root"        location="${basedir}/.."/>
+
 
   <!-- ================ Compilation Control Options ======================= -->
 
@@ -117,6 +121,8 @@
     <!-- Runtime libraries -->
     <path refid="runtime.classpath"/>
   </path>
+
+  <filelist id="module.list" dir="${datalift.root}" files="${modules}"/>
 
 
   <!-- ================ All Target ======================================== -->
@@ -197,7 +203,19 @@
 
   <!-- ================ Distribution Target =============================== -->
 
-  <target name="prepare-dist" depends="prepare">
+  <target name="build-core">
+    <subant target="dist">
+      <filelist dir="${basedir}/.." files="framework,core"/>
+    </subant>
+  </target>
+
+  <target name="build-modules" depends="build-core">
+    <subant target="dist">
+      <filelist refid="module.list"/>
+    </subant>
+  </target>
+
+  <target name="prepare-dist" depends="prepare,build-core,build-modules">
     <mkdir dir="${dist.home}"/>
     <!-- Copy runtime directory structure -->
     <copy todir="${dist.home}/bin" flatten="true" preservelastmodified="true">
@@ -215,6 +233,19 @@
     <jar jarfile="${dist.home}/webapps/${datalift.war.name}" update="true">
       <fileset dir="${webapp.conf}"/>
     </jar>
+    <!-- Copy default DataLift modules -->
+    <pathconvert property="modules.jars" refid="module.list" pathsep=",">
+      <mapper>
+        <chainedmapper>
+          <globmapper from="${datalift.root}/*" to="*/dist" handledirsep="false"/>
+          <regexpmapper from="^(.*)$" to="\1/*.jar"/>
+        </chainedmapper>
+      </mapper>
+    </pathconvert>
+    <copy todir="${dist.home}/modules" flatten="true"
+                                       preservelastmodified="true">
+      <fileset dir="${datalift.root}" includes="${modules.jars}"/>
+    </copy>
   </target>
 
   <!--
