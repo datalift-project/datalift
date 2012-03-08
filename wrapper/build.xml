@@ -30,6 +30,8 @@
   <property file="${user.home}/datalift-build.properties"/>
   <property file="build.properties"/>
 
+  <property name="datalift.root" location="${basedir}/.."/>
+
 
   <!-- ================ File and Directory Names ========================== -->
 
@@ -75,7 +77,6 @@
 
   <property name="modules"
             value="sparql-endpoint,projectmanager,simple-convert"/>
-  <property name="datalift.root"        location="${basedir}/.."/>
 
 
   <!-- ================ Compilation Control Options ======================= -->
