@@ -193,6 +193,11 @@ public final class FileUtils
     }
 
     public static void save(InputStream from, File to) throws IOException {
+        save(from, to, true);
+    }
+
+    public static void save(InputStream from, File to, boolean closeInput)
+                                                            throws IOException {
         if (from == null) {
             throw new IllegalArgumentException("from");
         }
@@ -222,7 +227,9 @@ public final class FileUtils
             copyFailed = false;
         }
         finally {
-            close(in);
+            if (closeInput) {
+                close(in);
+            }
             close(out);
             if (copyFailed) {
                 to.delete();

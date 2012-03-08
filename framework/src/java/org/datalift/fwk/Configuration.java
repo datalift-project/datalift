@@ -231,6 +231,13 @@ public abstract class Configuration
     abstract public File getPrivateStorage();
 
     /**
+     * Returns the path of the temporary file storage. This storage shall
+     * be used to save temporary data.
+     * @return the path of the temporary file storage.
+     */
+    abstract public File getTempStorage();
+
+    /**
      * Return the paths of the directories where the DataLift
      * application expects to find the {@link Module module} components.
      * <p>

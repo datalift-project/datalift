@@ -97,6 +97,9 @@ public class DefaultConfiguration extends Configuration
     /** The property to define the private file storage directory path. */
     public final static String PRIVATE_STORAGE_PATH =
                                             "datalift.private.storage.path";
+    /** The property to define the temporary storage directory path. */
+    public final static String TEMP_STORAGE_PATH =
+                                            "datalift.temp.storage.path";
 
     /**
      * Former property suffix for repository URL.
@@ -129,6 +132,8 @@ public class DefaultConfiguration extends Configuration
     private final File privateStorage;
     /** The public (i.e. remotely accessible) file storage. */
     private final File publicStorage;
+    /** The temporary file storage. */
+    private final File tempStorage;
     /** The module directory. */
     private final Collection<File> modulePaths = new LinkedList<File>();
 
@@ -175,6 +180,12 @@ public class DefaultConfiguration extends Configuration
         if (this.privateStorage != null) {
             log.info("Private storage directory: {}", this.privateStorage);
         }
+
+        File tmpStorage = this.initLocalPath(TEMP_STORAGE_PATH, false, true);
+        if (tmpStorage == null) {
+            tmpStorage = new File(System.getProperty("java.io.tmpdir"));
+        }
+        this.tempStorage = tmpStorage;
     }
 
     //-------------------------------------------------------------------------
@@ -250,6 +261,12 @@ public class DefaultConfiguration extends Configuration
     @Override
     public File getPrivateStorage() {
         return this.privateStorage;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public File getTempStorage() {
+        return this.tempStorage;
     }
 
     /** {@inheritDoc} */

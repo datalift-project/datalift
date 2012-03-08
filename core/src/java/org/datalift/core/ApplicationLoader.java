@@ -37,6 +37,7 @@ package org.datalift.core;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.io.FileInputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -52,6 +53,8 @@ import java.util.Properties;
 import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.jar.JarEntry;
+import java.util.jar.JarInputStream;
 
 import javax.ws.rs.Path;
 
@@ -63,6 +66,7 @@ import org.datalift.fwk.LifeCycle;
 import org.datalift.fwk.Module;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.log.web.LogServletContextListener;
+import org.datalift.fwk.util.io.FileUtils;
 
 import static org.datalift.core.DefaultConfiguration.DATALIFT_HOME;
 
@@ -90,6 +94,9 @@ public class ApplicationLoader extends LogServletContextListener
      * be loaded.
      */
     public final static String MODULE_LIB_DIR     = "lib";
+
+    /** The name of the directory where to store temporary files. */
+    private final static String CACHE_DIRECTORY_NAME    = "module-data";
 
     //-------------------------------------------------------------------------
     // Class members
@@ -551,6 +558,27 @@ public class ApplicationLoader extends LogServletContextListener
         else {
             // JAR file. => Add the JAR file itself to the classpath.
             urls.add(this.getFileUrl(path, srcName));
+            // Extract wrapped JARs and add them to classpath.
+            JarEntry e = null;
+            try {
+                File tempJarDir = new File(Configuration.getDefault().getTempStorage(),
+                                           CACHE_DIRECTORY_NAME + '/' + path.getName());
+                JarInputStream in = new JarInputStream(new FileInputStream(path));
+                while ((e = in.getNextJarEntry()) != null) {
+                    if (e.getName().endsWith(".jar")) {
+                        File f = new File(tempJarDir, e.getName());
+                        if (! tempJarDir.exists()) {
+                            tempJarDir.mkdirs();
+                        }
+                        FileUtils.save(in, f, false);
+                        urls.add(f.toURI().toURL());
+                    }
+                }
+            }
+            catch (Exception ex) {
+                log.warn("Failed to extract embedded JAR {} from {}", ex,
+                         e, path);
+            }
         }
         return urls.toArray(new URL[urls.size()]);
     }

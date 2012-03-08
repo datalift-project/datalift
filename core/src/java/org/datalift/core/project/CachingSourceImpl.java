@@ -34,7 +34,8 @@ public abstract class CachingSourceImpl extends BaseSource
 
     private final static long MIN_CACHE_DURATION = 3 * MINUTES_TO_MILLIS;
 
-    private final static String CACHE_DIRECTORY_NAME    = "caches";
+    /** The name of the directory where to store temporary files. */
+    private final static String CACHE_DIRECTORY_NAME    = "source-data";
 
     //-------------------------------------------------------------------------
     // Class members
@@ -166,7 +167,7 @@ public abstract class CachingSourceImpl extends BaseSource
                                 + urlify(this.getProject().getTitle())
                                 + File.separatorChar
                                 + urlify(this.getTitle()) + "-cache" + ext;
-            File f = new File(Configuration.getDefault().getPrivateStorage(),
+            File f = new File(Configuration.getDefault().getTempStorage(),
                               filePath);
             // Make sure parent directories exist.
             f.getParentFile().mkdirs();
