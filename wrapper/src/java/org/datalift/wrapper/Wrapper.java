@@ -15,6 +15,8 @@ import org.mortbay.jetty.webapp.WebAppContext;
 
 import com.centerkey.utils.BareBonesBrowserLaunch;
 
+import static org.datalift.wrapper.OsType.*;
+
 
 public final class Wrapper
 {
@@ -24,13 +26,29 @@ public final class Wrapper
     public final static String DATALIFT_HOME = "datalift.home";
     /** The system property defining the DataLift installation directory. */
     public final static String DATALIFT_ROOT = "datalift.root";
+    /** The system property defining the location of the DataLift log files. */
+    public final static String DATALIFT_LOG_PATH = "datalift.log.path";
     /** The Sesame repository directory system property variable. */
     public final static String SESAME_HOME =
                                         "info.aduna.platform.appdata.basedir";
     private final static String SESAME_REPOSITORIES_DIR = "repositories";
 
-    private final static String MAC_OSX_OS_NAME = "Mac OS";
-    private final static String WINDOWS_OS_NAME = "Windows";
+    private final static String MAC_DATALIFT_NAME = "DataLift";
+    private final static String MAC_APPL_DATA_PATH =
+                            "Library/Application Support/" + MAC_DATALIFT_NAME;
+    private final static String MAC_APPL_CACHE_PATH =
+                            "Library/Caches/" + MAC_DATALIFT_NAME;
+    private final static String MAC_APPL_LOGS_PATH =
+                            "Library/Logs/" + MAC_DATALIFT_NAME;
+
+    private final static String WIN_DATALIFT_NAME = MAC_DATALIFT_NAME;
+    private final static String WIN_APPL_DATA_PATH =
+                            "Application Data/" + WIN_DATALIFT_NAME;
+
+    private final static String OTHER_DATALIFT_NAME   = ".datalift";
+    private final static String OTHER_APPL_DATA_PATH  = OTHER_DATALIFT_NAME;
+    private final static String OTHER_APPL_CACHE_PATH = "temp";
+    private final static String OTHER_APPL_LOGS_PATH  = "logs";
 
     public static void main(String[] args) throws Exception
     {
@@ -72,14 +90,22 @@ public final class Wrapper
             File sesameHome = new File(dataliftHome, SESAME_REPOSITORIES_DIR);
             System.setProperty(SESAME_HOME, sesameHome.getCanonicalPath());
         }
+        // Set DataLift log files location.
+        File logPath = (CURRENT_OS == MacOS)? getUserPath(MAC_APPL_LOGS_PATH):
+                                new File(dataliftHome, OTHER_APPL_LOGS_PATH);
+        logPath.mkdirs();
+        System.setProperty(DATALIFT_LOG_PATH, logPath.getCanonicalPath());
         // Set (and create) Jetty working directory.
         System.setProperty("jetty.home", dataliftRoot.getPath());
         File jettyWorkDir = new File(dataliftHome, "work");
         jettyWorkDir.mkdirs();
         // Set (and create) Jetty temporary directory.
-        File jettyTempDir = new File(dataliftHome, "temp");
-        jettyTempDir.mkdirs();
-        System.setProperty("java.io.tmpdir", jettyTempDir.getAbsolutePath());
+        File tempDir = new File(dataliftHome, OTHER_APPL_CACHE_PATH);
+        if (CURRENT_OS == MacOS) {
+            tempDir = getUserPath(MAC_APPL_CACHE_PATH);
+        }
+        tempDir.mkdirs();
+        System.setProperty("java.io.tmpdir", tempDir.getAbsolutePath());
         // Create Jetty server.
         final Server httpServer = new Server(httpPort);
         // Register web applications.
@@ -119,21 +145,22 @@ public final class Wrapper
     }
 
     private static File getUserEnv() {
-        // Build user-specific DataLift configuration path
+        // Build user-specific DataLift execution environment path
         // depending on local OS type.
-        String userConfigPath = ".datalift";
+        return getUserPath((CURRENT_OS == MacOS)?   MAC_APPL_DATA_PATH:
+                           (CURRENT_OS == Windows)? WIN_APPL_DATA_PATH:
+                                                    OTHER_APPL_DATA_PATH);
+    }
 
-        String osName = System.getProperty("os.name");
-        if (osName.startsWith(MAC_OSX_OS_NAME)) {
-            userConfigPath = "Library/Application Support/DataLift";
+    private static File getUserPath(String path) {
+        if (path == null) {
+            throw new IllegalArgumentException("path");
         }
-        else if (osName.startsWith(WINDOWS_OS_NAME)) {
-            userConfigPath = "Application Data/DataLift";
+        if (path.charAt(0) == '/') {
+            // Path shall be relative to user home directory.
+            path = path.substring(1);
         }
-        // Else: Assume Unix or Linux...
-
-        return new File(new File(System.getProperty("user.home")),
-                        userConfigPath);
+        return new File(new File(System.getProperty("user.home")), path);
     }
 
     private static void installUserEnv(File path, File source)
@@ -141,18 +168,25 @@ public final class Wrapper
         if (path != null) {
             createDirectory(path);
             // Create working directory, if they do not exist yet...
-            createDirectory(new File(path, "logs"));
             createDirectory(new File(path, "modules"));
             createDirectory(new File(path, "storage/public"));
-            createDirectory(new File(path, "temp"));
             createDirectory(new File(path, "work"));
+            if (CURRENT_OS != MacOS) {
+                createDirectory(new File(path, "logs"));
+                createDirectory(new File(path, "temp"));
+            }
 
             if ((source != null) && (! source.equals(path))) {
                 // Copy runtime templates: configuration...
-                copy(new File(source, "conf"), new File(path, "conf"));
+                File target = new File(path, "conf");
+                if (! target.exists()) {
+                    copy(new File(source, "conf"), target);
+                }
                 // and empty Sesame repositories.
-                copy(new File(source, SESAME_REPOSITORIES_DIR),
-                     new File(path,   SESAME_REPOSITORIES_DIR));
+                target= new File(path, SESAME_REPOSITORIES_DIR);
+                if (! target.exists()) {
+                    copy(new File(source, SESAME_REPOSITORIES_DIR), target);
+                }
             }
         }
         // Else: ignore...

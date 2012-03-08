@@ -5,7 +5,7 @@
   <!-- ===== Appenders ===== -->
   <!-- Default appender: log file -->
   <appender name="defaultLog" class="org.apache.log4j.RollingFileAppender">
-    <param name="file" value="${datalift.home}/logs/datalift.log"/>
+    <param name="file" value="${datalift.log.path}/datalift.log"/>
     <param name="maxFileSize"    value="100KB"/>
     <param name="maxBackupIndex" value="10"/>
 
