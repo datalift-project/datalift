@@ -65,10 +65,16 @@
   <property name="run.lib.home"         location="${lib.home}/runtime"/>
 
   <property name="classes.dir"          location="${build.home}/classes"/>
+  <property name="dist.dir"             location="${build.home}/dist"/>
+  <property name="gen.dist.dir"         location="${dist.dir}/gen"/>
 
   <property name="conf.home"            location="${basedir}/conf"/>
   <property name="runtime.conf"         location="${conf.home}/runtime"/>
   <property name="webapp.conf"          location="${conf.home}/webapp"/>
+
+  <property name="mac.app.name"         value="DataLift.app"/>
+  <property name="mac.conf"             location="${conf.home}/mac"/>
+  <property name="mac.dist.dir"         location="${dist.home}/${mac.app.name}"/>
 
   <property name="core.home"            location="${basedir}/../core"/>
   <property name="datalift.war.name"    value="datalift.war"/>
@@ -216,37 +222,53 @@
     </subant>
   </target>
 
-  <target name="prepare-dist" depends="prepare,build-core,build-modules">
+  <target name="prepare-dist" depends="compile,build-core,build-modules">
     <mkdir dir="${dist.home}"/>
+    <mkdir dir="${gen.dist.dir}"/>
     <!-- Copy runtime directory structure -->
-    <copy todir="${dist.home}/bin" flatten="true" preservelastmodified="true">
+    <copy todir="${gen.dist.dir}/bin" flatten="true"
+                                      preservelastmodified="true">
       <fileset dir="${run.lib.home}">
         <include name="**/*.jar"/>
       </fileset>
     </copy>
     <!-- Copy wrapper runtime dependencies -->
-    <copy todir="${dist.home}" preservelastmodified="true">
+    <copy todir="${gen.dist.dir}" preservelastmodified="true">
       <fileset dir="${runtime.conf}"/>
     </copy>
     <!-- Copy DataLift main web application -->
-    <copy file="${datalift.war.path}" todir="${dist.home}/webapps"/>
+    <copy file="${datalift.war.path}" todir="${gen.dist.dir}/webapps"/>
     <!-- Patch DataLift webapp to install standalon app. security config. -->
-    <jar jarfile="${dist.home}/webapps/${datalift.war.name}" update="true">
+    <jar jarfile="${gen.dist.dir}/webapps/${datalift.war.name}" update="true">
       <fileset dir="${webapp.conf}"/>
     </jar>
     <!-- Copy default DataLift modules -->
     <pathconvert property="modules.jars" refid="module.list" pathsep=",">
       <mapper>
         <chainedmapper>
-          <globmapper from="${datalift.root}/*" to="*/dist" handledirsep="false"/>
+          <globmapper from="${datalift.root}/*"
+                        to="*/dist" handledirsep="true"/>
           <regexpmapper from="^(.*)$" to="\1/*.jar"/>
         </chainedmapper>
       </mapper>
     </pathconvert>
-    <copy todir="${dist.home}/modules" flatten="true"
-                                       preservelastmodified="true">
+    <copy todir="${gen.dist.dir}/modules" flatten="true"
+                                          preservelastmodified="true">
       <fileset dir="${datalift.root}" includes="${modules.jars}"/>
     </copy>
+    <!-- Creates the wrapper executable JAR -->
+    <pathconvert property="jar.classpath"
+                    refid="runtime.classpath" pathsep=" ">
+      <flattenmapper/>
+    </pathconvert>
+    <jar jarfile="${gen.dist.dir}/bin/${app.name}.jar">
+      <fileset dir="${classes.dir}"/>
+      <manifest>
+        <attribute name="Main-Class" value="org.datalift.wrapper.Wrapper"/>
+        <attribute name="Class-Path" value="${jar.classpath}"/>
+      </manifest>
+    </jar>
+
   </target>
 
   <!--
@@ -260,22 +282,34 @@
         deployement.
    -->
 
-  <target name="dist" depends="compile,prepare-dist"
+  <target name="dist-gen" depends="prepare-dist"
+                      description="Builds a generic binary distribution">
+    <!-- To be completed: create a tar.gz with a datalift shell-script. -->
+  </target>
+
+  <target name="dist-mac" depends="prepare-dist"
+                      description="Builds a Mac OS X binary distribution">
+    <mkdir dir="${mac.dist.dir}"/>
+    <!-- Copy Mac application directory structure -->
+    <copy todir="${mac.dist.dir}" preservelastmodified="true">
+      <fileset dir="${mac.conf}"/>
+    </copy>
+    <!-- Make sure Java wrapper is executable -->
+    <chmod perm="ugo+rx" type="file">
+      <fileset dir="${mac.dist.dir}/Contents/MacOS"/>
+    </chmod>
+    <!-- Copy DataLift Java application -->
+    <copy todir="${mac.dist.dir}/Contents/Resources"
+                                          preservelastmodified="true">
+      <fileset dir="${gen.dist.dir}"/>
+    </copy>
+    <move todir="${mac.dist.dir}/Contents/Resources/Java">
+      <fileset dir="${mac.dist.dir}/Contents/Resources/bin"/>
+    </move>
+  </target>
+
+  <target name="dist" depends="dist-gen, dist-mac"
                       description="Creates a binary distribution">
-
-    <pathconvert property="jar.classpath"
-                    refid="runtime.classpath" pathsep=" ">
-      <flattenmapper/>
-    </pathconvert>
-
-    <jar jarfile="${dist.home}/bin/${app.name}.jar">
-      <fileset dir="${classes.dir}"/>
-      <manifest>
-        <attribute name="Main-Class" value="org.datalift.wrapper.Wrapper"/>
-        <attribute name="Class-Path" value="${jar.classpath}"/>
-      </manifest>
-    </jar>
-
   </target>
 
 

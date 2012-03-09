@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<plist version="1.0">
+  <dict>
+    <key>CFBundleName</key>
+    <string>DataLift</string>
+    <key>CFBundleShortVersionString</key>
+    <string>0.5</string>
+    <key>CFBundleGetInfoString</key>
+    <string>DataLift 0.5 Beta</string>
+    <key>CFBundleAllowMixedLocalizations</key>
+    <string>false</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>CFBundleExecutable</key>
+    <string>JavaApplicationStub</string>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>English</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleSignature</key>
+    <string>????</string>
+    <key>CFBundleIconFile</key>
+    <string>datalift.icns</string>
+    <key>CFBundleIdentifier</key>
+    <string>org.datalift.wrapper.Wrapper</string>
+    <key>Java</key>
+    <dict>
+      <key>MainClass</key>
+      <string>org.datalift.wrapper.Wrapper</string>
+      <key>JVMVersion</key>
+      <string>1.6+</string>
+      <key>ClassPath</key>
+      <array>
+        <string>$JAVAROOT/jetty-6.1.26.jar</string>
+        <string>$JAVAROOT/jetty-util-6.1.26.jar</string>
+        <string>$JAVAROOT/servlet-api-2.5-20081211.jar</string>
+        <string>$JAVAROOT/datalift-wrapper.jar</string>
+      </array>
+      <key>VMOptions</key>
+      <string>-Xms256M -Xmx1024M</string>
+      <key>WorkingDirectory</key>
+      <string>$APP_PACKAGE/Contents/Resources</string>
+      <key>Properties</key>
+      <dict>
+        <key>apple.awt.textantialiasing</key>
+        <string>true</string>
+        <key>apple.laf.useScreenMenuBar</key>
+        <string>true</string>
+        <key>apple.awt.antialiasing</key>
+        <string>true</string>
+      </dict>
+    </dict>
+  </dict>
+</plist>
