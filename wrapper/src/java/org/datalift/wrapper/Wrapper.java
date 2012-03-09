@@ -85,6 +85,8 @@ public final class Wrapper
                             "Library/Caches/" + MAC_DATALIFT_NAME;
     private final static String MAC_APPL_LOGS_PATH =
                             "Library/Logs/" + MAC_DATALIFT_NAME;
+    private final static String MAC_WEB_APPS_PATH =
+                            MAC_APPL_CACHE_PATH + "/webapps";
 
     private final static String WIN_DATALIFT_NAME = MAC_DATALIFT_NAME;
     private final static String WIN_APPL_DATA_PATH =
@@ -94,6 +96,7 @@ public final class Wrapper
     private final static String OTHER_APPL_DATA_PATH  = OTHER_DATALIFT_NAME;
     private final static String OTHER_APPL_CACHE_PATH = "temp";
     private final static String OTHER_APPL_LOGS_PATH  = "logs";
+    private final static String OTHER_WEB_APPS_PATH   = "work";
 
     public static void main(String[] args) throws Exception
     {
@@ -108,6 +111,7 @@ public final class Wrapper
             throw new FileNotFoundException(args[0]);
         }
         System.setProperty(DATALIFT_ROOT, dataliftRoot.getCanonicalPath());
+        System.setProperty("jetty.home",  dataliftRoot.getCanonicalPath());
         // 2. HTTP listening port.
         int httpPort = DEFAULT_HTTP_PORT;
         if (args.length > 1) {
@@ -119,15 +123,16 @@ public final class Wrapper
         // Check (user-specific) runtime environment.
         String homeDir = System.getProperty(DATALIFT_HOME);
         File dataliftHome = (homeDir == null)? getUserEnv(): new File(homeDir);
+        boolean defaultHome = (homeDir == null);
         try {
             // Install user-specific configuration, if needed.
-            installUserEnv(dataliftHome, dataliftRoot);
+            installUserEnv(dataliftHome, dataliftRoot, defaultHome);
         }
         catch (IOException e) {
             // Oops! Can't create a user-specific runtime environment.
             // => Run DataLift at the executable location.
             dataliftHome = dataliftRoot;
-            installUserEnv(dataliftRoot, dataliftRoot);
+            installUserEnv(dataliftRoot, dataliftRoot, true);
         }
         System.setProperty(DATALIFT_HOME, dataliftHome.getCanonicalPath());
         // Set Sesame repositories location.
@@ -136,20 +141,21 @@ public final class Wrapper
             System.setProperty(SESAME_HOME, sesameHome.getCanonicalPath());
         }
         // Set DataLift log files location.
-        File logPath = (CURRENT_OS == MacOS)? getUserPath(MAC_APPL_LOGS_PATH):
+        File logPath = ((CURRENT_OS == MacOS) && defaultHome)?
+                                getUserPath(MAC_APPL_LOGS_PATH):
                                 new File(dataliftHome, OTHER_APPL_LOGS_PATH);
-        logPath.mkdirs();
+        createDirectory(logPath);
         System.setProperty(DATALIFT_LOG_PATH, logPath.getCanonicalPath());
         // Set (and create) Jetty working directory.
-        System.setProperty("jetty.home", dataliftRoot.getPath());
-        File jettyWorkDir = new File(dataliftHome, "work");
-        jettyWorkDir.mkdirs();
+        File jettyWorkDir = ((CURRENT_OS == MacOS) && defaultHome)?
+                                getUserPath(MAC_WEB_APPS_PATH):
+                                new File(dataliftHome, OTHER_WEB_APPS_PATH);
+        createDirectory(jettyWorkDir);
         // Set (and create) Jetty temporary directory.
-        File tempDir = new File(dataliftHome, OTHER_APPL_CACHE_PATH);
-        if (CURRENT_OS == MacOS) {
-            tempDir = getUserPath(MAC_APPL_CACHE_PATH);
-        }
-        tempDir.mkdirs();
+        File tempDir = ((CURRENT_OS == MacOS) && defaultHome)?
+                                getUserPath(MAC_APPL_CACHE_PATH):
+                                new File(dataliftHome, OTHER_APPL_CACHE_PATH);
+        createDirectory(tempDir);
         System.setProperty("java.io.tmpdir", tempDir.getAbsolutePath());
         // Create Jetty server.
         final Server httpServer = new Server(httpPort);
@@ -208,15 +214,15 @@ public final class Wrapper
         return new File(new File(System.getProperty("user.home")), path);
     }
 
-    private static void installUserEnv(File path, File source)
+    private static void installUserEnv(File path,
+                                       File source, boolean defaultHome)
                                                             throws IOException {
         if (path != null) {
             createDirectory(path);
             // Create working directory, if they do not exist yet...
             createDirectory(new File(path, "modules"));
             createDirectory(new File(path, "storage/public"));
-            createDirectory(new File(path, "work"));
-            if (CURRENT_OS != MacOS) {
+            if (! ((CURRENT_OS == MacOS) && defaultHome)) {
                 createDirectory(new File(path, "logs"));
                 createDirectory(new File(path, "temp"));
             }
