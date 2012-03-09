@@ -198,9 +198,18 @@ public final class Wrapper
     private static File getUserEnv() {
         // Build user-specific DataLift execution environment path
         // depending on local OS type.
-        return getUserPath((CURRENT_OS == MacOS)?   MAC_APPL_DATA_PATH:
-                           (CURRENT_OS == Windows)? WIN_APPL_DATA_PATH:
-                                                    OTHER_APPL_DATA_PATH);
+        File userEnv = null;
+        if (CURRENT_OS == Windows) {
+            String appDataPath = System.getenv("APPDATA");
+            userEnv = (appDataPath != null)?
+                            new File(new File(appDataPath), WIN_DATALIFT_NAME):
+                            getUserPath(WIN_APPL_DATA_PATH);
+        }
+        else {
+            userEnv = getUserPath((CURRENT_OS == MacOS)? MAC_APPL_DATA_PATH:
+                                                         OTHER_APPL_DATA_PATH);
+        }
+        return userEnv;
     }
 
     private static File getUserPath(String path) {
