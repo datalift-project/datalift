@@ -75,6 +75,10 @@
   <property name="mac.app.name"         value="DataLift.app"/>
   <property name="mac.conf"             location="${conf.home}/mac"/>
   <property name="mac.dist.dir"         location="${dist.home}/${mac.app.name}"/>
+	
+  <property name="windows.app.name"         value="DataLift"/>
+  <property name="windows.conf"             location="${conf.home}/windows"/>
+  <property name="windows.dist.dir"         location="${dist.home}/${windows.app.name}"/>
 
   <property name="core.home"            location="${basedir}/../core"/>
   <property name="datalift.war.name"    value="datalift.war"/>
@@ -307,8 +311,22 @@
       <fileset dir="${mac.dist.dir}/Contents/Resources/bin"/>
     </move>
   </target>
+	
+	
+  <target name="dist-windows" depends="prepare-dist"
+                      description="Builds a Windows Executable">
+    <mkdir dir="${windows.dist.dir}"/>
+    <!-- Copy Windows application excutable -->
+    <copy todir="${windows.dist.dir}" preservelastmodified="true">
+      <fileset dir="${windows.conf}"/>
+    </copy>
+    <!-- Copy DataLift Java application -->
+    <copy todir="${windows.dist.dir}" preservelastmodified="true">
+      <fileset dir="${gen.dist.dir}"/>
+    </copy>
+  </target>
 
-  <target name="dist" depends="dist-gen, dist-mac"
+  <target name="dist" depends="dist-gen, dist-mac, dist-windows"
                       description="Creates a binary distribution">
   </target>
 
