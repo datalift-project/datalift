@@ -39,6 +39,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -272,7 +274,10 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
             boolean userAuthenticated = SecurityContext.isUserAuthenticated();
             Collection<Repository> c = Configuration.getDefault()
                                         .getRepositories(! userAuthenticated);
-            response = Response.ok(this.newViewable("/sparqlEndpoint.vm", c),
+            Map<String, Object> args = new TreeMap<String, Object>();
+            args.put("collections", c);
+            args.put("isAuth", userAuthenticated);
+            response = Response.ok(this.newViewable("/sparqlEndpoint.vm", args),
                                    MediaType.TEXT_HTML);
             return response.build();
         }

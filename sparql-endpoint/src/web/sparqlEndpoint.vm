@@ -8,16 +8,19 @@
 #css_links
 </head>
 <body>
+#if($isAuth)
+	<a href="${baseUri}/project" id="go_to_projectmanager" class="button" style="position:absolute;top:15px;right:15px;">#i18n("sparql.go_to_projectmanager")</a>
+#end
 #banner
 	<div id="content" class="ui-widget-content dl-main-panel">
 		<h3 class="ui-widget-header dl-widget-header">#i18n("sparql.query.full")</h3>
 		<div class="dl-panel">
 		    <form id="query_form" action="${baseUri}/sparql" method="get">
-#if( ${it.size()} > 1 )
+#if( ${collections.size()} > 1 )
 			<div class="dl-form-elt">
 				<label for="default-graph-uri">#i18n("sparql.repository"): </label>
 				<select id="default-graph-uri" name="default-graph-uri">
-#foreach( $item in $it )
+#foreach( $item in $collections )
 #if( $foreach.count == 1 )
 					<option value="$esc.html($!{item.name})" selected="true">#i18n($!{item.label})</option>
 #else
@@ -69,6 +72,7 @@
 		$(function() {
 			$("#result-format").buttonset();
 			$("#query_submit").button();
+			$("#go_to_projectmanager").button();
 			$("#query_form").submit(function(e) {
 				var fmt = $("input[name=format]:checked").val();
 				$("#format_save").val(fmt);

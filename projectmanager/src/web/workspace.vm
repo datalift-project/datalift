@@ -9,6 +9,7 @@
 </head>
 <body>
 #banner
+<a href="${baseUri}/sparql" id="go_to_sparql" class="button" style="position:absolute;top:15px;right:15px;">#i18n("workspace.go_to_sparql")</a>
 <div id="workspace" class="ui-widget-content">
 #if( $current )
 	<h3 class="ui-widget-header dl-widget-header">#i18n("project") $!esc.html($current.title)</h3>
@@ -96,6 +97,7 @@
 #end
 	$(function() {
 		$("input:submit, .button").button();
+		$("#go_to_sparql").button();
 		$("#tabs").tabs();
 
 		if (typeof(currentProject) != 'undefined') {
