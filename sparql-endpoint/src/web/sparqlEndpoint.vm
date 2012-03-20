@@ -78,7 +78,7 @@
 				$("#format_save").val(fmt);
 				var requestUrl = $("#query_form").attr("action")
 							+ "?" + $("#query").serialize();
-#if( ${it.size()} > 1 )
+#if( ${collections.size()} > 1 )
 				requestUrl += "&" + $("#default-graph-uri").serialize();
 #end
 				if (fmt.match(/json/)) {
