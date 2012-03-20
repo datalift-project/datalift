@@ -4,6 +4,11 @@ This wrapper supports building a native application for the following opérating
  - Windows ???
  - Linux
 
+When run, the wrapper first starts a standalone DataLift server and then opens a new tab or window in the user's default Web browser, pointing it at the SPARQL endpoint of the DataLift server.
+
+Please note that the standalone DataLift server is not a general purpose DataLift installation. In particular, it performs no user authentication, expecting that only the user that started the application will access it.
+
+
 1. Mac OS X
 -----------
 The DataLift application initializes a DataLift runtime environment for the user the first time it is started.
