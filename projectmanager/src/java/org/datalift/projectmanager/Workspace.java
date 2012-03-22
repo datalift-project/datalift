@@ -558,7 +558,9 @@ public class Workspace extends BaseModule
             }
             catch (Exception e) {
                 // Conversion of source base URI to URL failed.
-                this.throwInvalidParamError("file_url", null);
+                log.error("Failed to parse URL {}", e, sourceUrl);
+                this.throwInvalidParamError("file_url",
+                                    sourceUrl + " (" + e.getMessage() + ')');
             }
         }
         else {
@@ -698,7 +700,9 @@ public class Workspace extends BaseModule
             }
             catch (Exception e) {
                 // Conversion of source base URI to URL failed.
-                this.throwInvalidParamError("file_url", null);
+                log.error("Failed to parse URL {}", e, sourceUrl);
+                this.throwInvalidParamError("file_url", 
+                                    sourceUrl + " (" + e.getMessage() + ')');
             }
         }
         else {
@@ -1472,11 +1476,13 @@ public class Workspace extends BaseModule
         if (url == null) {
             throw new IllegalArgumentException("url");
         }
-
+        String fileName = null;
         String[] elts = url.getPath().split("/");
-        String fileName = elts[elts.length-1];
-        if ((suffix != null) && (fileName.indexOf('.') == -1)) {
-            fileName += "." + suffix;
+        if (elts.length > 0) {
+            fileName = elts[elts.length-1];
+            if ((suffix != null) && (fileName.indexOf('.') == -1)) {
+                fileName += "." + suffix;
+            }
         }
         log.debug("{} -> {}", url, fileName);
         return fileName;
