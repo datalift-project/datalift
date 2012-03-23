@@ -164,7 +164,7 @@ public class RouterResource implements LifeCycle, ResourceResolver
     private final List<UriPolicy> policies = new LinkedList<UriPolicy>();
     /** Predefined SPARQL queries for DataLift core module. */
     private final SparqlQueries queries =
-                                new SparqlQueries(DataliftApplication.class);
+                                new SparqlQueries(RouterResource.class);
     /** Default URI policy. */
     private final UriPolicy defaultPolicy = new UriPolicy()
         {
