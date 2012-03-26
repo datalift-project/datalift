@@ -111,10 +111,8 @@
   <property name="classes.dir"          location="${build.home}/classes"/>
   <property name="docs.dir"             location="${dist.home}/docs"/>
 
-  <property name="jar.name"             value="${app.name}.jar"/>
-  <property name="jar.path"             location="${build.home}/${jar.name}"/>
-  <property name="zip.name"             value="${app.name}-${app.version}.zip"/>
-  <property name="zip.path"             location="${dist.home}/${zip.name}"/>
+  <property name="jar.name"             value="${app.name}-${app.version}.jar"/>
+  <property name="jar.path"             location="${dist.home}/${jar.name}"/>
 
   <property name="locale.default"       value="en"/>
   <property name="locale.default_resources"
@@ -169,9 +167,9 @@
     <!-- Runtime libraries -->
     <path refid="runtime.classpath"/>
     <!-- Buildtime-only libraries -->
-    <zipfileset dir="${fwk.build.libs}" prefix="/">
+    <fileset dir="${fwk.build.libs}">
       <include name="**/*.jar"/>
-    </zipfileset>
+    </fileset>
   </path>
 
 
@@ -268,7 +266,7 @@
 
   <target name="prepare-dist" depends="prepare">
     <!-- Copy runtime JARs to embed in distribution -->
-    <copy todir="${build.home}" flatten="true">
+    <copy todir="${classes.dir}" flatten="true">
       <fileset dir="${run.lib.home}">
         <include name="**/*.jar"/>
       </fileset>
@@ -296,12 +294,6 @@
         <provider classname="org.datalift.allegrograph.AllegroGraphRepositoryFactory"/>
       </service>
     </jar>
-    <!-- Create distribution package -->
-    <zip destfile="${zip.path}">
-      <fileset dir="${build.home}">
-        <include name="**/*.jar"/>
-      </fileset>
-    </zip>
   </target>
 
 
