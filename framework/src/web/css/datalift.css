@@ -68,6 +68,14 @@ body {
   vertical-align:middle;
 }
 
+#datalift-partenaire {
+	display:inline;
+	height:100px;
+	width:auto;
+	vertical-align:middle;
+	margin-left: 10px;
+}
+
 #projects_panel {
   width:10%;
   margin:0;
