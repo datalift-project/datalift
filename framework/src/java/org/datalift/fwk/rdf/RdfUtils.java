@@ -51,14 +51,8 @@ import org.openrdf.query.GraphQuery;
 import org.openrdf.query.QueryLanguage;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
-import org.openrdf.rio.RDFFormat;
 import org.openrdf.rio.RDFParser;
 import org.openrdf.rio.helpers.RDFHandlerBase;
-import org.openrdf.rio.ntriples.NTriplesParser;
-import org.openrdf.rio.rdfxml.RDFXMLParser;
-import org.openrdf.rio.trig.TriGParser;
-import org.openrdf.rio.trix.TriXParser;
-import org.openrdf.rio.turtle.TurtleParser;
 
 import org.datalift.fwk.MediaTypes;
 import org.datalift.fwk.util.CloseableIterable;
@@ -66,7 +60,6 @@ import org.datalift.fwk.util.StringUtils;
 import org.datalift.fwk.util.UriMapper;
 import org.datalift.fwk.util.io.FileUtils;
 
-import static org.datalift.fwk.MediaTypes.*;
 import static org.datalift.fwk.util.Env.*;
 
 
@@ -458,13 +451,10 @@ public final class RdfUtils
      *         <code>null</code> or not a valid MIME type for RDF
      *         data.
      *
-     * @see    #newRdfParser(MediaType)
+     * @see    #newRdfParser(RdfFormat)
      */
     public static RDFParser newRdfParser(String mimeType) {
-        if (StringUtils.isBlank(mimeType)) {
-            throw new IllegalArgumentException("mimeType");
-        }
-        return newRdfParser(parseMimeType(mimeType));
+        return newRdfParser(RdfFormat.find(mimeType));
     }
 
     /**
@@ -476,36 +466,26 @@ public final class RdfUtils
      * @throws IllegalArgumentException if mimeType is
      *         <code>null</code> or not a valid MIME type for RDF
      *         data.
+     *
+     * @see    #newRdfParser(RdfFormat)
      */
     public static RDFParser newRdfParser(MediaType mimeType) {
-        if (mimeType == null) {
-            throw new IllegalArgumentException("mimeType");
-        }
-        ValueFactory valueFactory = new UriCachingValueFactory();
+        return newRdfParser(RdfFormat.find(mimeType));
+    }
 
-        RDFParser parser = null;
-        if ((TEXT_TURTLE_TYPE.equals(mimeType)) ||
-            (TEXT_N3_TYPE.equals(mimeType))) {
-            parser = new TurtleParser(valueFactory);
+    /**
+     * Returns a RDF parser suitable for parsing files of the
+     * specified type.
+     * @param  type   the RDF type of the data to be parsed.
+     *
+     * @return a RDF parser.
+     * @throws IllegalArgumentException if type is <code>null</code>.
+     */
+    public static RDFParser newRdfParser(RdfFormat type) {
+        if (type == null) {
+            throw new IllegalArgumentException("type");
         }
-        else if (APPLICATION_NTRIPLES_TYPE.equals(mimeType)) {
-            parser = new NTriplesParser(valueFactory);
-        }
-        else if (APPLICATION_TRIG_TYPE.equals(mimeType)) {
-            parser = new TriGParser(valueFactory);
-        }
-        else if (APPLICATION_TRIX_TYPE.equals(mimeType)) {
-            parser = new TriXParser(valueFactory);
-        }
-        else if ((APPLICATION_RDF_XML_TYPE.equals(mimeType)) ||
-                 (APPLICATION_XML_TYPE.equals(mimeType))) {
-            parser = new RDFXMLParser(valueFactory);
-        }
-        else {
-            throw new IllegalArgumentException(
-                            "Unsupported MIME type for RDF data: " + mimeType);
-        }
-        return parser;
+        return type.newParser(new UriCachingValueFactory());
     }
 
     /**
@@ -529,24 +509,11 @@ public final class RdfUtils
             ext = fileName.substring(i+1);
         }
         MediaType mimeType = null;
-        if (("rdf".equalsIgnoreCase(ext)) || ("rdfs".equalsIgnoreCase(ext)) ||
-            ("owl".equalsIgnoreCase(ext)) || ("xml".equalsIgnoreCase(ext))) {
-            mimeType = APPLICATION_RDF_XML_TYPE;
-        }
-        else if ("ttl".equalsIgnoreCase(ext)) {
-            mimeType = TEXT_TURTLE_TYPE;
-        }
-        else if ("n3".equalsIgnoreCase(ext)) {
-            mimeType = TEXT_N3_TYPE;
-        }
-        else if ("nt".equalsIgnoreCase(ext)) {
-            mimeType = APPLICATION_NTRIPLES_TYPE;
-        }
-        else if ("trig".equalsIgnoreCase(ext)) {
-            mimeType = APPLICATION_TRIG_TYPE;
-        }
-        else if ("trix".equalsIgnoreCase(ext)) {
-            mimeType = APPLICATION_TRIX_TYPE;
+        for (RdfFormat t : RdfFormat.values()) {
+            if (t.isExtensionKnown(ext)) {
+                mimeType = t.getMimeType();
+                break;
+            }
         }
         return mimeType;
     }
@@ -564,66 +531,7 @@ public final class RdfUtils
      *         data.
      */
     public static MediaType parseMimeType(String mimeType) {
-        MediaType mappedType = null;
-        if (! StringUtils.isBlank(mimeType)) {
-            mimeType = mimeType.trim().toLowerCase();
-            if ((TEXT_TURTLE.equals(mimeType)) ||
-                (APPLICATION_TURTLE.equals(mimeType))) {
-                mappedType = TEXT_TURTLE_TYPE;
-            }
-            else if ((TEXT_N3.equals(mimeType)) ||
-                     (TEXT_RDF_N3.equals(mimeType)) ||
-                     (APPLICATION_N3.equals(mimeType))) {
-                mappedType = TEXT_N3_TYPE;
-            }
-            else if ((APPLICATION_RDF_XML.equals(mimeType)) ||
-                     (APPLICATION_XML.equals(mimeType))) {
-                mappedType = APPLICATION_RDF_XML_TYPE;
-            }
-            else if (APPLICATION_TRIG.equals(mimeType)) {
-                mappedType = APPLICATION_TRIG_TYPE;
-            }
-            else if (APPLICATION_TRIX.equals(mimeType)) {
-                mappedType = APPLICATION_TRIX_TYPE;
-            }
-            else if (APPLICATION_NTRIPLES.equals(mimeType)) {
-                mappedType = APPLICATION_NTRIPLES_TYPE;
-            }
-        }
-        if (mappedType == null) {
-            throw new IllegalArgumentException(
-                            "Unsupported MIME type for RDF data: " + mimeType);
-        }
-        return mappedType;
-    }
-
-    public static RDFFormat getRdfFormat(MediaType mimeType) {
-        RDFFormat mappedFormat = null;
-        if (mimeType != null) {
-            if (mimeType == TEXT_TURTLE_TYPE) {
-                mappedFormat = RDFFormat.TURTLE;
-            }
-            else if (mimeType == TEXT_N3_TYPE) {
-                mappedFormat = RDFFormat.N3;
-            }
-            else if (mimeType == APPLICATION_RDF_XML_TYPE) {
-                mappedFormat = RDFFormat.RDFXML;
-            }
-            else if (mimeType == APPLICATION_TRIG_TYPE) {
-                mappedFormat = RDFFormat.TRIG;
-            }
-            else if (mimeType == APPLICATION_TRIX_TYPE) {
-                mappedFormat = RDFFormat.TRIX;
-            }
-            else if (mimeType == APPLICATION_NTRIPLES_TYPE) {
-                mappedFormat = RDFFormat.NTRIPLES;
-            }
-        }
-        if (mappedFormat == null) {
-            throw new IllegalArgumentException(
-                            "Unsupported MIME type for RDF data: " + mimeType);
-        }
-        return mappedFormat;
+        return RdfFormat.find(mimeType).getMimeType();
     }
 
     /**
@@ -672,7 +580,7 @@ public final class RdfUtils
 
     /**
      * Removes all non-valid XML data characters from the specified
-     * string as W3C RDF spec states that
+     * string as W3C RDF specification states that
      * <a href="http://www.w3.org/TR/rdf-syntax-grammar/#literal">RDF
      * literals shall only contain valid XML character</a>. If all
      * characters are valid, the input string is returned unchanged.
@@ -702,6 +610,14 @@ public final class RdfUtils
         return (buf == null)? s: buf.toString();
     }
 
+    /**
+     * Removes all triples from the specified named graph.
+     * @param  r           the RDF store.
+     * @param  graphName   the named graph (context) to purge.
+     *
+     * @throws RdfException if any exception occurred while removing
+     *         the triples.
+     */
     public static void clearGraph(Repository r, URI graphName)
                                                         throws RdfException {
         RepositoryConnection cnx = null;
