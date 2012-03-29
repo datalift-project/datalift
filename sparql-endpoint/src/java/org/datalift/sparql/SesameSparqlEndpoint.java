@@ -459,7 +459,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
             try {
                 GraphQuery q = cnx.prepareGraphQuery(SPARQL,
                                                      this.query, this.baseUri);
-                if (dataset != null) {
+                if (this.dataset != null) {
                     q.setDataset(this.dataset);
                 }
                 q.evaluate(this.getHandler(out));
@@ -473,22 +473,26 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
         }
 
         private RDFHandler getHandler(OutputStream out) {
-            return new RDFHandlerWrapper(this.newHandler(out)) {
-                    private int consumed = 0;
-                    @Override
-                    public void handleStatement(Statement st)
-                                            throws RDFHandlerException {
-                        super.handleStatement(st);
-                        this.consumed++;
-                    }
-                    @Override
-                    public void endRDF() throws RDFHandlerException {
-                        super.endRDF();
-                        log.debug("Processed {} results for: {}",
+            RDFHandler h = this.newHandler(out);
+            if (log.isDebugEnabled()) {
+                h = new RDFHandlerWrapper(h) {
+                        private int consumed = 0;
+                        @Override
+                        public void handleStatement(Statement st)
+                                                throws RDFHandlerException {
+                            super.handleStatement(st);
+                            this.consumed++;
+                        }
+                        @Override
+                        public void endRDF() throws RDFHandlerException {
+                            super.endRDF();
+                            log.debug("Processed {} results for: {}",
                                                 Integer.valueOf(this.consumed),
                                                 new QueryDescription(query));
-                    }
-                };
+                        }
+                    };
+            }
+            return h;
         }
 
         abstract protected RDFHandler newHandler(OutputStream out);
@@ -521,7 +525,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
             try {
                 TupleQuery q = cnx.prepareTupleQuery(SPARQL,
                                                      this.query, this.baseUri);
-                if (dataset != null) {
+                if (this.dataset != null) {
                     q.setDataset(this.dataset);
                 }
                 q.evaluate(this.getHandler(out));
