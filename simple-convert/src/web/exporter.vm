@@ -1,0 +1,52 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+#load("rdfexporter/resources")
+#load_core_resources
+	<title>#i18n("rdfexporter.title") - DataLift</title>
+#css_links
+</head>
+<body>
+#banner
+#set( $targetUri = "${baseUri}/rdfexporter?project=${it.uri}" )
+<div class="ui-widget-content converter_main" id="workspace">
+	<h3 class="ui-widget-header dl-widget-header">#i18n("rdfexporter.title") - #i18n("project.label") ${it.title}</h3>
+
+	<form id="converter_form" method="post" action="${targetUri}">
+		<p><label for="source">#i18n("source.to_export"):</label>
+		<select id="source" name="source">
+#foreach( $curSrc in $it.getSources() )
+	#if( $converter.canHandle($curSrc) )
+			<option name="${curSrc.uri}">$esc.html($curSrc.title)</option>
+	#end
+#end
+		</select></p>
+		<p><label for="mime_type">#i18n("source.export_rdf_format"): </label>
+		<select id="mime_type" name="mime_type">
+#foreach( $f in $formats )
+			<option id="${f.fileExtension}" value="${f.mimeType}">$esc.html($f.name)</option>
+#end
+		</select></p>
+
+		<input type="submit" id="source_submit" value="#i18n('submit.label')"/>
+	</form>
+</div>
+
+#script_links
+<script type="text/javascript">
+	var form_base_action = "${targetUri}";
+
+	$(function() {
+		$("#source_submit").button();
+
+		$("#source").change(function() {
+			$("#source option:selected").each(function () {
+				$("#converter_form").attr('action', form_base_action + "&source=" + $(this).attr('name'));
+			});
+		});
+		$("#source").change();
+	});
+</script>
+</body>
+</html>

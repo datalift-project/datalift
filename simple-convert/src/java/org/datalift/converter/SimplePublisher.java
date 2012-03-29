@@ -78,7 +78,7 @@ public class SimplePublisher extends BaseConverterModule
 
     /** Default constructor. */
     public SimplePublisher() {
-        super(MODULE_NAME, 10000, SourceType.TransformedRdfSource);
+        super(MODULE_NAME, 10010, SourceType.TransformedRdfSource);
     }
 
     //-------------------------------------------------------------------------
