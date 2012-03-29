@@ -276,7 +276,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                                         .getRepositories(! userAuthenticated);
             Map<String, Object> args = new TreeMap<String, Object>();
             args.put("collections", c);
-            args.put("isAuth", userAuthenticated);
+            args.put("isAuth", Boolean.valueOf(userAuthenticated));
             response = Response.ok(this.newViewable("/sparqlEndpoint.vm", args),
                                    MediaType.TEXT_HTML);
             return response.build();
