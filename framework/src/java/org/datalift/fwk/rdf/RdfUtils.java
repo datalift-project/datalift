@@ -55,6 +55,7 @@ import org.openrdf.rio.RDFParser;
 import org.openrdf.rio.helpers.RDFHandlerBase;
 
 import org.datalift.fwk.MediaTypes;
+import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.util.CloseableIterable;
 import org.datalift.fwk.util.StringUtils;
 import org.datalift.fwk.util.UriMapper;
@@ -83,6 +84,12 @@ import static org.datalift.fwk.util.Env.*;
  */
 public final class RdfUtils
 {
+    //-------------------------------------------------------------------------
+    // Class members
+    //-------------------------------------------------------------------------
+
+    private final static Logger log = Logger.getLogger();
+
     //-------------------------------------------------------------------------
     // Constructors
     //-------------------------------------------------------------------------
@@ -226,14 +233,20 @@ public final class RdfUtils
             // Clear target named graph, if any.
             targetGraph = clearGraph(namedGraph, cnx);
 
+            StatementAppender appender =
+                                new StatementAppender(cnx, targetGraph, mapper);
             // Load triples, mapping URIs on the fly.
             // Note: we're using an RDF parser and directly adding statements
             //       because Sesame RepositoryConnection.add(File, ...) is
             //       really not optimized for perf. and high throughput...
             RDFParser parser = newRdfParser(mimeType);
-            parser.setRDFHandler(
-                            new StatementAppender(cnx, targetGraph, mapper));
+            parser.setRDFHandler(appender);
             parser.parse(FileUtils.getInputStream(source), baseUri);
+
+            log.debug("Inserted {} RDF triples from {} into <{}> in {} seconds",
+                      Long.valueOf(appender.getStatementCount()),
+                      source, namedGraph,
+                      Double.valueOf(appender.getDuration() / 1000.0));
         }
         catch (Exception e) {
             try {
@@ -281,6 +294,10 @@ public final class RdfUtils
                 appender.handleStatement(stmt);
             }
             appender.endRDF();
+
+            log.debug("Inserted {} RDF triples into <{}> in {} seconds",
+                      Long.valueOf(appender.getStatementCount()), namedGraph,
+                      Double.valueOf(appender.getDuration() / 1000.0));
         }
         catch (Exception e) {
             try {
@@ -679,7 +696,9 @@ public final class RdfUtils
         private final UriMapper mapper;
         private final int batchSize;
 
-        private long statementCount = 0L;
+        private long statementCount = -1L;
+        private long startTime = -1L;
+        private long duration = -1L;
 
         public StatementAppender(RepositoryConnection cnx,
                                  org.openrdf.model.URI targetGraph,
@@ -704,6 +723,14 @@ public final class RdfUtils
                                             MIN_RDF_IO_BATCH_SIZE: batchSize;
         }
 
+        /** {@inheritDoc} */
+        @Override
+        public void startRDF() {
+            this.startTime = System.currentTimeMillis();
+            this.statementCount = 0L;
+        }
+
+        /** {@inheritDoc} */
         @Override
         public void handleStatement(Statement stmt) {
             try {
@@ -728,6 +755,20 @@ public final class RdfUtils
             catch (RepositoryException e) {
                 throw new RuntimeException("RDF triple insertion failed", e);
             }
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public void endRDF() {
+            this.duration = System.currentTimeMillis() - this.startTime;
+        }
+
+        public long getStatementCount() {
+            return this.statementCount;
+        }
+
+        public long getDuration() {
+            return this.duration;
         }
 
         private Value checkStringLitteral(Value v) {
