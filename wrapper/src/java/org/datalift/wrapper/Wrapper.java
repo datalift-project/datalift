@@ -159,6 +159,7 @@ public final class Wrapper
         System.setProperty("java.io.tmpdir", tempDir.getAbsolutePath());
         // Create Jetty server.
         final Server httpServer = new Server(httpPort);
+        httpServer.setSendServerVersion(false);     // No Server HTTP header.
         // Register web applications.
         FileFilter webappFilter = new FileFilter() {
                 public boolean accept(File f) {
@@ -170,8 +171,9 @@ public final class Wrapper
         for (File webapp : webappDir.listFiles(webappFilter)) {
             WebAppContext ctx = new WebAppContext();
             String path = webapp.getName();
-            int i = path.indexOf('.');
+            int i = path.indexOf(".war");
             if (i > 0) {
+                // Remove ending .war extension.
                 path = path.substring(0, i);
             }
             ctx.setContextPath("/" + path);
