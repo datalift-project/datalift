@@ -1300,20 +1300,34 @@ public class Workspace extends BaseModule
         return response;
     }
 
+    /**
+     * Traps accesses to module static resources and redirect them
+     * toward the default {@link ResourceResolver} for resolution.
+     * @param  path        the relative path of the module static
+     *                     resource being accessed.
+     * @param  uriInfo     the request URI data (injected).
+     * @param  request     the JAX-RS request object (injected).
+     * @param  acceptHdr   the HTTP "Accept" header value.
+     *
+     * @return a {@link Response JAX-RS response} to download the
+     *         content of the specified public resource.
+     * @throws WebApplicationException complete with status code and
+     *         plain-text error message if any error occurred while
+     *         accessing the requested resource.
+     */
     @GET
-    @Path("static/js/{path: .*$}")
+    @Path("static/{path: .*$}")
     public Object getStaticResource(@PathParam("path") String path,
                                     @Context UriInfo uriInfo,
                                     @Context Request request,
                                     @HeaderParam(ACCEPT) String acceptHdr)
                                                 throws WebApplicationException {
-    	log.debug("Going to get static resource with Path : {}", path);
         return Configuration.getDefault()
                             .getBean(ResourceResolver.class)
                             .resolveModuleResource(this.getName(),
                                                    uriInfo, request, acceptHdr);
     }
-    
+
     //-------------------------------------------------------------------------
     // Specific implementation
     //-------------------------------------------------------------------------
