@@ -58,9 +58,9 @@ public interface ResourceResolver
      * @param  path      the requested resource path.
      * @param  request   the HTTP request being processed.
      *
-     * @return a JAX-RS response pointing to the resolved static
-     *         resource of <code>null</code> if no matching resource
-     *         was found.
+     * @return a {@link Response JAX-RS response} pointing to the
+     *         resolved static resource or <code>null</code> if no
+     *         matching resource was found.
      * @throws WebApplicationException if the resolved request path
      *         points outside of the specified document root directory.
      */
@@ -74,7 +74,7 @@ public interface ResourceResolver
      * @param  request     the JAX-RS request object.
      * @param  acceptHdr   the HTTP "Accept" header value.
      *
-     * @return a {@link Response service response} with the result of
+     * @return a {@link Response JAX-RS response} with the result of
      *         the SPARQL DESCRIBE query on the RDF resource or
      *         <code>null</code> if the request resource was not found
      *         in the RDF store.
@@ -91,12 +91,11 @@ public interface ResourceResolver
      * @param  request     the JAX-RS request object.
      * @param  acceptHdr   the HTTP "Accept" header value.
      *
-     * @return a {@link Response service response} with the result of
-     *         the SPARQL DESCRIBE query on the RDF resource or
-     *         <code>null</code> if the request resource was not found
-     *         in the RDF store.
-     * @throws WebApplicationException if any error occurred accessing
-     *         the RDF resource.
+     * @return a {@link Response JAX-RS response} to download the
+     *         content of the specified public resource.
+     * @throws WebApplicationException complete with status code and
+     *         plain-text error message if any error occurred while
+     *         accessing the requested resource.
      */
     public Response resolveModuleResource(String module,
                                           UriInfo uriInfo, Request request,
