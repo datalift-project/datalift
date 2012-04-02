@@ -188,18 +188,33 @@ public class RdfExporter extends BaseConverterModule
 
         private RDFHandler getDebugHandler(RDFHandler h) {
             return new RDFHandlerWrapper(h) {
-                    private int consumed = 0;
+                    private long statementCount = -1L;
+                    private long t0 = -1L;
+
+                    /** {@inheritDoc} */
+                    @Override
+                    public void startRDF() throws RDFHandlerException {
+                        super.startRDF();
+                        this.t0 = System.currentTimeMillis();
+                        this.statementCount = 0L;
+                    }
+
+                    /** {@inheritDoc} */
                     @Override
                     public void handleStatement(Statement st)
                                             throws RDFHandlerException {
                         super.handleStatement(st);
-                        this.consumed++;
+                        this.statementCount++;
                     }
+
+                    /** {@inheritDoc} */
                     @Override
                     public void endRDF() throws RDFHandlerException {
                         super.endRDF();
-                        log.debug("Exported {} triples from <{}>",
-                                  Integer.valueOf(this.consumed), namedGraph);
+                        long delay = System.currentTimeMillis() - this.t0;
+                        log.debug("Exported {} triples from <{}> in {} seconds",
+                                  Long.valueOf(this.statementCount), namedGraph,
+                                  Double.valueOf(delay / 1000.0));
                     }
                 };
         }

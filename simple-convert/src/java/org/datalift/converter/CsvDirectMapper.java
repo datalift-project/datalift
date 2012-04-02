@@ -153,6 +153,7 @@ public class CsvDirectMapper extends BaseConverterModule
         try {
             final ValueFactory valueFactory = cnx.getValueFactory();
 
+            long t0 = System.currentTimeMillis();
             // Prevent transaction commit for each triple inserted.
             cnx.setAutoCommit(false);
             // Clear target named graph, if any.
@@ -179,13 +180,13 @@ public class CsvDirectMapper extends BaseConverterModule
             for (Row<String> row : src) {
                 org.openrdf.model.URI subject =
                                 valueFactory.createURI(root + i); // + "#_";
-                log.trace("Mapping {} to \"{}\"", row, subject);
+                log.trace("Mapping \"{}\" to <{}>", row, subject);
                 for (int j=0, l=row.size(); j<l; j++) {
                     String v = row.get(j);
                     if (isSet(v)) {
+                        Literal value = this.mapValue(v, valueFactory);
                         cnx.add(valueFactory.createStatement(
-                                        subject, predicates[j],
-                                        this.mapValue(v, valueFactory)),
+                                                subject, predicates[j], value),
                                 ctx);
 
                         // Commit transaction according to the configured batch size.
@@ -193,15 +194,18 @@ public class CsvDirectMapper extends BaseConverterModule
                         if ((statementCount % batchSize) == 0) {
                             cnx.commit();
                         }
+                        //log.trace("<{}> <{}> {} ({})",
+                        //                    subject, predicates[j], value, v);
                     }
                     // Else: ignore cell.
                 }
                 i++;
             }
             cnx.commit();
-            log.debug("Inserted {} RDF triples into {} from {} CSV lines",
+            long delay = System.currentTimeMillis() - t0;
+            log.debug("Inserted {} RDF triples into <{}> from {} CSV lines in {} seconds",
                       Long.valueOf(statementCount), targetGraph,
-                      Integer.valueOf(i));
+                      Integer.valueOf(i - 1), Double.valueOf(delay / 1000.0));
         }
         catch (Exception e) {
             try {

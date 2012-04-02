@@ -73,6 +73,7 @@ import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.SqlSource;
 import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.rdf.Repository;
+import org.datalift.fwk.util.Env;
 import org.datalift.fwk.util.StringUtils;
 
 
@@ -223,6 +224,7 @@ public class SqlDirectMapper extends BaseConverterModule
         try {
             final ValueFactory valueFactory = cnx.getValueFactory();
 
+            long t0 = System.currentTimeMillis();
             // Prevent transaction commit for each triple inserted.
             cnx.setAutoCommit(false);
             // Clear target named graph, if any.
@@ -245,28 +247,40 @@ public class SqlDirectMapper extends BaseConverterModule
                 i++;
             }
             // Load triples
-            i = 1;              // Start numbering lines at 1.
+            long statementCount = 0L;
+            int  batchSize = Env.getRdfBatchSize();
+            i = 1;                              // Start numbering lines at 1.
             for (Row<Object> row : src) {
                 String key = (keyColumn != null)? row.getString(keyColumn):
                                                   String.valueOf(i);
                 org.openrdf.model.URI subject =
                             valueFactory.createURI(baseUri + key); // + "#_";
-
+                log.trace("Mapping {} to <{}>", key, subject);
                 for (int j=0; j<max; j++) {
                     Object o = row.get(j);
                     if ((o != null) && (predicates[j] != null)) {
                         Literal value = this.mapValue(o, valueFactory);
                         cnx.add(valueFactory.createStatement(
-                                            subject, predicates[j],
-                                            value),
+                                                subject, predicates[j], value),
                                 ctx);
-                        log.trace("{}: {} -> {}", subject, o, value);
+
+                        // Commit transaction according to the configured batch size.
+                        statementCount++;
+                        if ((statementCount % batchSize) == 0) {
+                            cnx.commit();
+                        }
+                        //log.trace("<{}> <{}> {} ({})",
+                        //                    subject, predicates[j], value, o);
                     }
                     // Else: ignore cell.
                 }
                 i++;
             }
             cnx.commit();
+            long delay = System.currentTimeMillis() - t0;
+            log.debug("Inserted {} RDF triples into <{}> from {} SQL results in {} seconds",
+                      Long.valueOf(statementCount), targetGraph,
+                      Integer.valueOf(i - 1), Double.valueOf(delay / 1000.0));
         }
         catch (Exception e) {
             throw new TechnicalException("sql.conversion.failed", e);
