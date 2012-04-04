@@ -69,6 +69,8 @@ public abstract class BaseFileSource<T> extends BaseSource
 
     @RdfProperty("dc:format")
     private String mimeType;
+    @RdfProperty("cnt:characterEncoding")
+    private String encoding;
     @RdfProperty("datalift:path")
     private String filePath;
 
@@ -129,7 +131,7 @@ public abstract class BaseFileSource<T> extends BaseSource
 
     /** {@inheritDoc} */
     @Override
-    public final String getMimeType() {
+    public String getMimeType() {
         return this.mimeType;
     }
 
@@ -137,6 +139,18 @@ public abstract class BaseFileSource<T> extends BaseSource
     @Override
     public void setMimeType(String mimeType) {
         this.mimeType = mimeType;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public String getEncoding() {
+        return this.encoding;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void setEncoding(String charset) {
+        this.encoding = charset;
     }
 
     /** {@inheritDoc} */

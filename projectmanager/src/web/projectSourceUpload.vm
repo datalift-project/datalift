@@ -26,7 +26,7 @@
 #banner
 
 <div id="content" class="ui-widget-content dl-main-panel">
-<h3 class="ui-widget-header dl-widget-header">#i18n($title)</h3>
+<h3 class="ui-widget-header dl-widget-header">#i18n($title) - #i18n("project") $esc.html($it.title)</h3>
 <div class="dl-panel">
 <a href="${it.uri}#source">#i18n("back")</a>
 
@@ -34,71 +34,87 @@
 
 	<h3><a href="#">CSV</a></h3>
 	<div>
+#if( (!$current) || ($current.getType() == $field.CsvSource) )
 	<form method="post" action="$target_csv" enctype="multipart/form-data" class="form_formated">
-#if(!$current)
-		<p>#i18n("project.upload_csv") $esc.html($it.getTitle())</p>
-		<p><input type="file" name="source" size="64"/><br />
+#if( !$current )
+		<p><label for="file">#i18n("project.upload_csv"): </label>
+		<input type="file" name="source" size="64"/><bt />
 		<label for="file_url">#i18n("project.upload_source.file_url"): </label>
 		<input type="text" id="file_url" name="file_url"/></p>
 #else
 		<input type="hidden" name="current_source" value="$current.uri"/>
+		<p>#i18n("project.update_csv"): <a href="$current.uri">$esc.html($current.title)</a></p>
 #end
 		<p><label for="description">#i18n("project.upload_source.description"): </label>
 		<input type="text" id="description" name="description" value="$!esc.html($current.description)"/></p>
+		<p><label for="charset">#i18n("project.upload_csv_charset"): </label>
+		<select id="charset" name="charset">
+#foreach( $s in $charsets )
+#if( ($foreach.count == 1 && !$current) || $s.equals($current.encoding) )
+			<option value="$s" selected="true">$esc.html($s)</option>
+#else
+			<option value="$s">$esc.html($s)</option>
+#end
+#end
+		</select></p>
+		<p><label for="separator">#i18n("project.upload_csv_separator"): </label>
+		<select id="separator" name="separator">
+#foreach( $s in $sep )
+#set( $label = "csv.source.${s.name()}.separator" )
+#if( ($foreach.count == 1 && !$current) || $current.getSeparator().equals($s.toString()) )
+			<option value="$esc.html($s.name())" selected="true">#i18n($label)</option>
+#else
+			<option value="$esc.html($s.name())">#i18n($label)</option>
+#end
+#end
+		</select></p>
 		<p><label for="title_row">#i18n("project.upload_csv_activate"): </label>
-#if($current && $current.hasTitleRow() == true)
+#if( $current && $current.hasTitleRow() == true )
 		<input type="checkbox" id="title_row" name="title_row" checked="on"/></p>
 #else
 		<input type="checkbox" id="title_row" name="title_row"/></p>
 #end
-		
-		<p><label for="separator">#i18n("project.upload_csv_separator"): </label>
-		<select id="separator" name="separator">
-#foreach($s in $sep)
-#set( $label = "csv.source.${s.name()}.separator" )
-#if(($foreach.count == 1 && !$current) || $current.getSeparator().equals($s.toString()))
-				<option value="$esc.html($s.name())" selected="true">#i18n($label)</option>
-#else
-				<option value="$esc.html($s.name())">#i18n($label)</option>
-#end
-#end
-		</select></p>
 		<input type="submit" value="#i18n("$submit")"/>
 	</form>
+#end
 	</div>
 
 	<h3><a href="#">RDF</a></h3>
 	<div>
+#if( (!$current) || ($current.getType() == $field.RdfFileSource) )
 	<form method="post" action="$target_rdf" enctype="multipart/form-data" class="form_formated">
-#if (!$current)
-		<p>#i18n("project.upload_rdf") $esc.html($it.getTitle())</p>
-		<p><input type="file" name="source" size="64"/><br />
+#if( !$current )
+		<p><label for="file">#i18n("project.upload_rdf"): </label>
+		<input type="file" name="source" size="64"/><br />
 		<label for="file_url">#i18n("project.upload_source.file_url"): </label>
 		<input type="text" id="file_url" name="file_url"/></p>
 #else
 		<input type="hidden" id="current_source" name="current_source" value="$current.uri"/>
+		<p>#i18n("project.update_rdf"): <a href="$current.uri">$esc.html($current.title)</a></p>
 #end
 		<p><label for="description">#i18n("project.upload_source.description"): </label>
 		<input type="text" id="description" name="description" value="$!esc.html($current.description)"/></p>
-		<p><label for="base_uri">#i18n("project.upload_source.base_uri"): </label>
-		<input type="text" id="base_uri" name="base_uri" value="$!esc.html($current.source)"/></p>
 		<p><label for="mime_type">#i18n("project.upload_rdf_format"): </label>
 		<select id="mime_type" name="mime_type">
-			<option id="rdfxml"	value="application/rdf+xml" #if($current.getMimeType().equals("application/rdf+xml")) selected="true" #end>RDF/XML</option>
-			<option id="ntriple"	value="application/n-triples" #if($current.getMimeType().equals("application/n-triples")) selected="true" #end>NTriples</option>
-			<option id="turtle"	value="text/turtle" #if($current.getMimeType().equals("text/turtle")) selected="true" #end>Turtle</option>
-			<option id="n3"		value="text/n3" #if($current.getMimeType().equals("text/n3")) selected="true" #end>N3</option>
-			<option id="trig"	value="application/x-trig" #if($current.getMimeType().equals("application/x-trig")) selected="true" #end>TriG</option>
-			<option id="trix"	value="application/trix" #if($current.getMimeType().equals("application/trix")) selected="true" #end>TriX</option>
+#foreach( $f in $rdfFormats )
+			<option id="${f.fileExtension}" value="${f.mimeType}"#if( $current.mimeType.equals($f.mimeType.toString()) ) selected="true"#end>$esc.html($f.name)</option>
+#end
 		</select></p>
+		<p><label for="base_uri">#i18n("project.upload_source.base_uri"): </label>
+		<input type="text" id="base_uri" name="base_uri" value="$!esc.html($current.source)"/></p>
 		<input type="submit" value="#i18n("$submit")"/>
 	</form>
+#end
 	</div>
 
 	<h3><a href="#">#i18n("project.upload_db.title")</a></h3>
 	<div>
+#if( (!$current) || ($current.getType() == $field.SqlSource) )
 	<form method="post" action="$target_db" class="form_formated">
+#if( $current )
 		<input type="hidden" id="current_source" name="current_source" value="$current.uri"/>
+		<p>#i18n("project.update_db"): <a href="$current.uri">$esc.html($current.title)</a></p>
+#end
 		<p><label for="title">#i18n("project.upload_source.name"): </label>
 		<input type="text" id="title" name="title" value="$!esc.html($current.title)"/></p>
 		<p><label for="description">#i18n("project.upload_source.description"): </label>
@@ -115,12 +131,17 @@
 		<p><input type="text" id="cache_duration" name="cache_duration" value="$!esc.html($current.cacheDuration)"/></p>
 		<input type="submit" value="#i18n("$submit")"/>
 	</form>
+#end
 	</div>
-	
+
 	<h3><a href="#">SPARQL</a></h3>
 	<div>
+#if( (!$current) || ($current.getType() == $field.SparqlSource) )
 	<form method="post" action="$target_sparql" class="form_formated">
+#if( $current )
 		<input type="hidden" id="current_source" name="current_source" value="$current.uri"/>
+		<p>#i18n("project.update_sparql"): <a href="$current.uri">$esc.html($current.title)</a></p>
+#end
 		<p><label for="title">#i18n("project.upload_source.name"): </label>
 		<input type="text" id="title" name="title" value="$!esc.html($current.title)"/></p>
 		<p><label for="description">#i18n("project.upload_source.description"): </label>
@@ -143,6 +164,7 @@
 		<input type="text" id="cache_duration" name="cache_duration" value="$!esc.html($current.cacheDuration)"/></p>
 		<input type="submit" value="#i18n("$submit")"/>
 	</form>
+#end
 	</div>
 </div>
 </div>
@@ -156,7 +178,7 @@
 		$("#accordion").accordion({
 			autoHeight: false,
 			navigation: true,
-			collapsible:true,
+			collapsible: true,
 #if( $current )
 			event: ""
 #end
@@ -166,16 +188,16 @@
 #if( $current )
 		var select_panel = 0;
 	#if( $current.getType() == $field.CsvSource )
-	 	select_panel = 0;
+		select_panel = 0;
 	#elseif( $current.getType() == $field.RdfFileSource )
 		select_panel = 1;
 	#elseif( $current.getType() == $field.SqlSource )
-	 	select_panel = 2;
+		select_panel = 2;
 	#elseif( $current.getType() == $field.SparqlSource )
-	 	select_panel = 3;
+		select_panel = 3;
 	#end
 		if (select_panel != 0) {
-	 	 	$("#accordion").accordion("option", "active", select_panel);
+			$("#accordion").accordion("option", "active", select_panel);
 		}
 		$("#accordion h3").click(function() {
 			var idx = $("#accordion h3").index(this);

@@ -52,6 +52,8 @@ public enum RdfNamespace
     DC_Elements ("dc",          "http://purl.org/dc/elements/1.1/"),
     /** dcterms: &lt;http://purl.org/dc/terms/&gt; */
     DC_Terms    ("dcterms",     "http://purl.org/dc/terms/"),
+    /** dct: &lt;http://purl.org/dc/terms/&gt; */
+    DCTerms     ("dct",         "http://purl.org/dc/terms/"),
     /** foaf: &lt;http://xmlns.com/foaf/0.1/&gt; */
     FOAF        ("foaf",        "http://xmlns.com/foaf/0.1/"),
     /** rdf: &lt;http://www.w3.org/1999/02/22-rdf-syntax-ns#&gt; */
@@ -67,7 +69,9 @@ public enum RdfNamespace
     /** vdpp: &lt;http://data.lirmm.fr/ontologies/vdpp#&gt; */
     VDPP        ("vdpp",        "http://data.lirmm.fr/ontologies/vdpp#"),
     /** prv: &lt;http://purl.org/net/provenance/ns#&gt; */
-    PRV         ("prv",         "http://purl.org/net/provenance/ns#");
+    PRV         ("prv",         "http://purl.org/net/provenance/ns#"),
+    /** cnt: &lt;http://www.w3.org/2011/content#&gt; */
+    CNT         ("cnt",         "http://www.w3.org/2011/content#");
 
     //-------------------------------------------------------------------------
     // Instance members

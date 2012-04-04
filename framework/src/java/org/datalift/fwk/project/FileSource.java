@@ -64,6 +64,21 @@ public interface FileSource<T> extends Source, CloseableIterable<T>
     public void setMimeType(String mimeType);
 
     /**
+     * Returns the declared character encoding of data this source
+     * contains.
+     * @return the declared character set for the source content or
+     *         <code>null</code> if not applicable (e.g binary data,
+     *         self-describing data (XML), etc.).
+     */
+    public String getEncoding();
+
+    /**
+     * Sets the character encoding of the source content.
+     * @param  charset   character set of the source content. 
+     */
+    public void setEncoding(String encoding);
+
+    /**
      * Returns the path (relative to the DataLift public storage
      * directory) of the file containing the source data.
      * @return the data file relative path.

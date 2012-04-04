@@ -40,8 +40,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
+import java.nio.charset.Charset;
+import java.text.Collator;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -49,6 +53,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.regex.Pattern;
 
 import javax.persistence.EntityNotFoundException;
 import javax.ws.rs.Consumes;
@@ -84,6 +89,7 @@ import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.MediaTypes;
 import org.datalift.fwk.ResourceResolver;
+import org.datalift.fwk.i18n.LocaleComparable;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.CachingSource;
 import org.datalift.fwk.project.CsvSource;
@@ -98,6 +104,7 @@ import org.datalift.fwk.project.RdfFileSource;
 import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.CsvSource.Separator;
 import org.datalift.fwk.project.ProjectModule.UriDesc;
+import org.datalift.fwk.rdf.RdfFormat;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.sparql.SparqlEndpoint;
 import org.datalift.fwk.util.CloseableIterator;
@@ -155,6 +162,12 @@ public class Workspace extends BaseModule
     // Class members
     //-------------------------------------------------------------------------
 
+    /**
+     * The character sets supported by the local JVM, sorted by
+     * relevance first and then alphabetically.
+     */
+    private final static List<String> charsets;
+
     private final static Logger log = Logger.getLogger();
 
     //-------------------------------------------------------------------------
@@ -163,6 +176,55 @@ public class Workspace extends BaseModule
 
     /** Project Manager bean. */
     private ProjectManager projectManager = null;
+
+    //-------------------------------------------------------------------------
+    // Class initializer
+    //-------------------------------------------------------------------------
+
+    static {
+        List<LocaleComparable<Charset>> l1 =
+                                    new ArrayList<LocaleComparable<Charset>>();
+        Collator c = Collator.getInstance();
+        for (Charset cs : Charset.availableCharsets().values()) {
+            if (cs.isRegistered()) {
+                l1.add(new LocaleComparable<Charset>(cs.displayName(), cs, c));
+            }
+        }
+        Collections.sort(l1, new Comparator<LocaleComparable<Charset>>() {
+                private Pattern[] prefixes = new Pattern[] {
+                                        Pattern.compile("ISO-8859-1"),
+                                        Pattern.compile("UTF-.[^E]*"),
+                                        Pattern.compile("ISO-8859-.*"),
+                                        Pattern.compile("US-ASCII"),
+                                        Pattern.compile("windows-12.*") };
+                @Override
+                public int compare(LocaleComparable<Charset> o1,
+                                   LocaleComparable<Charset> o2) {
+                    int n = 0;
+                    int i1 = this.getPrefix(o1.key);
+                    int i2 = this.getPrefix(o2.key);
+                    if (i1 == i2) {
+                        n = o1.compareTo(o2);
+                    }
+                    else {
+                        n = i1 - i2;
+                    }
+                    return n;
+                }
+    
+                private int getPrefix(String key) {
+                    for (int i=0; i<prefixes.length; i++) {
+                        if (prefixes[i].matcher(key).matches()) return i;
+                    }
+                    return prefixes.length;
+                }
+            });
+        List<String> l2 = new ArrayList<String>(l1.size());
+        for (LocaleComparable<Charset> cs : l1) {
+            l2.add(cs.data.displayName());
+        }
+        charsets = Collections.unmodifiableList(l2);
+    }
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -476,23 +538,7 @@ public class Workspace extends BaseModule
     public Object getSourceUploadPage(@PathParam("id") String id,
                                       @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
-        Response response = null;
-        URI uri = null;
-        try {
-            uri = this.newProjectId(uriInfo.getBaseUri(), id);
-            Project p = this.loadProject(uri);
-
-            Map<String, Object> args = new HashMap<String, Object>();
-            args.put("it", p);
-            args.put("sep", Separator.values());
-            response = Response.ok(
-                            this.newViewable("projectSourceUpload.vm", args),
-                            TEXT_HTML).build();
-        }
-        catch (Exception e) {
-            this.handleInternalError(e, "Failed to load project {}", uri);
-        }
-        return response;
+        return this.getSourceModifyPage(id, null, uriInfo);
     }
 
     @GET
@@ -502,21 +548,32 @@ public class Workspace extends BaseModule
                                         @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
         Response response = null;
+        URI prjUri = this.newProjectId(uriInfo.getBaseUri(), id);
+        Project p = null;
         try {
-            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
-            Project p = this.loadProject(projectUri);
-
-            // Search for requested source in project.
-            Source src = p.getSource(
-                new URL(this.getSourceId(projectUri, srcId)).toURI());
-            if (src == null) {
-                // Not found.
-                throw new NotFoundException();
-            }
+            p = this.loadProject(prjUri);
+        }
+        catch (Exception e) {
+            this.handleInternalError(e, "Failed to load project {}", prjUri);
+        }
+        try {
+            // Prepare model for building view.
             Map<String, Object> args = new HashMap<String, Object>();
             args.put("it", p);
-            args.put("current", src);
+            args.put("charsets", charsets);
+            args.put("rdfFormats", RdfFormat.values());
             args.put("sep", Separator.values());
+
+            // Search for requested source in project (if specified).
+            if (srcId != null) {
+                URI srcUri = new URL(this.getSourceId(prjUri, srcId)).toURI();
+                Source src = p.getSource(srcUri);
+                if (src == null) {
+                    // Not found.
+                    throw new NotFoundException(srcUri);
+                }
+                args.put("current", src);
+            }
             response = Response.ok(
                             this.newViewable("projectSourceUpload.vm", args),
                             TEXT_HTML).build();
@@ -537,12 +594,22 @@ public class Workspace extends BaseModule
                             @FormDataParam("source")
                                     FormDataContentDisposition fileDisposition,
                             @FormDataParam("file_url") String sourceUrl,
+                            @FormDataParam("charset") String charset,
                             @FormDataParam("separator") String separator,
                             @FormDataParam("title_row") String titleRow,
                             @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
         if (!isSet(separator)) {
             this.throwInvalidParamError("separator", separator);
+        }
+        Charset encoding = null;
+        if (isSet(charset)) {
+            try {
+                encoding = Charset.forName(charset);
+            }
+            catch (Exception e) {
+                this.throwInvalidParamError("charset", charset);
+            }
         }
         Response response = null;
 
@@ -593,6 +660,9 @@ public class Workspace extends BaseModule
             CsvSource src = this.projectManager.newCsvSource(p, sourceUri,
                                         fileName, description,
                                         filePath, sep.getValue(), hasTitleRow);
+            if (encoding != null) {
+                src.setEncoding(encoding.name());
+            }
             // Iterate on source content to validate uploaded file.
             int n = 0;
             CloseableIterator<?> i = src.iterator();
@@ -637,12 +707,22 @@ public class Workspace extends BaseModule
                             @PathParam("id") String projectId,
                             @FormDataParam("current_source") URI sourceUri,
                             @FormDataParam("description") String description,
+                            @FormDataParam("charset") String charset,
                             @FormDataParam("separator") String separator,
                             @FormDataParam("title_row") String titleRow,
                             @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
         if (!isSet(separator)) {
             this.throwInvalidParamError("separator", separator);
+        }
+        Charset encoding = null;
+        if (isSet(charset)) {
+            try {
+                encoding = Charset.forName(charset);
+            }
+            catch (Exception e) {
+                this.throwInvalidParamError("charset", charset);
+            }
         }
         Response response = null;
 
@@ -651,10 +731,13 @@ public class Workspace extends BaseModule
             CsvSource s = this.loadSource(CsvSource.class, sourceUri);
             // Update source data.
             s.setDescription(description);
-            s.setSeparator(separator);
+            if (encoding != null) {
+                s.setEncoding(encoding.name());
+            }
             boolean hasTitleRow = ((titleRow != null) &&
                                    (titleRow.toLowerCase().equals("on")));
             s.setTitleRow(hasTitleRow);
+            s.setSeparator(separator);
             // Save updated source.
             Project p = s.getProject();
             this.projectManager.saveProject(p);

@@ -108,6 +108,17 @@ public class CsvSourceImpl extends BaseFileSource<Row<String>>
     }
 
     //-------------------------------------------------------------------------
+    // FileSource contract support
+    //-------------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    @Override
+    public final String getEncoding() {
+        String enc = super.getEncoding();
+        return (StringUtils.isSet(enc))? enc: "ISO-8859-1";
+    }
+
+    //-------------------------------------------------------------------------
     // CsvSource contract support
     //-------------------------------------------------------------------------
 
@@ -197,9 +208,9 @@ public class CsvSourceImpl extends BaseFileSource<Row<String>>
     }
 
     private CSVReader newReader() throws IOException {
-        return new CSVReader(
-                    new InputStreamReader(this.getInputStream(), "ISO-8859-1"),
-                    Separator.valueOf(this.separator).getValue());
+        return new CSVReader(new InputStreamReader(this.getInputStream(),
+                                                   this.getEncoding()),
+                             Separator.valueOf(this.separator).getValue());
     }
 
     private String getColumnName(int n) {
