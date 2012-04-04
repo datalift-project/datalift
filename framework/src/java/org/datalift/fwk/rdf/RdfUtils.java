@@ -576,9 +576,10 @@ public final class RdfUtils
     public final static String getBaseUri(String uri, char sep) {
         String baseUri = "";
         if (StringUtils.isSet(uri)) {
+            baseUri = uri;
             int n = uri.length() - 1;
             if (! ((uri.charAt(n) == '/') || (uri.charAt(n) == '#'))) {
-                baseUri = uri + sep;
+                baseUri += sep;
             }
         }
         return baseUri;
