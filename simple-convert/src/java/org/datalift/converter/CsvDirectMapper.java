@@ -61,6 +61,7 @@ import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
+import org.datalift.fwk.rdf.UriCachingValueFactory;
 import org.datalift.fwk.util.Env;
 
 import static org.datalift.fwk.util.StringUtils.*;
@@ -151,7 +152,8 @@ public class CsvDirectMapper extends BaseConverterModule
         final RepositoryConnection cnx = target.newConnection();
         org.openrdf.model.URI ctx = null;
         try {
-            final ValueFactory valueFactory = cnx.getValueFactory();
+            final ValueFactory valueFactory =
+                            new UriCachingValueFactory(cnx.getValueFactory());
 
             long t0 = System.currentTimeMillis();
             // Prevent transaction commit for each triple inserted.
@@ -175,12 +177,12 @@ public class CsvDirectMapper extends BaseConverterModule
             }
             // Load triples
             long statementCount = 0L;
+            long duration = 0L;
             int  batchSize = Env.getRdfBatchSize();
             i = 1;                              // Start line numbering at 1.
             for (Row<String> row : src) {
                 org.openrdf.model.URI subject =
                                 valueFactory.createURI(root + i); // + "#_";
-                log.trace("Mapping \"{}\" to <{}>", row, subject);
                 for (int j=0, l=row.size(); j<l; j++) {
                     String v = row.get(j);
                     if (isSet(v)) {
@@ -193,19 +195,25 @@ public class CsvDirectMapper extends BaseConverterModule
                         statementCount++;
                         if ((statementCount % batchSize) == 0) {
                             cnx.commit();
+                            // Trace progress.
+                            if (log.isTraceEnabled()) {
+                                duration = System.currentTimeMillis() - t0;
+                                log.trace("Inserted {} RDF triples from {} CSV lines in {} seconds...",
+                                          Long.valueOf(statementCount),
+                                          Integer.valueOf(i - 1),
+                                          Double.valueOf(duration / 1000.0));
+                            }
                         }
-                        //log.trace("<{}> <{}> {} ({})",
-                        //                    subject, predicates[j], value, v);
                     }
                     // Else: ignore cell.
                 }
                 i++;
             }
             cnx.commit();
-            long delay = System.currentTimeMillis() - t0;
+            duration = System.currentTimeMillis() - t0;
             log.debug("Inserted {} RDF triples into <{}> from {} CSV lines in {} seconds",
                       Long.valueOf(statementCount), targetGraph,
-                      Integer.valueOf(i - 1), Double.valueOf(delay / 1000.0));
+                      Integer.valueOf(i - 1), Double.valueOf(duration / 1000.0));
         }
         catch (Exception e) {
             try {
