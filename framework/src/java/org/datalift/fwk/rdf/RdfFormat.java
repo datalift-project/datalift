@@ -286,4 +286,13 @@ public enum RdfFormat
         }
         return mappedType;
     }
+
+    //-------------------------------------------------------------------------
+    // Object contract support
+    //-------------------------------------------------------------------------
+
+    @Override
+    public String toString() {
+        return this.getMimeType().toString();
+    }
 }
