@@ -43,7 +43,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 
+import org.mortbay.jetty.Connector;
 import org.mortbay.jetty.Server;
+import org.mortbay.jetty.bio.SocketConnector;
 import org.mortbay.jetty.webapp.WebAppContext;
 
 import com.centerkey.utils.BareBonesBrowserLaunch;
@@ -160,6 +162,16 @@ public final class Wrapper
         // Create Jetty server.
         final Server httpServer = new Server(httpPort);
         httpServer.setSendServerVersion(false);     // No Server HTTP header.
+        // On MAC OS, avoid the annoying popup asking the user to allow
+        // the Java app to accept all incoming connections by forcing the
+        // HTTP server to listen only to loopback interface.
+        if (CURRENT_OS == MacOS) {
+            for (Connector c : httpServer.getConnectors()) {
+                if (c instanceof SocketConnector) {
+                    c.setHost("localhost");
+                }
+            }
+        }
         // Register web applications.
         FileFilter webappFilter = new FileFilter() {
                 public boolean accept(File f) {
