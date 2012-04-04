@@ -63,6 +63,17 @@ public interface CsvSource extends FileSource<Row<String>>
         }
     }
 
+    //-------------------------------------------------------------------------
+    // Constants
+    //-------------------------------------------------------------------------
+
+    public final static String DEFAULT_ENCODING = "ISO-8859-1";
+    public final static char DEFAULT_QUOTE_CHAR = '"';
+
+    //-------------------------------------------------------------------------
+    // Methods
+    //-------------------------------------------------------------------------
+
     /**
      * Returns whether the first line of the file contains column
      * headings.
@@ -91,6 +102,18 @@ public interface CsvSource extends FileSource<Row<String>>
      * @param  sep    the separator character.
      */
     public void setSeparator(String sep);
+
+    /**
+     * Returns the quote character.
+     * @return the quote character.
+     */
+    public char getQuoteCharacter();
+
+    /**
+     * Sets the quote character.
+     * @param  quote    the quote character.
+     */
+    public void setQuoteCharacter(char quote);
 
     /**
      * Returns the number of data columns present in the file.

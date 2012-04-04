@@ -57,7 +57,8 @@ import org.datalift.fwk.project.CsvSource;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.Row;
 import org.datalift.fwk.util.CloseableIterator;
-import org.datalift.fwk.util.StringUtils;
+
+import static org.datalift.fwk.util.StringUtils.isSet;
 
 
 /**
@@ -76,6 +77,8 @@ public class CsvSourceImpl extends BaseFileSource<Row<String>>
 
     @RdfProperty("datalift:separator")
     private String separator;
+    @RdfProperty("datalift:quote")
+    private String quote;
     @RdfProperty("datalift:titleRow")
     private boolean titleRow = false;
 
@@ -115,7 +118,7 @@ public class CsvSourceImpl extends BaseFileSource<Row<String>>
     @Override
     public final String getEncoding() {
         String enc = super.getEncoding();
-        return (StringUtils.isSet(enc))? enc: "ISO-8859-1";
+        return (isSet(enc))? enc: DEFAULT_ENCODING;
     }
 
     //-------------------------------------------------------------------------
@@ -143,10 +146,22 @@ public class CsvSourceImpl extends BaseFileSource<Row<String>>
     /** {@inheritDoc} */
     @Override
     public void setSeparator(String separator) {
-        if (! StringUtils.isSet(separator)) {
+        if (! isSet(separator)) {
             throw new IllegalArgumentException("separator");
         }
         this.separator = separator;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public char getQuoteCharacter() {
+        return (isSet(this.quote))? this.quote.charAt(0): DEFAULT_QUOTE_CHAR;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void setQuoteCharacter(char quote) {
+        this.quote = "" + quote;
     }
 
     /** {@inheritDoc} */
@@ -210,7 +225,8 @@ public class CsvSourceImpl extends BaseFileSource<Row<String>>
     private CSVReader newReader() throws IOException {
         return new CSVReader(new InputStreamReader(this.getInputStream(),
                                                    this.getEncoding()),
-                             Separator.valueOf(this.separator).getValue());
+                             Separator.valueOf(this.separator).getValue(),
+                             this.getQuoteCharacter());
     }
 
     private String getColumnName(int n) {
