@@ -104,7 +104,7 @@ public class RdfExporter extends BaseConverterModule
         args.put("it", p);
         args.put("converter", this);
         args.put("formats", RdfFormat.values());
-        return Response.ok(this.newViewable("/exporter.vm", args))
+        return Response.ok(this.newViewable("/rdfExporter.vm", args))
                        .build();
     }
 
