@@ -32,7 +32,7 @@
 		<input type="text" name="dest_title" id="dest_title" value=""/></p>
 
 		<p><label for="dest_graph_uri" class="hidden">#i18n("dest.uri"):</label>
-		<input type="text" name="dest_graph_uri" id="dest_graph_uri" value=""/></p>
+		<input type="text" name="dest_graph_uri" id="dest_graph_uri" title="#i18n('dest.graph.help')" value=""/></p>
 
 		<fieldset class="ui-widget ui-widget-content">
 			<legend>#i18n("uri.translation.title")</legend>
