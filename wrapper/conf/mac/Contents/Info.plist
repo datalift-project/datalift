@@ -37,7 +37,7 @@
         <string>$JAVAROOT/datalift-wrapper.jar</string>
       </array>
       <key>VMOptions</key>
-      <string>-Xms256M -Xmx1024M</string>
+      <string>-Xms256M -Xmx1024M -Xverify:none -Xshare:off</string>
       <key>WorkingDirectory</key>
       <string>$APP_PACKAGE/Contents/Resources</string>
       <key>Properties</key>
