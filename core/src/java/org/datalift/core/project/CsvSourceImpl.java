@@ -155,13 +155,19 @@ public class CsvSourceImpl extends BaseFileSource<Row<String>>
     /** {@inheritDoc} */
     @Override
     public char getQuoteCharacter() {
-        return (isSet(this.quote))? this.quote.charAt(0): DEFAULT_QUOTE_CHAR;
+        return this.quote2char(this.quote);
     }
 
     /** {@inheritDoc} */
     @Override
-    public void setQuoteCharacter(char quote) {
-        this.quote = "" + quote;
+    public String getQuote() {
+        return this.quote;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void setQuote(String quote) throws IllegalArgumentException {
+        this.quote = this.quote2string(quote);
     }
 
     /** {@inheritDoc} */
@@ -235,6 +241,94 @@ public class CsvSourceImpl extends BaseFileSource<Row<String>>
             s.insert(0, (char)(n % 26 + 65));
         }
         return s.toString();
+    }
+
+    private char quote2char(String s) {
+        char c = DEFAULT_QUOTE_CHAR;
+        if (isSet(s)) {
+            c = s.charAt(0);
+            if (s.length() != 1) {
+                if (s.charAt(0) == '\\') {                
+                    s = s.toLowerCase();
+                    int i = -1;
+                    try {
+                        // Check for character escaping
+                        if (s.startsWith("\\0x")) {
+                            i = Integer.parseInt(s.substring(3), 16);
+                        }
+                        else if ((s.startsWith("\\u")) || (s.startsWith("\\x"))) {
+                            i = Integer.parseInt(s.substring(2), 16);
+                        }
+                        else if (s.startsWith("\\0")) {
+                            i = Integer.parseInt(s.substring(2), 8);
+                        }
+                    }
+                    catch (NumberFormatException e) { /* Ignore... */ }
+
+                    if (i != -1) {
+                        c = (char)i;
+                    }
+                    else if ("\\t".equals(s)) {
+                        c = '\t';
+                    }
+                    else if ("\\n".equals(s)) {
+                        c = '\n';
+                    }
+                    else if ("\\r".equals(s)) {
+                        c = '\r';
+                    }
+                }
+                else if ("tab".equals(s)) {
+                    c = '\t';
+                }
+                else if ("quote".equals(s)) {
+                    c = '"';
+                }
+                else if ("nul".equals(s)) {
+                    c = '\0';
+                }
+                else if ("vt".equals(s)) {
+                    c = '\013';
+                }
+            }
+        }
+        return c;
+    }
+
+    private String quote2string(String quote) throws IllegalArgumentException {
+        String q = Character.toString(quote.charAt(0));
+        if ((isSet(quote)) && (quote.length() > 1)) {
+            String s = quote.toLowerCase();
+            if (s.charAt(0) == '\\') {
+                // Check for character escaping
+                int i = -1;
+                if (s.startsWith("\\0x")) {
+                    i = Integer.parseInt(s.substring(3), 16);
+                }
+                else if ((s.startsWith("\\u")) || (s.startsWith("\\x"))) {
+                    i = Integer.parseInt(s.substring(2), 16);
+                }
+                else if (s.startsWith("\\0")) {
+                    i = Integer.parseInt(s.substring(2), 8);
+                }
+                if ((i != -1) || ("\\t".equals(s)) || ("\\n".equals(s))
+                                                   || ("\\r".equals(s))) {
+                    q = s;
+                }
+                // Else: Quote char already set to backslash.
+            }
+            else if ("tab".equals(s)) {
+                q = Character.toString('\t');
+            }
+            else if ("quote".equals(s)) {
+                q = Character.toString('"');
+            }
+            else if (("nul".equals(s)) || ("vt".equals(s))) {
+                q = s;
+            }
+            // Else: Ignore additional character and only consider first.
+        }
+        return q;
     }
 
     //-------------------------------------------------------------------------

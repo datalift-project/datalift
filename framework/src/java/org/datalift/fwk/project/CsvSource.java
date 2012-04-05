@@ -110,10 +110,19 @@ public interface CsvSource extends FileSource<Row<String>>
     public char getQuoteCharacter();
 
     /**
-     * Sets the quote character.
-     * @param  quote    the quote character.
+     * Returns the quote character as a string.
+     * @return the quote character as a string.
      */
-    public void setQuoteCharacter(char quote);
+    public String getQuote();
+
+    /**
+     * Sets the quote character.
+     * @param  quote    the quote character as a string, to allow
+     *                  expressing character values that are not
+     *                  legal XML data character such as NUL, vertical
+     *                  tab, etc.
+     */
+    public void setQuote(String quote);
 
     /**
      * Returns the number of data columns present in the file.

@@ -597,6 +597,7 @@ public class Workspace extends BaseModule
                             @FormDataParam("charset") String charset,
                             @FormDataParam("separator") String separator,
                             @FormDataParam("title_row") String titleRow,
+                            @FormDataParam("quote") String quote,
                             @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
         if (!isSet(separator)) {
@@ -663,6 +664,7 @@ public class Workspace extends BaseModule
             if (encoding != null) {
                 src.setEncoding(encoding.name());
             }
+            src.setQuote(quote);
             // Iterate on source content to validate uploaded file.
             int n = 0;
             CloseableIterator<?> i = src.iterator();
@@ -710,6 +712,7 @@ public class Workspace extends BaseModule
                             @FormDataParam("charset") String charset,
                             @FormDataParam("separator") String separator,
                             @FormDataParam("title_row") String titleRow,
+                            @FormDataParam("quote") String quote,
                             @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
         if (!isSet(separator)) {
@@ -738,6 +741,9 @@ public class Workspace extends BaseModule
                                    (titleRow.toLowerCase().equals("on")));
             s.setTitleRow(hasTitleRow);
             s.setSeparator(separator);
+            if (isSet(quote)) {
+                s.setQuote(quote);
+            }
             // Save updated source.
             Project p = s.getProject();
             this.projectManager.saveProject(p);

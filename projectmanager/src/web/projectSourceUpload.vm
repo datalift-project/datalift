@@ -74,6 +74,8 @@
 #else
 		<input type="checkbox" id="title_row" name="title_row"/></p>
 #end
+		<p><label for="quote">#i18n("project.upload_csv_quote"): </label>
+		<input type="text" id="quote" name="quote" title="#i18n('project.upload_csv_quote.help')" value='$!esc.html($current.quote)'/></p>
 		<input type="submit" value="#i18n("$submit")"/>
 	</form>
 #end
