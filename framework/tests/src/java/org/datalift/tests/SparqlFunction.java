@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.openrdf.model.Literal;
 import org.openrdf.model.Value;
 
 import static org.datalift.fwk.util.StringUtils.*;
@@ -23,6 +24,8 @@ abstract class SparqlFunction implements SparqlExpression
 
     static {
         register(new Concat());
+        register(new Strlen());
+        register(new Substr());
     }
 
     protected SparqlFunction(String name, Value... v) {
@@ -45,13 +48,13 @@ abstract class SparqlFunction implements SparqlExpression
     }
 
     public static void register(SparqlFunction f) {
-        fcts.put(f.name, f.getClass());
+        fcts.put(f.name.toLowerCase(), f.getClass());
     }
 
     public static SparqlFunction newFunction(String name, Value... v) {
         SparqlFunction f = null;
 
-        Class<? extends SparqlFunction> c = fcts.get(name);
+        Class<? extends SparqlFunction> c = fcts.get(name.toLowerCase());
         if (c != null) {
             try {
                 Constructor<? extends SparqlFunction> ctor =
@@ -67,12 +70,60 @@ abstract class SparqlFunction implements SparqlExpression
 
     private final static class Concat extends SparqlFunction
     {
-        public Concat() {
-            this((Value[])null);
+        private Concat() {
+            super("concat", (Value[])null);
         }
 
-        public Concat(Value... v) {
-            super("concat", v);
+        public Concat(Value... args) {
+            super("concat", args);
+            if (args.length < 2) {
+                throw new IllegalArgumentException(
+                    "CONCAT(string literal ltrl1 ... string literal ltrlN");
+            }
+        }
+    }
+
+    private final static class Strlen extends SparqlFunction
+    {
+        private Strlen() {
+            super("strlen", (Value[])null);
+        }
+
+        public Strlen(Value... args) {
+            super("strlen", args);
+            if (args.length != 1) {
+                throw new IllegalArgumentException("STRLEN(string literal str)");
+            }
+        }
+    }
+
+    private final static class Substr extends SparqlFunction
+    {
+        private Substr() {
+            super("substr", (Value[])null);
+        }
+
+        public Substr(Value... args) {
+            super("substr", args);
+            boolean valid = ((args.length >= 2) && (args.length <= 3));
+            if (valid) {
+                try {
+                    valid = ((args[1] instanceof Variable) ||
+                             (((Literal)args[1]).intValue() >= 0));
+                    if (valid && (args.length > 2)) {
+                        valid = ((args[2] instanceof Variable) ||
+                                 (((Literal)args[2]).intValue() >= 0));
+                    }
+                }
+                catch (Exception e) {
+                    valid = false;
+                }
+            }
+            if (! valid) {
+                throw new IllegalArgumentException(
+                    "SUBSTR(string literal source, xsd:integer startingLoc " +
+                    "[, xsd:integer length])");
+            }
         }
     }
 }
