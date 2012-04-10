@@ -43,6 +43,7 @@ import java.util.Map.Entry;
 
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
+import org.openrdf.model.impl.URIImpl;
 
 import org.datalift.fwk.util.StringUtils;
 
@@ -57,7 +58,8 @@ public class VCardMapping
                 Arrays.asList("street-address", "postal-code", "locality",
                               "country-name");
 
-    private final String varName;
+    private String varName;
+    private final URI srcGraph;
     private final Map<String,String> nsMapping = new HashMap<String,String>();
 
     public VCardMapping(String srcNs) {
@@ -65,7 +67,12 @@ public class VCardMapping
     }
 
     public VCardMapping(String varName, String srcNs) {
-        this.varName = varName;
+        this(varName, srcNs, null);
+    }
+
+    public VCardMapping(String varName, String srcNs, String srcGraph) {
+        this.varName  = varName;
+        this.srcGraph = (StringUtils.isSet(srcGraph))? new URIImpl(srcGraph): null;
         if (StringUtils.isSet(srcNs)) {
             this.nsMapping.put("src", srcNs);
         }
@@ -80,10 +87,10 @@ public class VCardMapping
     public Resource mapVCard(UpdateQuery query, Map<String,String> mapping) {
         this.addPrefixes(query);
 
-        Variable node = query.variable(this.varName);
+        Variable node = this.getSubject(query);
         query.rdfType(node, query.uri(VCARD, "VCard"))
-             .addStatements(node, this.mapPredicates(mapping, query,
-                                                     VCARD_PREDICATES));
+             .addStatements(node, this.srcGraph, node,
+                        this.mapPredicates(mapping, query, VCARD_PREDICATES));
 
         return node;
     }
@@ -92,19 +99,27 @@ public class VCardMapping
                                                  Map<String,String> mapping) {
         this.addPrefixes(query);
 
-        Variable node = query.variable(this.varName);
+        Variable node = this.getSubject(query);
         Resource addr = query.blankNode();
 
         query.rdfType(addr, query.uri(VCARD, addrType))
              .addTriple(node, query.uri(VCARD, "adr"), addr)
-             .addStatements(node, addr, this.mapPredicates(mapping, query,
-                                                           ADDRESS_PREDICATES));
+             .addStatements(node, this.srcGraph, addr,
+                        this.mapPredicates(mapping, query, ADDRESS_PREDICATES));
         return addr;
     }
 
     public VCardMapping addPrefix(String prefix, String uri) {
         this.nsMapping.put(prefix, uri);
         return this;
+    }
+
+    private final Variable getSubject(UpdateQuery query) {
+        Variable node = query.variable(this.varName);
+        if (this.varName == null) {
+            this.varName = node.stringValue();
+        }
+        return node;
     }
 
     private final UpdateQuery addPrefixes(UpdateQuery query) {

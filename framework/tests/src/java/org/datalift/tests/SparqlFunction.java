@@ -57,6 +57,7 @@ abstract class SparqlFunction implements SparqlExpression
     protected final List<Value> args;
 
     static {
+        register(new Expr());
         register(new Concat());
         register(new Strlen());
         register(new Substr());
@@ -113,6 +114,20 @@ abstract class SparqlFunction implements SparqlExpression
             if (args.length < 2) {
                 throw new IllegalArgumentException(
                     "CONCAT(string literal ltrl1 ... string literal ltrlN");
+            }
+        }
+    }
+
+    private final static class Expr extends SparqlFunction
+    {
+        private Expr() {
+            super("expr", (Value[])null);
+        }
+
+        public Expr(Value... args) {
+            super("expr", args);
+            if (args.length != 1) {
+                throw new IllegalArgumentException("EXPR(string literal expr)");
             }
         }
     }

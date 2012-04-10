@@ -261,7 +261,7 @@ public abstract class UpdateQuery
         b = this.append(this.whereClauses, b);
         // Local variable bindings
         for (Binding bnd : this.bindings) {
-            b.append("\t\t").append(bnd).append('\n');
+            b.append("\t").append(bnd).append('\n');
         }
         b.append('}');
         return b.toString();
@@ -299,20 +299,18 @@ public abstract class UpdateQuery
         URI p = null;
         for (Statement t : stmts) {
             Resource g = t.getContext();
-            if (inGraph) {
-                if ((g == null) || (! g.equals(graph))) {
+            if ((inGraph) && ((g == null) || (! g.equals(graph)))) {
                     // Close named graph scope.
                     b.append("\t}\n");
                     inGraph = false;
                     graph = null;
                     s = null;
                     p = null;
-                }
-                // Else: Continue in same graph scope.
             }
-            else if (g != null) {
+            if ((! inGraph) && (g != null)) {
                     // Open named graph scope.
                     b.append("\tGRAPH <").append(g.toString()).append("> {\n");
+                    inGraph = true;
                     graph = g;
             }
 
@@ -364,6 +362,11 @@ public abstract class UpdateQuery
 
     protected UpdateQuery addStatements(Resource src, Resource dest,
                                                     Map<URI,String> mapping) {
+        return this.addStatements(src, null, dest, mapping);
+    }
+
+    protected UpdateQuery addStatements(Resource src, URI srcGraph,
+                                    Resource dest, Map<URI,String> mapping) {
         // TODO: Add named graphs support.
         for (Entry<URI,String> e : mapping.entrySet()) {
             URI p = e.getKey();
@@ -377,7 +380,7 @@ public abstract class UpdateQuery
                 // Predicate.
                 URI u = (URI)o;
                 Variable var = this.variable(u.getLocalName());
-                this.addWhereClause(src, u, var, null)
+                this.addWhereClause(src, u, var, srcGraph)
                           .addTriple(dest, p, var, null);
 
             }
@@ -437,59 +440,143 @@ public abstract class UpdateQuery
         }
         return v;
     }
-}
 
 
-final class VariableImpl implements Variable
-{
-    public final String name;
+    final static class VariableImpl implements Variable
+    {
+        public final String name;
 
-    public VariableImpl(String name) {
-        if (! isSet(name)) {
-            throw new IllegalArgumentException("name");
+        public VariableImpl(String name) {
+            if (! isSet(name)) {
+                throw new IllegalArgumentException("name");
+            }
+            if (name.charAt(0) == '?') {
+                name = name.substring(1);
+            }
+            this.name = name;
         }
-        this.name = name;
+
+        @Override
+        public String stringValue()  {
+            return "?" + this.name;
+        }
+
+        @Override
+        public String toString() {
+            return this.stringValue();
+        }
+
+        @Override
+        public int hashCode() {
+            return this.stringValue().hashCode();
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            return (o instanceof VariableImpl)?
+                this.stringValue().equals(((VariableImpl)o).stringValue()): false;
+        }
     }
 
-    @Override
-    public String stringValue()  {
-        return "?" + this.name;
+    final static URI EMPTY_URI = new URI() {
+        @Override
+        public String getLocalName() {
+            return "";
+        }
+
+        @Override
+        public String getNamespace() {
+            return "";
+        }
+
+        @Override
+        public String stringValue() {
+            return "";
+        }
+
+        @Override
+        public String toString() {
+            return this.stringValue();
+        }
+    };
+
+    abstract static class GraphPattern implements Statement
+    {
+        public final URI graph;
+
+        protected GraphPattern(URI graph) {
+            this.graph = graph;
+        }
+
+        abstract String stringValue();
+
+        @Override
+        public final String toString() {
+            return this.stringValue();
+        }
+
+        @Override
+        public final Resource getContext() {
+            return this.graph;
+        }
+
+        @Override
+        public final Resource getSubject() {
+            return EMPTY_URI;
+        }
+
+        @Override
+        public final URI getPredicate() {
+            return EMPTY_URI;
+        }
+
+        @Override
+        public final Value getObject() {
+            final String v = this.stringValue();
+            return new Value() {
+                    @Override public String stringValue() { return v; }
+                    @Override public String toString()    { return v; }
+            };
+        }
     }
 
-    @Override
-    public String toString() {
-        return this.stringValue();
+    final static class Binding extends GraphPattern
+    {
+        public final Value expr;
+        public final Variable v;
+
+        public Binding(Value expr, Variable v) {
+            this(expr, v, null);
+        }
+
+        public Binding(Value expr, Variable v, URI graph) {
+            super(graph);
+            this.expr = expr;
+            this.v = v;
+        }
+
+        public String stringValue() {
+            return "BIND(" + this.expr.stringValue()
+                           + " AS " + this.v.stringValue() + ')';
+        }
+    
     }
 
-    @Override
-    public int hashCode() {
-        return this.stringValue().hashCode();
-    }
+    final static class Filter extends GraphPattern
+    {
+        public final Value expr;
 
-    @Override
-    public boolean equals(Object o) {
-        return (o instanceof VariableImpl)?
-            this.stringValue().equals(((VariableImpl)o).stringValue()): false;
-    }
-}
+        public Filter(Value expr) {
+            this(expr, null);
+        }
 
-class Binding
-{
-    public final Value expr;
-    public final Variable v;
+        public Filter(Value expr, URI graph) {
+            super(graph);
+            this.expr = expr;
+        }
 
-    public Binding(Value expr, Variable v) {
-        this.expr = expr;
-        this.v = v;
-    }
-
-    public String stringValue() {
-        return "BIND(" + this.expr.stringValue()
-                       + " AS " + this.v.stringValue() + ')';
-    }
-
-    @Override
-    public String toString() {
-        return this.stringValue();
+        public String stringValue() {
+            return "FILTER(" + this.expr.stringValue() + ')';
+        }
     }
 }
