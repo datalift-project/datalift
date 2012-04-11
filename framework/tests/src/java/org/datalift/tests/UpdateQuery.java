@@ -40,6 +40,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -86,7 +87,9 @@ public abstract class UpdateQuery
     private final Map<String,String> prefix2Ns = new HashMap<String,String>();
     private final Map<String,String> ns2Prefix = new HashMap<String,String>();
     private final Collection<Statement> triples = new LinkedList<Statement>();
-    private final Collection<Statement> whereClauses = new LinkedList<Statement>();
+    private final WhereClauses whereClauses = new WhereClauses();
+    private final Map<String,WhereClauses> namedWhereClauses =
+                                            new HashMap<String,WhereClauses>();
     private final Collection<Binding> bindings = new LinkedList<Binding>();
 
     protected UpdateQuery(String queryName) {
@@ -158,9 +161,19 @@ public abstract class UpdateQuery
         return this.addWhereClause(s, p, o, null);
     }
     public UpdateQuery addWhereClause(Resource s, URI p, Value o, URI graph) {
-        this.whereClauses.add((graph != null)?
-                                    new ContextStatementImpl(s, p, o, graph):
-                                    new StatementImpl(s, p, o));
+        return this.addWhereClause(s, p, o, graph, null);
+    }
+    public UpdateQuery addWhereClause(Resource s, URI p, Value o, URI graph,
+                                      String clauseGroup) {
+        WhereClauses w = this.whereClauses;
+        if (isSet(clauseGroup)) {
+            w = this.namedWhereClauses.get(clauseGroup);
+            if (w == null) {
+                w = new WhereClauses(clauseGroup, this.whereClauses);
+            }
+        }
+        w.add((graph != null)? new ContextStatementImpl(s, p, o, graph):
+                               new StatementImpl(s, p, o));
         return this;
     }
 
@@ -255,16 +268,36 @@ public abstract class UpdateQuery
         // Query type
         b.append(this.name).append(" {\n");
         // Triples, grouped by graph.
-        b = this.append(this.triples, b);
+        b = this.append(this.triples, b).append("}\n");
         // WHERE clauses, grouped by graph.
-        b.append("}\nWHERE {\n");
-        b = this.append(this.whereClauses, b);
+        if (! this.whereClauses.isEmpty()) {
+            b.append("WHERE {\n");
+            b = this.append(this.whereClauses, b, 0);
+        }
         // Local variable bindings
         for (Binding bnd : this.bindings) {
             b.append("\t").append(bnd).append('\n');
         }
         b.append('}');
         return b.toString();
+    }
+
+    private StringBuilder append(WhereClauses c, StringBuilder b, int level) {
+        if (level > 0) {
+            b.append('\t');
+            if (c.type != null) {
+                b.append(c.type).append(' ');
+            }
+            b.append("{\n");
+        }
+        this.append(c.clauses, b);
+        for (WhereClauses w : c.children) {
+            this.append(w, b, level + 1);
+        }
+        if (level > 0) {
+            b.append("\t}\n");
+        }
+        return b;
     }
 
     private StringBuilder append(Collection<Statement> c, StringBuilder b) {
@@ -367,7 +400,6 @@ public abstract class UpdateQuery
 
     protected UpdateQuery addStatements(Resource src, URI srcGraph,
                                     Resource dest, Map<URI,String> mapping) {
-        // TODO: Add named graphs support.
         for (Entry<URI,String> e : mapping.entrySet()) {
             URI p = e.getKey();
             String v = e.getValue();
@@ -441,6 +473,68 @@ public abstract class UpdateQuery
         return v;
     }
 
+
+    private static enum WhereType {
+        DEFAULT         (""),
+        OPTIONAL        ("OPTIONAL"),
+        UNION           ("UNION"),
+        MINUS           ("MINIUS");
+
+        public final String label;
+
+        WhereType(String label) {
+            this.label = label;
+        }
+
+        @Override
+        public String toString() {
+            return this.label;
+        }
+    }
+
+    final class WhereClauses implements Iterable<Statement>
+    {
+        public final WhereType type;
+        public final Collection<Statement> clauses = new LinkedList<Statement>();
+        public Collection<WhereClauses> children = new LinkedList<WhereClauses>();
+
+        public WhereClauses() {
+            this("", null);
+        }
+
+        public WhereClauses(String name, WhereClauses parent) {
+            this(WhereType.DEFAULT, name, parent);
+        }
+
+        public WhereClauses(WhereType type, String name, WhereClauses parent) {
+            this.type = type;
+            if (isSet(name)) {
+                namedWhereClauses.put(name, this);
+            }
+            if (parent != null) {
+                parent.add(this);
+            }
+        }
+
+        public WhereClauses add(Statement s) {
+            this.clauses.add(s);
+            return this;
+        }
+
+        public boolean isEmpty() {
+            return this.clauses.isEmpty();
+        }
+
+        private WhereClauses add(WhereClauses child) {
+            this.children.add(child);
+            return this;
+        }
+
+        @Override
+        public Iterator<Statement> iterator() {
+            return this.clauses.iterator();
+        }
+    }
 
     final static class VariableImpl implements Variable
     {
