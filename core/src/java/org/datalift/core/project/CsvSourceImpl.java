@@ -296,37 +296,41 @@ public class CsvSourceImpl extends BaseFileSource<Row<String>>
     }
 
     private String quote2string(String quote) throws IllegalArgumentException {
-        String q = Character.toString(quote.charAt(0));
-        if ((isSet(quote)) && (quote.length() > 1)) {
-            String s = quote.toLowerCase();
-            if (s.charAt(0) == '\\') {
-                // Check for character escaping
-                int i = -1;
-                if (s.startsWith("\\0x")) {
-                    i = Integer.parseInt(s.substring(3), 16);
+        String q = null;
+        if (isSet(quote)) {
+            q = Character.toString(quote.charAt(0));
+
+            if (quote.length() > 1) {
+                String s = quote.toLowerCase();
+                if (s.charAt(0) == '\\') {
+                    // Check for character escaping
+                    int i = -1;
+                    if (s.startsWith("\\0x")) {
+                        i = Integer.parseInt(s.substring(3), 16);
+                    }
+                    else if ((s.startsWith("\\u")) || (s.startsWith("\\x"))) {
+                        i = Integer.parseInt(s.substring(2), 16);
+                    }
+                    else if (s.startsWith("\\0")) {
+                        i = Integer.parseInt(s.substring(2), 8);
+                    }
+                    if ((i != -1) || ("\\t".equals(s)) || ("\\n".equals(s))
+                                                       || ("\\r".equals(s))) {
+                        q = s;
+                    }
+                    // Else: Quote char already set to backslash.
                 }
-                else if ((s.startsWith("\\u")) || (s.startsWith("\\x"))) {
-                    i = Integer.parseInt(s.substring(2), 16);
+                else if ("tab".equals(s)) {
+                    q = Character.toString('\t');
                 }
-                else if (s.startsWith("\\0")) {
-                    i = Integer.parseInt(s.substring(2), 8);
+                else if ("quote".equals(s)) {
+                    q = Character.toString('"');
                 }
-                if ((i != -1) || ("\\t".equals(s)) || ("\\n".equals(s))
-                                                   || ("\\r".equals(s))) {
+                else if (("nul".equals(s)) || ("vt".equals(s))) {
                     q = s;
                 }
-                // Else: Quote char already set to backslash.
+                // Else: Ignore additional character and only consider first.
             }
-            else if ("tab".equals(s)) {
-                q = Character.toString('\t');
-            }
-            else if ("quote".equals(s)) {
-                q = Character.toString('"');
-            }
-            else if (("nul".equals(s)) || ("vt".equals(s))) {
-                q = s;
-            }
-            // Else: Ignore additional character and only consider first.
         }
         return q;
     }
