@@ -270,6 +270,25 @@ public final class RdfUtils
         }
     }
 
+    /**
+     * Insert a collection of triples into the specified RDF store,
+     * optionally placing them in the specified named graph.
+     * @param  source       a collection of RDF triples, as a Java
+     *                      {@link Iterable} object.
+     * @param  target       the RDF store to persist triples into.
+     * @param  namedGraph   the named graph to use as context for the
+     *                      triples or <code>null</code>. If the named
+     *                      graph exists, it will be cleared prior
+     *                      loading the triples.
+     * @param  mapper       an optional {@link UriMapper mapper} to
+     *                      translate URIs as triples are loaded or
+     *                      <code>null</code> if no mapping is needed.
+     *
+     * @throws IllegalArgumentException if no source collection or
+     *         target RDF store are provided.
+     * @throws RdfException if any error occurred reading triples or
+     *         accessing the RDF store.
+     */
     public static void upload(CloseableIterable<Statement> source,
                               Repository target, URI namedGraph,
                               final UriMapper mapper) throws RdfException {
