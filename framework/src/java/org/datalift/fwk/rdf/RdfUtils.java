@@ -478,6 +478,70 @@ public final class RdfUtils
     }
 
     /**
+     * Applies a set of SPARQL update queries on an RDF store to
+     * insert or delete data.
+     * @param  target          the RDF store to update.
+     * @param  updateQueries   the SPARQL update queries to execute.
+     *
+     * @throws IllegalArgumentException if no RDF store or SPARQL update
+     *         query list are provided.
+     * @throws RdfException if any error occurred accessing the RDF
+     *         store or executing the update queries.
+     *
+     * @see    #convert(Repository, List, String)
+     */
+    public static void update(Repository target,
+                              List<String> updateQueries) throws RdfException {
+        update(target, updateQueries, null);
+    }
+
+    /**
+     * Applies a set of SPARQL update queries on an RDF store to
+     * insert or delete data.
+     * @param  target          the RDF store to update.
+     * @param  updateQueries   the SPARQL update queries to execute.
+     * @param  baseUri         the (optional) base URI to resolve
+     *                         relative URIs.
+     *
+     * @throws IllegalArgumentException if no RDF store or SPARQL update
+     *         query list are provided.
+     * @throws RdfException if any error occurred accessing the RDF
+     *         store or executing the update queries.
+     */
+    public static void update(Repository target,
+                              List<String> updateQueries, String baseUri)
+                                                        throws RdfException {
+        if (target == null) {
+            throw new IllegalArgumentException("source");
+        }
+        if ((updateQueries == null) || (updateQueries.isEmpty())) {
+            throw new IllegalArgumentException("updateQueries");
+        }
+        baseUri = getBaseUri(baseUri);
+
+        RepositoryConnection in  = null;
+        String query = null;
+        try {
+            in = target.newConnection();
+
+            for (String s : updateQueries) {
+                query = s;
+                in.prepareUpdate(QueryLanguage.SPARQL, query, baseUri)
+                  .execute();
+            }
+            query = null;       // No query in error.
+        }
+        catch (Exception e) {
+            throw new RdfException((query != null)? query: e.getMessage(), e);
+        }
+        finally {
+            if (in != null) {
+                try { in.close(); } catch (Exception e) { /* Ignore... */ }
+            }
+        }
+    }
+
+    /**
      * Returns a RDF parser suitable for parsing files of the
      * specified MIME type.
      * @param  mimeType   the MIME type of the data to be parsed.
