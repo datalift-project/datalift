@@ -1,4 +1,4 @@
-In order to run silk-sample in datalift, the following steps should be done:
+In order to run interconnection module in datalift, the following steps should be done:
 1. create a project
 2. go to "Sources" to upload two RDF data sets
 3. go back to "Description", press button "RDF source file loading", loading the RDF data sets that you upload at 2nd step
@@ -11,5 +11,5 @@ SELECT * WHERE {
 the link result comes.
 
 PAY ATTENTION: 
-i. download sesame 2.6.1, put openrdf-sesame.war and openrdf-workbench.war into tomcat/webapps
-ii. we put two RDF data sets and a SILK script file in the folder datalift/silk-sample/src/java/org/datalift/samples/project for users to test
+i. download sesame 2.6.4, put openrdf-sesame.war and openrdf-workbench.war into tomcat/webapps
+ii. we put two RDF data sets and a SILK script file in the folder datalift/interconnection/example for users to test
