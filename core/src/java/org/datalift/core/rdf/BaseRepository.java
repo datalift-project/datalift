@@ -311,6 +311,9 @@ abstract public class BaseRepository extends Repository
     private Value mapBinding(Object o) {
         Value v = null;
 
+        if (o instanceof Value) {       // Value, URI, Resource, Literal...
+            v = (Value)o;
+        }
         if (o instanceof URI) {
             v = this.valueFactory.createURI(o.toString());
         }
