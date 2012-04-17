@@ -175,7 +175,7 @@
 #foreach($curSrc in $current.getSources())
 		{
 			uri:"$curSrc.uri",
-			title:"<a href='${baseUri}/sparql/describe?uri=$esc.url(${curSrc.uri})&type=Graph&default-graph=internal'>$esc.html($curSrc.title)</a>",
+			title:"<a href='$curSrc.uri'>$esc.html($curSrc.title)</a>",
 	#if( $curSrc.getType() == $field.CsvSource )
 			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.html($curSrc.description)<br />#end#i18n('project.upload_source.file'): $!esc.html($curSrc.filePath)<br />#i18n('project.upload_csv_separator'): $!esc.html($curSrc.separator)<br />#i18n('project.upload_csv_activate'): #i18n("boolean.${curSrc.hasTitleRow()}")"
 	#elseif( $curSrc.getType() == $field.RdfFileSource )
@@ -183,6 +183,7 @@
 	#elseif( $curSrc.getType() == $field.SqlSource )
 			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.html($curSrc.description)<br />#end#i18n('project.upload_db.source_url'): $!esc.html($curSrc.connectionUrl)<br />#i18n('project.upload_source.cache_duration'): $!esc.html($curSrc.cacheDuration)<br />#i18n('project.upload_source.cache_update'): $!date.format('medium', $curSrc.lastCacheUpdate)"
 	#elseif( $curSrc.getType() == $field.TransformedRdfSource )
+			title:"<a href='${baseUri}/sparql/describe?uri=$esc.url(${curSrc.uri})&type=Graph&default-graph=internal'>$esc.html($curSrc.title)</a>",
 			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.html($curSrc.description)<br />#end#i18n('project.upload_source.graph'): $!esc.html($curSrc.targetGraph.toString())<br />#i18n('project.upload_source.parent'): $!esc.html($curSrc.parent.title)<br />#i18n('project.upload_source.created'): $!date.format('medium', $curSrc.creationDate)"
 	#elseif( $curSrc.getType() == $field.SparqlSource )
 			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.html($curSrc.description)<br />#end#i18n('project.upload_sparql.connection_url'): $!esc.html($curSrc.endpointUrl)<br />#i18n('project.upload_source.cache_duration'): $!esc.html($curSrc.cacheDuration)<br />#i18n('project.upload_source.cache_update'): $!date.format('medium', $curSrc.lastCacheUpdate)"
