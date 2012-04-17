@@ -99,9 +99,14 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     private final static int MAX_QUERY_DESC = 128;
 
     private final static MessageFormat DESCRIBE_OBJECT_QUERY =
-            new MessageFormat("CONSTRUCT '{' ?s ?p ?o . '}' WHERE '{'\n"
-                              + "  ?s ?p ?o .\n"
-                              + "  FILTER ( ?s = <{0}> || ?o = <{0}> )\n'}'");
+            new MessageFormat("CONSTRUCT '{' ?s1 ?p1 ?o1 ."
+                              +            " ?o1 ?p2 ?o2 . '}'\n"
+                              + "WHERE '{'\n"
+                              + "  ?s1 ?p1 ?o1 .\n"
+                              + "  OPTIONAL '{'\n"
+                              + "    ?o1 ?p2 ?o2 .\n"
+                              + "    FILTER isBlank(?o1)\n  '}'\n"
+                              + "  FILTER ( ?s1 = <{0}> || ?o1 = <{0}> )\n'}'");
     private final static MessageFormat DESCRIBE_PREDICATE_QUERY =
             new MessageFormat("CONSTRUCT '{' ?s ?p ?o . '}' WHERE '{'\n"
                               + "  ?s ?p ?o .\n"
@@ -183,7 +188,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
 
     /** {@inheritDoc} */
     @Override
-    public ResponseBuilder describe(URI uri, DescribeType type,
+    public ResponseBuilder describe(String uri, DescribeType type,
                             UriInfo uriInfo, Request request, String acceptHdr)
                                                 throws WebApplicationException {
         return this.describe(uri, type, null, uriInfo, request, acceptHdr);
@@ -191,11 +196,11 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
 
     /** {@inheritDoc} */
     @Override
-    public ResponseBuilder describe(URI uri, DescribeType type,
+    public ResponseBuilder describe(String uri, DescribeType type,
                                     String defaultGraph, UriInfo uriInfo,
                                     Request request, String acceptHdr)
                                                 throws WebApplicationException {
-        if (uri == null) {
+        if (isBlank(uri)) {
             this.throwInvalidParamError("uri", uri);
         }
         List<String> defGraphs = null;
@@ -349,7 +354,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     @GET
     @Path("describe")
     public final Response getDescribe(
-                            @QueryParam("uri") URI uri,
+                            @QueryParam("uri") String uri,
                             @QueryParam("type") String type,
                             @QueryParam("default-graph") String defaultGraph,
                             @Context UriInfo uriInfo,
@@ -389,7 +394,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     @POST
     @Path("describe")
     public final Response postDescribe(
-                            @QueryParam("uri") URI uri,
+                            @QueryParam("uri") String uri,
                             @QueryParam("type") String type,
                             @QueryParam("default-graph") String defaultGraph,
                             @Context UriInfo uriInfo,
@@ -613,13 +618,13 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         return desc;
     }
 
-    private DescribeType getDescribeTypeFromUri(final URI uri,
+    private DescribeType getDescribeTypeFromUri(final String uri,
                                                 final List<String> defGraphs) {
         DescribeType type = null;
         try {
             // Try to determine the URI type by performing a SPARQL query.
             Map<String,Object> bindings = new HashMap<String,Object>();
-            bindings.put("u", uri);
+            bindings.put("u", new org.openrdf.model.impl.URIImpl(uri));
             TupleQueryResultMapper<DescribeType> m =
                                 new BaseTupleQueryResultMapper<DescribeType>() {
                     private DescribeType nodeType = null;

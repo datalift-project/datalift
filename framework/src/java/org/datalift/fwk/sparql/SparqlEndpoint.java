@@ -230,7 +230,7 @@ public interface SparqlEndpoint
      * 
      * @see    #describe(URI, DescribeType, String, UriInfo, Request, String)
      */
-    public ResponseBuilder describe(URI uri, DescribeType type,
+    public ResponseBuilder describe(String uri, DescribeType type,
                             UriInfo uriInfo, Request request, String acceptHdr)
                                                 throws WebApplicationException;
 
@@ -260,7 +260,7 @@ public interface SparqlEndpoint
      * @throws SecurityException if the user is not allowed to
      *         perform the query.
      */
-    public ResponseBuilder describe(URI uri, DescribeType type,
+    public ResponseBuilder describe(String uri, DescribeType type,
                                     String defaultGraph, UriInfo uriInfo,
                                     Request request, String acceptHdr)
                                                 throws WebApplicationException;
