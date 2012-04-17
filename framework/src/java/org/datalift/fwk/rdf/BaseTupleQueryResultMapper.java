@@ -51,5 +51,5 @@ abstract public class BaseTupleQueryResultMapper<T>
                                 extends TupleQueryResultHandlerBase
                                 implements TupleQueryResultMapper<T>
 {
-    // Concrete subclasses shall implement getResult.
+    // Concrete subclasses shall implement TupleQueryResultMapper.getResult().
 }

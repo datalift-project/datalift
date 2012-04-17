@@ -43,7 +43,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.openrdf.model.Statement;
-import org.openrdf.query.Binding;
 import org.openrdf.query.BindingSet;
 import org.openrdf.query.TupleQueryResultHandlerException;
 import org.openrdf.query.resultio.TupleQueryResultFormat;
@@ -62,11 +61,21 @@ public class GridJsonWriter extends AbstractJsonWriter
     //-------------------------------------------------------------------------
 
     public GridJsonWriter(OutputStream out) {
-        super(out);
+        this(out, null, null);
+    }
+
+    public GridJsonWriter(OutputStream out, String urlPattern,
+                                            String defaultGraphUri) {
+        super(out, urlPattern, defaultGraphUri);
     }
 
     public GridJsonWriter(Writer out) {
-        super(out);
+        this(out, null, null);
+    }
+
+    public GridJsonWriter(Writer out, String urlPattern,
+                                      String defaultGraphUri) {
+        super(out, urlPattern, defaultGraphUri);
     }
 
     //-------------------------------------------------------------------------
@@ -105,13 +114,11 @@ public class GridJsonWriter extends AbstractJsonWriter
         try {
             this.startSolution();       // start of new solution
 
-            Iterator<Binding> bindingIter = bindingSet.iterator();
-            Iterator<String> headerIter = columnHeaders.iterator();
-
-            while (bindingIter.hasNext() && headerIter.hasNext()) {
-                Binding binding = bindingIter.next();
-                this.writeKeyValue(headerIter.next(), binding.getValue());
-                if (bindingIter.hasNext() && headerIter.hasNext()) {
+            for (Iterator<String> i=this.columnHeaders.iterator(); i.hasNext(); ) {
+                String key = i.next();
+                this.writeKeyValue(key, bindingSet.getValue(key),
+                                        ResourceType.Unknown);
+                if (i.hasNext()) {
                     this.writeComma();
                 }
             }
@@ -162,11 +169,14 @@ public class GridJsonWriter extends AbstractJsonWriter
     public void handleStatement(Statement stmt) throws RDFHandlerException {
         try {
             this.startSolution();       // start of new solution
-            this.writeKeyValue(CONSTRUCT_VARS[0], stmt.getSubject());
+            this.writeKeyValue(CONSTRUCT_VARS[0], stmt.getSubject(),
+                                                  ResourceType.Object);
             this.writeComma();
-            this.writeKeyValue(CONSTRUCT_VARS[1], stmt.getPredicate());
+            this.writeKeyValue(CONSTRUCT_VARS[1], stmt.getPredicate(),
+                                                  ResourceType.Predicate);
             this.writeComma();
-            this.writeKeyValue(CONSTRUCT_VARS[2], stmt.getObject());
+            this.writeKeyValue(CONSTRUCT_VARS[2], stmt.getObject(),
+                                                  ResourceType.Object);
             this.endSolution();         // end solution
         }
         catch (IOException e) {
@@ -200,7 +210,7 @@ public class GridJsonWriter extends AbstractJsonWriter
 
         for (Iterator<String> i=this.columnHeaders.iterator(); i.hasNext(); ) {
             String key = i.next();
-            this.writeKeyValue(key, row.getString(key));
+            this.writeKeyValue(key, row.getString(key), ResourceType.Unknown);
             if (i.hasNext()) {
                 this.writeComma();
             }

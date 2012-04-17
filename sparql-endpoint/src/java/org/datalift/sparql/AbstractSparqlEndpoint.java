@@ -35,7 +35,11 @@
 package org.datalift.sparql;
 
 
+import java.net.URI;
+import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -49,6 +53,7 @@ import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
+import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
@@ -60,18 +65,23 @@ import javax.ws.rs.core.Variant;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 
+import org.openrdf.query.BindingSet;
+
 import com.sun.jersey.api.view.Viewable;
 
 import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.MediaTypes;
 import org.datalift.fwk.log.Logger;
+import org.datalift.fwk.rdf.BaseTupleQueryResultMapper;
 import org.datalift.fwk.rdf.Repository;
+import org.datalift.fwk.rdf.TupleQueryResultMapper;
 import org.datalift.fwk.security.SecurityContext;
 import org.datalift.fwk.sparql.SparqlEndpoint;
 import org.datalift.fwk.util.StringUtils;
 
 import static org.datalift.fwk.util.StringUtils.isBlank;
+import static org.datalift.fwk.sparql.SparqlEndpoint.DescribeType.*;
 
 
 abstract public class AbstractSparqlEndpoint extends BaseModule
@@ -87,6 +97,24 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     private final static Pattern QUERY_START_PATTERN = Pattern.compile(
                     "SELECT|CONSTRUCT|ASK|DESCRIBE", Pattern.CASE_INSENSITIVE);
     private final static int MAX_QUERY_DESC = 128;
+
+    private final static MessageFormat DESCRIBE_OBJECT_QUERY =
+            new MessageFormat("CONSTRUCT '{' ?s ?p ?o . '}' WHERE '{'\n"
+                              + "  ?s ?p ?o .\n"
+                              + "  FILTER ( ?s = <{0}> || ?o = <{0}> )\n'}'");
+    private final static MessageFormat DESCRIBE_PREDICATE_QUERY =
+            new MessageFormat("CONSTRUCT '{' ?s ?p ?o . '}' WHERE '{'\n"
+                              + "  ?s ?p ?o .\n"
+                              + "  FILTER ( ?p = <{0}> )\n'}'");
+    private final static MessageFormat DESCRIBE_GRAPH_QUERY =
+            new MessageFormat("CONSTRUCT '{' ?s ?p ?o . '}' WHERE '{'\n"
+                              + "  GRAPH <{0}> '{' ?s ?p ?o . '}'\n'}'");
+
+    private final static String DETERMINE_TYPE_QUERY =
+            "SELECT DISTINCT ?p ?g WHERE {\n" +
+            "  OPTIONAL { ?s1 ?p ?o1 . FILTER( ?p = ?u ) }\n" +
+            "  OPTIONAL { GRAPH ?g { ?s2 ?p2 ?o2 . FILTER( ?g = ?u ) } }\n" +
+            "}";
 
     //-------------------------------------------------------------------------
     // Class members
@@ -151,6 +179,54 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         return this.executeQuery(defaultGraphUris, namedGraphUris, query,
                                 startOffset, endOffset, gridJson, null,
                                 uriInfo, request, acceptHdr);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public ResponseBuilder describe(URI uri, DescribeType type,
+                            UriInfo uriInfo, Request request, String acceptHdr)
+                                                throws WebApplicationException {
+        return this.describe(uri, type, null, uriInfo, request, acceptHdr);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public ResponseBuilder describe(URI uri, DescribeType type,
+                                    String defaultGraph, UriInfo uriInfo,
+                                    Request request, String acceptHdr)
+                                                throws WebApplicationException {
+        if (uri == null) {
+            this.throwInvalidParamError("uri", uri);
+        }
+        List<String> defGraphs = null;
+        if (! isBlank(defaultGraph)) {
+            defGraphs = new ArrayList<String>();
+            defGraphs.add(defaultGraph);
+        }
+        ResponseBuilder response = null;
+        try {
+            if (type == null) {
+                type = this.getDescribeTypeFromUri(uri, defGraphs);
+            }
+            String query = null;
+            MessageFormat fmt = (type == Graph)?     DESCRIBE_GRAPH_QUERY:
+                                (type == Predicate)? DESCRIBE_PREDICATE_QUERY:
+                                                     DESCRIBE_OBJECT_QUERY;
+            synchronized (fmt) {
+                query = fmt.format(new Object[] { uri });
+            }
+
+            Map<String,Object> viewData = new HashMap<String,Object>();
+            viewData.put("describe-type", type);
+            viewData.put("describe-uri",  uri);
+            response = this.doExecute(defGraphs, null, query,
+                                      -1, -1, false, null,
+                                      uriInfo, request, acceptHdr, viewData);
+        }
+        catch (Exception e) {
+            this.handleError(uri, e);
+        }
+        return response;
     }
 
     //-------------------------------------------------------------------------
@@ -245,6 +321,85 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                                   uriInfo, request, acceptHdr);
     }
 
+    /**
+     * <i>[Resource method]</i> Returns the description of the specified
+     * object (node, predicate or named graph) from the specified RDF
+     * store, using the HTTP GET method.
+     * <p>
+     * Whenever known, the type of description shall be provided to
+     * avoid the overhead of querying the RDF store to try to detect
+     * the possible applicable description types.</p>
+     * @param  uri            the URI of the object to describe.
+     * @param  type           the type of the object or
+     *                        <code>null</code> if unknown.
+     * @param  defaultGraph   the RDF store to read the object
+     *                        description from.
+     * @param  uriInfo        the request URI data.
+     * @param  request        the JAX-RS Request object, for content
+     *                        negotiation.
+     * @param  acceptHdr      the HTTP Accept header, for content
+     *                        negotiation.
+     *
+     * @return the SPARQL query result, formatted according to the
+     *         negotiated content type.
+     * @throws WebApplicationException if the SPARQL request is invalid
+     *         or a processing error occurred or the user is not allowed
+     *         to execute the specified query.
+     */
+    @GET
+    @Path("describe")
+    public final Response getDescribe(
+                            @QueryParam("uri") URI uri,
+                            @QueryParam("type") String type,
+                            @QueryParam("default-graph") String defaultGraph,
+                            @Context UriInfo uriInfo,
+                            @Context Request request,
+                            @HeaderParam("Accept") String acceptHdr)
+                                                throws WebApplicationException {
+        return this.describe(uri, DescribeType.fromString(type),
+                             defaultGraph, uriInfo, request, acceptHdr)
+                   .build();
+    }
+
+    /**
+     * <i>[Resource method]</i> Returns the description of the specified
+     * object (node, predicate or named graph) from the specified RDF
+     * store, using the HTTP POST method.
+     * <p>
+     * Whenever known, the type of description shall be provided to
+     * avoid the overhead of querying the RDF store to try to detect
+     * the possible applicable description types.</p>
+     * @param  uri            the URI of the object to describe.
+     * @param  type           the type of the object or
+     *                        <code>null</code> if unknown.
+     * @param  defaultGraph   the RDF store to read the object
+     *                        description from.
+     * @param  uriInfo        the request URI data.
+     * @param  request        the JAX-RS Request object, for content
+     *                        negotiation.
+     * @param  acceptHdr      the HTTP Accept header, for content
+     *                        negotiation.
+     *
+     * @return the SPARQL query result, formatted according to the
+     *         negotiated content type.
+     * @throws WebApplicationException if the SPARQL request is invalid
+     *         or a processing error occurred or the user is not allowed
+     *         to execute the specified query.
+     */
+    @POST
+    @Path("describe")
+    public final Response postDescribe(
+                            @QueryParam("uri") URI uri,
+                            @QueryParam("type") String type,
+                            @QueryParam("default-graph") String defaultGraph,
+                            @Context UriInfo uriInfo,
+                            @Context Request request,
+                            @HeaderParam("Accept") String acceptHdr)
+                                                throws WebApplicationException {
+        return this.getDescribe(uri, type, defaultGraph,
+                                uriInfo, request, acceptHdr);
+    }
+
     //-------------------------------------------------------------------------
     // Specific implementation
     //-------------------------------------------------------------------------
@@ -294,7 +449,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         try {
             response = this.doExecute(defaultGraphUris, namedGraphUris, query,
                                       startOffset, endOffset, gridJson, format,
-                                      uriInfo, request, acceptHdr);
+                                      uriInfo, request, acceptHdr, null);
         }
         catch (Exception e) {
             this.handleError(query, e);
@@ -308,7 +463,8 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                                           String query, int startOffset,
                                           int endOffset, boolean gridJson,
                                           String format, UriInfo uriInfo,
-                                          Request request, String acceptHdr)
+                                          Request request, String acceptHdr,
+                                          Map<String,Object> viewData)
                                                             throws Exception;
 
     protected final Repository getTargetRepository(
@@ -405,6 +561,11 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                                         .entity(message).build());
     }
 
+    protected final void handleError(URI uri, Exception e)
+                                                throws WebApplicationException {
+        this.handleError("<" + uri + ">", e);
+    }
+
     protected final void handleError(String query, Exception e)
                                                 throws WebApplicationException {
         if (e instanceof WebApplicationException) {
@@ -426,6 +587,16 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         }
     }
 
+    protected void throwInvalidParamError(String name, Object value) {
+        TechnicalException error = (value != null)?
+                new TechnicalException("ws.invalid.param.error", name, value):
+                new TechnicalException("ws.missing.param", name);
+        throw new WebApplicationException(
+                                Response.status(Status.BAD_REQUEST)
+                                        .type(MediaTypes.TEXT_PLAIN_TYPE)
+                                        .entity(error.getMessage()).build());
+    }
+
     protected final static String getQueryDesc(String query) {
         String desc = query;
         if (query != null) {
@@ -440,6 +611,47 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
             }
         }
         return desc;
+    }
+
+    private DescribeType getDescribeTypeFromUri(final URI uri,
+                                                final List<String> defGraphs) {
+        DescribeType type = null;
+        try {
+            // Try to determine the URI type by performing a SPARQL query.
+            Map<String,Object> bindings = new HashMap<String,Object>();
+            bindings.put("u", uri);
+            TupleQueryResultMapper<DescribeType> m =
+                                new BaseTupleQueryResultMapper<DescribeType>() {
+                    private DescribeType nodeType = null;
+                    @Override
+                    public void handleSolution(BindingSet b) {
+                        if (nodeType == null) {
+                            if (b.hasBinding("p")) {
+                                nodeType = Predicate;
+                            }
+                            else if (b.hasBinding("g")) {
+                                nodeType = Graph;
+                            }
+                        }
+                        // Else: Already set. => Ignore...
+                    }
+                    @Override
+                    public DescribeType getResult() {
+                        return nodeType;
+                    }
+                };
+            // Get target repository.
+            // The provided list shall be cloned as it'll be consumed.
+            Repository repository = this.getTargetRepository(
+                (defGraphs != null)? new LinkedList<String>(defGraphs): null);
+            // Execute filter query.
+            repository.select(DETERMINE_TYPE_QUERY, bindings, m);
+            type = m.getResult();
+        }
+        catch (Exception e) {
+            log.warn("Failed to determine object type of <{}>", e, uri);
+        }
+        return type;
     }
 
     protected final static class QueryDescription

@@ -42,6 +42,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.HttpURLConnection;
 import java.util.List;
+import java.util.Map;
 
 import javax.ws.rs.Path;
 import javax.ws.rs.core.Request;
@@ -74,7 +75,8 @@ public class HttpSparqlEndpoint extends AbstractSparqlEndpoint
                                         String query, int startOffset,
                                         int endOffset, boolean gridJson,
                                         String format, UriInfo uriInfo,
-                                        Request request, String acceptHdr)
+                                        Request request, String acceptHdr,
+                                        Map<String,Object> viewData)
                                         throws IOException, URISyntaxException {
         log.trace("Processing SPARQL query: \"{}\"", query);
         // Forward query to the SPARQL endpoint.

@@ -64,11 +64,11 @@ public class JsonRdfHandler extends AbstractJsonWriter implements RDFHandler
     public void handleStatement(Statement stmt) throws RDFHandlerException {
         try {
             this.startSolution();       // start of new solution
-            this.writeKeyValue(CONSTRUCT_VARS[0], stmt.getSubject());
+            this.writeKeyValue(CONSTRUCT_VARS[0], stmt.getSubject(), null);
             this.writeComma();
-            this.writeKeyValue(CONSTRUCT_VARS[1], stmt.getPredicate());
+            this.writeKeyValue(CONSTRUCT_VARS[1], stmt.getPredicate(), null);
             this.writeComma();
-            this.writeKeyValue(CONSTRUCT_VARS[2], stmt.getObject());
+            this.writeKeyValue(CONSTRUCT_VARS[2], stmt.getObject(), null);
             this.endSolution();         // end solution
         }
         catch (IOException e) {

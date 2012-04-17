@@ -38,9 +38,11 @@ package org.datalift.sparql;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import javax.ws.rs.Path;
 import javax.ws.rs.WebApplicationException;
@@ -86,6 +88,7 @@ import org.datalift.fwk.Configuration;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.util.web.json.GridJsonWriter;
 import org.datalift.fwk.util.web.json.JsonRdfHandler;
+import org.datalift.fwk.util.web.json.AbstractJsonWriter.ResourceType;
 
 import static org.datalift.fwk.MediaTypes.*;
 
@@ -142,6 +145,13 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
             "{ \"head\":[ \"value\" ], " + 
               "\"rows\":[ { \"value\":\"%s\" } ] }";
 
+    private final static String DESCRIBE_URL_PATTERN =
+        "sparql/describe?uri={0}{1,choice," +
+            ResourceType.Object.value    + "#&type=" + DescribeType.Object    + "|" +
+            ResourceType.Predicate.value + "#&type=" + DescribeType.Predicate + "|" +
+            ResourceType.Graph.value     + "#&type=" + DescribeType.Graph     + "|" +
+            ResourceType.Graph.value     + "<}&default-graph={2}";
+
     //-------------------------------------------------------------------------
     // Instance members
     //-------------------------------------------------------------------------
@@ -170,7 +180,8 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                                         String query, int startOffset,
                                         int endOffset, boolean gridJson,
                                         String format, UriInfo uriInfo,
-                                        Request request, String acceptHdr)
+                                        Request request, String acceptHdr,
+                                        Map<String,Object> viewData)
                                                 throws WebApplicationException {
         log.trace("Processing SPARQL query: \"{}\"", query);
         // Build base URI from request if none was enforced in configuration.
@@ -193,6 +204,19 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
         Repository repo = this.getTargetRepository(defGraphUris);
         // Build query dataset from specified graphs, if any.
         Dataset dataset = this.buildDataset(defGraphUris, namedGraphUris);
+        // Prepare HTML view parameters.
+        Map<String,Object> model = new HashMap<String,Object>();
+        model.put("default-graph-uri", defaultGraphUris);
+        model.put("named-graph-uri", namedGraphUris);
+        model.put("repository", repo.name);
+        model.put("query", query);
+        model.put("min", Integer.valueOf(startOffset));
+        model.put("max", Integer.valueOf(endOffset));
+        model.put("grid", Boolean.valueOf(gridJson));
+        model.put("format", format);
+        if (viewData != null) {
+            model.putAll(viewData);
+        }
         // Execute query.
         ResponseBuilder response = null;
         Variant responseType = null;
@@ -221,9 +245,10 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
             if (mediaType.isCompatible(TEXT_HTML_TYPE) ||
                 mediaType.isCompatible(APPLICATION_XHTML_XML_TYPE)) {
                 // Execute query and provide iterator to Velocity template.
+                model.put("it", this.executeConstructQuery(repo, query,
+                                                           baseUri, dataset));
                 response = Response.ok(this.newViewable("/constructResult.vm",
-                            this.executeConstructQuery(repo, query,
-                                                       baseUri, dataset)));
+                                                        model));
             }
             else {
                 StreamingOutput out = this.getRdfHandlerOutput(repo, query,
@@ -241,8 +266,10 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
             if (mediaType.isCompatible(TEXT_HTML_TYPE) ||
                 mediaType.isCompatible(APPLICATION_XHTML_XML_TYPE)) {
                 // Execute query and provide iterator to Velocity template.
+                model.put("it", this.executeSelectQuery(repo, query,
+                                                        baseUri, dataset));
                 response = Response.ok(this.newViewable("/selectResult.vm",
-                    this.executeSelectQuery(repo, query, baseUri, dataset)));
+                                                        model));
             }
             else {
                 StreamingOutput out = this.getResultHandlerOutput(repo, query,
@@ -339,10 +366,10 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
         return result;
     }
 
-    private StreamingOutput getRdfHandlerOutput(Repository repository,
-                                            final String query,
-                                            boolean gridJson, String baseUri,
-                                            Dataset dataset, Variant v) {
+    private StreamingOutput getRdfHandlerOutput(
+                            final Repository repository, final String query,
+                            final boolean gridJson, final String baseUri,
+                            final Dataset dataset, final Variant v) {
         StreamingOutput handler = null;
 
         MediaType mediaType = v.getMediaType();
@@ -353,7 +380,9 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                                                             baseUri, dataset)
                     {
                         protected RDFHandler newHandler(OutputStream out) {
-                            return new GridJsonWriter(out);
+                            return new GridJsonWriter(out,
+                                            baseUri + DESCRIBE_URL_PATTERN,
+                                            repository.name);
                         }
                     };
             }
@@ -394,11 +423,11 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
         return handler;
     }
 
-    private StreamingOutput getResultHandlerOutput(Repository repository,
-                                            final String query,
-                                            int startOffset, int endOffset,
-                                            boolean gridJson, String baseUri,
-                                            Dataset dataset, Variant v) {
+    private StreamingOutput getResultHandlerOutput(
+                            final Repository repository, final String query,
+                            final int startOffset, final int endOffset,
+                            final boolean gridJson, final String baseUri,
+                            final Dataset dataset, final Variant v) {
         StreamingOutput handler = null;
 
         MediaType mediaType = v.getMediaType();
@@ -409,7 +438,9 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                                     startOffset, endOffset, baseUri, dataset)
                     {
                         protected TupleQueryResultHandler newHandler(OutputStream out) {
-                            return new GridJsonWriter(out);
+                            return new GridJsonWriter(out,
+                                            baseUri + DESCRIBE_URL_PATTERN,
+                                            repository.name);
                         }
                 		
                     };
@@ -486,8 +517,9 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                         @Override
                         public void endRDF() throws RDFHandlerException {
                             super.endRDF();
-                            log.debug("Processed {} results for: {}",
+                            log.debug("Processed {} results from <{}> for: {}",
                                                 Integer.valueOf(this.consumed),
+                                                repository.name,
                                                 new QueryDescription(query));
                         }
                     };

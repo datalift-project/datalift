@@ -35,6 +35,7 @@
 package org.datalift.fwk.sparql;
 
 
+import java.net.URI;
 import java.util.List;
 
 import javax.ws.rs.WebApplicationException;
@@ -42,23 +43,87 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
+import org.datalift.fwk.Configuration;
+import org.datalift.fwk.util.StringUtils;
+
 
 /**
  * The Java interface for in-VM invocation of the SPARQL endpoint.
  * <p>
- * An implementation of this interface shall be provided by the
- * framework implementation. Datalift module can retrieve it through
- * the DataLift runtime
- * {@link org.datalift.fwk.Configuration#getBean(Class) configuration},
- * during or after the post-initialization step:</p>
+ * An implementation of this interface shall be provided by every
+ * framework implementation. Other modules access it after retrieving
+ * it, as any Datalift module, using the DataLift runtime
+ * {@link Configuration#getBean(Class) configuration}, during or after
+ * the post-initialization step:</p>
  * <blockquote><pre>
- *   SparqlEndpoint endpoint = configuration.getBean(SparqlEndpoint.class);
+ *   SparqlEndpoint endpoint = Configuration.getDefault().getBean(SparqlEndpoint.class);
  * </pre></blockquote>
+ * <p>
+ * In addition to the methods below, every SPARQL endpoint
+ * implementation shall provide REST web services on the following
+ * URLs:</p>
+ * <dl>
+ *  <dt><code>/sparql</code></dt>
+ *  <dd>the standard HTTP REST SPARQL endpoint, as defined by the
+ *   <a href="http://www.w3.org/TR/rdf-sparql-protocol/#query-bindings-http">
+ *   SPARQL Protocol for RDF W3C recommendation</a>.</dd>
+ *  <dt><code>/sparql/describe</code></dt>
+ *  <dd>a DataLift-specific service to return the description of an RDF
+ *   object. This service, available through both GET and POST methods
+ *   takes the following input arguments:
+ *   <dl>
+ *    <dt><code>uri</code></dt>
+ *    <dd>the object to describe</dd>
+ *    <dt><code>type</code></dt>
+ *    <dd>the object type (see {@link DescribeType})</dd>
+ *    <dt><code>default-graph</code></dt>
+ *    <dd>the RDF store to read the object description from</dd>
+ *   </dl></dd>
+ * </dl>
  *
  * @author lbihanic
  */
 public interface SparqlEndpoint
 {
+    //-------------------------------------------------------------------------
+    // Constants
+    //-------------------------------------------------------------------------
+
+    /**
+     * The type of object to
+     * {@link SparqlEndpoint#describe(URI,DescribeType,UriInfo,Request,String) describe}.
+     */
+    public enum DescribeType {
+        Object,
+        Predicate,
+        Graph;
+
+        /**
+         * Return the enumeration value corresponding to the specified
+         * string, ignoring case.
+         * @param  s   the description type, as a string.
+         *
+         * @return the description type value or <code>null</code> if
+         *         the specified string was not recognized.
+         */
+        public static DescribeType fromString(String s) {
+            DescribeType v = null;
+            if (StringUtils.isSet(s)) {
+                for (DescribeType t : values()) {
+                    if (t.name().equalsIgnoreCase(s)) {
+                        v = t;
+                        break;
+                    }
+                }
+            }
+            return v;
+        }
+    }
+
+    //-------------------------------------------------------------------------
+    // Methods
+    //-------------------------------------------------------------------------
+
     /**
      * Executes a SPARQL query and returns the results directly to
      * the client.
@@ -137,5 +202,66 @@ public interface SparqlEndpoint
                             List<String> namedGraphUris, String query,
                             int startOffset, int endOffset, boolean gridJson,
                             UriInfo uriInfo, Request request, String acceptHdr)
+                                                throws WebApplicationException;
+
+    /**
+     * Provides the description of the specified object (node, predicate
+     * or named graph) from the default public RDF store and returns the
+     * results directly to the client.
+     * <p>
+     * Whenever known, the type of description shall be provided to
+     * avoid the overhead of querying the RDF store to try to detect
+     * the possible applicable description types.</p>
+     * @param  uri            the URI of the object to describe.
+     * @param  type           the type of the object or
+     *                        <code>null</code> if unknown.
+     * @param  uriInfo        the request URI data.
+     * @param  request        the JAX-RS Request object, for content
+     *                        negotiation.
+     * @param  acceptHdr      the HTTP Accept header, for content
+     *                        negotiation.
+     *
+     * @return a JAX-RS response with the object description, formatted
+     *         according to the negotiated format.
+     * @throws WebApplicationException if any error occurred processing
+     *         the SPARQL query.
+     * @throws SecurityException if the user is not allowed to
+     *         perform the query.
+     * 
+     * @see    #describe(URI, DescribeType, String, UriInfo, Request, String)
+     */
+    public ResponseBuilder describe(URI uri, DescribeType type,
+                            UriInfo uriInfo, Request request, String acceptHdr)
+                                                throws WebApplicationException;
+
+    /**
+     * Provides the description of the specified object (node, predicate
+     * or named graph) from the specified RDF store and returns the
+     * results directly to the client.
+     * <p>
+     * Whenever known, the type of description shall be provided to
+     * avoid the overhead of querying the RDF store to try to detect
+     * the possible applicable description types.</p>
+     * @param  uri            the URI of the object to describe.
+     * @param  type           the type of the object or
+     *                        <code>null</code> if unknown.
+     * @param  defaultGraph   the RDF store to read the object
+     *                        description from.
+     * @param  uriInfo        the request URI data.
+     * @param  request        the JAX-RS Request object, for content
+     *                        negotiation.
+     * @param  acceptHdr      the HTTP Accept header, for content
+     *                        negotiation.
+     *
+     * @return a JAX-RS response with the object description, formatted
+     *         according to the negotiated format.
+     * @throws WebApplicationException if any error occurred processing
+     *         the SPARQL query.
+     * @throws SecurityException if the user is not allowed to
+     *         perform the query.
+     */
+    public ResponseBuilder describe(URI uri, DescribeType type,
+                                    String defaultGraph, UriInfo uriInfo,
+                                    Request request, String acceptHdr)
                                                 throws WebApplicationException;
 }
