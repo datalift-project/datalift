@@ -175,7 +175,7 @@
 #foreach($curSrc in $current.getSources())
 		{
 			uri:"$curSrc.uri",
-			title:"<a href='$curSrc.uri'>$esc.html($curSrc.title)</a>",
+			title:"<a href='${baseUri}/sparql/describe?uri=$esc.url(${curSrc.uri})&type=Graph&default-graph=internal'>$esc.html($curSrc.title)</a>",
 	#if( $curSrc.getType() == $field.CsvSource )
 			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.html($curSrc.description)<br />#end#i18n('project.upload_source.file'): $!esc.html($curSrc.filePath)<br />#i18n('project.upload_csv_separator'): $!esc.html($curSrc.separator)<br />#i18n('project.upload_csv_activate'): #i18n("boolean.${curSrc.hasTitleRow()}")"
 	#elseif( $curSrc.getType() == $field.RdfFileSource )
