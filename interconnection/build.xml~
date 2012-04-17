@@ -30,7 +30,7 @@
   set to the current working directory.
 -->
 
-<project name="datalift-silk-sample" default="dist" basedir=".">
+<project name="datalift-interconnection" default="dist" basedir=".">
 
   <!-- ================ Property Definitions ============================== -->
 
@@ -92,10 +92,10 @@
                         Defaults to "dist".
    -->
 
-  <property name="app.name"             value="silk-sample"/>
+  <property name="app.name"             value="interconnection"/>
   <property name="app.version"          value="0.3"/>
   <property name="app.path"             value="/${app.name}"/>
-  <property name="app.long.name"        value="Sample MY module for DataLift"/>
+  <property name="app.long.name"        value="interlinking module for DataLift"/>
 
   <property name="build.home"           location="${basedir}/build"/>
   <property name="dist.home"            location="${basedir}/dist"/>
@@ -106,7 +106,7 @@
   <property name="lib.home"             location="${basedir}/lib"/>
   <property name="run.lib.home"         location="${lib.home}/runtime"/>
 
-  <property name="silk.version"         value="snapshot"/>
+  <property name="silk.version"         value="2.5.3"/>
   <property name="silk.jar"
             location="${run.lib.home}/silk-${silk.version}/silk.jar"/>
 
