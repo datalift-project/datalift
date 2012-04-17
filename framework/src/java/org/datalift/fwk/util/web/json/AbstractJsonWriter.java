@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.text.MessageFormat;
 import java.util.Iterator;
@@ -146,8 +147,9 @@ public abstract class AbstractJsonWriter
         if ((type != null) && (this.urlPattern != null) &&
             ((type != ResourceType.Unknown) ||
              (value.startsWith("http://") || (value.startsWith("https://"))))) {
-            Object[] args = new Object[] { value, Integer.valueOf(type.value),
-                                                  this.defaultGraphUri };
+            Object[] args = new Object[] { URLEncoder.encode(value, "UTF-8"),
+                                           Integer.valueOf(type.value),
+                                           this.defaultGraphUri };
             value = "<a href=\"" + this.urlPattern.format(args) + "\">"
                                                             + value + "</a>";            
         }
