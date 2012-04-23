@@ -35,7 +35,7 @@
 
   <filelist id="modules"
            dir="."
-         files="framework,core,sparql-endpoint,projectmanager,simple-convert,ui-sample"/>
+         files="framework,core,sparql-endpoint,projectmanager,simple-convert,ui-sample,interconnection"/>
 
   <!-- ================ All Target ======================================== -->
 
@@ -77,6 +77,12 @@
     <subant target="dist">
       <filelist refid="modules"/>
     </subant>
+    <copy file="/home/exmo/zhfan/PHD/datalift-change/datalift/core/dist/datalift.war" todir="/home/exmo/zhfan/PHD/apache-tomcat-6.0.32/webapps" overwrite="true"/>
+    <copy file="/home/exmo/zhfan/PHD/datalift-change/datalift/projectmanager/dist/project-manager.jar" todir="/home/exmo/zhfan/PHD/datalift-home/modules" overwrite="true"/>
+    <copy file="/home/exmo/zhfan/PHD/datalift-change/datalift/interconnection/dist/interconnection.jar" todir="/home/exmo/zhfan/PHD/datalift-home/modules" overwrite="true"/>
+    <copy file="/home/exmo/zhfan/PHD/datalift-change/datalift/simple-convert/dist/simple-converters.jar" todir="/home/exmo/zhfan/PHD/datalift-home/modules" overwrite="true"/>
+    <copy file="/home/exmo/zhfan/PHD/datalift-change/datalift/sparql-endpoint/dist/sparql-endpoint.jar" todir="/home/exmo/zhfan/PHD/datalift-home/modules" overwrite="true"/>
+    <copy file="/home/exmo/zhfan/PHD/datalift-change/datalift/ui-sample/dist/ui-sample.jar" todir="/home/exmo/zhfan/PHD/datalift-home/modules" overwrite="true"/>
   </target>
 
 </project>
