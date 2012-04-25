@@ -381,8 +381,8 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                     {
                         protected RDFHandler newHandler(OutputStream out) {
                             return new GridJsonWriter(out,
-                                            baseUri + DESCRIBE_URL_PATTERN,
-                                            repository.name);
+                                            this.baseUri + DESCRIBE_URL_PATTERN,
+                                            this.repository.name);
                         }
                     };
             }
@@ -439,8 +439,8 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                     {
                         protected TupleQueryResultHandler newHandler(OutputStream out) {
                             return new GridJsonWriter(out,
-                                            baseUri + DESCRIBE_URL_PATTERN,
-                                            repository.name);
+                                            this.baseUri + DESCRIBE_URL_PATTERN,
+                                            this.repository.name);
                         }
                 		
                     };
@@ -470,10 +470,10 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
 
     private abstract class ConstructStreamingOutput implements StreamingOutput
     {
-        private final Repository repository;
-        private final String query;
-        private final String baseUri;
-        private final Dataset dataset;
+        protected final Repository repository;
+        protected final String query;
+        protected final String baseUri;
+        protected final Dataset dataset;
 
         public ConstructStreamingOutput(Repository repository, String query,
                                         String baseUri, Dataset dataset) {
