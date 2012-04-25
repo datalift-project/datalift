@@ -82,10 +82,23 @@ public class HttpSparqlEndpoint extends AbstractSparqlEndpoint
         // Forward query to the SPARQL endpoint.
         URL u = new URL(this.getTargetRepository(defaultGraphUris)
                             .getEndpointUrl());
+        // Rebuild SPARQL query parameter list.
+        StringBuilder buf = new StringBuilder(512);
+        buf.append("query=").append(query);
+        if ((defaultGraphUris != null) && (! defaultGraphUris.isEmpty())) {
+            for (String s : defaultGraphUris) {
+                buf.append("&default-graph-uri=").append(s);
+            }
+        }
+        if ((namedGraphUris != null) && (! namedGraphUris.isEmpty())) {
+            for (String s : namedGraphUris) {
+                buf.append("&named-graph-uri=").append(s);
+            }
+        }
         // Use URI multi-argument constructor to escape query string.
         u = new URI(u.getProtocol(), null,
                     u.getHost(), u.getPort(),
-                    u.getPath(), "query=" + query, null).toURL();
+                    u.getPath(), buf.toString(), null).toURL();
         // Build HTTP request.
         HttpURLConnection cnx = (HttpURLConnection)(u.openConnection());
         cnx.setRequestMethod(request.getMethod());
