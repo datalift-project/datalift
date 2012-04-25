@@ -60,6 +60,13 @@ public class DataliftApplication extends Application
     // Class members
     //-------------------------------------------------------------------------
 
+    /* Class-level booleans to prevent multiple logging of registered
+     * JAX-RS resources as Jersey invokes several times the getClasses()
+     * and getSingletons() methods at startup.
+     */
+    private static volatile boolean classesLogged   = false;
+    private static volatile boolean singletonLogged = false;
+
     private final static Logger log = Logger.getLogger();
 
     //-------------------------------------------------------------------------
@@ -75,8 +82,11 @@ public class DataliftApplication extends Application
         classes.add(VelocityTemplateProcessor.class);
         classes.add(PreferredLocalesProvider.class);
 
-        log.debug("Registered {} resource classes/providers: {}",
+        if (! classesLogged) {
+            log.debug("Registered {} resource classes/providers: {}",
                                 Integer.valueOf(classes.size()), classes);
+            classesLogged = true;
+        }
         return classes;
     }
 
@@ -84,8 +94,12 @@ public class DataliftApplication extends Application
     @Override
     public Set<Object> getSingletons() {
         Set<Object> resources = ApplicationLoader.getDefault().getResources();
-        log.debug("Registered {} singleton resources/providers: {}",
+
+        if (! singletonLogged) {
+            log.debug("Registered {} singleton resources/providers: {}",
                                 Integer.valueOf(resources.size()), resources);
+            singletonLogged = true;
+        }
         return resources;
     }
 }
