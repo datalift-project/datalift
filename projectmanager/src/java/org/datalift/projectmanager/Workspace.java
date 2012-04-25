@@ -102,11 +102,13 @@ import org.datalift.fwk.project.ProjectManager;
 import org.datalift.fwk.project.ProjectModule;
 import org.datalift.fwk.project.RdfFileSource;
 import org.datalift.fwk.project.Source;
+import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.project.CsvSource.Separator;
 import org.datalift.fwk.project.ProjectModule.UriDesc;
 import org.datalift.fwk.rdf.RdfFormat;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.sparql.SparqlEndpoint;
+import org.datalift.fwk.sparql.SparqlEndpoint.DescribeType;
 import org.datalift.fwk.util.CloseableIterator;
 import org.datalift.fwk.util.io.FileUtils;
 
@@ -1159,38 +1161,49 @@ public class Workspace extends BaseModule
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
     public Response displaySource(@PathParam("id") String id,
                                   @PathParam("srcid") String srcId,
-                                  @Context UriInfo uriInfo)
+                                  @Context UriInfo uriInfo,
+                                  @Context Request request,
+                                  @HeaderParam(ACCEPT) String acceptHdr)
                                                 throws WebApplicationException {
-        Response response = null;
+        ResponseBuilder response = null;
         try {
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
             Project p = this.loadProject(projectUri);
-
             // Search for requested source in project.
-            Source src = p.getSource(new URL(
-                                this.getSourceId(projectUri, srcId)).toURI());
+            URI u = uriInfo.getAbsolutePath();
+            Source src = p.getSource(u);
             if (src == null) {
                 // Not found.
                 throw new NotFoundException();
             }
-            // Return the HTML template matching the source type.
-            String template = null;
-            if ((src instanceof CsvSource) || (src instanceof SqlSource)) {
-                template = "RowSourceGrid.vm";
-            }
-            else if (src instanceof RdfSource) {
-                template = "RdfSourceGrid.vm";
+            if (src instanceof TransformedRdfSource) {
+                // Forward source description request to the SPARQL endpoint.
+                Configuration cfg = Configuration.getDefault();
+                response = cfg.getBean(SparqlEndpoint.class)
+                              .describe(u.toString(), DescribeType.Graph,
+                                        cfg.getInternalRepository(),
+                                        uriInfo, request, acceptHdr);
             }
             else {
-                throw new TechnicalException("unknown.source.type",
-                                             src.getClass());
+                // Return the HTML template matching the source type.
+                String template = null;
+                if ((src instanceof CsvSource) || (src instanceof SqlSource)) {
+                    template = "RowSourceGrid.vm";
+                }
+                else if (src instanceof RdfSource) {
+                    template = "RdfSourceGrid.vm";
+                }
+                else {
+                    throw new TechnicalException("unknown.source.type",
+                                                 src.getClass());
+                }
+                response = Response.ok(this.newViewable(template, src));
             }
-            response = Response.ok(this.newViewable(template, src)).build();
         }
         catch (Exception e) {
             this.handleInternalError(e, "Failed to load source {}", srcId);
         }
-        return response;
+        return response.build();
     }
 
     @GET
@@ -1208,8 +1221,8 @@ public class Workspace extends BaseModule
             // to load the whole project and search it using its URI.
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
             Project p = this.loadProject(projectUri);
-            URI u = new URI(uriInfo.getAbsolutePath().toString()
-                                                     .replace("/delete", ""));
+            // Search for requested source in project.
+            URI u = new URL(this.getSourceId(projectUri, sourceId)).toURI();
             Source s = p.getSource(u);
             // Delete source.
             this.projectManager.delete(s);
@@ -1236,16 +1249,37 @@ public class Workspace extends BaseModule
                                    @Context Request request,
                                    @HeaderParam(ACCEPT) String acceptHdr)
                                                 throws WebApplicationException {
-        // Check that projects exists in internal data store.
-        this.loadProject(this.newProjectId(uriInfo.getBaseUri(), id));
-        // Forward request for source RDF description to the SPARQL endpoint.
-        URI uri = uriInfo.getAbsolutePath();
-        Configuration cfg = Configuration.getDefault();
-        List<String> defGraph = Arrays.asList(cfg.getInternalRepository().name);
-        return cfg.getBean(SparqlEndpoint.class)
-                  .executeQuery(defGraph, null,
-                                "DESCRIBE <" + uri + '>',
-                                uriInfo, request, acceptHdr).build();
+        Response response = null;
+        try {
+            // Check that projects exists in internal data store.
+            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
+            Project p = this.loadProject(projectUri);
+            // Search for requested source in project.
+            URI u = uriInfo.getAbsolutePath();
+            Source src = p.getSource(u);
+            if (src == null) {
+                // Not found.
+                throw new NotFoundException();
+            }
+            else if (! (src instanceof TransformedRdfSource)) {
+                TechnicalException error =
+                                    new TechnicalException("not.rdf.source");
+                throw new WebApplicationException(
+                                Response.status(Status.UNSUPPORTED_MEDIA_TYPE)
+                                        .type(TEXT_PLAIN_TYPE)
+                                        .entity(error.getMessage()).build());
+            }
+            // Forward source description request to the SPARQL endpoint.
+            Configuration cfg = Configuration.getDefault();
+            response = cfg.getBean(SparqlEndpoint.class)
+                          .describe(u.toString(), DescribeType.Graph,
+                                    cfg.getInternalRepository(),
+                                    uriInfo, request, acceptHdr).build();
+        }
+        catch (Exception e) {
+            this.handleInternalError(e, "Failed to load source {}", srcId);
+        }
+        return response;
     }
 
     @GET
@@ -1692,7 +1726,7 @@ public class Workspace extends BaseModule
                 new TechnicalException("ws.missing.param", name);
         throw new WebApplicationException(
                                 Response.status(Status.BAD_REQUEST)
-                                        .type(MediaTypes.TEXT_PLAIN_TYPE)
+                                        .type(TEXT_PLAIN_TYPE)
                                         .entity(error.getMessage()).build());
     }
 
@@ -1715,9 +1749,9 @@ public class Workspace extends BaseModule
             TechnicalException error = new TechnicalException(
                                     "ws.internal.error", e, e.getMessage());
             throw new WebApplicationException(
-                            Response.status(Status.INTERNAL_SERVER_ERROR)
-                                    .type(MediaTypes.TEXT_PLAIN_TYPE)
-                                    .entity(error.getMessage()).build());
+                                Response.status(Status.INTERNAL_SERVER_ERROR)
+                                        .type(TEXT_PLAIN_TYPE)
+                                        .entity(error.getMessage()).build());
         }
     }
    
