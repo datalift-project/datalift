@@ -12,6 +12,8 @@ import java.io.ObjectStreamException;
 import java.util.HashMap;
 import java.util.Map;
 
+import javassist.bytecode.Descriptor.Iterator;
+
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -23,6 +25,7 @@ import javax.ws.rs.core.Response;
 import org.datalift.fwk.MediaTypes;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.Project;
+import org.datalift.fwk.project.Source;
 
 import de.fuberlin.wiwiss.silk.Silk;
 
@@ -48,7 +51,7 @@ public class HandleProjectModule extends BaseInterconnectionModule
     	
     	try {   	  	
     		  	
-            if (p.getSources().size()>2) {
+            if (p.getSources().size()>1) {
             // The URI should be a URI for running the interconnection
             projectURL = new UriDesc(this.getName() + "?project=" + p.getUri(),
                                "Interconnection");     	
@@ -57,6 +60,7 @@ public class HandleProjectModule extends BaseInterconnectionModule
                 projectURL.setPosition(100000);
             //}
             }
+            
         }
         catch (Exception e) {
             log.fatal("Uh?", e);
