@@ -44,6 +44,7 @@ import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
 import org.datalift.fwk.Configuration;
+import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.util.StringUtils;
 
 
@@ -242,16 +243,16 @@ public interface SparqlEndpoint
      * Whenever known, the type of description shall be provided to
      * avoid the overhead of querying the RDF store to try to detect
      * the possible applicable description types.</p>
-     * @param  uri            the URI of the object to describe.
-     * @param  type           the type of the object or
-     *                        <code>null</code> if unknown.
-     * @param  defaultGraph   the RDF store to read the object
-     *                        description from.
-     * @param  uriInfo        the request URI data.
-     * @param  request        the JAX-RS Request object, for content
-     *                        negotiation.
-     * @param  acceptHdr      the HTTP Accept header, for content
-     *                        negotiation.
+     * @param  uri          the URI of the object to describe.
+     * @param  type         the type of the object or
+     *                      <code>null</code> if unknown.
+     * @param  repository   the RDF store to read the object
+     *                      description from.
+     * @param  uriInfo      the request URI data.
+     * @param  request      the JAX-RS Request object, for content
+     *                      negotiation.
+     * @param  acceptHdr    the HTTP Accept header, for content
+     *                      negotiation.
      *
      * @return a JAX-RS response with the object description, formatted
      *         according to the negotiated format.
@@ -261,7 +262,7 @@ public interface SparqlEndpoint
      *         perform the query.
      */
     public ResponseBuilder describe(String uri, DescribeType type,
-                                    String defaultGraph, UriInfo uriInfo,
+                                    Repository repository, UriInfo uriInfo,
                                     Request request, String acceptHdr)
                                                 throws WebApplicationException;
 }

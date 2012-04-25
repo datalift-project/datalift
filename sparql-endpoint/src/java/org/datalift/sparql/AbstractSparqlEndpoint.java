@@ -197,21 +197,21 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     /** {@inheritDoc} */
     @Override
     public ResponseBuilder describe(String uri, DescribeType type,
-                                    String defaultGraph, UriInfo uriInfo,
+                                    Repository repository, UriInfo uriInfo,
                                     Request request, String acceptHdr)
                                                 throws WebApplicationException {
         if (isBlank(uri)) {
             this.throwInvalidParamError("uri", uri);
         }
         List<String> defGraphs = null;
-        if (! isBlank(defaultGraph)) {
+        if (repository != null) {
             defGraphs = new ArrayList<String>();
-            defGraphs.add(defaultGraph);
+            defGraphs.add(repository.name);
         }
         ResponseBuilder response = null;
         try {
             if (type == null) {
-                type = this.getDescribeTypeFromUri(uri, defGraphs);
+                type = this.getDescribeTypeFromUri(uri, repository);
             }
             String query = null;
             MessageFormat fmt = (type == Graph)?     DESCRIBE_GRAPH_QUERY:
@@ -361,8 +361,15 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                             @Context Request request,
                             @HeaderParam("Accept") String acceptHdr)
                                                 throws WebApplicationException {
+        Repository repository = null;
+        if (! isBlank(defaultGraph)) {
+            // Resolve target repository (a mutable list is required).
+            List<String> l = new LinkedList<String>();
+            l.add(defaultGraph);
+            repository = this.getTargetRepository(l);
+        }
         return this.describe(uri, DescribeType.fromString(type),
-                             defaultGraph, uriInfo, request, acceptHdr)
+                             repository, uriInfo, request, acceptHdr)
                    .build();
     }
 
@@ -619,7 +626,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     }
 
     private DescribeType getDescribeTypeFromUri(final String uri,
-                                                final List<String> defGraphs) {
+                                                Repository repository) {
         DescribeType type = null;
         try {
             // Try to determine the URI type by performing a SPARQL query.
@@ -645,10 +652,10 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                         return nodeType;
                     }
                 };
-            // Get target repository.
-            // The provided list shall be cloned as it'll be consumed.
-            Repository repository = this.getTargetRepository(
-                (defGraphs != null)? new LinkedList<String>(defGraphs): null);
+            if (repository == null) {
+                // Use default repository if none is specified.
+                repository = Configuration.getDefault().getDefaultRepository();
+            }
             // Execute filter query.
             repository.select(DETERMINE_TYPE_QUERY, bindings, m);
             type = m.getResult();
