@@ -103,7 +103,7 @@
 #end
 		</select></p>
 		<p><label for="base_uri">#i18n("project.upload_source.base_uri"): </label>
-		<input type="text" id="base_uri" name="base_uri" value="$!esc.html($current.source)"/></p>
+		<input type="text" id="base_uri" name="base_uri" value="$!esc.html($current.sourceUrl)"/></p>
 		<input type="submit" value="#i18n("$submit")"/>
 	</form>
 #end
