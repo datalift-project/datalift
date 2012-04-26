@@ -864,10 +864,10 @@ public class Workspace extends BaseModule
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     public Response modifyRdfSource(
                             @PathParam("id") String projectId,
+                            @FormDataParam("current_source") URI sourceUri,
                             @FormDataParam("description") String description,
                             @FormDataParam("mime_type") String mimeType,
                             @FormDataParam("base_uri") URI baseUri,
-                            @FormDataParam("current_source") URI sourceUri,
                             @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
         Response response = null;
@@ -1114,12 +1114,12 @@ public class Workspace extends BaseModule
 
     @GET
     @Path("{id}/{filename}")
-    public Response getSourceData(@PathParam("id") String id,
+    public Response getSourceData(@PathParam("id") String projectId,
                                   @PathParam("filename") String fileName,
                                   @Context UriInfo uriInfo,
                                   @Context Request request)
                                                 throws WebApplicationException {
-        String filePath = this.getProjectFilePath(id, fileName);
+        String filePath = this.getProjectFilePath(projectId, fileName);
         Response response = Configuration.getDefault()
                                     .getBean(ResourceResolver.class)
                                     .resolveStaticResource(filePath, request);
@@ -1132,13 +1132,13 @@ public class Workspace extends BaseModule
     @GET
     @Path("{id}/source")
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
-    public Response displaySources(@PathParam("id") String id,
+    public Response displaySources(@PathParam("id") String projectId,
                                    @Context UriInfo uriInfo,
                                    @Context Request request)
                                                 throws WebApplicationException {
         ResponseBuilder response = null;
         try {
-            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
+            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
             Project p = this.loadProject(projectUri);
             // Check data freshness HTTP headers (If-Modified-Since & ETags)
             Date lastModified = p.getModificationDate();
@@ -1159,7 +1159,7 @@ public class Workspace extends BaseModule
     @GET
     @Path("{id}/source/{srcid}")
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
-    public Response displaySource(@PathParam("id") String id,
+    public Response displaySource(@PathParam("id") String projectId,
                                   @PathParam("srcid") String srcId,
                                   @Context UriInfo uriInfo,
                                   @Context Request request,
@@ -1167,7 +1167,7 @@ public class Workspace extends BaseModule
                                                 throws WebApplicationException {
         ResponseBuilder response = null;
         try {
-            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
+            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
             Project p = this.loadProject(projectUri);
             // Search for requested source in project.
             URI u = uriInfo.getAbsolutePath();
@@ -1243,7 +1243,7 @@ public class Workspace extends BaseModule
     @Produces({ APPLICATION_RDF_XML, TEXT_TURTLE, APPLICATION_TURTLE,
                 TEXT_N3, TEXT_RDF_N3, APPLICATION_N3, APPLICATION_NTRIPLES,
                 APPLICATION_JSON })
-    public Response describeSource(@PathParam("id") String id,
+    public Response describeSource(@PathParam("id") String projectId,
                                    @PathParam("srcid") String srcId,
                                    @Context UriInfo uriInfo,
                                    @Context Request request,
@@ -1252,7 +1252,7 @@ public class Workspace extends BaseModule
         Response response = null;
         try {
             // Check that projects exists in internal data store.
-            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
+            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
             Project p = this.loadProject(projectUri);
             // Search for requested source in project.
             URI u = uriInfo.getAbsolutePath();
@@ -1285,12 +1285,12 @@ public class Workspace extends BaseModule
     @GET
     @Path("{id}/ontologyupload")
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
-    public Object getOntologyUploadPage(@PathParam("id") String id,
+    public Object getOntologyUploadPage(@PathParam("id") String projectId,
                                         @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
         Response response = null;
         try {
-            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
+            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
             Project p = this.loadProject(projectUri);
 
             response = Response.ok(this.newViewable("projectOntoUpload.vm", p),
@@ -1334,14 +1334,14 @@ public class Workspace extends BaseModule
     @Path("{id}/ontology/{ontologyTitle}/modify")
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
     public Response getOntologyModifyPage(
-                            @PathParam("id") String id,
+                            @PathParam("id") String projectId,
                             @PathParam("ontologyTitle") String ontologyTitle,
                             @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
         Response response = null;
         try {
             // Retrieve project.
-            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
+            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
             Project p = this.loadProject(projectUri);
             // Search for requested ontology in project.
             Ontology ontology = p.getOntology(ontologyTitle);
@@ -1364,7 +1364,7 @@ public class Workspace extends BaseModule
 
     @POST
     @Path("{id}/ontology/{ontologyTitle}/modify")
-    public Response modifyOntology(@PathParam("id") String id,
+    public Response modifyOntology(@PathParam("id") String projectId,
             @Context UriInfo uriInfo, @FormParam("title") String title,
             @FormParam("source_url") URI source,
             @FormParam("oldTitle") String currentOntologyTitle)
@@ -1372,7 +1372,7 @@ public class Workspace extends BaseModule
         Response response = null;
         try {
             // Retrieve project.
-            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
+            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
             Project p = this.loadProject(projectUri);
             // Search for requested ontology in project.
             Ontology ontology = p.getOntology(currentOntologyTitle);
