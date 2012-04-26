@@ -42,7 +42,6 @@ import javax.persistence.MappedSuperclass;
 import com.clarkparsia.empire.annotation.RdfId;
 import com.clarkparsia.empire.annotation.RdfProperty;
 
-import org.datalift.fwk.i18n.Iso8601DateFormat;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.Source;
 import org.datalift.fwk.util.StringUtils;
@@ -216,20 +215,6 @@ public abstract class BaseSource extends BaseRdfEntity implements Source
 
     /** {@inheritDoc} */
     @Override
-    public boolean equals(Object o) {
-        return ((o != null) &&
-                o.getClass().equals(this.getClass()) &&
-                StringUtils.equals(this.getUri(), ((Source)o).getUri()));
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public int hashCode() {
-        return this.uri.hashCode();
-    }
-
-    /** {@inheritDoc} */
-    @Override
     public String toString() {
         StringBuilder b = new StringBuilder(64);
         b.append(this.getUri())
@@ -268,17 +253,6 @@ public abstract class BaseSource extends BaseRdfEntity implements Source
     }
 
     /**
-     * Utility method to perform a defensive copy of a user-provided
-     * date, as {@link Date dates} are mutable objects.
-     * @param  date   the {@link Date} object to copy.
-     *
-     * @return a clone of the specified {@link Date} object.
-     */
-    protected final Date copy(final Date date) {
-        return (date != null)? new Date(date.getTime()): null;
-    }
-
-    /**
      * Complementary {@link #toString()} method to let subclasses
      * complement the default string representation without overriding
      * the whole {@link #toString()} method.
@@ -289,14 +263,5 @@ public abstract class BaseSource extends BaseRdfEntity implements Source
      */
     protected StringBuilder toString(StringBuilder b) {
         return b;
-    }
-
-    /**
-     * Formats a date in {@link Iso8601DateFormat ISO-8601 format}.
-     * @param  date   the date to format.
-     * @return the ISO-8601 representation of the specified date.
-     */
-    protected final String toString(final Date date) {
-        return Iso8601DateFormat.DATETIME_UTC.format(date);
     }
 }

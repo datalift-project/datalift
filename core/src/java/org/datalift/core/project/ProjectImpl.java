@@ -55,6 +55,7 @@ import com.clarkparsia.empire.annotation.RdfsClass;
 import org.datalift.fwk.project.Ontology;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.Source;
+import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.util.StringUtils;
 
 import static org.datalift.fwk.rdf.RdfNamespace.VDPP;
@@ -232,8 +233,18 @@ public class ProjectImpl extends BaseRdfEntity implements Project
     /** {@inheritDoc} */
     @Override
     public void remove(Source source) {
-        if (source == null) {
+        if ((source == null) || (! this.sources.contains(source))) {
             throw new IllegalArgumentException("source");
+        }
+        String srcId = source.getUri();
+        for (Source s : this.getSources()) {
+            if (s instanceof TransformedRdfSource) {
+                TransformedRdfSource trs = (TransformedRdfSource)s;
+                Source parent = trs.getParent();
+                if ((parent != null) && (parent.getUri().equals(srcId))) {
+                    trs.setParent(null);
+                }
+            }
         }
         this.sources.remove(source);
     }
@@ -323,6 +334,23 @@ public class ProjectImpl extends BaseRdfEntity implements Project
     }
 
     //-------------------------------------------------------------------------
+    // Object contract support
+    //-------------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    @Override
+    public String toString() {
+        StringBuilder b = new StringBuilder(64);
+        b.append(this.getUri())
+         .append(" (").append(this.getClass().getSimpleName())
+         .append(", \"").append(this.getTitle())
+         .append("\", ").append(this.getOwner())
+         .append(", ").append(this.toString(this.getModificationDate()))
+         .append(')');
+        return b.toString();
+    }
+
+    //-------------------------------------------------------------------------
     // Specific implementation
     //-------------------------------------------------------------------------
 
@@ -340,9 +368,5 @@ public class ProjectImpl extends BaseRdfEntity implements Project
      */
     public final void setCreationDate(Date date) {
         this.dateCreated = this.copy(date);
-    }
-
-    protected final Date copy(Date date) {
-        return (date != null)? new Date(date.getTime()): null;
     }
 }

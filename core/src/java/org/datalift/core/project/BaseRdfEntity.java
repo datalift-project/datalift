@@ -35,10 +35,14 @@
 package org.datalift.core.project;
 
 
+import java.util.Date;
+
 import javax.persistence.MappedSuperclass;
 
 import com.clarkparsia.empire.SupportsRdfId;
 import com.clarkparsia.empire.annotation.SupportsRdfIdImpl;
+
+import org.datalift.fwk.i18n.Iso8601DateFormat;
 
 
 @MappedSuperclass
@@ -79,8 +83,11 @@ public abstract class BaseRdfEntity implements SupportsRdfId
 
     /** {@inheritDoc} */
     @Override
-    public String toString() {
-        return String.valueOf(this.getRdfId());
+    public boolean equals(Object o) {
+        return ((o != null) &&
+                o.getClass().equals(this.getClass()) &&
+                String.valueOf(this.getRdfId()).equals(
+                                String.valueOf(((BaseRdfEntity)o).getRdfId())));
     }
 
     /** {@inheritDoc} */
@@ -88,5 +95,35 @@ public abstract class BaseRdfEntity implements SupportsRdfId
     public int hashCode() {
         return (this.getRdfId() != null)? this.getRdfId().hashCode():
                                           System.identityHashCode(this);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public String toString() {
+        return String.valueOf(this.getRdfId());
+    }
+
+    //-------------------------------------------------------------------------
+    // Specific implementation
+    //-------------------------------------------------------------------------
+
+    /**
+     * Utility method to perform a defensive copy of a user-provided
+     * date, as {@link Date dates} are mutable objects.
+     * @param  date   the {@link Date} object to copy.
+     *
+     * @return a clone of the specified {@link Date} object.
+     */
+    protected final Date copy(final Date date) {
+        return (date != null)? new Date(date.getTime()): null;
+    }
+
+    /**
+     * Formats a date in {@link Iso8601DateFormat ISO-8601 format}.
+     * @param  date   the date to format.
+     * @return the ISO-8601 representation of the specified date.
+     */
+    protected final String toString(final Date date) {
+        return Iso8601DateFormat.DATETIME_UTC.format(date);
     }
 }
