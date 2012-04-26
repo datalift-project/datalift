@@ -183,6 +183,18 @@ public abstract class BaseFileSource<T> extends BaseSource
     }
 
     //-------------------------------------------------------------------------
+    // BaseSource contract support
+    //-------------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    @Override
+    protected StringBuilder toString(StringBuilder b) {
+        return super.toString(b).append(this.getFilePath())
+                                .append(", ").append(this.getMimeType())
+                                .append(", ").append(this.getEncoding());
+    }
+
+    //-------------------------------------------------------------------------
     // Specific implementation
     //-------------------------------------------------------------------------
 

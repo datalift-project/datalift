@@ -39,12 +39,13 @@ import java.util.Date;
 
 import javax.persistence.MappedSuperclass;
 
+import com.clarkparsia.empire.annotation.RdfId;
+import com.clarkparsia.empire.annotation.RdfProperty;
+
+import org.datalift.fwk.i18n.Iso8601DateFormat;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.Source;
 import org.datalift.fwk.util.StringUtils;
-
-import com.clarkparsia.empire.annotation.RdfId;
-import com.clarkparsia.empire.annotation.RdfProperty;
 
 
 /**
@@ -210,6 +211,43 @@ public abstract class BaseSource extends BaseRdfEntity implements Source
     }
 
     //-------------------------------------------------------------------------
+    // Object contract support
+    //-------------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean equals(Object o) {
+        return ((o != null) &&
+                o.getClass().equals(this.getClass()) &&
+                StringUtils.equals(this.getUri(), ((Source)o).getUri()));
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public int hashCode() {
+        return this.uri.hashCode();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public String toString() {
+        StringBuilder b = new StringBuilder(64);
+        b.append(this.getUri())
+         .append(" (").append(this.getClass().getSimpleName())
+         .append(", \"").append(this.getTitle())
+         .append("\", ");
+        int l = b.length();
+        b = this.toString(b);
+        if (b.length() != l) {
+            b.append(", ");
+        }
+        b.append(this.getOperator())
+         .append(", ").append(this.toString(this.getCreationDate()))
+         .append(')');
+        return b.toString();
+    }
+
+    //-------------------------------------------------------------------------
     // Specific implementation
     //-------------------------------------------------------------------------
 
@@ -225,11 +263,40 @@ public abstract class BaseSource extends BaseRdfEntity implements Source
      * Sets the creation date of this source.
      * @param  date   the source creation date.
      */
-    public final void setCreationDate(Date date) {
+    public final void setCreationDate(final Date date) {
         this.creationDate = this.copy(date);
     }
 
-    protected final Date copy(Date date) {
+    /**
+     * Utility method to perform a defensive copy of a user-provided
+     * date, as {@link Date dates} are mutable objects.
+     * @param  date   the {@link Date} object to copy.
+     *
+     * @return a clone of the specified {@link Date} object.
+     */
+    protected final Date copy(final Date date) {
         return (date != null)? new Date(date.getTime()): null;
+    }
+
+    /**
+     * Complementary {@link #toString()} method to let subclasses
+     * complement the default string representation without overriding
+     * the whole {@link #toString()} method.
+     * @param  b   the being-build string representation of this source.
+     *
+     * @return the buffer, augmented with the subclass-specific
+     *         complement.
+     */
+    protected StringBuilder toString(StringBuilder b) {
+        return b;
+    }
+
+    /**
+     * Formats a date in {@link Iso8601DateFormat ISO-8601 format}.
+     * @param  date   the date to format.
+     * @return the ISO-8601 representation of the specified date.
+     */
+    protected final String toString(final Date date) {
+        return Iso8601DateFormat.DATETIME_UTC.format(date);
     }
 }

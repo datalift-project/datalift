@@ -211,6 +211,16 @@ public class TransformedRdfSourceImpl extends BaseSource
     }
 
     //-------------------------------------------------------------------------
+    // BaseSource contract support
+    //-------------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    @Override
+    protected StringBuilder toString(StringBuilder b) {
+        return super.toString(b).append(this.getTargetGraph());
+    }
+
+    //-------------------------------------------------------------------------
     // Specific implementation
     //-------------------------------------------------------------------------
 
