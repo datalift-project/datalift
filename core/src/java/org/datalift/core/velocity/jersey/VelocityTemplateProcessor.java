@@ -226,10 +226,9 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
         }
         catch (Exception e) {
             // A .vm file was found but could not be parsed.
-            // => Notify error but return null in case another
-            //    ViewProcessor can handle it.
             log.error("Error loading template \"{}\": {}", e,
                                                         name, e.getMessage());
+            throw new RuntimeException(e);
         }
         return template;
     }
