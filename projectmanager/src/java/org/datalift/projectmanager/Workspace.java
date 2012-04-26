@@ -733,7 +733,8 @@ public class Workspace extends BaseModule
 
         try {
             // Retrieve source.
-            CsvSource s = this.loadSource(CsvSource.class, sourceUri);
+            Project p = this.loadProject(uriInfo, projectId);
+            CsvSource s = this.loadSource(p, sourceUri, CsvSource.class);
             // Update source data.
             s.setDescription(description);
             if (encoding != null) {
@@ -747,7 +748,6 @@ public class Workspace extends BaseModule
                 s.setQuote(quote);
             }
             // Save updated source.
-            Project p = s.getProject();
             this.projectManager.saveProject(p);
             // Notify user of successful update, redirecting HTML clients
             // (browsers) to the source tab of the project page.
@@ -873,7 +873,8 @@ public class Workspace extends BaseModule
         Response response = null;
         try {
             // Retrieve source.
-            RdfFileSource s = this.loadSource(RdfFileSource.class, sourceUri);
+            Project p = this.loadProject(uriInfo, projectId);
+            RdfFileSource s = this.loadSource(p, sourceUri, RdfFileSource.class);
             // Update source data.
             s.setDescription(description);
             s.setSourceUrl(baseUri.toString());
@@ -887,7 +888,6 @@ public class Workspace extends BaseModule
             }
             s.setMimeType(mappedType.toString());
             // Save updated source.
-            Project p = s.getProject();
             this.projectManager.saveProject(p);
             // Notify user of successful update, redirecting HTML clients
             // (browsers) to the source tab of the project page.
@@ -966,7 +966,8 @@ public class Workspace extends BaseModule
         Response response = null;
         try {
             // Retrieve source.
-            SqlSource s = this.loadSource(SqlSource.class, sourceUri);
+            Project p = this.loadProject(uriInfo, projectId);
+            SqlSource s = this.loadSource(p, sourceUri, SqlSource.class);
             // Update source data.
             if ((s.getTitle() == null) || (! s.getTitle().equals(title))) {
                 s.setTitle(title);
@@ -988,7 +989,6 @@ public class Workspace extends BaseModule
                 ((CachingSource)s).setCacheDuration(cacheDuration);
             }
             // Save updated source.
-            Project p = s.getProject();
             this.projectManager.saveProject(p);
             // Notify user of successful update, redirecting HTML clients
             // (browsers) to the source tab of the project page.
@@ -1004,7 +1004,7 @@ public class Workspace extends BaseModule
     @POST
     @Path("{id}/sparqlupload")
     public Response uploadSparqlSource(
-                            @PathParam("id") String id,
+                            @PathParam("id") String projectId,
                             @FormParam("title") String title,
                             @FormParam("description") String description,
                             @FormParam("connection_url") String endpointUrl,
@@ -1020,7 +1020,7 @@ public class Workspace extends BaseModule
             log.debug("Processing SPARQL source creation request for \"{}\"",
                       title);
             // Build object URIs from request path.
-            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
+            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
             URI sourceUri = new URI(projectUri.getScheme(), null,
                                     projectUri.getHost(), projectUri.getPort(),
                                     this.getSourceId(projectUri.getPath(), title),
@@ -1072,7 +1072,8 @@ public class Workspace extends BaseModule
         Response response = null;
         try {
             // Retrieve source.
-            SparqlSource s = this.loadSource(SparqlSource.class, sourceUri);
+            Project p = this.loadProject(uriInfo, projectId);
+            SparqlSource s = this.loadSource(p, sourceUri, SparqlSource.class);
             // Update source data.
             if ((s.getTitle() == null) || (! s.getTitle().equals(title))) {
                 s.setTitle(title);
@@ -1099,7 +1100,6 @@ public class Workspace extends BaseModule
                 ((CachingSource)s).setCacheDuration(cacheDuration);
             }
             // Save updated source.
-            Project p = s.getProject();
             this.projectManager.saveProject(p);
             // Notify user of successful update, redirecting HTML clients
             // (browsers) to the source tab of the project page.
@@ -1167,11 +1167,9 @@ public class Workspace extends BaseModule
                                                 throws WebApplicationException {
         ResponseBuilder response = null;
         try {
-            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
-            Project p = this.loadProject(projectUri);
             // Search for requested source in project.
-            URI u = uriInfo.getAbsolutePath();
-            Source src = p.getSource(u);
+            Project p = this.loadProject(uriInfo, projectId);
+            Source src = p.getSource(uriInfo.getAbsolutePath());
             if (src == null) {
                 // Not found.
                 throw new NotFoundException();
@@ -1180,7 +1178,7 @@ public class Workspace extends BaseModule
                 // Forward source description request to the SPARQL endpoint.
                 Configuration cfg = Configuration.getDefault();
                 response = cfg.getBean(SparqlEndpoint.class)
-                              .describe(u.toString(), DescribeType.Graph,
+                              .describe(src.getUri(), DescribeType.Graph,
                                         cfg.getInternalRepository(),
                                         uriInfo, request, acceptHdr);
             }
@@ -1520,6 +1518,11 @@ public class Workspace extends BaseModule
         }
     }
 
+    private Project loadProject(UriInfo uriInfo, String id)
+                                                throws WebApplicationException {
+        return this.loadProject(this.newProjectId(uriInfo.getBaseUri(), id));
+    }
+
     private Project loadProject(URI uri) throws WebApplicationException {
         Project p = this.findProject(uri);
         if (p == null) {
@@ -1529,28 +1532,20 @@ public class Workspace extends BaseModule
         return p;
     }
 
-    private <C extends Source> C findSource(Class<C> clazz, URI uri)
-                                                throws WebApplicationException {
-        try {
-            return this.projectManager.findSource(clazz, uri);
+    private <C extends Source> C findSource(Project p, URI id, Class<C> clazz) {
+        Source s = p.getSource(id);
+        if ((clazz != null) && (! clazz.isAssignableFrom(s.getClass()))) {
+            // Invalid source type. => not found.
+            s = null;
         }
-        catch (Exception e) {
-            TechnicalException error = new TechnicalException(
-                                        "ws.internal.error", e, e.getMessage());
-            log.error(error.getMessage(), e);
-            throw new WebApplicationException(
-                                Response.status(Status.INTERNAL_SERVER_ERROR)
-                                        .type(MediaTypes.TEXT_PLAIN_TYPE)
-                                        .entity(error.getMessage()).build());
-        }
+        return clazz.cast(s);
     }
 
-    private <C extends Source> C loadSource(Class<C> clazz, URI uri)
-                                                throws WebApplicationException {
-        C s = this.findSource(clazz, uri);
+    private <C extends Source> C loadSource(Project p, URI id, Class<C> clazz) {
+        C s = this.findSource(p, id, clazz);
         if (s == null) {
             // Not found.
-            throw new NotFoundException(uri);
+            throw new NotFoundException(id);
         }
         return s;
     }

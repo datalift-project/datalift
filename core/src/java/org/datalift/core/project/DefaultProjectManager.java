@@ -150,29 +150,6 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     }
 
     /** {@inheritDoc} */
-    @Override @SuppressWarnings("unchecked")
-    public <C extends Source> C findSource(Class<C> clazz, URI uri) {
-        Class<? extends Source> implClass = clazz;
-        // Map the source interface to the default implementation class.
-        if (clazz.equals(CsvSource.class)) {
-            implClass = CsvSourceImpl.class;
-        }
-        else if (clazz.equals(RdfFileSource.class)) {
-            implClass = RdfFileSourceImpl.class;
-        }
-        else if (clazz.equals(SqlSource.class)) {
-            implClass = SqlSourceImpl.class;
-        }
-        else if (clazz.equals(SparqlSource.class)) {
-            implClass = SparqlSourceImpl.class;
-        }
-        else if (clazz.equals(TransformedRdfSource.class)) {
-            implClass = TransformedRdfSourceImpl.class;
-        }
-        return (C)(this.projectDao.find(implClass, uri));
-    }
-
-    /** {@inheritDoc} */
     @Override
     public CsvSource newCsvSource(Project project, URI uri, String title,
                                   String description, String filePath,
@@ -286,23 +263,13 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         if (source == null) {
             throw new IllegalArgumentException("source");
         }
-        // Remove source from project.
         Project p = source.getProject();
-        String srcId = source.getUri();
-        for (Source s : p.getSources()) {
-            if (s instanceof TransformedRdfSource) {
-                TransformedRdfSource trs = (TransformedRdfSource)s;
-                Source parent = trs.getParent();
-                if ((parent != null) && (parent.getUri().equals(srcId))) {
-                    trs.setParent(null);
-                }
-            }
-        }
+        // Remove source from project.
         p.remove(source);
-        this.saveProject(p);
         // Release source resources (files, caches...).
         source.delete();
-        // Delete source from persistent store.
+        // Persist changes.
+        this.saveProject(p);
         this.projectDao.delete(source);
     }
 

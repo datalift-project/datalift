@@ -77,17 +77,6 @@ public interface ProjectManager
     public Collection<? extends Project> listProjects();
 
     /**
-     * Finds a source object in the DataLift internal RDF repository
-     * from its URI.
-     * @param  clazz   the expected implementation class.
-     * @param  uri     the source URI.
-     *
-     * @return a source object or <code>null</code> if no Source
-     *         object matching the specified URI was found.
-     */
-    public <C extends Source> C findSource(Class<C> clazz, URI uri);
-
-    /**
      * Creates a new project.
      * @param  projectId   the project identifier as a URI
      * @param  title       the project name/title.
