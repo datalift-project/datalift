@@ -35,6 +35,9 @@
 package org.datalift.projectmanager;
 
 
+import java.beans.BeanInfo;
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -77,6 +80,7 @@ import javax.ws.rs.core.Response.Status;
 
 import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 
+import com.google.gson.Gson;
 import com.sun.jersey.api.ConflictException;
 import com.sun.jersey.api.NotFoundException;
 import com.sun.jersey.api.view.Viewable;
@@ -1202,6 +1206,53 @@ public class Workspace extends BaseModule
             this.handleInternalError(e, "Failed to load source {}", srcId);
         }
         return response.build();
+    }
+
+    @GET
+    @Path("{id}/source/{srcid}/{prop}")
+    @Produces({ APPLICATION_JSON + ";charset=UTF-8" })
+    public Response displayProperty(@PathParam("id") String projectId,
+                                    @PathParam("srcid") String srcId,
+                                    @PathParam("prop") String prop,
+                                    @Context UriInfo uriInfo,
+                                    @Context Request request,
+                                    @HeaderParam(ACCEPT) String acceptHdr)
+                                                throws WebApplicationException {
+        Response response = null;
+        try {
+            // Search for requested source in project.
+            Project p = this.loadProject(uriInfo, projectId);
+            Source src = p.getSource(this.getSourceId(p.getUri(), srcId));
+            if (src == null) {
+                // Not found.
+                throw new NotFoundException();
+            }
+            else {
+                Object value = null;
+                boolean resolved = false;
+                BeanInfo bean = Introspector.getBeanInfo(src.getClass());
+                for (PropertyDescriptor desc : bean.getPropertyDescriptors()) {
+                    if (prop.equalsIgnoreCase(desc.getName())) {
+                        resolved = true;
+                        value = desc.getReadMethod().invoke(src);
+                        break;
+                    }
+                }
+                if (resolved) {
+                    ResponseBuilder b = Response.ok();
+                    if (value != null) {
+                        b.entity(new Gson().toJson(value));
+                    }
+                    response = b.build();
+                }
+            }
+        }
+        catch (Exception e) {
+            this.handleInternalError(e,
+                                "Failed to resolve property {} of source {}",
+                                prop, srcId);
+        }
+        return response;
     }
 
     @GET

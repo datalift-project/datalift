@@ -101,11 +101,6 @@
       <param-name>com.sun.jersey.config.property.WebPageContentRegex</param-name>
       <param-value>(/(images|css|js|wro|(WEB-INF/jsp))/.*)|(.*\.html)</param-value>
     </init-param>
-    <!-- Activation of automatic redirection for URLs ending with slash -->
-    <init-param>
-      <param-name>com.sun.jersey.config.feature.Redirect</param-name>
-      <param-value>true</param-value>
-    </init-param>
     <!-- Install some filters to
           - Honor GZip accepted encoding in response
           - Replace POST method by PUT or DELETE according to extended HTTP
