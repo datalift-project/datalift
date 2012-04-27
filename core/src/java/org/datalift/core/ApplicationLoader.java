@@ -564,13 +564,30 @@ public class ApplicationLoader extends LogServletContextListener
                 File tempJarDir = new File(Configuration.getDefault().getTempStorage(),
                                            CACHE_DIRECTORY_NAME + '/' + path.getName());
                 JarInputStream in = new JarInputStream(new FileInputStream(path));
+                boolean embeddedJarsFound = false;
                 while ((e = in.getNextJarEntry()) != null) {
                     if (e.getName().endsWith(".jar")) {
+                        if (embeddedJarsFound == false) {
+                            log.debug("Extracting embedded libraries of {}",
+                                                                path.getName());
+                            embeddedJarsFound = true;
+                        }
                         File f = new File(tempJarDir, e.getName());
                         if (! tempJarDir.exists()) {
                             tempJarDir.mkdirs();
                         }
-                        FileUtils.save(in, f, false);
+                        long entryDate = e.getTime();
+                        if ((! f.exists()) || (f.lastModified() < entryDate)) {
+                            FileUtils.save(in, f, false);
+                            if (entryDate > 0) {
+                                f.setLastModified(entryDate);
+                            }
+                        }
+                        else {
+                            // Local cache is already up to date.
+                            log.debug("{}/{} is up-to-date.", path.getName(),
+                                                              f.getName());
+                        }
                         urls.add(f.toURI().toURL());
                     }
                 }
