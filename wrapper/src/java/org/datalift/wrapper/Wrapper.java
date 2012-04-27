@@ -42,6 +42,8 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.mortbay.jetty.Connector;
 import org.mortbay.jetty.Server;
@@ -49,6 +51,10 @@ import org.mortbay.jetty.bio.SocketConnector;
 import org.mortbay.jetty.webapp.WebAppContext;
 
 import com.centerkey.utils.BareBonesBrowserLaunch;
+
+import jargs.gnu.CmdLineParser.Option;
+
+import jargs.gnu.CmdLineParser;
 
 import static org.datalift.wrapper.OsType.*;
 
@@ -72,6 +78,8 @@ public final class Wrapper
     public final static String DATALIFT_HOME = "datalift.home";
     /** The system property defining the DataLift installation directory. */
     public final static String DATALIFT_ROOT = "datalift.root";
+    /** The system property defining the DataLift listening port. */
+    public final static String DATALIFT_PORT = "datalift.port";
     /** The system property defining the location of the DataLift log files. */
     public final static String DATALIFT_LOG_PATH = "datalift.log.path";
     /** The Sesame repository directory system property variable. */
@@ -79,6 +87,7 @@ public final class Wrapper
                                         "info.aduna.platform.appdata.basedir";
 
     private final static String SESAME_REPOSITORIES_DIR = "repositories";
+    private final static String WEBAPPS_DIR = "webapps";
 
     private final static String MAC_DATALIFT_NAME = "DataLift";
     private final static String MAC_APPL_DATA_PATH =
@@ -102,26 +111,36 @@ public final class Wrapper
 
     public static void main(String[] args) throws Exception
     {
-        // Check command-line arguments:
-        // 1. DataLift installation directory.
-        String runDir = System.getProperty("user.dir");
-        if (args.length > 0) {
-            runDir = args[0];
+        File dataliftRoot = null;
+        int httpPort = DEFAULT_HTTP_PORT;
+        try {
+            // Parse command-line arguments.
+            CmdLineParser parser = new CmdLineParser();
+            Option portOption = parser.addIntegerOption('p', "port");
+            parser.parse(args);
+            // 1. HTTP listening port.
+            httpPort = ((Integer)(parser.getOptionValue(portOption,
+                                new Integer(DEFAULT_HTTP_PORT)))).intValue();
+            // Parse other arguments.
+            String[] otherArgs = parser.getRemainingArgs();
+            // 2. DataLift installation directory.
+            String runDir = (otherArgs.length > 0)?
+                                otherArgs[0]: System.getProperty("user.dir");
+            // Validate installation directory.
+            dataliftRoot = new File(runDir);
+            if (! ((dataliftRoot.exists()) && (dataliftRoot.isDirectory()))) {
+                throw new FileNotFoundException(args[0]);
+            }
         }
-        File dataliftRoot = new File(runDir);
-        if (! ((dataliftRoot.exists()) && (dataliftRoot.isDirectory()))) {
-            throw new FileNotFoundException(args[0]);
+        catch (Exception e) {
+            System.err.println(e.getMessage());
+            System.err.println("Usage: " + Wrapper.class.getSimpleName()
+                                         + " [{-p,--port} port] [install_dir]");
+            System.exit(2);
         }
         System.setProperty(DATALIFT_ROOT, dataliftRoot.getCanonicalPath());
+        System.setProperty(DATALIFT_PORT, String.valueOf(httpPort));
         System.setProperty("jetty.home",  dataliftRoot.getCanonicalPath());
-        // 2. HTTP listening port.
-        int httpPort = DEFAULT_HTTP_PORT;
-        if (args.length > 1) {
-            try {
-                httpPort = Integer.parseInt(args[1]);
-            }
-            catch (Exception e) { /* Ignore... */ }
-        }
         // Check (user-specific) runtime environment.
         String homeDir = System.getProperty(DATALIFT_HOME);
         File dataliftHome = (homeDir == null)? getUserEnv(): new File(homeDir);
@@ -179,8 +198,14 @@ public final class Wrapper
                             (f.isFile() && (f.getName().endsWith(".war"))));
                 }
             };
-        File webappDir = new File(dataliftRoot, "webapps");
-        for (File webapp : webappDir.listFiles(webappFilter)) {
+        List<File> webapps = new LinkedList<File>();
+        for (File f : new File(dataliftRoot, WEBAPPS_DIR).listFiles(webappFilter)) {
+            webapps.add(f);
+        }
+        for (File f : new File(dataliftHome, WEBAPPS_DIR).listFiles(webappFilter)) {
+            webapps.add(f);
+        }
+        for (File webapp : webapps) {
             WebAppContext ctx = new WebAppContext();
             String path = webapp.getName();
             int i = path.indexOf(".war");
@@ -245,6 +270,7 @@ public final class Wrapper
             // Create working directory, if they do not exist yet...
             createDirectory(new File(path, "modules"));
             createDirectory(new File(path, "storage/public"));
+            createDirectory(new File(path, WEBAPPS_DIR));
             if (! ((CURRENT_OS == MacOS) && defaultHome)) {
                 createDirectory(new File(path, "logs"));
                 createDirectory(new File(path, "temp"));
