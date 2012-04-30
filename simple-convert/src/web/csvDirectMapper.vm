@@ -36,8 +36,8 @@
 		<p><label for="base_uri">#i18n("dest.base_uri"): </label>
 		<input type="text" id="base_uri" name="base_uri" title="#i18n('dest.base_uri.help')" value=""/></p>
 
-		<div id="accordion" class="ui-widget ui-widget-content">
-		    <h3><a href="#">Type mapping</a></h3>
+		<div id="accordion" class="ui-widget">
+		    <h3><a href="#">#i18n("csv.type.mapping")</a></h3>
 		    <div id="columns"></div>
 		</div>
 
@@ -92,12 +92,12 @@
 			var colName = 'col_' + response[i];
 			h[h.length] = '<p><label for="' + colName + '">Colonne "' + response[i] + '" :</label>';
 			h[h.length] = '<select name="' + colName + '" id="' + colName + '">';
-			h[h.length] = '<option value="string" selected="true">String value</option>';
-			h[h.length] = '<option value="ignore">Ignore</option>';
-			h[h.length] = '<option value="id">Key</option>';
-			h[h.length] = '<option value="int">Integer value</option>';
-			h[h.length] = '<option value="float">Floating point value</option>';
-			h[h.length] = '<option value="auto">Autodetect value</option>';
+			h[h.length] = '<option value="string" selected="true">#i18n("csv.map.string")</option>';
+			h[h.length] = '<option value="ignore">#i18n("csv.map.ignore")</option>';
+			h[h.length] = '<option value="id">#i18n("csv.map.key")</option>';
+			h[h.length] = '<option value="int">#i18n("csv.map.int")</option>';
+			h[h.length] = '<option value="float">#i18n("csv.map.float")</option>';
+			h[h.length] = '<option value="auto">#i18n("csv.map.autodetect")</option>';
 			h[h.length] = '</select></p>';
 			cols.append(h.join(''));
 		}
