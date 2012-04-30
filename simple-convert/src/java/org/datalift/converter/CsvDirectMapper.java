@@ -37,14 +37,18 @@ package org.datalift.converter;
 
 import java.net.URI;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
 import org.openrdf.model.Literal;
@@ -78,6 +82,42 @@ import static org.datalift.fwk.util.StringUtils.*;
 @Path(CsvDirectMapper.MODULE_NAME)
 public class CsvDirectMapper extends BaseConverterModule
 {
+    public enum Mapping {
+        String          ("string"),
+        Integer         ("int"),
+        Float           ("float"),
+        Id              ("id"),
+        Automatic       ("auto"),
+        Ignore          ("ignore");
+
+        private final String label;
+
+        Mapping(String label) {
+            this.label = label;
+        }
+
+        /**
+         * Return the enumeration value corresponding to the specified
+         * string, ignoring case.
+         * @param  s   the description type, as a string.
+         *
+         * @return the description type value or <code>null</code> if
+         *         the specified string was not recognized.
+         */
+        public static Mapping fromString(String s) {
+            Mapping v = Automatic;
+            if (isSet(s)) {
+                for (Mapping t : values()) {
+                    if (t.label.equalsIgnoreCase(s)) {
+                        v = t;
+                        break;
+                    }
+                }
+            }
+            return v;
+        }
+    }
+
     //-------------------------------------------------------------------------
     // Constants
     //-------------------------------------------------------------------------
@@ -117,21 +157,37 @@ public class CsvDirectMapper extends BaseConverterModule
     }
 
     @POST
-    public Response loadSourceData(@QueryParam("project") URI projectId,
-                                   @QueryParam("source") URI sourceId,
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public Response loadSourceData(@FormParam("project") URI projectId,
+                                   @FormParam("source") URI sourceId,
                                    @FormParam("dest_title") String destTitle,
                                    @FormParam("dest_graph_uri") URI targetGraph,
-                                   @FormParam("base_uri") URI baseUri)
+                                   @FormParam("base_uri") URI baseUri,
+                                   MultivaluedMap<String,String> params)
                                                 throws WebApplicationException {
+        // Note: There a bug in Jersey that cause the MultivalueMap to be
+        // empty unless at least one @FormParm annotation is present.
+        // see: http://jersey.576304.n2.nabble.com/POST-parameters-not-injected-via-MultivaluedMap-td6434341.html
+
         Response response = null;
         try {
             // Retrieve project.
             Project p = this.getProject(projectId);
             // Load input source.
             CsvSource in = (CsvSource)(p.getSource(sourceId));
+            // Load datatype mapping for each column.
+            Map<String,Mapping> typeMappings = new HashMap<String,Mapping>();
+            for (String k : params.keySet()) {
+                if (k.startsWith("col_")) {
+                    String col = k.substring(4);
+                    Mapping m  = Mapping.fromString(params.getFirst(k));
+                    log.debug("Type mapping: {} -> {}", col, m);
+                    typeMappings.put(col, m);
+                }
+            }
             // Convert CSV data and load generated RDF triples.
             this.convert(in, Configuration.getDefault().getInternalRepository(),
-                             targetGraph, baseUri);
+                             targetGraph, baseUri, typeMappings);
             // Register new transformed RDF source.
             Source out = this.addResultSource(p, in, destTitle, targetGraph);
             // Display project source tab, including the newly created source.
@@ -148,7 +204,8 @@ public class CsvDirectMapper extends BaseConverterModule
     //-------------------------------------------------------------------------
 
     private void convert(CsvSource src, Repository target,
-                                        URI targetGraph, URI baseUri) {
+                                        URI targetGraph, URI baseUri,
+                                        Map<String,Mapping> typeMappings) {
         final RepositoryConnection cnx = target.newConnection();
         org.openrdf.model.URI ctx = null;
         try {
@@ -169,43 +226,62 @@ public class CsvDirectMapper extends BaseConverterModule
             String root = RdfUtils.getBaseUri(
                                 (baseUri != null)? baseUri.toString(): null);
             // Build predicates URIs.
-            int max = src.getColumnNames().size();
-            org.openrdf.model.URI[] predicates = new org.openrdf.model.URI[max];
-            int i = 0;
+            Map<String,org.openrdf.model.URI> predicates =
+                                    new HashMap<String,org.openrdf.model.URI>();
             for (String s : src.getColumnNames()) {
-                predicates[i++] = valueFactory.createURI(root + urlify(s));
+                predicates.put(s, valueFactory.createURI(root + urlify(s)));
             }
             // Load triples
             long statementCount = 0L;
             long duration = 0L;
             int  batchSize = Env.getRdfBatchSize();
-            i = 1;                              // Start line numbering at 1.
+            int i = 1;                          // Start line numbering at 1.
+            Map<org.openrdf.model.URI,Literal> statements =
+                            new LinkedHashMap<org.openrdf.model.URI,Literal>();
             for (Row<String> row : src) {
-                org.openrdf.model.URI subject =
-                                valueFactory.createURI(root + i); // + "#_";
-                for (int j=0, l=row.size(); j<l; j++) {
-                    String v = row.get(j);
+                statements.clear();
+                // Scan columns to map values and build triples.
+                org.openrdf.model.URI subject = null;
+                for (String s : src.getColumnNames()) {
+                    String  v = row.get(s);
+                    Mapping m = typeMappings.get(s);
+                    Literal value = null;
                     if (isSet(v)) {
-                        Literal value = this.mapValue(v, valueFactory);
-                        cnx.add(valueFactory.createStatement(
-                                                subject, predicates[j], value),
-                                ctx);
-
-                        // Commit transaction according to the configured batch size.
-                        statementCount++;
-                        if ((statementCount % batchSize) == 0) {
-                            cnx.commit();
-                            // Trace progress.
-                            if (log.isTraceEnabled()) {
-                                duration = System.currentTimeMillis() - t0;
-                                log.trace("Inserted {} RDF triples from {} CSV lines in {} seconds...",
-                                          Long.valueOf(statementCount),
-                                          Integer.valueOf(i - 1),
-                                          Double.valueOf(duration / 1000.0));
-                            }
+                        if (m == Mapping.Id) {
+                            subject = valueFactory.createURI(root + urlify(v)); // + "#_";
+                        }
+                        else {
+                            value = this.mapValue(v, valueFactory, m);                            
                         }
                     }
-                    // Else: ignore cell.
+                    if (value != null) {
+                        statements.put(predicates.get(s), value);
+                    }
+                    // Else: Ignore cell.
+                }
+                // Auto-generate row URI if no identifier column was defined.
+                if (subject == null) {
+                    subject = valueFactory.createURI(root + i); // + "#_";
+                }
+                // Save triples into RDF store.
+                for (Map.Entry<org.openrdf.model.URI,Literal>e :
+                                                    statements.entrySet()) {
+                    cnx.add(valueFactory.createStatement(
+                                    subject, e.getKey(), e.getValue()), ctx);
+
+                    // Commit transaction according to the configured batch size.
+                    statementCount++;
+                    if ((statementCount % batchSize) == 0) {
+                        cnx.commit();
+                        // Trace progress.
+                        if (log.isTraceEnabled()) {
+                            duration = System.currentTimeMillis() - t0;
+                            log.trace("Inserted {} RDF triples from {} CSV lines in {} seconds...",
+                                      Long.valueOf(statementCount),
+                                      Integer.valueOf(i - 1),
+                                      Double.valueOf(duration / 1000.0));
+                        }
+                    }
                 }
                 i++;
             }
@@ -236,27 +312,64 @@ public class CsvDirectMapper extends BaseConverterModule
         }
     }
 
-    private Literal mapValue(String s, ValueFactory valueFactory) {
+    private Literal mapValue(String s, ValueFactory valueFactory,
+                                       Mapping mapping) {
         Literal v = null;
         s = s.trim();
-        if ((s.indexOf('.') != -1) || (s.indexOf(',') != -1)) {
-            // Try double.
-            try {
-                v = valueFactory.createLiteral(
+        switch (mapping) {
+            case Ignore:
+                break;
+            case String:
+                v = this.mapString(s, valueFactory);
+                break;
+            case Integer:
+                v = this.mapInt(s, valueFactory);
+                break;
+            case Float:
+                v = this.mapFloat(s, valueFactory);
+                break;
+            default:
+                // Automatic mapping on a per-cell basis.
+                if ((s.indexOf('.') != -1) || (s.indexOf(',') != -1)) {
+                    // Try double.
+                    v = this.mapFloat(s, valueFactory);
+                }
+                if (v == null) {
+                    // Try integer.
+                    v = this.mapInt(s, valueFactory);
+                }
+                if (v == null) {
+                    // Assume string.
+                    v = this.mapString(s, valueFactory);
+                }
+                break;
+        }
+        return v;
+    }
+
+    private Literal mapString(String s, ValueFactory valueFactory) {
+        return valueFactory.createLiteral(s);
+    }
+
+    private Literal mapInt(String s, ValueFactory valueFactory) {
+        Literal v = null;
+        try {
+            v = valueFactory.createLiteral(Long.parseLong(s));
+        }
+        catch (Exception e) {
+            /* Ignore... */
+        }
+        return v;
+    }
+
+    private Literal mapFloat(String s, ValueFactory valueFactory) {
+        Literal v = null;
+        try {
+            v = valueFactory.createLiteral(
                                     Double.parseDouble(s.replace(',', '.')));
-            }
-            catch (Exception e) { /* Ignore... */ }
         }
-        if (v == null) {
-            // Try integer.
-            try {
-                v = valueFactory.createLiteral(Long.parseLong(s));
-            }
-            catch (Exception e) { /* Ignore... */ }
-        }
-        if (v == null) {
-            // Assume string literal.
-            v = valueFactory.createLiteral(s);
+        catch (Exception e) {
+            /* Ignore... */
         }
         return v;
     }
