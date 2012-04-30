@@ -68,6 +68,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Context;
@@ -544,14 +545,37 @@ public class Workspace extends BaseModule
     public Object getSourceUploadPage(@PathParam("id") String id,
                                       @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
-        return this.getSourceModifyPage(id, null, uriInfo);
+        return this.getSourceIdModifyPage(id, null, uriInfo);
     }
 
     @GET
     @Path("{id}/source/{srcid}/modify")
-    public Response getSourceModifyPage(@PathParam("id") String id,
-                                        @PathParam("srcid") String srcId,
-                                        @Context UriInfo uriInfo)
+    @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
+    public Response getSourceIdModifyPage(@PathParam("id") String id,
+                                          @PathParam("srcid") String srcId,
+                                          @Context UriInfo uriInfo)
+                                                throws WebApplicationException {
+        Response response = null;
+        try {
+            URI srcUri = null;
+            if (isSet(srcId)) {
+                srcUri = new URI(this.getSourceId(
+                    this.newProjectId(uriInfo.getBaseUri(), id), srcId));
+            }
+            response = this.getSourceUriModifyPage(id, srcUri, uriInfo);
+        }
+        catch (Exception e) {
+            this.handleInternalError(e, "Failed to load source {}", srcId);
+        }
+        return response;
+    }
+
+    @GET
+    @Path("{id}/source/modify")
+    @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
+    public Response getSourceUriModifyPage(@PathParam("id") String id,
+                                           @QueryParam("uri") URI srcUri,
+                                           @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
         Response response = null;
         URI prjUri = this.newProjectId(uriInfo.getBaseUri(), id);
@@ -571,8 +595,7 @@ public class Workspace extends BaseModule
             args.put("sep", Separator.values());
 
             // Search for requested source in project (if specified).
-            if (srcId != null) {
-                URI srcUri = new URL(this.getSourceId(prjUri, srcId)).toURI();
+            if (srcUri != null) {
                 Source src = p.getSource(srcUri);
                 if (src == null) {
                     // Not found.
@@ -585,7 +608,7 @@ public class Workspace extends BaseModule
                             TEXT_HTML).build();
         }
         catch (Exception e) {
-            this.handleInternalError(e, "Failed to load source {}", srcId);
+            this.handleInternalError(e, "Failed to load source {}", srcUri);
         }
         return response;
     }
@@ -1255,34 +1278,42 @@ public class Workspace extends BaseModule
         return response;
     }
 
+//    @GET
+//    @Path("{id}/source/{srcid}/delete")
+//    @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
+//    public Response deleteSource(@PathParam("id") String projectId,
+//                                 @PathParam("srcid") String sourceId,
+//                                 @Context UriInfo uriInfo)
+//                                                throws WebApplicationException {
+//    }
+
     @GET
-    @Path("{id}/source/{srcid}/delete")
+    @Path("{id}/source/delete")
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
     public Response deleteSource(@PathParam("id") String projectId,
-                                 @PathParam("srcid") String sourceId,
+                                 @QueryParam("uri") URI srcUri,
                                  @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
         Response response = null;
         try {
-            log.debug("Processing source deletion request for {}", sourceId);
+            log.debug("Processing source deletion request for {}", srcUri);
             // Retrieve source.
             // As we can't infer the source type (CSV, SPARQL...), we have
             // to load the whole project and search it using its URI.
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
             Project p = this.loadProject(projectUri);
             // Search for requested source in project.
-            URI u = new URL(this.getSourceId(projectUri, sourceId)).toURI();
-            Source s = p.getSource(u);
+            Source s = p.getSource(srcUri);
             // Delete source.
             this.projectManager.delete(s);
             // Notify user of successful update, redirecting HTML clients
             // (browsers) to the source tab of the project page.
             response = this.redirect(p, ProjectTab.Sources).build();
 
-            log.info("Source \"{}\" deleted", u);
+            log.info("Source \"{}\" deleted", srcUri);
         }
         catch (Exception e) {
-            this.handleInternalError(e, "Failed to delete source {}", sourceId);
+            this.handleInternalError(e, "Failed to delete source {}", srcUri);
         }
         return response;
     }

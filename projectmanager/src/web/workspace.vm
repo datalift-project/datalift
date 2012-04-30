@@ -215,7 +215,7 @@
 				var id = jQuery("#selectable_sources").getGridParam('selrow');
 				if (id) {
 					var ret = jQuery("#selectable_sources").getRowData(id);
-					window.location = ret.uri+"/modify";
+					window.location = currentProject + "/source/modify?uri=" + ret.uri;
 				}
 				else {
 					alert('#i18n("project.msg.select_row")');
@@ -230,7 +230,7 @@
 				var id = jQuery("#selectable_sources").getGridParam('selrow');
 				if (id) {
 					var ret = jQuery("#selectable_sources").getRowData(id);
-					window.location = ret.uri+"/delete";
+					window.location = currentProject + "/source/delete?uri=" + ret.uri;
 				}
 				else {
 					alert('#i18n("project.msg.select_row")');
