@@ -36,9 +36,18 @@ package org.datalift.converter;
 
 
 import java.net.URI;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+
+import static java.util.Calendar.*;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
@@ -50,6 +59,10 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+import javax.xml.datatype.DatatypeFactory;
+import javax.xml.datatype.XMLGregorianCalendar;
+
+import static javax.xml.datatype.DatatypeConstants.*;
 
 import org.openrdf.model.Literal;
 import org.openrdf.model.ValueFactory;
@@ -86,6 +99,8 @@ public class CsvDirectMapper extends BaseConverterModule
         String          ("string"),
         Integer         ("int"),
         Float           ("float"),
+        Boolean         ("boolean"),
+        Date            ("date"),
         Id              ("id"),
         Automatic       ("auto"),
         Ignore          ("ignore");
@@ -163,6 +178,8 @@ public class CsvDirectMapper extends BaseConverterModule
                                    @FormParam("dest_title") String destTitle,
                                    @FormParam("dest_graph_uri") URI targetGraph,
                                    @FormParam("base_uri") URI baseUri,
+                                   @FormParam("true_values") String trueValues,
+                                   @FormParam("date_format") String dateFormat,
                                    MultivaluedMap<String,String> params)
                                                 throws WebApplicationException {
         // Note: There a bug in Jersey that cause the MultivalueMap to be
@@ -184,10 +201,18 @@ public class CsvDirectMapper extends BaseConverterModule
                     log.debug("Type mapping: {} -> {}", col, m);
                     typeMappings.put(col, m);
                 }
+                // Else: Ignore, not a column type mapping description.
+            }
+            MappingDesc desc = null;
+            try {
+                desc = new MappingDesc(typeMappings, trueValues, dateFormat);
+            }
+            catch (IllegalArgumentException e) {
+                this.throwInvalidParamError("date_format", dateFormat);
             }
             // Convert CSV data and load generated RDF triples.
             this.convert(in, Configuration.getDefault().getInternalRepository(),
-                             targetGraph, baseUri, typeMappings);
+                             targetGraph, baseUri, desc);
             // Register new transformed RDF source.
             Source out = this.addResultSource(p, in, destTitle, targetGraph);
             // Display project source tab, including the newly created source.
@@ -205,7 +230,7 @@ public class CsvDirectMapper extends BaseConverterModule
 
     private void convert(CsvSource src, Repository target,
                                         URI targetGraph, URI baseUri,
-                                        Map<String,Mapping> typeMappings) {
+                                        MappingDesc mapping) {
         final RepositoryConnection cnx = target.newConnection();
         org.openrdf.model.URI ctx = null;
         try {
@@ -244,14 +269,14 @@ public class CsvDirectMapper extends BaseConverterModule
                 org.openrdf.model.URI subject = null;
                 for (String s : src.getColumnNames()) {
                     String  v = row.get(s);
-                    Mapping m = typeMappings.get(s);
+                    Mapping m = mapping.getMapping(s);
                     Literal value = null;
                     if (isSet(v)) {
                         if (m == Mapping.Id) {
                             subject = valueFactory.createURI(root + urlify(v)); // + "#_";
                         }
                         else {
-                            value = this.mapValue(v, valueFactory, m);                            
+                            value = this.mapValue(v, valueFactory, m, mapping);                            
                         }
                     }
                     if (value != null) {
@@ -313,7 +338,7 @@ public class CsvDirectMapper extends BaseConverterModule
     }
 
     private Literal mapValue(String s, ValueFactory valueFactory,
-                                       Mapping mapping) {
+                                       Mapping mapping, MappingDesc desc) {
         Literal v = null;
         s = s.trim();
         switch (mapping) {
@@ -328,6 +353,12 @@ public class CsvDirectMapper extends BaseConverterModule
             case Float:
                 v = this.mapFloat(s, valueFactory);
                 break;
+            case Boolean:
+                v = this.mapBoolean(s, valueFactory, desc);
+                break;
+            case Date:
+                v = this.mapDate(s, valueFactory, desc, false);
+                break;
             default:
                 // Automatic mapping on a per-cell basis.
                 if ((s.indexOf('.') != -1) || (s.indexOf(',') != -1)) {
@@ -337,6 +368,14 @@ public class CsvDirectMapper extends BaseConverterModule
                 if (v == null) {
                     // Try integer.
                     v = this.mapInt(s, valueFactory);
+                }
+                if ((v == null) && (desc.hasBooleanValues())) {
+                    // Try boolean.
+                    v = this.mapBoolean(s, valueFactory, desc);
+                }
+                if ((v == null) && (desc.hasDateFormat())) {
+                    // Try date/time.
+                    v = this.mapDate(s, valueFactory, desc, true);
                 }
                 if (v == null) {
                     // Assume string.
@@ -372,5 +411,135 @@ public class CsvDirectMapper extends BaseConverterModule
             /* Ignore... */
         }
         return v;
+    }
+
+    private Literal mapBoolean(String s, ValueFactory valueFactory,
+                                         MappingDesc desc) {
+        return valueFactory.createLiteral(desc.parseBoolean(s));
+    }
+
+    private Literal mapDate(String s, ValueFactory valueFactory,
+                                      MappingDesc desc, boolean tentative) {
+        Literal v = null;
+        try {
+            v = valueFactory.createLiteral(desc.parseDate(s, tentative));
+        }
+        catch (Exception e) {
+            /* Ignore... */
+        }
+        return v;
+    }
+
+    private final static class MappingDesc
+    {
+        private final Map<String,Mapping> mappings;
+        private final List<String> trueValues;
+        private final DateFormat dateFormat;
+        private final DatatypeFactory dateFactory;
+
+        public MappingDesc(Map<String,Mapping> typeMappings,
+                           String trueValues, String dateFormat) {
+            if ((typeMappings == null) || (typeMappings.isEmpty())) {
+                throw new IllegalArgumentException("typeMappings");
+            }
+            // Type mappings.
+            this.mappings = new HashMap<String,Mapping>(typeMappings);
+            // Boolean TRUE values.
+            List<String> l = Collections.emptyList();
+            if (isSet(trueValues)) {
+                String[] v = trueValues.trim().split("\\s*,\\s*");
+                l = new ArrayList<String>(v.length);
+                for (String s : v) {
+                    if (isSet(s)) {
+                        l.add(s.toLowerCase());
+                    }
+                }
+            }
+            this.trueValues = l;
+            // Date format.
+            DateFormat fmt = null;
+            DatatypeFactory df = null;
+            if (isSet(dateFormat)) {
+                fmt = new SimpleDateFormat(dateFormat);
+                GregorianCalendar c = new GregorianCalendar();
+                c.clear();
+                fmt.setCalendar(c);
+                // fmt.setLenient(false);       -> Best effort!
+                try {
+                    df = DatatypeFactory.newInstance();
+                }
+                catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            this.dateFormat  = fmt;
+            this.dateFactory = df;
+        }
+
+        public Mapping getMapping(String column) {
+            return this.mappings.get(column);
+        }
+
+        public boolean hasBooleanValues() {
+            return (! this.trueValues.isEmpty());
+        }
+
+        public boolean parseBoolean(String s) {
+            return (isSet(s))? this.trueValues.contains(s.toLowerCase()): false;
+        }
+
+        public boolean hasDateFormat() {
+            return (this.dateFormat != null);
+        }
+
+        public XMLGregorianCalendar parseDate(String s, boolean tentative) {
+            XMLGregorianCalendar date = null;
+            if ((this.dateFormat != null) && (! isBlank(s))) {
+                try {
+                    this.dateFormat.parse(s.trim());
+                    Calendar c = this.dateFormat.getCalendar();
+                    date = this.dateFactory.newXMLGregorianCalendar(
+                                this.get(c, YEAR), this.get(c, MONTH),
+                                this.get(c, DAY_OF_MONTH),
+                                this.get(c, HOUR_OF_DAY), this.get(c, MINUTE),
+                                this.get(c, SECOND), this.get(c, MILLISECOND),
+                                FIELD_UNDEFINED /* Timezone */);
+                }
+                catch (Exception e) {
+                    if (! tentative) {
+                        // Not a blind (auto-detect) conversion attempt.
+                        // => Report error.
+                        log.warn("Date conversion failed for \"{}\"", e, s);
+                    }
+                    // Else: Ignore...
+                }
+            }
+            return date;
+        }
+
+        private int get(Calendar c, int field) {
+            int v = FIELD_UNDEFINED;
+            if (c.isSet(field)) {
+                v = c.get(field);
+                switch (field) {
+                    case MONTH:
+                        v++;    // From 0-based Calendar to 1-based XML date.
+                        break;
+                    case HOUR:
+                        if (v == 12) v = 0;     // Upper limit for durations.
+                        break;
+                    case HOUR_OF_DAY:
+                        if (v == 24) v = 0;     // Upper limit for durations.
+                        break;
+                    case MINUTE:
+                    case SECOND:
+                        if (v == 60) v = 0;     // Upper limit for durations.
+                        break;
+                    case MILLISECOND:
+                        if (v == 1000) v = 0;   // Upper limit for durations.
+                }
+            }
+            return v;
+        }
     }
 }

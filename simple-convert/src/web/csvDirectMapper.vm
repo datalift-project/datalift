@@ -90,17 +90,21 @@
 		for (var i=0; i<response.length; i++) {
 			var h = [];
 			var colName = 'col_' + response[i];
-			h[h.length] = '<p><label for="' + colName + '">Colonne "' + response[i] + '" :</label>';
+			h[h.length] = '<p><label for="' + colName + '">Colonne "' + response[i] + '" </label>';
 			h[h.length] = '<select name="' + colName + '" id="' + colName + '">';
 			h[h.length] = '<option value="string" selected="true">#i18n("csv.map.string")</option>';
 			h[h.length] = '<option value="ignore">#i18n("csv.map.ignore")</option>';
 			h[h.length] = '<option value="id">#i18n("csv.map.key")</option>';
 			h[h.length] = '<option value="int">#i18n("csv.map.int")</option>';
 			h[h.length] = '<option value="float">#i18n("csv.map.float")</option>';
+			h[h.length] = '<option value="boolean">#i18n("csv.map.boolean")</option>';
+			h[h.length] = '<option value="date">#i18n("csv.map.date")</option>';
 			h[h.length] = '<option value="auto">#i18n("csv.map.autodetect")</option>';
 			h[h.length] = '</select></p>';
 			cols.append(h.join(''));
 		}
+		cols.append('<p><label for="true_values">#i18n("csv.map.truevalues") :</label><input type="text" name="true_values" id="true_values" title="#i18n('csv.map.truevalues.help')" value=""/></p>');
+		cols.append('<p><label for="date_format">#i18n("csv.map.dateformat") :</label><input type="text" name="date_format" id="date_format" title="#i18n('csv.map.dateformat.help')" value=""/></p>');
 		acc.accordion("resize");
 		acc.accordion("enable");
 	}
