@@ -464,7 +464,7 @@ public class CsvDirectMapper extends BaseConverterModule
                 GregorianCalendar c = new GregorianCalendar();
                 c.clear();
                 fmt.setCalendar(c);
-                // fmt.setLenient(false);       -> Best effort!
+                fmt.setLenient(true);   // Best effort!
                 try {
                     df = DatatypeFactory.newInstance();
                 }
