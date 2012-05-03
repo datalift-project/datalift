@@ -113,17 +113,25 @@ public final class Wrapper
     {
         File dataliftRoot = null;
         int httpPort = DEFAULT_HTTP_PORT;
+        // On MAC OS, avoid the annoying popup asking the user to allow
+        // the Java app to accept all incoming connections by forcing the
+        // HTTP server to listen only to loopback interface.
+        boolean loopbackOnly = (CURRENT_OS == MacOS);
         try {
             // Parse command-line arguments.
             CmdLineParser parser = new CmdLineParser();
             Option portOption = parser.addIntegerOption('p', "port");
+            Option externalOption = parser.addBooleanOption('e', "external");
             parser.parse(args);
             // 1. HTTP listening port.
             httpPort = ((Integer)(parser.getOptionValue(portOption,
-                                new Integer(DEFAULT_HTTP_PORT)))).intValue();
+                                new Integer(httpPort)))).intValue();
+            // 2. Network interfaces to listen to.
+            loopbackOnly = ! ((Boolean)(parser.getOptionValue(externalOption,
+                                new Boolean(! loopbackOnly)))).booleanValue();
             // Parse other arguments.
             String[] otherArgs = parser.getRemainingArgs();
-            // 2. DataLift installation directory.
+            // 3. DataLift installation directory.
             String runDir = (otherArgs.length > 0)?
                                 otherArgs[0]: System.getProperty("user.dir");
             // Validate installation directory.
@@ -134,8 +142,10 @@ public final class Wrapper
         }
         catch (Exception e) {
             System.err.println(e.getMessage());
-            System.err.println("Usage: " + Wrapper.class.getSimpleName()
-                                         + " [{-p,--port} port] [install_dir]");
+            System.err.println("Usage: " + Wrapper.class.getSimpleName() +
+                               " [{-p,--port} port]" +
+                               " [{-e,--external}]" +
+                               " [install_dir]");
             System.exit(2);
         }
         System.setProperty(DATALIFT_ROOT, dataliftRoot.getCanonicalPath());
@@ -181,10 +191,7 @@ public final class Wrapper
         // Create Jetty server.
         final Server httpServer = new Server(httpPort);
         httpServer.setSendServerVersion(false);     // No Server HTTP header.
-        // On MAC OS, avoid the annoying popup asking the user to allow
-        // the Java app to accept all incoming connections by forcing the
-        // HTTP server to listen only to loopback interface.
-        if (CURRENT_OS == MacOS) {
+        if (loopbackOnly) {
             for (Connector c : httpServer.getConnectors()) {
                 if (c instanceof SocketConnector) {
                     c.setHost("localhost");
