@@ -521,22 +521,8 @@ public class CsvDirectMapper extends BaseConverterModule
             int v = FIELD_UNDEFINED;
             if (c.isSet(field)) {
                 v = c.get(field);
-                switch (field) {
-                    case MONTH:
-                        v++;    // From 0-based Calendar to 1-based XML date.
-                        break;
-                    case HOUR:
-                        if (v == 12) v = 0;     // Upper limit for durations.
-                        break;
-                    case HOUR_OF_DAY:
-                        if (v == 24) v = 0;     // Upper limit for durations.
-                        break;
-                    case MINUTE:
-                    case SECOND:
-                        if (v == 60) v = 0;     // Upper limit for durations.
-                        break;
-                    case MILLISECOND:
-                        if (v == 1000) v = 0;   // Upper limit for durations.
+                if (field == MONTH) {
+                    v++;        // From 0-based Calendar to 1-based XML date.
                 }
             }
             return v;
