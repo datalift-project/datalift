@@ -111,21 +111,21 @@ public abstract class UpdateQuery
         return this;
     }
 
-    public UpdateQuery triple(Resource s, URI p, String v) {
+    public final UpdateQuery triple(Resource s, URI p, String v) {
         return this.triple(s, p, v, null);
     }
-    public UpdateQuery triple(Resource s, URI p, String v, URI graph) {
+    public final UpdateQuery triple(Resource s, URI p, String v, URI graph) {
         return this.triple(s, p, this.literal(v), graph);
     }
-    public UpdateQuery triple(Resource s, URI p, SparqlExpression expr) {
+    public final UpdateQuery triple(Resource s, URI p, SparqlExpression expr) {
         return this.triple(s, p, expr, null, null);
     }
-    public UpdateQuery triple(Resource s, URI p,
-                                          SparqlExpression expr, URI graph) {
+    public final UpdateQuery triple(Resource s, URI p,
+                                    SparqlExpression expr, URI graph) {
         return this.triple(s, p, expr, null, graph);
     }
-    public UpdateQuery triple(Resource s, URI p,
-                                          SparqlExpression expr, String var) {
+    public final UpdateQuery triple(Resource s, URI p,
+                                    SparqlExpression expr, String var) {
         return this.triple(s, p, expr, var, null);
     }
     public UpdateQuery triple(Resource s, URI p,
@@ -133,17 +133,15 @@ public abstract class UpdateQuery
         Variable v = this.variable(var);
         return this.bind(expr, v).triple(s, p, v, graph);
     }
-    public UpdateQuery triple(Resource s, URI p, Value o) {
+    public final UpdateQuery triple(Resource s, URI p, Value o) {
         return this.triple(s, p, o, null);
     }
     public UpdateQuery triple(Resource s, URI p, Value o, URI graph) {
-        this.triples.add((graph != null)?
-                                    new ContextStatementImpl(s, p, o, graph):
-                                    new StatementImpl(s, p, o));
+        this.triples.add(this.statement(s, p, o, graph));
         return this;
     }
 
-    public UpdateQuery rdfType(Resource s, URI t) {
+    public final UpdateQuery rdfType(Resource s, URI t) {
         return this.rdfType(s, t, null);
     }
 
@@ -151,43 +149,50 @@ public abstract class UpdateQuery
         return this.triple(s, RDF_TYPE, t, graph);
     }
 
-    public UpdateQuery where(Resource s, URI p, String v) {
+    public final UpdateQuery where(Resource s, URI p, String v) {
         return this.where(s, p, v, null);
     }
-    public UpdateQuery where(Resource s, URI p, String v, URI graph) {
+    public final UpdateQuery where(Resource s, URI p, String v, URI graph) {
         return this.where(s, p, this.literal(v), graph);
     }
-    public UpdateQuery where(Resource s, URI p, Value o) {
+    public final UpdateQuery where(Resource s, URI p, Value o) {
         return this.where(s, p, o, null);
     }
-    public UpdateQuery where(Resource s, URI p, Value o, URI graph) {
-        return this.where(s, p, o, graph, null);
+    public final UpdateQuery where(Resource s, URI p, Value o, URI graph) {
+        return this.where(s, p, o, graph, (WhereClauses)null);
     }
-    public UpdateQuery where(Resource s, URI p, Value o, URI graph,
-                                                         String groupKey) {
-        return this.where(s, p, o, graph, groupKey, null);
+    public final UpdateQuery where(Resource s, URI p, Value o, URI graph,
+                                                               String group) {
+        return this.where(s, p, o, graph, this.whereGroup(group));
     }
-    public UpdateQuery where(Resource s, URI p, Value o, URI graph,
-                                         String groupKey, WhereType groupType) {
-        WhereClauses w = this.whereClauses;
+    public final UpdateQuery where(Resource s, URI p, Value o, URI graph,
+                                   String groupKey, WhereType groupType) {
+        WhereClauses w = null;
         if (isSet(groupKey)) {
             if (groupType == null) {
                 groupType = WhereType.UNION;
             }
             w = this.whereGroup(groupKey, groupType, this.whereClauses);
         }
-        w.add((graph != null)? new ContextStatementImpl(s, p, o, graph):
-                               new StatementImpl(s, p, o));
+        return this.where(s, p, o, graph, w);
+    }
+    public UpdateQuery where(Resource s, URI p, Value o, URI graph,
+                                                         WhereClauses group) {
+        if (group == null) {
+            group = this.whereClauses;
+        }
+        group.add(this.statement(s, p, o, graph));
         return this;
     }
 
-    public WhereClauses whereGroup(String key) {
+    public final WhereClauses whereGroup(String key) {
         return this.whereGroup(key, null, (WhereClauses)null);
     }
-    public WhereClauses whereGroup(WhereType type) {
+    public final WhereClauses whereGroup(WhereType type) {
         return this.whereGroup(null, type, (WhereClauses)null);
     }
-    public WhereClauses whereGroup(String key, WhereType type, String parent) {
+    public final WhereClauses whereGroup(String key, WhereType type,
+                                                     String parent) {
         return this.whereGroup(key, type, this.whereGroup(parent));
     }
     public WhereClauses whereGroup(String key, WhereType type,
@@ -214,7 +219,7 @@ public abstract class UpdateQuery
         return this;
     }
 
-    public String prefixFor(URI u) {
+    public final String prefixFor(URI u) {
         return this.prefixFor(u.getNamespace());
     }
 
@@ -238,7 +243,7 @@ public abstract class UpdateQuery
         return new URIImpl(ns + name);
     }
 
-    public String nameFor(String ns, String name) {
+    public final String nameFor(String ns, String name) {
         return this.nameFor(this.uri(ns, name));
     }
 
@@ -253,7 +258,7 @@ public abstract class UpdateQuery
         return new VariableImpl(name);
     }
 
-    public Variable variable(URI u) {
+    public final Variable variable(URI u) {
         return this.variable(this.nameFor(u));
     }
 
@@ -265,7 +270,7 @@ public abstract class UpdateQuery
         return new NumericLiteralImpl(i);
     }
 
-    public BNode blankNode() {
+    public final BNode blankNode() {
         return this.blankNode((String)null);
     }
 
@@ -276,7 +281,7 @@ public abstract class UpdateQuery
         return new BNodeImpl(name);
     }
 
-    public BNode blankNode(URI u) {
+    public final BNode blankNode(URI u) {
         return this.blankNode(this.nameFor(u));
     }
 
@@ -341,7 +346,8 @@ public abstract class UpdateQuery
                         // Sort statements by named group.
                         if (t1.getContext() != null) {
                             n = (t2.getContext() != null)?
-                                    t1.getContext().stringValue().compareTo(t2.getContext().stringValue()):
+                                    t1.getContext().stringValue().compareTo(
+                                                t2.getContext().stringValue()):
                                     1;
                         }
                         else {
@@ -349,7 +355,8 @@ public abstract class UpdateQuery
                         }
                         // Then by subject name.
                         if (n == 0) {
-                            n = t1.getSubject().stringValue().compareTo(t2.getSubject().stringValue());
+                            n = t1.getSubject().stringValue().compareTo(
+                                                t2.getSubject().stringValue());
                         }
                         return n;
                     }
@@ -417,17 +424,22 @@ public abstract class UpdateQuery
         }
     }
 
-    protected UpdateQuery map(Resource node, Map<URI,String> values) {
+    protected Statement statement(Resource s, URI p, Value o, URI graph) {
+        return ((graph != null)? new ContextStatementImpl(s, p, o, graph):
+                                 new StatementImpl(s, p, o));
+    }
+
+    protected final UpdateQuery map(Resource node, Map<URI,String> values) {
         return this.map(null, node, null, values);
     }
 
-    protected UpdateQuery map(URI srcGraph, Resource node,
-                                            Map<URI,String> values) {
+    protected final UpdateQuery map(URI srcGraph, Resource node,
+                                                  Map<URI,String> values) {
         return this.map(srcGraph, node, null, values);
     }
 
-    protected UpdateQuery map(Resource from, Resource to,
-                                            Map<URI,String> values) {
+    protected final UpdateQuery map(Resource from, Resource to,
+                                                   Map<URI,String> values) {
         return this.map(null, from, to, values);
     }
 
@@ -466,7 +478,8 @@ public abstract class UpdateQuery
         return this;
     }
 
-    private final static Pattern fctPattern = Pattern.compile("(\\w+?)\\((.*?)\\)");
+    private final static Pattern fctPattern =
+                                        Pattern.compile("(\\w+?)\\((.*?)\\)");
 
     protected Value mapValue(String s) {
         Value v = null;
@@ -536,6 +549,7 @@ public abstract class UpdateQuery
 
     final class WhereClauses implements Iterable<Statement>
     {
+        // public final String name;
         public final WhereType type;
         public final Collection<Statement> clauses = new LinkedList<Statement>();
         public Collection<WhereClauses> children = new LinkedList<WhereClauses>();
@@ -552,12 +566,13 @@ public abstract class UpdateQuery
             if (type == null) {
                 throw new IllegalArgumentException("type");
             }
+            // this.name = name;
             this.type = type;
-            if (isSet(name)) {
-                namedWhereClauses.put(name, this);
-            }
             if (parent != null) {
                 parent.add(this);
+            }
+            if (isSet(name)) {
+                namedWhereClauses.put(name, this);
             }
         }
 
