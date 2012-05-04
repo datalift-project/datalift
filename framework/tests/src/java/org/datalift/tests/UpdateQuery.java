@@ -105,38 +105,38 @@ public abstract class UpdateQuery
         return this.targetGraph;
     }
 
-    public UpdateQuery addPrefix(String prefix, String ns) {
+    public UpdateQuery prefix(String prefix, String ns) {
         this.prefix2Ns.put(prefix, ns);
         this.ns2Prefix.put(ns, prefix);
         return this;
     }
 
-    public UpdateQuery addTriple(Resource s, URI p, String v) {
-        return this.addTriple(s, p, v, null);
+    public UpdateQuery triple(Resource s, URI p, String v) {
+        return this.triple(s, p, v, null);
     }
-    public UpdateQuery addTriple(Resource s, URI p, String v, URI graph) {
-        return this.addTriple(s, p, this.literal(v), graph);
+    public UpdateQuery triple(Resource s, URI p, String v, URI graph) {
+        return this.triple(s, p, this.literal(v), graph);
     }
-    public UpdateQuery addTriple(Resource s, URI p, SparqlExpression expr) {
-        return this.addTriple(s, p, expr, null, null);
+    public UpdateQuery triple(Resource s, URI p, SparqlExpression expr) {
+        return this.triple(s, p, expr, null, null);
     }
-    public UpdateQuery addTriple(Resource s, URI p, SparqlExpression expr, URI graph) {
-        return this.addTriple(s, p, expr, null, graph);
+    public UpdateQuery triple(Resource s, URI p,
+                                          SparqlExpression expr, URI graph) {
+        return this.triple(s, p, expr, null, graph);
     }
-    public UpdateQuery addTriple(Resource s, URI p,
-                                 SparqlExpression expr, String var) {
-        return this.addTriple(s, p, expr, var, null);
+    public UpdateQuery triple(Resource s, URI p,
+                                          SparqlExpression expr, String var) {
+        return this.triple(s, p, expr, var, null);
     }
-    public UpdateQuery addTriple(Resource s, URI p,
+    public UpdateQuery triple(Resource s, URI p,
                                  SparqlExpression expr, String var, URI graph) {
         Variable v = this.variable(var);
-        return this.addBinding(expr, v)
-                   .addTriple(s, p, v, graph);
+        return this.bind(expr, v).triple(s, p, v, graph);
     }
-    public UpdateQuery addTriple(Resource s, URI p, Value o) {
-        return this.addTriple(s, p, o, null);
+    public UpdateQuery triple(Resource s, URI p, Value o) {
+        return this.triple(s, p, o, null);
     }
-    public UpdateQuery addTriple(Resource s, URI p, Value o, URI graph) {
+    public UpdateQuery triple(Resource s, URI p, Value o, URI graph) {
         this.triples.add((graph != null)?
                                     new ContextStatementImpl(s, p, o, graph):
                                     new StatementImpl(s, p, o));
@@ -148,36 +148,68 @@ public abstract class UpdateQuery
     }
 
     public UpdateQuery rdfType(Resource s, URI t, URI graph) {
-        return this.addTriple(s, RDF_TYPE, t, graph);
+        return this.triple(s, RDF_TYPE, t, graph);
     }
 
-    public UpdateQuery addWhereClause(Resource s, URI p, String v) {
-        return this.addWhereClause(s, p, v, null);
+    public UpdateQuery where(Resource s, URI p, String v) {
+        return this.where(s, p, v, null);
     }
-    public UpdateQuery addWhereClause(Resource s, URI p, String v, URI graph) {
-        return this.addWhereClause(s, p, this.literal(v), graph);
+    public UpdateQuery where(Resource s, URI p, String v, URI graph) {
+        return this.where(s, p, this.literal(v), graph);
     }
-    public UpdateQuery addWhereClause(Resource s, URI p, Value o) {
-        return this.addWhereClause(s, p, o, null);
+    public UpdateQuery where(Resource s, URI p, Value o) {
+        return this.where(s, p, o, null);
     }
-    public UpdateQuery addWhereClause(Resource s, URI p, Value o, URI graph) {
-        return this.addWhereClause(s, p, o, graph, null);
+    public UpdateQuery where(Resource s, URI p, Value o, URI graph) {
+        return this.where(s, p, o, graph, null);
     }
-    public UpdateQuery addWhereClause(Resource s, URI p, Value o, URI graph,
-                                      String clauseGroup) {
+    public UpdateQuery where(Resource s, URI p, Value o, URI graph,
+                                                         String groupKey) {
+        return this.where(s, p, o, graph, groupKey, null);
+    }
+    public UpdateQuery where(Resource s, URI p, Value o, URI graph,
+                                         String groupKey, WhereType groupType) {
         WhereClauses w = this.whereClauses;
-        if (isSet(clauseGroup)) {
-            w = this.namedWhereClauses.get(clauseGroup);
-            if (w == null) {
-                w = new WhereClauses(clauseGroup, this.whereClauses);
+        if (isSet(groupKey)) {
+            if (groupType == null) {
+                groupType = WhereType.UNION;
             }
+            w = this.whereGroup(groupKey, groupType, this.whereClauses);
         }
         w.add((graph != null)? new ContextStatementImpl(s, p, o, graph):
                                new StatementImpl(s, p, o));
         return this;
     }
 
-    public UpdateQuery addBinding(SparqlExpression expr, Variable v) {
+    public WhereClauses whereGroup(String key) {
+        return this.whereGroup(key, null, (WhereClauses)null);
+    }
+    public WhereClauses whereGroup(WhereType type) {
+        return this.whereGroup(null, type, (WhereClauses)null);
+    }
+    public WhereClauses whereGroup(String key, WhereType type, String parent) {
+        return this.whereGroup(key, type, this.whereGroup(parent));
+    }
+    public WhereClauses whereGroup(String key, WhereType type,
+                                               WhereClauses parent) {
+        WhereClauses w = null;
+        if (isSet(key)) {
+            w = this.namedWhereClauses.get(key);
+        }
+        if ((w == null) && (type != null)) {
+            if (! isSet(key)) {
+                key = this.nextVariable("w");
+            }
+            w = new WhereClauses(type, key,
+                                 (parent != null)? parent: this.whereClauses);
+        }
+        if (w == null) {
+            w = this.whereClauses;
+        }
+        return w;
+    }
+
+    public UpdateQuery bind(SparqlExpression expr, Variable v) {
         this.bindings.add(new Binding(expr, v));
         return this;
     }
@@ -193,7 +225,7 @@ public abstract class UpdateQuery
             if (prefix == null) {
                 prefix = "p" + this.prefixCount.incrementAndGet();
             }
-            this.addPrefix(prefix, ns);
+            this.prefix(prefix, ns);
         }
         return prefix;
     }
@@ -285,7 +317,7 @@ public abstract class UpdateQuery
     private StringBuilder append(WhereClauses c, StringBuilder b, int level) {
         if (level > 0) {
             b.append('\t');
-            if (c.type != null) {
+            if (c.type != WhereType.DEFAULT) {
                 b.append(c.type).append(' ');
             }
             b.append("{\n");
@@ -319,10 +351,6 @@ public abstract class UpdateQuery
                         if (n == 0) {
                             n = t1.getSubject().stringValue().compareTo(t2.getSubject().stringValue());
                         }
-//                        // Finally by predicate.
-//                        if (n == 0) {
-//                            n = t1.getPredicate().stringValue().compareTo(t2.getPredicate().stringValue());
-//                        }
                         return n;
                     }
                 });
@@ -389,36 +417,50 @@ public abstract class UpdateQuery
         }
     }
 
-    protected UpdateQuery addStatements(Resource node, Map<URI,String> mapping) {
-        return this.addStatements(node, node, mapping);
+    protected UpdateQuery map(Resource node, Map<URI,String> values) {
+        return this.map(null, node, null, values);
     }
 
-    protected UpdateQuery addStatements(Resource src, Resource dest,
-                                                    Map<URI,String> mapping) {
-        return this.addStatements(src, null, dest, mapping);
+    protected UpdateQuery map(URI srcGraph, Resource node,
+                                            Map<URI,String> values) {
+        return this.map(srcGraph, node, null, values);
     }
 
-    protected UpdateQuery addStatements(Resource src, URI srcGraph,
-                                    Resource dest, Map<URI,String> mapping) {
-        for (Entry<URI,String> e : mapping.entrySet()) {
+    protected UpdateQuery map(Resource from, Resource to,
+                                            Map<URI,String> values) {
+        return this.map(null, from, to, values);
+    }
+
+    protected UpdateQuery map(URI srcGraph, Resource from,
+                              Resource to, Map<URI,String> values) {
+        if (to == null) {
+            // No target subject specified. => Assume the target subject URI
+            // is the source one (the owning named graph may differ).
+            to = from;
+        }
+        // Parse mapped values and generates triples.
+        for (Entry<URI,String> e : values.entrySet()) {
             URI p = e.getKey();
             String v = e.getValue();
 
-            Value  o = this.mapValue(v);
+            Value o = this.mapValue(v);
             if (o instanceof SparqlExpression) {
-                this.addTriple(dest, p, (SparqlExpression)o, (URI)null);
+                this.triple(to, p, (SparqlExpression)o, (URI)null);
             }
             else if (o instanceof URI) {
-                // Predicate.
+                // Node URI. => Use an intermediate SPARQL variable to create
+                // the link between the triple to insert and the WHERE clause.
                 URI u = (URI)o;
                 Variable var = this.variable(u.getLocalName());
-                this.addWhereClause(src, u, var, srcGraph)
-                          .addTriple(dest, p, var, null);
-
+                this.where(from, u, var, srcGraph)
+                    .triple(to, p, var, null);
             }
             else if (o instanceof Literal) {
                 // Literal.
-                this.addTriple(dest, p, (Literal)o, null);
+                this.triple(to, p, (Literal)o, null);
+            }
+            else {
+                throw new IllegalArgumentException(p.toString() + " -> " + v);
             }
         }
         return this;
@@ -431,7 +473,7 @@ public abstract class UpdateQuery
         if (! isBlank(s)) {
             s = s.trim();
             if (s.charAt(0) == '"') {
-                // Constant.
+                // Quoted string
                 v = this.literal(s.substring(1, s.length() - 1));
             }
             else {
@@ -458,7 +500,7 @@ public abstract class UpdateQuery
                         catch (Exception e) { /* Ignore... */ }
                     }
                     if (v == null) {
-                        // Predicate match.
+                        // No match yet. => Assume URI.
                         int i = s.indexOf(':');
                         if (i != -1) {
                             v = this.uri(s.substring(0, i), s.substring(i + 1));
@@ -499,7 +541,7 @@ public abstract class UpdateQuery
         public Collection<WhereClauses> children = new LinkedList<WhereClauses>();
 
         public WhereClauses() {
-            this("", null);
+            this(WhereType.DEFAULT, null, null);
         }
 
         public WhereClauses(String name, WhereClauses parent) {
@@ -507,6 +549,9 @@ public abstract class UpdateQuery
         }
 
         public WhereClauses(WhereType type, String name, WhereClauses parent) {
+            if (type == null) {
+                throw new IllegalArgumentException("type");
+            }
             this.type = type;
             if (isSet(name)) {
                 namedWhereClauses.put(name, this);

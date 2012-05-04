@@ -38,6 +38,7 @@ package org.datalift.tests;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -53,17 +54,21 @@ public class VCardMapping
     public final static String VCARD = "http://www.w3.org/2006/vcard/ns#";
 
     private final static Collection<String> VCARD_PREDICATES =
-                Arrays.asList("fn", "adr");
+                                                    Arrays.asList("fn", "adr");
     private final static Collection<String> ADDRESS_PREDICATES =
-                Arrays.asList("street-address", "postal-code", "locality",
-                              "country-name");
+                                Arrays.asList("street-address", "postal-code",
+                                              "locality", "country-name");
 
     private String varName;
     private final URI srcGraph;
     private final Map<String,String> nsMapping = new HashMap<String,String>();
 
+    public VCardMapping() {
+        this(null, null, null);
+    }
+
     public VCardMapping(String srcNs) {
-        this("s", srcNs);
+        this(null, srcNs, null);
     }
 
     public VCardMapping(String varName, String srcNs) {
@@ -79,33 +84,47 @@ public class VCardMapping
     }
 
     public UpdateQuery map(UpdateQuery query, Map<String,String> mapping) {
-        this.mapVCard(query, mapping);
-        this.mapAddress(query, "Work", mapping);
+        return this.map(query, null, mapping);
+    }
+
+    public UpdateQuery map(UpdateQuery query, Resource vcard,
+                                              Map<String,String> mapping) {
+        vcard = this.mapVCard(query, vcard, mapping);
+        this.mapAddress(query, vcard, "Work", mapping);
         return query;
     }
 
-    public Resource mapVCard(UpdateQuery query, Map<String,String> mapping) {
+    public Resource mapVCard(UpdateQuery query, Resource vcard,
+                                                Map<String,String> mapping) {
+        // Ensure query holds all needed RDF namespace prefixes.
         this.addPrefixes(query);
-
-        Variable node = this.getSubject(query);
-        query.rdfType(node, query.uri(VCARD, "VCard"))
-             .addStatements(node, this.srcGraph, node,
-                        this.mapPredicates(mapping, query, VCARD_PREDICATES));
-
-        return node;
+        // If no target node is specified, use default.
+        if (vcard == null) {
+            vcard = query.variable(this.varName);
+        }
+        // Map VCard predicates for the subject node.
+        query.rdfType(vcard, query.uri(VCARD, "VCard"))
+             .map(this.srcGraph, vcard,
+                  this.getValues(mapping, query, VCARD_PREDICATES));
+        // Return the SPARQL variable associated to the VCard node in query.
+        return vcard;
     }
 
-    public Resource mapAddress(UpdateQuery query, String addrType,
-                                                 Map<String,String> mapping) {
+    public Resource mapAddress(UpdateQuery query, Resource vcard,
+                               String addrType, Map<String,String> mapping) {
+        // Ensure query holds all needed RDF namespace prefixes.
         this.addPrefixes(query);
-
-        Variable node = this.getSubject(query);
+        // If no target node is specified, use default.
+        if (vcard == null) {
+            vcard = query.variable(this.varName);
+        }
+        // As per the VCard ontology, use a blank node to hold the address data.
         Resource addr = query.blankNode();
-
         query.rdfType(addr, query.uri(VCARD, addrType))
-             .addTriple(node, query.uri(VCARD, "adr"), addr)
-             .addStatements(node, this.srcGraph, addr,
-                        this.mapPredicates(mapping, query, ADDRESS_PREDICATES));
+             .triple(vcard, query.uri(VCARD, "adr"), addr)
+             .map(this.srcGraph, vcard, addr,
+                  this.getValues(mapping, query, ADDRESS_PREDICATES));
+        // Return the blank node associated to this VCard address in query.
         return addr;
     }
 
@@ -114,40 +133,39 @@ public class VCardMapping
         return this;
     }
 
-    private final Variable getSubject(UpdateQuery query) {
-        Variable node = query.variable(this.varName);
-        if (this.varName == null) {
-            this.varName = node.stringValue();
-        }
-        return node;
-    }
-
     private final UpdateQuery addPrefixes(UpdateQuery query) {
-        query.addPrefix("v", VCARD);
+        query.prefix("v", VCARD);
         for (Entry<String,String> e : this.nsMapping.entrySet()) {
-            query.addPrefix(e.getKey(), e.getValue());
+            query.prefix(e.getKey(), e.getValue());
         }
         return query;
     }
 
-    private final Map<URI,String> mapPredicates(Map<String,String> mapping,
-                                UpdateQuery query, Collection<String> filter) {
-        Map<URI,String> m = new HashMap<URI,String>();
+    private final Map<URI,String> getValues(Map<String,String> mapping,
+                                            UpdateQuery query,
+                                            Collection<String> predicates) {
+        Map<URI,String> m = new LinkedHashMap<URI,String>();
         String prefix = query.prefixFor(VCARD) + ":";
-        for (String p : filter) {
+        for (String p : predicates) {
+            // VCard predicate absolute URI.
             URI u = query.uri(VCARD, p);
-            this.addIfFound(mapping, p, m, u);
-            this.addIfFound(mapping, prefix + p, m, u);
-            this.addIfFound(mapping, VCARD  + p, m, u);
+            // Search for predicate in source mapping using its
+            // simple name (p), prefixed name and absolute URI.
+            this.add(u, m, p, mapping);
+            this.add(u, m, prefix + p, mapping);
+            this.add(u, m, u.toString(), mapping);
         }
         return m;
     }
 
-    private final void addIfFound(Map<String,String> src, String key,
-                                  Map<URI,String> dest, URI destKey) {
-        String v = src.get(key);
+    private final boolean add(URI predicate, Map<URI,String> to,
+                              String key,    Map<String,String> from) {
+        boolean added = false;
+        String v = from.get(key);
         if (v != null) {
-            dest.put(destKey, v);
+            to.put(predicate, v);
+            added = true;
         }
+        return added;
     }
 }
