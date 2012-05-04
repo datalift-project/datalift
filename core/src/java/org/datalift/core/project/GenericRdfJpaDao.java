@@ -47,10 +47,10 @@ import javax.persistence.Query;
 import com.clarkparsia.empire.annotation.RdfsClass;
 import com.clarkparsia.empire.impl.RdfQuery;
 
-import org.datalift.fwk.util.StringUtils;
+import static org.datalift.fwk.util.StringUtils.*;
 
 
-public abstract class GenericRdfJpaDao<T>
+public class GenericRdfJpaDao<T>
 {
     protected final Class<? extends T> persistentClass;
     protected final String rdfType;
@@ -87,18 +87,6 @@ public abstract class GenericRdfJpaDao<T>
         return this.getAll(entityClass, null);
     }
 
-    public <C> C find(Class<C> entityClass, URI primaryKey) {
-        return this.entityMgr.find(entityClass, primaryKey);
-    }
-
-    public <C> C get(Class<C> entityClass, URI primaryKey) {
-        C entity = this.entityMgr.find(entityClass, primaryKey);
-        if (entity == null) {
-            throw new EntityNotFoundException(String.valueOf(primaryKey));
-        }
-        return entity;
-    }
-
     public void persist(Object entity) {
         this.entityMgr.persist(entity);
     }
@@ -115,13 +103,25 @@ public abstract class GenericRdfJpaDao<T>
         this.delete(this.get(id));
     }
 
+    protected <C> C find(Class<C> entityClass, URI primaryKey) {
+        return this.entityMgr.find(entityClass, primaryKey);
+    }
+
+    protected <C> C get(Class<C> entityClass, URI primaryKey) {
+        C entity = this.entityMgr.find(entityClass, primaryKey);
+        if (entity == null) {
+            throw new EntityNotFoundException(String.valueOf(primaryKey));
+        }
+        return entity;
+    }
+
     protected List<? extends T> executeQuery(String query) {
         return this.executeQuery(query, this.persistentClass);
     }
 
     @SuppressWarnings("unchecked")
     protected <C> List<C> executeQuery(String query, Class<C> entityClass) {
-        if (StringUtils.isBlank(query)) {
+        if (isBlank(query)) {
             throw new IllegalArgumentException("query");
         }
         Query q = this.entityMgr.createQuery(query);
