@@ -94,7 +94,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
 
     private EntityManagerFactory emf = null;
     private EntityManager entityMgr = null;
-    private ProjectJpaDao projectDao = null;
+    private GenericRdfJpaDao<Project> projectDao = null;
 
     private final Collection<Class<?>> classes = new HashSet<Class<?>>();
 
@@ -116,7 +116,8 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
                                         configuration.getInternalRepository());
         this.entityMgr = this.emf.createEntityManager();
         // Create Data Access Object for Projects.
-        this.projectDao = new ProjectJpaDao(this.entityMgr);
+        this.projectDao = new GenericRdfJpaDao<Project>(
+                                            ProjectImpl.class, this.entityMgr);
     }
 
     /** {@inheritDoc} */
@@ -483,19 +484,5 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         src.setSourceUrl(sourceUrl);
         src.setCreationDate(new Date());
         src.setOperator(SecurityContext.getUserPrincipal());
-    }
-
-    //-------------------------------------------------------------------------
-    // ProjectJpaDao nested class
-    //-------------------------------------------------------------------------
-
-    /**
-     * A JPA DAO implementation for persisting ProjectImpl objects.
-     */
-    public final static class ProjectJpaDao extends GenericRdfJpaDao<Project>
-    {
-        public ProjectJpaDao(EntityManager em) {
-            super(ProjectImpl.class, em);
-        }
     }
 }
