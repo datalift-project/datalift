@@ -40,7 +40,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -63,6 +62,7 @@ import org.openrdf.model.impl.StatementImpl;
 import org.openrdf.model.impl.URIImpl;
 
 import org.datalift.fwk.rdf.RdfNamespace;
+import org.datalift.tests.WhereClauses.WhereType;
 
 import static org.datalift.fwk.util.StringUtils.*;
 
@@ -198,18 +198,27 @@ public abstract class UpdateQuery
     public WhereClauses whereGroup(String key, WhereType type,
                                                WhereClauses parent) {
         WhereClauses w = null;
-        if (isSet(key)) {
+        boolean hasKey = isSet(key);
+        if (hasKey) {
+            // Retrieve group from query registry.
             w = this.namedWhereClauses.get(key);
         }
+        else if (type == null) {
+            // No name and no data to create a new group. => Return default.
+            w = this.whereClauses;
+        }
         if ((w == null) && (type != null)) {
-            if (! isSet(key)) {
+            // Not found. => Create and register new group.
+            if (! hasKey) {
+                // Generate group name dynamically.
                 key = this.nextVariable("w");
             }
             w = new WhereClauses(type, key,
                                  (parent != null)? parent: this.whereClauses);
+            this.namedWhereClauses.put(key, w);
         }
         if (w == null) {
-            w = this.whereClauses;
+            throw new IllegalArgumentException(key);
         }
         return w;
     }
@@ -320,6 +329,10 @@ public abstract class UpdateQuery
     }
 
     private StringBuilder append(WhereClauses c, StringBuilder b, int level) {
+        if (c.isEmpty()) {
+            // No statements and no child where clauses. => Return right away.
+            return b;
+        }
         if (level > 0) {
             b.append('\t');
             if (c.type != WhereType.DEFAULT) {
@@ -338,12 +351,17 @@ public abstract class UpdateQuery
     }
 
     private StringBuilder append(Collection<Statement> c, StringBuilder b) {
+        if (c.isEmpty()) {
+            // Collection is empty. => Return right away.
+            return b;
+        }
+        // Group statement using named graph, subject and predicate.
         List<Statement> stmts = new ArrayList<Statement>(c);
         Collections.sort(stmts, new Comparator<Statement>() {
                     @Override
                     public int compare(Statement t1, Statement t2) {
                         int n = 0;
-                        // Sort statements by named group.
+                        // Sort statements by named graph first.
                         if (t1.getContext() != null) {
                             n = (t2.getContext() != null)?
                                     t1.getContext().stringValue().compareTo(
@@ -353,10 +371,15 @@ public abstract class UpdateQuery
                         else {
                             n = (t2.getContext() != null)? -1: 0;
                         }
-                        // Then by subject name.
+                        // Then by subject.
                         if (n == 0) {
                             n = t1.getSubject().stringValue().compareTo(
                                                 t2.getSubject().stringValue());
+                        }
+                        // And finally by predicate.
+                        if (n == 0) {
+                            n = t1.getPredicate().stringValue().compareTo(
+                                                t2.getPredicate().stringValue());
                         }
                         return n;
                     }
@@ -366,42 +389,49 @@ public abstract class UpdateQuery
         Resource s = null;
         URI p = null;
         for (Statement t : stmts) {
+            // Check for new named graph scope.
             Resource g = t.getContext();
             if ((inGraph) && ((g == null) || (! g.equals(graph)))) {
-                    // Close named graph scope.
-                    b.append("\t}\n");
-                    inGraph = false;
-                    graph = null;
-                    s = null;
-                    p = null;
+                // Close previous named graph scope.
+                b.append("\t}\n");
+                inGraph = false;
+                graph = null;
+                s = null;
+                p = null;
             }
             if ((! inGraph) && (g != null)) {
-                    // Open named graph scope.
-                    b.append("\tGRAPH <").append(g.toString()).append("> {\n");
-                    inGraph = true;
-                    graph = g;
+                // Open new named graph scope.
+                b.append("\tGRAPH <").append(g.toString()).append("> {\n");
+                inGraph = true;
+                graph = g;
             }
-
+            // Optimize request look (!) by not duplicating repeating
+            // subjects and predicates
             if (t.getSubject().equals(s)) {
+                // Same subject. => Remove triple terminator (" .").
                 b.setLength(b.length() - 2);
                 if (t.getPredicate().equals(p)) {
+                    // Same predicate. => Object list
                     b.append(",\n\t\t\t\t");
                 }
                 else {
+                    // New predicate.
                     p = t.getPredicate();
                     b.append(";\n\t\t\t").append(this.toString(p)).append(' ');
                 }
             }
             else {
+                // New subject. => Reset both subject and predicate.
                 s = t.getSubject();
                 p = t.getPredicate();
                 b.append("\t\t").append(this.toString(s)).append('\t')
                                 .append(this.toString(p)).append(' ');
             }
+            // Append value and triple terminator.
             b.append(this.toString(t.getObject())).append(" .\n");
-        }
+        } // End loop.
+        // Close current name graph scope, if any.
         if (inGraph) {
-            // Close named graph scope.
             b.append("\t}\n");
             inGraph = false;
         }
@@ -528,73 +558,6 @@ public abstract class UpdateQuery
         return v;
     }
 
-
-    private static enum WhereType {
-        DEFAULT         (""),
-        OPTIONAL        ("OPTIONAL"),
-        UNION           ("UNION"),
-        MINUS           ("MINIUS");
-
-        public final String label;
-
-        WhereType(String label) {
-            this.label = label;
-        }
-
-        @Override
-        public String toString() {
-            return this.label;
-        }
-    }
-
-    final class WhereClauses implements Iterable<Statement>
-    {
-        // public final String name;
-        public final WhereType type;
-        public final Collection<Statement> clauses = new LinkedList<Statement>();
-        public Collection<WhereClauses> children = new LinkedList<WhereClauses>();
-
-        public WhereClauses() {
-            this(WhereType.DEFAULT, null, null);
-        }
-
-        public WhereClauses(String name, WhereClauses parent) {
-            this(WhereType.DEFAULT, name, parent);
-        }
-
-        public WhereClauses(WhereType type, String name, WhereClauses parent) {
-            if (type == null) {
-                throw new IllegalArgumentException("type");
-            }
-            // this.name = name;
-            this.type = type;
-            if (parent != null) {
-                parent.add(this);
-            }
-            if (isSet(name)) {
-                namedWhereClauses.put(name, this);
-            }
-        }
-
-        public WhereClauses add(Statement s) {
-            this.clauses.add(s);
-            return this;
-        }
-
-        public boolean isEmpty() {
-            return this.clauses.isEmpty();
-        }
-
-        private WhereClauses add(WhereClauses child) {
-            this.children.add(child);
-            return this;
-        }
-
-        @Override
-        public Iterator<Statement> iterator() {
-            return this.clauses.iterator();
-        }
-    }
 
     final static class VariableImpl implements Variable
     {
