@@ -43,7 +43,7 @@ import org.datalift.tests.Variable;
 
 public final class Substr extends SparqlFunction
 {
-    private Substr() {
+    public Substr() {
         super("substr", (Value[])null);
     }
 

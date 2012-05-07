@@ -40,7 +40,7 @@ import org.openrdf.model.Value;
 
 public final class Concat extends SparqlFunction
 {
-    private Concat() {
+    public Concat() {
         super("concat", (Value[])null);
     }
 
@@ -48,7 +48,7 @@ public final class Concat extends SparqlFunction
         super("concat", args);
         if (args.length < 2) {
             throw new IllegalArgumentException(
-                "CONCAT(string literal ltrl1 ... string literal ltrlN");
+                "CONCAT(string literal ltrl1 ... string literal ltrlN)");
         }
     }
 }

@@ -40,7 +40,7 @@ import org.openrdf.model.Value;
 
 public final class Strlen extends SparqlFunction
 {
-    private Strlen() {
+    public Strlen() {
         super("strlen", (Value[])null);
     }
 
