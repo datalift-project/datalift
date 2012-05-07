@@ -55,6 +55,7 @@ import org.openrdf.model.Statement;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.model.impl.BNodeImpl;
+import org.openrdf.model.impl.BooleanLiteralImpl;
 import org.openrdf.model.impl.ContextStatementImpl;
 import org.openrdf.model.impl.LiteralImpl;
 import org.openrdf.model.impl.NumericLiteralImpl;
@@ -63,16 +64,41 @@ import org.openrdf.model.impl.URIImpl;
 
 import org.datalift.fwk.rdf.RdfNamespace;
 import org.datalift.tests.WhereClauses.WhereType;
+import org.datalift.tests.functions.SparqlFunction;
+import org.datalift.tests.impl.VariableImpl;
 
 import static org.datalift.fwk.util.StringUtils.*;
 
 
+/**
+ * A simple grammar to help building SPARQL update (insert & delete) and
+ * CONSTRUCT queries in Java.
+ *
+ * @author lbihanic
+ */
 public abstract class UpdateQuery
 {
-    private final static URI RDF_TYPE = new URIImpl("rdf:a");
+    //-------------------------------------------------------------------------
+    // Constants
+    //-------------------------------------------------------------------------
 
+    /**
+     * the <a href="http://www.w3.org/TR/rdf-schema/#ch_type">RDF type</a>
+     * predicate.
+     */
+    public final static URI RDF_TYPE = new URIImpl("rdf:a");
+
+    //-------------------------------------------------------------------------
+    // Class members
+    //-------------------------------------------------------------------------
+
+    /** Well-known RDF namespace prefix mappings. */
     private final static Map<String,String> tentativePrefixes =
                                                 new HashMap<String,String>();
+
+    //-------------------------------------------------------------------------
+    // Class initializer
+    //-------------------------------------------------------------------------
 
     static {
         for (RdfNamespace ns : RdfNamespace.values()) {
@@ -80,8 +106,15 @@ public abstract class UpdateQuery
         }
     }
 
-    private final String name;
-    private final URI targetGraph;
+    //-------------------------------------------------------------------------
+    // Instance members
+    //-------------------------------------------------------------------------
+
+    /** The query type (CONSTRUCT, INSET, DELETE...). */
+    public final String type;
+    /** The named graph the query will modify. */
+    public final URI targetGraph;
+
     private final AtomicInteger prefixCount   = new AtomicInteger();
     private final AtomicInteger variableCount = new AtomicInteger();
     private final Map<String,String> prefix2Ns = new HashMap<String,String>();
@@ -92,31 +125,68 @@ public abstract class UpdateQuery
                                             new HashMap<String,WhereClauses>();
     private final Collection<Binding> bindings = new LinkedList<Binding>();
 
-    protected UpdateQuery(String queryName) {
-        this(queryName, null);
+    //-------------------------------------------------------------------------
+    // Constructors
+    //-------------------------------------------------------------------------
+
+    /**
+     * Creates a new query.
+     * @param  type   the query type (CONSTRUCT, INSERT, DELETE...).
+     */
+    protected UpdateQuery(String type) {
+        this(type, null);
     }
 
-    protected UpdateQuery(String queryName, URI targetGraph) {
-        this.name = queryName.toUpperCase();
+    /**
+     * Creates a new query.
+     * @param  type          the query type (CONSTRUCT, INSERT,
+     *                       DELETE...).
+     * @param  targetGraph   the named graph the query will modify or
+     *                       <code>null</code> to target the default
+     *                       graph.
+     */
+    protected UpdateQuery(String type, URI targetGraph) {
+        if (isBlank(type)) {
+            throw new IllegalArgumentException("queryType");
+        }
+        this.type = type.toUpperCase();
         this.targetGraph = targetGraph;
     }
 
-    public URI getTargetGraph() {
-        return this.targetGraph;
-    }
+    //-------------------------------------------------------------------------
+    // Triples construction
+    //-------------------------------------------------------------------------
 
-    public UpdateQuery prefix(String prefix, String ns) {
-        this.prefix2Ns.put(prefix, ns);
-        this.ns2Prefix.put(ns, prefix);
-        return this;
-    }
-
+    /**
+     * Shorthand method to append a triple template for string literal
+     * value.
+     * @param  s   the subject (URI or variable).
+     * @param  p   the predicate.
+     * @param  v   the value.
+     *
+     * @return this query object, for call chaining.
+     * @see    #triple(Resource, URI, Value)
+     */
     public final UpdateQuery triple(Resource s, URI p, String v) {
-        return this.triple(s, p, v, null);
+        return this.triple(s, p, this.literal(v));
     }
+
+    /**
+     * Shorthand method to append a triple template for string literal
+     * value.
+     * @param  s       the subject (URI or variable).
+     * @param  p       the predicate.
+     * @param  v       the value.
+     * @param  graph   the named graph for the triple belongs to,
+     *                 <code>null</code> to use the default graph.
+     *
+     * @return this query object, for call chaining.
+     * @see    #triple(Resource, URI, Value, URI)
+     */
     public final UpdateQuery triple(Resource s, URI p, String v, URI graph) {
         return this.triple(s, p, this.literal(v), graph);
     }
+
     public final UpdateQuery triple(Resource s, URI p, SparqlExpression expr) {
         return this.triple(s, p, expr, null, null);
     }
@@ -129,42 +199,170 @@ public abstract class UpdateQuery
         return this.triple(s, p, expr, var, null);
     }
     public UpdateQuery triple(Resource s, URI p,
-                                 SparqlExpression expr, String var, URI graph) {
+                              SparqlExpression expr, String var, URI graph) {
         Variable v = this.variable(var);
         return this.bind(expr, v).triple(s, p, v, graph);
     }
+
+    /**
+     * Appends the specified template to the list of triples this query
+     * generates (constructs, inserts or deletes).
+     * @param  s   the subject (URI or variable).
+     * @param  p   the predicate.
+     * @param  o   the value.
+     *
+     * @return this query object, for call chaining.
+     * @see    #triple(Resource, URI, Value, URI)
+     */
     public final UpdateQuery triple(Resource s, URI p, Value o) {
         return this.triple(s, p, o, null);
     }
+
+    /**
+     * Appends the specified template to the list of triples this query
+     * generates (constructs, inserts or deletes).
+     * @param  s       the subject (URI or variable).
+     * @param  p       the predicate.
+     * @param  o       the value.
+     * @param  graph   the named graph for the triple belongs to,
+     *                 <code>null</code> to use the default graph.
+     *
+     * @return this query object, for call chaining.
+     */
     public UpdateQuery triple(Resource s, URI p, Value o, URI graph) {
         this.triples.add(this.statement(s, p, o, graph));
         return this;
     }
 
+    /**
+     * Appends a triple template defining the {@link #RDF_TYPE RDF type}
+     * of the specified subject into the list of triples this query
+     * generates (constructs, inserts or deletes).
+     * @param  s   the subject (URI or variable).
+     * @param  t   the RDF type.
+     *
+     * @return this query object, for call chaining.
+     * @see    #rdfType(Resource, URI, URI)
+     */
     public final UpdateQuery rdfType(Resource s, URI t) {
         return this.rdfType(s, t, null);
     }
 
+    /**
+     * Appends a triple template defining the {@link #RDF_TYPE RDF type}
+     * of the specified subject into the list of triples this query
+     * generates (constructs, inserts or deletes).
+     * @param  s       the subject (URI or variable).
+     * @param  t       the RDF type.
+     * @param  graph   the named graph for the triple belongs to,
+     *                 <code>null</code> to use the default graph.
+     *
+     * @return this query object, for call chaining.
+     * @see    #triple(Resource, URI, Value, URI)
+     */
     public UpdateQuery rdfType(Resource s, URI t, URI graph) {
         return this.triple(s, RDF_TYPE, t, graph);
     }
 
+    //-------------------------------------------------------------------------
+    // Where clauses construction
+    //-------------------------------------------------------------------------
+
+    /**
+     * Shorthand method to append a WHERE clause to the default clause
+     * group for string literal value.
+     * @param  s       the subject (URI or variable).
+     * @param  p       the predicate.
+     * @param  v       the value.
+     *
+     * @return this query object, for call chaining.
+     * @see    #where(Resource, URI, Value, URI)
+     */
     public final UpdateQuery where(Resource s, URI p, String v) {
         return this.where(s, p, v, null);
     }
+
+    /**
+     * Shorthand method to append a WHERE clause to the default clause
+     * group for string literal value.
+     * @param  s       the subject (URI or variable).
+     * @param  p       the predicate.
+     * @param  v       the value.
+     * @param  graph   the named graph for the triple shall belong to
+     *                 or <code>null</code> for any graph.
+     *
+     * @return this query object, for call chaining.
+     * @see    #where(Resource, URI, Value, URI)
+     */
     public final UpdateQuery where(Resource s, URI p, String v, URI graph) {
         return this.where(s, p, this.literal(v), graph);
     }
+
+    /**
+     * Appends the specified SPARQL WHERE clause to the default clause
+     * group for this query.
+     * @param  s   the subject (URI or variable).
+     * @param  p   the predicate.
+     * @param  o   the value.
+     *
+     * @return this query object, for call chaining.
+     * @see    #where(Resource, URI, Value, URI)
+     */
     public final UpdateQuery where(Resource s, URI p, Value o) {
         return this.where(s, p, o, null);
     }
+
+    /**
+     * Appends the specified SPARQL WHERE clause to the default clause
+     * group for this query.
+     * @param  s       the subject (URI or variable).
+     * @param  p       the predicate.
+     * @param  o       the value.
+     * @param  graph   the named graph for the triple shall belong to
+     *                 or <code>null</code> for any graph.
+     *
+     * @return this query object, for call chaining.
+     * @see    #where(Resource, URI, Value, URI, String)
+     */
     public final UpdateQuery where(Resource s, URI p, Value o, URI graph) {
         return this.where(s, p, o, graph, (WhereClauses)null);
     }
+
+    /**
+     * Appends the specified SPARQL WHERE clause to the specified clause
+     * group for this query.
+     * @param  s       the subject (URI or variable).
+     * @param  p       the predicate.
+     * @param  o       the value.
+     * @param  graph   the named graph for the triple shall belong to
+     *                 or <code>null</code> for any graph.
+     * @param  group   the clause group name.
+     *
+     * @return this query object, for call chaining.
+     * @see    #where(Resource, URI, Value, URI, WhereClauses)
+     */
     public final UpdateQuery where(Resource s, URI p, Value o, URI graph,
                                                                String group) {
         return this.where(s, p, o, graph, this.whereGroup(group));
     }
+
+    /**
+     * Appends the specified SPARQL WHERE clause to the specified clause
+     * group for this query, creating the group if it does not exist and
+     * a group type is specified.
+     * @param  s           the subject (URI or variable).
+     * @param  p           the predicate.
+     * @param  o           the value.
+     * @param  graph       the named graph for the triple shall belong
+     *                     to or <code>null</code> for any graph.
+     * @param  groupKey    the clause group name.
+     * @param  groupType   the type of the clause group to create or
+     *                     <code>null</code> to prevent on-the-fly
+     *                     group creation.
+     *
+     * @return this query object, for call chaining.
+     * @see    #where(Resource, URI, Value, URI, WhereClauses)
+     */
     public final UpdateQuery where(Resource s, URI p, Value o, URI graph,
                                    String groupKey, WhereType groupType) {
         WhereClauses w = null;
@@ -176,6 +374,21 @@ public abstract class UpdateQuery
         }
         return this.where(s, p, o, graph, w);
     }
+
+    /**
+     * Appends the specified SPARQL WHERE clause to the specified clause
+     * group for this query.
+     * @param  s       the subject (URI or variable).
+     * @param  p       the predicate.
+     * @param  o       the value.
+     * @param  graph   the named graph for the triple shall belong to
+     *                 or <code>null</code> for any graph.
+     * @param  group   the clause group or <code>null</code> to use the
+     *                 default clause group.
+     *
+     * @return this query object, for call chaining.
+     * @see    #where(Resource, URI, Value, URI, WhereClauses)
+     */
     public UpdateQuery where(Resource s, URI p, Value o, URI graph,
                                                          WhereClauses group) {
         if (group == null) {
@@ -185,16 +398,61 @@ public abstract class UpdateQuery
         return this;
     }
 
+    /**
+     * Retrieves the specified WHERE clause group.
+     * @param  key   the name of the WHERE clause group or
+     *               <code>null</code> for the default group.
+     *
+     * @return the WHERE clause group associated to <code>key</code>
+     *         for this query.
+     * @throws IllegalArgumentException if no binding exists for
+     *         <code>key</code>.
+     */
     public final WhereClauses whereGroup(String key) {
         return this.whereGroup(key, null, (WhereClauses)null);
     }
+
+    /**
+     * Creates a new WHERE clause group of the specified type,
+     * dynamically generating the group name.  The new clause group
+     * is a child of the default group.
+     * @param  type   the clause group type.
+     *
+     * @return the created WHERE clause group.
+     * @see    #whereGroup(String, WhereType, WhereClauses)
+     */
     public final WhereClauses whereGroup(WhereType type) {
+        if (type == null) {
+            throw new IllegalArgumentException("type");
+        }
         return this.whereGroup(null, type, (WhereClauses)null);
     }
+
+    /**
+     * Creates a new WHERE clause group.
+     * @param  key      the clause group name.
+     * @param  type     the clause group type.
+     * @param  parent   the name of parent clause group or
+     *                  <code>null</code> if the new group is a child
+     *                  of the default group.
+     *
+     * @return the created WHERE clause group.
+     * @see    #whereGroup(String, WhereType, WhereClauses)
+     */
     public final WhereClauses whereGroup(String key, WhereType type,
                                                      String parent) {
         return this.whereGroup(key, type, this.whereGroup(parent));
     }
+
+    /**
+     * Creates a new WHERE clause group.
+     * @param  key      the clause group name.
+     * @param  type     the clause group type.
+     * @param  parent   the parent clause group or <code>null</code> if
+     *                  the new group is a child of the default group.
+     *
+     * @return the created WHERE clause group.
+     */
     public WhereClauses whereGroup(String key, WhereType type,
                                                WhereClauses parent) {
         WhereClauses w = null;
@@ -223,15 +481,49 @@ public abstract class UpdateQuery
         return w;
     }
 
+    //-------------------------------------------------------------------------
+    // Variable binding
+    //-------------------------------------------------------------------------
+
+    /**
+     * Bind the specified SPARQL expression to the specified variable.
+     * @param  expr   the SPARQL expression.
+     * @param  v      the variable to bind the expression to.
+     *
+     * @return this query object, for call chaining.
+     */
     public UpdateQuery bind(SparqlExpression expr, Variable v) {
         this.bindings.add(new Binding(expr, v));
         return this;
     }
 
-    public final String prefixFor(URI u) {
-        return this.prefixFor(u.getNamespace());
+    //-------------------------------------------------------------------------
+    // Namespace prefix mapping
+    //-------------------------------------------------------------------------
+
+    /**
+     * Add a namespace prefix mapping.
+     * @param  prefix   the prefix.
+     * @param  ns       the namespace URI to bind to the prefix.
+     *
+     * @return this query object, for call chaining.
+     */
+    public UpdateQuery prefix(String prefix, String ns) {
+        this.prefix2Ns.put(prefix, ns);
+        this.ns2Prefix.put(ns, prefix);
+        return this;
     }
 
+    /**
+     * Return the prefix associated to the specified namespace for
+     * this query.  If no mapping exists, this method also checks for
+     * {@link RdfNamespace well-known prefix mappings} and automatically
+     * registers positive matches.
+     * @param  ns   the namespace URI.
+     *
+     * @return the prefix associated to the namespace or
+     *         <code>null</code> if none was defined.
+     */
     public String prefixFor(String ns) {
         String prefix = this.ns2Prefix.get(ns);
         if (prefix == null) {
@@ -244,6 +536,17 @@ public abstract class UpdateQuery
         return prefix;
     }
 
+    //-------------------------------------------------------------------------
+    // Factory methods
+    //-------------------------------------------------------------------------
+
+    /**
+     * Creates a URI for the specified namespace and local name.
+     * @param  ns     the namespace URI or prefix.
+     * @param  name   the local name.
+     *
+     * @return a URI object.
+     */
     public URI uri(String ns, String name) {
         String uri = this.prefix2Ns.get(ns);
         if (uri != null) {
@@ -252,14 +555,24 @@ public abstract class UpdateQuery
         return new URIImpl(ns + name);
     }
 
-    public final String nameFor(String ns, String name) {
-        return this.nameFor(this.uri(ns, name));
+    /**
+     * Creates a new variable, the name of which is derived from the
+     * specified URI.
+     * @param  u   the URI to build the variable name from.
+     *
+     * @return a new variable.
+     */
+    public final Variable variable(URI u) {
+        return this.variable(this.nameFor(u));
     }
 
-    public String nameFor(URI u) {
-        return this.prefixFor(u) + '_' + u.getLocalName();
-    }
-
+    /**
+     * Creates a new variable with the specified name or generating one
+     * if none is specified.
+     * @param  name   the (optional) variable name.
+     *
+     * @return a new variable.
+     */
     public Variable variable(String name) {
         if (! isSet(name)) {
             name = this.nextVariable("v");
@@ -267,20 +580,52 @@ public abstract class UpdateQuery
         return new VariableImpl(name);
     }
 
-    public final Variable variable(URI u) {
-        return this.variable(this.nameFor(u));
-    }
-
+    /**
+     * Creates a string literal.
+     * @param  v   the string literal value.
+     *
+     * @return a literal holding the specified string value.
+     */
     public Literal literal(String v) {
         return new LiteralImpl(v);
     }
 
-    public Literal literal(int i) {
-        return new NumericLiteralImpl(i);
+    /**
+     * Creates a boolean literal.
+     * @param  b   the boolean literal value.
+     *
+     * @return a literal holding the specified boolean value.
+     */
+    public Literal literal(boolean b) {
+        return new BooleanLiteralImpl(b);
+    }
+
+    /**
+     * Creates a numeric literal.
+     * @param  l   the long integer literal value.
+     *
+     * @return a literal holding the specified integer value.
+     */
+    public Literal literal(long l) {
+        return new NumericLiteralImpl(l);
+    }
+
+    /**
+     * Creates a numeric literal.
+     * @param  v   the floating point literal value.
+     *
+     * @return a literal holding the specified floating point value.
+     */
+    public Literal literal(double d) {
+        return new NumericLiteralImpl(d);
     }
 
     public final BNode blankNode() {
         return this.blankNode((String)null);
+    }
+
+    public final BNode blankNode(URI u) {
+        return this.blankNode(this.nameFor(u));
     }
 
     public BNode blankNode(String name) {
@@ -290,15 +635,34 @@ public abstract class UpdateQuery
         return new BNodeImpl(name);
     }
 
-    public final BNode blankNode(URI u) {
-        return this.blankNode(this.nameFor(u));
+    protected Statement statement(Resource s, URI p, Value o, URI graph) {
+        return ((graph != null)? new ContextStatementImpl(s, p, o, graph):
+                                 new StatementImpl(s, p, o));
     }
 
-    private String nextVariable(String prefix) {
+    protected final String nextVariable(String prefix) {
         return prefix + this.variableCount.incrementAndGet();
     }
 
-    public String toString() {
+    /**
+     * Generates a SPARQL variable name for the specified URI.
+     * @param  u   the URI to generate a name for.
+     *
+     * @return a valid SPARQL variable name.
+     */
+    protected final String nameFor(URI u) {
+        if (u == null) {
+            throw new IllegalArgumentException("u");
+        }
+        return this.prefixFor(u.getNamespace()) + '_' + u.getLocalName();
+    }
+
+    //-------------------------------------------------------------------------
+    // Query SPARQL serialization
+    //-------------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    public final String toString() {
         StringBuilder b = new StringBuilder(1024);
         // Namespace prefix declarations
         for (Entry<String,String> e : this.prefix2Ns.entrySet()) {
@@ -307,12 +671,12 @@ public abstract class UpdateQuery
         }
         b.append('\n');
         // With graph
-        URI graph = this.getTargetGraph();
-        if (graph != null) {
-            b.append("WITH <").append(graph.toString()).append(">\n");
+        if (this.targetGraph != null) {
+            b.append("WITH <").append(this.targetGraph.toString())
+                              .append(">\n");
         }
         // Query type
-        b.append(this.name).append(" {\n");
+        b.append(this.type).append(" {\n");
         // Triples, grouped by graph.
         b = this.append(this.triples, b).append("}\n");
         // WHERE clauses, grouped by graph.
@@ -454,10 +818,9 @@ public abstract class UpdateQuery
         }
     }
 
-    protected Statement statement(Resource s, URI p, Value o, URI graph) {
-        return ((graph != null)? new ContextStatementImpl(s, p, o, graph):
-                                 new StatementImpl(s, p, o));
-    }
+    //-------------------------------------------------------------------------
+    // ???
+    //-------------------------------------------------------------------------
 
     protected final UpdateQuery map(Resource node, Map<URI,String> values) {
         return this.map(null, node, null, values);
@@ -535,10 +898,20 @@ public abstract class UpdateQuery
                     v = SparqlFunction.newFunction(f, args);
                 }
                 else {
-                    // Check for integer.
-                    if (Character.isDigit(s.charAt(0))) {
+                    // Check for numbers.
+                    if ((Character.isDigit(s.charAt(0))) ||
+                        ((s.length() > 1) && (s.charAt(0) == '-')
+                                          && (Character.isDigit(s.charAt(1))))) {
                         try {
-                            v = this.literal(Integer.parseInt(s));
+                            if ((s.indexOf('.') != -1) || (s.indexOf(',') != -1)) {
+                                // Double
+                                v = this.literal(Double.parseDouble(
+                                                        s.replace(',', '.')));
+                            }
+                            else {
+                                // Integer
+                                v = this.literal(Long.parseLong(s));
+                            }
                         }
                         catch (Exception e) { /* Ignore... */ }
                     }
@@ -559,115 +932,17 @@ public abstract class UpdateQuery
     }
 
 
-    final static class VariableImpl implements Variable
-    {
-        public final String name;
-
-        public VariableImpl(String name) {
-            if (! isSet(name)) {
-                throw new IllegalArgumentException("name");
-            }
-            if (name.charAt(0) == '?') {
-                name = name.substring(1);
-            }
-            this.name = name;
-        }
-
-        @Override
-        public String stringValue()  {
-            return "?" + this.name;
-        }
-
-        @Override
-        public String toString() {
-            return this.stringValue();
-        }
-
-        @Override
-        public int hashCode() {
-            return this.stringValue().hashCode();
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            return (o instanceof VariableImpl)?
-                this.stringValue().equals(((VariableImpl)o).stringValue()): false;
-        }
-    }
-
-    final static URI EMPTY_URI = new URI() {
-        @Override
-        public String getLocalName() {
-            return "";
-        }
-
-        @Override
-        public String getNamespace() {
-            return "";
-        }
-
-        @Override
-        public String stringValue() {
-            return "";
-        }
-
-        @Override
-        public String toString() {
-            return this.stringValue();
-        }
-    };
-
-    abstract static class GraphPattern implements Statement
-    {
-        public final URI graph;
-
-        protected GraphPattern(URI graph) {
-            this.graph = graph;
-        }
-
-        abstract String stringValue();
-
-        @Override
-        public final String toString() {
-            return this.stringValue();
-        }
-
-        @Override
-        public final Resource getContext() {
-            return this.graph;
-        }
-
-        @Override
-        public final Resource getSubject() {
-            return EMPTY_URI;
-        }
-
-        @Override
-        public final URI getPredicate() {
-            return EMPTY_URI;
-        }
-
-        @Override
-        public final Value getObject() {
-            final String v = this.stringValue();
-            return new Value() {
-                    @Override public String stringValue() { return v; }
-                    @Override public String toString()    { return v; }
-            };
-        }
-    }
-
-    final static class Binding extends GraphPattern
+    /**
+     * SPARQL <a href="http://www.w3.org/TR/sparql11-query/#bind">variable
+     * assignment</a>.
+     */
+    private final static class Binding extends GraphPattern
     {
         public final Value expr;
         public final Variable v;
 
         public Binding(Value expr, Variable v) {
-            this(expr, v, null);
-        }
-
-        public Binding(Value expr, Variable v, URI graph) {
-            super(graph);
+            super();
             this.expr = expr;
             this.v = v;
         }
@@ -676,10 +951,9 @@ public abstract class UpdateQuery
             return "BIND(" + this.expr.stringValue()
                            + " AS " + this.v.stringValue() + ')';
         }
-    
     }
 
-    final static class Filter extends GraphPattern
+    protected final static class Filter extends GraphPattern
     {
         public final Value expr;
 

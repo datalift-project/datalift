@@ -32,7 +32,7 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 
-package org.datalift.tests;
+package org.datalift.tests.functions;
 
 
 import java.lang.reflect.Constructor;
@@ -42,13 +42,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.openrdf.model.Literal;
 import org.openrdf.model.Value;
+
+import org.datalift.tests.SparqlExpression;
 
 import static org.datalift.fwk.util.StringUtils.*;
 
 
-abstract class SparqlFunction implements SparqlExpression
+abstract public class SparqlFunction implements SparqlExpression
 {
     private final static Map<String,Class<? extends SparqlFunction>> fcts =
                         new HashMap<String,Class<? extends SparqlFunction>>();
@@ -103,21 +104,6 @@ abstract class SparqlFunction implements SparqlExpression
         return f;
     }
 
-    private final static class Concat extends SparqlFunction
-    {
-        private Concat() {
-            super("concat", (Value[])null);
-        }
-
-        public Concat(Value... args) {
-            super("concat", args);
-            if (args.length < 2) {
-                throw new IllegalArgumentException(
-                    "CONCAT(string literal ltrl1 ... string literal ltrlN");
-            }
-        }
-    }
-
     private final static class Expr extends SparqlFunction
     {
         private Expr() {
@@ -128,50 +114,6 @@ abstract class SparqlFunction implements SparqlExpression
             super("expr", args);
             if (args.length != 1) {
                 throw new IllegalArgumentException("EXPR(string literal expr)");
-            }
-        }
-    }
-
-    private final static class Strlen extends SparqlFunction
-    {
-        private Strlen() {
-            super("strlen", (Value[])null);
-        }
-
-        public Strlen(Value... args) {
-            super("strlen", args);
-            if (args.length != 1) {
-                throw new IllegalArgumentException("STRLEN(string literal str)");
-            }
-        }
-    }
-
-    private final static class Substr extends SparqlFunction
-    {
-        private Substr() {
-            super("substr", (Value[])null);
-        }
-
-        public Substr(Value... args) {
-            super("substr", args);
-            boolean valid = ((args.length >= 2) && (args.length <= 3));
-            if (valid) {
-                try {
-                    valid = ((args[1] instanceof Variable) ||
-                             (((Literal)args[1]).intValue() >= 0));
-                    if (valid && (args.length > 2)) {
-                        valid = ((args[2] instanceof Variable) ||
-                                 (((Literal)args[2]).intValue() >= 0));
-                    }
-                }
-                catch (Exception e) {
-                    valid = false;
-                }
-            }
-            if (! valid) {
-                throw new IllegalArgumentException(
-                    "SUBSTR(string literal source, xsd:integer startingLoc " +
-                    "[, xsd:integer length])");
             }
         }
     }
