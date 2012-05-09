@@ -38,7 +38,7 @@
 	<form method="post" action="$target_csv" enctype="multipart/form-data" class="form_formated">
 #if( !$current )
 		<p><label for="file">#i18n("project.upload_csv"): </label>
-		<input type="file" name="source" size="64"/><bt />
+		<input type="file" name="source" size="64"/><br />
 		<label for="file_url">#i18n("project.upload_source.file_url"): </label>
 		<input type="text" id="file_url" name="file_url"/></p>
 #else
