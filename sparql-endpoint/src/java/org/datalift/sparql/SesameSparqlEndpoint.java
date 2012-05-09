@@ -73,7 +73,6 @@ import org.openrdf.query.parser.ParsedBooleanQuery;
 import org.openrdf.query.parser.ParsedGraphQuery;
 import org.openrdf.query.parser.ParsedQuery;
 import org.openrdf.query.parser.sparql.SPARQLParserFactory;
-import org.openrdf.query.resultio.sparqljson.SPARQLResultsJSONWriter;
 import org.openrdf.query.resultio.sparqlxml.SPARQLResultsXMLWriter;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.rio.RDFHandler;
@@ -86,8 +85,10 @@ import static org.openrdf.query.QueryLanguage.SPARQL;
 
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.rdf.Repository;
+import org.datalift.fwk.util.StringUtils;
 import org.datalift.fwk.util.web.json.GridJsonWriter;
 import org.datalift.fwk.util.web.json.JsonRdfHandler;
+import org.datalift.fwk.util.web.json.SparqlResultsJsonWriter;
 import org.datalift.fwk.util.web.json.AbstractJsonWriter.ResourceType;
 
 import static org.datalift.fwk.MediaTypes.*;
@@ -179,8 +180,9 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                                         List<String> namedGraphUris,
                                         String query, int startOffset,
                                         int endOffset, boolean gridJson,
-                                        String format, UriInfo uriInfo,
-                                        Request request, String acceptHdr,
+                                        String format, String jsonCallback,
+                                        UriInfo uriInfo, Request request,
+                                        String acceptHdr,
                                         Map<String,Object> viewData)
                                                 throws WebApplicationException {
         log.trace("Processing SPARQL query: \"{}\"", query);
@@ -232,6 +234,10 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                 String fmt = (gridJson)? GRID_JSON_SINGLE_VALUE_FMT:
                                          STD_JSON_SINGLE_VALUE_FMT;
                 result = String.format(fmt, result);
+                // Check for JSONP results.
+                if (StringUtils.isSet(jsonCallback)) {
+                    result = jsonCallback + '(' + result + ')';
+                }
             }
             response = Response.ok(result, responseType);
             log.debug("ASK query result: {} for \"{}\"", result,
@@ -252,8 +258,8 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
             }
             else {
                 StreamingOutput out = this.getRdfHandlerOutput(repo, query,
-                                                        gridJson, baseUri,
-                                                        dataset, responseType);
+                                                gridJson, jsonCallback, baseUri,
+                                                dataset, responseType);
                 response = Response.ok(out, responseType);
             }
         }
@@ -273,7 +279,8 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
             }
             else {
                 StreamingOutput out = this.getResultHandlerOutput(repo, query,
-                                            startOffset, endOffset, gridJson,
+                                            startOffset, endOffset,
+                                            gridJson, jsonCallback,
                                             baseUri, dataset, responseType);
                 response = Response.ok(out, responseType);
             }
@@ -368,7 +375,8 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
 
     private StreamingOutput getRdfHandlerOutput(
                             final Repository repository, final String query,
-                            final boolean gridJson, final String baseUri,
+                            final boolean gridJson, final String jsonCallback,
+                            final String baseUri,
                             final Dataset dataset, final Variant v) {
         StreamingOutput handler = null;
 
@@ -382,7 +390,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                         protected RDFHandler newHandler(OutputStream out) {
                             return new GridJsonWriter(out,
                                             this.baseUri + DESCRIBE_URL_PATTERN,
-                                            this.repository.name);
+                                            this.repository.name, jsonCallback);
                         }
                     };
             }
@@ -426,7 +434,8 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
     private StreamingOutput getResultHandlerOutput(
                             final Repository repository, final String query,
                             final int startOffset, final int endOffset,
-                            final boolean gridJson, final String baseUri,
+                            final boolean gridJson, final String jsonCallback,
+                            final String baseUri,
                             final Dataset dataset, final Variant v) {
         StreamingOutput handler = null;
 
@@ -440,7 +449,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                         protected TupleQueryResultHandler newHandler(OutputStream out) {
                             return new GridJsonWriter(out,
                                             this.baseUri + DESCRIBE_URL_PATTERN,
-                                            this.repository.name);
+                                            this.repository.name, jsonCallback);
                         }
                 		
                     };
@@ -450,7 +459,9 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                                     startOffset, endOffset, baseUri, dataset)
                     {
                         protected TupleQueryResultHandler newHandler(OutputStream out) {
-                            return new SPARQLResultsJSONWriter(out);
+                            return new SparqlResultsJsonWriter(out,
+                                            this.baseUri + DESCRIBE_URL_PATTERN,
+                                            this.repository.name, jsonCallback);
                         }
                     };
             }

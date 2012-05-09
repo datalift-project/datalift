@@ -43,6 +43,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.openrdf.model.Statement;
+import org.openrdf.model.impl.LiteralImpl;
 import org.openrdf.query.BindingSet;
 import org.openrdf.query.TupleQueryResultHandlerException;
 import org.openrdf.query.resultio.TupleQueryResultFormat;
@@ -61,21 +62,21 @@ public class GridJsonWriter extends AbstractJsonWriter
     //-------------------------------------------------------------------------
 
     public GridJsonWriter(OutputStream out) {
-        this(out, null, null);
+        this(out, null, null, null);
     }
 
     public GridJsonWriter(OutputStream out, String urlPattern,
-                                            String defaultGraphUri) {
-        super(out, urlPattern, defaultGraphUri);
+                          String defaultGraphUri, String jsonCallback) {
+        super(out, urlPattern, defaultGraphUri, jsonCallback);
     }
 
     public GridJsonWriter(Writer out) {
-        this(out, null, null);
+        this(out, null, null, null);
     }
 
     public GridJsonWriter(Writer out, String urlPattern,
-                                      String defaultGraphUri) {
-        super(out, urlPattern, defaultGraphUri);
+                          String defaultGraphUri, String jsonCallback) {
+        super(out, urlPattern, defaultGraphUri, jsonCallback);
     }
 
     //-------------------------------------------------------------------------
@@ -210,7 +211,8 @@ public class GridJsonWriter extends AbstractJsonWriter
 
         for (Iterator<String> i=this.columnHeaders.iterator(); i.hasNext(); ) {
             String key = i.next();
-            this.writeKeyValue(key, row.getString(key), ResourceType.Unknown);
+            this.writeKeyValue(key, new LiteralImpl(row.getString(key)),
+                                    ResourceType.Unknown);
             if (i.hasNext()) {
                 this.writeComma();
             }

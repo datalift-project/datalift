@@ -80,7 +80,7 @@ import org.datalift.fwk.security.SecurityContext;
 import org.datalift.fwk.sparql.SparqlEndpoint;
 import org.datalift.fwk.util.StringUtils;
 
-import static org.datalift.fwk.util.StringUtils.isBlank;
+import static org.datalift.fwk.util.StringUtils.*;
 import static org.datalift.fwk.sparql.SparqlEndpoint.DescribeType.*;
 
 
@@ -159,7 +159,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     public ResponseBuilder executeQuery(String query, UriInfo uriInfo,
                                         Request request, String acceptHdr)
                                                 throws WebApplicationException {
-        return this.executeQuery(null, null, query, -1, -1, false, null,
+        return this.executeQuery(null, null, query, -1, -1, false, null, null,
                                  uriInfo, request, acceptHdr);
     }
     
@@ -171,7 +171,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                                         Request request, String acceptHdr)
                                                 throws WebApplicationException {
         return this.executeQuery(defaultGraphUris, namedGraphUris, query,
-                            -1, -1, false, null, uriInfo, request, acceptHdr);
+                        -1, -1, false, null, null, uriInfo, request, acceptHdr);
     }
 
     /** {@inheritDoc} */
@@ -182,7 +182,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                             UriInfo uriInfo, Request request, String acceptHdr)
                                                 throws WebApplicationException {
         return this.executeQuery(defaultGraphUris, namedGraphUris, query,
-                                startOffset, endOffset, gridJson, null,
+                                startOffset, endOffset, gridJson, null, null,
                                 uriInfo, request, acceptHdr);
     }
 
@@ -225,7 +225,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
             viewData.put("describe-type", type);
             viewData.put("describe-uri",  uri);
             response = this.doExecute(defGraphs, null, query,
-                                      -1, -1, false, null,
+                                      -1, -1, false, null,  null,
                                       uriInfo, request, acceptHdr, viewData);
         }
         catch (Exception e) {
@@ -278,13 +278,14 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                 @QueryParam("max") @DefaultValue("-1") int endOffset,
                 @QueryParam("grid") @DefaultValue("false") boolean gridJson,
                 @QueryParam("format") String format,
+                @QueryParam("callback") String jsonCallback,
                 @Context UriInfo uriInfo,
                 @Context Request request,
                 @HeaderParam("Accept") String acceptHdr)
                                                 throws WebApplicationException {
         return this.dispatchQuery(defaultGraphUris, namedGraphUris, query,
                                   startOffset, endOffset, gridJson, format,
-                                  uriInfo, request, acceptHdr);
+                                  jsonCallback, uriInfo, request, acceptHdr);
     }
     
     /**
@@ -317,13 +318,14 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                 @QueryParam("max") @DefaultValue("-1") int endOffset,
                 @QueryParam("grid") @DefaultValue("false") boolean gridJson,
                 @QueryParam("format") String format,
+                @QueryParam("callback") String jsonCallback,
                 @Context UriInfo uriInfo,
                 @Context Request request,
                 @HeaderParam("Accept") String acceptHdr)
                                                 throws WebApplicationException {
         return this.dispatchQuery(defaultGraphUris, namedGraphUris, query,
                                   startOffset, endOffset, gridJson, format,
-                                  uriInfo, request, acceptHdr);
+                                  jsonCallback, uriInfo, request, acceptHdr);
     }
 
     /**
@@ -419,8 +421,8 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     private final Response dispatchQuery(List<String> defaultGraphUris,
                             List<String> namedGraphUris, String query,
                             int startOffset, int endOffset, 
-                            boolean gridJson, String format, UriInfo uriInfo,
-                            Request request, String acceptHdr)
+                            boolean gridJson, String format, String jsonCallback,
+                            UriInfo uriInfo, Request request, String acceptHdr)
                                                 throws WebApplicationException {
         ResponseBuilder response = null;
 
@@ -428,8 +430,8 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         if (StringUtils.isSet(query)) {
             try {
                 response = this.executeQuery(defaultGraphUris, namedGraphUris,
-                                        query, startOffset, endOffset, gridJson,
-                                        format, uriInfo, request, acceptHdr);
+                                query, startOffset, endOffset, gridJson, format,
+                                jsonCallback, uriInfo, request, acceptHdr);
             }
             catch (Exception e) {
                 this.handleError(query, e);
@@ -454,13 +456,17 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     private ResponseBuilder executeQuery(List<String> defaultGraphUris,
                             List<String> namedGraphUris, String query,
                             int startOffset, int endOffset,
-                            boolean gridJson, String format,
+                            boolean gridJson, String format, String jsonCallback,
                             UriInfo uriInfo, Request request, String acceptHdr)
                                                 throws WebApplicationException {
         ResponseBuilder response = null;
         try {
+            if ((! isBlank(jsonCallback)) && (isBlank(format))) {
+                format = MediaType.APPLICATION_JSON;
+            }
             response = this.doExecute(defaultGraphUris, namedGraphUris, query,
-                                      startOffset, endOffset, gridJson, format,
+                                      startOffset, endOffset, gridJson,
+                                      format, jsonCallback,
                                       uriInfo, request, acceptHdr, null);
         }
         catch (Exception e) {
@@ -474,8 +480,9 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                                           List<String> namedGraphUris,
                                           String query, int startOffset,
                                           int endOffset, boolean gridJson,
-                                          String format, UriInfo uriInfo,
-                                          Request request, String acceptHdr,
+                                          String format, String jsonCallback,
+                                          UriInfo uriInfo, Request request,
+                                          String acceptHdr,
                                           Map<String,Object> viewData)
                                                             throws Exception;
 
@@ -515,7 +522,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
             Collection<AcceptType> types = new TreeSet<AcceptType>();
             int i = 0;
             for (String t : expected.split("\\s*,\\s*")) {
-                types.add(new AcceptType(t, i++));
+                types.add(new AcceptType(t, i++, supportedTypes));
             }
             Iterator<AcceptType> it = types.iterator();
             while ((it.hasNext()) && (responseType == null)) {
@@ -690,7 +697,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         public final double priority;
         private final int order;
 
-        public AcceptType(String type, int order) {
+        public AcceptType(String type, int order, List<Variant> knownTypes) {
             String mimeType = type;
             double priority = 1.0;
             // Extract MIME type and type priority ("quality factor").
@@ -705,9 +712,37 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                     catch (Exception e) { /* Ignore... */ }
                 }
             }
-            this.mimeType = MediaType.valueOf(mimeType);
+            this.mimeType = this.mapType(mimeType, knownTypes);
             this.priority = priority;
             this.order = order;
+        }
+
+        /**
+         * Determines the media type from a MIME type string
+         * representation. This method accepts shorthand MIME types with
+         * only the subtype set (e.g. "json" instead of
+         * "application/json").
+         * @param  type         the MIME type to map.
+         * @param  knownTypes   the well-known MIME types to check
+         *                      shorthand types against.
+         *
+         * @return the matched media type.
+         */
+        private MediaType mapType(String type, List<Variant> knownTypes) {
+            MediaType mimeType = null;
+            if ((knownTypes != null) && (type.indexOf('/') == -1)) {
+                for (Variant v : knownTypes) {
+                    MediaType t = v.getMediaType();
+                    if (t.getSubtype().equals(type)) {
+                        mimeType = t;
+                        break;
+                    }
+                }
+            }
+            if (mimeType == null) {
+                mimeType = MediaType.valueOf(type);
+            }
+            return mimeType;
         }
 
         /** {@inheritDoc} */

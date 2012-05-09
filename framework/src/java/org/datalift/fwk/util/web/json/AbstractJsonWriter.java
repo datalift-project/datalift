@@ -45,10 +45,10 @@ import java.nio.charset.Charset;
 import java.text.MessageFormat;
 import java.util.Iterator;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.openrdf.model.BNode;
 import org.openrdf.model.Literal;
-import org.openrdf.model.Resource;
 import org.openrdf.model.Value;
 
 import info.aduna.io.IndentingWriter;
@@ -71,10 +71,13 @@ public abstract class AbstractJsonWriter
 
     protected final static String[] CONSTRUCT_VARS =
                                         { "subject", "predicate", "object" };
+    private final static Pattern NATIVE_TYPES_PATTERN = Pattern.compile(
+                "boolean|.*[iI]nt.*|.*[lL]ong|.*[sS]hort|decimal|double|float");
 
     private final IndentingWriter writer;
     private final MessageFormat urlPattern;
     private final String defaultGraphUri;
+    private final String jsonCallback;
 
     private boolean firstTupleWritten;
     protected List<String> columnHeaders;
@@ -84,31 +87,40 @@ public abstract class AbstractJsonWriter
     //-------------------------------------------------------------------------
 
     public AbstractJsonWriter(OutputStream out) {
-        this(out, null, null);
+        this(out, null, null, null);
     }
 
     public AbstractJsonWriter(OutputStream out,
-                              String urlPattern, String defaultGraphUri) {
+                              String urlPattern, String defaultGraphUri,
+                              String jsonCallback) {
         this(new OutputStreamWriter(out, Charset.forName("UTF-8")),
-             urlPattern, defaultGraphUri);
+             urlPattern, defaultGraphUri, jsonCallback);
     }
 
     public AbstractJsonWriter(Writer out) {
-        this(out, null, null);
+        this(out, null, null, null);
     }
 
     public AbstractJsonWriter(Writer out, String urlPattern,
-                                          String defaultGraphUri) {
+                              String defaultGraphUri, String jsonCallback) {
         if (out == null) {
             throw new IllegalArgumentException("out");
         }
         if (! (out instanceof BufferedWriter)) {
             out = new BufferedWriter(out, 1024);
         }
-        this.writer = new IndentingWriter(out);
+        // this.writer = new IndentingWriter(out);
+        this.writer = new CompactWriter(out);
         this.urlPattern = (urlPattern != null)? new MessageFormat(urlPattern):
                                                 null;
         this.defaultGraphUri = defaultGraphUri;
+        if (jsonCallback != null) {
+            jsonCallback = jsonCallback.trim();
+            if (jsonCallback.length() == 0) {
+                jsonCallback = null;
+            }
+        }
+        this.jsonCallback = jsonCallback;
     }
 
     //-------------------------------------------------------------------------
@@ -118,9 +130,16 @@ public abstract class AbstractJsonWriter
     protected void start(List<String> headers) throws IOException {
         this.columnHeaders = headers;
         this.firstTupleWritten = false;
+        if (this.jsonCallback != null) {
+            this.writer.write(this.jsonCallback);
+            this.writer.write('(');
+        }
     }
 
     protected void end() throws IOException {
+        if (this.jsonCallback != null) {
+            this.writer.write(')');
+        }
         this.writer.flush();
     }
 
@@ -136,47 +155,46 @@ public abstract class AbstractJsonWriter
 
     protected void endSolution() throws IOException {
         this.closeBraces();             // end solution
-        this.writer.flush();
+        // this.writer.flush();
     }
 
     protected void writeKeyValue(String key, Value value) throws IOException {
         this.writeKeyValue(key, value, null);
     }
 
+    protected void writeKeyValue(String key, String value) throws IOException {
+        this.writeKey(key);
+        this.writeString(value);
+    }
+
     protected void writeKeyValue(String key, Value value, ResourceType type)
                                                             throws IOException {
-        if (value instanceof Resource) {
-            this.writeKeyValue(key, (Resource)value, type);
-        }
-        else {
-            this.writeKeyValue(key, (Literal)value);
-        }
+        this.writeKey(key);
+        this.writeValue(value, type);
     }
 
-    protected void writeKeyValue(String key, Resource value)
-                                                            throws IOException {
-        this.writeKeyValue(key, value, ResourceType.Unknown);
-    }
-
-    protected void writeKeyValue(String key, Resource value, ResourceType type)
+    protected void writeValue(Value value, ResourceType type)
                                                             throws IOException {
         if (value instanceof BNode) {
-            this.writeKeyValue(key, "_:" + value.stringValue(), type);
+            this.writeValue("_:" + value.stringValue(), type);
+        }
+        else if (value instanceof Literal) {
+            Literal l = (Literal)value;
+            if ((value != null) && (l.getDatatype() != null) &&
+                (NATIVE_TYPES_PATTERN.matcher(l.getDatatype().getLocalName())
+                                     .matches())) {
+                this.writer.write(l.getLabel());
+            }
+            else {
+                this.writeValue(l.stringValue(), type);
+            }
         }
         else {
-            this.writeKeyValue(key, value.stringValue(), type);
+            this.writeValue((value != null)? value.stringValue(): "", type);
         }
     }
 
-    protected void writeKeyValue(String key, Literal value) throws IOException {
-        this.writeKeyValue(key, (value != null)? value.stringValue(): "");
-    }
-
-    protected void writeKeyValue(String key, String value) throws IOException {
-        this.writeKeyValue(key, value, null);
-    }
-
-    protected void writeKeyValue(String key, String value, ResourceType type)
+    protected void writeValue(String value, ResourceType type)
                                                             throws IOException {
         if ((type != null) && (this.urlPattern != null) &&
             ((type != ResourceType.Unknown) ||
@@ -187,7 +205,6 @@ public abstract class AbstractJsonWriter
             value = "<a href=\"" + this.urlPattern.format(args) + "\">"
                                                             + value + "</a>";            
         }
-        this.writeKey(key);
         this.writeString(value);
     }
 
@@ -257,6 +274,21 @@ public abstract class AbstractJsonWriter
 
     protected void writeComma() throws IOException {
         this.writer.write(", ");
-        this.writer.writeEOL();
+    }
+
+
+    private final static class CompactWriter extends IndentingWriter
+    {
+        public CompactWriter(Writer out) {
+            super(out);
+        }
+
+        @Override public void writeEOL()            { /* NOP */ }
+        @Override public void increaseIndentation() { /* NOP */ }
+        @Override public void decreaseIndentation() { /* NOP */ }
+
+        @Override public void setIndentationLevel(int l) {
+            super.setIndentationLevel(0);
+        }
     }
 }

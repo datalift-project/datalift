@@ -74,8 +74,9 @@ public class HttpSparqlEndpoint extends AbstractSparqlEndpoint
                                         List<String> namedGraphUris,
                                         String query, int startOffset,
                                         int endOffset, boolean gridJson,
-                                        String format, UriInfo uriInfo,
-                                        Request request, String acceptHdr,
+                                        String format, String jsonCallback,
+                                        UriInfo uriInfo, Request request,
+                                        String acceptHdr,
                                         Map<String,Object> viewData)
                                         throws IOException, URISyntaxException {
         log.trace("Processing SPARQL query: \"{}\"", query);
