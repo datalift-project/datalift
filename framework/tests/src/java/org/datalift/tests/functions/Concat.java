@@ -40,7 +40,7 @@ import org.openrdf.model.Value;
 
 public final class Concat extends SparqlFunction
 {
-    public Concat() {
+    /* package */ Concat() {
         super("concat", (Value[])null);
     }
 
