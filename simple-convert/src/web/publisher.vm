@@ -12,15 +12,18 @@
 <div class="ui-widget-content converter_main" id="workspace">
 	<h3 class="ui-widget-header dl-widget-header">#i18n("simple-publisher.title") - #i18n("project.label") ${it.title}</h3>
 
-	<form id="converter_form" method="post" action="${baseUri}/simple-publisher?project=${it.uri}">
+	<form id="converter_form" method="post" action="${baseUri}/simple-publisher">
+                <input type="hidden" name="project" id="project" value="${it.uri}"/>
 		<p><label for="source">#i18n("source.to_publish"):</label>
 		<select id="source" name="source">
 #foreach( $curSrc in $it.getSources() )
 	#if( $converter.canHandle($curSrc) )
-			<option name="${curSrc.uri}">$esc.html($curSrc.title)</option>
+			<option value="${curSrc.uri}" name="${curSrc.title}">$esc.html($curSrc.title)</option>
 	#end
 #end
 		</select></p>
+		<p><label for="dest_graph_uri">#i18n("dest.uri"):</label>
+		<input type="text" name="dest_graph_uri" id="dest_graph_uri" title="#i18n('dest.graph.help')" value=""/></p>
 
 		<input type="submit" id="source_submit" value="#i18n('submit.label')"/>
 	</form>
@@ -28,14 +31,12 @@
 
 #script_links
 <script type="text/javascript">
-	var form_base_action = "${baseUri}/simple-publisher?project=${it.uri}";
-
 	$(function() {
 		$("#source_submit").button();
 
 		$("#source").change(function() {
 			$("#source option:selected").each(function () {
-				$("#converter_form").attr('action', form_base_action + "&source=" + $(this).attr('name'));
+				$("#dest_graph_uri").attr('value', $(this).attr('value'));
 			});
 		});
 		$("#source").change();

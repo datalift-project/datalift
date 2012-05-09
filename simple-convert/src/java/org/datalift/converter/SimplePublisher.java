@@ -41,6 +41,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
@@ -98,8 +99,9 @@ public class SimplePublisher extends BaseConverterModule
     }
 
     @POST
-    public Response publishProject(@QueryParam("project") URI projectId,
-                                   @QueryParam("source") URI sourceId,
+    public Response publishProject(@FormParam("project") URI projectId,
+                                   @FormParam("source") URI sourceId,
+                                   @FormParam("dest_graph_uri") URI targetGraph,
                                    @Context UriInfo uriInfo,
                                    @Context Request request,
                                    @HeaderParam(ACCEPT) String acceptHdr)
@@ -110,18 +112,20 @@ public class SimplePublisher extends BaseConverterModule
             Project p = this.getProject(projectId);
             // Load input source.
             TransformedRdfSource in =
-                                    (TransformedRdfSource)p.getSource(sourceId);
-            // Get the source (CSV, RDF/XML, database...) at the origin of the
-            // transformations and use its name as target named graph.
-            Source origin = null;
-            TransformedRdfSource current = in;
-            while (current != null) {
-                origin = current.getParent();
-                current = (origin instanceof TransformedRdfSource)?
-                                            (TransformedRdfSource)origin: null;
-            }
-            URI targetGraph = (origin != null)? new URI(origin.getUri()):
+                                (TransformedRdfSource)(p.getSource(sourceId));
+            if (targetGraph == null) {
+                // Get the source (CSV, RDF/XML, database...) at the origin of the
+                // transformations and use its name as target named graph.
+                Source origin = null;
+                TransformedRdfSource current = in;
+                while (current != null) {
+                    origin = current.getParent();
+                    current = (origin instanceof TransformedRdfSource)?
+                                                (TransformedRdfSource)origin: null;
+                }
+                targetGraph = (origin != null)? new URI(origin.getUri()):
                                                 projectId;
+            }
             Configuration cfg = Configuration.getDefault();
             // Publish input source triples in public repository.
             List<String> constructs = Arrays.asList(
