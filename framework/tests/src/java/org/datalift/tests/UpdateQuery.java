@@ -61,6 +61,7 @@ import org.openrdf.model.impl.LiteralImpl;
 import org.openrdf.model.impl.NumericLiteralImpl;
 import org.openrdf.model.impl.StatementImpl;
 import org.openrdf.model.impl.URIImpl;
+import org.openrdf.model.vocabulary.RDF;
 
 import org.datalift.fwk.rdf.RdfNamespace;
 import org.datalift.tests.WhereClauses.WhereType;
@@ -78,16 +79,6 @@ import static org.datalift.fwk.util.StringUtils.*;
  */
 public abstract class UpdateQuery
 {
-    //-------------------------------------------------------------------------
-    // Constants
-    //-------------------------------------------------------------------------
-
-    /**
-     * the <a href="http://www.w3.org/TR/rdf-schema/#ch_type">RDF type</a>
-     * predicate.
-     */
-    public final static URI RDF_TYPE = new URIImpl("rdf:a");
-
     //-------------------------------------------------------------------------
     // Class members
     //-------------------------------------------------------------------------
@@ -261,7 +252,7 @@ public abstract class UpdateQuery
      * @see    #triple(Resource, URI, Value, URI)
      */
     public UpdateQuery rdfType(Resource s, URI t, URI graph) {
-        return this.triple(s, RDF_TYPE, t, graph);
+        return this.triple(s, RDF.TYPE, t, graph);
     }
 
     //-------------------------------------------------------------------------
@@ -803,19 +794,23 @@ public abstract class UpdateQuery
     }
 
     private String toString(Value v) {
+        String s = null;
         if (v instanceof URI) {
             URI u = (URI)v;
-            String nsUri = u.getNamespace();
-            String prefix = this.ns2Prefix.get(nsUri);
-            if ((prefix == null) && ("rdf:".equalsIgnoreCase(nsUri))) {
-                nsUri = null;
+            if (u == RDF.TYPE) {
+                s = "a";
             }
-            return (prefix != null)? prefix + ':' + u.getLocalName():
-                   (nsUri  != null)? "<" + v.toString() + '>': u.getLocalName();
+            else {
+                String nsUri  = u.getNamespace();
+                String prefix = this.ns2Prefix.get(nsUri);
+                s = (prefix != null)? prefix + ':' + u.getLocalName():
+                                      "<" + v.toString() + '>';
+            }
         }
         else {
-            return v.toString();
+            s = v.toString();
         }
+        return s;
     }
 
     //-------------------------------------------------------------------------
