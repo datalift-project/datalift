@@ -32,46 +32,13 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 
-package org.datalift.tests.impl;
+package org.datalift.sparql.query;
 
 
-import org.datalift.tests.Variable;
-
-import static org.datalift.fwk.util.StringUtils.isSet;
+import org.openrdf.model.Value;
 
 
-public final class VariableImpl implements Variable
+public interface SparqlExpression extends Value
 {
-    public final String name;
-
-    public VariableImpl(String name) {
-        if (! isSet(name)) {
-            throw new IllegalArgumentException("name");
-        }
-        if (name.charAt(0) == '?') {
-            name = name.substring(1);
-        }
-        this.name = name;
-    }
-
-    @Override
-    public String stringValue()  {
-        return "?" + this.name;
-    }
-
-    @Override
-    public String toString() {
-        return this.stringValue();
-    }
-
-    @Override
-    public int hashCode() {
-        return this.stringValue().hashCode();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        return (o instanceof VariableImpl)?
-            this.stringValue().equals(((VariableImpl)o).stringValue()): false;
-    }
+    // Just another type of Value.
 }

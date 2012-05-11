@@ -32,24 +32,46 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 
-package org.datalift.tests;
+package org.datalift.sparql.query.impl;
 
 
-import org.openrdf.model.URI;
-import org.openrdf.model.impl.URIImpl;
+import static org.datalift.fwk.util.StringUtils.isSet;
+
+import org.datalift.sparql.query.Variable;
 
 
-public class DeleteQuery extends UpdateQuery
+public final class VariableImpl implements Variable
 {
-    public DeleteQuery() {
-        this((URI)null);
+    public final String name;
+
+    public VariableImpl(String name) {
+        if (! isSet(name)) {
+            throw new IllegalArgumentException("name");
+        }
+        if (name.charAt(0) == '?') {
+            name = name.substring(1);
+        }
+        this.name = name;
     }
 
-    public DeleteQuery(String targetGraph) {
-        this(new URIImpl(targetGraph));
+    @Override
+    public String stringValue()  {
+        return "?" + this.name;
     }
 
-    public DeleteQuery(URI targetGraph) {
-        super("DELETE", targetGraph);
+    @Override
+    public String toString() {
+        return this.stringValue();
+    }
+
+    @Override
+    public int hashCode() {
+        return this.stringValue().hashCode();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        return (o instanceof VariableImpl)?
+            this.stringValue().equals(((VariableImpl)o).stringValue()): false;
     }
 }

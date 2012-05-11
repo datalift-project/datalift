@@ -32,7 +32,7 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 
-package org.datalift.tests;
+package org.datalift.sparql.query;
 
 
 import java.util.ArrayList;
@@ -64,9 +64,9 @@ import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.RDF;
 
 import org.datalift.fwk.rdf.RdfNamespace;
-import org.datalift.tests.WhereClauses.WhereType;
-import org.datalift.tests.functions.SparqlFunction;
-import org.datalift.tests.impl.VariableImpl;
+import org.datalift.sparql.query.WhereClauses.WhereType;
+import org.datalift.sparql.query.functions.SparqlFunction;
+import org.datalift.sparql.query.impl.VariableImpl;
 
 import static org.datalift.fwk.util.StringUtils.*;
 
@@ -817,22 +817,22 @@ public abstract class UpdateQuery
     // ???
     //-------------------------------------------------------------------------
 
-    protected final UpdateQuery map(Resource node, Map<URI,String> values) {
+    public final UpdateQuery map(Resource node, Map<URI,String> values) {
         return this.map(null, node, null, values);
     }
 
-    protected final UpdateQuery map(URI srcGraph, Resource node,
-                                                  Map<URI,String> values) {
+    public final UpdateQuery map(URI srcGraph, Resource node,
+                                               Map<URI,String> values) {
         return this.map(srcGraph, node, null, values);
     }
 
-    protected final UpdateQuery map(Resource from, Resource to,
-                                                   Map<URI,String> values) {
+    public final UpdateQuery map(Resource from, Resource to,
+                                                Map<URI,String> values) {
         return this.map(null, from, to, values);
     }
 
-    protected UpdateQuery map(URI srcGraph, Resource from,
-                              Resource to, Map<URI,String> values) {
+    public UpdateQuery map(URI srcGraph, Resource from,
+                                         Resource to, Map<URI,String> values) {
         if (to == null) {
             // No target subject specified. => Assume the target subject URI
             // is the source one (the owning named graph may differ).

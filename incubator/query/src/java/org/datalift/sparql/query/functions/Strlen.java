@@ -32,13 +32,22 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 
-package org.datalift.tests;
+package org.datalift.sparql.query.functions;
 
 
 import org.openrdf.model.Value;
 
 
-public interface SparqlExpression extends Value
+public final class Strlen extends SparqlFunction
 {
-    // Just another type of Value.
+    /* package */ Strlen() {
+        super("strlen", (Value[])null);
+    }
+
+    public Strlen(Value... args) {
+        super("strlen", args);
+        if (args.length != 1) {
+            throw new IllegalArgumentException("STRLEN(string literal str)");
+        }
+    }
 }

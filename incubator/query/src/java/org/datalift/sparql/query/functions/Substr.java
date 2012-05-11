@@ -32,22 +32,42 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 
-package org.datalift.tests.functions;
+package org.datalift.sparql.query.functions;
 
 
+import org.openrdf.model.Literal;
 import org.openrdf.model.Value;
 
+import org.datalift.sparql.query.Variable;
 
-public final class Strlen extends SparqlFunction
+
+
+public final class Substr extends SparqlFunction
 {
-    /* package */ Strlen() {
-        super("strlen", (Value[])null);
+    /* package */ Substr() {
+        super("substr", (Value[])null);
     }
 
-    public Strlen(Value... args) {
-        super("strlen", args);
-        if (args.length != 1) {
-            throw new IllegalArgumentException("STRLEN(string literal str)");
+    public Substr(Value... args) {
+        super("substr", args);
+        boolean valid = ((args.length >= 2) && (args.length <= 3));
+        if (valid) {
+            try {
+                valid = ((args[1] instanceof Variable) ||
+                         (((Literal)args[1]).intValue() >= 0));
+                if (valid && (args.length > 2)) {
+                    valid = ((args[2] instanceof Variable) ||
+                             (((Literal)args[2]).intValue() >= 0));
+                }
+            }
+            catch (Exception e) {
+                valid = false;
+            }
+        }
+        if (! valid) {
+            throw new IllegalArgumentException(
+                "SUBSTR(string literal source, xsd:integer startingLoc " +
+                "[, xsd:integer length])");
         }
     }
 }

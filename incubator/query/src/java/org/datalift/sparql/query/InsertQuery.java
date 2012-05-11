@@ -32,7 +32,7 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 
-package org.datalift.tests;
+package org.datalift.sparql.query;
 
 
 import org.openrdf.model.URI;

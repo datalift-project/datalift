@@ -32,41 +32,23 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 
-package org.datalift.tests.functions;
+package org.datalift.sparql.query.functions;
 
 
-import org.openrdf.model.Literal;
 import org.openrdf.model.Value;
 
-import org.datalift.tests.Variable;
 
-
-public final class Substr extends SparqlFunction
+public final class Concat extends SparqlFunction
 {
-    /* package */ Substr() {
-        super("substr", (Value[])null);
+    /* package */ Concat() {
+        super("concat", (Value[])null);
     }
 
-    public Substr(Value... args) {
-        super("substr", args);
-        boolean valid = ((args.length >= 2) && (args.length <= 3));
-        if (valid) {
-            try {
-                valid = ((args[1] instanceof Variable) ||
-                         (((Literal)args[1]).intValue() >= 0));
-                if (valid && (args.length > 2)) {
-                    valid = ((args[2] instanceof Variable) ||
-                             (((Literal)args[2]).intValue() >= 0));
-                }
-            }
-            catch (Exception e) {
-                valid = false;
-            }
-        }
-        if (! valid) {
+    public Concat(Value... args) {
+        super("concat", args);
+        if (args.length < 2) {
             throw new IllegalArgumentException(
-                "SUBSTR(string literal source, xsd:integer startingLoc " +
-                "[, xsd:integer length])");
+                "CONCAT(string literal ltrl1 ... string literal ltrlN)");
         }
     }
 }

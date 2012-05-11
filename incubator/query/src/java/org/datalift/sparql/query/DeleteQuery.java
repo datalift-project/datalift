@@ -32,12 +32,24 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 
-package org.datalift.tests;
+package org.datalift.sparql.query;
 
 
-public class ConstructQuery extends UpdateQuery
+import org.openrdf.model.URI;
+import org.openrdf.model.impl.URIImpl;
+
+
+public class DeleteQuery extends UpdateQuery
 {
-    public ConstructQuery() {
-        super("CONSTRUCT");
+    public DeleteQuery() {
+        this((URI)null);
+    }
+
+    public DeleteQuery(String targetGraph) {
+        this(new URIImpl(targetGraph));
+    }
+
+    public DeleteQuery(URI targetGraph) {
+        super("DELETE", targetGraph);
     }
 }

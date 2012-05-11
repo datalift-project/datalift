@@ -32,7 +32,7 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 
-package org.datalift.tests.functions;
+package org.datalift.sparql.query.functions;
 
 
 import java.lang.reflect.Constructor;
@@ -44,7 +44,7 @@ import java.util.Map;
 
 import org.openrdf.model.Value;
 
-import org.datalift.tests.SparqlExpression;
+import org.datalift.sparql.query.SparqlExpression;
 
 import static org.datalift.fwk.util.StringUtils.*;
 
