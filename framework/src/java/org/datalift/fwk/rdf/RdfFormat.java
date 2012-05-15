@@ -39,7 +39,7 @@ import java.io.OutputStream;
 import java.io.Writer;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -86,7 +86,7 @@ public enum RdfFormat
 
     /** A map to resolve MIME type strings into actual RDF type objects. */
     private final static Map<String,RdfFormat> mime2TypeMap =
-                                                new HashMap<String,RdfFormat>();
+                                        new LinkedHashMap<String,RdfFormat>();
 
     //-------------------------------------------------------------------------
     // Instance members
