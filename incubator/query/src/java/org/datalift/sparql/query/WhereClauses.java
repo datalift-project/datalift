@@ -37,6 +37,7 @@ package org.datalift.sparql.query;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 
 import org.openrdf.model.Statement;
@@ -64,7 +65,7 @@ public final class WhereClauses implements Iterable<Statement>
 
     // public final String name;
     public final WhereType type;
-    public final Collection<Statement> clauses = new LinkedList<Statement>();
+    public final Collection<Statement> clauses = new LinkedHashSet<Statement>();
     public Collection<WhereClauses> children = new LinkedList<WhereClauses>();
 
     public WhereClauses() {
@@ -87,6 +88,9 @@ public final class WhereClauses implements Iterable<Statement>
     }
 
     public WhereClauses add(Statement s) {
+        if (this.type == WhereType.UNION) {
+            throw new UnsupportedOperationException();
+        }
         this.clauses.add(s);
         return this;
     }
@@ -95,8 +99,13 @@ public final class WhereClauses implements Iterable<Statement>
         return (this.clauses.isEmpty() && this.children.isEmpty());
     }
 
-    private WhereClauses add(WhereClauses child) {
+    public WhereClauses add(WhereClauses child) {
         this.children.add(child);
+        return this;
+    }
+
+    public WhereClauses remove(WhereClauses child) {
+        this.children.remove(child);
         return this;
     }
 
