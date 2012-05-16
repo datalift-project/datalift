@@ -356,14 +356,10 @@ public abstract class UpdateQuery
      */
     public final UpdateQuery where(Resource s, URI p, Value o, URI graph,
                                    String groupKey, WhereType groupType) {
-        WhereClauses w = null;
-        if (isSet(groupKey)) {
-            if (groupType == null) {
-                groupType = WhereType.UNION;
-            }
-            w = this.whereGroup(groupKey, groupType, this.whereClauses);
-        }
-        return this.where(s, p, o, graph, w);
+        return this.where(s, p, o, graph, (groupType != null)?
+                    // Allows on-the-fly group creation.
+                    this.whereGroup(groupKey, groupType, this.whereClauses):
+                    this.whereGroup(groupKey));
     }
 
     /**
@@ -532,6 +528,16 @@ public abstract class UpdateQuery
     //-------------------------------------------------------------------------
 
     /**
+     * Creates a URI object for the specified URI string.
+     * @param  uri   the URI as a string.
+     *
+     * @return a URI object.
+     */
+    public URI uri(String uri) {
+        return this.uri(null, uri);
+    }
+
+    /**
      * Creates a URI for the specified namespace and local name.
      * @param  ns     the namespace URI or prefix.
      * @param  name   the local name.
@@ -543,7 +549,7 @@ public abstract class UpdateQuery
         if (uri != null) {
             ns = uri;
         }
-        return new URIImpl(ns + name);
+        return (ns != null)? new URIImpl(ns + name): new URIImpl(name);
     }
 
     /**
@@ -688,7 +694,7 @@ public abstract class UpdateQuery
             // No statements and no child where clauses. => Return right away.
             return b;
         }
-        if (level > 0) {
+        if ((level > 0) && (c.type != WhereType.UNION)) {
             b.append('\t');
             if (c.type != WhereType.DEFAULT) {
                 b.append(c.type).append(' ');
@@ -696,7 +702,12 @@ public abstract class UpdateQuery
             b.append("{\n");
         }
         this.append(c.clauses, b);
+        boolean first = true;
         for (WhereClauses w : c.children) {
+            if ((c.type == WhereType.UNION) && (! first)) {
+                b.append('\t').append(c.type).append('\n');
+            }
+            first = false;
             this.append(w, b, level + 1);
         }
         if (level > 0) {
@@ -833,11 +844,17 @@ public abstract class UpdateQuery
 
     public UpdateQuery map(URI srcGraph, Resource from,
                                          Resource to, Map<URI,String> values) {
+        return this.map(srcGraph, from, to, values, false);
+    }
+
+    public UpdateQuery map(URI srcGraph, Resource from,
+                       Resource to, Map<URI,String> values, boolean optional) {
         if (to == null) {
             // No target subject specified. => Assume the target subject URI
             // is the source one (the owning named graph may differ).
             to = from;
         }
+        WhereType opt = (optional)? WhereType.OPTIONAL: null;
         // Parse mapped values and generates triples.
         for (Entry<URI,String> e : values.entrySet()) {
             URI p = e.getKey();
@@ -845,6 +862,13 @@ public abstract class UpdateQuery
 
             Value o = this.mapValue(v);
             if (o instanceof SparqlExpression) {
+                if (o instanceof FunctionWrapper) {
+                    FunctionWrapper w = (FunctionWrapper)o;
+                    for (Entry<URI,Variable> e2 : w.vars.entrySet()) {
+                        this.where(from, e2.getKey(),
+                                         e2.getValue(), srcGraph, null, opt);
+                    }
+                }
                 this.triple(to, p, (SparqlExpression)o, (URI)null);
             }
             else if (o instanceof URI) {
@@ -852,7 +876,7 @@ public abstract class UpdateQuery
                 // the link between the triple to insert and the WHERE clause.
                 URI u = (URI)o;
                 Variable var = this.variable(u.getLocalName());
-                this.where(from, u, var, srcGraph)
+                this.where(from, u, var, srcGraph, null, opt)
                     .triple(to, p, var, null);
             }
             else if (o instanceof Literal) {
@@ -885,12 +909,19 @@ public abstract class UpdateQuery
                     String[] p = m.group(2).split("\\s*,\\s*");
     
                     Value[] args = new Value[p.length];
+                    Map<URI,Variable> vars = new HashMap<URI,Variable>();
                     for (int i=0; i<p.length; i++) {
                         Value x = this.mapValue(p[i]);
-                        args[i] = (x instanceof URI)?
-                                    this.variable(((URI)x).getLocalName()): x;
+                        if (x instanceof URI) {
+                            URI u = (URI)x;
+                            Variable y = this.variable(u.getLocalName());
+                            vars.put(u, y);
+                            x = y;
+                        }
+                        args[i] = x;
                     }
-                    v = SparqlFunction.newFunction(f, args);
+                    v = new FunctionWrapper(
+                                    SparqlFunction.newFunction(f, args), vars);
                 }
                 else {
                     // Check for numbers.
@@ -963,6 +994,22 @@ public abstract class UpdateQuery
 
         public String stringValue() {
             return "FILTER(" + this.expr.stringValue() + ')';
+        }
+    }
+
+    private final static class FunctionWrapper implements SparqlExpression
+    {
+        public final SparqlFunction fct;
+        public final Map<URI,Variable> vars = new HashMap<URI,Variable>();
+
+        public FunctionWrapper(SparqlFunction fct, Map<URI,Variable> vars) {
+            this.fct = fct;
+            this.vars.putAll(vars);
+        }
+
+        @Override
+        public String stringValue() {
+            return this.fct.stringValue();
         }
     }
 }
