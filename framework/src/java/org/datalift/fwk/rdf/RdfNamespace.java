@@ -56,6 +56,8 @@ public enum RdfNamespace
     DCTerms     ("dct",         "http://purl.org/dc/terms/"),
     /** foaf: &lt;http://xmlns.com/foaf/0.1/&gt; */
     FOAF        ("foaf",        "http://xmlns.com/foaf/0.1/"),
+    /** xsd: &lt;http://www.w3.org/2001/XMLSchema#&gt; */
+    XSD         ("xsd",         "http://www.w3.org/2001/XMLSchema#"),
     /** rdf: &lt;http://www.w3.org/1999/02/22-rdf-syntax-ns#&gt; */
     RDF         ("rdf",         "http://www.w3.org/1999/02/22-rdf-syntax-ns#"),
     /** rdfs: &lt;http://www.w3.org/2000/01/rdf-schema#&gt; */
@@ -71,7 +73,9 @@ public enum RdfNamespace
     /** prv: &lt;http://purl.org/net/provenance/ns#&gt; */
     PRV         ("prv",         "http://purl.org/net/provenance/ns#"),
     /** cnt: &lt;http://www.w3.org/2011/content#&gt; */
-    CNT         ("cnt",         "http://www.w3.org/2011/content#");
+    CNT         ("cnt",         "http://www.w3.org/2011/content#"),
+    /** wgs84: &lt;http://www.w3.org/2003/01/geo/wgs84_pos#&gt; */
+    WGS84       ("wgs84",       "http://www.w3.org/2003/01/geo/wgs84_pos#");
 
     //-------------------------------------------------------------------------
     // Instance members
@@ -113,5 +117,45 @@ public enum RdfNamespace
     @Override
     public String toString() {
         return "PREFIX " + this.prefix + ": <" + this.uri + '>';
+    }
+    
+    //-------------------------------------------------------------------------
+    // Specific implementation
+    //-------------------------------------------------------------------------
+
+    /**
+     * Returns the RDF namespace mapped to the specified prefix.
+     * @param  prefix   the default namespace prefix.
+     *
+     * @return the RDF namespace mapped to the specified prefix or
+     *         <code>null</code> if no matching mapping was found.
+     */
+    public static RdfNamespace findByPrefix(String prefix) {
+        RdfNamespace ns = null;
+        for (RdfNamespace n : RdfNamespace.values()) {
+            if (n.prefix.equalsIgnoreCase(prefix)) {
+                ns = n;
+                break;
+            }
+        }
+        return ns;
+    }
+
+    /**
+     * Returns the RDF namespace with the specified URI.
+     * @param  uri   the namespace URI.
+     *
+     * @return the RDF namespace with the specified URI or
+     *         <code>null</code> if no matching mapping was found.
+     */
+    public static RdfNamespace findByUri(String uri) {
+        RdfNamespace ns = null;
+        for (RdfNamespace n : RdfNamespace.values()) {
+            if (n.uri.equals(uri)) {
+                ns = n;
+                break;
+            }
+        }
+        return ns;
     }
 }
