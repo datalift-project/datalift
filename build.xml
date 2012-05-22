@@ -78,5 +78,23 @@
       <filelist refid="modules"/>
     </subant>
   </target>
+	
+ <target name="javadoc" description="Create javadoc">
+ 	<mkdir dir="javadoc"/>  
+ 	    <javadoc  
+ 	        destdir="javadoc"  
+ 	        nohelp="yes"  
+ 	        use="yes"  
+ 	        package="yes"
+ 	    	windowtitle="Datalift" >  
+ 	    	<fileset dir="./core/src" includes="**/*.java"/> 
+ 	    	<fileset dir="./framework/src" includes="**/*.java"/> 
+ 	    	<fileset dir="./projectmanager/src" includes="**/*.java"/> 
+ 	    	<fileset dir="./simple-convert/src" includes="**/*.java"/> 
+ 	    	<fileset dir="./sparql-endpoint/src" includes="**/*.java"/> 
+ 	    	<fileset dir="./wrapper/src" includes="**/*.java"/> 
+ 	    </javadoc>
+
+  </target>
 
 </project>
