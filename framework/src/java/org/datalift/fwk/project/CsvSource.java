@@ -37,6 +37,8 @@ package org.datalift.fwk.project;
 
 import java.util.Collection;
 
+import org.datalift.fwk.util.CloseableIterable;
+
 
 /**
  * A file source object describing a CSV (character separated values)
@@ -44,7 +46,7 @@ import java.util.Collection;
  *
  * @author hdevos
  */
-public interface CsvSource extends FileSource<Row<String>>
+public interface CsvSource extends FileSource, CloseableIterable<Row<String>>
 {
     /**
      * Supported separator characters.

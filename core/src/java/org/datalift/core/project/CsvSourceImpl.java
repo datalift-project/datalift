@@ -68,7 +68,7 @@ import static org.datalift.fwk.util.StringUtils.isSet;
  */
 @Entity
 @RdfsClass("datalift:csvSource")
-public class CsvSourceImpl extends BaseFileSource<Row<String>>
+public class CsvSourceImpl extends BaseFileSource
                            implements CsvSource
 {
     //-------------------------------------------------------------------------

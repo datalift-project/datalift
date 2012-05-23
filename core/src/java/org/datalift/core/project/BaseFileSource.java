@@ -60,8 +60,8 @@ import static org.datalift.fwk.util.Env.*;
  * @author hdevos
  */
 @MappedSuperclass
-public abstract class BaseFileSource<T> extends BaseSource
-                                        implements FileSource<T>
+public abstract class BaseFileSource extends BaseSource
+                                     implements FileSource
 {
     //-------------------------------------------------------------------------
     // Instance members

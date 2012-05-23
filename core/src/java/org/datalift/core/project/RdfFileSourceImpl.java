@@ -59,7 +59,7 @@ import org.datalift.fwk.util.Env;
  */
 @Entity
 @RdfsClass("datalift:rdfSource")
-public class RdfFileSourceImpl extends BaseFileSource<Statement>
+public class RdfFileSourceImpl extends BaseFileSource
                                implements RdfFileSource
 {
     //-------------------------------------------------------------------------

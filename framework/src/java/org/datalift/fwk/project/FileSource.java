@@ -38,18 +38,13 @@ package org.datalift.fwk.project;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.datalift.fwk.util.CloseableIterable;
-
 
 /**
  * A file-based source object.
  *
- * @param  <T>   The type of data the source contains and that can be
- *               iterated over when reading through this source object.
- *
  * @author hdevos
  */
-public interface FileSource<T> extends Source, CloseableIterable<T>
+public interface FileSource extends Source
 {
     /**
      * Returns the declared type of data this source contains.
