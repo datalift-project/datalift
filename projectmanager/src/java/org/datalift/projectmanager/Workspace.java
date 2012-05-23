@@ -78,6 +78,11 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
+import javax.xml.parsers.SAXParserFactory;
+
+import org.xml.sax.InputSource;
+import org.xml.sax.XMLReader;
+import org.xml.sax.helpers.DefaultHandler;
 
 import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 
@@ -108,6 +113,7 @@ import org.datalift.fwk.project.ProjectModule;
 import org.datalift.fwk.project.RdfFileSource;
 import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.TransformedRdfSource;
+import org.datalift.fwk.project.XmlSource;
 import org.datalift.fwk.project.CsvSource.Separator;
 import org.datalift.fwk.project.ProjectModule.UriDesc;
 import org.datalift.fwk.rdf.RdfFormat;
@@ -645,6 +651,7 @@ public class Workspace extends BaseModule
 
         String fileName = null;
         URL fileUrl = null;
+        File localFile = null;
         if (! isBlank(sourceUrl)) {
             // Not uploaded data. => A file URL must be provided.
             try {
@@ -680,8 +687,8 @@ public class Workspace extends BaseModule
             Project p = this.loadProject(projectUri);
             // Save new source data to public project storage.
             String filePath = this.getProjectFilePath(projectId, fileName);
-            this.getFileData(fileData, fileUrl,
-                                       this.getFileStorage(filePath), uriInfo);
+            localFile = this.getFileStorage(filePath);
+            this.getFileData(fileData, fileUrl, localFile, uriInfo);
 
             Separator sep = Separator.valueOf(separator);
             boolean hasTitleRow = ((titleRow != null) &&
@@ -719,12 +726,18 @@ public class Workspace extends BaseModule
             log.info("New CSV source \"{}\" created", sourceUri);
         }
         catch (IOException e) {
+            if (localFile != null) {
+                localFile.delete();
+            }
             String src = (fileData != null)? fileName:
                         (fileUrl != null)? fileUrl.toString(): "file_url";
             log.fatal("Failed to save source data from {}", e, src);
             this.throwInvalidParamError(src, e.getLocalizedMessage());
         }
         catch (Exception e) {
+            if (localFile != null) {
+                localFile.delete();
+            }
             this.handleInternalError(e,
                             "Failed to create CVS source for {}", fileName);
         }
@@ -808,6 +821,7 @@ public class Workspace extends BaseModule
 
         String fileName = null;
         URL fileUrl = null;
+        File localFile = null;
         if (! isBlank(sourceUrl)) {
             // Not uploaded data. => A file URL must be provided.
             try {
@@ -843,8 +857,8 @@ public class Workspace extends BaseModule
             Project p = this.loadProject(projectUri);
             // Save new source data to public project storage.
             String filePath = this.getProjectFilePath(projectId, fileName);
-            this.getFileData(fileData, fileUrl,
-                                       this.getFileStorage(filePath), uriInfo);
+            localFile = this.getFileStorage(filePath);
+            this.getFileData(fileData, fileUrl, localFile, uriInfo);
             // Initialize new source.
             RdfFileSource src = this.projectManager.newRdfSource(p,
                                             sourceUri, fileName, description,
@@ -874,12 +888,18 @@ public class Workspace extends BaseModule
             log.info("New RDF source \"{}\" created", sourceUri);
         }
         catch (IOException e) {
+            if (localFile != null) {
+                localFile.delete();
+            }
             String src = (fileData != null)? fileName:
                         (fileUrl != null)? fileUrl.toString(): "file_url";
             log.fatal("Failed to save source data from {}", e, src);
             this.throwInvalidParamError(src, e.getLocalizedMessage());
         }
         catch (Exception e) {
+            if (localFile != null) {
+                localFile.delete();
+            }
             this.handleInternalError(e,
                             "Failed to create RDF source for {}", fileName);
         }
@@ -1135,6 +1155,132 @@ public class Workspace extends BaseModule
         catch (Exception e) {
             this.handleInternalError(e,
                                 "Failed to modify SPARQL source {}", sourceUri);
+        }
+        return response;
+    }
+
+    @POST 
+    @Path("{id}/xmlupload")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    public Response uploadXmlSource(
+                            @PathParam("id") String projectId,
+                            @FormDataParam("description") String description,
+                            @FormDataParam("source") InputStream fileData,
+                            @FormDataParam("source")
+                                    FormDataContentDisposition fileDisposition,
+                            @FormDataParam("file_url") String sourceUrl,
+                            @Context UriInfo uriInfo)
+                                                throws WebApplicationException {
+        Response response = null;
+
+        String fileName = null;
+        URL fileUrl = null;
+        File localFile = null;
+        if (! isBlank(sourceUrl)) {
+            // Not uploaded data. => A file URL must be provided.
+            try {
+                fileUrl = new URL(sourceUrl);
+                fileName = this.extractFileName(fileUrl, "xml");
+                // Reset input stream to force downloading data from URL.
+                fileData = null;
+            }
+            catch (Exception e) {
+                // Conversion of source base URI to URL failed.
+                log.error("Failed to parse URL {}", e, sourceUrl);
+                this.throwInvalidParamError("file_url",
+                                    sourceUrl + " (" + e.getMessage() + ')');
+            }
+        }
+        else {
+            fileName = fileDisposition.getFileName();
+            if (isBlank(fileName)) {
+                this.throwInvalidParamError("source", null);
+            }
+        }
+        // Else: File data have been uploaded.
+
+        log.debug("Processing XML source creation request for {}", fileName);
+        try {
+            // Build object URIs from request path.
+            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
+            URI sourceUri = new URI(projectUri.getScheme(), null,
+                                    projectUri.getHost(), projectUri.getPort(),
+                                    this.getSourceId(projectUri.getPath(), fileName),
+                                    null, null);
+            // Retrieve project.
+            Project p = this.loadProject(projectUri);
+            // Save new source data to public project storage.
+            String filePath = this.getProjectFilePath(projectId, fileName);
+            localFile = this.getFileStorage(filePath);
+            this.getFileData(fileData, fileUrl, localFile, uriInfo);
+            // Initialize new source.
+            XmlSource src = this.projectManager.newXmlSource(p, sourceUri,
+                                            fileName, description, filePath);
+            // Parse XML file content to validate well-formedness.
+            try {
+                SAXParserFactory spf = SAXParserFactory.newInstance();
+                spf.setValidating(false);
+                spf.setNamespaceAware(true);
+                XMLReader parser = spf.newSAXParser().getXMLReader();
+                parser.setContentHandler(new DefaultHandler());
+                parser.parse(new InputSource(src.getInputStream()));
+            }
+            catch (Exception e) {
+                throw new IOException("Invalid or empty source data", e);
+            }
+            // Persist new source.
+            this.projectManager.saveProject(p);
+            // Notify user of successful creation, redirecting HTML clients
+            // (browsers) to the source tab of the project page.
+            response = this.created(p, sourceUri, ProjectTab.Sources).build();
+
+            log.info("New XML source \"{}\" created", sourceUri);
+        }
+        catch (IOException e) {
+            if (localFile != null) {
+                localFile.delete();
+            }
+            String src = (fileData != null)? fileName:
+                        (fileUrl != null)? fileUrl.toString(): "file_url";
+            log.fatal("Failed to save source data from {}", e, src);
+            this.throwInvalidParamError(src, e.getLocalizedMessage());
+        }
+        catch (Exception e) {
+            if (localFile != null) {
+                localFile.delete();
+            }
+            this.handleInternalError(e,
+                            "Failed to create XML source for {}", fileName);
+        }
+        return response;
+    }
+
+    @POST
+    @Path("{id}/xmlmodify")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    public Response modifyXmlSource(
+                            @PathParam("id") String projectId,
+                            @FormDataParam("current_source") URI sourceUri,
+                            @FormDataParam("description") String description,
+                            @Context UriInfo uriInfo)
+                                                throws WebApplicationException {
+        Response response = null;
+
+        try {
+            // Retrieve source.
+            Project p = this.loadProject(uriInfo, projectId);
+            XmlSource s = this.loadSource(p, sourceUri, XmlSource.class);
+            // Update source data.
+            s.setDescription(description);
+            // Save updated source.
+            this.projectManager.saveProject(p);
+            // Notify user of successful update, redirecting HTML clients
+            // (browsers) to the source tab of the project page.
+            response = this.redirect(p, ProjectTab.Sources).build();
+        }
+        catch (Exception e) {
+            this.handleInternalError(e, "Could not modify XML source {}",
+                                        sourceUri);
         }
         return response;
     }

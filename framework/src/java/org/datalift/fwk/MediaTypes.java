@@ -113,4 +113,10 @@ public class MediaTypes extends MediaType
     /** "application/x-trig" */
     public final static MediaType APPLICATION_TRIG_TYPE =
                                             MediaType.valueOf(APPLICATION_TRIG);
+
+    /** "text/csv" */
+    public final static String TEXT_CSV = "text/csv";
+    /** "text/csv" */
+    public final static MediaType TEXT_CSV_TYPE =
+                                        MediaType.valueOf(TEXT_CSV);
 }

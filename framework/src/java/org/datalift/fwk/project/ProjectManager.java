@@ -106,6 +106,8 @@ public interface ProjectManager
      * @param  project       the owning project.
      * @param  uri           the source URI.
      * @param  title         the source label.
+     * @param  description   the description of the source content or
+     *                       intent.
      * @param  filePath      the CSV file path in the public storage.
      * @param  separator     the column separator character.
      * @param  hasTitleRow   whether the first row holds the column
@@ -189,6 +191,23 @@ public interface ProjectManager
     public SparqlSource newSparqlSource(Project project, URI uri, String title,
                                         String description, String endpointUrl,
                                         String sparqlQuery, int cacheDuration)
+                                                            throws IOException;
+
+    /**
+     * Creates a new XML source object.
+     * @param  project       the owning project.
+     * @param  uri           the source URI.
+     * @param  title         the source label.
+     * @param  description   the description of the source content or
+     *                       intent.
+     * @param  filePath      the XML file path in the public storage.
+     *
+     * @return a new XML source, associated to the specified project.
+     * @throws IOException if any error occurred creating the source
+     *         or accessing the specified file.
+     */
+    public XmlSource newXmlSource(Project project, URI uri, String title,
+                                  String description, String filePath)
                                                             throws IOException;
 
     /**

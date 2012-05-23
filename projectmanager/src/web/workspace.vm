@@ -188,6 +188,8 @@
 			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.html($curSrc.description)<br />#end#i18n('project.upload_source.graph'): $!esc.html($curSrc.targetGraph.toString())<br />#i18n('project.upload_source.parent'): $!esc.html($curSrc.parent.title)<br />#i18n('project.upload_source.created'): $!date.format('medium', $curSrc.creationDate)"
 	#elseif( $curSrc.getType() == $field.SparqlSource )
 			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.html($curSrc.description)<br />#end#i18n('project.upload_sparql.connection_url'): $!esc.html($curSrc.endpointUrl)<br />#i18n('project.upload_source.cache_duration'): $!esc.html($curSrc.cacheDuration)<br />#i18n('project.upload_source.cache_update'): $!date.format('medium', $curSrc.lastCacheUpdate)"
+	#elseif( $curSrc.getType() == $field.XmlSource )
+			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.html($curSrc.description)<br />#end#i18n('project.upload_source.file'): $!esc.html($curSrc.filePath)"
 	#end
 		},
 #end

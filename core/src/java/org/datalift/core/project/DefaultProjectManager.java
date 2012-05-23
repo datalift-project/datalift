@@ -63,6 +63,7 @@ import javassist.ClassPool;
 
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.LifeCycle;
+import org.datalift.fwk.MediaTypes;
 import org.datalift.fwk.project.CsvSource;
 import org.datalift.fwk.project.SparqlSource;
 import org.datalift.fwk.project.SqlSource;
@@ -72,6 +73,7 @@ import org.datalift.fwk.project.ProjectManager;
 import org.datalift.fwk.project.RdfFileSource;
 import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.TransformedRdfSource;
+import org.datalift.fwk.project.XmlSource;
 import org.datalift.fwk.project.CsvSource.Separator;
 import org.datalift.fwk.rdf.RdfNamespace;
 import org.datalift.fwk.rdf.Repository;
@@ -166,7 +168,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         }
         src.setTitleRow(hasTitleRow);
         src.setFilePath(filePath);
-        src.setMimeType("text/csv");
+        src.setMimeType(MediaTypes.TEXT_CSV);
         src.setSeparator(String.valueOf(separator));
         for (Separator s : Separator.values()) {
             if (s.getValue() == separator) {
@@ -235,6 +237,26 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         src.setEndpointUrl(endpointUrl);
         src.setQuery(sparqlQuery);
         src.setCacheDuration(cacheDuration);
+        // Add source to project.
+        project.add(src);
+        return src;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public XmlSource newXmlSource(Project project, URI uri, String title,
+                                  String description, String filePath)
+                                                            throws IOException {
+        // Create new XML source.
+        XmlSourceImpl src = new XmlSourceImpl(uri.toString(), project);
+        // Set source parameters.
+        this.initSource(src, title, description, null);
+        File f = this.getFileStorage(filePath);
+        if (! f.isFile()) {
+            throw new FileNotFoundException(filePath);
+        }
+        src.setFilePath(filePath);
+        src.setMimeType(MediaTypes.APPLICATION_XML);
         // Add source to project.
         project.add(src);
         return src;
@@ -426,6 +448,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
                     ProjectImpl.class, OntologyImpl.class,
                     CsvSourceImpl.class, RdfFileSourceImpl.class,
                     SqlSourceImpl.class, SparqlSourceImpl.class,
+                    XmlSourceImpl.class,
                     TransformedRdfSourceImpl.class));
         return classes;
     }

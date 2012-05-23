@@ -5,12 +5,13 @@
 #load("project/resources")
 #load_core_resources
 #if( $current )
-	#set( $title  = "project.title.modify_dataset" )
+	#set( $title = "project.title.modify_dataset" )
 	#set( $submit = "modify" )
 	#set( $target_csv = "${it.uri}/csvmodify" )
 	#set( $target_rdf = "${it.uri}/rdfmodify" )
 	#set( $target_db = "${it.uri}/dbmodify" )
 	#set( $target_sparql = "${it.uri}/sparqlmodify" )
+	#set( $target_xml = "${it.uri}/xmlmodify" )
 #else
 	#set( $title = "project.title.add_dataset" )
 	#set( $submit = "create" )
@@ -18,6 +19,7 @@
 	#set( $target_rdf = "${it.uri}/rdfupload" )
 	#set( $target_db = "${it.uri}/dbupload" )
 	#set( $target_sparql = "${it.uri}/sparqlupload")
+	#set( $target_xml = "${it.uri}/xmlupload" )
 #end
 	<title>#i18n($title) - #i18n("workspace.title") - DataLift</title>
 #css_links
@@ -47,7 +49,7 @@
 #end
 		<p><label for="description">#i18n("project.upload_source.description"): </label>
 		<input type="text" id="description" name="description" value="$!esc.html($current.description)"/></p>
-		<p><label for="charset">#i18n("project.upload_csv_charset"): </label>
+		<p><label for="charset">#i18n("project.upload_source.charset"): </label>
 		<select id="charset" name="charset">
 #foreach( $s in $charsets )
 #if( ($foreach.count == 1 && !$current) || $s.equals($current.encoding) )
@@ -168,6 +170,25 @@
 	</form>
 #end
 	</div>
+	<h3><a href="#">XML</a></h3>
+	<div>
+#if( (!$current) || ($current.getType() == $field.XmlSource) )
+	<form method="post" action="$target_xml" enctype="multipart/form-data" class="form_formated">
+#if( !$current )
+		<p><label for="file">#i18n("project.upload_xml"): </label>
+		<input type="file" name="source" size="64"/><br />
+		<label for="file_url">#i18n("project.upload_source.file_url"): </label>
+		<input type="text" id="file_url" name="file_url"/></p>
+#else
+		<input type="hidden" name="current_source" value="$current.uri"/>
+		<p>#i18n("project.update_xml"): <a href="$current.uri">$esc.html($current.title)</a></p>
+#end
+		<p><label for="description">#i18n("project.upload_source.description"): </label>
+		<input type="text" id="description" name="description" value="$!esc.html($current.description)"/></p>
+		<input type="submit" value="#i18n("$submit")"/>
+	</form>
+#end
+	</div>
 </div>
 </div>
 </div>
@@ -197,6 +218,8 @@
 		select_panel = 2;
 	#elseif( $current.getType() == $field.SparqlSource )
 		select_panel = 3;
+	#elseif( $current.getType() == $field.XmlSource )
+		select_panel = 4;
 	#end
 		if (select_panel != 0) {
 			$("#accordion").accordion("option", "active", select_panel);
