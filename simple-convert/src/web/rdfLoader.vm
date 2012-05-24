@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 #load("rdfloader/resources")
@@ -13,7 +13,7 @@
 	<h3 class="ui-widget-header dl-widget-header">#i18n("rdfloader.title") - #i18n("project.label") ${it.title}</h3>
 
 	<form id="converter_form" method="post" action="${baseUri}/rdfloader">
-                <input type="hidden" name="project" id="project" value="${it.uri}"/>
+		<input type="hidden" name="project" id="project" value="${it.uri}"/>
 		<p><label for="source">#i18n("source.to_convert"):</label>
 		<select id="source">
 #foreach( $curSrc in $it.getSources() )
