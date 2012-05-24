@@ -63,6 +63,12 @@ import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.rdf.RdfUtils;
 
 
+/**
+ * A {@link ProjectModule project module} that copies the RDF triples
+ * of a source from the internal repository to the public repository.
+ *
+ * @author lbihanic
+ */
 @Path(SimplePublisher.MODULE_NAME)
 public class SimplePublisher extends BaseConverterModule
 {
@@ -99,12 +105,14 @@ public class SimplePublisher extends BaseConverterModule
     }
 
     @POST
-    public Response publishProject(@FormParam("project") URI projectId,
-                                   @FormParam("source") URI sourceId,
-                                   @FormParam("dest_graph_uri") URI targetGraph,
-                                   @Context UriInfo uriInfo,
-                                   @Context Request request,
-                                   @HeaderParam(ACCEPT) String acceptHdr)
+    public Response publishRdfSource(
+                                @FormParam("project") URI projectId,
+                                @FormParam("source") URI sourceId,
+                                @FormParam("dest_graph_uri") URI targetGraph,
+                                @FormParam("overwrite") boolean overwrite,
+                                @Context UriInfo uriInfo,
+                                @Context Request request,
+                                @HeaderParam(ACCEPT) String acceptHdr)
                                                 throws WebApplicationException {
         Response response = null;
         try {
@@ -132,7 +140,7 @@ public class SimplePublisher extends BaseConverterModule
                             "CONSTRUCT { ?s ?p ?o . } WHERE { GRAPH <"
                                 + in.getTargetGraph() + "> { ?s ?p ?o . } }");
             RdfUtils.convert(cfg.getInternalRepository(), constructs,
-                             cfg.getDataRepository(), targetGraph);
+                             cfg.getDataRepository(), targetGraph, overwrite);
             // Display generated triples.
             response = this.displayGraph(null, targetGraph,
                                          uriInfo, request, acceptHdr);

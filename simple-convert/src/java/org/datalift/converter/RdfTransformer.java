@@ -57,6 +57,14 @@ import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
 
 
+/**
+ * A {@link ProjectModule project module} that performs RDF to RDF
+ * transformations by applying a set of SPARQL CONSTRUCT queries and
+ * saving the generated triples into a new
+ * {@link TransformedRdfSource source}.
+ *
+ * @author lbihanic
+ */
 @Path(RdfTransformer.MODULE_NAME)
 public class RdfTransformer extends BaseConverterModule
 {
@@ -93,11 +101,12 @@ public class RdfTransformer extends BaseConverterModule
     }
 
     @POST
-    public Response convertRdfSource(@QueryParam("project") URI projectId,
-                                     @QueryParam("source") URI sourceId,
+    public Response convertRdfSource(@FormParam("project") URI projectId,
+                                     @FormParam("source") URI sourceId,
                                      @FormParam("dest_title") String destTitle,
                                      @FormParam("dest_graph_uri") URI targetGraph,
-                                     @FormParam("query[]") List<String> queries)
+                                     @FormParam("query[]") List<String> queries,
+                                     @FormParam("overwrite") boolean overwrite)
                                                 throws WebApplicationException {
         Response response = null;
 
@@ -110,7 +119,7 @@ public class RdfTransformer extends BaseConverterModule
             // Retrieve project.
             Project p = this.getProject(projectId);
             // Execute SPARQL Construct queries.
-            RdfUtils.convert(internal, queries, internal, targetGraph);
+            RdfUtils.convert(internal, queries, internal, targetGraph, overwrite);
             // Register new transformed RDF source.
             TransformedRdfSource in =
                                 (TransformedRdfSource)p.getSource(sourceId);

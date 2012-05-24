@@ -36,6 +36,7 @@ package org.datalift.fwk.rdf;
 
 
 import java.io.File;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
@@ -195,6 +196,35 @@ public final class RdfUtils
      * Parses the specified file and loads the resulting triples
      * into the specified RDF store, optionally placing them in the
      * specified named graph.
+     * @param  source       the RDF data to load.
+     * @param  mimeType     the type of RDF data present in the file.
+     * @param  target       the RDF store to persist triples into.
+     * @param  namedGraph   the named graph to use as context for the
+     *                      triples or <code>null</code>. If the named
+     *                      graph exists, it will be cleared prior
+     *                      loading the triples.
+     * @param  mapper       an optional {@link UriMapper mapper} to
+     *                      translate URIs as triples are loaded or
+     *                      <code>null</code> if no mapping is needed.
+     *
+     * @throws IllegalArgumentException if no source file, MIME type
+     *         or target RDF store are provided.
+     * @throws RdfException if any error occurred parsing the file or
+     *         accessing the RDF store.
+     *
+     * @see    #upload(InputSream, MediaType, Repository, URI, UriMapper, String)
+     */
+    public static void upload(InputStream source, MediaType mimeType,
+                              Repository target, URI namedGraph,
+                              UriMapper mapper) throws RdfException {
+        upload(source, mimeType, target, namedGraph, mapper,
+                            (namedGraph != null)? namedGraph.toString(): null);
+    }
+
+    /**
+     * Parses the specified file and loads the resulting triples
+     * into the specified RDF store, optionally placing them in the
+     * specified named graph.
      * @param  source       the RDF file to load.
      * @param  mimeType     the type of RDF data present in the file.
      * @param  target       the RDF store to persist triples into.
@@ -220,6 +250,45 @@ public final class RdfUtils
         if ((source == null) || (! source.isFile())) {
             throw new IllegalArgumentException("source");
         }
+        try {
+            upload(FileUtils.getInputStream(source), mimeType, target,
+                                                namedGraph, mapper, baseUri);
+        }
+        catch (Exception e) {
+            throw new RdfException("Failed to upload RDF triples from "
+                                   + source.getPath(), e);
+        }
+    }
+
+    /**
+     * Parses the specified file and loads the resulting triples
+     * into the specified RDF store, optionally placing them in the
+     * specified named graph.
+     * @param  source       the RDF data to load.
+     * @param  mimeType     the type of RDF data present in the file.
+     * @param  target       the RDF store to persist triples into.
+     * @param  namedGraph   the named graph to use as context for the
+     *                      triples or <code>null</code>. If the named
+     *                      graph exists, it will be cleared prior
+     *                      loading the triples.
+     * @param  mapper       an optional {@link UriMapper mapper} to
+     *                      translate URIs as triples are loaded or
+     *                      <code>null</code> if no mapping is needed.
+     * @param  baseUri      the (optional) base URI to resolve relative
+     *                      URIs.
+     *
+     * @throws IllegalArgumentException if no source file, MIME type
+     *         or target RDF store are provided.
+     * @throws RdfException if any error occurred parsing the file or
+     *         accessing the RDF store.
+     */
+    public static void upload(InputStream source, MediaType mimeType,
+                              Repository target, URI namedGraph,
+                              final UriMapper mapper, String baseUri)
+                                                        throws RdfException {
+        if (source == null) {
+            throw new IllegalArgumentException("source");
+        }
         if (target == null) {
             throw new IllegalArgumentException("target");
         }
@@ -231,7 +300,7 @@ public final class RdfUtils
             // Prevent transaction commit for each triple inserted.
             cnx.setAutoCommit(false);
             // Clear target named graph, if any.
-            targetGraph = clearGraph(namedGraph, cnx);
+            targetGraph = getGraphUri(namedGraph, cnx, true);
 
             StatementAppender appender =
                                 new StatementAppender(cnx, targetGraph, mapper);
@@ -241,11 +310,10 @@ public final class RdfUtils
             //       really not optimized for perf. and high throughput...
             RDFParser parser = newRdfParser(mimeType);
             parser.setRDFHandler(appender);
-            parser.parse(FileUtils.getInputStream(source), baseUri);
+            parser.parse(source, baseUri);
 
-            log.debug("Inserted {} RDF triples from {} into <{}> in {} seconds",
-                      Long.valueOf(appender.getStatementCount()),
-                      source, namedGraph,
+            log.debug("Inserted {} RDF triples into <{}> in {} seconds",
+                      Long.valueOf(appender.getStatementCount()), namedGraph,
                       Double.valueOf(appender.getDuration() / 1000.0));
         }
         catch (Exception e) {
@@ -259,8 +327,7 @@ public final class RdfUtils
             }
             catch (Exception e2) { /* Ignore... */ }
 
-            throw new RdfException("Failed to upload RDF triples from "
-                                   + source.getPath(), e);
+            throw new RdfException(e.getMessage(), e);
         }
         finally {
             // Commit pending data (including graph removal in case of error).
@@ -304,7 +371,7 @@ public final class RdfUtils
             // Prevent transaction commit for each triple inserted.
             cnx.setAutoCommit(false);
             // Clear target named graph, if any.
-            targetGraph = clearGraph(namedGraph, cnx);
+            targetGraph = getGraphUri(namedGraph, cnx, true);
             // Load triples, mapping URIs on the fly.
             StatementAppender appender =
                                 new StatementAppender(cnx, targetGraph, mapper);
@@ -349,6 +416,8 @@ public final class RdfUtils
      *                            generated triple to or
      *                            <code>null</code> to persist the
      *                            triples into the source RDF store.
+     * @param  clearTargetGraph   whether to clear the target name graph
+     *                            prior inserting the new triples.
      *
      * @throws IllegalArgumentException if no source RDF store or
      *         CONSTRUCT query list are provided.
@@ -357,10 +426,10 @@ public final class RdfUtils
      *
      * @see    #convert(Repository, List, Repository, URI, String)
      */
-    public static void convert(Repository source,
-                               List<String> constructQueries,
-                               Repository target) throws RdfException {
-        convert(source, constructQueries, target, null);
+    public static void convert(Repository source, List<String> constructQueries,
+                               Repository target, boolean clearTargetGraph)
+                                                        throws RdfException {
+        convert(source, constructQueries, target, null, clearTargetGraph);
     }
 
     /**
@@ -378,6 +447,8 @@ public final class RdfUtils
      *                            or <code>null</code>. If the named
      *                            graph exists, it will be cleared
      *                            prior inserting the new triples.
+     * @param  clearTargetGraph   whether to clear the target name graph
+     *                            prior inserting the new triples.
      *
      * @throws IllegalArgumentException if no source RDF store or
      *         CONSTRUCT query list are provided.
@@ -388,10 +459,11 @@ public final class RdfUtils
      */
     public static void convert(Repository source,
                                List<String> constructQueries,
-                               Repository target, URI namedGraph)
-                                                        throws RdfException {
+                               Repository target, URI namedGraph,
+                               boolean clearTargetGraph) throws RdfException {
         convert(source, constructQueries, target, namedGraph,
-                            (namedGraph != null)? namedGraph.toString(): null);
+                            (namedGraph != null)? namedGraph.toString(): null,
+                            clearTargetGraph);
     }
 
     /**
@@ -411,6 +483,8 @@ public final class RdfUtils
      *                            prior inserting the new triples.
      * @param  baseUri            the (optional) base URI to resolve
      *                            relative URIs.
+     * @param  clearTargetGraph   whether to clear the target name graph
+     *                            prior inserting the new triples.
      *
      * @throws IllegalArgumentException if no source RDF store or
      *         CONSTRUCT query list are provided.
@@ -419,8 +493,8 @@ public final class RdfUtils
      */
     public static void convert(Repository source,
                                List<String> constructQueries,
-                               Repository target,
-                               URI namedGraph, String baseUri)
+                               Repository target, URI namedGraph,
+                               String baseUri, boolean clearTargetGraph)
                                                         throws RdfException {
         if (source == null) {
             throw new IllegalArgumentException("source");
@@ -440,14 +514,9 @@ public final class RdfUtils
         try {
             in  = source.newConnection();
             out = target.newConnection();
-
-            final ValueFactory valueFactory = out.getValueFactory();
-            // Clear target named graph, if any.
-            if (namedGraph != null) {
-                u = valueFactory.createURI(namedGraph.toString());
-                out.clear(u);
-            }
-
+            // Clear target named graph, if requested.
+            u = getGraphUri(namedGraph, out, clearTargetGraph);
+            // Apply CONSTRUCT queries to generate and insert triples.
             for (String s : constructQueries) {
                 query = s;
                 GraphQuery q = in.prepareGraphQuery(QueryLanguage.SPARQL,
@@ -724,7 +793,7 @@ public final class RdfUtils
         RepositoryConnection cnx = null;
         try {
             cnx = r.newConnection();
-            clearGraph(graphName, cnx);
+            getGraphUri(graphName, cnx, true);
         }
         catch (Exception e) {
             throw new RdfException(String.valueOf(graphName), e);
@@ -740,14 +809,16 @@ public final class RdfUtils
     // Specific implementation
     //-------------------------------------------------------------------------
 
-    private static org.openrdf.model.URI clearGraph(URI graphName,
-                                                    RepositoryConnection cnx)
-                                                    throws RepositoryException {
+    private static org.openrdf.model.URI getGraphUri(URI graphName,
+                                    RepositoryConnection cnx, boolean clear)
+                                                     throws RepositoryException {
         org.openrdf.model.URI namedGraph = null;
         // Clear target named graph, if any.
         if (graphName != null) {
             namedGraph = cnx.getValueFactory().createURI(graphName.toString());
-            cnx.clear(namedGraph);
+            if (clear) {
+                cnx.clear(namedGraph);
+            }
         }
         return namedGraph;
     }

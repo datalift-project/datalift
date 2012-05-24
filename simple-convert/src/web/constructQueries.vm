@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 #load("rdftransformer/resources")
@@ -15,7 +15,8 @@
 #banner
 	<div class="ui-widget-content" id="workspace">
 		<h3 class="ui-widget-header dl-widget-header">#i18n("rdftransformer.title") - #i18n("project.label") ${it.title}</h3>
-		<form method="post" id="converter_form" action="">
+		<form id="converter_form" method="post" action="${baseUri}/rdftransformer">
+			<input type="hidden" name="project" id="project" value="${it.uri}"/>
 			<p><label for="source_to_select">#i18n("source.to_convert"):</label>
 			<select id="source">
 #foreach( $curSrc in $it.getSources() )
@@ -47,8 +48,6 @@
 
 #script_links
 <script type="text/javascript">
-	var form_base_action = "${baseUri}/rdftransformer?project=${it.uri}";
-
 	$(function() {
 		$("#queries_submit").button();
 		$("#add_query").button();
@@ -63,7 +62,6 @@
 
 		$("#source").change(function(){
 		 	$("#source option:selected").each(function () {
-				$("#converter_form").attr('action', form_base_action + "&source=" + $(this).attr('uri'));
 		 		$("#dest_title").attr("value", $(this).attr('name') + " - (RDF #" + $(this).attr("count") + ")");
 				$("#dest_graph_uri").attr("value", $(this).attr("uri") + "-rdf-" + $(this).attr("count"));
 		 	});
