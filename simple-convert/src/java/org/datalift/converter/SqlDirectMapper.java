@@ -184,11 +184,11 @@ public class SqlDirectMapper extends BaseConverterModule
     }
 
     @POST
-    public Response loadSourceData(@QueryParam("project") URI projectId,
-                                   @QueryParam("source") URI sourceId,
-                                   @FormParam("dest_title") String destTitle,
-                                   @FormParam("dest_graph_uri") URI targetGraph,
-                                   @FormParam("key_column") String keyColumn)
+    public Response mapSqlData(@FormParam("project") URI projectId,
+                               @FormParam("source") URI sourceId,
+                               @FormParam("dest_title") String destTitle,
+                               @FormParam("dest_graph_uri") URI targetGraph,
+                               @FormParam("key_column") String keyColumn)
                                                 throws WebApplicationException {
         Response response = null;
         try {

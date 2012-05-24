@@ -109,7 +109,7 @@ public class RdfExporter extends BaseConverterModule
     }
 
     @POST
-    public Response exportRdfSource(@QueryParam("project") URI projectId,
+    public Response exportRdfSource(@FormParam("project") URI projectId,
                                     @FormParam("source") URI sourceId,
                                     @FormParam("mime_type") String mimeType)
                                                 throws WebApplicationException {

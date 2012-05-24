@@ -51,6 +51,8 @@ import javax.ws.rs.core.Response;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.Project;
+import org.datalift.fwk.project.ProjectModule;
+import org.datalift.fwk.project.RdfFileSource;
 import org.datalift.fwk.project.RdfSource;
 import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.Source.SourceType;
@@ -63,6 +65,13 @@ import org.datalift.fwk.util.UriMapper;
 import static org.datalift.fwk.util.StringUtils.*;
 
 
+/**
+ * A {@link ProjectModule project module} that loads the RDF data
+ * from a {@link RdfFileSource RDF file source} into the internal
+ * RDF store.
+ *
+ * @author lbihanic
+ */
 @Path(RdfLoader.MODULE_NAME)
 public class RdfLoader extends BaseConverterModule
 {
@@ -106,9 +115,9 @@ public class RdfLoader extends BaseConverterModule
     }
 
     @POST
-    public Response loadSourceData(
-                    @QueryParam("project") URI projectId,
-                    @QueryParam("source") URI sourceId,
+    public Response loadRdfData(
+                    @FormParam("project") URI projectId,
+                    @FormParam("source") URI sourceId,
                     @FormParam("dest_title") String destTitle,
                     @FormParam("dest_graph_uri") URI targetGraph,
                     @FormParam("uri_translation_src") String uriPattern,
