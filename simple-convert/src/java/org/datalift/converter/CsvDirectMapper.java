@@ -95,6 +95,13 @@ import static org.datalift.fwk.util.StringUtils.*;
 @Path(CsvDirectMapper.MODULE_NAME)
 public class CsvDirectMapper extends BaseConverterModule
 {
+    //-------------------------------------------------------------------------
+    // CSV column type mapping enumeration
+    //-------------------------------------------------------------------------
+
+    /**
+     * CSV column type mapping enumeration.
+     */
     public enum Mapping {
         String          ("string"),
         Integer         ("int"),
@@ -173,14 +180,14 @@ public class CsvDirectMapper extends BaseConverterModule
 
     @POST
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public Response loadSourceData(@FormParam("project") URI projectId,
-                                   @FormParam("source") URI sourceId,
-                                   @FormParam("dest_title") String destTitle,
-                                   @FormParam("dest_graph_uri") URI targetGraph,
-                                   @FormParam("base_uri") URI baseUri,
-                                   @FormParam("true_values") String trueValues,
-                                   @FormParam("date_format") String dateFormat,
-                                   MultivaluedMap<String,String> params)
+    public Response mapCsvData(@FormParam("project") URI projectId,
+                               @FormParam("source") URI sourceId,
+                               @FormParam("dest_title") String destTitle,
+                               @FormParam("dest_graph_uri") URI targetGraph,
+                               @FormParam("base_uri") URI baseUri,
+                               @FormParam("true_values") String trueValues,
+                               @FormParam("date_format") String dateFormat,
+                               MultivaluedMap<String,String> params)
                                                 throws WebApplicationException {
         // Note: There a bug in Jersey that cause the MultivalueMap to be
         // empty unless at least one @FormParm annotation is present.
