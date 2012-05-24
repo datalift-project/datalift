@@ -141,6 +141,9 @@ public class Workspace extends BaseModule
     // Project page tabs enumeration
     //-------------------------------------------------------------------------
 
+    /**
+     * Project page tabs enumeration.
+     */
     public enum ProjectTab {
         Description     ("description"),
         Sources         ("source"),
