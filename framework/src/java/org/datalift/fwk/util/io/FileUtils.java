@@ -68,6 +68,18 @@ import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.util.Env;
 
 
+/**
+ * A set of utility methods to help handling file-based data:
+ * <ul>
+ *  <li>Reading data from compressed files with automatic detection
+ *   of the compression algorithm (ZIP, GZIPor BZip2),</li>
+ *  <li>Downloading data from a URL to save them into a local file,</li>
+ *  <li>Copying files,</li>
+ *  <li>Etc.</li>
+ * </ul>
+ *
+ * @author lbihanic
+ */
 public final class FileUtils
 {
     //-------------------------------------------------------------------------
@@ -97,10 +109,11 @@ public final class FileUtils
     //-------------------------------------------------------------------------
 
     /**
-     * Returned a buffered input stream reading data for the specified
+     * Returns a buffered input stream reading data for the specified
      * file.
      * @param  f   the file to read data from.
      *
+     * @return a buffered input stream.
      * @throws IOException   if the file does not exist, is not
      *                        read-accessible or if any I/O error
      *                        occurred while extracting a compressed
@@ -116,6 +129,7 @@ public final class FileUtils
      * @param  f            the file to read data from.
      * @param  bufferSize   the buffer size.
      *
+     * @return a buffered input stream.
      * @throws IOException   if the file does not exist, is not
      *                        read-accessible or if any I/O error
      *                        occurred while extracting a compressed
@@ -174,10 +188,31 @@ public final class FileUtils
         return in;
     }
 
+    /**
+     * Retrieves data from the specified URL and saves them into the
+     * specified file.
+     * @param  u    the URL to download the data from.
+     * @param  to   the local file to save data to.
+     *
+     * @throws IOException   if any error occurred reading or writing
+     *                       the data.
+     */
     public static void save(URL u, File to) throws IOException {
         save(u, null, null, to);
     }
 
+    /**
+     * Retrieves data from the specified URL and saves them into the
+     * specified file.
+     * @param  u            the URL to download the data from.
+     * @param  query        the data to send to the server (enforces
+     *                      usage of POST method for HTTP connections).
+     * @param  properties   the request properties, i.e. HTTP headers.
+     * @param  to           the local file to save data to.
+     *
+     * @throws IOException   if any error occurred reading or writing
+     *                       the data.
+     */
     public static void save(URL u, String query,
                             Map<String,String> properties, File to)
                                                             throws IOException {
@@ -250,10 +285,33 @@ public final class FileUtils
         }
     }
 
+    /**
+     * Reads data from the specified input stream and saves them into
+     * the specified file.
+     * @param  from   the input stream to read the data from.
+     * @param  to     the local file to save data to.
+     *
+     * @throws IOException   if any error occurred reading or writing
+     *                       the data.
+     * @see    #save(InputStream, File, boolean)
+     */
     public static void save(InputStream from, File to) throws IOException {
         save(from, to, true);
     }
 
+    /**
+     * Reads data from the specified input stream and saves them into
+     * the specified file.
+     * @param  from         the input stream to read the data from.
+     * @param  to           the local file to save data to.
+     * @param  closeInput   whether to close the input stream after
+     *                      all data have been read (case of a regular
+     *                      file or URL connection) or leave it open
+     *                      (case of a compressed file stream).
+     *
+     * @throws IOException   if any error occurred reading or writing
+     *                       the data.
+     */
     public static void save(InputStream from, File to, boolean closeInput)
                                                             throws IOException {
         if (from == null) {
@@ -300,7 +358,16 @@ public final class FileUtils
             }
         }
     }
-    
+
+    /**
+     * Copies a file.
+     * @param  from       the file to copy.
+     * @param  to         the target file location.
+     * @param  compress   whether to (GZip) compress during copy.
+     *
+     * @throws IOException   if any error occurred reading or writing
+     *                       the data.
+     */
     public final static void copy(File from, File to, boolean compress)
                                                             throws IOException {
         if ((from == null) || (! from.canRead())) {
@@ -345,7 +412,7 @@ public final class FileUtils
                 try {
                     in  = new FileInputStream(from).getChannel();
                     out = new FileOutputStream(to).getChannel();
-        
+
                     long start = 0L;
                     long end   = in.size();
                     while (end != 0L) {
@@ -388,6 +455,14 @@ public final class FileUtils
     // Specific implementation
     //-------------------------------------------------------------------------
 
+    /**
+     * Parses the value of the Content-Type HTTP header to extract
+     * the content type (MIME type) and character encoding information.
+     * @param  contentType   the value of the HTTP Content-Type header.
+     *
+     * @return the content type and character encoding as an array of
+     *         strings.
+     */
     private static String[] parseContentType(String contentType) {
         String[] elts = new String[2];
 
@@ -402,6 +477,10 @@ public final class FileUtils
         return elts;
     }
 
+    /**
+     * Closes a file or a (byte or character) stream, absorbing errors.
+     * @param  c   the stream to close.
+     */
     private final static void close(Closeable c) {
         if (c != null) {
             try {
@@ -414,6 +493,10 @@ public final class FileUtils
     /**
      * Fetches unsigned 16-bit value from byte array at specified offset.
      * The bytes are assumed to be in Intel (little-endian) byte order.
+     * @param  b        the byte array to read data from.
+     * @param  offset   the offset of the first byte to read.
+     *
+     * @return the unsigned 16-bit value read at the specified location.
      */
     private final static int get16(byte b[], int offset) {
         return (b[offset] & 0xff) | ((b[offset+1] & 0xff) << 8);
@@ -422,6 +505,10 @@ public final class FileUtils
     /**
      * Fetches unsigned 32-bit value from byte array at specified offset.
      * The bytes are assumed to be in Intel (little-endian) byte order.
+     * @param  b        the byte array to read data from.
+     * @param  offset   the offset of the first byte to read.
+     *
+     * @return the unsigned 32-bit value read at the specified location.
      */
     private final static long get32(byte b[], int offset) {
         return get16(b, offset) | ((long)get16(b, offset+2) << 16);
@@ -431,6 +518,10 @@ public final class FileUtils
     // ByteCounterInputStream nested class
     //-------------------------------------------------------------------------
 
+    /**
+     * An {@link InputStream} {@link FilterInputStream decorator} that
+     * counts and reports the number of bytes read.
+     */
     private final static class ByteCounterInputStream extends FilterInputStream
     {
         private final File file;
@@ -519,6 +610,10 @@ public final class FileUtils
     // ZipWrapperInputStream nested class
     //-------------------------------------------------------------------------
 
+    /**
+     * An {@link InputStream} {@link FilterInputStream decorator} that
+     * extracts the first entry of a ZIP archive.
+     */
     private final static class ZipWrapperInputStream extends FilterInputStream
     {
         private final ZipFile zipFile;
