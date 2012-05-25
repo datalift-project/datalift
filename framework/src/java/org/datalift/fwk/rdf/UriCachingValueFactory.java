@@ -52,6 +52,14 @@ import org.openrdf.model.impl.ValueFactoryImpl;
 import org.datalift.fwk.log.Logger;
 
 
+/**
+ * A {@link ValueFactory} decorator that manages a cache of the created
+ * URIs to avoid allocating again and again the same URI objects, e.g.
+ * URIs of RDF subjects or properties.
+ * <p>
+ * @author lbihanic
+ *
+ */
 public final class UriCachingValueFactory implements ValueFactory
 {
     //-------------------------------------------------------------------------
@@ -221,6 +229,11 @@ public final class UriCachingValueFactory implements ValueFactory
         return this.wrappedFactory.createStatement(subject, predicate, object);
     }
 
+    //-------------------------------------------------------------------------
+    // UriCachingValueFactory contract definition
+    //-------------------------------------------------------------------------
+
+    /** Logs the cache statistics. */
     public void displatStats() {
         Logger.getLogger().info("Cache hits: {}/{} ({}%)",
                     Long.valueOf(this.cacheHits), Long.valueOf(this.callCount),
