@@ -51,6 +51,7 @@ import org.openrdf.rio.RDFParser;
 import org.openrdf.rio.RDFWriter;
 import org.openrdf.rio.Rio;
 
+import org.datalift.fwk.rdf.rio.rdfxml.RDFXMLParser;
 import org.datalift.fwk.util.StringUtils;
 
 import static org.datalift.fwk.MediaTypes.*;
@@ -65,7 +66,11 @@ public enum RdfFormat
     /** "application/rdf+xml" */
     RDF_XML     ("RDF/XML", RDFFormat.RDFXML,
                  new String[] { "rdf", "rdfs", "owl", "xml" },
-                 APPLICATION_RDF_XML_TYPE, APPLICATION_XML_TYPE),
+                 APPLICATION_RDF_XML_TYPE, APPLICATION_XML_TYPE) {
+            public RDFParser newParser() {
+                return new RDFXMLParser();
+            }
+        },
     /** "text/turtle" */
     TURTLE      ("Turtle", RDFFormat.TURTLE, "ttl",
                  TEXT_TURTLE_TYPE, APPLICATION_TURTLE_TYPE),
