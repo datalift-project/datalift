@@ -104,6 +104,7 @@
 
   <property name="src.home"             location="${basedir}/src/java"/>
   <property name="web.home"             location="${basedir}/src/web"/>
+  <property name="rsc.home"             location="${basedir}/src/resources"/>
 
   <property name="fwk.web.home"         location="${fwk.home}/src/web"/>
   <property name="fwk.lib.home"         location="${fwk.home}/lib"/>
@@ -271,6 +272,7 @@
     <copy todir="${classes.dir}" includeEmptyDirs="false"
                                  preservelastmodified="true">
       <fileset dir="${web.home}" excludes="**/.*"/>
+      <fileset dir="${rsc.home}" excludes="**/.*"/>
     </copy>
     <!-- Create build directories as needed -->
     <mkdir dir="${dist.home}"/>
@@ -294,9 +296,10 @@
       <service type="org.datalift.fwk.Module">
         <provider classname="org.datalift.converter.CsvDirectMapper"/>
         <provider classname="org.datalift.converter.RdfLoader"/>
+        <provider classname="org.datalift.converter.SqlDirectMapper"/>
+        <provider classname="org.datalift.converter.XsltXmlConverter"/>
         <provider classname="org.datalift.converter.RdfTransformer"/>
         <provider classname="org.datalift.converter.SimplePublisher"/>
-        <provider classname="org.datalift.converter.SqlDirectMapper"/>
         <provider classname="org.datalift.converter.RdfExporter"/>
       </service>
     </jar>
