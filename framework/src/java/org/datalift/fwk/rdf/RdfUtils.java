@@ -38,22 +38,16 @@ package org.datalift.fwk.rdf;
 import java.io.File;
 import java.io.InputStream;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.List;
 
 import javax.ws.rs.core.MediaType;
 
-import org.openrdf.model.Literal;
-import org.openrdf.model.Resource;
 import org.openrdf.model.Statement;
-import org.openrdf.model.Value;
-import org.openrdf.model.ValueFactory;
 import org.openrdf.query.GraphQuery;
 import org.openrdf.query.QueryLanguage;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
 import org.openrdf.rio.RDFParser;
-import org.openrdf.rio.helpers.RDFHandlerBase;
 
 import org.datalift.fwk.MediaTypes;
 import org.datalift.fwk.log.Logger;
@@ -61,8 +55,6 @@ import org.datalift.fwk.util.CloseableIterable;
 import org.datalift.fwk.util.StringUtils;
 import org.datalift.fwk.util.UriMapper;
 import org.datalift.fwk.util.io.FileUtils;
-
-import static org.datalift.fwk.util.Env.*;
 
 
 /**
@@ -297,13 +289,11 @@ public final class RdfUtils
         org.openrdf.model.URI targetGraph = null;
         RepositoryConnection cnx = target.newConnection();
         try {
-            // Prevent transaction commit for each triple inserted.
-            cnx.setAutoCommit(false);
             // Clear target named graph, if any.
             targetGraph = getGraphUri(namedGraph, cnx, true);
 
-            StatementAppender appender =
-                                new StatementAppender(cnx, targetGraph, mapper);
+            BatchStatementAppender appender =
+                        new BatchStatementAppender(cnx, targetGraph, mapper);
             // Load triples, mapping URIs on the fly.
             // Note: we're using an RDF parser and directly adding statements
             //       because Sesame RepositoryConnection.add(File, ...) is
@@ -368,13 +358,11 @@ public final class RdfUtils
         org.openrdf.model.URI targetGraph = null;
         RepositoryConnection cnx = target.newConnection();
         try {
-            // Prevent transaction commit for each triple inserted.
-            cnx.setAutoCommit(false);
             // Clear target named graph, if any.
             targetGraph = getGraphUri(namedGraph, cnx, true);
             // Load triples, mapping URIs on the fly.
-            StatementAppender appender =
-                                new StatementAppender(cnx, targetGraph, mapper);
+            BatchStatementAppender appender =
+                        new BatchStatementAppender(cnx, targetGraph, mapper);
             appender.startRDF();
             for (Statement stmt : source) {
                 appender.handleStatement(stmt);
@@ -837,123 +825,5 @@ public final class RdfUtils
         // [#x10000-#x10FFFF]
         return (c >= 32 && c <= 55295) || (c >= 57344 && c <= 65533) ||
                (c >= 65536 && c <= 1114111) || c == 9 || c == 10 || c == 13;
-    }
-
-    //-------------------------------------------------------------------------
-    // StatementAppender nested class
-    //-------------------------------------------------------------------------
-
-    private final static class StatementAppender extends RDFHandlerBase
-    {
-        private final RepositoryConnection cnx;
-        private final ValueFactory valueFactory;
-        private final org.openrdf.model.URI targetGraph;
-        private final UriMapper mapper;
-        private final int batchSize;
-
-        private long statementCount = -1L;
-        private long startTime = -1L;
-        private long duration = -1L;
-
-        public StatementAppender(RepositoryConnection cnx,
-                                 org.openrdf.model.URI targetGraph,
-                                 UriMapper mapper) {
-            this(cnx, targetGraph, mapper, getRdfBatchSize());
-        }
-
-        public StatementAppender(RepositoryConnection cnx,
-                                 org.openrdf.model.URI targetGraph,
-                                 UriMapper mapper, int batchSize) {
-            super();
-
-            if (cnx == null) {
-                throw new IllegalArgumentException("cnx");
-            }
-            this.cnx = cnx;
-            this.valueFactory = cnx.getValueFactory();
-            this.targetGraph = targetGraph;
-            this.mapper = mapper;
-            // Batches can't be too small.
-            this.batchSize = (batchSize < MIN_RDF_IO_BATCH_SIZE)?
-                                            MIN_RDF_IO_BATCH_SIZE: batchSize;
-        }
-
-        /** {@inheritDoc} */
-        @Override
-        public void startRDF() {
-            this.startTime = System.currentTimeMillis();
-            this.statementCount = 0L;
-        }
-
-        /** {@inheritDoc} */
-        @Override
-        public void handleStatement(Statement stmt) {
-            try {
-                Resource s = stmt.getSubject();
-                org.openrdf.model.URI p = stmt.getPredicate();
-                Value o = checkStringLitteral(stmt.getObject());
-
-                if (mapper != null) {
-                    // Map URIs.
-                    s = (Resource)(this.mapValue(s));
-                    p = this.mapUri(p);
-                    o = this.mapValue(o);
-                }
-                this.cnx.add(s, p, o, this.targetGraph);
-
-                // Commit transaction according to the configured batch size.
-                this.statementCount++;
-                if ((this.statementCount % this.batchSize) == 0) {
-                    this.cnx.commit();
-                }
-            }
-            catch (RepositoryException e) {
-                throw new RuntimeException("RDF triple insertion failed", e);
-            }
-        }
-
-        /** {@inheritDoc} */
-        @Override
-        public void endRDF() {
-            this.duration = System.currentTimeMillis() - this.startTime;
-        }
-
-        public long getStatementCount() {
-            return this.statementCount;
-        }
-
-        public long getDuration() {
-            return this.duration;
-        }
-
-        private Value checkStringLitteral(Value v) {
-            if (v instanceof Literal) {
-                Literal l = (Literal)v;
-                if (l.getDatatype() == null) {
-                    String s = l.stringValue();
-                    if (! isValidStringLiteral(s)) {
-                        v = valueFactory.createLiteral(
-                                removeInvalidDataCharacter(s), l.getLanguage());
-                    }
-                }
-            }
-            return v;
-        }
-
-        private Value mapValue(Value v) {
-            return (v instanceof org.openrdf.model.URI)?
-                                    this.mapUri((org.openrdf.model.URI)v): v;
-        }
-
-        private org.openrdf.model.URI mapUri(org.openrdf.model.URI u) {
-            try {
-                return this.valueFactory.createURI(
-                        this.mapper.map(new URI(u.stringValue())).toString());
-            }
-            catch (URISyntaxException e) {
-                // Should never happen.
-                throw new RuntimeException(e);
-            }
-        }
     }
 }
