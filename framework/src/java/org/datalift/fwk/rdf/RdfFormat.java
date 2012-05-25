@@ -67,8 +67,10 @@ public enum RdfFormat
     RDF_XML     ("RDF/XML", RDFFormat.RDFXML,
                  new String[] { "rdf", "rdfs", "owl", "xml" },
                  APPLICATION_RDF_XML_TYPE, APPLICATION_XML_TYPE) {
-            public RDFParser newParser() {
-                return new RDFXMLParser();
+            @Override
+            public RDFParser newParser(ValueFactory valueFactory) {
+                return (valueFactory == null)? new RDFXMLParser():
+                                               new RDFXMLParser(valueFactory);
             }
         },
     /** "text/turtle" */
@@ -123,7 +125,7 @@ public enum RdfFormat
     //-------------------------------------------------------------------------
 
     /**
-     * Creates a new RdfType instance.
+     * Creates a new RdfFormat instance.
      * @param  type        the official type.
      * @param  mimeTypes   the MIME types that map to the official type.
      */
@@ -133,7 +135,7 @@ public enum RdfFormat
     }
 
     /**
-     * Creates a new RdfType instance.
+     * Creates a new RdfFormat instance.
      * @param  type        the official type.
      * @param  mimeTypes   the MIME types that map to the official type.
      */
@@ -189,8 +191,8 @@ public enum RdfFormat
      * Creates a new RDF parser object for this type.
      * @return an RDF parser.
      */
-    public RDFParser newParser() {
-        return Rio.createParser(this.format);
+    public final RDFParser newParser() {
+        return this.newParser(null);
     }
 
     /**
@@ -201,7 +203,9 @@ public enum RdfFormat
      * @return an RDF parser.
      */
     public RDFParser newParser(ValueFactory valueFactory) {
-        return Rio.createParser(this.format, valueFactory);
+        return (valueFactory == null)?
+                        Rio.createParser(this.format):
+                        Rio.createParser(this.format, valueFactory);
     }
 
     /**
