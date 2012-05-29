@@ -39,6 +39,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.ServiceLoader;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
@@ -56,6 +57,7 @@ import javax.xml.transform.stream.StreamSource;
 import org.openrdf.repository.RepositoryConnection;
 
 import org.datalift.fwk.Configuration;
+import org.datalift.fwk.Module;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.Source;
@@ -182,9 +184,10 @@ public class XsltXmlConverter extends BaseConverterModule
                                 (RdfUtils.newRdfParser(RdfFormat.RDF_XML));
             rdfParser.setRDFHandler(appender);
             // Apply XSL transformation to build RDF XML from XML data.
-            this.newTransformer(null).transform(
-                                    new StreamSource(src.getInputStream()),
-                                    rdfParser.getSAXResult(baseUri.toString()));
+            Transformer t = this.newTransformer(null);
+            t.setParameter("BaseURI", baseUri.toString());
+            t.transform(new StreamSource(src.getInputStream()),
+                        rdfParser.getSAXResult(baseUri.toString()));
 
             log.debug("Inserted {} RDF triples into <{}> in {} seconds",
                       Long.valueOf(appender.getStatementCount()), targetGraph,
