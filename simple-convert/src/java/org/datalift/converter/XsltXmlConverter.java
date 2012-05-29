@@ -39,7 +39,6 @@ import java.io.InputStream;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.ServiceLoader;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
@@ -57,7 +56,6 @@ import javax.xml.transform.stream.StreamSource;
 import org.openrdf.repository.RepositoryConnection;
 
 import org.datalift.fwk.Configuration;
-import org.datalift.fwk.Module;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.Source;
@@ -198,13 +196,31 @@ public class XsltXmlConverter extends BaseConverterModule
         }
     }
 
+    /**
+     * Returns a {@link Transformer} object to apply the specified XSLT
+     * stylesheet.
+     * @param  xslt   the XSLT stylesheet to use for transforming
+     *                source XML data into RDF or <code>null</code> to
+     *                use the default stylesheet.
+     * @return a new Transformer object.
+     */
     private Transformer newTransformer(InputStream xslt) {
         if (transformerFactory == null) {
+            // set thread content classloader to ensure proper resource
+            // (JAR service provider configuration file and stylesheets)
+            // resolution.
+            ClassLoader ctx = Thread.currentThread().getContextClassLoader();
+            Thread.currentThread().setContextClassLoader(
+                                            this.getClass().getClassLoader());
+            // Load embedded XLST transformation engine implementation.
             transformerFactory = TransformerFactory.newInstance();
+            // Restore application server classloader.
+            Thread.currentThread().setContextClassLoader(ctx);
         }
         Transformer t = null;
         try {
             if (xslt == null) {
+                // Use default XML to RDF transformation stylesheet.
                 if (defaultTemplates == null) {
                     defaultTemplates = transformerFactory.newTemplates(
                             new StreamSource(
