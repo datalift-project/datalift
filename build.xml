@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<project name="datalift" default="dist" basedir=".">
+<project name="Datalift" default="dist" basedir=".">
 
   <!-- ================ Property Definitions ============================== -->
 
@@ -33,9 +33,21 @@
 
   <!-- ================ File and Directory Names ========================== -->
 
-  <filelist id="modules"
-           dir="."
-         files="framework,core,sparql-endpoint,projectmanager,simple-convert,ui-sample,interconnection"/>
+  <property name="datalift.default.modules"
+            value="framework,core,sparql-endpoint,projectmanager,simple-convert,ui-sample,interconnection"/>
+
+  <property name="app.name"             value="${ant.project.name}"/>
+  <property name="app.version"          value="0.6"/>
+
+  <property name="dist.home"            location="${basedir}/core/dist"/>
+  <property name="docs.dir"             location="${dist.home}/docs"/>
+
+  <property name="copyright.dates"      value="2010-2013"/>
+  <property name="copyright.owner"
+           value="Atos - Public Sector France - BS &amp; Innovation for the DataLift project"/>
+
+  <filelist id="build.modules" dir="." files="${datalift.default.modules}"/>
+
 
   <!-- ================ All Target ======================================== -->
 
@@ -47,7 +59,7 @@
   <target name="all"
    description="Cleans build and dist directories, then rebuilds distribution">
     <subant target="all">
-      <filelist refid="modules"/>
+      <filelist refid="build.modules"/>
     </subant>
   </target>
 
@@ -61,7 +73,7 @@
 
   <target name="clean" description="Deletes build and dist directories">
     <subant target="clean">
-      <filelist refid="modules"/>
+      <filelist refid="build.modules"/>
     </subant>
   </target>
 
@@ -75,26 +87,51 @@
 
   <target name="dist" description="Create binary distribution">
     <subant target="dist">
-      <filelist refid="modules"/>
+      <filelist refid="build.modules"/>
     </subant>
   </target>
-	
- <target name="javadoc" description="Create javadoc">
- 	<mkdir dir="javadoc"/>  
- 	    <javadoc  
- 	        destdir="javadoc"  
- 	        nohelp="yes"  
- 	        use="yes"  
- 	        package="yes"
- 	    	windowtitle="Datalift" >  
- 	    	<fileset dir="./core/src" includes="**/*.java"/> 
- 	    	<fileset dir="./framework/src" includes="**/*.java"/> 
- 	    	<fileset dir="./projectmanager/src" includes="**/*.java"/> 
- 	    	<fileset dir="./simple-convert/src" includes="**/*.java"/> 
- 	    	<fileset dir="./sparql-endpoint/src" includes="**/*.java"/> 
- 	    	<fileset dir="./wrapper/src" includes="**/*.java"/> 
- 	    </javadoc>
 
+  <target name="javadoc" description="Create Javadoc API documentation">
+    <mkdir dir="${docs.dir}/api"/>
+
+    <javadoc destdir="${docs.dir}/api"
+              author="false"
+             version="true"
+                 use="true"
+          splitindex="true"
+             noindex="false"
+         windowtitle="${app.name} v${app.version}"
+            doctitle="${app.name} v${app.version}&lt;br&gt;API Specification"
+              header="&lt;b&gt;${app.name}&lt;br&gt;&lt;font size='-1'&gt;${app.version}&lt;/font&gt;&lt;/b&gt;"
+              bottom="Copyright &#169; ${copyright.dates} ${copyright.owner}. All rights reserved.">
+      <classpath>
+        <fileset dir="${basedir}">
+          <include name="*/lib/runtime/**/*.jar"/>
+        </fileset>
+      </classpath>
+
+      <fileset dir="./framework/src/java"       includes="**/*.java"/>
+      <fileset dir="./core/src/java"            includes="**/*.java"/>
+      <fileset dir="./wrapper/src/java"         includes="**/*.java"/>
+      <fileset dir="./projectmanager/src/java"  includes="**/*.java"/>
+      <fileset dir="./simple-convert/src/java"  includes="**/*.java"/>
+      <fileset dir="./sparql-endpoint/src/java" includes="**/*.java"/>
+      <fileset dir="./allegrograph-connector/src/java"  includes="**/*.java"/>
+      <fileset dir="./virtuoso-connector/src/java"      includes="**/*.java"/>
+
+      <group title="Datalift Framework"
+          packages="org.datalift.fwk*"/>
+      <group title="Datalift Core"
+          packages="org.datalift.core*:org.datalift.sparql*:org.datalift.wrapper*"/>
+      <group title="Datalift Modules"
+          packages="org.datalift.projectmanager*:org.datalift.converter*"/>
+      <group title="Datalift Connectors"
+          packages="org.datalift.allegrograph*:org.datalift.virtuoso*"/>
+
+      <link href="http://docs.oracle.com/javase/6/docs/api/"/>
+      <!-- link href="http://jersey.java.net/nonav/apidocs/latest/jersey/"/ -->
+      <link href="http://www.openrdf.org/doc/sesame2/api/"/>
+    </javadoc>
   </target>
 
 </project>

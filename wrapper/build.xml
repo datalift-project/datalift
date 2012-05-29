@@ -32,6 +32,9 @@
 
   <property name="datalift.root" location="${basedir}/.."/>
 
+  <property name="datalift.wrapper.modules"
+            value="sparql-endpoint,projectmanager,simple-convert"/>
+
 
   <!-- ================ File and Directory Names ========================== -->
 
@@ -88,9 +91,6 @@
   <property name="datalift.war.path"
             location="${core.home}/dist/${datalift.war.name}"/>
 
-  <property name="modules"
-            value="sparql-endpoint,projectmanager,simple-convert"/>
-
 
   <!-- ================ Compilation Control Options ======================= -->
 
@@ -136,7 +136,8 @@
     <path refid="runtime.classpath"/>
   </path>
 
-  <filelist id="module.list" dir="${datalift.root}" files="${modules}"/>
+  <filelist id="build.modules" dir="${datalift.root}"
+                             files="${datalift.wrapper.modules}"/>
 
 
   <!-- ================ All Target ======================================== -->
@@ -225,7 +226,7 @@
 
   <target name="build-modules" depends="build-core">
     <subant target="dist">
-      <filelist refid="module.list"/>
+      <filelist refid="build.modules"/>
     </subant>
   </target>
 
@@ -256,7 +257,7 @@
     </jar>
     <delete dir="${tmp.build.dir}" quiet="true"/>
     <!-- Copy default DataLift modules -->
-    <pathconvert property="modules.jars" refid="module.list" pathsep=",">
+    <pathconvert property="modules.jars" refid="build.modules" pathsep=",">
       <mapper>
         <chainedmapper>
           <globmapper from="${datalift.root}/*"
