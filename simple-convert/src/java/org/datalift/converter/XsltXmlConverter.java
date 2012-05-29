@@ -58,6 +58,7 @@ import org.openrdf.repository.RepositoryConnection;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.Project;
+import org.datalift.fwk.project.ProjectModule;
 import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.XmlSource;
 import org.datalift.fwk.project.Source.SourceType;

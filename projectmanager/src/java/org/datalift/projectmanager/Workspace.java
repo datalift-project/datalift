@@ -391,7 +391,6 @@ public class Workspace extends BaseModule
      *                       <code>null</code> to leave it unchanged.
      * @param  license       the URL of the new project license or
      *                       <code>null</code> to leave it unchanged.
-     * @param  delete        whether to delete the project.
      * @param  uriInfo       the requested URI.
      *
      * @return A redirection to the project summary page of to the

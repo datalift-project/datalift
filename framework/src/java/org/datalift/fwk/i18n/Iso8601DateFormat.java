@@ -151,8 +151,8 @@ public class Iso8601DateFormat extends SimpleDateFormat
     /**
      * Constructs a <code>Iso8601DateFormat</code> with the specified
      * format.
-     * @param  format   the ISO-8601 date format to apply.
-     * @param  utc      whether to use UTC or local timezone.
+     * @param  mode   the ISO-8601 date format to apply.
+     * @param  utc    whether to use UTC or local timezone.
      */
     public Iso8601DateFormat(final Format mode, final boolean utc) {
         super(mode.getFormat(utc));

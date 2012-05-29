@@ -35,7 +35,8 @@ import java.util.Arrays;
  *
  * @author  Dem Pilafian
  * @version 3.1 (June 6, 2010)
- * @see     http://www.centerkey.com/java/browser/
+ * @see     <a href="http://www.centerkey.com/java/browser/">Bare
+ *          Bones Browser Launch</a>
  */
 public class BareBonesBrowserLaunch
 {

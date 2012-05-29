@@ -39,14 +39,14 @@ import javax.servlet.ServletResponse;
  *  <dd>If set to "true", any character encoding specified by the client
  *   is ignored, and the
  *   {@link ServletRequest#getCharacterEncoding() request character encoding}
- *   is set to the value returned by {@link #selectEncoding()}.  If set
- *   to "false", {@link #selectEncoding()} is called
+ *   is set to the value returned by {@link #selectEncoding}.  If set
+ *   to "false", {@link #selectEncoding} is called
  *   <strong>only</strong> if the client has not specified an encoding.<br />
  *   By default, this parameter is set to "true".</dd>
  * </dl>
  * <p>
  * Although this filter can be used unchanged, it is also easy to
- * subclass it and make the {@link #selectEncoding()} method more
+ * subclass it and make the {@link #selectEncoding} method more
  * intelligent about what encoding to choose, based on characteristics
  * of the incoming request (such as the values of the
  * <code>Accept-Language</code> and <code>User-Agent</code> headers,

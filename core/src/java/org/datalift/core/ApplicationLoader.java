@@ -290,7 +290,7 @@ public class ApplicationLoader extends LogServletContextListener
      * @param  props   the properties describing the application runtime
      *                 environment.
      *
-     * @return a DataLift {@Link Configuration} populated from the
+     * @return a DataLift {@link Configuration} populated from the
      *         found configuration file(s).
      * @throws TechnicalException if any error occurred.
      */

@@ -35,7 +35,6 @@
 package org.datalift.fwk.sparql;
 
 
-import java.net.URI;
 import java.util.List;
 
 import javax.ws.rs.WebApplicationException;
@@ -92,7 +91,7 @@ public interface SparqlEndpoint
 
     /**
      * The type of object to
-     * {@link SparqlEndpoint#describe(URI,DescribeType,UriInfo,Request,String) describe}.
+     * {@link SparqlEndpoint#describe(String,DescribeType,UriInfo,Request,String) describe}.
      */
     public enum DescribeType {
         Object,
@@ -229,7 +228,7 @@ public interface SparqlEndpoint
      * @throws SecurityException if the user is not allowed to
      *         perform the query.
      * 
-     * @see    #describe(URI, DescribeType, String, UriInfo, Request, String)
+     * @see    #describe(String, DescribeType, Repository, UriInfo, Request, String)
      */
     public ResponseBuilder describe(String uri, DescribeType type,
                             UriInfo uriInfo, Request request, String acceptHdr)

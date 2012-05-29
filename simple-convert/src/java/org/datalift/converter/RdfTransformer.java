@@ -50,6 +50,7 @@ import javax.ws.rs.core.Response;
 
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.project.Project;
+import org.datalift.fwk.project.ProjectModule;
 import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.project.Source.SourceType;

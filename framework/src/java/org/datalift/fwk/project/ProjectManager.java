@@ -154,7 +154,7 @@ public interface ProjectManager
      * @param  title           the source label.
      * @param  description     the description of the source content or
      *                         intent.
-     * @param  connectionUrl   the connection string of the database.
+     * @param  srcUrl          the connection string of the database.
      * @param  user            username for connection.
      * @param  password        password for connection.
      * @param  request         SQL query to extract data.

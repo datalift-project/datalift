@@ -201,7 +201,7 @@ public class SimpleCache<K,V>
      * @return <code>true</code> if there was a mapping for key;
      *         <code>false</code> otherwise.
      *
-     * @see    #removeAndGet for alternate version.
+     * @see    #getAndRemove for alternate version.
      */
     public boolean remove(K key) {
         return (this.getAndRemove(key) != null);

@@ -70,7 +70,7 @@ import org.datalift.fwk.util.io.FileUtils;
  *   store: {@link #upload(File, Repository, URI)}</li>
  *  <li>Apply a set of SPARQL CONTRUCT queries to build a new set of
  *   RDF triples and save them into an RDF store:
- *   {@link #convert(Repository, List, Repository, URI)}</li>
+ *   {@link #convert(Repository, List, Repository, URI, boolean)}</li>
  * </ul>
  *
  * @author lbihanic
@@ -204,7 +204,7 @@ public final class RdfUtils
      * @throws RdfException if any error occurred parsing the file or
      *         accessing the RDF store.
      *
-     * @see    #upload(InputSream, MediaType, Repository, URI, UriMapper, String)
+     * @see    #upload(InputStream, MediaType, Repository, URI, UriMapper, String)
      */
     public static void upload(InputStream source, MediaType mimeType,
                               Repository target, URI namedGraph,
@@ -412,7 +412,7 @@ public final class RdfUtils
      * @throws RdfException if any error occurred accessing the RDF
      *         stores or executing the CONSTRUCT queries.
      *
-     * @see    #convert(Repository, List, Repository, URI, String)
+     * @see    #convert(Repository, List, Repository, URI, String, boolean)
      */
     public static void convert(Repository source, List<String> constructQueries,
                                Repository target, boolean clearTargetGraph)
@@ -443,7 +443,7 @@ public final class RdfUtils
      * @throws RdfException if any error occurred accessing the RDF
      *         stores or executing the CONSTRUCT queries.
      *
-     * @see    #convert(Repository, List, Repository, URI, String)
+     * @see    #convert(Repository, List, Repository, URI, String, boolean)
      */
     public static void convert(Repository source,
                                List<String> constructQueries,
@@ -545,7 +545,7 @@ public final class RdfUtils
      * @throws RdfException if any error occurred accessing the RDF
      *         store or executing the update queries.
      *
-     * @see    #convert(Repository, List, String)
+     * @see    #update(Repository, List, String)
      */
     public static void update(Repository target,
                               List<String> updateQueries) throws RdfException {

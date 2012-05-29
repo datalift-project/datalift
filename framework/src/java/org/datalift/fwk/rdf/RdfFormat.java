@@ -262,7 +262,7 @@ public enum RdfFormat
 
     /**
      * Creates a new RDF formatter object for this type.
-     * @param  out   the character stream to write formatted RDF to.
+     * @param  w   the character stream to write formatted RDF to.
      *
      * @return an RDF formatter.
      */

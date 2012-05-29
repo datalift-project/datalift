@@ -69,7 +69,7 @@ public interface FileSource extends Source
 
     /**
      * Sets the character encoding of the source content.
-     * @param  charset   character set of the source content. 
+     * @param  encoding   character set of the source content. 
      */
     public void setEncoding(String encoding);
 
