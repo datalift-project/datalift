@@ -38,6 +38,7 @@ package org.datalift.fwk.rdf;
 import java.io.OutputStream;
 import java.io.Writer;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -57,6 +58,11 @@ import org.datalift.fwk.util.StringUtils;
 import static org.datalift.fwk.MediaTypes.*;
 
 
+/**
+ * The RDF representation formats supported by the Datalift platform.
+ *
+ * @author lbihanic
+ */
 public enum RdfFormat
 {
     //-------------------------------------------------------------------------
@@ -165,21 +171,54 @@ public enum RdfFormat
     // Specific implementation
     //-------------------------------------------------------------------------
 
+    /**
+     * Returns the format name.
+     * @return the format name.
+     */
     public String getName() {
         return this.name;
     }
 
+    /**
+     * Returns the official MIME type for this format.
+     * @return the format MIME type.
+     */
     public MediaType getMimeType() {
         return this.mimeTypes.get(0);
     }
 
     /**
-     * 
+     * Returns the known MIME types for this format.
+     * @return the format MIME types.
+     */
+    public Collection<MediaType> getMimeTypes() {
+        return this.mimeTypes;
+    }
+
+    /**
+     * Returns the expected file extension for this format.
+     * @return the format default file extension.
      */
     public String getFileExtension() {
         return this.extensions.get(0);
     }
 
+    /**
+     * Returns the supported file extensions for this format.
+     * @return the supported file extensions.
+     */
+    public Collection<String> getFileExtensions() {
+        return this.extensions;
+    }
+
+    /**
+     * Returns whether the specified extension is one of the supported
+     * file extensions for this format.
+     * @param  ext   the file extension, without any leading dot.
+     *
+     * @return <code>true</code> if the specified file extension is
+     *         supported for this format; <code>false</code> otherwise.
+     */
     public boolean isExtensionKnown(String ext) {
         if (! StringUtils.isSet(ext)) {
             throw new IllegalArgumentException("ext");
@@ -300,6 +339,7 @@ public enum RdfFormat
     // Object contract support
     //-------------------------------------------------------------------------
 
+    /** {@inheritDoc} */
     @Override
     public String toString() {
         return this.getMimeType().toString();
