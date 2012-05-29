@@ -39,7 +39,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -85,6 +84,7 @@ import static org.openrdf.query.QueryLanguage.SPARQL;
 
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.rdf.Repository;
+import org.datalift.fwk.util.CloseableIterator;
 import org.datalift.fwk.util.StringUtils;
 import org.datalift.fwk.util.web.json.GridJsonWriter;
 import org.datalift.fwk.util.web.json.JsonRdfHandler;
@@ -387,6 +387,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                 handler = new ConstructStreamingOutput(repository, query,
                                                             baseUri, dataset)
                     {
+                        @Override
                         protected RDFHandler newHandler(OutputStream out) {
                             return new GridJsonWriter(out,
                                             this.baseUri + DESCRIBE_URL_PATTERN,
@@ -398,6 +399,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                 handler = new ConstructStreamingOutput(repository, query,
                                                             baseUri, dataset)
                     {
+                        @Override
                         protected RDFHandler newHandler(OutputStream out) {
                             return new JsonRdfHandler(out);
                         }
@@ -413,6 +415,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
             handler = new ConstructStreamingOutput(repository, query,
                                                             baseUri, dataset)
                 {
+                    @Override
                     protected RDFHandler newHandler(OutputStream out) {
                         return new TurtleWriter(out);
                     }
@@ -423,6 +426,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
             handler = new ConstructStreamingOutput(repository, query,
                                                             baseUri, dataset)
                 {
+                    @Override
                     protected RDFHandler newHandler(OutputStream out) {
                         return new RDFXMLWriter(out);
                     }
@@ -446,6 +450,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                 handler = new SelectStreamingOutput(repository, query,
                                     startOffset, endOffset, baseUri, dataset)
                     {
+                        @Override
                         protected TupleQueryResultHandler newHandler(OutputStream out) {
                             return new GridJsonWriter(out,
                                             this.baseUri + DESCRIBE_URL_PATTERN,
@@ -458,6 +463,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                 handler = new SelectStreamingOutput(repository, query,
                                     startOffset, endOffset, baseUri, dataset)
                     {
+                        @Override
                         protected TupleQueryResultHandler newHandler(OutputStream out) {
                             return new SparqlResultsJsonWriter(out,
                                             this.baseUri + DESCRIBE_URL_PATTERN,
@@ -471,6 +477,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
             handler = new SelectStreamingOutput(repository, query,
                                     startOffset, endOffset, baseUri, dataset)
                 {
+                    @Override
                     protected TupleQueryResultHandler newHandler(OutputStream out) {
                         return new SPARQLResultsXMLWriter(out);
                     }
@@ -622,7 +629,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
         protected abstract TupleQueryResultHandler newHandler(OutputStream out);
     }
 
-    public static class QueryResultIterator<T> implements Iterator<T> {
+    public static class QueryResultIterator<T> implements CloseableIterator<T> {
         public final String query;
         public final QueryResult<T> result;
         private RepositoryConnection cnx = null;
@@ -681,6 +688,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
             }
         }
 
+        @Override
         public void close() {
             this.close(null);
         }
