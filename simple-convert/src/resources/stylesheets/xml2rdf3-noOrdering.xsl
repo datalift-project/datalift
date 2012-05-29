@@ -28,9 +28,7 @@
        <xsl:strip-space elements="*"/>
        <xsl:output method="xml" indent="yes"/>
 
-       <xsl:param name="BaseURI"><!-- Define if not completed by application-->
-              <!-- http://www.exampleURI.net/STELLA-I -->
-       </xsl:param>
+       <xsl:param name="BaseURI"/>
 
        <!-- Begin RDF document -->
        <xsl:template match="/">
@@ -45,6 +43,7 @@
        <!-- Turn XML elements into RDF triples. -->
        <xsl:template match="*">
               <xsl:param name="subjectname"/>
+              <xsl:param name="subjectns"/>
 
               <!-- Build URI for subjects resources from ancestors elements -->
               <xsl:variable name="newsubjectname">
@@ -64,7 +63,22 @@
                      </xsl:if>
               </xsl:variable>
 
-              <xsl:element name="{name()}" namespace="{concat(namespace-uri(),'#')}">
+              <xsl:variable name="ns">
+                     <!-- If element doesn't have a namespace, use the default provided namespace, if present, or the base URI -->
+                     <xsl:choose>
+                            <xsl:when test="namespace-uri() != ''">
+                                   <xsl:value-of select="concat(namespace-uri(),'#')"/>
+                            </xsl:when>
+                            <xsl:when test="$subjectns != ''">
+                                   <xsl:value-of select="$subjectns"/>
+                            </xsl:when>
+                            <xsl:otherwise>
+                                   <xsl:value-of select="concat($BaseURI,'#')"/>
+                            </xsl:otherwise>
+                     </xsl:choose>
+              </xsl:variable>
+
+              <xsl:element name="{name()}" namespace="{$ns}">
                      <rdf:Description>
                             <xsl:attribute name="rdf:about">
                                    <xsl:value-of select="$newsubjectname"/>
@@ -72,6 +86,8 @@
                             <xsl:apply-templates select="@*|node()">
                                    <xsl:with-param name="subjectname"
                                           select="concat($newsubjectname,'/')"/>
+                                   <xsl:with-param name="subjectns"
+                                          select="$ns"/>
                             </xsl:apply-templates>
                      </rdf:Description>
               </xsl:element>
@@ -93,14 +109,19 @@
 
        <!-- Create attribute triples. -->
        <xsl:template match="@*" name="attributes">
+              <xsl:param name="subjectns"/>
+
               <xsl:variable name="ns">
-                     <!-- If attribute doesn't have a namespace use element namespace -->
+                     <!-- If attribute doesn't have a namespace, use element namespace, if present, or the default provided namespace -->
                      <xsl:choose>
-                            <xsl:when test="namespace-uri()=''">
+                            <xsl:when test="namespace-uri() != ''">
+                                   <xsl:value-of select="concat(namespace-uri(),'#')"/>
+                            </xsl:when>
+                            <xsl:when test="namespace-uri(..) != ''">
                                    <xsl:value-of select="concat(namespace-uri(..),'#')"/>
                             </xsl:when>
                             <xsl:otherwise>
-                                   <xsl:value-of select="concat(namespace-uri(),'#')"/>
+                                   <xsl:value-of select="$subjectns"/>
                             </xsl:otherwise>
                      </xsl:choose>
               </xsl:variable>
