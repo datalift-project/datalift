@@ -60,12 +60,20 @@ import org.openrdf.rio.helpers.RDFHandlerWrapper;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.Project;
+import org.datalift.fwk.project.ProjectModule;
 import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.rdf.RdfFormat;
 import org.datalift.fwk.rdf.Repository;
 
 
+/**
+ * A {@link ProjectModule project module} that streams the RDF triples
+ * of a source from the internal repository into the HTTP response, to
+ * save them into a file on the user's computer.
+ *
+ * @author lbihanic
+ */
 @Path(RdfExporter.MODULE_NAME)
 public class RdfExporter extends BaseConverterModule
 {

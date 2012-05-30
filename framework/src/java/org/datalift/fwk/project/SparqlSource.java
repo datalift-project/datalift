@@ -35,6 +35,12 @@
 package org.datalift.fwk.project;
 
 
+/**
+ * A source object reading data from a SPARQL endpoint by executing a
+ * user-provided SPARQL query.
+ *
+ * @author hdevos
+ */
 public interface SparqlSource extends RdfSource
 {
     /**

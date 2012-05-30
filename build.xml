@@ -91,6 +91,16 @@
     </subant>
   </target>
 
+
+  <!-- ================ Javadoc Target ==================================== -->
+
+  <!--
+    The "javadoc" target creates Javadoc API documentation for the Java
+    classes included in the application.  Normally, this is only required
+    when preparing a distribution release, but is available as a separate
+    target in case the developer wants to create Javadocs independently.
+   -->
+
   <target name="javadoc" description="Create Javadoc API documentation">
     <mkdir dir="${docs.dir}/api"/>
 
@@ -103,22 +113,40 @@
          windowtitle="${app.name} v${app.version}"
             doctitle="${app.name} v${app.version}&lt;br&gt;API Specification"
               header="&lt;b&gt;${app.name}&lt;br&gt;&lt;font size='-1'&gt;${app.version}&lt;/font&gt;&lt;/b&gt;"
-              bottom="Copyright &#169; ${copyright.dates} ${copyright.owner}. All rights reserved.">
+              bottom="Copyright &amp;copy; ${copyright.dates} ${copyright.owner}. All rights reserved.">
+
+      <!--
+        Add imported (patched) classes from external packages to classpath
+        to exclude them from the scanned Java sources so that they do not
+        appear in the generated Javadoc.
+       -->
       <classpath>
         <fileset dir="${basedir}">
           <include name="*/lib/runtime/**/*.jar"/>
         </fileset>
+        <pathelement location="core/build/WEB-INF/classes"/>
+        <pathelement location="wrapper/build/classes"/>
       </classpath>
 
-      <fileset dir="./framework/src/java"       includes="**/*.java"/>
-      <fileset dir="./core/src/java"            includes="**/*.java"/>
-      <fileset dir="./wrapper/src/java"         includes="**/*.java"/>
-      <fileset dir="./projectmanager/src/java"  includes="**/*.java"/>
-      <fileset dir="./simple-convert/src/java"  includes="**/*.java"/>
-      <fileset dir="./sparql-endpoint/src/java" includes="**/*.java"/>
-      <fileset dir="./allegrograph-connector/src/java"  includes="**/*.java"/>
-      <fileset dir="./virtuoso-connector/src/java"      includes="**/*.java"/>
+      <!--
+        Include Java source files from all Datalift modules.
+       -->
+      <fileset dir="${basedir}/framework/src/java" includes="**/*.java"/>
+      <fileset dir="${basedir}/core/src/java"
+          includes="**/*.java" excludes="org/apache/**"/>
+      <fileset dir="${basedir}/wrapper/src/java"
+          includes="**/*.java" excludes="com/**"/>
+      <fileset dir="${basedir}/projectmanager/src/java"  includes="**/*.java"/>
+      <fileset dir="${basedir}/simple-convert/src/java"  includes="**/*.java"/>
+      <fileset dir="${basedir}/sparql-endpoint/src/java" includes="**/*.java"/>
+      <fileset dir="${basedir}/allegrograph-connector/src/java"
+          includes="**/*.java"/>
+      <fileset dir="${basedir}/virtuoso-connector/src/java"
+          includes="**/*.java"/>
 
+      <!--
+        Group packages into logical subsets.
+       -->
       <group title="Datalift Framework"
           packages="org.datalift.fwk*"/>
       <group title="Datalift Core"
@@ -128,9 +156,16 @@
       <group title="Datalift Connectors"
           packages="org.datalift.allegrograph*:org.datalift.virtuoso*"/>
 
+      <!--
+        Add direct links to external third-party libraries.
+       -->
       <link href="http://docs.oracle.com/javase/6/docs/api/"/>
-      <!-- link href="http://jersey.java.net/nonav/apidocs/latest/jersey/"/ -->
+      <link href="http://docs.oracle.com/javaee/5/api/"/>
       <link href="http://www.openrdf.org/doc/sesame2/api/"/>
+      <!-- link href="http://jersey.java.net/nonav/apidocs/latest/jersey/"/ -->
+      <link href="http://velocity.apache.org/engine/releases/velocity-1.7/apidocs/"/>
+      <link href="http://logging.apache.org/log4j/1.2/apidocs/"/>
+      <link href="http://shiro.apache.org/static/1.1.0/apidocs/"/>
     </javadoc>
   </target>
 

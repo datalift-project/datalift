@@ -23,7 +23,7 @@ import javax.servlet.ServletResponse;
 
 
 /**
- * A servlet {@link Filter filter} that sets the character encoding
+ * A {@link Filter servlet filter} that sets the character encoding
  * to be used in parsing the incoming request, either unconditionally
  * or only if the client did not specify a character encoding.
  * <p>

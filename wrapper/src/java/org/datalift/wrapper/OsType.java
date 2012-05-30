@@ -41,7 +41,7 @@ package org.datalift.wrapper;
  *
  * @author lbihanic
  */
-public enum OsType {
+/* package */ enum OsType {
     MacOS("Mac OS"),
     Windows("Windows"),
     Other("");

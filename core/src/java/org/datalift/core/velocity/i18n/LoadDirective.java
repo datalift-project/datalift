@@ -54,6 +54,7 @@ import org.apache.velocity.runtime.parser.node.Node;
 import org.datalift.core.i18n.jersey.PreferredLocalesProvider;
 import org.datalift.core.util.SimpleCache;
 import org.datalift.core.velocity.i18n.BundleList.Bundle;
+import org.datalift.fwk.i18n.PreferredLocales;
 import org.datalift.fwk.log.Logger;
 
 import static org.datalift.core.velocity.jersey.VelocityTemplateProcessor.CTX_HTTP_REQUEST;
@@ -61,6 +62,15 @@ import static org.datalift.core.velocity.jersey.VelocityTemplateProcessor.CTX_HT
 import com.sun.jersey.api.core.HttpRequestContext;
 
 
+/**
+ * Supplementary {@link Directive Velocity directive} for loading
+ * internationalized messages definition resource bundles based on
+ * the user's {@link PreferredLocales preferred locales} retrieved
+ * from the HTTP <code>Accept-Language</code> header sent by the
+ * Web browser.
+ *
+ * @author lbihanic
+ */
 public class LoadDirective extends Directive
 {
     //-------------------------------------------------------------------------

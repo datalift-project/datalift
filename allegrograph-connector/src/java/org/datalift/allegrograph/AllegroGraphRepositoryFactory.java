@@ -52,7 +52,7 @@ import static org.datalift.fwk.util.StringUtils.isBlank;
 
 
 /**
- * A repository factory implementation for instantiating
+ * A {@link RepositoryFactory} implementation for accessing
  * <a href="http://www.franz.com/agraph/allegrograph/">AllegroGraph</a>
  * repositories.
  *
@@ -113,7 +113,7 @@ public class AllegroGraphRepositoryFactory extends RepositoryFactory
     //-------------------------------------------------------------------------
 
     /**
-     * A Repository implementation to access remote AllegroGraph
+     * A {@link Repository} implementation to access remote AllegroGraph
      * repositories.
      */
     public final static class AllegroGraphRepository extends BaseRepository

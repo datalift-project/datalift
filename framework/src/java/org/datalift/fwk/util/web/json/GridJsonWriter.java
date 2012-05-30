@@ -54,6 +54,13 @@ import org.openrdf.rio.RDFHandlerException;
 import org.datalift.fwk.project.Row;
 
 
+/**
+ * A {@link TupleQueryResultWriter} implementation that serializes
+ * SPARQL query results into a compact JSON syntax, suitable for
+ * directly filling HTML tables with minimum client-side processing.
+ *
+ * @author hdevos
+ */
 public class GridJsonWriter extends AbstractJsonWriter
                             implements TupleQueryResultWriter, RDFHandler
 {

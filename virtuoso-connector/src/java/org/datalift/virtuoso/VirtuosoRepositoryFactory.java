@@ -47,9 +47,9 @@ import org.datalift.fwk.util.StringUtils;
 
 
 /**
- * A repository factory implementation for instantiating
- * <a href="http://virtuoso.openlinksw.com/dataspace/dav/wiki/Main">OpenLink Virtuoso</a>
- * repositories.
+ * A {@link RepositoryFactory} implementation for accessing
+ * <a href="http://virtuoso.openlinksw.com/dataspace/dav/wiki/Main">OpenLink
+ * Virtuoso</a> repositories.
  *
  * @author lbihanic
  */
@@ -99,7 +99,7 @@ public final class VirtuosoRepositoryFactory extends RepositoryFactory
     //-------------------------------------------------------------------------
 
     /**
-     * A Repository implementation to access remote Virtuoso
+     * A {@link Repository} implementation to access remote Virtuoso
      * repositories over JDBC.
      */
     public final static class VirtuosoJdbcRepository extends BaseRepository

@@ -41,7 +41,8 @@ import java.util.Map;
 
 /**
  * A default implementation of the {@link Module} interface to act
- * as a superclass for actual application modules.
+ * as a superclass for actual application modules. Most method
+ * implementations are empty.
  *
  * @author lbihanic
  */
@@ -115,29 +116,20 @@ public abstract class BaseModule implements Module
         return this.isResource;
     }
 
-    /**
-     * {@inheritDoc}
-     * <p>This implementation is empty.</p>
-     */
+    /** {@inheritDoc} */
     @Override
     public void init(Configuration configuration) {
         // NOP
     }
 
-    /**
-     * {@inheritDoc}
-     * <p>This implementation is empty.</p>
-     */
+    /** {@inheritDoc} */
     @Override
     public void postInit(Configuration configuration) {
         // NOP
     }
     
+    /** {@inheritDoc} */
     @Override
-    /**
-     * {@inheritDoc}
-     * <p>This implementation is empty.</p>
-     */
     public void shutdown(Configuration configuration) {
         // NOP
     }

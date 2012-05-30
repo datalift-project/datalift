@@ -84,6 +84,12 @@ import static org.datalift.fwk.util.StringUtils.*;
 import static org.datalift.fwk.sparql.SparqlEndpoint.DescribeType.*;
 
 
+/**
+ * A skeleton for implementations of the {@link SparqlEndpoint}
+ * Java interface and SPARQL endpoint HTTP bindings.
+ *
+ * @author lbihanic
+ */
 abstract public class AbstractSparqlEndpoint extends BaseModule
                                              implements SparqlEndpoint
 {
@@ -673,15 +679,32 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         return type;
     }
 
+    //-------------------------------------------------------------------------
+    // QueryDescription
+    //-------------------------------------------------------------------------
+
+    /**
+     * Helper class to ease logging of SPARQL queries by providing a
+     * {@link #toString() shortened description} of the query text,
+     * without namespace prefixes declarations and a possibly truncated
+     * query body.
+     */
     protected final static class QueryDescription
     {
+        /** The full text of the SPARQL query. */
         public final String query;
+        /** The shortened description of the SPARQL query. */
         private String desc = null;
 
+        /**
+         * Default constructor.
+         * @param  query   the SPARQL query to wrap.
+         */
         public QueryDescription(String query) {
             this.query = query;
         }
 
+        /** {@inheritDoc} */
         @Override
         public String toString() {
             if (this.desc == null) {
@@ -690,6 +713,10 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
             return this.desc;
         }
     }
+
+    //-------------------------------------------------------------------------
+    // AcceptType nested class
+    //-------------------------------------------------------------------------
 
     private final static class AcceptType implements Comparable<AcceptType>
     {

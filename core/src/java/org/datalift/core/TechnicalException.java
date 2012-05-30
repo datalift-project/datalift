@@ -38,6 +38,14 @@ package org.datalift.core;
 import java.text.MessageFormat;
 
 
+/**
+ * <code>TechnicalExceptions</code> are thrown to indicate technical
+ * or environmental (i.e. configuration, hardware...) error conditions
+ * that need not to be handled by the application code. These errors
+ * shall be notified to the system administrator.
+ *
+ * @author  lbihanic
+ */
 public class TechnicalException extends org.datalift.fwk.TechnicalException
 {
     //-------------------------------------------------------------------------

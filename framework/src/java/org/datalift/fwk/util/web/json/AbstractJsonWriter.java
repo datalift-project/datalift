@@ -42,6 +42,7 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
+import java.text.ChoiceFormat;
 import java.text.MessageFormat;
 import java.util.Iterator;
 import java.util.List;
@@ -55,15 +56,34 @@ import info.aduna.io.IndentingWriter;
 import info.aduna.text.StringUtil;
 
 
+/**
+ * A helper class to write custom JSON serializers for RDF data.
+ *
+ * @author hdevos
+ */
 public abstract class AbstractJsonWriter
 {
+    /** Types of RDF objects recognized for JSON serialization. */
     public enum ResourceType {
+        /** RDF subject or object, literals excluded. */
         Object          (0),
+        /** Predicate. */
         Predicate       (1),
+        /** Named graph. */
         Graph           (2),
+        /** Object type to be determined by analyzing the query results. */
         Unknown         (3);
 
+        /**
+         * The resource type identifier as an integer value, suitable
+         * for testing in a {@link ChoiceFormat}.
+         */
         public final int value;
+
+        /**
+         * Default constructor.
+         * @param  value   the resource type identifier.
+         */
         private ResourceType(int value) {
             this.value = value;
         }

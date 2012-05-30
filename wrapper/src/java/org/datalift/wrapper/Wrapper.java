@@ -74,7 +74,10 @@ public final class Wrapper
 {
     /** The default HTTP port for the DataLift standalone server. */
     public final static int DEFAULT_HTTP_PORT = 9091;
-    /** The DataLift working directory system property/environment variable. */
+    /**
+     * The system property/environment variable defining the DataLift
+     * working directory.
+     */
     public final static String DATALIFT_HOME = "datalift.home";
     /** The system property defining the DataLift installation directory. */
     public final static String DATALIFT_ROOT = "datalift.root";
@@ -82,8 +85,11 @@ public final class Wrapper
     public final static String DATALIFT_PORT = "datalift.port";
     /** The system property defining the location of the DataLift log files. */
     public final static String DATALIFT_LOG_PATH = "datalift.log.path";
-    /** The Sesame repository directory system property variable. */
-    public final static String SESAME_HOME =
+    /**
+     * The system property/environment variable defining the directory
+     * where Sesame stores the persistent repository data.
+     */
+    private final static String SESAME_HOME =
                                         "info.aduna.platform.appdata.basedir";
 
     private final static String SESAME_REPOSITORIES_DIR = "repositories";
@@ -109,6 +115,16 @@ public final class Wrapper
     private final static String OTHER_APPL_LOGS_PATH  = "logs";
     private final static String OTHER_WEB_APPS_PATH   = "work";
 
+    /**
+     * The wrapper main method to run Datalift from the command line.
+     * <p>
+     * Usage: java org.datalift.wrapper.Wrapper [{-p,--port} port]
+              [{-e,--external}] [install_dir]</p>
+     * @param  args   the command-line arguments (see above).
+     *
+     * @throws Exception if any error occurred while running the
+     *         Datalift application.
+     */
     public static void main(String[] args) throws Exception
     {
         File dataliftRoot = null;
@@ -142,7 +158,7 @@ public final class Wrapper
         }
         catch (Exception e) {
             System.err.println(e.getMessage());
-            System.err.println("Usage: " + Wrapper.class.getSimpleName() +
+            System.err.println("Usage: java " + Wrapper.class.getName() +
                                " [{-p,--port} port]" +
                                " [{-e,--external}]" +
                                " [install_dir]");
@@ -339,7 +355,7 @@ public final class Wrapper
         // Else: neither a directory nor a regular file. => Ignore...
     }
 
-    public final static void copyFile(File in, File out) throws IOException {
+    private static void copyFile(File in, File out) throws IOException {
         if ((in == null) || (! in.canRead())) {
             throw new IllegalArgumentException("in");
         }
@@ -383,7 +399,7 @@ public final class Wrapper
         }
     }
 
-    public final static void delete(File f) {
+    private static void delete(File f) {
         if ((f != null) && (f.exists())) {
             if (f.isDirectory()) {
                 // Delete children, files and sub-directories.

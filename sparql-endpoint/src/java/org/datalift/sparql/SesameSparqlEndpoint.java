@@ -629,6 +629,19 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
         protected abstract TupleQueryResultHandler newHandler(OutputStream out);
     }
 
+    //-------------------------------------------------------------------------
+    // QueryResultIterator nested class
+    //-------------------------------------------------------------------------
+
+    /**
+     * An iterator of the results of a SPARQL query, to support direct
+     * consumption of the query results by the view (HTML template, JSP
+     * page...) in streaming mode.
+     *
+     * @param  <T>   the expected type of query results, e.g.
+     *               {@link Statement} for CONSTRUCT queries or
+     *               {@link BindingSet} for SELECT queries.
+     */
     public static class QueryResultIterator<T> implements CloseableIterator<T> {
         public final String query;
         public final QueryResult<T> result;

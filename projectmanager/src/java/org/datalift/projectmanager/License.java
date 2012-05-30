@@ -39,6 +39,11 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 
+/**
+ * Well-known Open Data licenses.
+ *
+ * @author lbihanic
+ */
 public enum License
 {
     Attribution("http://creativecommons.org/licenses/by/3.0"), 
@@ -48,17 +53,26 @@ public enum License
     Attribution_NonCommercial_ShareAlike("http://creativecommons.org/licenses/by-nc-sa/3.0"),
     Attribution_NonCommercial_NoDerivs("http://creativecommons.org/licenses/by-nc-nd/3.0");
 
+    /** The license identifier, as a URI. */
     public final URI uri;
 
-    License(String s) {
+    /**
+     * Default constructor.
+     * @param  uri   the license identifier.  
+     */
+    License(String uri) {
         try {
-            this.uri = new URI(s);
+            this.uri = new URI(uri);
         }
-        catch(URISyntaxException e) {
-            throw new IllegalArgumentException(e);
+        catch (URISyntaxException e) {
+            throw new IllegalArgumentException(uri, e);
         }
     }
-    
+
+    /**
+     * Returns the license identifier, as a URI.
+     * @return the license URI.
+     */
     public URI getUri() {
     	return this.uri;
     }

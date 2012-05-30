@@ -18,6 +18,15 @@ import org.openrdf.query.resultio.TupleQueryResultFormat;
 import org.openrdf.query.resultio.TupleQueryResultWriter;
 
 
+/**
+ * A {@link TupleQueryResultWriter} implementation that serializes
+ * SPARQL query results into a JSON syntax compliant with the W3C
+ * proposal for
+ * <a href="http://www.w3.org/TR/rdf-sparql-json-res/">Serializing
+ * SPARQL Query Results in JSON</a>.
+ *
+ * @author lbihanic
+ */
 public class SparqlResultsJsonWriter extends AbstractJsonWriter
                                      implements TupleQueryResultWriter
 {

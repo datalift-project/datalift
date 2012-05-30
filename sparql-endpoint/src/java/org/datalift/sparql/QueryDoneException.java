@@ -35,8 +35,25 @@
 package org.datalift.sparql;
 
 
+import org.openrdf.query.TupleQueryResultHandler;
+
+import org.datalift.fwk.rdf.Repository;
+
+
+/**
+ * A checked exception to abort the reading of the SPARQL query results
+ * by the {@link Repository#select(String, TupleQueryResultHandler)
+ * repository connection} when the user only desires a subset (from M
+ * to N) of these results, as in the case of a paginated user interface.
+ * Classes relying on {@link TupleQueryResultHandler} implementations
+ * throwing this exception should make sure it is properly caught and
+ * never propagated to the end user.
+ *
+ * @author lbihanic
+ */
 public class QueryDoneException extends Exception
 {
+    /** Default constructor. */
     public QueryDoneException() {
         super();
     }

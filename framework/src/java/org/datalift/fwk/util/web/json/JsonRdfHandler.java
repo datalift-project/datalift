@@ -45,6 +45,12 @@ import org.openrdf.rio.RDFHandler;
 import org.openrdf.rio.RDFHandlerException;
 
 
+/**
+ * An {@link RDFHandler} implementation that serializes the processed
+ * RDF triples in JSON.
+ *
+ * @author lbihanic
+ */
 public class JsonRdfHandler extends AbstractJsonWriter implements RDFHandler
 {
     //-------------------------------------------------------------------------

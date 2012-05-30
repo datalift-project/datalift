@@ -39,8 +39,9 @@ package org.datalift.fwk.util;
  * An extension of the Java {@link Iterable} interface for
  * implementations that require an additional method call on the
  * returned {@link CloseableIterator iterator object}
- * ({@link #close()}) to free underlying resources in case the user
- * stops using the iterator prior reaching the end of the collection.
+ * ({@link CloseableIterator#close()}) to free underlying resources
+ * in case the user stops using the iterator prior reaching the end
+ * of the collection.
  *
  * @param  <T>   the type of objects this iterable iterates on.
  */

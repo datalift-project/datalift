@@ -48,8 +48,21 @@ import org.apache.velocity.runtime.parser.node.Node;
 import org.datalift.fwk.log.Logger;
 
 
+/**
+ * Supplementary {@link Directive Velocity directive} for substituting
+ * an internationalized message identifier with the best available
+ * translation {@link LoadDirective loaded from resource bundles}
+ * based on the user's preferred locales retrieved from the HTTP
+ * <code>Accept-Language</code> header sent by the Web browser.
+ *
+ * @author lbihanic
+ */
 public class I18nDirective extends Directive
 {
+    //-------------------------------------------------------------------------
+    // Class members
+    //-------------------------------------------------------------------------
+
     private final static Logger log = Logger.getLogger();
 
     //-------------------------------------------------------------------------

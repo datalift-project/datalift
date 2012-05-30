@@ -40,7 +40,7 @@ import java.util.ServiceLoader;
 
 
 /**
- * An factory class that abstracts the access to the user's security
+ * A factory class that abstracts access to the user's security
  * information.
  *
  * @author lbihanic
