@@ -37,7 +37,6 @@ package org.datalift.fwk.i18n;
 
 import java.util.AbstractList;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -52,7 +51,8 @@ import org.datalift.fwk.util.StringUtils;
 
 /**
  * The user's preferred locales, extracted from the HTTP request
- * "<code>Accept-Language</code>" header.
+ * "<code>Accept-Language</code>" header, as an
+ * <strong>unmodifiable</strong> list.
  * <p>
  * Preferred locales are accessible:</p>
  * <ul>
@@ -83,7 +83,12 @@ public final class PreferredLocales extends AbstractList<Locale>
     // Constructors
     //-------------------------------------------------------------------------
 
-    public PreferredLocales(Collection<? extends Locale> c) {
+    /**
+     * Creates a new PreferredLocales object for the specified list of
+     * locales.
+     * @param  c   the preferred locales, the most preferred first.
+     */
+    public PreferredLocales(List<? extends Locale> c) {
         super();
         if ((c == null) || (c.isEmpty())) {
             throw new IllegalArgumentException("c");
@@ -96,11 +101,13 @@ public final class PreferredLocales extends AbstractList<Locale>
     // List contract support
     //-------------------------------------------------------------------------
 
+    /** {@inheritDoc} */
     @Override
     public Locale get(int index) {
         return this.locales.get(index);
     }
 
+    /** {@inheritDoc} */
     @Override
     public int size() {
         return this.locales.size();
