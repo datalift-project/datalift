@@ -34,7 +34,7 @@
   <!-- ================ File and Directory Names ========================== -->
 
   <property name="datalift.default.modules"
-            value="framework,core,sparql-endpoint,projectmanager,simple-convert,ui-sample,interconnection"/>
+            value="framework,core,sparql-endpoint,projectmanager,simple-convert,ui-sample"/>
 
   <property name="app.name"             value="${ant.project.name}"/>
   <property name="app.version"          value="0.6"/>
