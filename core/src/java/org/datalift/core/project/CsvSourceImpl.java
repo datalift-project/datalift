@@ -506,7 +506,7 @@ public class CsvSourceImpl extends BaseFileSource
         /** {@inheritDoc} */
         @Override
         public String get(int index) {
-            if ((index < 0) || (index > this.size())) {
+            if ((index < 0) || (index > this.keyMapping.size())) {
                 throw new ArrayIndexOutOfBoundsException(index);
             }
             String v = null;
