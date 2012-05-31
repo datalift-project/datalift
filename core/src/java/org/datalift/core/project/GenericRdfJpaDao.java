@@ -50,13 +50,25 @@ import com.clarkparsia.empire.impl.RdfQuery;
 import static org.datalift.fwk.util.StringUtils.*;
 
 
+/**
+ * A generic RDF JPA DAO.
+ *
+ * @param  <T>   the type of objects this DAO persists.
+ *
+ * @author lbihanic
+ */
 public class GenericRdfJpaDao<T>
 {
+    /** The class the instances of which are persisted through this DAO. */
     protected final Class<? extends T> persistentClass;
+    /** The RDF type of the persistent class. */
     protected final String rdfType;
-
+    /**
+     * The JPA entity manager this DAO relies on to access the
+     * persistent object store.
+     */
     protected final EntityManager entityMgr;
-    
+
     public GenericRdfJpaDao(final Class<? extends T> persistentClass,
                             final EntityManager entityMgr) {
         if (persistentClass == null) {

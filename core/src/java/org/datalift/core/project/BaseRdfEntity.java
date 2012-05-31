@@ -45,6 +45,11 @@ import com.clarkparsia.empire.annotation.SupportsRdfIdImpl;
 import org.datalift.fwk.i18n.Iso8601DateFormat;
 
 
+/**
+ * An abstract superclass for all Java objects to be persisted as RDF.
+ *
+ * @author lbihanic
+ */
 @MappedSuperclass
 public abstract class BaseRdfEntity implements SupportsRdfId
 {
@@ -58,6 +63,10 @@ public abstract class BaseRdfEntity implements SupportsRdfId
     // BaseRdfEntity contract definition
     //-------------------------------------------------------------------------
 
+    /**
+     * Set the RDF identifier (URI) for this entity.
+     * @param  id   the URI identifying this entity.
+     */
     abstract protected void setId(String id);
 
     //-------------------------------------------------------------------------

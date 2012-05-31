@@ -56,9 +56,8 @@ import org.datalift.fwk.log.Logger;
  * A {@link ValueFactory} decorator that manages a cache of the created
  * URIs to avoid allocating again and again the same URI objects, e.g.
  * URIs of RDF subjects or properties.
- * <p>
- * @author lbihanic
  *
+ * @author lbihanic
  */
 public final class UriCachingValueFactory implements ValueFactory
 {
@@ -66,6 +65,7 @@ public final class UriCachingValueFactory implements ValueFactory
     // Constants
     //-------------------------------------------------------------------------
 
+    /** The default size for the cache. */
     public final static int DEFAULT_CACHE_SIZE = 1024;
 
     //-------------------------------------------------------------------------
@@ -82,26 +82,46 @@ public final class UriCachingValueFactory implements ValueFactory
     // Constructors
     //-------------------------------------------------------------------------
 
+    /**
+     * Creates a new value factory with the default cache size.
+     */
     public UriCachingValueFactory() {
         this(null);
     }
 
+    /**
+     * Creates a new value factory with the default cache size and
+     * caching the URIs created by the specified value factory.
+     * @param  wrappedFactory   the value factory to decorate.
+     */
     public UriCachingValueFactory(ValueFactory wrappedFactory) {
         this(wrappedFactory, DEFAULT_CACHE_SIZE);
     }
 
-    public UriCachingValueFactory(ValueFactory wrappedFactory,
-                                                        final int cacheSize) {
+    /**
+     * Creates a new value factory with the specified cache size and
+     * caching the URIs created by the specified value factory.
+     * @param  wrappedFactory   the value factory to decorate or
+     *                          <code>null</code> to use the default
+     *                          value factory.
+     * @param  cacheSize        the cache size.
+     */
+    public UriCachingValueFactory(ValueFactory wrappedFactory, int cacheSize) {
         if (wrappedFactory == null) {
             wrappedFactory = ValueFactoryImpl.getInstance();
         }
+        if (cacheSize < 0) {
+            throw new IllegalArgumentException("cacheSize");
+        }
+        final int size = (cacheSize < DEFAULT_CACHE_SIZE)? DEFAULT_CACHE_SIZE:
+                                                           cacheSize;
         this.wrappedFactory = wrappedFactory;
         this.uriCache = new LinkedHashMap<String,URI>(cacheSize, 0.75f, true)
             {
                 @Override
                 protected boolean removeEldestEntry(
                                                 Map.Entry<String,URI> eldest) {
-                    return this.size() > cacheSize;
+                    return this.size() > size;
                 }
             };
     }
@@ -110,7 +130,12 @@ public final class UriCachingValueFactory implements ValueFactory
     // Overridden ValueFactory methods
     //-------------------------------------------------------------------------
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     * @return an existing URI object if present in the cache or
+     *         delegates the actual URI allocation to the decorated
+     *         value factory.
+     */
     @Override
     public URI createURI(String uri) {
         this.callCount++;
@@ -126,7 +151,10 @@ public final class UriCachingValueFactory implements ValueFactory
         return u;
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     * @see    #createURI(String)
+     */
     @Override
     public URI createURI(String namespace, String localName) {
         return this.createURI(namespace + localName);

@@ -82,6 +82,11 @@ import org.datalift.fwk.security.SecurityContext;
 import static org.datalift.fwk.util.StringUtils.*;
 
 
+/**
+ * Default implementation of the {@link ProjectManager} interface.
+ *
+ * @author hdevos, lbihanic, oventura
+ */
 public class DefaultProjectManager implements ProjectManager, LifeCycle
 {
     //-------------------------------------------------------------------------

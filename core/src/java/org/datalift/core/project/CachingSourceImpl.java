@@ -16,11 +16,19 @@ import org.datalift.fwk.Configuration;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.CachingSource;
 import org.datalift.fwk.project.Project;
+import org.datalift.fwk.project.Source;
 
 import static org.datalift.fwk.util.StringUtils.urlify;
 import static org.datalift.fwk.util.Env.*;
 
 
+/**
+ * An abstract superclass for implementations of the {@link Source}
+ * interface supporting caching of the source data on the local
+ * file system.
+ *
+ * @author lbihanic
+ */
 @MappedSuperclass
 public abstract class CachingSourceImpl extends BaseSource
                                         implements CachingSource

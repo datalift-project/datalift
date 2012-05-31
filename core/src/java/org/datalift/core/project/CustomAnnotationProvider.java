@@ -56,15 +56,52 @@ import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.util.StringUtils;
 
 
+/**
+ * An implementation of Empire's {@link EmpireAnnotationProvider} that
+ * retrieves the list of annotated classes to register to the Empire
+ * persistence manager from the Empire's configuration (rather than from
+ * a property file, as the default provider does).
+ *
+ * @author lbihanic
+ */
 public final class CustomAnnotationProvider implements EmpireAnnotationProvider
 {
+    //-------------------------------------------------------------------------
+    // Constants
+    //-------------------------------------------------------------------------
+
+    /**
+     * The Empire configuration property that holds the list of
+     * RDF-annotated classes to search for and automatically register
+     * when this provider is created.
+     */
     public final static String ANNOTATED_CLASSES_PROP = "annotated.classes";
+
+    //-------------------------------------------------------------------------
+    // Class members
+    //-------------------------------------------------------------------------
 
     private final static Logger log = Logger.getLogger();
 
+    //-------------------------------------------------------------------------
+    // Instance members
+    //-------------------------------------------------------------------------
+
+    /** The classes registered for each annotation. */
     private final Map<Class<? extends Annotation>,Collection<Class<?>>>
             annotatedClasses = new HashMap<Class<? extends Annotation>,Collection<Class<?>>>();
 
+    //-------------------------------------------------------------------------
+    // Constructors
+    //-------------------------------------------------------------------------
+
+    /**
+     * Creates a new annotation provider,
+     * {@link #ANNOTATED_CLASSES_PROP retrieving} the list of
+     * RDF-annotated classes to register for persistence from the
+     * specified Empire configuration.
+     * @param  cfg   the Empire configuration.
+     */
     @Inject
     public CustomAnnotationProvider(@Named("ec") EmpireConfiguration cfg) {
         String v = cfg.get(ANNOTATED_CLASSES_PROP);
@@ -82,11 +119,13 @@ public final class CustomAnnotationProvider implements EmpireAnnotationProvider
                                            c + "\": " + e.getMessage(), e);
             }
         }
-        // Force Javassist to take web application classes into account.
-//        javassist.ClassPool.getDefault().insertClassPath(
-//                                new javassist.ClassClassPath(this.getClass()));
     }
 
+    //-------------------------------------------------------------------------
+    // EmpireAnnotationProvider contract support
+    //-------------------------------------------------------------------------
+
+    /** {@inheritDoc} */
     @Override
     public Collection<Class<?>> getClassesWithAnnotation(
                                 Class<? extends Annotation> annotation) {
@@ -98,6 +137,15 @@ public final class CustomAnnotationProvider implements EmpireAnnotationProvider
         return l;
     }
 
+    //-------------------------------------------------------------------------
+    // CustomAnnotationProvider contract definition
+    //-------------------------------------------------------------------------
+
+    /**
+     * Checks the specified class for Empire annotations and registers
+     * it for each annotation found.
+     * @param  c   the class to register.
+     */
     public void register(Class<?> c) {
         if (c.isAnnotationPresent(RdfsClass.class)) {
             this.register(c, RdfsClass.class);
@@ -117,6 +165,15 @@ public final class CustomAnnotationProvider implements EmpireAnnotationProvider
         // Else: ignore...
     }
 
+    //-------------------------------------------------------------------------
+    // Specific implementation
+    //-------------------------------------------------------------------------
+
+    /**
+     * Registers the specified class for the specified annotation.
+     * @param  c            the class to register.
+     * @param  annotation   the annotation to register the class for.
+     */
     private void register(Class<?> c,
                           Class<? extends Annotation> annotation) {
         Collection<Class<?>> l = this.annotatedClasses.get(annotation);

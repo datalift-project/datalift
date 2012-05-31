@@ -43,6 +43,11 @@ import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.XmlSource;
 
 
+/**
+ * Default implementation of the {@link XmlSource} interface.
+ *
+ * @author lbihanic
+ */
 @Entity
 @RdfsClass("datalift:xmlSource")
 public class XmlSourceImpl extends BaseFileSource

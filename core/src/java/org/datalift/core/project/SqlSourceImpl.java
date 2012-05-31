@@ -452,21 +452,31 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
         private final ResultSet rs;
         private final Collection<String> columns;
 
+        /**
+         * Creates a new result set row object for the current row
+         * of the result set.
+         * @param  rs        the result set the current row of which
+         *                   shall be wrapped.
+         * @param  columns   the columns available from the result set.
+         */
         public ResultSetRow(ResultSet rs, Collection<String> columns) {
             this.rs = rs;
             this.columns = columns;
         }
 
+        /** {@inheritDoc} */
         @Override
         public int size() {
             return this.columns.size();
         }
 
+        /** {@inheritDoc} */
         @Override
         public Collection<String> keys() {
             return this.columns;
         }
 
+        /** {@inheritDoc} */
         @Override
         public Object get(String key) {
             try {
@@ -477,6 +487,7 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
             }
         }
 
+        /** {@inheritDoc} */
         @Override
         public String getString(String key) {
             try {
@@ -487,6 +498,7 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
             }
         }
 
+        /** {@inheritDoc} */
         @Override
         public Object get(int index) {
             try {
@@ -497,6 +509,7 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
             }
         }
 
+        /** {@inheritDoc} */
         @Override
         public String getString(int index) {
             try {
@@ -507,6 +520,7 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
             }
         }
 
+        /** {@inheritDoc} */
         @Override
         public Iterator<Object> iterator() {
             return new Iterator<Object>() {

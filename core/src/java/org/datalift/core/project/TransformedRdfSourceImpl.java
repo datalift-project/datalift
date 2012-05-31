@@ -53,6 +53,11 @@ import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.util.CloseableIterator;
 
 
+/**
+ * Default implementation of the {@link TransformedRdfSource} interface.
+ *
+ * @author lbihanic
+ */
 @Entity
 @RdfsClass("datalift:TransformedRdfSource")
 public class TransformedRdfSourceImpl extends BaseSource
@@ -197,6 +202,7 @@ public class TransformedRdfSourceImpl extends BaseSource
                         this.close();
                     }
 
+                    @Override
                     public void close() {
                         try { result.close(); } catch (Exception e) { /* Ignore... */ }
                         try { cnx.close();    } catch (Exception e) { /* Ignore... */ }

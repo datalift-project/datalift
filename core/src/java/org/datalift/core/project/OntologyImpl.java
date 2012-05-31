@@ -45,6 +45,11 @@ import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.RdfsClass;
 
 
+/**
+ * Default implementation of the {@link Ontology} interface.
+ *
+ * @author oventura
+ */
 @Entity
 @RdfsClass("void:vocabulary")
 public class OntologyImpl extends BaseRdfEntity implements Ontology

@@ -84,12 +84,32 @@ public final class BatchStatementAppender extends RDFHandlerBase
     // Constructors
     //-------------------------------------------------------------------------
 
+    /**
+     * Creates a new statement appender with the default batch size.
+     * @param  cnx           the connection to the RDF store.
+     * @param  targetGraph   the named graph to which the inserted
+     *                       triples shall belong or <code>null</code>
+     *                       to insert the triples in the default graph.
+     * @param  mapper        an optional URI mapper to translate URIs
+     *                       while processing triples.
+     */
     public BatchStatementAppender(RepositoryConnection cnx,
                                   URI targetGraph,
                                   UriMapper mapper) {
         this(cnx, targetGraph, mapper, getRdfBatchSize());
     }
 
+    /**
+     * Creates a new statement appender with the specified batch size.
+     * @param  cnx           the connection to the RDF store.
+     * @param  targetGraph   the named graph to which the inserted
+     *                       triples shall belong or <code>null</code>
+     *                       to insert the triples in the default graph.
+     * @param  mapper        an optional URI mapper to translate URIs
+     *                       while processing triples.
+     * @param  batchSize     the size of triple batches, as a number of
+     *                       triples.
+     */
     public BatchStatementAppender(RepositoryConnection cnx,
                                   URI targetGraph,
                                   UriMapper mapper, int batchSize) {
@@ -97,6 +117,9 @@ public final class BatchStatementAppender extends RDFHandlerBase
 
         if (cnx == null) {
             throw new IllegalArgumentException("cnx");
+        }
+        if (batchSize < 0) {
+            throw new IllegalArgumentException("batchSize");
         }
         this.cnx = cnx;
         this.valueFactory = cnx.getValueFactory();

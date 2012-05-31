@@ -246,8 +246,23 @@ public interface ProjectManager
      */
     public Ontology newOntology(Project project, URI srcUrl, String title);
 
+    /**
+     * Deletes the specified ontology from the project.
+     * @param  project    the owning project.
+     * @param  ontology   the ontology to remove.
+     */
     public void deleteOntology(Project project, Ontology ontology);
 
+    /**
+     * Builds the path to the project directory or to the specified
+     * file belonging to the project. The returned path is relative to
+     * the DataLift public storage directory.
+     * @param  projectId   the project identifier, i.e. the last member
+     *                     of the project URI.
+     * @param  fileName    the file name or <code>null</code>.
+     *
+     * @return the path to the project directory or file.
+     */
     public String getProjectFilePath(String projectId, String fileName);
 
     /**
