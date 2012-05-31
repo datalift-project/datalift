@@ -36,7 +36,6 @@ package org.datalift.core.project;
 
 
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -58,8 +57,6 @@ import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.util.StringUtils;
-
-import static org.datalift.fwk.rdf.RdfNamespace.VDPP;
 
 
 /**
@@ -93,6 +90,7 @@ public class ProjectImpl extends BaseRdfEntity implements Project
     // Enumeration of project execution steps
     //-------------------------------------------------------------------------
 
+/*
     public enum Execution {
         Selection       (VDPP.uri + "Selection"),
         Publication     (VDPP.uri + "Publication"),
@@ -110,6 +108,7 @@ public class ProjectImpl extends BaseRdfEntity implements Project
             }
         }
     }
+*/
 
     //-------------------------------------------------------------------------
     // Class members
