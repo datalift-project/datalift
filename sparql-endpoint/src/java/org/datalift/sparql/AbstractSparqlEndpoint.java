@@ -65,13 +65,14 @@ import javax.ws.rs.core.Variant;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 
+import static javax.ws.rs.core.Response.Status.*;
+
 import org.openrdf.query.BindingSet;
 
 import com.sun.jersey.api.view.Viewable;
 
 import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
-import org.datalift.fwk.MediaTypes;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.rdf.BaseTupleQueryResultMapper;
 import org.datalift.fwk.rdf.Repository;
@@ -559,11 +560,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                                            "default.negotiation.failed",
                     l, expected);
             log.error(error.getMessage());
-
-            throw new WebApplicationException(
-                                Response.status(Status.NOT_ACCEPTABLE)
-                                        .type(MediaTypes.TEXT_PLAIN_TYPE)
-                                        .entity(error.getMessage()).build());
+            this.sendError(NOT_ACCEPTABLE, error.getMessage());
         }
         log.debug("Negotiated content type: {}", responseType);
         return responseType;
@@ -577,13 +574,10 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                                      String message, Status status)
                                                 throws WebApplicationException {
         if (status == null) {
-            status = Status.INTERNAL_SERVER_ERROR;
+            status = INTERNAL_SERVER_ERROR;
         }
         log.error("Query processing failed: {}, for \"{}\"", message, query);
-        throw new WebApplicationException(
-                                Response.status(status)
-                                        .type(MediaTypes.TEXT_PLAIN_TYPE)
-                                        .entity(message).build());
+        this.sendError(status, message);
     }
 
     protected final void handleError(URI uri, Exception e)
@@ -597,7 +591,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
             throw (WebApplicationException)e;
         }
         else if (e instanceof SecurityException) {
-            throw new WebApplicationException(Status.FORBIDDEN);
+            this.sendError(FORBIDDEN, null);
         }
         else if (e.getCause() instanceof QueryDoneException) {
             // End of requested range (start/end offset) successfully reached.
@@ -605,10 +599,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         else {
             log.error("Query processing failed: \"{}\" for: \"{}\"",
                                                     e, e.getMessage(), query);
-            throw new WebApplicationException(e,
-                                Response.status(Status.INTERNAL_SERVER_ERROR)
-                                        .type(MediaTypes.TEXT_PLAIN_TYPE)
-                                        .entity(e.getMessage()).build());
+            this.sendError(INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
 
@@ -616,10 +607,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         TechnicalException error = (value != null)?
                 new TechnicalException("ws.invalid.param.error", name, value):
                 new TechnicalException("ws.missing.param", name);
-        throw new WebApplicationException(
-                                Response.status(Status.BAD_REQUEST)
-                                        .type(MediaTypes.TEXT_PLAIN_TYPE)
-                                        .entity(error.getMessage()).build());
+        this.sendError(BAD_REQUEST, error.getMessage());
     }
 
     protected final static String getQueryDesc(String query) {

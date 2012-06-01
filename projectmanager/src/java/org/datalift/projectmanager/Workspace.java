@@ -77,27 +77,22 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.core.Response.ResponseBuilder;
-import javax.ws.rs.core.Response.Status;
 import javax.xml.parsers.SAXParserFactory;
+
+import static javax.ws.rs.core.HttpHeaders.ACCEPT;
+import static javax.ws.rs.core.Response.Status.*;
 
 import org.xml.sax.InputSource;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 
-import static javax.ws.rs.core.HttpHeaders.ACCEPT;
-
 import com.google.gson.Gson;
-import com.sun.jersey.api.ConflictException;
-import com.sun.jersey.api.NotFoundException;
 import com.sun.jersey.api.view.Viewable;
 import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.FormDataParam;
 
-import static javax.ws.rs.core.MediaType.TEXT_HTML;
-
 import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
-import org.datalift.fwk.MediaTypes;
 import org.datalift.fwk.ResourceResolver;
 import org.datalift.fwk.i18n.LocaleComparable;
 import org.datalift.fwk.log.Logger;
@@ -325,7 +320,7 @@ public class Workspace extends BaseModule
                                                         urlify(title), title);
             TechnicalException error = new TechnicalException(
                                                 "duplicate.identifier", title);
-            throw new ConflictException(error.getMessage());
+            this.sendError(CONFLICT, error.getMessage());
         }
         return response;
     }
@@ -607,7 +602,7 @@ public class Workspace extends BaseModule
                 Source src = p.getSource(srcUri);
                 if (src == null) {
                     // Not found.
-                    throw new NotFoundException(srcUri);
+                    this.sendError(NOT_FOUND, srcUri.toString());
                 }
                 args.put("current", src);
             }
@@ -623,7 +618,7 @@ public class Workspace extends BaseModule
 
     @POST 
     @Path("{id}/csvupload")
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Consumes(MULTIPART_FORM_DATA)
     public Response uploadCsvSource(
                             @PathParam("id") String projectId,
                             @FormDataParam("description") String description,
@@ -748,7 +743,7 @@ public class Workspace extends BaseModule
 
     @POST
     @Path("{id}/csvmodify")
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Consumes(MULTIPART_FORM_DATA)
     public Response modifyCsvSource(
                             @PathParam("id") String projectId,
                             @FormDataParam("current_source") URI sourceUri,
@@ -804,7 +799,7 @@ public class Workspace extends BaseModule
 
     @POST
     @Path("{id}/rdfupload")
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Consumes(MULTIPART_FORM_DATA)
     public Response uploadRdfSource(
                             @PathParam("id") String projectId,
                             @FormDataParam("description") String description,
@@ -910,7 +905,7 @@ public class Workspace extends BaseModule
 
     @POST
     @Path("{id}/rdfmodify")
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Consumes(MULTIPART_FORM_DATA)
     public Response modifyRdfSource(
                             @PathParam("id") String projectId,
                             @FormDataParam("current_source") URI sourceUri,
@@ -1163,7 +1158,7 @@ public class Workspace extends BaseModule
 
     @POST 
     @Path("{id}/xmlupload")
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Consumes(MULTIPART_FORM_DATA)
     public Response uploadXmlSource(
                             @PathParam("id") String projectId,
                             @FormDataParam("description") String description,
@@ -1259,7 +1254,7 @@ public class Workspace extends BaseModule
 
     @POST
     @Path("{id}/xmlmodify")
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Consumes(MULTIPART_FORM_DATA)
     public Response modifyXmlSource(
                             @PathParam("id") String projectId,
                             @FormDataParam("current_source") URI sourceUri,
@@ -1299,7 +1294,7 @@ public class Workspace extends BaseModule
                                     .getBean(ResourceResolver.class)
                                     .resolveStaticResource(filePath, request);
         if (response == null) {
-            throw new NotFoundException();
+            this.sendError(NOT_FOUND, null);
         }
         return response;
     }
@@ -1347,7 +1342,7 @@ public class Workspace extends BaseModule
             Source src = p.getSource(uriInfo.getAbsolutePath());
             if (src == null) {
                 // Not found.
-                throw new NotFoundException();
+                this.sendError(NOT_FOUND, null);
             }
             if (src instanceof TransformedRdfSource) {
                 // Forward source description request to the SPARQL endpoint.
@@ -1396,7 +1391,7 @@ public class Workspace extends BaseModule
             Source src = p.getSource(this.getSourceId(p.getUri(), srcId));
             if (src == null) {
                 // Not found.
-                throw new NotFoundException();
+                this.sendError(NOT_FOUND, null);
             }
             else {
                 Object value = null;
@@ -1487,15 +1482,12 @@ public class Workspace extends BaseModule
             Source src = p.getSource(u);
             if (src == null) {
                 // Not found.
-                throw new NotFoundException();
+                this.sendError(NOT_FOUND, null);
             }
             else if (! (src instanceof TransformedRdfSource)) {
                 TechnicalException error =
                                     new TechnicalException("not.rdf.source");
-                throw new WebApplicationException(
-                                Response.status(Status.UNSUPPORTED_MEDIA_TYPE)
-                                        .type(TEXT_PLAIN_TYPE)
-                                        .entity(error.getMessage()).build());
+                this.sendError(UNSUPPORTED_MEDIA_TYPE, error.getMessage());
             }
             // Forward source description request to the SPARQL endpoint.
             Configuration cfg = Configuration.getDefault();
@@ -1575,7 +1567,7 @@ public class Workspace extends BaseModule
             Ontology ontology = p.getOntology(ontologyTitle);
             if (ontology == null) {
                 // Not found.
-                throw new NotFoundException();
+                this.sendError(NOT_FOUND, null);
             }
             Map<String, Object> args = new TreeMap<String, Object>();
             args.put("it", p);
@@ -1606,7 +1598,7 @@ public class Workspace extends BaseModule
             Ontology ontology = p.getOntology(currentOntologyTitle);
             if (ontology == null) {
                 // Not found.
-                throw new NotFoundException();
+                this.sendError(NOT_FOUND, null);
             }
             // Update ontology data.
             ontology.setTitle(title);
@@ -1734,18 +1726,17 @@ public class Workspace extends BaseModule
     }
 
     private Project findProject(URI uri) throws WebApplicationException {
+        Project p = null;
         try {
-            return this.projectManager.findProject(uri);
+            p = this.projectManager.findProject(uri);
         }
         catch (Exception e) {
             TechnicalException error = new TechnicalException(
                                         "ws.internal.error", e, e.getMessage());
             log.error(error.getMessage(), e);
-            throw new WebApplicationException(
-                                Response.status(Status.INTERNAL_SERVER_ERROR)
-                                        .type(MediaTypes.TEXT_PLAIN_TYPE)
-                                        .entity(error.getMessage()).build());
+            this.sendError(INTERNAL_SERVER_ERROR, error.getMessage());
         }
+        return p;
     }
 
     private Project loadProject(UriInfo uriInfo, String id)
@@ -1757,7 +1748,7 @@ public class Workspace extends BaseModule
         Project p = this.findProject(uri);
         if (p == null) {
             // Not found.
-            throw new NotFoundException(uri);
+            this.sendError(NOT_FOUND, uri.toString());
         }
         return p;
     }
@@ -1775,7 +1766,7 @@ public class Workspace extends BaseModule
         C s = this.findSource(p, id, clazz);
         if (s == null) {
             // Not found.
-            throw new NotFoundException(id);
+            this.sendError(NOT_FOUND, id.toString());
         }
         return s;
     }
@@ -1949,10 +1940,7 @@ public class Workspace extends BaseModule
         TechnicalException error = (value != null)?
                 new TechnicalException("ws.invalid.param.error", name, value):
                 new TechnicalException("ws.missing.param", name);
-        throw new WebApplicationException(
-                                Response.status(Status.BAD_REQUEST)
-                                        .type(TEXT_PLAIN_TYPE)
-                                        .entity(error.getMessage()).build());
+        this.sendError(BAD_REQUEST, error.getMessage());
     }
 
     private void handleInternalError(Exception e,
@@ -1962,7 +1950,7 @@ public class Workspace extends BaseModule
             throw (WebApplicationException)e;
         }
         if (e instanceof EntityNotFoundException) {
-            throw new NotFoundException();
+            this.sendError(NOT_FOUND, null);
         }
         else {
             if (isSet(logMsg)) {
@@ -1973,10 +1961,7 @@ public class Workspace extends BaseModule
             }
             TechnicalException error = new TechnicalException(
                                     "ws.internal.error", e, e.getMessage());
-            throw new WebApplicationException(
-                                Response.status(Status.INTERNAL_SERVER_ERROR)
-                                        .type(TEXT_PLAIN_TYPE)
-                                        .entity(error.getMessage()).build());
+            this.sendError(INTERNAL_SERVER_ERROR, error.getMessage());
         }
     }
    

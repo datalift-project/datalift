@@ -49,16 +49,13 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.core.Response.ResponseBuilder;
-import javax.ws.rs.core.Response.Status;
 
-import com.sun.jersey.api.NotFoundException;
+import static javax.ws.rs.core.Response.Status.*;
+
 import com.sun.jersey.api.view.Viewable;
-
-import static javax.ws.rs.core.MediaType.TEXT_HTML;
 
 import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
-import org.datalift.fwk.MediaTypes;
 import org.datalift.fwk.i18n.PreferredLocales;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.Project;
@@ -69,6 +66,8 @@ import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.sparql.SparqlEndpoint;
+
+import static org.datalift.fwk.MediaTypes.*;
 
 
 /**
@@ -364,10 +363,7 @@ public abstract class BaseConverterModule
         TechnicalException error = (value != null)?
                 new TechnicalException("ws.invalid.param.error", name, value):
                 new TechnicalException("ws.missing.param", name);
-        throw new WebApplicationException(
-                                Response.status(Status.BAD_REQUEST)
-                                        .type(MediaTypes.TEXT_PLAIN_TYPE)
-                                        .entity(error.getMessage()).build());
+        this.sendError(BAD_REQUEST, error.getMessage());
     }
 
     protected void handleInternalError(Exception e)
@@ -377,7 +373,7 @@ public abstract class BaseConverterModule
             throw (WebApplicationException)e;
         }
         else if (e instanceof ObjectNotFoundException) {
-            throw new NotFoundException(e.getMessage());
+            this.sendError(NOT_FOUND, e.getMessage());
         }
         else if (e instanceof TechnicalException) {
             error = (TechnicalException)e;
@@ -387,9 +383,6 @@ public abstract class BaseConverterModule
                                     "ws.internal.error", e, e.getMessage());
         }
         log.fatal(e.getMessage(), e);
-        throw new WebApplicationException(
-                            Response.status(Status.INTERNAL_SERVER_ERROR)
-                                    .type(MediaTypes.TEXT_PLAIN_TYPE)
-                                    .entity(error.getMessage()).build());
+        this.sendError(INTERNAL_SERVER_ERROR, error.getMessage());
     }
 }

@@ -68,6 +68,7 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 
 import static javax.ws.rs.core.HttpHeaders.ACCEPT;
+import static javax.ws.rs.core.Response.Status.*;
 
 import org.openrdf.model.Literal;
 import org.openrdf.query.Binding;
@@ -448,9 +449,7 @@ public class RouterResource implements LifeCycle, ResourceResolver
                 }
                 catch (Exception e) {
                     log.error("Failed to create resource of type {}", e, clazz);
-                    throw new WebApplicationException(
-                                Response.status(Status.INTERNAL_SERVER_ERROR)
-                                        .build());
+                    this.sendError(INTERNAL_SERVER_ERROR, null);
                 }
             }
             // Else: unknown resource for module
@@ -558,10 +557,7 @@ public class RouterResource implements LifeCycle, ResourceResolver
             TechnicalException error = new TechnicalException(
                                         "ws.internal.error", e, e.getMessage());
             log.error(error.getMessage(), e);
-            throw new WebApplicationException(
-                                Response.status(Status.INTERNAL_SERVER_ERROR)
-                                        .type(MediaTypes.TEXT_PLAIN_TYPE)
-                                        .entity(error.getMessage()).build());
+            this.sendError(INTERNAL_SERVER_ERROR, error.getMessage());
         }
         return response;
     }
@@ -597,7 +593,7 @@ public class RouterResource implements LifeCycle, ResourceResolver
                 // Oops! Forged path that point outside public file store.
                 log.warn("Attempt to access file {} outside storage: {}",
                          f, root);
-                throw new WebApplicationException(Status.FORBIDDEN);
+                this.sendError(FORBIDDEN, null);
             }
             // Check whether data shall be returned.
             Date lastModified = new Date(f.lastModified());
@@ -688,6 +684,23 @@ public class RouterResource implements LifeCycle, ResourceResolver
             log.info("Registered {} URI policy(ies) for module \"{}\"",
                      Integer.valueOf(this.policies.size()), moduleName);
         }
+    }
+
+    /**
+     * Helper method to build a JAX-RS web service error response
+     * @param  status    the {@link Status HTTP status code}.
+     * @param  message   an optional error message to return
+     *                   to the service user.
+     *
+     * @throws WebApplicationException always.
+     */
+   private void sendError(Status status, String message)
+                                            throws WebApplicationException {
+        ResponseBuilder r = Response.status(status);
+        if (isSet(message)) {
+            r.entity(message).type(MediaTypes.TEXT_PLAIN);
+        }
+        throw new WebApplicationException(r.build());
     }
 
     //-------------------------------------------------------------------------
