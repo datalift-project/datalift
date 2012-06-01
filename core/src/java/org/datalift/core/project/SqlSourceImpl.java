@@ -441,7 +441,7 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
     //-------------------------------------------------------------------------
 
     /**
-     * A Row implementation wrapping an array of strings.
+     * A Row implementation wrapping a row in a JDBC result set.
      * <p>
      * <i>Implementation notes</i>: this class is marked as public on
      * purpose. Otherwise the Velocity template engine fails to access
