@@ -79,15 +79,17 @@ public abstract class RepositoryFactory
     //-------------------------------------------------------------------------
 
     /**
-     * Builds a new {@link Repository DataLift repository}.
+     * Builds a new {@link Repository DataLift repository}, reading the
+     * connection parameter from the specified configuration, using the
+     * repository name as key.
      * @param  name            the repository name in DataLift
      *                         configuration.
      * @param  url             the repository URL.
      * @param  configuration   the DataLift configuration.
      *
      * @return a ready-to-use {@link Repository} or <code>null</code>
-     *         if the configuration for the specified repository can
-     *         not be handled by this factory.
+     *         if the repository URL or configuration parameter are not
+     *         supported by this factory.
      */
     abstract public Repository newRepository(String name, String url,
                                              Configuration configuration);

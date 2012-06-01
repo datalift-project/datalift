@@ -95,7 +95,7 @@ public abstract class Repository
      */
     public Repository(String name, String url, String label, boolean isPublic) {
         if (isBlank(name)) {
-            throw new IllegalArgumentException("name");
+            name = null;
         }
         this.name     = name;
         this.url      = url;
@@ -349,6 +349,6 @@ public abstract class Repository
     /** {@inheritDoc} */
     @Override
     public String toString() {
-        return this.name + ": " + this.url;
+        return (this.name != null)? this.name + ": " + this.url: this.url;
     }
 }

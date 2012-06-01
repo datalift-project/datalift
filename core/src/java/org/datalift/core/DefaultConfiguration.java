@@ -59,7 +59,10 @@ import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.rdf.Repository;
 
 import org.datalift.core.rdf.RepositoryFactory;
+import org.datalift.core.rdf.sesame.SesameRepositoryFactory;
 import org.datalift.core.util.VersatileProperties;
+
+import static org.datalift.fwk.util.StringUtils.*;
 
 
 /**
@@ -101,14 +104,6 @@ public class DefaultConfiguration extends Configuration
     public final static String TEMP_STORAGE_PATH =
                                             "datalift.temp.storage.path";
 
-    /**
-     * Former property suffix for repository URL.
-     * <p>
-     * Support for this property will be removed in the next release
-     * of DataLift.</p>
-     */
-    private final static String REPOSITORY_HTTP_URL = ".repository.http.url";
-
     //-------------------------------------------------------------------------
     // Class members
     //-------------------------------------------------------------------------
@@ -126,8 +121,15 @@ public class DefaultConfiguration extends Configuration
      * even when the loading of the DataLift configuration fails.
      */
     private VersatileProperties props = new VersatileProperties();
+    /** The available repository factories. */
+    private Collection<RepositoryFactory> repositoryFactories =
+                // Use an ordered collection to consider the default (core)
+                // factories only when all third-party factories have failed.
+                new LinkedList<RepositoryFactory>();
     /** The configured repositories. */
-    private Map<String,Repository> repositories;
+    private final Map<String,Repository> repositories =
+                // Preserve repository configuration declaration order.
+                new LinkedHashMap<String,Repository>();
     /** The private (i.e. accessible to server modules only) file storage. */
     private final File privateStorage;
     /** The public (i.e. remotely accessible) file storage. */
@@ -241,12 +243,54 @@ public class DefaultConfiguration extends Configuration
     /** {@inheritDoc} */
     @Override
     public Repository getRepository(String uri) {
-        if (uri == null) {
+        if (! isSet(uri)) {
             uri = "";           // Default repository.
         }
         Repository r = this.repositories.get(uri);
         if (r == null) {
             throw new IllegalArgumentException("No such repository: " + uri);
+        }
+        return r;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Repository newRepository(String uri, String url, boolean publish) {
+        if (isBlank(url)) {
+            throw new IllegalArgumentException("url");
+        }
+        if (isBlank(uri)) {
+            if (publish) {
+                throw new IllegalArgumentException(
+                            new TechnicalException("repository.missing.name"));
+            }
+            uri = null;
+        }
+        Repository r = null;
+        try {
+            // Check all registered factories in turn to create the repository.
+            for (RepositoryFactory f : this.repositoryFactories) {
+                r = f.newRepository(uri, url, this);
+                if (r != null) break;
+            }
+            if (r == null) {
+                // All factories denied repository created.
+                throw new TechnicalException(
+                                        "repository.unknown.type", uri, url);
+            }
+            if ((publish) && (uri != null)) {
+                this.repositories.put(uri, r);
+            }
+        }
+        catch (TechnicalException e) {
+            log.fatal(e.getMessage(), e);
+            throw e;
+        }
+        catch (Exception e) {
+            TechnicalException error = new TechnicalException(
+                    "repository.config.error", e, uri, url, e.getMessage());
+            log.fatal(error.getMessage(), e);
+            throw error;
         }
         return r;
     }
@@ -432,13 +476,13 @@ public class DefaultConfiguration extends Configuration
      *         one of the repositories.
      */
     protected void initRepositories(Collection<PackageDesc> packages) {
-        // Use an ordered collection to consider the default (core) factories
-        // only when all third-party factories have failed.
-        Collection<RepositoryFactory> factories =
-                                            new LinkedList<RepositoryFactory>();
         // Get default (core-provided) repository factories.
         Collection<RepositoryFactory> defaultFactories =
                 this.loadRepositoryFactories(this.getClass().getClassLoader());
+        if (defaultFactories.isEmpty()) {
+            // Use Sesame repository factory as default.
+            defaultFactories.add(new SesameRepositoryFactory());
+        }
         // Build the list of factory classes to ignore.
         Collection<Class<?>> defaultClasses = new HashSet<Class<?>>();
         for (RepositoryFactory f : defaultFactories) {
@@ -447,6 +491,7 @@ public class DefaultConfiguration extends Configuration
         // Load available repository factories from third-party packages,
         // ignoring default (core-provided) ones, retrieved through
         // classloader parentage.
+        this.repositoryFactories.clear();
         if ((packages != null) && (! packages.isEmpty())) {
             for (PackageDesc p : packages) {
                 // Find non-default third-party repository factories.
@@ -455,68 +500,36 @@ public class DefaultConfiguration extends Configuration
                     if (! defaultClasses.contains(f.getClass())) {
                         log.debug("Found repository connector {} from {}",
                                         f.getClass().getSimpleName(), p.root);
-                        factories.add(f);
+                        this.repositoryFactories.add(f);
                     }
                 }
             }
         }
         // Append default factories.
-        factories.addAll(defaultFactories);
+        this.repositoryFactories.addAll(defaultFactories);
 
-        // Preserve repository configuration declaration order.
-        Map<String,Repository> m = new LinkedHashMap<String,Repository>();
-        // Connect repositories.
+        // Connect to configured repositories.
+        this.repositories.clear();
         for (String name : this.getConfigurationEntry(REPOSITORY_URIS, true)
                                .split("\\s*,\\s*")) {
             if (name.length() == 0) continue;           // Ignore...
 
-            try {
-                // Get repository connection URL from configuration.
-                // Try with former URL property name first.
-                String url = this.getConfigurationEntry(
-                                            name + REPOSITORY_HTTP_URL, false);
-                if (url == null) {
-                    // Old URL property not found. => Try with new name.
-                    url = this.getConfigurationEntry(
+            // Get repository connection URL from configuration.
+            String url = this.getConfigurationEntry(
                                             name + REPOSITORY_URL, true);
-                }
-                else {
-                    log.warn("Property {} is deprecated. Use {} instead.",
-                             name + REPOSITORY_HTTP_URL, name + REPOSITORY_URL);
-                }
-                Repository r = null;
-                for (RepositoryFactory f : factories) {
-                    r = f.newRepository(name, url, this);
-                    if (r != null) break;
-                }
-                if (r == null) {
-                    throw new TechnicalException(
-                                        "repository.unknown.type", name, url);
-                }
-                m.put(name, r);
-                if (this.props.getBoolean(
-                                    name + REPOSITORY_DEFAULT_FLAG, false)) {
-                    m.put(DEFAULT_REPOSITORY, r);
-                }
-            }
-            catch (TechnicalException e) {
-                log.fatal(e.getMessage(), e);
-                throw e;
-            }
-            catch (Exception e) {
-                TechnicalException error = new TechnicalException(
-                        "repository.config.error", e, name, e.getMessage());
-                log.fatal(error.getMessage(), e);
-                throw error;
+            Repository r = this.newRepository(name, url, true);
+            // Check for default repository flag.
+            if (this.props.getBoolean(name + REPOSITORY_DEFAULT_FLAG, false)) {
+                this.repositories.put(DEFAULT_REPOSITORY, r);
             }
         }
-        if (m.get(DEFAULT_REPOSITORY) == null) {
+        // Check that a default repository is defined in configuration.
+        if (this.repositories.get(DEFAULT_REPOSITORY) == null) {
             TechnicalException error = new TechnicalException(
                                                 "repository.missing.default");
             log.fatal(error.getMessage());
             throw error;
         }
-        this.repositories = Collections.unmodifiableMap(m);
     }
 
     /**
@@ -547,10 +560,7 @@ public class DefaultConfiguration extends Configuration
             }
         }
         while (hasNext);
-        // Check that at least one provider was found.
-        if (factories.isEmpty()) {
-            throw new TechnicalException("repository.missing.factory");
-        }
+
         return factories;
     }
 

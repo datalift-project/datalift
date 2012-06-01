@@ -245,7 +245,7 @@ public final class SesameRepositoryFactory extends RepositoryFactory
             }
             catch (Exception e) {
                 throw new TechnicalException("repository.config.error", e,
-                                             this.name, e.getMessage());
+                                        this.name, this.url, e.getMessage());
             }
             return repository;
         }

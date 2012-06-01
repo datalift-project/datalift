@@ -188,6 +188,32 @@ public abstract class Configuration
     }
 
     /**
+     * Creates a new RDF store, retrieving its configuration from the
+     * configuration if present, assuming it's a in-memory RDF store
+     * otherwise.
+     * @param  uri       the new RDF store name, used as a key to look up
+     *                   parameters from this configuration and
+     *                   {@link #getRepository(String) publish it} if
+     *                   requested.
+     * @param  url       the URL connection string. Use
+     *                   <code>sail:</code> to create a transient
+     *                   in-memory repository and
+     *                   <code>sail:file:///...</code> to create an
+     *                   in-memory persistent repository backed by a
+     *                   file. The file can be located anywhere in the
+     *                   file system yet it is recommended to use the
+     *                   {@link #getPrivateStorage() DataLift private
+     *                   storage area}.
+     * @param  publish   whether to publish the newly created repository.
+     *
+     * @return a new repository.
+     * @throws TechnicalException if any error occurred reading the
+     *         repository configuration, creating it or connecting it.
+     */
+    abstract public Repository newRepository(String uri, String url,
+                                                         boolean publish);
+
+    /**
      * Return a connection to a given repository.
      * @param  uri   the configured name of the repository,
      *               <code>null</code> for the default repository.
