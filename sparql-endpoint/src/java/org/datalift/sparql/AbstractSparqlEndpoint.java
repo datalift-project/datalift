@@ -139,7 +139,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
 
     /** Default constructor. */
     protected AbstractSparqlEndpoint() {
-        super(MODULE_NAME, false);
+        super(MODULE_NAME);
     }
 
     //-------------------------------------------------------------------------

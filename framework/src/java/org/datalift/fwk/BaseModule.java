@@ -38,6 +38,8 @@ package org.datalift.fwk;
 import java.util.Collection;
 import java.util.Map;
 
+import javax.ws.rs.Path;
+
 
 /**
  * A default implementation of the {@link Module} interface to act
@@ -83,6 +85,9 @@ public abstract class BaseModule implements Module
      *
      * @throws IllegalArgumentException if <code>name</code> is
      *         <code>null</code>.
+     *
+     * @deprecated Modules should expose REST resources using the
+     *             {@link Path @Path} JAX-RS annotation.
      */
     protected BaseModule(String name, boolean isResource) {
         if ((name == null) || (name.length() == 0)) {
@@ -140,7 +145,7 @@ public abstract class BaseModule implements Module
      * sub-resources).</p>
      */
     @Override
-    public Map<String,Class<?>> getResources() {
+    public final Map<String,Class<?>> getResources() {
         return null;
     }
 

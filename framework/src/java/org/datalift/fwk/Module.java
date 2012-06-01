@@ -38,6 +38,8 @@ package org.datalift.fwk;
 import java.util.Collection;
 import java.util.Map;
 
+import javax.ws.rs.Path;
+
 
 /**
  * Base interface for DataLift application modules.
@@ -121,6 +123,9 @@ public interface Module extends LifeCycle
      * @return the resource classes as a map using the resource URL
      *         path element as key or <code>null</code> if this module
      *         has no sub-resources.
+     *
+     * @deprecated Modules should expose REST resources using the
+     *             {@link Path @Path} JAX-RS annotation.
      */
     public Map<String,Class<?>> getResources();
 
@@ -131,6 +136,9 @@ public interface Module extends LifeCycle
      * resources should always return <code>false</code>.
      * @return <code>true</code> if this module is a JAX-RS resource,
      *         <code>false</code> otherwise.
+     *
+     * @deprecated Modules should expose REST resources using the
+     *             {@link Path @Path} JAX-RS annotation.
      */
     public boolean isResource();
 

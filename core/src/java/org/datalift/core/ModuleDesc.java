@@ -79,6 +79,7 @@ import org.datalift.fwk.Module;
      * @throws IllegalArgumentException if either <code>module</code>
      *         of <code>classLoader</code> is <code>null</code>.
      */
+    @SuppressWarnings("deprecation")
     public ModuleDesc(Module module, ClassLoader classLoader, File root) {
         super(classLoader, root);
 
