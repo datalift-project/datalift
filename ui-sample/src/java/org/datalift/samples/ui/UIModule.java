@@ -35,10 +35,11 @@
 package org.datalift.samples.ui;
 
 
-import java.util.HashMap;
-import java.util.Map;
-
 import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.UriInfo;
 
 import com.sun.jersey.api.view.Viewable;
 
@@ -46,32 +47,35 @@ import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.log.Logger;
 
 
+@Path(UIModule.MODULE_NAME)
 public class UIModule extends BaseModule
 {
+    //-------------------------------------------------------------------------
+    // Constants
+    //-------------------------------------------------------------------------
+
+    /** The module name. */
+    public static final String MODULE_NAME = "sample-ui";
+
+    //-------------------------------------------------------------------------
+    // Class members
+    //-------------------------------------------------------------------------
+
     private final static Logger log = Logger.getLogger();
 
+    //-------------------------------------------------------------------------
+    // Constructors
+    //-------------------------------------------------------------------------
+
     /**
-     * Creates a new UIModule instance with the default module name
-     * "<code>sample-ui</code>".
+     * Creates a new UIModule instance.
      */
     public UIModule() {
-        super("sample-ui", true);
+        super(MODULE_NAME);
     }
 
     //-------------------------------------------------------------------------
-    // Module contract support
-    //-------------------------------------------------------------------------
-
-    /** {@inheritDoc} */
-    @Override
-    public Map<String, Class<?>> getResources() {
-        Map<String, Class<?>> resources = new HashMap<String, Class<?>>();
-        resources.put("widget", UIResource.class);
-        return resources;
-    }
-
-    //-------------------------------------------------------------------------
-    // Specific implementation
+    // Web services
     //-------------------------------------------------------------------------
 
     /**
@@ -79,23 +83,49 @@ public class UIModule extends BaseModule
      * @return the index page.
      */
     @GET
-    public Viewable getIndex() {
-        log.debug("Processing GET request");
-        return this.newViewable("/index.vm", null);
+    public Viewable getIndex(@Context UriInfo uriInfo) {
+        return new Viewable("/" + uriInfo.getPath() + "/index.vm");
     }
 
     /**
-     * Return a viewable for the specified template, populated with the
-     * specified model object.
+     * <i>[Resource method]</i> Returns the page to display the
+     * specified widget.
      * <p>
-     * The template name shall be relative to the module, the module
-     * name is automatically prepended.</p>
-     * @param  templateName   the relative template name.
-     * @param  it             the model object to pass on to the view.
+     * This method is actually a JAS-RS "sub-resource locator" method
+     * that demonstrates usage of sub-resource objects.</p>
+     * @param  widget   the widget name (request path element).
      *
-     * @return a populated viewable.
+     * @return the widget page.
      */
-    protected final Viewable newViewable(String templateName, Object it) {
-        return new Viewable("/" + this.getName() + templateName, it);
+    @Path("widget/{widget}")
+    public WidgetResource getWidget(@PathParam("widget") String widget) {
+        return new WidgetResource();
+    }
+
+    //-------------------------------------------------------------------------
+    // WidgetResource nested class
+    //-------------------------------------------------------------------------
+
+    /**
+     * A JAX-RS sub-resource class return a widget page.
+     */
+    public final static class WidgetResource
+    {
+        /**
+         * <i>[Resource method]</i> Returns the page displaying the
+         * specified widget.
+         * <p>
+         * This method demonstrates usage of {@link UriInfo} to extract
+         * the information from the request path.</p>
+         * @param  uriInfo   the JAX-RS request URI data.
+         *
+         * @return the widget page.
+         */
+        @GET
+        public Viewable getWidget(@Context UriInfo uriInfo) {
+            String path = uriInfo.getPath();
+            log.debug("Sub-resource processing of GET request on {}", path);
+            return new Viewable("/" + path + ".vm");
+        }
     }
 }
