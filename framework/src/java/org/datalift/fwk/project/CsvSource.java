@@ -35,7 +35,7 @@
 package org.datalift.fwk.project;
 
 
-import java.util.Collection;
+import java.util.List;
 
 import org.datalift.fwk.util.CloseableIterable;
 
@@ -137,5 +137,5 @@ public interface CsvSource extends FileSource, CloseableIterable<Row<String>>
      * (A, B ..., Z, AA, AB ...) if the file has no title row.
      * @return the column headings.
      */
-    public Collection<String> getColumnNames();
+    public List<String> getColumnNames();
 }

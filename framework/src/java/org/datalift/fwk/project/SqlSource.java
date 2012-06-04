@@ -36,7 +36,7 @@ package org.datalift.fwk.project;
 
 
 import java.sql.SQLException;
-import java.util.Collection;
+import java.util.List;
 
 import org.datalift.fwk.util.CloseableIterable;
 
@@ -89,10 +89,10 @@ public interface SqlSource extends Source, CloseableIterable<Row<Object>>
     public int getColumnCount() throws SQLException;
 
     /**
-     * Returns the number of data columns returned by the SQL query.
-     * @return the number of data columns.
+     * Returns the names of data columns returned by the SQL query.
+     * @return the names of data columns.
      * @throws SQLException if any error occurred accessing the
      *         database.
      */
-    public Collection<String> getColumnNames() throws SQLException;
+    public List<String> getColumnNames() throws SQLException;
 }

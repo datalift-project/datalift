@@ -35,7 +35,7 @@
 package org.datalift.fwk.project;
 
 
-import java.util.Collection;
+import java.util.List;
 
 
 /**
@@ -56,7 +56,7 @@ public interface Row<V> extends Iterable<V>
      * Returns the column headings for accessing row data.
      * @return the column headings.
      */
-    public Collection<String> keys();
+    public List<String> keys();
 
     /**
      * Return the row data for the specified key, in native format.

@@ -38,10 +38,10 @@ package org.datalift.core.project;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
@@ -82,7 +82,7 @@ public class CsvSourceImpl extends BaseFileSource
     @RdfProperty("datalift:titleRow")
     private boolean titleRow = false;
 
-    private transient Collection<String> headers = null;
+    private transient List<String> headers = null;
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -178,7 +178,7 @@ public class CsvSourceImpl extends BaseFileSource
 
     /** {@inheritDoc} */
     @Override
-    public Collection<String> getColumnNames() {
+    public List<String> getColumnNames() {
         this.init();
         return this.headers;
     }
@@ -212,7 +212,7 @@ public class CsvSourceImpl extends BaseFileSource
                         firstRow[i] = this.getColumnName(i);
                     }
                 }
-                this.headers = Collections.unmodifiableCollection(
+                this.headers = Collections.unmodifiableList(
                     Arrays.asList((firstRow != null)? firstRow: new String[0]));
             }
             catch (IOException e) {
@@ -435,7 +435,7 @@ public class CsvSourceImpl extends BaseFileSource
             try {
                 final String[] data = this.reader.readNext();
                 if (data != null) {
-                    row = new StringArrayRow(data, this.keyMapping);
+                    row = new StringArrayRow(data, headers, this.keyMapping);
                 }
             }
             finally {
@@ -461,6 +461,7 @@ public class CsvSourceImpl extends BaseFileSource
     public final static class StringArrayRow implements Row<String>
     {
         private final String[] data;
+        private final List<String> headers;
         private final Map<String,Integer> keyMapping;
 
         /**
@@ -469,8 +470,10 @@ public class CsvSourceImpl extends BaseFileSource
          * @param  keyMapping   the mapping between keys and array
          *                      indices.
          */
-        public StringArrayRow(String[] data, Map<String,Integer> keyMapping) {
+        public StringArrayRow(String[] data, List<String> headers,
+                                             Map<String,Integer> keyMapping) {
             this.data = data;
+            this.headers = headers;
             this.keyMapping = keyMapping;
         }
 
@@ -482,8 +485,8 @@ public class CsvSourceImpl extends BaseFileSource
 
         /** {@inheritDoc} */
         @Override
-        public Collection<String> keys() {
-            return this.keyMapping.keySet();
+        public List<String> keys() {
+            return this.headers;
         }
 
         /** {@inheritDoc} */

@@ -65,7 +65,9 @@ import javax.xml.datatype.XMLGregorianCalendar;
 import static javax.xml.datatype.DatatypeConstants.*;
 
 import org.openrdf.model.Literal;
+import org.openrdf.model.Value;
 import org.openrdf.model.ValueFactory;
+import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.repository.RepositoryConnection;
 
 import org.datalift.fwk.Configuration;
@@ -257,6 +259,8 @@ public class CsvDirectMapper extends BaseConverterModule
             }
             String root = RdfUtils.getBaseUri(
                                 (baseUri != null)? baseUri.toString(): null);
+            org.openrdf.model.URI rdfType = valueFactory.createURI(
+                                        root.substring(0, root.length() - 1));
             // Build predicates URIs.
             Map<String,org.openrdf.model.URI> predicates =
                                     new HashMap<String,org.openrdf.model.URI>();
@@ -268,8 +272,8 @@ public class CsvDirectMapper extends BaseConverterModule
             long duration = 0L;
             int  batchSize = Env.getRdfBatchSize();
             int i = 1;                          // Start line numbering at 1.
-            Map<org.openrdf.model.URI,Literal> statements =
-                            new LinkedHashMap<org.openrdf.model.URI,Literal>();
+            Map<org.openrdf.model.URI,Value> statements =
+                            new LinkedHashMap<org.openrdf.model.URI,Value>();
             for (Row<String> row : src) {
                 statements.clear();
                 // Scan columns to map values and build triples.
@@ -277,7 +281,7 @@ public class CsvDirectMapper extends BaseConverterModule
                 for (String s : src.getColumnNames()) {
                     String  v = row.get(s);
                     Mapping m = mapping.getMapping(s);
-                    Literal value = null;
+                    Value value = null;
                     if (isSet(v)) {
                         if (m == Mapping.Id) {
                             subject = valueFactory.createURI(root + urlify(v)); // + "#_";
@@ -295,8 +299,12 @@ public class CsvDirectMapper extends BaseConverterModule
                 if (subject == null) {
                     subject = valueFactory.createURI(root + i); // + "#_";
                 }
+                // Append RDF type triple.
+                if (! statements.isEmpty()) {
+                    statements.put(RDF.TYPE, rdfType);
+                }
                 // Save triples into RDF store.
-                for (Map.Entry<org.openrdf.model.URI,Literal>e :
+                for (Map.Entry<org.openrdf.model.URI,Value>e :
                                                     statements.entrySet()) {
                     cnx.add(valueFactory.createStatement(
                                     subject, e.getKey(), e.getValue()), ctx);
@@ -344,9 +352,9 @@ public class CsvDirectMapper extends BaseConverterModule
         }
     }
 
-    private Literal mapValue(String s, ValueFactory valueFactory,
+    private Value mapValue(String s, ValueFactory valueFactory,
                                        Mapping mapping, MappingDesc desc) {
-        Literal v = null;
+        Value v = null;
         s = s.trim();
         switch (mapping) {
             case Ignore:

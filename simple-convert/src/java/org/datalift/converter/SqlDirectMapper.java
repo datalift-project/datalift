@@ -60,6 +60,7 @@ import javax.xml.datatype.DatatypeFactory;
 
 import org.openrdf.model.Literal;
 import org.openrdf.model.ValueFactory;
+import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.repository.RepositoryConnection;
 
 import org.datalift.fwk.Configuration;
@@ -72,6 +73,7 @@ import org.datalift.fwk.project.Row;
 import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.SqlSource;
 import org.datalift.fwk.project.Source.SourceType;
+import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.util.Env;
 import org.datalift.fwk.util.StringUtils;
@@ -233,8 +235,10 @@ public class SqlDirectMapper extends BaseConverterModule
                 ctx = valueFactory.createURI(targetGraph.toString());
                 cnx.clear(ctx);
             }
-            String baseUri = (targetGraph != null)?
-                                            targetGraph.toString() + '/': "";
+            String root = RdfUtils.getBaseUri(
+                        (targetGraph != null)? targetGraph.toString(): null);
+            org.openrdf.model.URI rdfType = valueFactory.createURI(
+                                        root.substring(0, root.length() - 1));
             // Build predicates URIs.
             int max = src.getColumnNames().size();
             org.openrdf.model.URI[] predicates = new org.openrdf.model.URI[max];
@@ -242,7 +246,7 @@ public class SqlDirectMapper extends BaseConverterModule
             for (String s : src.getColumnNames()) {
                 if (! s.equals(keyColumn)) {
                     predicates[i] = valueFactory.createURI(
-                                            baseUri + StringUtils.urlify(s));
+                                                root + StringUtils.urlify(s));
                 }
                 i++;
             }
@@ -254,16 +258,20 @@ public class SqlDirectMapper extends BaseConverterModule
                 String key = (keyColumn != null)? row.getString(keyColumn):
                                                   String.valueOf(i);
                 org.openrdf.model.URI subject =
-                            valueFactory.createURI(baseUri + key); // + "#_";
+                            valueFactory.createURI(root + key); // + "#_";
                 log.trace("Mapping {} to <{}>", key, subject);
+                boolean firstStatement = false;
                 for (int j=0; j<max; j++) {
                     Object o = row.get(j);
                     if ((o != null) && (predicates[j] != null)) {
                         Literal value = this.mapValue(o, valueFactory);
                         cnx.add(valueFactory.createStatement(
-                                                subject, predicates[j], value),
-                                ctx);
-
+                                        subject, predicates[j], value), ctx);
+                        if (firstStatement) {
+                            cnx.add(valueFactory.createStatement(
+                                        subject, RDF.TYPE, rdfType), ctx);
+                            firstStatement = false;
+                        }
                         // Commit transaction according to the configured batch size.
                         statementCount++;
                         if ((statementCount % batchSize) == 0) {

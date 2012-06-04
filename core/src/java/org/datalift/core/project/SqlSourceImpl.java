@@ -43,9 +43,9 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 import javax.persistence.Entity;
@@ -97,7 +97,7 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
     private String query;
 
     private transient WebRowSet rowSet = null;
-    private transient Collection<String> columns = null;
+    private transient List<String> columns = null;
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -193,7 +193,7 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
 
     /** {@inheritDoc} */
     @Override
-    public Collection<String> getColumnNames() throws SQLException {
+    public List<String> getColumnNames() throws SQLException {
         this.init();
         return this.columns;
     }
@@ -317,7 +317,7 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
                 for (int i=0, max=cols.length; i<max; i++) {
                     cols[i] = metadata.getColumnName(i+1);
                 }
-                this.columns = Collections.unmodifiableCollection(
+                this.columns = Collections.unmodifiableList(
                                                         Arrays.asList(cols));
                 log.debug("Extracted query result columns: {}", this.columns);
             }
@@ -450,7 +450,7 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
     public final static class ResultSetRow implements Row<Object>
     {
         private final ResultSet rs;
-        private final Collection<String> columns;
+        private final List<String> columns;
 
         /**
          * Creates a new result set row object for the current row
@@ -459,7 +459,7 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
          *                   shall be wrapped.
          * @param  columns   the columns available from the result set.
          */
-        public ResultSetRow(ResultSet rs, Collection<String> columns) {
+        public ResultSetRow(ResultSet rs, List<String> columns) {
             this.rs = rs;
             this.columns = columns;
         }
@@ -472,7 +472,7 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
 
         /** {@inheritDoc} */
         @Override
-        public Collection<String> keys() {
+        public List<String> keys() {
             return this.columns;
         }
 
