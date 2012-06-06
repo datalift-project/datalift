@@ -86,6 +86,8 @@
   <property name="windows.dist.dir"
             location="${dist.home}/${windows.app.name}"/>
 
+  <property name="linux.conf"           location="${conf.home}/linux"/>
+
   <property name="core.home"            location="${basedir}/../core"/>
   <property name="datalift.war.name"    value="datalift.war"/>
   <property name="datalift.war.path"
@@ -323,13 +325,18 @@
   </target>
 
   <target name="dist-windows" depends="prepare-dist"
-                      description="Builds a Windows Executable">
+                      description="Builds a Windows executable">
     <mkdir dir="${windows.dist.dir}"/>
-    <!-- Copy Windows application excutable -->
+    <!-- Copy Windows application excutable and Linux start-up script-->
     <copy todir="${windows.dist.dir}" preservelastmodified="true">
       <fileset dir="${windows.conf}"/>
+      <fileset dir="${linux.conf}"/>
     </copy>
-    <!-- Copy DataLift Java application -->
+    <!-- Make sure shell-script are executable -->
+    <chmod perm="ugo+rx" type="file">
+      <fileset dir="${windows.dist.dir}" includes="**/*.sh"/>
+    </chmod>
+     <!-- Copy DataLift Java application -->
     <copy todir="${windows.dist.dir}" preservelastmodified="true">
       <fileset dir="${gen.dist.dir}"/>
     </copy>

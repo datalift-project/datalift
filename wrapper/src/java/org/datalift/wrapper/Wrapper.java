@@ -52,9 +52,8 @@ import org.mortbay.jetty.webapp.WebAppContext;
 
 import com.centerkey.utils.BareBonesBrowserLaunch;
 
-import jargs.gnu.CmdLineParser.Option;
-
 import jargs.gnu.CmdLineParser;
+import jargs.gnu.CmdLineParser.Option;
 
 import static org.datalift.wrapper.OsType.*;
 

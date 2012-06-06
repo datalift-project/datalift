@@ -34,6 +34,7 @@
         <string>$JAVAROOT/jetty-6.1.26.jar</string>
         <string>$JAVAROOT/jetty-util-6.1.26.jar</string>
         <string>$JAVAROOT/servlet-api-2.5-20081211.jar</string>
+        <string>$JAVAROOT/jargs-1.0.jar</string>
         <string>$JAVAROOT/datalift-wrapper.jar</string>
       </array>
       <key>VMOptions</key>
