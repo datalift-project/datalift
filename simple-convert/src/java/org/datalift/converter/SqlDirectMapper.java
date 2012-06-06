@@ -78,6 +78,8 @@ import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.util.Env;
 import org.datalift.fwk.util.StringUtils;
 
+import static org.datalift.fwk.util.StringUtils.urlify;
+
 
 /**
  * A {@link ProjectModule project module} that performs SQL to RDF
@@ -235,10 +237,12 @@ public class SqlDirectMapper extends BaseConverterModule
                 ctx = valueFactory.createURI(targetGraph.toString());
                 cnx.clear(ctx);
             }
-            String root = RdfUtils.getBaseUri(
-                        (targetGraph != null)? targetGraph.toString(): null);
+            String baseUri = RdfUtils.getBaseUri(
+                    (targetGraph != null)? targetGraph.toString(): null, '/');
+            String typeUri = RdfUtils.getBaseUri(
+                    (targetGraph != null)? targetGraph.toString(): null, '#');
             org.openrdf.model.URI rdfType = valueFactory.createURI(
-                                        root.substring(0, root.length() - 1));
+                                            typeUri, urlify(src.getTitle()));
             // Build predicates URIs.
             int max = src.getColumnNames().size();
             org.openrdf.model.URI[] predicates = new org.openrdf.model.URI[max];
@@ -246,7 +250,7 @@ public class SqlDirectMapper extends BaseConverterModule
             for (String s : src.getColumnNames()) {
                 if (! s.equals(keyColumn)) {
                     predicates[i] = valueFactory.createURI(
-                                                root + StringUtils.urlify(s));
+                                            typeUri + StringUtils.urlify(s));
                 }
                 i++;
             }
@@ -258,7 +262,7 @@ public class SqlDirectMapper extends BaseConverterModule
                 String key = (keyColumn != null)? row.getString(keyColumn):
                                                   String.valueOf(i);
                 org.openrdf.model.URI subject =
-                            valueFactory.createURI(root + key); // + "#_";
+                                valueFactory.createURI(baseUri + key); // + "#_";
                 log.trace("Mapping {} to <{}>", key, subject);
                 boolean firstStatement = false;
                 for (int j=0; j<max; j++) {

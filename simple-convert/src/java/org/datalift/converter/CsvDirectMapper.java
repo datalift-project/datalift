@@ -257,15 +257,17 @@ public class CsvDirectMapper extends BaseConverterModule
             if (baseUri == null) {
                 baseUri = targetGraph;
             }
-            String root = RdfUtils.getBaseUri(
-                                (baseUri != null)? baseUri.toString(): null);
+            String objUri  = RdfUtils.getBaseUri(
+                            (baseUri != null)? baseUri.toString(): null, '/');
+            String typeUri = RdfUtils.getBaseUri(
+                            (baseUri != null)? baseUri.toString(): null, '#');
             org.openrdf.model.URI rdfType = valueFactory.createURI(
-                                        root.substring(0, root.length() - 1));
+                                            typeUri, urlify(src.getTitle()));
             // Build predicates URIs.
             Map<String,org.openrdf.model.URI> predicates =
                                     new HashMap<String,org.openrdf.model.URI>();
             for (String s : src.getColumnNames()) {
-                predicates.put(s, valueFactory.createURI(root + urlify(s)));
+                predicates.put(s, valueFactory.createURI(typeUri + urlify(s)));
             }
             // Load triples
             long statementCount = 0L;
@@ -284,7 +286,7 @@ public class CsvDirectMapper extends BaseConverterModule
                     Value value = null;
                     if (isSet(v)) {
                         if (m == Mapping.Id) {
-                            subject = valueFactory.createURI(root + urlify(v)); // + "#_";
+                            subject = valueFactory.createURI(objUri + urlify(v)); // + "#_";
                         }
                         else {
                             value = this.mapValue(v, valueFactory, m, mapping);                            
@@ -297,7 +299,7 @@ public class CsvDirectMapper extends BaseConverterModule
                 }
                 // Auto-generate row URI if no identifier column was defined.
                 if (subject == null) {
-                    subject = valueFactory.createURI(root + i); // + "#_";
+                    subject = valueFactory.createURI(objUri + i); // + "#_";
                 }
                 // Append RDF type triple.
                 if (! statements.isEmpty()) {
