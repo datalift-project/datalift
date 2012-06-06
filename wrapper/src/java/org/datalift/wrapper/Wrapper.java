@@ -109,6 +109,11 @@ public final class Wrapper
     private final static String WIN_APPL_DATA_PATH =
                             "Application Data/" + WIN_DATALIFT_NAME;
 
+    private final static String LINUX_REPOSITORIES_PATH =
+                            SESAME_REPOSITORIES_DIR + "/openrdf-sesame";
+    private final static String OTHER_REPOSITORIES_PATH =
+                            SESAME_REPOSITORIES_DIR + "/OpenRDF Sesame";
+
     private final static String OTHER_DATALIFT_NAME   = ".datalift";
     private final static String OTHER_APPL_DATA_PATH  = OTHER_DATALIFT_NAME;
     private final static String OTHER_APPL_CACHE_PATH = "temp";
@@ -306,9 +311,11 @@ public final class Wrapper
                     copy(new File(source, "conf"), target);
                 }
                 // and empty Sesame repositories.
-                target= new File(path, SESAME_REPOSITORIES_DIR);
+                target= (CURRENT_OS == Other)?
+                                    new File(path, LINUX_REPOSITORIES_PATH):
+                                    new File(path, OTHER_REPOSITORIES_PATH);
                 if (! target.exists()) {
-                    copy(new File(source, SESAME_REPOSITORIES_DIR), target);
+                    copy(new File(source, OTHER_REPOSITORIES_PATH), target);
                 }
             }
         }
