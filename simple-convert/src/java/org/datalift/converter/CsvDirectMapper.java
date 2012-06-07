@@ -202,13 +202,19 @@ public class CsvDirectMapper extends BaseConverterModule
             // Load input source.
             CsvSource in = (CsvSource)(p.getSource(sourceId));
             // Load datatype mapping for each column.
-            Map<String,Mapping> typeMappings = new HashMap<String,Mapping>();
+            Mapping[] typeMappings = new Mapping[params.size()];
             for (String k : params.keySet()) {
                 if (k.startsWith("col_")) {
-                    String col = k.substring(4);
-                    Mapping m  = Mapping.fromString(params.getFirst(k));
-                    log.debug("Type mapping: {} -> {}", col, m);
-                    typeMappings.put(col, m);
+                    try {
+                        int col = Integer.parseInt(k.substring(4));
+                        Mapping m  = Mapping.fromString(params.getFirst(k));
+                        if (log.isTraceEnabled()) {
+                            log.trace("Type mapping: Column #{} -> {}",
+                                                    Integer.valueOf(col), m);
+                        }
+                        typeMappings[col] = m;
+                    }
+                    catch (Exception e) { /* Ignore... */ }
                 }
                 // Else: Ignore, not a column type mapping description.
             }
@@ -264,25 +270,26 @@ public class CsvDirectMapper extends BaseConverterModule
             org.openrdf.model.URI rdfType = valueFactory.createURI(
                                             typeUri, urlify(src.getTitle()));
             // Build predicates URIs.
-            Map<String,org.openrdf.model.URI> predicates =
-                                    new HashMap<String,org.openrdf.model.URI>();
+            int n = src.getColumnNames().size();
+            org.openrdf.model.URI[] predicates = new org.openrdf.model.URI[n];
+            int i = 0;
             for (String s : src.getColumnNames()) {
-                predicates.put(s, valueFactory.createURI(typeUri + urlify(s)));
+                predicates[i++] = valueFactory.createURI(typeUri + urlify(s));
             }
             // Load triples
             long statementCount = 0L;
             long duration = 0L;
             int  batchSize = Env.getRdfBatchSize();
-            int i = 1;                          // Start line numbering at 1.
+            i = 1;                              // Start line numbering at 1.
             Map<org.openrdf.model.URI,Value> statements =
                             new LinkedHashMap<org.openrdf.model.URI,Value>();
             for (Row<String> row : src) {
                 statements.clear();
                 // Scan columns to map values and build triples.
                 org.openrdf.model.URI subject = null;
-                for (String s : src.getColumnNames()) {
-                    String  v = row.get(s);
-                    Mapping m = mapping.getMapping(s);
+                for (int j=0, max=row.size(); j<max; j++) {
+                    String  v = row.get(j);
+                    Mapping m = mapping.getMapping(j);
                     Value value = null;
                     if (isSet(v)) {
                         if (m == Mapping.Id) {
@@ -293,7 +300,7 @@ public class CsvDirectMapper extends BaseConverterModule
                         }
                     }
                     if (value != null) {
-                        statements.put(predicates.get(s), value);
+                        statements.put(predicates[j], value);
                     }
                     // Else: Ignore cell.
                 }
@@ -332,6 +339,9 @@ public class CsvDirectMapper extends BaseConverterModule
             log.debug("Inserted {} RDF triples into <{}> from {} CSV lines in {} seconds",
                       Long.valueOf(statementCount), targetGraph,
                       Integer.valueOf(i - 1), Double.valueOf(duration / 1000.0));
+        }
+        catch (TechnicalException e) {
+            throw e;
         }
         catch (Exception e) {
             try {
@@ -449,18 +459,18 @@ public class CsvDirectMapper extends BaseConverterModule
 
     private final static class MappingDesc
     {
-        private final Map<String,Mapping> mappings;
+        private final Mapping[] mappings;
         private final List<String> trueValues;
         private final DateFormat dateFormat;
         private final DatatypeFactory dateFactory;
 
-        public MappingDesc(Map<String,Mapping> typeMappings,
+        public MappingDesc(Mapping[] typeMappings,
                            String trueValues, String dateFormat) {
-            if ((typeMappings == null) || (typeMappings.isEmpty())) {
+            if ((typeMappings == null) || (typeMappings.length == 0)) {
                 throw new IllegalArgumentException("typeMappings");
             }
             // Type mappings.
-            this.mappings = new HashMap<String,Mapping>(typeMappings);
+            this.mappings = typeMappings;
             // Boolean TRUE values.
             List<String> l = Collections.emptyList();
             if (isSet(trueValues)) {
@@ -493,8 +503,8 @@ public class CsvDirectMapper extends BaseConverterModule
             this.dateFactory = df;
         }
 
-        public Mapping getMapping(String column) {
-            return this.mappings.get(column);
+        public Mapping getMapping(int column) {
+            return this.mappings[column];
         }
 
         public boolean hasBooleanValues() {

@@ -39,11 +39,13 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.persistence.Entity;
 
@@ -210,6 +212,23 @@ public class CsvSourceImpl extends BaseFileSource
                     // Generate generic column names (A, B... Z, AA, AB...).
                     for (int i=0; i<firstRow.length; i++) {
                         firstRow[i] = this.getColumnName(i);
+                    }
+                }
+                // Check column names to ensure uniqueness.  
+                if (firstRow != null) {
+                    Map<String,AtomicInteger> duplicatedColumns =
+                                            new HashMap<String,AtomicInteger>();
+                    for (int i=0, max=firstRow.length; i<max; i++) {
+                        String s = firstRow[i];
+                        AtomicInteger count = duplicatedColumns.get(s);
+                        if (count == null) {
+                            count = new AtomicInteger(0);
+                            duplicatedColumns.put(s, count);
+                        }
+                        int n = count.incrementAndGet();
+                        if (n > 1) {
+                            firstRow[i] = s + ' ' + n;
+                        }
                     }
                 }
                 this.headers = Collections.unmodifiableList(
@@ -480,7 +499,7 @@ public class CsvSourceImpl extends BaseFileSource
         /** {@inheritDoc} */
         @Override
         public int size() {
-            return Math.min(this.data.length, this.keyMapping.size());
+            return Math.min(this.data.length, this.headers.size());
         }
 
         /** {@inheritDoc} */
@@ -509,7 +528,7 @@ public class CsvSourceImpl extends BaseFileSource
         /** {@inheritDoc} */
         @Override
         public String get(int index) {
-            if ((index < 0) || (index > this.keyMapping.size())) {
+            if ((index < 0) || (index > this.headers.size())) {
                 throw new ArrayIndexOutOfBoundsException(index);
             }
             String v = null;
@@ -528,6 +547,12 @@ public class CsvSourceImpl extends BaseFileSource
         }
 
         /** {@inheritDoc} */
+        @Override
+        public String getKey(int index) {
+            return this.headers.get(index);
+        }
+
+       /** {@inheritDoc} */
         @Override
         public Iterator<String> iterator() {
             return new Iterator<String>() {
