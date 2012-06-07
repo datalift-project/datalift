@@ -84,6 +84,7 @@ import org.datalift.fwk.ResourceResolver;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.sparql.SparqlEndpoint;
 import org.datalift.fwk.sparql.SparqlQueries;
+import org.datalift.fwk.sparql.SparqlEndpoint.DescribeType;
 import org.datalift.fwk.util.UriPolicy;
 import org.datalift.fwk.util.UriPolicy.ResourceHandler;
 
@@ -155,8 +156,6 @@ public class RouterResource implements LifeCycle, ResourceResolver
     /** Cache management informations. */
     private int cacheDuration = 2 * 3600;           // 2 hours in seconds
     private int[] businessDay = { 8, 20 };          // 8 A.M. to 8 P.M.
-    /** The DataLift SPARQL endpoint module. */
-    private SparqlEndpoint sparqlEndpoint = null;
 
     /** Application modules. */
     private final Map<String,ModuleDesc> modules =
@@ -264,7 +263,7 @@ public class RouterResource implements LifeCycle, ResourceResolver
 
         // Check whether SPARQL endpoint module is available.
         try {
-            this.sparqlEndpoint = configuration.getBean(SparqlEndpoint.class);
+            configuration.getBean(SparqlEndpoint.class);
         }
         catch (Exception e) {
             log.warn("No SPARQL endpoint module available");
@@ -466,6 +465,19 @@ public class RouterResource implements LifeCycle, ResourceResolver
         return target;
     }
 
+    @Path("{module}/{resource}/{path: .*$}")
+    public ResponseWrapper resourceForwarding(@PathParam("module") String module,
+                                     @PathParam("resource") String resource,
+                                     @PathParam("path") String path,
+                                     @Context UriInfo uriInfo,
+                                     @Context Request request,
+                                     @HeaderParam(ACCEPT) String acceptHdr)
+                                                throws WebApplicationException {
+        Response response = this.resolveUnmappedResource(null, uriInfo,
+                                                         request, acceptHdr);
+        return (response != null)? new ResponseWrapper(response): null;
+    }
+ 
     //-------------------------------------------------------------------------
     // Specific implementation
     //-------------------------------------------------------------------------
@@ -540,7 +552,7 @@ public class RouterResource implements LifeCycle, ResourceResolver
                 // => Try to match a file on local storage.
                 response = this.resolveStaticResource(path, request);
             }
-            if ((response == null) && (this.sparqlEndpoint != null)) {
+            if (response == null) {
                 // Not a public file. => Check triple store for RDF resource.
                 response = resolveRdfResource(uriInfo, request, acceptHdr);
             }
@@ -778,6 +790,13 @@ public class RouterResource implements LifeCycle, ResourceResolver
 
         @Override
         public Response getRepresentation() throws WebApplicationException {
+            // Retrieve platform SPARQL endpoint.
+            SparqlEndpoint sparqlEndpoint =
+                    Configuration.getDefault().getBean(SparqlEndpoint.class);
+            if (sparqlEndpoint == null) {
+                // No endpoint, no RDF resource description!
+                return null;
+            }
             Response response = null;
             
             final URI uri = this.uriInfo.getRequestUri();
@@ -806,8 +825,9 @@ public class RouterResource implements LifeCycle, ResourceResolver
                     // Data recently updated or not cached by client.
                     // => Get subject description from SPARQL endpoint.
                     log.trace("Resolved requested URI {} as RDF resource", uri);
-                    b = sparqlEndpoint.executeQuery("DESCRIBE <" + uri + '>',
-                                this.uriInfo, this.request, this.acceptHdr);
+                    b = sparqlEndpoint.describe(
+                                    uri.toString(), DescribeType.Object,
+                                    this.uriInfo, this.request, this.acceptHdr);
                 }
                 // Else: Client already up-to-date.
 
