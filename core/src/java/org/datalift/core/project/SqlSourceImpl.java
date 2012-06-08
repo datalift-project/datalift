@@ -522,6 +522,12 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
 
         /** {@inheritDoc} */
         @Override
+        public String getKey(int index) {
+            return this.columns.get(index);
+        }
+
+        /** {@inheritDoc} */
+        @Override
         public Iterator<Object> iterator() {
             return new Iterator<Object>() {
                 private int curPos = 0;

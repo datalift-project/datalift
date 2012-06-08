@@ -32,45 +32,30 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 
-package org.datalift.samples.project;
+package org.datalift.samples.ui;
 
 
 import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Request;
 import javax.ws.rs.core.UriInfo;
 
-import static javax.ws.rs.core.HttpHeaders.ACCEPT;
+import com.sun.jersey.api.view.Viewable;
 
 import org.datalift.fwk.BaseModule;
-import org.datalift.fwk.Configuration;
-import org.datalift.fwk.ResourceResolver;
 import org.datalift.fwk.log.Logger;
-import org.datalift.fwk.project.Project;
-import org.datalift.fwk.project.ProjectModule;
 
 
-/**
- * A very simple {@link ProjectModule} capable of handling all
- * DataLift projects regardless their state or content (sources) just
- * to display a funny pictures.
- *
- * @author lbihanic
- */
-@Path(HandleProjectModule.MODULE_NAME)
-public class HandleProjectModule extends BaseModule implements ProjectModule
+@Path(SampleUI.MODULE_NAME)
+public class SampleUI extends BaseModule
 {
     //-------------------------------------------------------------------------
     // Constants
     //-------------------------------------------------------------------------
 
-    public final static String MODULE_NAME = "sample-project";
+    /** The module name. */
+    public static final String MODULE_NAME = "sample-ui";
 
     //-------------------------------------------------------------------------
     // Class members
@@ -82,49 +67,65 @@ public class HandleProjectModule extends BaseModule implements ProjectModule
     // Constructors
     //-------------------------------------------------------------------------
 
-    public HandleProjectModule() {
+    /**
+     * Creates a new UIModule instance.
+     */
+    public SampleUI() {
         super(MODULE_NAME);
-    }
-
-    //-------------------------------------------------------------------------
-    // ProjectModule contract support
-    //-------------------------------------------------------------------------
-
-    /** {@inheritDoc} */
-    @Override
-    public UriDesc canHandle(Project p) {
-        try {
-            UriDesc desc = new UriDesc(this.getName() + "/java-guy.jpg",
-                                       "Sample Project Module");
-            desc.setPosition(1000000);
-            return desc;
-        }
-        catch (Exception e) {
-            log.fatal("Uh?", e);
-            throw new RuntimeException(e);
-        }
     }
 
     //-------------------------------------------------------------------------
     // Web services
     //-------------------------------------------------------------------------
-    
+
+    /**
+     * <i>[Resource method]</i> Returns the index page for the module.
+     * @return the index page.
+     */
     @GET
-    @Produces(MediaType.TEXT_PLAIN)
-    public String doGet() {
-        return "Test HandleProjectModule index";
+    public Viewable getIndex(@Context UriInfo uriInfo) {
+        return new Viewable("/" + uriInfo.getPath() + "/index.vm");
     }
 
-    @GET
-    @Path("{path: .*$}")
-    public Object getStaticResource(@PathParam("path") String path,
-                                    @Context UriInfo uriInfo,
-                                    @Context Request request,
-                                    @HeaderParam(ACCEPT) String acceptHdr)
-                                                throws WebApplicationException {
-        return Configuration.getDefault()
-                            .getBean(ResourceResolver.class)
-                            .resolveModuleResource(this.getName(),
-                                                   uriInfo, request, acceptHdr);
+    /**
+     * <i>[Resource method]</i> Returns the page to display the
+     * specified widget.
+     * <p>
+     * This method is actually a JAS-RS "sub-resource locator" method
+     * that demonstrates usage of sub-resource objects.</p>
+     * @param  widget   the widget name (request path element).
+     *
+     * @return the widget page.
+     */
+    @Path("widget/{widget}")
+    public WidgetResource getWidget(@PathParam("widget") String widget) {
+        return new WidgetResource();
+    }
+
+    //-------------------------------------------------------------------------
+    // WidgetResource nested class
+    //-------------------------------------------------------------------------
+
+    /**
+     * A JAX-RS sub-resource class return a widget page.
+     */
+    public final static class WidgetResource
+    {
+        /**
+         * <i>[Resource method]</i> Returns the page displaying the
+         * specified widget.
+         * <p>
+         * This method demonstrates usage of {@link UriInfo} to extract
+         * the information from the request path.</p>
+         * @param  uriInfo   the JAX-RS request URI data.
+         *
+         * @return the widget page.
+         */
+        @GET
+        public Viewable getWidget(@Context UriInfo uriInfo) {
+            String path = uriInfo.getPath();
+            log.debug("Sub-resource processing of GET request on {}", path);
+            return new Viewable("/" + path + ".vm");
+        }
     }
 }

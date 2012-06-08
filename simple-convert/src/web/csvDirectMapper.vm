@@ -89,7 +89,7 @@
 		cols.empty();
 		for (var i=0; i<response.length; i++) {
 			var h = [];
-			var colName = 'col_' + response[i];
+			var colName = 'col_' + i;
 			h[h.length] = '<p><label for="' + colName + '">Colonne "' + response[i] + '" </label>';
 			h[h.length] = '<select name="' + colName + '" id="' + colName + '">';
 			h[h.length] = '<option value="string" selected="true">#i18n("csv.map.string")</option>';

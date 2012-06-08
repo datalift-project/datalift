@@ -291,7 +291,7 @@
       <fileset dir="${classes.dir}"/>
       <service type="org.datalift.fwk.Module">
         <provider classname="org.datalift.samples.ui.UIModule"/>
-        <provider classname="org.datalift.samples.project.HandleProjectModule"/>
+        <provider classname="org.datalift.samples.project.SampleProjectModule"/>
       </service>
     </jar>
   </target>

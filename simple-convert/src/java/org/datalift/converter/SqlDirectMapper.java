@@ -76,9 +76,8 @@ import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.util.Env;
-import org.datalift.fwk.util.StringUtils;
 
-import static org.datalift.fwk.util.StringUtils.urlify;
+import static org.datalift.fwk.util.StringUtils.*;
 
 
 /**
@@ -221,7 +220,7 @@ public class SqlDirectMapper extends BaseConverterModule
 
     private void convert(SqlSource src, String keyColumn,
                                         Repository target, URI targetGraph) {
-        if (StringUtils.isBlank(keyColumn)) {
+        if (isBlank(keyColumn)) {
             keyColumn = null;
         }
         final RepositoryConnection cnx = target.newConnection();
@@ -249,8 +248,7 @@ public class SqlDirectMapper extends BaseConverterModule
             int i = 0;
             for (String s : src.getColumnNames()) {
                 if (! s.equals(keyColumn)) {
-                    predicates[i] = valueFactory.createURI(
-                                            typeUri + StringUtils.urlify(s));
+                    predicates[i] = valueFactory.createURI(typeUri + urlify(s));
                 }
                 i++;
             }

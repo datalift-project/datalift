@@ -53,8 +53,8 @@ public interface Row<V> extends Iterable<V>
     public int size();
 
     /**
-     * Returns the column headings for accessing row data.
-     * @return the column headings.
+     * Returns the column name for accessing row data.
+     * @return the column name.
      */
     public List<String> keys();
 
@@ -93,4 +93,12 @@ public interface Row<V> extends Iterable<V>
      *         the column at index <code>index</code>.
      */
     public String getString(int index);
+
+    /**
+     * Returns the column name at the specified index.
+     * @param  index  the (zero-based) column index.
+     *
+     * @return the column name at index <code>index</code>.
+     */
+    public String getKey(int index);
 }
