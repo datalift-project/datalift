@@ -314,7 +314,7 @@ abstract public class BaseRepository extends Repository
         if (o instanceof Value) {       // Value, URI, Resource, Literal...
             v = (Value)o;
         }
-        if (o instanceof URI) {
+        else if (o instanceof URI) {
             v = this.valueFactory.createURI(o.toString());
         }
         else if (o instanceof String) {
