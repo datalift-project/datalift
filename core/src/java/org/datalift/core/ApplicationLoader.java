@@ -64,8 +64,10 @@ import org.datalift.core.velocity.jersey.VelocityTemplateProcessor;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.LifeCycle;
 import org.datalift.fwk.Module;
+import org.datalift.fwk.ResourceResolver;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.log.web.LogServletContextListener;
+import org.datalift.fwk.project.ProjectManager;
 import org.datalift.fwk.util.io.FileUtils;
 
 import static org.datalift.core.DefaultConfiguration.DATALIFT_HOME;
@@ -253,15 +255,21 @@ public class ApplicationLoader extends LogServletContextListener
             // Initialize RDF store connections
             // (connectors may be provided as part of third-party modules).
             cfg.initRepositories(packages);
-            // Load modules form third-party packages.
+            // Load and initialize modules form third-party packages.
             this.loadModules(packages);
-            // Initialize resources.
-            // First initialization step.
-            this.components.add(
+            // Initialize and register default resources if no custom
+            // implementations are provided by third-party packages.
+            if (cfg.getBeans(ResourceResolver.class).isEmpty()) {
+                // Add default resource resolver.
+                this.components.add(
                     this.initResource(new RouterResource(this.modules), cfg));
-            this.components.add(
+            }
+            if (cfg.getBeans(ProjectManager.class).isEmpty()) {
+                // Add default project manager.
+                this.components.add(
                     this.initResource(new DefaultProjectManager(), cfg));
-            // Second initialization step.
+            }
+            // Execute modules second initialization step.
             for (LifeCycle r : this.components) {
                 this.postInitResource(r, cfg);
             }
