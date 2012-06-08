@@ -12,6 +12,7 @@
 	#set( $target_db = "${it.uri}/dbmodify" )
 	#set( $target_sparql = "${it.uri}/sparqlmodify" )
 	#set( $target_xml = "${it.uri}/xmlmodify" )
+	#set( $target_shp = "${it.uri}/shpmodify" )
 #else
 	#set( $title = "project.title.add_dataset" )
 	#set( $submit = "create" )
@@ -20,6 +21,7 @@
 	#set( $target_db = "${it.uri}/dbupload" )
 	#set( $target_sparql = "${it.uri}/sparqlupload")
 	#set( $target_xml = "${it.uri}/xmlupload" )
+	#set( $target_shp = "${it.uri}/shpupload" )
 #end
 	<title>#i18n($title) - #i18n("workspace.title") - DataLift</title>
 #css_links
@@ -189,6 +191,28 @@
 	</form>
 #end
 	</div>
+	<h3><a href="#">SHP</a></h3>
+	<div>
+#if( (!$current) || ($current.getType() == $field.ShpSource) )
+	<form method="post" action="$target_shp" enctype="multipart/form-data" class="form_formated">
+#if( !$current )
+		<p><label for="file">#i18n("project.upload_shp"): </label>
+		<input type="file" name="source1" size="64"/><br />
+		<p><label for="file">#i18n("project.upload_prj"): </label>
+		<input type="file" name="source2" size="64"/><br />
+		<p><label for="file">#i18n("project.upload_shx"): </label>
+		<input type="file" name="source3" size="64"/><br />
+#else
+		<input type="hidden" name="current_source" value="$current.uri"/>
+		<p>#i18n("project.update_shp"): <a href="$current.uri">$esc.html($current.title)</a></p>
+#end
+		<p><label for="description">#i18n("project.upload_source.description"): </label>
+		<input type="text" id="description" name="description" value="$!esc.html($current.description)"/></p>
+		</select></p>
+		<input type="submit" value="#i18n("$submit")"/>
+	</form>
+#end
+	</div>	
 </div>
 </div>
 </div>
@@ -220,6 +244,8 @@
 		select_panel = 3;
 	#elseif( $current.getType() == $field.XmlSource )
 		select_panel = 4;
+	#elseif( $current.getType() == $field.ShpSource )
+		select_panel = 5;		
 	#end
 		if (select_panel != 0) {
 			$("#accordion").accordion("option", "active", select_panel);

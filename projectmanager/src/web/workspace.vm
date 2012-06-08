@@ -190,6 +190,8 @@
 			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.html($curSrc.description)<br />#end#i18n('project.upload_sparql.connection_url'): $!esc.html($curSrc.endpointUrl)<br />#i18n('project.upload_source.cache_duration'): $!esc.html($curSrc.cacheDuration)<br />#i18n('project.upload_source.cache_update'): $!date.format('medium', $curSrc.lastCacheUpdate)"
 	#elseif( $curSrc.getType() == $field.XmlSource )
 			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.html($curSrc.description)<br />#end#i18n('project.upload_source.file'): $!esc.html($curSrc.filePath)"
+	#elseif( $curSrc.getType() == $field.ShpSource )
+			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.html($curSrc.description)<br />#end#i18n('project.upload_source.file'): $!esc.html($curSrc.filePath)"
 	#end
 		},
 #end
