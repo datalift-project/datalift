@@ -71,6 +71,7 @@ import org.openrdf.query.impl.DatasetImpl;
 import org.openrdf.query.parser.ParsedBooleanQuery;
 import org.openrdf.query.parser.ParsedGraphQuery;
 import org.openrdf.query.parser.ParsedQuery;
+import org.openrdf.query.parser.ParsedTupleQuery;
 import org.openrdf.query.parser.sparql.SPARQLParserFactory;
 import org.openrdf.query.resultio.sparqlxml.SPARQLResultsXMLWriter;
 import org.openrdf.repository.RepositoryConnection;
@@ -223,6 +224,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
         ResponseBuilder response = null;
         Variant responseType = null;
         if (parsedQuery instanceof ParsedBooleanQuery) {
+            // ASK query.
             responseType = this.getResponseType(request, format,
                                                          ASK_RESPONSE_TYPES);
             MediaType mediaType = responseType.getMediaType();
@@ -244,6 +246,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                                                 new QueryDescription(query));
         }
         else if (parsedQuery instanceof ParsedGraphQuery) {
+            // CONSTRUCT query.
             responseType = this.getResponseType(request, format,
                                                 CONSTRUCT_RESPONSE_TYPES);
             MediaType mediaType = responseType.getMediaType();
@@ -263,8 +266,8 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                 response = Response.ok(out, responseType);
             }
         }
-        else {
-            // ParsedTupleQuery
+        else if (parsedQuery instanceof ParsedTupleQuery) {
+            // SELECT query.
             responseType = this.getResponseType(request, format,
                                                          SELECT_RESPONSE_TYPES);
             MediaType mediaType = responseType.getMediaType();
@@ -284,6 +287,10 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                                             baseUri, dataset, responseType);
                 response = Response.ok(out, responseType);
             }
+        }
+        else {
+            this.handleError(query, "Unsupported query type",
+                                                         Status.BAD_REQUEST);
         }
         return response;
     }

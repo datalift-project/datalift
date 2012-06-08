@@ -36,6 +36,7 @@ package org.datalift.sparql;
 
 
 import java.net.URI;
+import java.net.URL;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -67,6 +68,7 @@ import javax.ws.rs.core.Response.Status;
 
 import static javax.ws.rs.core.Response.Status.*;
 
+import org.openrdf.model.impl.URIImpl;
 import org.openrdf.query.BindingSet;
 
 import com.sun.jersey.api.view.Viewable;
@@ -123,10 +125,11 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                               + "  GRAPH <{0}> '{' ?s ?p ?o . '}'\n'}'");
 
     private final static String DETERMINE_TYPE_QUERY =
-            "SELECT DISTINCT ?p ?g WHERE {\n" +
-            "  OPTIONAL { ?s1 ?p ?o1 . FILTER( ?p = ?u ) }\n" +
-            "  OPTIONAL { GRAPH ?g { ?s2 ?p2 ?o2 . FILTER( ?g = ?u ) } }\n" +
-            "}";
+            "SELECT DISTINCT ?s ?p ?g WHERE {\n" +
+            "  OPTIONAL { ?s ?p1 ?o1 . FILTER( ?s = ?u ) }\n" +
+            "  OPTIONAL { ?s1 ?p ?o2 . FILTER( ?p = ?u ) }\n" +
+            "  OPTIONAL { GRAPH ?g { ?s2 ?p2 ?o3 . FILTER( ?g = ?u ) } }\n" +
+            "} LIMIT 1";
 
     //-------------------------------------------------------------------------
     // Class members
@@ -220,20 +223,31 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
             if (type == null) {
                 type = this.getDescribeTypeFromUri(uri, repository);
             }
-            String query = null;
-            MessageFormat fmt = (type == Graph)?     DESCRIBE_GRAPH_QUERY:
-                                (type == Predicate)? DESCRIBE_PREDICATE_QUERY:
-                                                     DESCRIBE_OBJECT_QUERY;
-            synchronized (fmt) {
-                query = fmt.format(new Object[] { uri });
+            if (type != null) {
+                // URI found in RDF store.
+                String query = null;
+                MessageFormat fmt = (type == Object)? DESCRIBE_OBJECT_QUERY:
+                                    (type == Graph)?  DESCRIBE_GRAPH_QUERY:
+                                                      DESCRIBE_PREDICATE_QUERY;
+                synchronized (fmt) {
+                    query = fmt.format(new Object[] { uri });
+                }
+                Map<String,Object> viewData = new HashMap<String,Object>();
+                viewData.put("describe-type", type);
+                viewData.put("describe-uri",  uri);
+                response = this.doExecute(defGraphs, null, query,
+                                          -1, -1, false, null,  null, uriInfo,
+                                          request, acceptHdr, viewData);
             }
-
-            Map<String,Object> viewData = new HashMap<String,Object>();
-            viewData.put("describe-type", type);
-            viewData.put("describe-uri",  uri);
-            response = this.doExecute(defGraphs, null, query,
-                                      -1, -1, false, null,  null,
-                                      uriInfo, request, acceptHdr, viewData);
+            else {
+                try {
+                    URL u = new URL(uri);
+                    response = Response.seeOther(u.toURI());
+                }
+                catch (Exception e) {
+                    this.sendError(NOT_FOUND, null);
+                }
+            }
         }
         catch (Exception e) {
             this.handleError(uri, e);
@@ -632,14 +646,17 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         try {
             // Try to determine the URI type by performing a SPARQL query.
             Map<String,Object> bindings = new HashMap<String,Object>();
-            bindings.put("u", new org.openrdf.model.impl.URIImpl(uri));
+            bindings.put("u", new URIImpl(uri));
             TupleQueryResultMapper<DescribeType> m =
                                 new BaseTupleQueryResultMapper<DescribeType>() {
                     private DescribeType nodeType = null;
                     @Override
                     public void handleSolution(BindingSet b) {
                         if (nodeType == null) {
-                            if (b.hasBinding("p")) {
+                            if (b.hasBinding("s")) {
+                                nodeType = Object;
+                            }
+                            else if (b.hasBinding("p")) {
                                 nodeType = Predicate;
                             }
                             else if (b.hasBinding("g")) {

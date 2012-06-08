@@ -806,7 +806,7 @@ public class RouterResource implements LifeCycle, ResourceResolver
             ExistsQueryResultHandler result = new ExistsQueryResultHandler();
             try {
                 Map<String,Object> bindings = new HashMap<String,Object>();
-                bindings.put("s", uri);
+                bindings.put("u", uri);
                 Configuration.getDefault().getDataRepository()
                                           .select(query, bindings, result);
             }
@@ -814,7 +814,7 @@ public class RouterResource implements LifeCycle, ResourceResolver
                 throw new RuntimeException("Failed to execute query \""
                                         + query + "\" for \"" + uri + '"', e);
             }
-            if (result.subject != null) {
+            if (result.type != null) {
                 // URI found as subject in RDF store.
                 // => Check whether data shall be returned.
                 ResponseBuilder b = null;
@@ -826,7 +826,7 @@ public class RouterResource implements LifeCycle, ResourceResolver
                     // => Get subject description from SPARQL endpoint.
                     log.trace("Resolved requested URI {} as RDF resource", uri);
                     b = sparqlEndpoint.describe(
-                                    uri.toString(), DescribeType.Object,
+                                    uri.toString(), result.type,
                                     this.uriInfo, this.request, this.acceptHdr);
                 }
                 // Else: Client already up-to-date.
@@ -843,8 +843,8 @@ public class RouterResource implements LifeCycle, ResourceResolver
 
     private static final class ExistsQueryResultHandler
                                         extends TupleQueryResultHandlerBase {
-        public String subject = null;
-        public Date   lastModified = null;
+        public DescribeType type = null;
+        public Date         lastModified = null;
 
         public ExistsQueryResultHandler() {
             super();
@@ -853,30 +853,30 @@ public class RouterResource implements LifeCycle, ResourceResolver
         /** {@inheritDoc} */
         @Override
         public void handleSolution(BindingSet b) {
-            if (this.subject == null) {
+            if (this.type == null) {
                 // Store information for the first matched entry.
-                this.subject = this.getString(b, "s");
-                this.lastModified = this.getDate(b, "lastModified");
+                this.type = (b.getBinding("s") != null)? DescribeType.Object:
+                            (b.getBinding("g") != null)? DescribeType.Graph: null;
+                if (this.type == null) {
+                    this.lastModified = this.getDate(b, "lastModified");
+                }
             }
             // Else: Ignore subsequent entries.
         }
 
-        private String getString(BindingSet b, String name) {
-            Binding v = b.getBinding(name);
-            return (v != null)? v.getValue().stringValue(): null;
-        }
-
         private Date getDate(BindingSet b, String name) {
+            Date d = null;
             Binding v = b.getBinding(name);
-            try {
-                // Try to extract date.
-                return ((Literal)(v.getValue())).calendarValue()
-                                                .toGregorianCalendar()
-                                                .getTime();
+            if (v != null) {
+                try {
+                    // Try to extract date.
+                    d = ((Literal)(v.getValue())).calendarValue()
+                                                 .toGregorianCalendar()
+                                                 .getTime();
+                }
+                catch (Exception e) { /* No date here... */ }
             }
-            catch (Exception e) {
-                return null;            // No date here...
-            }
+            return d;
         }
     }
 }
