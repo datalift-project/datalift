@@ -46,7 +46,7 @@
                 <Aggregate type="max">
                     <Compare metric="levenshteinDistance" threshold="0">
                         <TransformInput function="lowerCase">
-                            <Input path="?a/geo:nom[@lang='fr']" />
+                            <Input path="?a/insee:nom[@lang='fr']" />
                         </TransformInput>
                         <TransformInput function="lowerCase">
                             <Input path="?b/eurostat:name" />

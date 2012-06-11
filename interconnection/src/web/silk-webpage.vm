@@ -17,6 +17,9 @@
 		<p><label for="configFile">#i18n("configFile"):</label>
 		<input type="file" name="configFile" id="configFile" value=""/></p>
 
+		<p>Or you can create a SILK script by clicking here:
+		<a href="${baseUri}/silk/build-silkscript?project=$esc.url($it.uri)" id="configFile" color=blue class="button" style="">#i18n("Build a SILK Script")</a></p>
+
 		<p><label for="linkSpecId" class="hidden">#i18n("linkSpecId"):</label>
 		<input type="text" name="linkSpecId" id="linkSpecId" value=""/></p>
 

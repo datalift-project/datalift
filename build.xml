@@ -89,8 +89,12 @@
     <subant target="dist">
       <filelist refid="build.modules"/>
     </subant>
+    <copy file="/home/exmo/zhfan/PHD/datalift_2012.6.8/datalift/projectmanager/dist/project-manager.jar" todir="/home/exmo/zhfan/PHD/datalift-home/modules" overwrite="true"/>
+    <copy file="/home/exmo/zhfan/PHD/datalift_2012.6.8/datalift/projectmanager/dist/project-manager.jar" todir="/home/exmo/zhfan/PHD/datalift-home/modules" overwrite="true"/>
+    <copy file="/home/exmo/zhfan/PHD/datalift_2012.6.8/datalift/interconnection/dist/interconnection.jar" todir="/home/exmo/zhfan/PHD/datalift-home/modules" overwrite="true"/>
+    <copy file="/home/exmo/zhfan/PHD/datalift_2012.6.8/datalift/simple-convert/dist/simple-converters.jar" todir="/home/exmo/zhfan/PHD/datalift-home/modules" overwrite="true"/>
+    <copy file="/home/exmo/zhfan/PHD/datalift_2012.6.8/datalift/sparql-endpoint/dist/sparql-endpoint.jar" todir="/home/exmo/zhfan/PHD/datalift-home/modules" overwrite="true"/>
   </target>
-
 
   <!-- ================ Javadoc Target ==================================== -->
 
