@@ -41,10 +41,10 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
 
-import com.sun.jersey.api.view.Viewable;
-
 import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.log.Logger;
+import org.datalift.fwk.view.TemplateModel;
+import org.datalift.fwk.view.ViewFactory;
 
 
 @Path(SampleUI.MODULE_NAME)
@@ -83,8 +83,8 @@ public class SampleUI extends BaseModule
      * @return the index page.
      */
     @GET
-    public Viewable getIndex(@Context UriInfo uriInfo) {
-        return new Viewable("/" + uriInfo.getPath() + "/index.vm");
+    public TemplateModel getIndex(@Context UriInfo uriInfo) {
+        return ViewFactory.newView("/" + uriInfo.getPath() + "/index.vm");
     }
 
     /**
@@ -122,10 +122,10 @@ public class SampleUI extends BaseModule
          * @return the widget page.
          */
         @GET
-        public Viewable getWidget(@Context UriInfo uriInfo) {
+        public TemplateModel getWidget(@Context UriInfo uriInfo) {
             String path = uriInfo.getPath();
             log.debug("Sub-resource processing of GET request on {}", path);
-            return new Viewable("/" + path + ".vm");
+            return ViewFactory.newView("/" + path + ".vm");
         }
     }
 }

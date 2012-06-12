@@ -45,7 +45,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -71,8 +70,6 @@ import static javax.ws.rs.core.Response.Status.*;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.query.BindingSet;
 
-import com.sun.jersey.api.view.Viewable;
-
 import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.log.Logger;
@@ -82,6 +79,8 @@ import org.datalift.fwk.rdf.TupleQueryResultMapper;
 import org.datalift.fwk.security.SecurityContext;
 import org.datalift.fwk.sparql.SparqlEndpoint;
 import org.datalift.fwk.util.StringUtils;
+import org.datalift.fwk.view.TemplateModel;
+import org.datalift.fwk.view.ViewFactory;
 
 import static org.datalift.fwk.util.StringUtils.*;
 import static org.datalift.fwk.sparql.SparqlEndpoint.DescribeType.*;
@@ -464,12 +463,10 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
             boolean userAuthenticated = SecurityContext.isUserAuthenticated();
             Collection<Repository> c = Configuration.getDefault()
                                         .getRepositories(! userAuthenticated);
-            Map<String, Object> args = new TreeMap<String, Object>();
-            args.put("collections", c);
-            args.put("isAuth", Boolean.valueOf(userAuthenticated));
-            response = Response.ok(this.newViewable("/sparqlEndpoint.vm", args),
-                                   MediaType.TEXT_HTML);
-            return response.build();
+            TemplateModel view = this.newView("sparqlEndpoint.vm", null);
+            view.put("collections", c);
+            view.put("isAuth", Boolean.valueOf(userAuthenticated));
+            response = Response.ok(view, MediaType.TEXT_HTML);
         }
         return response.build();
     }
@@ -580,8 +577,9 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         return responseType;
     }
 
-    protected final Viewable newViewable(String templateName, Object it) {
-        return new Viewable("/" + this.getName() + templateName, it);
+    protected final TemplateModel newView(String templateName, Object it) {
+        return ViewFactory.newView(
+                                "/" + this.getName() + '/' + templateName, it);
     }
 
     protected final void handleError(String query,

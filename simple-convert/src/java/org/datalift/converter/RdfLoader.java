@@ -36,8 +36,6 @@ package org.datalift.converter;
 
 
 import java.net.URI;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.regex.Pattern;
 
 import javax.ws.rs.FormParam;
@@ -104,14 +102,7 @@ public class RdfLoader extends BaseConverterModule
 
     @GET
     public Response getIndexPage(@QueryParam("project") URI projectId) {
-        // Retrieve project.
-        Project p = this.getProject(projectId);
-        // Display conversion configuration page.
-        Map<String, Object> args = new HashMap<String, Object>();
-        args.put("it", p);
-        args.put("converter", this);
-        return Response.ok(this.newViewable("/rdfLoader.vm", args))
-                       .build();
+        return this.newProjectView("rdfLoader.vm", projectId);
     }
 
     @POST

@@ -213,8 +213,8 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
         model.put("named-graph-uri", namedGraphUris);
         model.put("repository", repo.name);
         model.put("query", query);
-        model.put("min", Integer.valueOf(startOffset));
-        model.put("max", Integer.valueOf(endOffset));
+        model.put("min",  Integer.valueOf(startOffset));
+        model.put("max",  Integer.valueOf(endOffset));
         model.put("grid", Boolean.valueOf(gridJson));
         model.put("format", format);
         if (viewData != null) {
@@ -256,8 +256,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                 // Execute query and provide iterator to Velocity template.
                 model.put("it", this.executeConstructQuery(repo, query,
                                                            baseUri, dataset));
-                response = Response.ok(this.newViewable("/constructResult.vm",
-                                                        model));
+                response = Response.ok(this.newView("constructResult.vm", model));
             }
             else {
                 StreamingOutput out = this.getRdfHandlerOutput(repo, query,
@@ -277,8 +276,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                 // Execute query and provide iterator to Velocity template.
                 model.put("it", this.executeSelectQuery(repo, query,
                                                         baseUri, dataset));
-                response = Response.ok(this.newViewable("/selectResult.vm",
-                                                        model));
+                response = Response.ok(this.newView("selectResult.vm", model));
             }
             else {
                 StreamingOutput out = this.getResultHandlerOutput(repo, query,

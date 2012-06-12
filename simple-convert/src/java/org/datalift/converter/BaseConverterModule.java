@@ -52,8 +52,6 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 
 import static javax.ws.rs.core.Response.Status.*;
 
-import com.sun.jersey.api.view.Viewable;
-
 import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.i18n.PreferredLocales;
@@ -66,6 +64,8 @@ import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.sparql.SparqlEndpoint;
+import org.datalift.fwk.view.TemplateModel;
+import org.datalift.fwk.view.ViewFactory;
 
 import static org.datalift.fwk.MediaTypes.*;
 
@@ -296,18 +296,40 @@ public abstract class BaseConverterModule
     }
 
     /**
-     * Return a viewable for the specified template, populated with the
-     * specified model object.
+     * Returns a service response displaying the specified project
+     * using the specified template.
+     * <p>
+     * The template name shall be relative to the module, the module
+     * name is automatically prepended.</p>
+     * @param  templateName   the relative template name.
+     * @param  projectId      the URI of the project to display.
+     *
+     * @return a template model for rendering the specified template,
+     *         populated with the specified project.
+     */
+    protected final Response newProjectView(String templateName, URI projectId) {
+        // Retrieve project.
+        Project p = this.getProject(projectId);
+        // Display conversion configuration page.
+        TemplateModel view = this.newView(templateName, p);
+        view.put("converter", this);
+        return Response.ok(view).build();
+    }
+
+    /**
+     * Return a model for the specified template view, populated with
+     * the specified model object.
      * <p>
      * The template name shall be relative to the module, the module
      * name is automatically prepended.</p>
      * @param  templateName   the relative template name.
      * @param  it             the model object to pass on to the view.
      *
-     * @return a populated viewable.
+     * @return a populated template model.
      */
-    protected final Viewable newViewable(String templateName, Object it) {
-        return new Viewable("/" + this.getName() + templateName, it);
+    protected final TemplateModel newView(String templateName, Object it) {
+        return ViewFactory.newView(
+                                "/" + this.getName() + '/' + templateName, it);
     }
 
     /**
@@ -324,7 +346,7 @@ public abstract class BaseConverterModule
         try {
             String targetUrl = src.getProject().getUri() + "#source";
             return Response.created(new URI(src.getUri()))
-                           .entity(this.newViewable("/redirect.vm", targetUrl))
+                           .entity(this.newView("redirect.vm", targetUrl))
                            .type(TEXT_HTML);
         }
         catch (Exception e) {

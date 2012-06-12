@@ -38,8 +38,6 @@ package org.datalift.converter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
-import java.util.HashMap;
-import java.util.Map;
 
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -65,6 +63,7 @@ import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.rdf.RdfFormat;
 import org.datalift.fwk.rdf.Repository;
+import org.datalift.fwk.view.TemplateModel;
 
 
 /**
@@ -108,12 +107,10 @@ public class RdfExporter extends BaseConverterModule
         // Retrieve project.
         Project p = this.getProject(projectId);
         // Display conversion configuration page.
-        Map<String, Object> args = new HashMap<String, Object>();
-        args.put("it", p);
-        args.put("converter", this);
-        args.put("formats", RdfFormat.values());
-        return Response.ok(this.newViewable("/rdfExporter.vm", args))
-                       .build();
+        TemplateModel view = this.newView("rdfExporter.vm", p);
+        view.put("converter", this);
+        view.put("formats",   RdfFormat.values());
+        return Response.ok(view).build();
     }
 
     @POST

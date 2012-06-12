@@ -42,7 +42,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.GregorianCalendar;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -170,14 +169,7 @@ public class CsvDirectMapper extends BaseConverterModule
 
     @GET
     public Response getIndexPage(@QueryParam("project") URI projectId) {
-        // Retrieve project.
-        Project p = this.getProject(projectId);
-        // Display conversion configuration page.
-        Map<String, Object> args = new HashMap<String, Object>();
-        args.put("it", p);
-        args.put("converter", this);
-        return Response.ok(this.newViewable("/csvDirectMapper.vm", args))
-                       .build();
+        return this.newProjectView("csvDirectMapper.vm", projectId);
     }
 
     @POST

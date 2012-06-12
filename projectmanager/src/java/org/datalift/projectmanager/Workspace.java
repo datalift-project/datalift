@@ -51,10 +51,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
 
@@ -87,7 +84,6 @@ import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 
 import com.google.gson.Gson;
-import com.sun.jersey.api.view.Viewable;
 import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.FormDataParam;
 
@@ -117,10 +113,11 @@ import org.datalift.fwk.sparql.SparqlEndpoint;
 import org.datalift.fwk.sparql.SparqlEndpoint.DescribeType;
 import org.datalift.fwk.util.CloseableIterator;
 import org.datalift.fwk.util.io.FileUtils;
+import org.datalift.fwk.view.TemplateModel;
+import org.datalift.fwk.view.ViewFactory;
 
 import static org.datalift.fwk.MediaTypes.*;
 import static org.datalift.fwk.util.StringUtils.*;
-
 
 
 /**
@@ -357,19 +354,17 @@ public class Workspace extends BaseModule
                                                 throws WebApplicationException {
         Response response = null;
         try {
-            Map<String, Object> args = new TreeMap<String, Object>();
+            Project p = null;
             if (id != null) {
                 // Retrieve project.
-                URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
-                args.put("it", this.loadProject(projectUri));
+                p = this.loadProject(this.newProjectId(uriInfo.getBaseUri(), id));
             }
             // Else: new project.
 
-            args.put("licenses", License.values());
             // Display project modification page.
-            response = Response.ok(
-                        this.newViewable("workspaceModifyProject.vm", args),
-                        TEXT_HTML).build();
+            TemplateModel view = this.newView("workspaceModifyProject.vm", p);
+            view.put("licenses", License.values());
+            response = Response.ok(view, TEXT_HTML).build();
         }
         catch (Exception e) {
             this.handleInternalError(e, "Failed to load project");
@@ -591,11 +586,10 @@ public class Workspace extends BaseModule
         }
         try {
             // Prepare model for building view.
-            Map<String, Object> args = new HashMap<String, Object>();
-            args.put("it", p);
-            args.put("charsets", charsets);
-            args.put("rdfFormats", RdfFormat.values());
-            args.put("sep", Separator.values());
+            TemplateModel view = this.newView("projectSourceUpload.vm", p);
+            view.put("charsets", charsets);
+            view.put("rdfFormats", RdfFormat.values());
+            view.put("sep", Separator.values());
 
             // Search for requested source in project (if specified).
             if (srcUri != null) {
@@ -604,11 +598,9 @@ public class Workspace extends BaseModule
                     // Not found.
                     this.sendError(NOT_FOUND, srcUri.toString());
                 }
-                args.put("current", src);
+                view.put("current", src);
             }
-            response = Response.ok(
-                            this.newViewable("projectSourceUpload.vm", args),
-                            TEXT_HTML).build();
+            response = Response.ok(view, TEXT_HTML).build();
         }
         catch (Exception e) {
             this.handleInternalError(e, "Failed to load source {}", srcUri);
@@ -1365,7 +1357,7 @@ public class Workspace extends BaseModule
                     throw new TechnicalException("unknown.source.type",
                                                  src.getClass());
                 }
-                response = Response.ok(this.newViewable(template, src));
+                response = Response.ok(this.newView(template, src));
             }
         }
         catch (Exception e) {
@@ -1513,7 +1505,7 @@ public class Workspace extends BaseModule
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
             Project p = this.loadProject(projectUri);
 
-            response = Response.ok(this.newViewable("projectOntoUpload.vm", p),
+            response = Response.ok(this.newView("projectOntoUpload.vm", p),
                                    TEXT_HTML)
                                .build();
         }
@@ -1569,11 +1561,9 @@ public class Workspace extends BaseModule
                 // Not found.
                 this.sendError(NOT_FOUND, null);
             }
-            Map<String, Object> args = new TreeMap<String, Object>();
-            args.put("it", p);
-            args.put("current", ontology);
-            response = Response.ok(this.newViewable("projectOntoUpload.vm", args),
-                                   TEXT_HTML).build();
+            TemplateModel view = this.newView("projectOntoUpload.vm", p);
+            view.put("current", ontology);
+            response = Response.ok(view, TEXT_HTML).build();
         }
         catch (Exception e) {
             this.handleInternalError(e, "Failed to load ontology {}",
@@ -1677,11 +1667,12 @@ public class Workspace extends BaseModule
 
     private ResponseBuilder displayIndexPage(ResponseBuilder response,
                                              Project p) {
-        Map<String, Object> args = new TreeMap<String, Object>();
-        // Populate project list.
-        args.put("it", this.projectManager.listProjects());
+        // Populate view with project list.
+        TemplateModel view = this.newView("workspace.vm",
+                                          this.projectManager.listProjects());
         // Display selected project.
         if (p != null) {
+            view.put("current", p);
             // Search for modules accepting the selected project.
             Collection<UriDesc> modules = new TreeSet<UriDesc>(
                     new Comparator<UriDesc>() {
@@ -1707,8 +1698,7 @@ public class Workspace extends BaseModule
                     // Ignore module error...
                 }
             }
-            args.put("current", p);
-            args.put("canHandle", modules);
+            view.put("canHandle", modules);
             // Set page expiry & last modification date to force revalidation.
             Date lastModified = p.getModificationDate();
             if (lastModified != null) {
@@ -1721,8 +1711,7 @@ public class Workspace extends BaseModule
             cc.setMustRevalidate(true);
             response = response.cacheControl(cc);
         }
-        return response.entity(this.newViewable("workspace.vm", args))
-                       .type(TEXT_HTML);
+        return response.entity(view).type(TEXT_HTML);
     }
 
     private Project findProject(URI uri) throws WebApplicationException {
@@ -1782,8 +1771,8 @@ public class Workspace extends BaseModule
      *
      * @return a populated viewable.
      */
-    protected final Viewable newViewable(String templateName, Object it) {
-        return new Viewable(TEMPLATE_PATH + templateName, it);
+    protected final TemplateModel newView(String templateName, Object it) {
+        return ViewFactory.newView(TEMPLATE_PATH + templateName, it);
     }
 
     private URI newProjectId(URI baseUri, String name) {
@@ -1876,7 +1865,7 @@ public class Workspace extends BaseModule
             String targetUrl = (tab != null)? p.getUri() + tab.anchor:
                                               p.getUri();
             return Response.created(uri)
-                           .entity(this.newViewable("redirect.vm", targetUrl))
+                           .entity(this.newView("redirect.vm", targetUrl))
                            .type(TEXT_HTML);
         }
         catch (Exception e) {
