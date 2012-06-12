@@ -89,8 +89,7 @@
     <subant target="dist">
       <filelist refid="build.modules"/>
     </subant>
-  </target>
-
+</target>
 
   <!-- ================ Javadoc Target ==================================== -->
 
