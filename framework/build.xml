@@ -86,7 +86,7 @@
    -->
 
   <property name="app.name"             value="${ant.project.name}"/>
-  <property name="fwk.version"          value="0.6"/>
+  <property name="fwk.version"          value="0.6.1"/>
   <property name="app.long.name"        value="DataLift"/>
 
   <property name="build.home"           location="${basedir}/build"/>

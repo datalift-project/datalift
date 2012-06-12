@@ -93,7 +93,7 @@
    -->
 
   <property name="app.name"             value="ui-sample"/>
-  <property name="app.version"          value="0.3"/>
+  <property name="app.version"          value="0.6.1"/>
   <property name="app.path"             value="/${app.name}"/>
   <property name="app.long.name"        value="Sample UI module for DataLift"/>
 

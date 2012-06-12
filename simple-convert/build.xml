@@ -95,7 +95,7 @@
    -->
 
   <property name="app.name"             value="simple-converters"/>
-  <property name="app.version"          value="0.4"/>
+  <property name="app.version"          value="0.6.1"/>
   <property name="app.path"             value="/${app.name}"/>
   <property name="app.long.name"        value="Datalift Sample Converters"/>
 
