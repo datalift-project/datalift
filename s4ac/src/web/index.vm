@@ -1,0 +1,60 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<META HTTP-EQUIV="CACHE-CONTROL" CONTENT="NO-CACHE">
+#load("s4ac/resources")
+#load_core_resources
+	<title>#i18n("s4ac.app.name")</title>
+#css_links
+
+<script type="text/javascript">
+function encode() {
+	var obj = document.getElementById('area');
+	var unencoded = obj.value;
+	obj.value = encodeURIComponent(unencoded);
+}
+function decode() {
+	var obj = document.getElementById('area');
+	var encoded = obj.value;
+	obj.value = decodeURIComponent(encoded.replace(/\+/g,  " "));
+}
+
+</script>
+
+</head>
+<body>
+#banner
+
+<center>
+<form name="input" enctype="application/x-www-form-urlencoded" action="${baseUri}/s4ac" method="post">
+## <input type="hidden" name="uid" value="" />
+## <input type="text" name="uid" />
+<table>
+<tr>
+## <td> Insert user graph </td> 
+<td> Insert query </td>
+</tr>
+
+<tr>
+## <td> <textarea name="graph" cols="30" rows="20" >User graph
+##   </textarea> </td> 
+<td><textarea name="query" cols="30" rows="20" >query
+  </textarea></td>
+</tr>
+</table>
+  <br/>
+
+  <input type="reset" />
+  <input type="submit" />
+
+</form>
+</center>
+
+
+#footer
+<div style="text-align:right;font-style:italic;font-size:0.8em">
+	<span style="color:gray">Version @app.version@</span>
+</div>
+</body>
+<html>
