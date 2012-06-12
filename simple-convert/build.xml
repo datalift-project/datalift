@@ -311,6 +311,7 @@
         <provider classname="org.datalift.converter.SqlDirectMapper"/>
         <provider classname="org.datalift.converter.XsltXmlConverter"/>
         <provider classname="org.datalift.converter.RdfTransformer"/>
+        <provider classname="org.datalift.converter.RdfUriMapper"/>
         <provider classname="org.datalift.converter.SimplePublisher"/>
         <provider classname="org.datalift.converter.RdfExporter"/>
       </service>
