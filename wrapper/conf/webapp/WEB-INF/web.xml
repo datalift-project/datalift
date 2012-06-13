@@ -65,62 +65,6 @@
     <url-pattern>/*</url-pattern>
   </filter-mapping>
 
-  <!-- Jersey (JAS-RS framework) entry point configuration -->
-  <!-- Note: Using Jersey as a filter is required as:
-              1. There is no way to have the Jersey servlet not handling the
-                 requests passed on to it (for example /css/...)
-              2. It is not possible to use several servlet-mappings as
-                 any prefix declared in a servlet-mapping (e.g. /resource)
-                 directly impacts the URI of the deployed resources.
-   -->
-  <filter>
-    <filter-name>Jersey</filter-name>
-    <filter-class>
-      com.sun.jersey.spi.container.servlet.ServletContainer
-    </filter-class>
-    <!-- Configuration of the JAX-RS application -->
-    <init-param>
-      <param-name>javax.ws.rs.Application</param-name>
-      <param-value>org.datalift.core.DataliftApplication</param-value>
-    </init-param>
-    <!-- Prevent Jersey from serving static files -->
-    <init-param>
-      <param-name>com.sun.jersey.config.property.WebPageContentRegex</param-name>
-      <param-value>(/(images|css|js|wro|(WEB-INF/jsp))/.*)|(.*\.html)</param-value>
-    </init-param>
-    <!-- Activation of automatic redirection for URLs ending with slash -->
-    <init-param>
-      <param-name>com.sun.jersey.config.feature.Redirect</param-name>
-      <param-value>true</param-value>
-    </init-param>
-    <!-- Install some filters to
-          - Honor GZip accepted encoding in response
-          - Replace POST method by PUT or DELETE according to extended HTTP
-            header or _method request parameter
-          - Make user's preferred locales globally available
-     -->
-    <init-param>
-      <param-name>com.sun.jersey.spi.container.ContainerRequestFilters</param-name>
-      <param-value>
-        com.sun.jersey.api.container.filter.GZIPContentEncodingFilter;
-        com.sun.jersey.api.container.filter.PostReplaceFilter;
-        org.datalift.core.i18n.jersey.PreferredLocalesFilter
-      </param-value>
-    </init-param>
-    <init-param>
-      <param-name>com.sun.jersey.spi.container.ContainerResponseFilters</param-name>
-      <param-value>
-        org.datalift.core.i18n.jersey.PreferredLocalesFilter;
-        com.sun.jersey.api.container.filter.GZIPContentEncodingFilter
-      </param-value>
-    </init-param>
-  </filter>
-  <!-- Route all service calls to Jersey -->
-  <filter-mapping>
-    <filter-name>Jersey</filter-name>
-    <url-pattern>/*</url-pattern>
-  </filter-mapping>
-
   <!-- Web Resource Optimizer, merges and minifies JS and CSS -->
   <filter>
     <filter-name>WebResourceOptimizer</filter-name>
@@ -176,6 +120,79 @@
   <filter-mapping>
     <filter-name>CacheForWeek</filter-name>
     <url-pattern>*.ico</url-pattern>
+  </filter-mapping>
+
+  <!-- Cross-Origin Resource Sharing (CORS) support filter -->
+  <filter>
+    <filter-name>CORS</filter-name>
+    <filter-class>
+      org.datalift.core.util.web.ResponseHeaderFilter
+    </filter-class>
+    <init-param>
+      <param-name>Access-Control-Allow-Origin</param-name>
+      <param-value>*</param-value>
+    </init-param>
+  </filter>
+  <!-- Allow cross-domain accesses on SPARQL endpoint -->
+  <filter-mapping>
+    <filter-name>CORS</filter-name>
+    <url-pattern>/sparql</url-pattern>
+  </filter-mapping>
+
+  <!-- Jersey (JAS-RS framework) entry point configuration -->
+  <!-- Note: Using Jersey as a filter is required as:
+              1. There is no way to have the Jersey servlet not handling the
+                 requests passed on to it (for example /css/...)
+              2. It is not possible to use several servlet-mappings as
+                 any prefix declared in a servlet-mapping (e.g. /resource)
+                 directly impacts the URI of the deployed resources.
+   -->
+  <filter>
+    <filter-name>Jersey</filter-name>
+    <filter-class>
+      com.sun.jersey.spi.container.servlet.ServletContainer
+    </filter-class>
+    <!-- Configuration of the JAX-RS application -->
+    <init-param>
+      <param-name>javax.ws.rs.Application</param-name>
+      <param-value>org.datalift.core.DataliftApplication</param-value>
+    </init-param>
+    <!-- Prevent Jersey from serving static files -->
+    <init-param>
+      <param-name>com.sun.jersey.config.property.WebPageContentRegex</param-name>
+      <param-value>(/(images|css|js|wro|(WEB-INF/jsp))/.*)|(.*\.html)</param-value>
+    </init-param>
+    <!-- Activation of automatic redirection for URLs ending with slash -->
+    <init-param>
+      <param-name>com.sun.jersey.config.feature.Redirect</param-name>
+      <param-value>true</param-value>
+    </init-param>
+    <!-- Install some filters to
+          - Honor GZip accepted encoding in response
+          - Replace POST method by PUT or DELETE according to extended HTTP
+            header or _method request parameter
+          - Make user's preferred locales globally available
+     -->
+    <init-param>
+      <param-name>com.sun.jersey.spi.container.ContainerRequestFilters</param-name>
+      <param-value>
+        com.sun.jersey.api.container.filter.GZIPContentEncodingFilter;
+        com.sun.jersey.api.container.filter.PostReplaceFilter;
+        org.datalift.core.i18n.jersey.PreferredLocalesFilter
+      </param-value>
+    </init-param>
+    <init-param>
+      <param-name>com.sun.jersey.spi.container.ContainerResponseFilters</param-name>
+      <param-value>
+        org.datalift.core.i18n.jersey.PreferredLocalesFilter;
+        com.sun.jersey.api.container.filter.GZIPContentEncodingFilter
+      </param-value>
+    </init-param>
+  </filter>
+  <!-- Route all service calls to Jersey -->
+  <filter-mapping>
+    <filter-name>Jersey</filter-name>
+    <url-pattern>/*</url-pattern>
   </filter-mapping>
 
   <!-- ===== Servlets definition & URL mapping ===== -->
