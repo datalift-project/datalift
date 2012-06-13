@@ -69,6 +69,7 @@ import static javax.ws.rs.core.Response.Status.*;
 
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.query.BindingSet;
+import org.openrdf.query.QueryInterruptedException;
 
 import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
@@ -604,6 +605,13 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         }
         else if (e instanceof SecurityException) {
             this.sendError(FORBIDDEN, null);
+        }
+        else if (e.getCause() instanceof QueryInterruptedException) {
+            // Query processing was interrupted as it was taking too much time.
+            // => Return HTTP status 413 (Request Entity Too Large).
+            TechnicalException error = new TechnicalException(
+                                        "query.max.duration.exceeded", query);
+            this.sendError(413, error.getMessage());
         }
         else if (e.getCause() instanceof QueryDoneException) {
             // End of requested range (start/end offset) successfully reached.

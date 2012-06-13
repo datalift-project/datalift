@@ -86,13 +86,13 @@ import static org.openrdf.query.QueryLanguage.SPARQL;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.util.CloseableIterator;
-import org.datalift.fwk.util.StringUtils;
 import org.datalift.fwk.util.web.json.GridJsonWriter;
 import org.datalift.fwk.util.web.json.JsonRdfHandler;
 import org.datalift.fwk.util.web.json.SparqlResultsJsonWriter;
 import org.datalift.fwk.util.web.json.AbstractJsonWriter.ResourceType;
 
 import static org.datalift.fwk.MediaTypes.*;
+import static org.datalift.fwk.util.StringUtils.*;
 
 
 /**
@@ -109,8 +109,17 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
     // Constants
     //-------------------------------------------------------------------------
 
-    /** The default base URI for SPARQL requests. */
+    /**
+     * The configuration property defining the default base URI
+     * for SPARQL queries.
+     */
     public final static String BASE_URI_PROPERTY = "datalift.rdf.base.uri";
+    /**
+     * The configuration property defining the maximum query duration
+     * for SPARQL queries.
+     */
+    public final static String MAX_QUERY_DURATION_PROPERTY =
+                                                "sparql.max.query.duration";
 
     private final static List<Variant> SELECT_RESPONSE_TYPES = Arrays.asList(
                     new Variant(APPLICATION_SPARQL_RESULT_XML_TYPE, null, null),
@@ -155,23 +164,6 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
             ResourceType.Graph.value     + "<}&default-graph={2}";
 
     //-------------------------------------------------------------------------
-    // Instance members
-    //-------------------------------------------------------------------------
-
-    private String cfgBaseUri;
-
-    //-------------------------------------------------------------------------
-    // LifeCycle contract support
-    //-------------------------------------------------------------------------
-
-    /** {@inheritDoc} */
-    @Override
-    public void init(Configuration configuration) {
-        super.init(configuration);
-        this.cfgBaseUri = configuration.getProperty(BASE_URI_PROPERTY);
-    }
-
-    //-------------------------------------------------------------------------
     // AbstractSparqlEndpoint contract support
     //-------------------------------------------------------------------------
 
@@ -188,8 +180,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                                                 throws WebApplicationException {
         log.trace("Processing SPARQL query: \"{}\"", query);
         // Build base URI from request if none was enforced in configuration.
-        String baseUri = (this.cfgBaseUri != null)?
-                            this.cfgBaseUri: uriInfo.getBaseUri().toString();
+        String baseUri = this.getQueryBaseUri(uriInfo);
         // Parse SPARQL query to make sure it's valid.
         ParsedQuery parsedQuery = null;
         try {
@@ -237,7 +228,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                                          STD_JSON_SINGLE_VALUE_FMT;
                 result = String.format(fmt, result);
                 // Check for JSONP results.
-                if (StringUtils.isSet(jsonCallback)) {
+                if (isSet(jsonCallback)) {
                     result = jsonCallback + '(' + result + ')';
                 }
             }
@@ -322,6 +313,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
             if (dataset != null) {
                 q.setDataset(dataset);
             }
+            q.setMaxQueryTime(this.getMaxQueryDuration());
             result = q.evaluate();
         }
         catch (OpenRDFException e) {
@@ -343,6 +335,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
             if (dataset != null) {
                 q.setDataset(dataset);
             }
+            q.setMaxQueryTime(this.getMaxQueryDuration());
             TupleQueryResult r = q.evaluate();
             result = new QueryResultIterator<BindingSet>(query,
                                                 r, cnx, r.getBindingNames());
@@ -366,6 +359,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
             if (dataset != null) {
                 q.setDataset(dataset);
             }
+            q.setMaxQueryTime(this.getMaxQueryDuration());
             result = new QueryResultIterator<Statement>(
                                                 query, q.evaluate(), cnx, null);
         }
@@ -489,6 +483,34 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                 };
         }
         return handler;
+    }
+
+    /**
+     * Returns the base URI for evaluating a SPARQL query, retrieving it
+     * from request path if none was enforced in configuration.
+     * @param  uriInfo   the requested URI.
+     *
+     * @return the base URI for evaluating a SPARQL query.
+     */
+    private String getQueryBaseUri(UriInfo uriInfo) {
+        String baseUri = Configuration.getDefault()
+                                      .getProperty(BASE_URI_PROPERTY);
+        return (baseUri != null)? baseUri: uriInfo.getBaseUri().toString();
+    }
+
+    private int getMaxQueryDuration() {
+        int maxDuration = -1;
+        String v = Configuration.getDefault()
+                                .getProperty(MAX_QUERY_DURATION_PROPERTY, "-1");
+        try {
+            maxDuration = Integer.parseInt(v);
+        }
+        catch (Exception e) {
+            log.warn("Invalid value for configuration parameter \"{}\": " +
+                     "\"{}\". Integer value expected.",
+                     MAX_QUERY_DURATION_PROPERTY, v);
+        }
+        return maxDuration;
     }
 
     private abstract class ConstructStreamingOutput implements StreamingOutput
