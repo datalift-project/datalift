@@ -225,7 +225,7 @@ public class SecurityCheckService extends BaseModule {
 //		String ee = queryContent.replaceAll("\\?context", "<"+ ContextURI.get(sessid) +"#ctx>");
 //		log.info("Ask eseguita:  " + ee);
 		
-		RepositoryConnection conn = this.liftedRepository.getConnection();
+		RepositoryConnection conn = this.securedRepository.getConnection();
 		BooleanQuery bquery = conn.prepareBooleanQuery(QueryLanguage.SPARQL, queryContent);
 //		BooleanQuery bquery = conn.prepareBooleanQuery(QueryLanguage.SPARQL, ee);
 		boolean res = bquery.evaluate();

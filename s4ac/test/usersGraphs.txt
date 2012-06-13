@@ -1,0 +1,106 @@
+======Context graph of User1========
+
+@prefix prissma: <http://ns.inria.fr/prissma/v2/> .
+@prefix hard: <http://www.w3.org/2007/uwa/context/hardware.owl#> .
+@prefix dcn: <http://www.w3.org/2007/uwa/context/deliverycontext.owl#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix common: <http://www.w3.org/2007/uwa/context/common.owl#> .
+@prefix xsd: <http://www.w3.org/2001/xmlschema#> .
+@prefix ao: <http://purl.org/ontology/ao/core#> .
+@prefix soft: <http://www.w3.org/2007/uwa/context/software.owl#> .
+@prefix ex: <http://example.com/context/uid1#> .
+
+<http://example.com/context/uid1> {
+ex:ctx a prissma:Context.
+ex:ctx prissma:environment ex:env.
+ex:ctx prissma:device ex:dev.
+ex:ctx prissma:user ex:user.
+ex:user a prissma:User.
+ex:user foaf:name "John Smith".
+ex:user foaf:gender "male".
+ex:user foaf:depiction <http://example/usr/pic.jpg>.
+ex:user foaf:interest <http://dbpedia.org/resource/Compulsive_shopping>.
+ex:user foaf:knows <http://ns.inria.fr/fabien.gandon#me>.
+ex:user foaf:knows <http://ns.inria.fr/luca.costabello#me>.
+ex:dev a prissma:Device.
+ex:dev hard:deviceHardware ex:hw.
+ex:hw dcn:display hard:TactileDisplay.
+ex:hw common:resolutionHeight "1024"^^xsd:int.
+ex:hw common:resolutionWidth "600"^^xsd:int.
+ex:dev soft:deviceSoftware ex:sw.
+ex:sw soft:operatingSystem ex:os.
+ex:os common:name "Android".
+ex:env a prissma:Environment.
+ex:env prissma:motion "no".
+ex:env prissma:currentPOI ex:poi.
+ex:poi prissma:poiCategory <http://dbpedia.org/resource/Library>.
+ex:poi prissma:poiLabel <http://dbpedia.org/resource/Cambridge_University_Library>.
+ex:env ao:activity <http://dbpedia.org/resource/Shopping>.
+}
+
+
+======Context graph of User2========
+@prefix prissma: <http://ns.inria.fr/prissma/v2/> .
+@prefix hard: <http://www.w3.org/2007/uwa/context/hardware.owl#> .
+@prefix dcn: <http://www.w3.org/2007/uwa/context/deliverycontext.owl#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix common: <http://www.w3.org/2007/uwa/context/common.owl#> .
+@prefix xsd: <http://www.w3.org/2001/xmlschema#> .
+@prefix ao: <http://purl.org/ontology/ao/core#> .
+@prefix soft: <http://www.w3.org/2007/uwa/context/software.owl#> .
+@prefix ex: <http://example.com/context/uid2#> .
+
+<http://example.com/context/uid2> {
+ex:ctx a prissma:Context.
+ex:ctx prissma:environment ex:env.
+ex:ctx prissma:device ex:dev.
+ex:ctx prissma:user ex:user.
+ex:user a prissma:User.
+ex:user foaf:name "Maria Rossi".
+ex:user foaf:gender "female".
+ex:user foaf:knows <http://ns.inria.fr/serena.villata#me>.
+ex:dev a prissma:Device.
+ex:dev hard:deviceHardware ex:hw.
+ex:hw dcn:display hard:TactileDisplay.
+ex:hw common:resolutionHeight "1024"^^xsd:int.
+ex:hw common:resolutionWidth "600"^^xsd:int.
+ex:dev soft:deviceSoftware ex:sw.
+ex:sw soft:operatingSystem ex:os.
+ex:os common:name "Apple".
+ex:env a prissma:Environment.
+ex:env prissma:motion "yes".
+}
+
+
+======Context graph of User3========
+
+@prefix prissma: <http://ns.inria.fr/prissma/v2/> .
+@prefix hard: <http://www.w3.org/2007/uwa/context/hardware.owl#> .
+@prefix dcn: <http://www.w3.org/2007/uwa/context/deliverycontext.owl#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix common: <http://www.w3.org/2007/uwa/context/common.owl#> .
+@prefix xsd: <http://www.w3.org/2001/xmlschema#> .
+@prefix ao: <http://purl.org/ontology/ao/core#> .
+@prefix soft: <http://www.w3.org/2007/uwa/context/software.owl#> .
+@prefix ex: <http://example.com/context/uid3#> .
+
+<http://example.com/context/uid3> {
+ex:ctx a prissma:Context.
+ex:ctx prissma:environment ex:env.
+ex:ctx prissma:device ex:dev.
+ex:ctx prissma:user ex:user.
+ex:user a prissma:User.
+ex:user foaf:name "Maria Rossi".
+ex:user foaf:gender "female".
+ex:user foaf:knows <http://ns.inria.fr/luca.costabello#me>.
+ex:dev a prissma:Device.
+ex:dev hard:deviceHardware ex:hw.
+ex:hw dcn:display hard:TactileDisplay.
+ex:hw common:resolutionHeight "1024"^^xsd:int.
+ex:hw common:resolutionWidth "600"^^xsd:int.
+ex:dev soft:deviceSoftware ex:sw.
+ex:sw soft:operatingSystem ex:os.
+ex:os common:name "Apple".
+ex:env a prissma:Environment.
+ex:env prissma:motion "yes".
+}
