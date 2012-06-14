@@ -116,11 +116,9 @@
   <property name="fwk.build.libs"       location="${fwk.lib.home}/buildtime"/>
   <property name="fwk.run.libs"         location="${fwk.lib.home}/runtime"/>
   <property name="core.run.libs"        location="${core.home}/lib/runtime"/>
+
   <property name="classes.dir"          location="${build.home}/classes"/>
   <property name="docs.dir"             location="${dist.home}/docs"/>
-  
-  <!-- ==========ADDED======= -->
-  <property name="sparql.dir"		location="${basedir}/../sparql-endpoint/dist" />
 
   <property name="jar.name"             value="${app.name}.jar"/>
   <property name="jar.path"             location="${dist.home}/${jar.name}"/>
@@ -169,10 +167,6 @@
     <fileset dir="${fwk.dist.home}">
       <include name="**/*.jar"/>
     </fileset>
-    <!-- ==========ADDED======= -->
-    <fileset dir="${sparql.dir}">
-      <include name="**/*.jar"/>
-    </fileset>
   </path>
 
   <path id="compile.classpath">
@@ -183,10 +177,6 @@
       <include name="**/*.jar"/>
     </fileset>
     <fileset dir="${core.run.libs}">
-      <include name="**/*.jar"/>
-    </fileset>
-    <!-- ==========ADDED======= -->
-    <fileset dir="${sparql.dir}">
       <include name="**/*.jar"/>
     </fileset>
   </path>
@@ -311,7 +301,9 @@
     <jar jarfile="${jar.path}" update="true">
       <fileset dir="${classes.dir}"/>
       <service type="org.datalift.fwk.Module">
-        <provider classname="org.datalift.s4ac.sparql.S4acSparqlEndpoint"/>
+        <provider classname="org.datalift.s4ac.S4acModule"/>
+<!-- 	<provider classname="org.datalift.s4ac.ProcessData"/> -->
+<!--       	<provider classname="org.datalift.s4ac.services.SecurityCheckService"/> -->
       </service>
     </jar>
   </target>
@@ -344,8 +336,6 @@
     <echo message="   - build.home          = ${build.home}"/>
     <echo message="   - dist.home           = ${dist.home}"/>
     <echo message="   - user.home           = ${user.home}"/>
-    <echo message=""/>
-    <echo message="   - sparql.dir          = ${sparql.dir}"/>
     <echo message=""/>
 
   </target>
