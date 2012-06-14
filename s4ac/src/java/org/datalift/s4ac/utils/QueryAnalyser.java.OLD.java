@@ -2,7 +2,7 @@ package org.datalift.s4ac.utils;
 
 import java.util.Set;
 
-import org.datalift.fwk.Configuration;
+import org.datalift.s4ac.Config;
 import org.datalift.s4ac.exceptions.QueryLexicalException;
 
 import org.openrdf.query.MalformedQueryException;
@@ -14,7 +14,7 @@ public class QueryAnalyser {
 
 	public static QueryType analyse(String query){
 
-		String baseURI = Configuration.getDefault().getProperty("BASE_URI_PROPERTY");
+		String baseURI = Config.getBaseUri();
     	SPARQLParser par = new SPARQLParser();
     	
     	try {

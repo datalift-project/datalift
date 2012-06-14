@@ -1,9 +1,7 @@
 package org.datalift.s4ac.services;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -11,9 +9,8 @@ import java.util.Set;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.datalift.fwk.BaseModule;
-import org.datalift.fwk.Configuration;
-import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.security.SecurityContext;
+import org.datalift.s4ac.Config;
 import org.datalift.s4ac.utils.CRUDType;
 
 import org.openrdf.OpenRDFException;
@@ -24,16 +21,17 @@ import org.openrdf.query.QueryEvaluationException;
 import org.openrdf.query.QueryLanguage;
 import org.openrdf.query.TupleQuery;
 import org.openrdf.query.TupleQueryResult;
-
+import org.openrdf.repository.Repository;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
+import org.openrdf.repository.http.HTTPRepository;
 
 
 public class SecurityCheckService extends BaseModule {
 	private Repository securedRepository;
 	private Repository liftedRepository;	
 	
-	private SecurityContext ctx = SecurityContext.getContext();
+	private SecurityContext ctx;
 	
 	private static final Log log = LogFactory.getLog(SecurityCheckService.class);
 	
@@ -59,17 +57,17 @@ public class SecurityCheckService extends BaseModule {
 	}
 	
 	public void init() {
-		
+				
 		try {
-			this.liftedRepository = Configuration.getDefault().getRepository("lifted");
-    		this.securedRepository = Configuration.getDefault().getRepository("secured");
+			this.liftedRepository = new HTTPRepository(Config.getSesameServer(), Config.getLiftedRep());
+			this.securedRepository = new HTTPRepository(Config.getSesameServer(), Config.getSecureRep());
 		} catch (Exception e) {
 			log.fatal("Unable to get repositories", e);
 			throw new RuntimeException(e);
 		}
 		
     	try {
-            RepositoryConnection conn = this.securedRepository.newConnection();
+            RepositoryConnection conn = this.securedRepository.getConnection();
             log.info("Opened connection to Secured repo");
             try {
                 TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, queryCtx);
@@ -80,6 +78,7 @@ public class SecurityCheckService extends BaseModule {
                 		String apuri = bindingSet.getValue("ap").stringValue();
                 		String acstype = bindingSet.getValue("acstype").stringValue();
                 		String g = bindingSet.getValue("graph").stringValue();
+//                		String graph = bindingSet.getValue("graph").stringValue();
                 		
                 		AccessPolicy ap;
                 		if(aps.containsKey(apuri)) 
@@ -139,7 +138,7 @@ public class SecurityCheckService extends BaseModule {
 		return apindex;
 	}
 
-	public Set<String> check(String logged_user) throws RepositoryException, MalformedQueryException, QueryEvaluationException {
+	public Set<String> check(String sessid) throws RepositoryException, MalformedQueryException, QueryEvaluationException {
 		
 		Set<String> graphs = new HashSet<String>();
 		graphs.add("http://example.com/default"); // on ajoute le graphe par défaut
@@ -150,7 +149,7 @@ public class SecurityCheckService extends BaseModule {
 			if(ap.getAcstype()== ACSType.CONJUNCTIVE){
 				// set conjonctif, tous les asks doivent etre valides
 				for(String askQuery : ap.getAsks()){
-					isok = isok && ask(askQuery, logged_user);
+					isok = isok && ask(askQuery, sessid);
 				}
 				if(isok==true){
 					graphs.addAll(ap.getGraph());
@@ -159,7 +158,7 @@ public class SecurityCheckService extends BaseModule {
 			else if(ap.getAcstype()== ACSType.DISJUNCTIVE){
 				// set disjonjonctif, au moins un ask doit etre valide
 				for(String askQuery : ap.getAsks()){
-					isokFalse = ask(askQuery, logged_user);
+					isokFalse = ask(askQuery, sessid);
 					if(isokFalse==true){
 						graphs.addAll(ap.getGraph());
 						break;
@@ -174,83 +173,67 @@ public class SecurityCheckService extends BaseModule {
 		log.info("Graphs " + graphs);
 		return graphs;
 	}	
+	
+//	public Set<String> checkByPrivilege(SecuredSparqlQuery sqry, String sessid) throws RepositoryException, MalformedQueryException, QueryEvaluationException  {
+//		
+//		Set<String> graphs = new HashSet<String>();
+//				
+//		// select AP depending on the query CRUDType
+//		CRUDType type = sqry.getCrudType();
+//		if(apindex.get(type)!=null){
+//			
+//			Set<String> apByPrivilege = apindex.get(type);
+//			
+//			for(String apuri : apByPrivilege){
+//				AccessPolicy ap = aps.get(apuri);
+//				boolean isok = true;
+//				boolean isokFalse=false;
+//				
+//				if(ap.getAcstype()== ACSType.CONJUNCTIVE){
+//					// set conjonctif, tous les asks doivent etre valides
+//					for(String askQuery : ap.getAsks()){
+//						isok = isok && ask(askQuery, sessid);
+//					}
+//					if(isok==true){
+//						graphs.addAll(ap.getGraph());
+//					}
+//				}
+//				else if(ap.getAcstype()== ACSType.DISJUNCTIVE){
+//					// set disjonjonctif, au moins un ask doit etre valide
+//					for(String askQuery : ap.getAsks()){
+//						isokFalse = ask(askQuery, sessid);
+//						if(isokFalse==true){
+//							graphs.addAll(ap.getGraph());
+//							protected final Viewable newViewable(String templateName, Object it) {
+//								return new Viewable("/" + this.getName() + templateName, it);
+//							}		break;
+//						}
+//					}
+//				}
+//			}
+//		}
+//
+//		return graphs;
+//	}
 
 	public boolean ask(String queryContent, String sessid) throws RepositoryException, MalformedQueryException, QueryEvaluationException {
 		
 		if(sessid != null && !sessid.equals("")){
 			queryContent += "\nBINDINGS ?context {(<"+ ContextURI.get(sessid) +"#ctx>)}";
 		}
-				
-		RepositoryConnection conn = this.liftedRepository.newConnection();
+		
+//		String ee = queryContent.replaceAll("\\?context", "<"+ ContextURI.get(sessid) +"#ctx>");
+//		log.info("Ask eseguita:  " + ee);
+		
+		RepositoryConnection conn = this.securedRepository.getConnection();
 		BooleanQuery bquery = conn.prepareBooleanQuery(QueryLanguage.SPARQL, queryContent);
+//		BooleanQuery bquery = conn.prepareBooleanQuery(QueryLanguage.SPARQL, ee);
 		boolean res = bquery.evaluate();
 		
         log.debug("RESULT ASK : "+String.valueOf(res));		
         
         return res;
-        
 	}
-
-	public List<String> getAccessibleGraphs(List<String> namedGraphUris) {
-		String logged_user = SecurityContext.getUserPrincipal();
-		Set<String> ng = null;
-		try {
-			ng = this.check(logged_user);
-			log.debug("Named graph checking done. Found " +ng.size() +" named graphs" );
-		} catch (RepositoryException e) {
-			e.printStackTrace();
-		} catch (MalformedQueryException e) {
-			e.printStackTrace();
-		} catch (QueryEvaluationException e) {
-			e.printStackTrace();
-		}
-		
-		return new ArrayList<String>(ng);
-	}
-
-/*
-	public Set<String> checkByPrivilege(SecuredSparqlQuery sqry, String sessid) throws RepositoryException, MalformedQueryException, QueryEvaluationException  {
-		
-		Set<String> graphs = new HashSet<String>();
-				
-		// select AP depending on the query CRUDType
-		CRUDType type = sqry.getCrudType();
-		if(apindex.get(type)!=null){
-			
-			Set<String> apByPrivilege = apindex.get(type);
-			
-			for(String apuri : apByPrivilege){
-				AccessPolicy ap = aps.get(apuri);
-				boolean isok = true;
-				boolean isokFalse=false;
-				
-				if(ap.getAcstype()== ACSType.CONJUNCTIVE){
-					// set conjonctif, tous les asks doivent etre valides
-					for(String askQuery : ap.getAsks()){
-						isok = isok && ask(askQuery, sessid);
-					}
-					if(isok==true){
-						graphs.addAll(ap.getGraph());
-					}
-				}
-				else if(ap.getAcstype()== ACSType.DISJUNCTIVE){
-					// set disjonjonctif, au moins un ask doit etre valide
-					for(String askQuery : ap.getAsks()){
-						isokFalse = ask(askQuery, sessid);
-						if(isokFalse==true){
-							graphs.addAll(ap.getGraph());
-							protected final Viewable newViewable(String templateName, Object it) {
-								return new Viewable("/" + this.getName() + templateName, it);
-							}		break;
-						}
-					}
-				}
-			}
-		}
-
-		return graphs;
-	}
-*/
 	
 
 }
