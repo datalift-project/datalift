@@ -1342,6 +1342,7 @@ public class Workspace extends BaseModule
                 response = cfg.getBean(SparqlEndpoint.class)
                               .describe(src.getUri(), DescribeType.Graph,
                                         cfg.getInternalRepository(),
+                                        5000, null, null,
                                         uriInfo, request, acceptHdr);
             }
             else {

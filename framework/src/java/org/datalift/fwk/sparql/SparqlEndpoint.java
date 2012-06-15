@@ -205,6 +205,46 @@ public interface SparqlEndpoint
                                                 throws WebApplicationException;
 
     /**
+     * Enhanced entry point for executing a SPARQL query and sending
+     * paginated results directly to the client.
+     * @param  defaultGraphUris   the target default graphs, or
+     *                            <code>null</code>.
+     * @param  namedGraphUris     named graph definitions for query.
+     * @param  query              the SPARQL query string.
+     * @param  startOffset        the index of the first expected result
+     *                            (inclusive).
+     * @param  endOffset          the index of the last expected result
+     *                            (exclusive).
+     * @param  gridJson           whether to return data grid optimized
+     *                            JSON result. Only applicable if the
+     *                            requested result MIME type is
+     *                            "application/json" or
+     *                            "application/sparql-results+json".
+     * @param  format             the expected response format,
+     *                            overrides the HTTP Accept header.
+     * @param  jsonCallback       the name of the JSONP callback to
+     *                            wrap the JSON response.
+     * @param  uriInfo            the request URI data.
+     * @param  request            the JAX-RS Request object, for content
+     *                            negotiation.
+     * @param  acceptHdr          the HTTP Accept header, for content
+     *                            negotiation.
+     *
+     * @return a JAX-RS response with the SPARQL result formatted
+     *         according to the negotiated format.
+     * @throws WebApplicationException if any error occurred processing
+     *         the SPARQL query.
+     * @throws SecurityException if the user is not allowed to
+     *         perform the query.
+     */
+    public ResponseBuilder executeQuery(List<String> defaultGraphUris,
+                            List<String> namedGraphUris, String query,
+                            int startOffset, int endOffset, boolean gridJson,
+                            String format, String jsonCallback,
+                            UriInfo uriInfo, Request request, String acceptHdr)
+                                                throws WebApplicationException;
+
+    /**
      * Provides the description of the specified object (node, predicate
      * or named graph) from the default public RDF store and returns the
      * results directly to the client.
@@ -263,5 +303,43 @@ public interface SparqlEndpoint
     public ResponseBuilder describe(String uri, DescribeType type,
                                     Repository repository, UriInfo uriInfo,
                                     Request request, String acceptHdr)
+                                                throws WebApplicationException;
+
+    /**
+     * Provides the description of the specified object (node, predicate
+     * or named graph) from the specified RDF store and returns the
+     * results directly to the client.
+     * <p>
+     * Whenever known, the type of description shall be provided to
+     * avoid the overhead of querying the RDF store to try to detect
+     * the possible applicable description types.</p>
+     * @param  uri            the URI of the object to describe.
+     * @param  type           the type of the object or
+     *                        <code>null</code> if unknown.
+     * @param  repository     the RDF store to read the object
+     *                        description from.
+     * @param  max            the maximum number of results to return.
+     * @param  format         the expected response format, overrides
+     *                        the HTTP Accept header.
+     * @param  jsonCallback   the name of the JSONP callback to wrap
+     *                        the JSON response.
+     * @param  uriInfo        the request URI data.
+     * @param  request        the JAX-RS Request object, for content
+     *                        negotiation.
+     * @param  acceptHdr      the HTTP Accept header, for content
+     *                        negotiation.
+     *
+     * @return a JAX-RS response with the object description, formatted
+     *         according to the negotiated format.
+     * @throws WebApplicationException if any error occurred processing
+     *         the SPARQL query.
+     * @throws SecurityException if the user is not allowed to
+     *         perform the query.
+     */
+    public ResponseBuilder describe(String uri, DescribeType type,
+                                    Repository repository, int max, 
+                                    String format, String jsonCallback,
+                                    UriInfo uriInfo, Request request,
+                                    String acceptHdr)
                                                 throws WebApplicationException;
 }

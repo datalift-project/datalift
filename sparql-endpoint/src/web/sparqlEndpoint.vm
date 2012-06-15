@@ -81,6 +81,7 @@
 #if( ${collections.size()} > 1 )
 				requestUrl += "&" + $("#default-graph-uri").serialize();
 #end
+				requestUrl += "&endOffset=5000";
 				if (fmt.match(/json/)) {
 					// Prevent the navigator from sending the form
 					e.preventDefault();

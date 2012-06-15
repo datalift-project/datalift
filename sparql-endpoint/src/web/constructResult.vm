@@ -83,7 +83,7 @@
 			jQuery.extend(jQuery.jgrid.defaults, {
 				pager: $('#pagernav'),
 				caption: $('#searchnav').html(),
-				rowNum: 200,
+				rowNum: 500,
 				rowList:[50,100,200,500,1000,2000],
 				height: 450,
 				search:{
