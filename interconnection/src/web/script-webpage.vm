@@ -16,7 +16,7 @@
 
 		<fieldset>
         <legend>Prefixes:</legend>
-        <!--<form>-->
+
             <p>prefix name of the source data set (a string):</label>
             <input type="text" name="sourcename" id="sourcename" value=""/>
             prefix of the source data set (a string):</label>
@@ -26,14 +26,14 @@
             prefix of the source data set (a string):</label>
             <input type="text" name="prefixtarget" id="prefixtarget" size=70 value=""/></p>
             <!other prefixes>
-        <!--</form>-->
+  
         </fieldset>
 		
         <br />
 		
         <fieldset>
         <legend>Data Sources:</legend>
-        <!--<form>-->
+  
 		    <p>type of the source data set:</label></p>
 		    <input type="radio" checked="checked" name="sourcetype" id="sourcetype" value="file" /> file, and the address is (a string): <input type="text" name="sourceaddressf" id="sourceaddress" size=60 value=""/>
 		    <br />
@@ -53,25 +53,23 @@
 		    
 		    <input type="radio" name="targetaddresss" id="targetaddress" value="http://localhost:8080/datalift/sparql" /> http://localhost:8080/datalift/sparql
 		    <input type="radio" name="targetaddresss" id="targetaddress" value="other"> other <input type="text" name="targetaddressso" id="targetaddress" size=60 value=""/>
-        <!--</form>-->
+
 		</fieldset>
 		
         <br />
 		
         <fieldset>
         <legend>Interlinks:</legend>
-        <!--<form>-->
+ 
             <fieldset>
             <legend>Interlink:</legend>
-            <!--<form>-->
+           
                 <p>id of the Interlink section:</label>
                    <input type="text" name="interlinkid" id="interlinkid" value=""/></p>
-
-            <!--</form>-->
 				
             <fieldset>
             <legend>Queries:</legend>
-            <!--<form>-->
+
                 <p>variable of the source data set (a string):</label>
                    <input type="text" name="variable1" id="variable1" value=""/></p>
                 <p>SPARQL query of the source data set (a string):</label>
@@ -80,14 +78,14 @@
                    <input type="text" name="variable2" id="variable2" value=""/></p>
                 <p>SPARQL query of the target data set (a string):</label>
                    <input type="text" name="targetquery" id="targetquery" size=100 value=""/></p>
-            <!--</form>-->
+    
             </fieldset>
 			
             <br />
 		
             <fieldset>
             <legend>LinkCondition:</legend>
-            <!--<form id="aggregatetype" method="post" action="yourpath">-->
+
               <ul>
                 <li>
                     <p>aggregate type:
@@ -100,12 +98,11 @@
                     </select>
                 </li>
               </ul>
-            <!--</form>-->
+
         
             <fieldset>
             <legend>Compare:</legend>
-            <!--<form id="myformid" method="post" action="mypath">-->
-            <!--<form>-->
+ 
                 <ul id="myformname0">
                     <li>required (true or false, or leave it blank):</label><input type="text" name="required0" id="required0" value=""/>
                         weight (an integer number):</label><input type="text" name="weight0" id="weight0" value=""/>
@@ -114,7 +111,7 @@
                       
 					  <fieldset> 
                       <legend>metric method:</legend> 
-					  <!--<form>-->
+					
                     		<input type="radio" name="metric0" id="metric0" value="levenshteinDistance" /> levenshteinDistance
 		                    <input type="radio" name="metric0" id="metric0" value="levenshtein"> levenshtein
 		                    <input type="radio" name="metric0" id="metric0" value="jaro" /> jaro
@@ -127,8 +124,7 @@
 		                    <input type="radio" name="metric0" id="metric0" value="num" /> num: <label for="minValue">#i18n("minValue") (a float number):</label><input type="text" name="minValue" id="minValue" value=""/> <label for="maxValue">#i18n("maxValue") (a float number):</label><input type="text" name="maxValue" id="maxValue" value=""/> 
 		                    <input type="radio" name="metric0" id="metric0" value="date" /> date
 		                    <input type="radio" name="metric0" id="metric0" value="dateTime" /> dateTime
-		                    <input type="radio" name="metric0" id="metric0" value="wgs84" /> wgs84: <label for="unit">#i18n("unit") (a string):</label><input type="text" name="unit" id="unit" value=""/> <label for="curveStyle">#i18n("curveStyle") (a string):</label><input type="text" name="curveStyle" id="curveStyle" value=""/>		                    
-                      <!--</form>-->
+		                    <input type="radio" name="metric0" id="metric0" value="wgs84" /> wgs84: <label for="unit">#i18n("unit") (a string):</label><input type="text" name="unit" id="unit" value=""/> <label for="curveStyle">#i18n("curveStyle") (a string):</label><input type="text" name="curveStyle" id="curveStyle" value=""/>		                               
                       </fieldset>
 					  
                     <li>comparing property of the source data set (a string, eg. insee:nom[@lang='fr']):</label><input type="text" name="sourceproperty0" id="sourceproperty0" value=""/>
@@ -139,7 +135,7 @@
                                                
                         <fieldset> 
                         <legend>function:</legend> 
-					    <!--<form>-->             
+					               
 					        <input type="radio" name="functions0" id="functions0" value="removeBlanks" /> removeBlanks
 		                    <input type="radio" name="functions0" id="functions0" value="removeSpecialChars"> removeSpecialChars
 		                    <input type="radio" name="functions0" id="functions0" value="lowerCase" /> lowerCase
@@ -158,7 +154,7 @@
 		                    <input type="radio" name="functions0" id="functions0" value="convert" /> convert, sourceCharset (a string):</label><input type="text" name="sourceCharsets0" id="sourceCharsets0" value=""/> targetCharset (a string):<input type="text" name="targetCharsets0" id="targetCharsets0" value=""/>
 		                    <input type="radio" name="functions0" id="functions0" value="tokenize" /> tokenize, regex (a string):</label><input type="text" name="regexs20" id="regexs20" value=""/>
 		                    <input type="radio" name="functions0" id="functions0" value="removeValues" /> removeValues, blacklist (a comma-separated list of words):<input type="text" name="blacklists0" id="blacklists0" value=""/>
-					    <!--</form>-->        
+					          
 		                </fieldset> 
 						          
 		            <li>comparing property of the target data set (a string, eg. insee:nom[@lang='fr']):</label><input type="text" name="targetproperty0" id="targetproperty0" value=""/>
@@ -169,7 +165,7 @@
                         
                         <fieldset> 
                         <legend>function:</legend> 
-					    <!--<form>-->             
+				       
 					        <input type="radio" name="functiont0" id="functiont0" value="removeBlanks" /> removeBlanks
 		                    <input type="radio" name="functiont0" id="functiont0" value="removeSpecialChars"> removeSpecialChars
 		                    <input type="radio" name="functiont0" id="functiont0" value="lowerCase" /> lowerCase
@@ -188,72 +184,30 @@
 		                    <input type="radio" name="functiont0" id="functiont0" value="convert" /> convert, sourceCharset (a string):</label><input type="text" name="sourceCharsett0" id="sourceCharsett0" value=""/> targetCharset (a string):<input type="text" name="targetCharsett0" id="targetCharsett0" value=""/>
 		                    <input type="radio" name="functiont0" id="functiont0" value="tokenize" /> tokenize, regex (a string):</label><input type="text" name="regext20" id="regext20" value=""/>
 		                    <input type="radio" name="functiont0" id="functiont0" value="removeValues" /> removeValues, blacklist (a comma-separated list of words):</label><input type="text" name="blacklistt0" id="blacklistt0" value=""/>
-					    <!--</form>-->        
+    
 		                </fieldset>
             </ul>
-        <!--</form>--> 
-        </fieldset> <!--compare section complete-->
+
+        </fieldset> 
         
-        </fieldset>  <!--linkCondition section complete-->
+        </fieldset>  
 	
         <br />
         
 		<fieldset>
         <legend>Filter:</legend>
-        <!--<form>-->
+      
         <p>limit:</label>
         <input type="text" name="filterlimit" id="filterlimit" value=""/></p>
-        <!--</form>-->		
+      	
         </fieldset>
 		
-            </fieldset>  <!--Interlink section complete-->
+            </fieldset> 
 
-            </fieldset>  <!--Interlinks section complete-->
+            </fieldset>  
 
 <input type="submit" value="Create SILK Script!" />
 </form>
 
 </body>
-        <script>
-        var i = 1;
-        function addCompareForm() {
-        i++;
-        var form = document.getElementById('myformid');
-        var insertLines = '<ul id="myformname'+i+'">';
-        insertLines += '<li><label for="metric">#i18n("metric"):</label><input type="text" name="metric" id="metric" value=""/><label for="threshold">#i18n("threshold"):</label><input type="text" name="threshold" id="threshold" value=""/><label for="required">#i18n("required"):</label><input type="text" name="required" id="required" value=""/></li>';  
-        insertLines += '<li><label for="inputpath_source">#i18n("inputpath_source"):</label><input type="text" name="inputpath_source" id="inputpath_source" value=""/>TransformInput: <input type="radio" name="TransformInput_s" value="Yes" /> Yes, function: 					                 <select>
-                                       <option>removeBlanks</option>
-                                       <option>removeSpecialChars</option>
-									   <option>lowerCase</option>
-									   <option>upperCase</option>
-									   <option>stem</option>
-									   <option>alphaReduce</option>
-									   <option>numReduce</option>
-									   <option>stripPrefix</option>
-									   <option>stripPostfix</option>
-									   <option>stripUriPrefix</option>
-									   <option>concat</option>
-									 </select><input type="radio" name="TransformInput_s" value="No"> No </li>';  
-        insertLines += '<li><label for="inputpath_target">#i18n("inputpath_target"):</label><input type="text" name="inputpath_target" id="inputpath_target" value=""/>TransformInput: <input type="radio" name="TransformInput_t" value="Yes" /> Yes, function: 					                 <select>
-                                       <option>removeBlanks</option>
-                                       <option>removeSpecialChars</option>
-									   <option>lowerCase</option>
-									   <option>upperCase</option>
-									   <option>stem</option>
-									   <option>alphaReduce</option>
-									   <option>numReduce</option>
-									   <option>stripPrefix</option>
-									   <option>stripPostfix</option>
-									   <option>stripUriPrefix</option>
-									   <option>concat</option>
-									 </select><input type="radio" name="TransformInput_t" value="No"> No </li>';
-        insertLines += '<li><button type="button" title="delete_Compare_form" onClick="delCompareForm('+i+');">Delete This Compare Section</button></li>';
-		form.innerHTML = form.innerHTML+insertLines;  
-        insertLines += '</ul>';
-        }
-        function delCompareForm(n) {
-        var ul = document.getElementById('myformname'+n);
-        ul.parentNode.removeChild(ul);
-        }
-        </script>
 </html>
