@@ -7,10 +7,12 @@
 
 package org.datalift.samples.project;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectStreamException;
 import java.io.PrintStream;
 import java.util.HashMap;
@@ -18,6 +20,7 @@ import java.util.Map;
 
 import javassist.bytecode.Descriptor.Iterator;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -25,13 +28,20 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+
+import org.datalift.fwk.Configuration;
 import org.datalift.fwk.MediaTypes;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.Source;
 import org.openrdf.model.URI;
+
+import com.sun.jersey.core.header.FormDataContentDisposition;
+import com.sun.jersey.multipart.FormDataParam;
 
 import de.fuberlin.wiwiss.silk.Silk;
 
@@ -178,6 +188,7 @@ public class HandleProjectModule extends BaseInterconnectionModule
             //create the silk script
         	int i=0;
             File script = new File("script.xml");
+        	//File script = new File("C://Zhengjie//study//datalift_6.13//configFile.xml");
         	PrintStream out = null;
     		try {
     			out = new PrintStream(new FileOutputStream(script));
@@ -361,31 +372,99 @@ public class HandleProjectModule extends BaseInterconnectionModule
     	System.out.close();
     	
     	place = System.getProperty("user.dir")+"/script.xml";
-    	
+        // Retrieve project.
+        Project p3 = this.getProject(projectId);		
+        // Display conversion configuration page.  	
     	Map<String, Object> args = new HashMap<String, Object>();
-    	return Response.ok(this.newViewable("/silk-webpage.vm", args))
+        args.put("it", p3);
+        args.put("linking", this);  
+    	return Response.ok(this.newViewable("/silk-webpage_2.vm", args))
                 .build();
+        
+    }
+ 
+    @POST
+    @Path("run-silk")
+    @Consumes(MediaTypes.MULTIPART_FORM_DATA)
+    @Produces(MediaTypes.TEXT_HTML)
+    public Response doRun(@QueryParam("project") java.net.URI projectId,
+                        @FormDataParam("configFile") InputStream data,
+                        @FormDataParam("configFile") FormDataContentDisposition disposition,
+                        @FormDataParam("linkSpecId") String linkSpecId,
+                        @FormDataParam("numThreads") int numThreads,
+                        @FormDataParam("reload") boolean reload)
+                                        throws ObjectStreamException
+    {    	   	
+        // Retrieve project.
+        Project p4 = this.getProject(projectId);		
+        // Display conversion configuration page.  	
+    	Map<String, Object> args = new HashMap<String, Object>();
+        args.put("it", p4);
+        args.put("linking", this);
+    	
+        String filename = disposition.getFileName();
+        try {
+			FileOutputStream fos = null;
+	        BufferedInputStream bis = null;
+	        int BUFFER_SIZE = 1024;
+	        byte[] buf = new byte[BUFFER_SIZE];
+	        int size = 0;
+	        bis = new BufferedInputStream(data);
+	        try {
+	        	    File configFile = null;
+					try {
+						configFile = File.createTempFile("configFile",".xml");
+						fos = new FileOutputStream(configFile);
+					} catch (IOException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					} finally {
+	                
+	                try {
+	                                while ( (size = bis.read(buf)) != -1)
+	                                    fos.write(buf, 0, size);
+	                                fos.close();
+	                                bis.close();
+	                        } catch (IOException e) {
+	                        	 // Includes FileNotFoundException
+	                             log.fatal("File upload error for {}", e, configFile);
+	                             throw new WebApplicationException(
+	                                       Response.status(Status.INTERNAL_SERVER_ERROR)
+	                                                .entity(e.getMessage())
+	                                                .type(MediaType.TEXT_PLAIN).build());
+	                        }
+        	        Silk.executeFile(configFile, linkSpecId, numThreads, reload);
+        	        configFile.deleteOnExit();
+	                } 
+					
+		} finally {}      
+		} finally {}
+		
+        return Response.ok(this.newViewable("/ok.vm", args)).build();
         
     }
     
     @POST
-    @Path("run-silk")
-    @Produces(MediaTypes.TEXT_PLAIN)
-    public String doRun(@QueryParam("project") java.net.URI projectId,
-                        @FormParam("configFile") File configFile,
+    @Path("run-silk_2")
+    @Produces(MediaTypes.TEXT_HTML)
+    public Response doRun(@QueryParam("project") java.net.URI projectId,
                         @FormParam("linkSpecId") String linkSpecId,
                         @FormParam("numThreads") int numThreads,
                         @FormParam("reload") boolean reload)
                         		throws ObjectStreamException
     {    	
-        //link the data sets
-    	//configFile = new File("C:/Program Files/Apache Software Foundation/Tomcat 6.0/script.xml");
+        // Retrieve project.
+        Project p5 = this.getProject(projectId);		
+        // Display conversion configuration page.  	
+    	Map<String, Object> args = new HashMap<String, Object>();
+        args.put("it", p5);
+        args.put("linking", this);
+        File configFile = null;
+		//link the data sets
         if (place!=null)
     	    configFile = new File(place);
     	Silk.executeFile(configFile, linkSpecId, numThreads, reload);
         
-        return "OK~~";
-        
+    	return Response.ok(this.newViewable("/ok.vm", args)).build();
     }
-    
 }
