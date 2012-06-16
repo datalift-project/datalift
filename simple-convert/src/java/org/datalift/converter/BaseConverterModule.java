@@ -64,6 +64,7 @@ import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.sparql.SparqlEndpoint;
+import org.datalift.fwk.sparql.SparqlEndpoint.DescribeType;
 import org.datalift.fwk.view.TemplateModel;
 import org.datalift.fwk.view.ViewFactory;
 
@@ -104,8 +105,6 @@ public abstract class BaseConverterModule
 
     /** The DataLift project manager. */
     protected ProjectManager projectManager = null;
-    /** The DataLift SPARQL endpoint. */
-    protected SparqlEndpoint sparqlEndpoint = null;
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -163,10 +162,6 @@ public abstract class BaseConverterModule
         this.projectManager = configuration.getBean(ProjectManager.class);
         if (this.projectManager == null) {
             throw new TechnicalException("project.manager.not.available");
-        }
-        this.sparqlEndpoint = configuration.getBean(SparqlEndpoint.class);
-        if (this.sparqlEndpoint == null) {
-            throw new TechnicalException("sparql.endpoint.not.available");
         }
     }
 
@@ -375,10 +370,11 @@ public abstract class BaseConverterModule
             defGraphs = new LinkedList<String>();
             defGraphs.add(repository.getName());
         }
-        return this.sparqlEndpoint.executeQuery(defGraphs, null,
-                                    "SELECT * WHERE { GRAPH <"
-                                        + namedGraph + "> { ?s ?p ?o . } }",
-                                    uriInfo, request, acceptHdr).build();
+        SparqlEndpoint endpoint = Configuration.getDefault()
+                                               .getBean(SparqlEndpoint.class);
+        return endpoint.describe(namedGraph.toString(), DescribeType.Graph,
+                                 repository, 5000, null, null,
+                                 uriInfo, request, acceptHdr).build();
     }
 
     protected void throwInvalidParamError(String name, Object value) {

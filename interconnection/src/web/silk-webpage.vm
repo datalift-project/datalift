@@ -12,7 +12,7 @@
 <div class="ui-widget-content converter_main" id="workspace">
 	<h3 class="ui-widget-header dl-widget-header">#i18n("RDF Data Sets Interconnection") - #i18n("Project") ${it.title}</h3>
 	
-<form name="input" action="${baseUri}/silk/run-silk" method="post">
+<form name="input" action="${baseUri}/silk/run-silk?project=$esc.url($it.uri)" method="post" enctype="multipart/form-data">
 
 		<p><label for="configFile">#i18n("configFile"):</label>
 		<input type="file" name="configFile" id="configFile" value=""/></p>
