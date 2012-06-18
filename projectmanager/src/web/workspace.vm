@@ -9,7 +9,7 @@
 </head>
 <body>
 #banner
-<a href="${baseUri}/sparql" id="go_to_sparql" class="button" style="position:absolute;top:15px;right:15px;">#i18n("workspace.go_to_sparql")</a>
+<a href="${baseUri}/sparql" id="goto_sparql" class="button" style="position:absolute;top:15px;right:15px;">#i18n("sparql.endpoint.link")</a>
 <div id="workspace" class="ui-widget-content">
 #if( $current )
 	<h3 class="ui-widget-header dl-widget-header">#i18n("project") $!esc.html($current.title)</h3>
@@ -97,7 +97,7 @@
 #end
 	$(function() {
 		$("input:submit, .button").button();
-		$("#go_to_sparql").button();
+		$("#goto_sparql").button();
 		$("#tabs").tabs();
 
 		if (typeof(currentProject) != 'undefined') {
@@ -178,9 +178,9 @@
 			title:"<a href='$curSrc.uri'>$esc.html($curSrc.title)</a>",
 	#if( $curSrc.getType() == $field.CsvSource )
 		#set( $sep = "csv.source.${curSrc.separator}.separator" )
-			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.html($curSrc.description)<br />#end#i18n('project.upload_source.file'): $!esc.html($curSrc.filePath)<br />#i18n('project.upload_csv_separator'): #i18n(${sep})<br />#i18n('project.upload_csv_activate'): #i18n("boolean.${curSrc.hasTitleRow()}")"
+			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.html($curSrc.description)<br />#end#i18n('project.upload_source.file'): <a href='${baseUri}/${curSrc.filePath}'>$!esc.html($curSrc.filePath)</a><br />#i18n('project.upload_csv_separator'): #i18n(${sep})<br />#i18n('project.upload_csv_activate'): #i18n("boolean.${curSrc.hasTitleRow()}")"
 	#elseif( $curSrc.getType() == $field.RdfFileSource )
-			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.html($curSrc.description)<br />#end#i18n('project.upload_source.file'): $!esc.html($curSrc.filePath)<br />#i18n('project.upload_rdf_format'): $!esc.html($curSrc.mimeType)"
+			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.html($curSrc.description)<br />#end#i18n('project.upload_source.file'): <a href='${baseUri}/${curSrc.filePath}'>$!esc.html($curSrc.filePath)</a><br />#i18n('project.upload_rdf_format'): $!esc.html($curSrc.mimeType)"
 	#elseif( $curSrc.getType() == $field.SqlSource )
 			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.html($curSrc.description)<br />#end#i18n('project.upload_db.source_url'): $!esc.html($curSrc.connectionUrl)<br />#i18n('project.upload_source.cache_duration'): $!esc.html($curSrc.cacheDuration)<br />#i18n('project.upload_source.cache_update'): $!date.format('medium', $curSrc.lastCacheUpdate)"
 	#elseif( $curSrc.getType() == $field.TransformedRdfSource )
@@ -189,7 +189,7 @@
 	#elseif( $curSrc.getType() == $field.SparqlSource )
 			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.html($curSrc.description)<br />#end#i18n('project.upload_sparql.connection_url'): $!esc.html($curSrc.endpointUrl)<br />#i18n('project.upload_source.cache_duration'): $!esc.html($curSrc.cacheDuration)<br />#i18n('project.upload_source.cache_update'): $!date.format('medium', $curSrc.lastCacheUpdate)"
 	#elseif( $curSrc.getType() == $field.XmlSource )
-			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.html($curSrc.description)<br />#end#i18n('project.upload_source.file'): $!esc.html($curSrc.filePath)"
+			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.html($curSrc.description)<br />#end#i18n('project.upload_source.file'): <a href='${baseUri}/${curSrc.filePath}'>$!esc.html($curSrc.filePath)</a>"
 	#end
 		},
 #end
