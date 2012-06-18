@@ -273,6 +273,15 @@ public enum RdfFormat
         return Rio.createWriter(this.format, w);
     }
 
+    /**
+     * Returns the native OpenRDF {@link RDFFormat RDF format} object
+     * corresponding to the format.
+     * @return the native OpenRDF RDF format object.
+     */
+    public RDFFormat getNativeFormat() {
+        return this.format;
+    }
+
     //-------------------------------------------------------------------------
     // Value resolvers
     //-------------------------------------------------------------------------
