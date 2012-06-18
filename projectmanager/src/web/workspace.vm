@@ -38,7 +38,7 @@
 
 			<div id="description"><p>
 				#i18n("project.description"): $!esc.html($current.description)<br />
-				#i18n("project.license"): <a href="$current.getLicense()">$esc.html($!current.license)</a><br />
+				#i18n("project.license"): <a href="$current.getLicense()">$esc.html($!license)</a><br />
 				#i18n("project.modification_s") $date.format("medium", $current.modificationDate)<br />
 				#i18n("project.creation_s") $date.format("medium", $current.creationDate) #i18n("project.owner_s") $!esc.html($current.owner)</p>
 #if( !${canHandle.isEmpty()} )

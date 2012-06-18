@@ -30,8 +30,8 @@
 				<p><label for="license" class="medium">#i18n("project.license"): </label>
 				<select id="license" name="license">
 #foreach($li in $licenses)
-					<option value="$esc.html($li.name())" #if($li.uri == $it.license) selected="selected" #end>
-					$esc.html($li.name())</option>
+					<option value="$li.uri" #if($li.uri == $it.license) selected="selected" #end>
+					$esc.html($li.label)</option>
 #end
 				</select></p>
 				<input type="submit" value="#i18n($submit)"/>

@@ -39,6 +39,8 @@ import java.beans.BeanInfo;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -51,7 +53,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
 
@@ -79,9 +83,16 @@ import javax.xml.parsers.SAXParserFactory;
 import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 import static javax.ws.rs.core.Response.Status.*;
 
+import org.openrdf.model.Literal;
+import org.openrdf.model.vocabulary.RDFS;
+import org.openrdf.query.BindingSet;
+import org.openrdf.query.TupleQueryResult;
+import org.openrdf.repository.RepositoryConnection;
 import org.xml.sax.InputSource;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
+
+import static org.openrdf.query.QueryLanguage.SPARQL;
 
 import com.google.gson.Gson;
 import com.sun.jersey.core.header.FormDataContentDisposition;
@@ -109,6 +120,7 @@ import org.datalift.fwk.project.CsvSource.Separator;
 import org.datalift.fwk.project.ProjectModule.UriDesc;
 import org.datalift.fwk.rdf.RdfFormat;
 import org.datalift.fwk.rdf.RdfUtils;
+import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.sparql.SparqlEndpoint;
 import org.datalift.fwk.sparql.SparqlEndpoint.DescribeType;
 import org.datalift.fwk.util.CloseableIterator;
@@ -152,6 +164,14 @@ public class Workspace extends BaseModule
     // Constants
     //-------------------------------------------------------------------------
 
+    /**
+     * The (optional) configuration property holding the path of
+     * the RDF file to load available project licenses from.
+     */
+    public final static String LICENSES_FILE_PROPERTY = "project.licenses.file";
+    /** The default license file, embedded in module JAR. */
+    private final static String DEFAULT_LICENSES_FILE = "default-licenses.ttl";
+
     /** The prefix for the URI of the project objects. */
     public final static String PROJECT_URI_PREFIX = "project";
     /** The prefix for the URI of the source objects, within projects. */
@@ -175,6 +195,11 @@ public class Workspace extends BaseModule
      * relevance first and then alphabetically.
      */
     private final static List<String> charsets;
+    /**
+     * The licenses available for new projects.
+     */
+    private final static Map<URI,License> licenses =
+                                            new LinkedHashMap<URI,License>();
 
     private final static Logger log = Logger.getLogger();
 
@@ -249,6 +274,14 @@ public class Workspace extends BaseModule
 
     /** {@inheritDoc} */
     @Override
+    public void init(Configuration configuration) {
+        // Load licenses.
+        this.loadLicenses(configuration.getProperty(LICENSES_FILE_PROPERTY),
+                          configuration);
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public void postInit(Configuration configuration) {
         this.projectManager = configuration.getBean(ProjectManager.class);
     }
@@ -290,7 +323,7 @@ public class Workspace extends BaseModule
     public Response registerProject(
                                 @FormParam("title") String title,
                                 @FormParam("description") String description,
-                                @FormParam("license") String license,
+                                @FormParam("license") URI license,
                                 @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
         Response response = null;
@@ -299,9 +332,8 @@ public class Workspace extends BaseModule
         if (this.findProject(projectId) == null) {
             try {
                 // Create new project.
-                License l = License.valueOf(license);
                 Project p = this.projectManager.newProject(projectId, title,
-                                                           description, l.uri);
+                                                           description, license);
                 // Persist project to RDF store.
                 this.projectManager.saveProject(p);
                 // Notify user of successful creation, redirecting HTML clients
@@ -363,7 +395,7 @@ public class Workspace extends BaseModule
 
             // Display project modification page.
             TemplateModel view = this.newView("workspaceModifyProject.vm", p);
-            view.put("licenses", License.values());
+            view.put("licenses", licenses.values());
             response = Response.ok(view, TEXT_HTML).build();
         }
         catch (Exception e) {
@@ -394,7 +426,7 @@ public class Workspace extends BaseModule
                     @PathParam("id") String id,
                     @FormParam("title") String title,
                     @FormParam("description") String description,
-                    @FormParam("license") String license,
+                    @FormParam("license") URI license,
                     @Context UriInfo uriInfo) throws WebApplicationException {
         Response response = null;
 
@@ -411,10 +443,9 @@ public class Workspace extends BaseModule
                 p.setDescription(description);
                 modified = true;
             }
-            if (! isBlank(license)) {
-                URI li = License.valueOf(license).uri;
-                if (!p.getLicense().equals(li)) {
-                    p.setLicense(li);
+            if (license != null) {
+                if (! p.getLicense().equals(license)) {
+                    p.setLicense(license);
                     modified = true;
                 }
             }
@@ -1674,6 +1705,11 @@ public class Workspace extends BaseModule
         // Display selected project.
         if (p != null) {
             view.put("current", p);
+            License l = licenses.get(p.getLicense());
+            if (l == null) {
+                l = new License(p.getLicense());        // Unknown license.
+            }
+            view.put("license", l.getLabel());
             // Search for modules accepting the selected project.
             Collection<UriDesc> modules = new TreeSet<UriDesc>(
                     new Comparator<UriDesc>() {
@@ -1774,6 +1810,73 @@ public class Workspace extends BaseModule
      */
     protected final TemplateModel newView(String templateName, Object it) {
         return ViewFactory.newView(TEMPLATE_PATH + templateName, it);
+    }
+
+    private void loadLicenses(String path, Configuration cfg) {
+        InputStream in = null;
+        Repository r = null;
+        RepositoryConnection cnx = null;
+        try {
+            if (isSet(path)) {
+                // Licenses file specified. => Check presence.
+                log.info("Loading licenses from {}", path);
+                File f = new File(path);
+                if (! (f.isFile() && f.canRead())) {
+                    throw new FileNotFoundException(path);
+                }
+                in = new FileInputStream(f);
+            }
+            else {
+                // No licenses file specified. => Use default.
+                log.debug("No licenses file specified, using default licenses");
+                path = DEFAULT_LICENSES_FILE;
+                in = this.getClass().getClassLoader().getResourceAsStream(path);
+            }
+            r = cfg.newRepository(null, "sail:///", false);
+            cnx = r.newConnection();
+            // Load ontology into RDF store.
+            cnx.add(in, "", RdfUtils.guessRdfFormatFromExtension(path)
+                                    .getNativeFormat());
+            cnx.close();
+            // Extract licenses data from RDF triples.
+            String query =
+                    "PREFIX rdfs: <" + RDFS.NAMESPACE + ">\n" +
+                    "PREFIX doap: <http://usefulinc.com/ns/doap#>\n" +
+                    "SELECT ?uri ?label WHERE { ?s doap:license ?uri ; " +
+                                              "    rdfs:label ?label . }";
+            cnx = r.newConnection();
+            TupleQueryResult rs = cnx.prepareTupleQuery(SPARQL, query)
+                                     .evaluate();
+            while (rs.hasNext()) {
+                BindingSet bs = rs.next();
+                URI uri = new URI(bs.getValue("uri").stringValue());
+                License l = licenses.get(uri);
+                if (l == null) {
+                    l = new License(uri);
+                    licenses.put(uri, l);
+                    log.trace("Added license: {}", uri);
+                }
+                Literal v  = (Literal)(bs.getValue("label"));
+                if (v != null) {
+                    l.setLabel(v.getLanguage(), v.getLabel());
+                }
+            }
+            rs.close();
+        }
+        catch (Exception e) {
+            throw new TechnicalException("licenses.load.failed", e, path);
+        }
+        finally {
+            if (cnx != null) {
+                try { cnx.close(); } catch (Exception e) { /* Ignore... */ }
+            }
+            if (r != null) {
+                try { r.shutdown(); } catch (Exception e) { /* Ignore... */ }
+            }
+            if (in != null) {
+                try { in.close(); } catch (Exception e) { /* Ignore... */ }
+            }
+        }
     }
 
     private URI newProjectId(URI baseUri, String name) {
@@ -1954,5 +2057,4 @@ public class Workspace extends BaseModule
             this.sendError(INTERNAL_SERVER_ERROR, error.getMessage());
         }
     }
-   
 }
