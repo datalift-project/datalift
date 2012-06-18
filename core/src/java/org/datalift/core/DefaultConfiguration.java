@@ -256,15 +256,25 @@ public class DefaultConfiguration extends Configuration
     /** {@inheritDoc} */
     @Override
     public Repository newRepository(String uri, String url, boolean publish) {
-        if (isBlank(url)) {
-            throw new IllegalArgumentException("url");
-        }
+        // Check repository name.
         if (isBlank(uri)) {
             if (publish) {
+                // A name is required as key for publishing a repository.
                 throw new IllegalArgumentException(
                             new TechnicalException("repository.missing.name"));
             }
             uri = null;
+        }
+        else {
+            if (isBlank(url)) {
+                // No repository URL provided. => Try reading the it from
+                // the configuration, using the configuration name as a key.
+                url = this.getProperty(uri + REPOSITORY_URL);
+            }
+        }
+        // Check repository URL, required to find the factory.
+        if (isBlank(url)) {
+            throw new IllegalArgumentException("url");
         }
         Repository r = null;
         try {
@@ -437,6 +447,19 @@ public class DefaultConfiguration extends Configuration
     //-------------------------------------------------------------------------
     // Specific implementation
     //-------------------------------------------------------------------------
+
+    /**
+     * Shuts down this configuration, freeing all attached resources
+     * and closing all repository connections.
+     */
+    /* package */ void shutdown() {
+        for (Repository r : this.repositories.values()) {
+            try {
+                r.shutdown();
+            }
+            catch (Exception e) { /* Ignore... */ }
+        }
+    }
 
     /**
      * Loads the DataLift configuration, reading the configuration file

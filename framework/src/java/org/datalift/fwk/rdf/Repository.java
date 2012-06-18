@@ -325,6 +325,11 @@ public abstract class Repository
         return this.isPublic;
     }
 
+    /**
+     * Shuts down this repository.
+     */
+    abstract public void shutdown();
+
     //-------------------------------------------------------------------------
     // Object contract support
     //-------------------------------------------------------------------------
