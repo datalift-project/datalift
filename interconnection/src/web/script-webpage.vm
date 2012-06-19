@@ -41,7 +41,7 @@
 		    
 		    and the address is (a string):</label>
 		    
-		    <input type="radio" name="sourceaddresss" id="sourceaddress" value="http://localhost:8080/datalift/sparql" /> http://localhost:8080/datalift/sparql
+		    <input type="radio" name="sourceaddresss" id="sourceaddress" value="" /> SPARQL endpoint of Datalift
 		    <input type="radio" name="sourceaddresss" id="sourceaddress" value="other"> other <input type="text" name="sourceaddressso" id="sourceaddress" size=60 value=""/>
 		    <br />		
 		    <p>type of the target data set:</label></p>
@@ -51,7 +51,7 @@
             
             and the address is (a string):</label>
 		    
-		    <input type="radio" name="targetaddresss" id="targetaddress" value="http://localhost:8080/datalift/sparql" /> http://localhost:8080/datalift/sparql
+		    <input type="radio" name="targetaddresss" id="targetaddress" value="" /> SPARQL endpoint of Datalift
 		    <input type="radio" name="targetaddresss" id="targetaddress" value="other"> other <input type="text" name="targetaddressso" id="targetaddress" size=60 value=""/>
 
 		</fieldset>

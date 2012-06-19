@@ -18,13 +18,10 @@ import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.Map;
 
-import javassist.bytecode.Descriptor.Iterator;
-
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -37,8 +34,7 @@ import org.datalift.fwk.Configuration;
 import org.datalift.fwk.MediaTypes;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.Project;
-import org.datalift.fwk.project.Source;
-import org.openrdf.model.URI;
+import org.datalift.fwk.rdf.Repository;
 
 import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.FormDataParam;
@@ -185,6 +181,12 @@ public class HandleProjectModule extends BaseInterconnectionModule
     	    required0 = false;
     	    filter_limit=null;
     	
+    	    //SPARQL endpoint URI
+            Repository r = Configuration.getDefault().getDataRepository();
+            String url = r.getEndpointUrl();
+            source_address_sparql = url.substring(0,21);
+            target_address_sparql = url.substring(0,21);
+    	    
             //create the silk script
         	int i=0;
             File script = new File("script.xml");
@@ -228,7 +230,7 @@ public class HandleProjectModule extends BaseInterconnectionModule
             	if (source_address_sparql.equals("other"))
             	    System.out.println("<Param name=\"endpointURI\" value=\""+ source_address_sparql_other +"\"/>");
             	else 
-            		System.out.println("<Param name=\"endpointURI\" value=\""+ source_address_sparql +"\"/>");
+            		System.out.println("<Param name=\"endpointURI\" value=\""+ source_address_sparql +"/datalift/sparql\"/>");
             	//System.out.println("<Param name=\"graph\" value=\""+ source_graph_value +"\"/>");
             	System.out.println("</DataSource>");
         	}
@@ -246,7 +248,7 @@ public class HandleProjectModule extends BaseInterconnectionModule
             	if (target_address_sparql.equals("other"))
             	    System.out.println("<Param name=\"endpointURI\" value=\""+ target_address_sparql_other +"\"/>");
             	else 
-            		System.out.println("<Param name=\"endpointURI\" value=\""+ target_address_sparql +"\"/>");
+            		System.out.println("<Param name=\"endpointURI\" value=\""+ target_address_sparql +"/datalift/sparql\"/>");
             	//System.out.println("<Param name=\"graph\" value=\""+ target_graph_value +"\"/>");
             	System.out.println("</DataSource>");
         	}
@@ -360,7 +362,8 @@ public class HandleProjectModule extends BaseInterconnectionModule
         		System.out.println("\n");
         		System.out.println("<Outputs>");
         		System.out.println("<Output type=\"sparul\" >");
-        		System.out.println("<Param name=\"uri\" value=\"http://localhost:8080/openrdf-sesame/repositories/lifted/statements\"/>");
+        		//System.out.println("<Param name=\"uri\" value=\"http://localhost:8080/openrdf-sesame/repositories/lifted/statements\"/>");	
+        		System.out.println("<Param name=\"uri\" value=\"" + url + "/statements\"/>");	
         		System.out.println("<Param name=\"parameter\" value=\"update\"/>");
         		System.out.println("</Output>");
     	    	System.out.println("</Outputs>");
@@ -369,7 +372,7 @@ public class HandleProjectModule extends BaseInterconnectionModule
         	//end of the script
         	System.out.println("</Interlinks>");
         	System.out.println("</Silk>");
-    	System.out.close();
+    	    System.out.close();
     	
     	place = System.getProperty("user.dir")+"/script.xml";
         // Retrieve project.
