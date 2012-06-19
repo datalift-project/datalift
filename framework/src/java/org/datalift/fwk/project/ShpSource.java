@@ -1,9 +1,8 @@
 /*
- * Copyright / Copr. 2010-2013 Atos - Public Sector France -
- * BS & Innovation for the DataLift project,
- * Contributor(s) : L. Bihanic, H. Devos, O. Ventura, M. Chetima
+ * Copyright / Copr. IGN
+ * Contributor(s) : F. Hamdi
  *
- * Contact: dlfr-datalift@atos.net
+ * Contact: hamdi.faycal@gmail.com
  *
  * This software is governed by the CeCILL license under French law and
  * abiding by the rules of distribution of free software. You can use,

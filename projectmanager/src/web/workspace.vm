@@ -192,6 +192,8 @@
 			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.html($curSrc.description)<br />#end#i18n('project.upload_source.file'): $!esc.html($curSrc.filePath)"
 	#elseif( $curSrc.getType() == $field.ShpSource )
 			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.html($curSrc.description)<br />#end#i18n('project.upload_source.file'): $!esc.html($curSrc.filePath)"
+	#elseif( $curSrc.getType() == $field.GmlSource )
+			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.html($curSrc.description)<br />#end#i18n('project.upload_source.file'): $!esc.html($curSrc.filePath)"
 	#end
 		},
 #end
