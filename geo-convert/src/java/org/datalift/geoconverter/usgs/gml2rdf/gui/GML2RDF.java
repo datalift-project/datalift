@@ -283,7 +283,7 @@ public class GML2RDF {
 					ConfigurationEditor ce = new ConfigurationEditor(cc.getFile());
 					Thread ceThread = new Thread(ce);
 					ceThread.start();
-				} catch (Exception err) {}
+				} catch (Exception err) { /* Ignore... */ }
 			}
 		}
 	};
@@ -298,7 +298,7 @@ public class GML2RDF {
 					m_gmlFile = m_gc.getFile();
 					m_GMLFile.setText(m_gmlFile.getPath());
 					m_currentDir = m_gmlFile.getParent();
-				} catch (Exception err) {}
+				} catch (Exception err) { /* Ignore... */ }
 			}
 		}
 	};
@@ -313,7 +313,7 @@ public class GML2RDF {
 					m_n3c.setCurrentDirectory(new File(m_currentDir));
 					m_n3Dir = m_n3c.getFile();
 					m_N3Directory.setText(m_n3Dir.getPath());
-				} catch (Exception err) {}
+				} catch (Exception err) { /* Ignore... */ }
 			}
 		}
 	};

@@ -7,13 +7,16 @@
 
 package org.datalift.geoconverter.usgs.gml.parsers;
 
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Vector;
 
 import org.datalift.geoconverter.usgs.rdf.util.Config;
+import org.datalift.geoconverter.usgs.rdf.util.ConfigFinder;
 import org.datalift.geoconverter.usgs.rdf.util.FeatureType;
 import org.geotools.gml2.GMLConfiguration;
 import org.geotools.xml.StreamingParser;
@@ -46,16 +49,25 @@ public class GeometryParser {
 	/** the type of features contained in the GML file. */
 	private FeatureType m_ft = null;
 	/** Geometry feature type configuration. */
-	private FeatureType m_geoft = new FeatureType();
+	private FeatureType m_geoft = null;
 	/** the default location of the configuration files. */
-	public static final String defaultConfigPath = "config/";
+        // public static final String defaultConfigPath = "config/";
 
 	/** configurations for the 8 relational properties. */
 	private Config contains, covers, crosses, equals, intersects, overlaps,
 		touches, within;
 
 	/** default constructor. */
-	public GeometryParser() { }
+	public GeometryParser() {
+	    // NOP
+	}
+
+//	public static void setDefaultConfigPath(File cfgPath) throws IOException {
+//	    if (! (cfgPath.isDirectory() && cfgPath.canRead())) {
+//	        throw new FileNotFoundException(cfgPath.getPath());
+//	    }
+//	    defaultConfigPath = cfgPath;
+//	}
 
 	/**
 	 * parses through the GML file and stores the geometry, ID and feature
@@ -66,7 +78,8 @@ public class GeometryParser {
 	 */
 	public final Vector<Geometry> getGeometries(final String gmlFile)
 		throws Exception {
-		InputStream in = new FileInputStream(gmlFile);
+	    File src = new File(gmlFile);
+	    InputStream in = new FileInputStream(src);
     	GMLConfiguration gml = new GMLConfiguration();
     	StreamingParser parser = new StreamingParser(gml, in,
     			SimpleFeature.class);
@@ -78,13 +91,13 @@ public class GeometryParser {
     			String ft = f.getFeatureType().getName().getLocalPart();
     			this.m_ftypes.add(ft);
     			if (!this.m_configs.containsKey(ft)) {
-        			this.loadFeatureConfig(ft);
-        			this.m_configs.put(ft, this.m_ft);
+    			    this.m_ft = this.loadFeatureConfig(ft);
+    			    this.m_configs.put(ft, this.m_ft);
         		}
     			this.m_IDs.add(this.getID(f));
     		}
     	}
-    	m_geoft.loadFromFile("config/Geometry.conf");
+    	m_geoft = this.loadFeatureConfig("Geometry");
     	return this.m_geoms;
 	}
 	/**
@@ -320,10 +333,22 @@ public class GeometryParser {
      * @param featureType name of feature type configuration to load
      * @throws Exception load configuration IO error
      */
-    private void loadFeatureConfig(final String featureType)
+    private FeatureType loadFeatureConfig(final String featureType)
     throws Exception {
-    	m_ft = new FeatureType();
-    	String configFile = defaultConfigPath + featureType + ".conf";
-    	m_ft.loadFromFile(configFile);
+        File cfg = ConfigFinder.findFile(featureType + ".conf");
+//        File cfg = new File(path, featureType + ".conf");
+//        if (! (cfg.isFile() && cfg.canRead())) {
+//            cfg = new File(defaultConfigPath, featureType + ".conf");
+//        }
+        if (! (cfg.isFile() && cfg.canRead())) {
+            throw new FileNotFoundException(cfg.getPath());
+        }
+        return this.loadFeatureConfig(cfg);
+    }
+    private FeatureType loadFeatureConfig(final File configFile)
+    throws Exception {
+        FeatureType ft = new FeatureType();
+        ft.loadFromFile(configFile.getCanonicalPath());
+        return ft;
     }
 }

@@ -91,7 +91,7 @@ public class ShptoGml extends BaseConverterModule
 	// Class members
 	//-------------------------------------------------------------------------
 
-	//private final static Logger log = Logger.getLogger();
+	private final static Logger log = Logger.getLogger();
 
 	//-------------------------------------------------------------------------
 	// Constructors

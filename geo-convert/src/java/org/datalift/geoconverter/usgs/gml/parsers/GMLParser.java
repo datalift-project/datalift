@@ -1,8 +1,10 @@
 package org.datalift.geoconverter.usgs.gml.parsers;
 
 import java.io.BufferedReader;
+import java.io.File;
 
 import org.datalift.geoconverter.usgs.rdf.util.Config;
+import org.datalift.geoconverter.usgs.rdf.util.ConfigFinder;
 import org.datalift.geoconverter.usgs.rdf.util.FeatureType;
 
 
@@ -22,7 +24,7 @@ public class GMLParser {
 	/** the type of features contained in the GML file. */
 	private FeatureType m_ft = null, m_geoft = new FeatureType();
 	/** the default location of the configuration files. */
-	public static final String defaultConfigPath = "config/";
+	// public static final String defaultConfigPath = "config/";
 	/** URN of the WGS1984 Spatial Reference System. */
 	private static final String WGS84 = "EPSG:4326";
 	/**
@@ -37,13 +39,14 @@ public class GMLParser {
 	throws Exception {
 		Model model = ModelFactory.createMemModelMaker().createFreshModel();
 		Resource parent = model.createResource();
-		m_geoft.loadFromFile("config/Geometry.conf");
+		File f = ConfigFinder.findFile("Geometry.conf");
+		m_geoft.loadFromFile(f.getPath());
 		Config c = null;
 		m_ft = new FeatureType();
 		StringBuilder sb = new StringBuilder();
 		String line;
-		Boolean inTag = false;
-		Boolean closed = true;
+		boolean inTag = false;
+		boolean closed = true;
 		while ((line = in.readLine()) != null) {
 			line = line.trim();
 			if (line.contains("<gml:featureMember>")
@@ -156,7 +159,8 @@ public class GMLParser {
      */
     private void loadFeatureConfig(final String featureType) throws Exception {
     	m_ft = new FeatureType();
-    	String configFile = defaultConfigPath + featureType + ".conf";
+    	// String configFile = defaultConfigPath + featureType + ".conf";
+    	String configFile = ConfigFinder.findFile(featureType + ".conf").getPath();
     	m_ft.loadFromFile(configFile);
     }
 }

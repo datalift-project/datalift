@@ -16,7 +16,7 @@ package org.datalift.geoconverter.usgs.rdf.util;
  */
 public class Config {
 	/** true if the attribute is a resource, false for literal. */
-	private Boolean m_isResource;
+	private boolean m_isResource;
 	/** URI of the attribute. */
 	private String m_namespace;
 	/** parent of the attribute if it is a resource. */
@@ -42,7 +42,7 @@ public class Config {
 	 * @param parent parent of the attribute
 	 * @param predicate accessing predicate for RDF
 	 */
-	public Config(final Boolean isResource, final String namespace,
+	public Config(final boolean isResource, final String namespace,
 			final String parent, final String predicate) {
 		this.m_namespace = namespace;
 		this.m_predicate = predicate;
@@ -68,7 +68,7 @@ public class Config {
 	 * retrieves whether the attribute is a resource or literal value.
 	 * @return true if resource, false if literal
 	 */
-	public final Boolean getIsResource() { return this.m_isResource; }
+	public final boolean getIsResource() { return this.m_isResource; }
 	/**
 	 * sets the attribute's URI.
 	 * @param namespace URI representing the feature
@@ -94,7 +94,7 @@ public class Config {
 	 * sets whether the attribute is a resource or literal.
 	 * @param isResource true if the property represents a resource
 	 */
-	public final void setIsResource(final Boolean isResource) {
+	public final void setIsResource(final boolean isResource) {
 		this.m_isResource = isResource;
 	}
 	/**

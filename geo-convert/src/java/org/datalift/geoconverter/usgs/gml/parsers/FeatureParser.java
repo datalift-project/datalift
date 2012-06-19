@@ -18,6 +18,7 @@ import java.util.Set;
 import org.datalift.geoconverter.usgs.gml2rdf.gui.ConfigurationEditor;
 import org.datalift.geoconverter.usgs.gml2rdf.gui.Filters;
 import org.datalift.geoconverter.usgs.rdf.util.Config;
+import org.datalift.geoconverter.usgs.rdf.util.ConfigFinder;
 import org.datalift.geoconverter.usgs.rdf.util.FeatureType;
 import org.geotools.xml.StreamingParser;
 import org.opengis.feature.Property;
@@ -27,7 +28,6 @@ import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.vocabulary.RDF;
-import com.vividsolutions.jts.geom.Geometry;
 
 /**
  * Class for parsing through GML files to retrieve the attributes contained in
@@ -45,7 +45,7 @@ public class FeatureParser {
 	private Hashtable<String, FeatureType> m_featureConfigs =
 		new Hashtable<String, FeatureType>();
 	/** folder in which the configuration files are saved. */
-	public static final String defaultConfigPath = "config/";
+	// public static final String defaultConfigPath = "config/";
 	/** default CEGIS RDF URI. */
 	private String rdfNameSpace = "http://cegis.usgs.gov/rdf/";
 	/** default URI for RDF data, updated depending on feature type. */
@@ -64,7 +64,8 @@ public class FeatureParser {
      */
     public final void loadFeatureConfigurations(final String configPath)
     throws Exception {
-		File cPath = new File(configPath);
+        for (File cPath : ConfigFinder.getPaths()) {
+		// File cPath = new File(configPath);
 		if (cPath.exists()) {
 			String[] files = cPath.list(Filters.configFilter);
 			if (files.length > 0) {
@@ -78,6 +79,7 @@ public class FeatureParser {
 				}
 			}
 		}
+        }
     }
     /**
      * retrieves the table of configurations.
@@ -163,7 +165,8 @@ public class FeatureParser {
    		this.defaultNameSpace = this.rdfNameSpace + fName + "#";
 
     	// load any saved configurations
-    	this.loadFeatureConfigurations(defaultConfigPath);
+    	//this.loadFeatureConfigurations(defaultConfigPath);
+    	this.loadFeatureConfigurations("");
 
     	// set up GML parser
     	InputStream in = null;
@@ -233,7 +236,9 @@ public class FeatureParser {
        		System.out.println(propType + " configuration finished");
        	}
        	// load the edited configuration and add to set
-       	featureProps.loadFromFile(defaultConfigPath + propType + ".conf");
+       	// featureProps.loadFromFile(defaultConfigPath + propType + ".conf");
+       	File f2 = ConfigFinder.findFile(propType + ".conf");
+       	featureProps.loadFromFile(f2.getPath());
        	this.m_featureConfigs.put(propType, featureProps);
     }
 	/**

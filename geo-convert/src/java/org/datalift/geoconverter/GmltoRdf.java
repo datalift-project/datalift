@@ -36,6 +36,7 @@ package org.datalift.geoconverter;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -54,7 +55,10 @@ import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectModule;
 import org.datalift.fwk.project.GmlSource;
+import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.Source.SourceType;
+import org.datalift.fwk.rdf.RdfUtils;
+import org.datalift.geoconverter.usgs.rdf.util.ConfigFinder;
 import org.datalift.geoconverter.usgs.rdf.util.GMLConverter;
 
 import static org.datalift.fwk.util.StringUtils.*;
@@ -72,7 +76,6 @@ public class GmltoRdf extends BaseConverterModule
 	//-------------------------------------------------------------------------
 	// Constants
 	//-------------------------------------------------------------------------
-
 	
 	/** The prefix for the URI of the project objects. */
 	public final static String PROJECT_URI_PREFIX = "project";
@@ -80,8 +83,6 @@ public class GmltoRdf extends BaseConverterModule
 	public final static String SOURCE_URI_PREFIX  = "source";
 	/** The relative path prefix for project objects and resources. */
 	private final static String REL_PROJECT_PATH = PROJECT_URI_PREFIX + '/';
-	/** The relative path prefix for source objects, within projects. */
-	private final static String SOURCE_PATH = "/" + SOURCE_URI_PREFIX  + '/';
 	
 	/** The name of this module in the DataLift configuration. */
 	public final static String MODULE_NAME = "gmltordf";
@@ -90,7 +91,7 @@ public class GmltoRdf extends BaseConverterModule
 	// Class members
 	//-------------------------------------------------------------------------
 
-	//private final static Logger log = Logger.getLogger();
+	private final static Logger log = Logger.getLogger();
 
 	//-------------------------------------------------------------------------
 	// Constructors
@@ -132,20 +133,48 @@ public class GmltoRdf extends BaseConverterModule
             if (s == null) {
                 this.throwInvalidParamError("source", sourceId);
             }
-            
+//            StdOutErrLog.tieSystemOutAndErrToLog();
+
             // Convert GLM data and load generated RDF.
             String filePath = this.getProjectFilePath(p.getTitle(), s.getTitle());
             File localFile = this.getFileStorage(filePath);
-            String fileInGml = localFile.getAbsolutePath();
-            String rootGml = fileInGml.substring(0, fileInGml.indexOf("."));
-            String fileOutRdf = rootGml + ".rdf";
-            File rdfExist = new File(fileOutRdf);
-            if (rdfExist.exists()) rdfExist.delete();
+            File path = localFile.getParentFile();
+//            String fileInGml = localFile.getAbsolutePath();
+//            String rootGml = fileInGml.substring(0, fileInGml.indexOf("."));
+//            String fileOutRdf = rootGml + ".rdf";
+//            File rdfExist = new File(fileOutRdf);
+            String fileName = localFile.getName();
+            fileName = fileName.substring(0, fileName.lastIndexOf('.'));
+            File rdfExist = new File(path, fileName + ".rdf");
+            if (rdfExist.exists()) {
+                log.debug("Deleting existing RDF file: {}", rdfExist);
+                rdfExist.delete();
+            }
 			
-            // TODO
-			new GMLConverter(new File(fileInGml), new File(fileOutRdf), true, true, true, true);
- 	
-			//response = this.created(src).build();
+            // Make sure the Geometry parser looks for its default
+            // configuration files in Datalift configuration directory.
+            String dataliftHome = Configuration.getDefault().getProperty(
+                                                                "datalift.home");
+            File cfgPath = new File(dataliftHome, "conf/geo");
+            log.debug("Geometry parser default configuration path: {}", cfgPath);
+            // GeometryParser.setDefaultConfigPath(cfgPath);
+            ConfigFinder.setPaths(Arrays.asList(path, cfgPath));
+            log.debug("Generating {} from {}", rdfExist, localFile);
+            GMLConverter converter = new GMLConverter(path,
+                                                path, true, true, true, true);
+            converter.run();
+            
+            URI targetGraph = new URI(s.getUri() + "-rdf");
+            RdfUtils.upload(rdfExist, Configuration.getDefault()
+                                                   .getInternalRepository(),
+                            targetGraph, null);
+            // Register new transformed RDF source.
+            Source out = this.addResultSource(p, s,
+                                "RDF mapping of " + s.getTitle(), targetGraph);
+            // Display project source tab, including the newly created source.
+            response = this.created(out).build();
+
+            log.info("RDF data successfully loaded into \"{}\"", targetGraph);
 
 		}
 		catch (Exception e) {
@@ -178,7 +207,22 @@ public class GmltoRdf extends BaseConverterModule
 		}
 		return f;
 	}
-	private String getSourceId(String projectUri, String sourceName) {
-		return projectUri + SOURCE_PATH + urlify(sourceName);
-	}
+
+//public final static class StdOutErrLog {
+//
+//    public static void tieSystemOutAndErrToLog() {
+//        System.setOut(createLoggingProxy(System.out));
+//        System.setErr(createLoggingProxy(System.err));
+//    }
+//
+//    public static PrintStream createLoggingProxy(final PrintStream realPrintStream) {
+//        return new PrintStream(realPrintStream) {
+//            public void print(final String string) {
+//                realPrintStream.print(string);
+//                log.info(string);
+//            }
+//        };
+//    }
+//}
+
 }

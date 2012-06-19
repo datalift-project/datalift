@@ -222,7 +222,7 @@ public class FeatureType {
 		} catch (Exception e) {
 			throw e;
 		} finally {
-			cin.close();
+			if (cin != null) { cin.close(); }
 		}
 	}
 }
