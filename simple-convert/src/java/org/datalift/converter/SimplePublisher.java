@@ -36,10 +36,6 @@ package org.datalift.converter;
 
 
 import java.net.URI;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -62,6 +58,7 @@ import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.rdf.RdfUtils;
+import org.datalift.fwk.rdf.Repository;
 
 
 /**
@@ -95,14 +92,7 @@ public class SimplePublisher extends BaseConverterModule
 
     @GET
     public Response getIndexPage(@QueryParam("project") URI projectId) {
-        // Retrieve project.
-        Project p = this.getProject(projectId);
-        // Display conversion configuration page.
-        Map<String, Object> args = new HashMap<String, Object>();
-        args.put("it", p);
-        args.put("converter", this);
-        return Response.ok(this.newViewable("/publisher.vm", args))
-                       .build();
+        return this.newProjectView("publisher.vm", projectId);
     }
 
     @POST
@@ -135,13 +125,12 @@ public class SimplePublisher extends BaseConverterModule
                 targetGraph = (origin != null)? new URI(origin.getUri()):
                                                 projectId;
             }
-            Configuration cfg = Configuration.getDefault();
+            Repository pub = Configuration.getDefault().getDataRepository();
             // Publish input source triples in public repository.
-            List<String> constructs = Arrays.asList(
-                            "CONSTRUCT { ?s ?p ?o . } WHERE { GRAPH <"
-                                + in.getTargetGraph() + "> { ?s ?p ?o . } }");
-            RdfUtils.convert(cfg.getInternalRepository(), constructs,
-                             cfg.getDataRepository(), targetGraph, overwrite);
+            if (overwrite) {
+                RdfUtils.clearGraph(pub, targetGraph);
+            }
+            RdfUtils.upload(in, pub, targetGraph, null);
             // Display generated triples.
             response = this.displayGraph(null, targetGraph,
                                          uriInfo, request, acceptHdr);

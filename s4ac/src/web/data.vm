@@ -1,0 +1,28 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+
+<meta http-equiv="Expires" content="Tue, 01 Jan 2000 12:12:12 GMT">
+<meta http-equiv="Pragma" content="no-cache">
+#load("s4ac/resources")
+#load_core_resources
+	<title>#i18n("s4ac.app.name")</title>
+#css_links
+</head>
+<body>
+#banner
+
+
+<ul>
+#foreach( $item in $result)
+  <li>$item</li>
+#end
+</ul>	
+
+#footer
+<div style="text-align:right;font-style:italic;font-size:0.8em">
+	<span style="color:gray">Version @app.version@</span>
+</div>
+</body>
+<html>

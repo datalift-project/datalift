@@ -105,11 +105,10 @@
 
   <property name="lib.home"             location="${basedir}/lib"/>
   <property name="run.lib.home"         location="${lib.home}/runtime"/>
-  <property name="build.lib.home"         location="${lib.home}/buildtime"/>
 
   <property name="silk.version"         value="2.5.3"/>
   <property name="silk.jar"
-            location="${build.lib.home}/silk-${silk.version}/silk.jar"/>
+            location="${run.lib.home}/silk-${silk.version}/silk.jar"/>
 
   <property name="fwk.web.home"         location="${fwk.home}/src/web"/>
   <property name="fwk.lib.home"         location="${fwk.home}/lib"/>
@@ -170,17 +169,10 @@
     </fileset>
   </path>
 
-  <path id="buildtime.classpath">
-    <fileset dir="${build.lib.home}">
-      <include name="**/*.jar"/>
-    </fileset>
-  </path>
-
   <path id="compile.classpath">
     <!-- Runtime libraries -->
     <path refid="runtime.classpath" />
     <!-- Buildtime-only libraries -->
-    <path refid="buildtime.classpath" />
     <fileset dir="${fwk.build.libs}">
       <include name="**/*.jar"/>
     </fileset>

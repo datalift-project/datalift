@@ -37,8 +37,6 @@ package org.datalift.converter;
 
 import java.io.InputStream;
 import java.net.URI;
-import java.util.HashMap;
-import java.util.Map;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
@@ -119,14 +117,7 @@ public class XsltXmlConverter extends BaseConverterModule
 
     @GET
     public Response getIndexPage(@QueryParam("project") URI projectId) {
-        // Retrieve project.
-        Project p = this.getProject(projectId);
-        // Display conversion configuration page.
-        Map<String, Object> args = new HashMap<String, Object>();
-        args.put("it", p);
-        args.put("converter", this);
-        return Response.ok(this.newViewable("/xsltXmlMapper.vm", args))
-                       .build();
+        return this.newProjectView("xsltXmlMapper.vm", projectId);
     }
 
     @POST

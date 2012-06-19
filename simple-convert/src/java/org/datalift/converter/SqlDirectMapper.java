@@ -40,8 +40,6 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.HashMap;
-import java.util.Map;
 
 import static java.util.GregorianCalendar.*;
 
@@ -129,14 +127,7 @@ public class SqlDirectMapper extends BaseConverterModule
 
     @GET
     public Response getIndexPage(@QueryParam("project") URI projectId) {
-        // Retrieve project.
-        Project p = this.getProject(projectId);
-        // Display conversion configuration page.
-        Map<String, Object> args = new HashMap<String, Object>();
-        args.put("it", p);
-        args.put("converter", this);
-        return Response.ok(this.newViewable("/sqlDirectMapper.vm", args))
-                       .build();
+        return this.newProjectView("sqlDirectMapper.vm", projectId);
     }
 
     @GET

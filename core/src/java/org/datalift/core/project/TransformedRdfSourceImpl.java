@@ -38,9 +38,9 @@ package org.datalift.core.project;
 import javax.persistence.Entity;
 
 import org.openrdf.model.Statement;
-import org.openrdf.query.GraphQueryResult;
-import org.openrdf.query.QueryLanguage;
+import org.openrdf.model.impl.URIImpl;
 import org.openrdf.repository.RepositoryConnection;
+import org.openrdf.repository.RepositoryResult;
 
 import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.RdfsClass;
@@ -154,12 +154,9 @@ public class TransformedRdfSourceImpl extends BaseSource
     public CloseableIterator<Statement> iterator() {
         final RepositoryConnection cnx = this.getRepositoryConnection();
         try {
-            final GraphQueryResult result =
-                        cnx.prepareGraphQuery(QueryLanguage.SPARQL,
-                                        "CONSTRUCT { ?s ?p ?o . }" +
-                                        " WHERE { GRAPH <" + this.targetGraph +
-                                            "> { ?s ?p ?o . } }",
-                                        this.getSourceUrl()).evaluate();
+            final RepositoryResult<Statement> result =
+                        cnx.getStatements(null, null, null, false,
+                                          new URIImpl(this.targetGraph));
             return new CloseableIterator<Statement>() {
                     @Override
                     public boolean hasNext() {

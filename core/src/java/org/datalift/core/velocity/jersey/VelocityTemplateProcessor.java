@@ -81,6 +81,7 @@ import org.datalift.core.velocity.i18n.LoadDirective;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.security.SecurityContext;
+import org.datalift.fwk.view.TemplateModel;
 
 import static org.datalift.fwk.util.StringUtils.join;
 
@@ -100,7 +101,7 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
     //-------------------------------------------------------------------------
 
     /** The default context key for the application model object. */
-    public final static String CTX_MODEL            = "it";
+    public final static String CTX_MODEL            = TemplateModel.MODEL_KEY;
     /** The context key for Velocity Escape tool. */
     public final static String CTX_ESCAPE_TOOL      = "esc";
     /** The context key for Velocity Link tool. */
@@ -254,21 +255,28 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
 
         try {
             // Populate Velocity context from model data.
-            Map<String,Object> ctx = new HashMap<String,Object>();
+            Map<String,Object> ctx = null;
             Object m = viewable.getModel();
-            if (m instanceof Map<?,?>) {
-                // Copy all map entries with a string as key.
-                Map<?,?> map = (Map<?,?>)m;
-                for (Map.Entry<?,?> e : map.entrySet()) {
-                    if (e.getKey() instanceof String) {
-                        ctx.put((String)(e.getKey()), e.getValue());
-                    }
-                    // Else: ignore entry.
-                }
+            if (m instanceof TemplateModel) {
+                ctx = (TemplateModel)m;
             }
             else {
-                // Single object model (may be null).
-                ctx.put(CTX_MODEL, m);
+                ctx = new HashMap<String,Object>();
+
+                if (m instanceof Map<?,?>) {
+                    // Copy all map entries with a string as key.
+                    Map<?,?> map = (Map<?,?>)m;
+                    for (Map.Entry<?,?> e : map.entrySet()) {
+                        if (e.getKey() instanceof String) {
+                            ctx.put((String)(e.getKey()), e.getValue());
+                        }
+                        // Else: ignore entry.
+                    }
+                }
+                else {
+                    // Single object model (may be null).
+                    ctx.put(CTX_MODEL, m);
+                }
             }
             UriInfo uriInfo = this.httpContext.getUriInfo();
             if (ctx.get(CTX_BASE_URI) == null) {

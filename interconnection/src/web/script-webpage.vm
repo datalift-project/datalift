@@ -1,0 +1,213 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+#load("interconnection/resources")
+#load_core_resources
+	<title>#i18n("interconnection.title") - DataLift</title>
+#css_links
+</head>
+<body>
+#banner
+<div class="ui-widget-content converter_main" id="workspace">
+	<h3 class="ui-widget-header dl-widget-header">#i18n("SILK Script Construction") - #i18n("Project") ${it.title}</h3>
+	
+<form name="input" action="${baseUri}/silk/build-silkscript/fillin?project=$esc.url($it.uri)" method="post">
+
+		<fieldset>
+        <legend>Prefixes:</legend>
+
+            <p>prefix name of the source data set (a string):</label>
+            <input type="text" name="sourcename" id="sourcename" value=""/>
+            prefix of the source data set (a string):</label>
+            <input type="text" name="prefixsource" id="prefixsource" size=70 value=""/></p>
+            <p>prefix name of the target data set (a string):</label>
+            <input type="text" name="targetname" id="targetname" value=""/>
+            prefix of the source data set (a string):</label>
+            <input type="text" name="prefixtarget" id="prefixtarget" size=70 value=""/></p>
+            <!other prefixes>
+  
+        </fieldset>
+		
+        <br />
+		
+        <fieldset>
+        <legend>Data Sources:</legend>
+  
+		    <p>type of the source data set:</label></p>
+		    <input type="radio" checked="checked" name="sourcetype" id="sourcetype" value="file" /> file, and the address is (a string): <input type="text" name="sourceaddressf" id="sourceaddress" size=60 value=""/>
+		    <br />
+		    <input type="radio" name="sourcetype" id="sourcetype" value="sparqlEndpoint" /> sparqlEndpoint, 
+		    
+		    and the address is (a string):</label>
+		    
+		    <input type="radio" name="sourceaddresss" id="sourceaddress" value="" /> SPARQL endpoint of Datalift
+		    <input type="radio" name="sourceaddresss" id="sourceaddress" value="other"> other <input type="text" name="sourceaddressso" id="sourceaddress" size=60 value=""/>
+		    <br />		
+		    <p>type of the target data set:</label></p>
+		    <input type="radio" checked="checked" name="targettype" id="targettype" value="file" /> file, and the address is (a string): <input type="text" name="targetaddressf" id="targetaddress" size=60 value=""/>
+		    <br />
+		    <input type="radio" name="targettype" id="targettype" value="sparqlEndpoint" /> sparqlEndpoint, 
+            
+            and the address is (a string):</label>
+		    
+		    <input type="radio" name="targetaddresss" id="targetaddress" value="" /> SPARQL endpoint of Datalift
+		    <input type="radio" name="targetaddresss" id="targetaddress" value="other"> other <input type="text" name="targetaddressso" id="targetaddress" size=60 value=""/>
+
+		</fieldset>
+		
+        <br />
+		
+        <fieldset>
+        <legend>Interlinks:</legend>
+ 
+            <fieldset>
+            <legend>Interlink:</legend>
+           
+                <p>id of the Interlink section:</label>
+                   <input type="text" name="interlinkid" id="interlinkid" value=""/></p>
+				
+            <fieldset>
+            <legend>Queries:</legend>
+
+                <p>variable of the source data set (a string):</label>
+                   <input type="text" name="variable1" id="variable1" value=""/></p>
+                <p>SPARQL query of the source data set (a string):</label>
+                   <input type="text" name="sourcequery" id="sourcequery" size=100 value=""/></p>
+                <p>variable of the target data set (a string):</label>
+                   <input type="text" name="variable2" id="variable2" value=""/></p>
+                <p>SPARQL query of the target data set (a string):</label>
+                   <input type="text" name="targetquery" id="targetquery" size=100 value=""/></p>
+    
+            </fieldset>
+			
+            <br />
+		
+            <fieldset>
+            <legend>LinkCondition:</legend>
+
+              <ul>
+                <li>
+                    <p>aggregate type:
+                    <select name="aggregatetype" id="aggregatetype">
+                       <option>average</option>
+                       <option>max</option>
+                       <option>min</option>
+                       <option>quadraticMean</option>
+                       <option>geometricMean</option>
+                    </select>
+                </li>
+              </ul>
+
+        
+            <fieldset>
+            <legend>Compare:</legend>
+ 
+                <ul id="myformname0">
+                    <li>required (true or false, or leave it blank):</label><input type="text" name="required0" id="required0" value=""/>
+                        weight (an integer number):</label><input type="text" name="weight0" id="weight0" value=""/>
+                        threshold (a float number):</label><input type="text" name="threshold0" id="threshold0" value=""/>
+                        </li>
+                      
+					  <fieldset> 
+                      <legend>metric method:</legend> 
+					
+                    		<input type="radio" name="metric0" id="metric0" value="levenshteinDistance" /> levenshteinDistance
+		                    <input type="radio" name="metric0" id="metric0" value="levenshtein"> levenshtein
+		                    <input type="radio" name="metric0" id="metric0" value="jaro" /> jaro
+		                    <input type="radio" name="metric0" id="metric0" value="jaroWinkler" /> jaroWinkler 
+		                    <input type="radio" name="metric0" id="metric0" value="equality" /> equality
+		                    <input type="radio" name="metric0" id="metric0" value="inequality" /> inequality
+		                    <input type="radio" name="metric0" id="metric0" value="jaccard" /> jaccard
+		                    <input type="radio" name="metric0" id="metric0" value="dice" /> dice
+		                    <input type="radio" name="metric0" id="metric0" value="softjaccard" /> softjaccard
+		                    <input type="radio" name="metric0" id="metric0" value="num" /> num: <label for="minValue">#i18n("minValue") (a float number):</label><input type="text" name="minValue" id="minValue" value=""/> <label for="maxValue">#i18n("maxValue") (a float number):</label><input type="text" name="maxValue" id="maxValue" value=""/> 
+		                    <input type="radio" name="metric0" id="metric0" value="date" /> date
+		                    <input type="radio" name="metric0" id="metric0" value="dateTime" /> dateTime
+		                    <input type="radio" name="metric0" id="metric0" value="wgs84" /> wgs84: <label for="unit">#i18n("unit") (a string):</label><input type="text" name="unit" id="unit" value=""/> <label for="curveStyle">#i18n("curveStyle") (a string):</label><input type="text" name="curveStyle" id="curveStyle" value=""/>		                               
+                      </fieldset>
+					  
+                    <li>comparing property of the source data set (a string, eg. insee:nom[@lang='fr']):</label><input type="text" name="sourceproperty0" id="sourceproperty0" value=""/>
+                    
+                    transforming the input?
+                    <input type="radio" name="transformInputs0" id="transformInputs0" value="No"> No 
+                    <input type="radio" name="transformInputs0" id="transformInputs0" value="Yes" /> Yes</li>
+                                               
+                        <fieldset> 
+                        <legend>function:</legend> 
+					               
+					        <input type="radio" name="functions0" id="functions0" value="removeBlanks" /> removeBlanks
+		                    <input type="radio" name="functions0" id="functions0" value="removeSpecialChars"> removeSpecialChars
+		                    <input type="radio" name="functions0" id="functions0" value="lowerCase" /> lowerCase
+		                    <input type="radio" name="functions0" id="functions0" value="upperCase" /> upperCase
+		                    <input type="radio" name="functions0" id="functions0" value="capitalize" /> capitalize, allWords (true or false): <input type="text" name="allWordss0" id="allWordss0" value="" />
+		                    <input type="radio" name="functions0" id="functions0" value="stem" /> stem
+		                    <input type="radio" name="functions0" id="functions0" value="alphaReduce" /> alphaReduce
+		                    <input type="radio" name="functions0" id="functions0" value="numReduce" /> numReduce
+		                    <input type="radio" name="functions0" id="functions0" value="replace" /> replace, search (a string):<input type="text" name="searchs0" id="searchs0" value=""/> replace (a string):</label><input type="text" name="replaces10" id="replaces10" value=""/>
+		                    <input type="radio" name="functions0" id="functions0" value="regexReplace" /> regexReplace: regex (a string):<input type="text" name="regexs10" id="regexs10" value=""/> replace (a string):<input type="text" name="replaces20" id="replaces20" value=""/>
+		                    <input type="radio" name="functions0" id="functions0" value="stripPrefix" /> stripPrefix
+		                    <input type="radio" name="functions0" id="functions0" value="stripPostfix" /> stripPostfix
+		                    <input type="radio" name="functions0" id="functions0" value="stripUriPrefix" /> stripUriPrefix
+		                    <input type="radio" name="functions0" id="functions0" value="concat" /> concat
+		                    <input type="radio" name="functions0" id="functions0" value="logarithm" /> logarithm, base (an integer number):</label><input type="text" name="bases0" id="bases0" value=""/>
+		                    <input type="radio" name="functions0" id="functions0" value="convert" /> convert, sourceCharset (a string):</label><input type="text" name="sourceCharsets0" id="sourceCharsets0" value=""/> targetCharset (a string):<input type="text" name="targetCharsets0" id="targetCharsets0" value=""/>
+		                    <input type="radio" name="functions0" id="functions0" value="tokenize" /> tokenize, regex (a string):</label><input type="text" name="regexs20" id="regexs20" value=""/>
+		                    <input type="radio" name="functions0" id="functions0" value="removeValues" /> removeValues, blacklist (a comma-separated list of words):<input type="text" name="blacklists0" id="blacklists0" value=""/>
+					          
+		                </fieldset> 
+						          
+		            <li>comparing property of the target data set (a string, eg. insee:nom[@lang='fr']):</label><input type="text" name="targetproperty0" id="targetproperty0" value=""/>
+                    
+                    transforming the input?
+                    <input type="radio" name="transformInputt0" id="transformInputt0" value="No"> No 
+                    <input type="radio" name="transformInputt0" id="transformInputt0" value="Yes" /> Yes</li>
+                        
+                        <fieldset> 
+                        <legend>function:</legend> 
+				       
+					        <input type="radio" name="functiont0" id="functiont0" value="removeBlanks" /> removeBlanks
+		                    <input type="radio" name="functiont0" id="functiont0" value="removeSpecialChars"> removeSpecialChars
+		                    <input type="radio" name="functiont0" id="functiont0" value="lowerCase" /> lowerCase
+		                    <input type="radio" name="functiont0" id="functiont0" value="upperCase" /> upperCase
+		                    <input type="radio" name="functiont0" id="functiont0" value="capitalize" /> capitalize, allWords (true or false): <input type="text" name="allWordst0" id="allWordst0" value="" />
+		                    <input type="radio" name="functiont0" id="functiont0" value="stem" /> stem
+		                    <input type="radio" name="functiont0" id="functiont0" value="alphaReduce" /> alphaReduce
+		                    <input type="radio" name="functiont0" id="functiont0" value="numReduce" /> numReduce
+		                    <input type="radio" name="functiont0" id="functiont0" value="replace" /> replace, search (a string):<input type="text" name="searcht0" id="searcht0" value=""/> replace (a string):<input type="text" name="replacet10" id="replacet10" value=""/>
+		                    <input type="radio" name="functiont0" id="functiont0" value="regexReplace" /> regexReplace: regex (a string):</label><input type="text" name="regext10" id="regext10" value=""/> replace (a string)::</label><input type="text" name="replacet20" id="replacet20" value=""/>
+		                    <input type="radio" name="functiont0" id="functiont0" value="stripPrefix" /> stripPrefix
+		                    <input type="radio" name="functiont0" id="functiont0" value="stripPostfix" /> stripPostfix
+		                    <input type="radio" name="functiont0" id="functiont0" value="stripUriPrefix" /> stripUriPrefix
+		                    <input type="radio" name="functiont0" id="functiont0" value="concat" /> concat
+		                    <input type="radio" name="functiont0" id="functiont0" value="logarithm" /> logarithm, base (an integer number):<input type="text" name="baset0" id="baset0" value=""/>
+		                    <input type="radio" name="functiont0" id="functiont0" value="convert" /> convert, sourceCharset (a string):</label><input type="text" name="sourceCharsett0" id="sourceCharsett0" value=""/> targetCharset (a string):<input type="text" name="targetCharsett0" id="targetCharsett0" value=""/>
+		                    <input type="radio" name="functiont0" id="functiont0" value="tokenize" /> tokenize, regex (a string):</label><input type="text" name="regext20" id="regext20" value=""/>
+		                    <input type="radio" name="functiont0" id="functiont0" value="removeValues" /> removeValues, blacklist (a comma-separated list of words):</label><input type="text" name="blacklistt0" id="blacklistt0" value=""/>
+    
+		                </fieldset>
+            </ul>
+
+        </fieldset> 
+        
+        </fieldset>  
+	
+        <br />
+        
+		<fieldset>
+        <legend>Filter:</legend>
+      
+        <p>limit:</label>
+        <input type="text" name="filterlimit" id="filterlimit" value=""/></p>
+      	
+        </fieldset>
+		
+            </fieldset> 
+
+            </fieldset>  
+
+<input type="submit" value="Create SILK Script!" />
+</form>
+
+</body>
+</html>

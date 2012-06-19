@@ -95,7 +95,7 @@
    -->
 
   <property name="app.name"             value="simple-converters"/>
-  <property name="app.version"          value="0.4"/>
+  <property name="app.version"          value="0.6.1"/>
   <property name="app.path"             value="/${app.name}"/>
   <property name="app.long.name"        value="Datalift Sample Converters"/>
 
@@ -311,6 +311,7 @@
         <provider classname="org.datalift.converter.SqlDirectMapper"/>
         <provider classname="org.datalift.converter.XsltXmlConverter"/>
         <provider classname="org.datalift.converter.RdfTransformer"/>
+        <provider classname="org.datalift.converter.RdfUriMapper"/>
         <provider classname="org.datalift.converter.SimplePublisher"/>
         <provider classname="org.datalift.converter.RdfExporter"/>
       </service>

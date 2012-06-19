@@ -1,0 +1,49 @@
+# Build tools artifacts
+# Ant
+build/
+classes/
+dist/
+build.properties
+# Maven
+target/
+# Gradle
+.gradle
+# SBT
+.history
+
+# IDE artifacts
+# Eclipse
+.classpath
+.externalToolBuilders/
+.metadata/
+.packaging
+.project
+.settings/
+*.jpage
+# NetBeans
+nbproject
+# Apple XCode
+*~.nib
+*.pbxuser
+*.perspective
+*.perspectivev3
+# Nettool debugging HTTP proxy
+.nettool-config.properties
+nettool.keystore
+
+# Operating systems specific stuff
+# Mac OS X
+.DS_Store
+.Trash/
+# Windows
+Thumbs.db
+
+# Misc.
+.*~
+*~
+.#*
+~*
+*.bak
+*.swp
+oldies/
+

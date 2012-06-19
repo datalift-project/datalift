@@ -68,7 +68,7 @@ function htmlTableTojQGrid(params) {
 		getHeaderColumns();
 		jQuery.extend(jQuery.jgrid.defaults, {
 			caption: $('#searchnav').html(),
-			rowNum: 1000000,
+			rowNum: 10000,
 			height: 450,
 			search:{
 				caption: '#i18n("grid.search.value.label")'
@@ -78,7 +78,7 @@ function htmlTableTojQGrid(params) {
 		gridParams = { 
 	 			datatype: "local", 
 	 			pager: $('#pagernav'), 
-	 			rowNum: 200,
+	 			rowNum: 500,
 				rowList: [50,100,200,500,1000,2000],
 		}
 		if (params != null) {

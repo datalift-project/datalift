@@ -9,7 +9,7 @@
 </head>
 <body>
 #banner
-#set( $maxEntries = 2000 )
+#set( $maxEntries = 5000 )
 	<h3>#i18n("source.grid.desc") $!esc.html($it.title) ($maxEntries #i18n("source.grid.displayed_entries"))</h3>
 	<table id="grid">
 		<thead>
