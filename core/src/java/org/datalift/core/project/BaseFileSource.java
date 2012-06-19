@@ -121,8 +121,14 @@ public abstract class BaseFileSource extends BaseSource
     public void delete() {
         super.delete();
 
-        this.init();
-        this.storage.delete();
+        try {
+            this.init();
+        }
+        catch (Exception e) { /* Ignore initialization failures... */ }
+
+        if (this.storage != null) {
+            this.storage.delete();
+        }
     }
 
     //-------------------------------------------------------------------------

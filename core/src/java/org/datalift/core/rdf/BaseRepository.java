@@ -271,7 +271,8 @@ abstract public class BaseRepository extends Repository
         }
     }
 
-    /** {@inheritDoc}
+    /**
+     * {@inheritDoc}
      * @return the URL of the repository SPARQL endpoint, as defined by
      * the {@link #REPOSITORY_ENDPOINT_URL} configuration property or
      * the {@link #getUrl() repository connection URL} if the property
@@ -280,6 +281,18 @@ abstract public class BaseRepository extends Repository
     @Override
     public String getEndpointUrl() {
         return this.endpointUrl;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void shutdown() {
+        try {
+            this.target.shutDown();
+        }
+        catch (Exception e) {
+            log.warn("Failed to properly shut down repository {}", e,
+                     this.name);
+        }
     }
 
     //-------------------------------------------------------------------------

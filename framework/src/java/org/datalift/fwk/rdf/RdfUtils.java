@@ -120,8 +120,7 @@ public final class RdfUtils
         if ((source == null) || (! source.isFile())) {
             throw new IllegalArgumentException("source");
         }
-        upload(source, guessRdfTypeFromExtension(source),
-                                                    target, namedGraph, null);
+        upload(source, target, namedGraph, null);
     }
 
     /**
@@ -151,7 +150,7 @@ public final class RdfUtils
         if ((source == null) || (! source.isFile())) {
             throw new IllegalArgumentException("source");
         }
-        upload(source, guessRdfTypeFromExtension(source),
+        upload(source, guessRdfTypeFromExtension(source.getName()),
                                                     target, namedGraph, mapper);
     }
 
@@ -648,31 +647,44 @@ public final class RdfUtils
     /**
      * Attempts to guess the type of RDF data a file contains by
      * examining the file extension.
-     * @param  f   the file the type of which is to determine.
+     * @param  fileName   the name (or path) of the file the type
+     *                    of which is to determine.
+     *
+     * @return the RDF format of the file content or <code>null</code>
+     *         if the extension was not recognized.
+     * @throws IllegalArgumentException if <code>f</code> is
+     *         <code>null</code> or is not a regular file.
+     */
+    public static RdfFormat guessRdfFormatFromExtension(String fileName) {
+        String ext = "";
+        int i = fileName.lastIndexOf('.');
+        if ((i > 0) && (i < fileName.length() - 1)) {
+            ext = fileName.substring(i+1);
+        }
+        RdfFormat format = null;
+        for (RdfFormat t : RdfFormat.values()) {
+            if (t.isExtensionKnown(ext)) {
+                format = t;
+                break;
+            }
+        }
+        return format;
+    }
+
+    /**
+     * Attempts to guess the type of RDF data a file contains by
+     * examining the file extension.
+     * @param  fileName   the name (or path) of the file the type
+     *                    of which is to determine.
      *
      * @return the MIME type of the file content or <code>null</code>
      *         if the extension was not recognized.
      * @throws IllegalArgumentException if <code>f</code> is
      *         <code>null</code> or is not a regular file.
      */
-    public static MediaType guessRdfTypeFromExtension(File f) {
-        if ((f == null) || (! f.isFile())) {
-            throw new IllegalArgumentException("f");
-        }
-        String fileName = f.getName();
-        String ext = "";
-        int i = fileName.lastIndexOf('.');
-        if ((i > 0) && (i < fileName.length() - 1)) {
-            ext = fileName.substring(i+1);
-        }
-        MediaType mimeType = null;
-        for (RdfFormat t : RdfFormat.values()) {
-            if (t.isExtensionKnown(ext)) {
-                mimeType = t.getMimeType();
-                break;
-            }
-        }
-        return mimeType;
+    public static MediaType guessRdfTypeFromExtension(String fileName) {
+        RdfFormat format = guessRdfFormatFromExtension(fileName);
+        return (format != null)? format.getMimeType(): null;
     }
 
     /**

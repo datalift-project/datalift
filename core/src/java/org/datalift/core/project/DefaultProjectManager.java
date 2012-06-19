@@ -71,6 +71,8 @@ import org.datalift.fwk.project.Ontology;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectManager;
 import org.datalift.fwk.project.RdfFileSource;
+import org.datalift.fwk.project.ShpSource;
+import org.datalift.fwk.project.GmlSource;
 import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.project.XmlSource;
@@ -284,18 +286,64 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         project.add(src);
         return src;
     }
+    
+    /** {@inheritDoc} */
+    @Override
+    public ShpSource newShpSource(Project project, URI uri, String title,
+                                  String description, String filePath)
+                                                            throws IOException {
+        // Create new SHP source.
+    	ShpSourceImpl src = new ShpSourceImpl(uri.toString(), project);
+        // Set source parameters.
+        this.initSource(src, title, description, null);
+        File f = this.getFileStorage(filePath);
+        if (! f.isFile()) {
+            throw new FileNotFoundException(filePath);
+        }
+        src.setFilePath(filePath);
+        // Add source to project.
+        project.add(src);
+        return src;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public GmlSource newGmlSource(Project project, URI uri, String title,
+                                  String description, String filePath)
+                                                            throws IOException {
+        // Create new GML source.
+    	GmlSourceImpl src = new GmlSourceImpl(uri.toString(), project);
+        // Set source parameters.
+        this.initSource(src, title, description, null);
+        File f = this.getFileStorage(filePath);
+        if (! f.isFile()) {
+            throw new FileNotFoundException(filePath);
+        }
+        src.setFilePath(filePath);
+        // Add source to project.
+        project.add(src);
+        return src;
+    }
 
     /** {@inheritDoc} */
     @Override
     public void delete(Source source) {
+        this.delete(source, true);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void delete(Source source, boolean deleteResources) {
         if (source == null) {
             throw new IllegalArgumentException("source");
         }
         Project p = source.getProject();
         // Remove source from project.
         p.remove(source);
-        // Release source resources (files, caches...).
-        source.delete();
+        if (deleteResources) {
+            // Release source resources (files, caches...).
+            source.delete();
+        }
         // Persist changes.
         this.saveProject(p);
         this.projectDao.delete(source);
@@ -363,6 +411,11 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     /** {@inheritDoc} */
     @Override
     public void deleteProject(Project p) {
+        // Delete server-side resources attached to sources.
+        for (Source s : p.getSources()) {
+            s.delete();
+        }
+        // Delete project (and dependent objects: sources, ontologies...)
         this.projectDao.delete(p);
     }
 
@@ -454,7 +507,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
                     CsvSourceImpl.class, RdfFileSourceImpl.class,
                     SqlSourceImpl.class, SparqlSourceImpl.class,
                     XmlSourceImpl.class,
-                    TransformedRdfSourceImpl.class));
+                    TransformedRdfSourceImpl.class, ShpSourceImpl.class, GmlSourceImpl.class));
         return classes;
     }
 

@@ -9,7 +9,7 @@
 </head>
 <body>
 #if($isAuth)
-	<a href="${baseUri}/project" id="go_to_projectmanager" class="button" style="position:absolute;top:15px;right:15px;">#i18n("sparql.go_to_projectmanager")</a>
+	<a href="${baseUri}/project" id="goto_workspace" class="button" style="position:absolute;top:15px;right:15px;">#i18n("project.workspace.link")</a>
 #end
 #banner
 	<div id="content" class="ui-widget-content dl-main-panel">
@@ -72,7 +72,7 @@
 		$(function() {
 			$("#result-format").buttonset();
 			$("#query_submit").button();
-			$("#go_to_projectmanager").button();
+			$("#goto_workspace").button();
 			$("#query_form").submit(function(e) {
 				var fmt = $("input[name=format]:checked").val();
 				$("#format_save").val(fmt);

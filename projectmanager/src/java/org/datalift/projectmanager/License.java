@@ -36,37 +36,34 @@ package org.datalift.projectmanager;
 
 
 import java.net.URI;
-import java.net.URISyntaxException;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+
+import org.datalift.fwk.i18n.PreferredLocales;
 
 
 /**
- * Well-known Open Data licenses.
+ * Project license.
  *
  * @author lbihanic
  */
-public enum License
+public class License
 {
-    Attribution("http://creativecommons.org/licenses/by/3.0"), 
-    Attribution_ShareAlike("http://creativecommons.org/licenses/by-sa/3.0"), 
-    Attribution_NoDerivs ("http://creativecommons.org/licenses/by-nd/3.0"),
-    Attribution_NonCommercial("http://creativecommons.org/licenses/by-nc/3.0"),
-    Attribution_NonCommercial_ShareAlike("http://creativecommons.org/licenses/by-nc-sa/3.0"),
-    Attribution_NonCommercial_NoDerivs("http://creativecommons.org/licenses/by-nc-nd/3.0");
-
     /** The license identifier, as a URI. */
     public final URI uri;
+    /** The license labels. */
+    private final Map<String,String> labels = new HashMap<String,String>();
 
     /**
      * Default constructor.
-     * @param  uri   the license identifier.  
+     * @param  uri   the license URI.  
      */
-    License(String uri) {
-        try {
-            this.uri = new URI(uri);
+    public License(URI uri) {
+        if (uri == null) {
+            throw new IllegalArgumentException("uri");
         }
-        catch (URISyntaxException e) {
-            throw new IllegalArgumentException(uri, e);
-        }
+        this.uri = uri;
     }
 
     /**
@@ -74,6 +71,87 @@ public enum License
      * @return the license URI.
      */
     public URI getUri() {
-    	return this.uri;
+        return this.uri;
+    }
+
+    /**
+     * Returns the license label for the user's
+     * {@link PreferredLocales preferred locale}.
+     * @return the license label in the user's preferred locale if
+     *         defined, the default license otherwise or, if no default
+     *         label has been defined, the license URI.
+     */
+    public String getLabel() {
+        String label = null;
+        for (Locale l : PreferredLocales.get()) {
+            label = this.getLabel(l.toString(), false);
+            if (label != null) break;
+        }
+        if (label == null) {
+            label = this.uri.toString();
+        }
+        return label;
+    }
+
+    /**
+     * Returns the license label for the specified locale.
+     * @param  locale   a locale.
+     *
+     * @return the license label for the locale country or language if
+     *         defined, the default license otherwise or, if no default
+     *         label has been defined, the license URI.
+     */
+    public String getLabel(Locale locale) {
+        return this.getLabel(locale.toString(), true);
+    }
+
+    /**
+     * Returns the license label for the specified language or
+     * language and country.
+     * @param  language   the language code or language and country
+     *                    codes, separated with an hyphen ('-') or an
+     *                    underscore ('_') character.
+     *
+     * @return the license label for the specified language if defined,
+     *         the default license otherwise or, if no default label has
+     *         been defined, the license URI.
+     */
+    public String getLabel(String language) {
+        return this.getLabel(language, true);
+    }
+
+    private String getLabel(String language, boolean acceptUri) {
+        String v = null;
+        String[] elts = language.split("-|_");
+        if ((elts.length > 1) && (elts[1].length() != 0)) {
+            v = this.labels.get(elts[0] + '_' + elts[1].toUpperCase());
+        }
+        if (v == null) {
+            v = this.labels.get(elts[0]);
+        }
+        if (v == null) {
+            v = this.labels.get("");
+        }
+        if ((v == null) && (acceptUri)) {
+            v = this.uri.toString();
+        }
+        return v;
+    }
+
+    /**
+     * Sets the license label for the specified language or language
+     * and country.
+     * @param language
+     * @param label
+     */
+    /* package */  void setLabel(String language, String label) {
+        if (language == null) {
+            language = "";
+        }
+        String[] elts = language.split("-|_");
+        this.labels.put(elts[0], label);
+        if ((elts.length > 1) && (elts[1].length() != 0)) {
+            this.labels.put(elts[0] + '_' + elts[1].toUpperCase(), label);
+        }
     }
 }

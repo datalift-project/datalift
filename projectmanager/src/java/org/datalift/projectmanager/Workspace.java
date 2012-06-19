@@ -39,6 +39,8 @@ import java.beans.BeanInfo;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -51,7 +53,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
 
@@ -79,9 +83,16 @@ import javax.xml.parsers.SAXParserFactory;
 import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 import static javax.ws.rs.core.Response.Status.*;
 
+import org.openrdf.model.Literal;
+import org.openrdf.model.vocabulary.RDFS;
+import org.openrdf.query.BindingSet;
+import org.openrdf.query.TupleQueryResult;
+import org.openrdf.repository.RepositoryConnection;
 import org.xml.sax.InputSource;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
+
+import static org.openrdf.query.QueryLanguage.SPARQL;
 
 import com.google.gson.Gson;
 import com.sun.jersey.core.header.FormDataContentDisposition;
@@ -94,7 +105,9 @@ import org.datalift.fwk.i18n.LocaleComparable;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.CachingSource;
 import org.datalift.fwk.project.CsvSource;
+import org.datalift.fwk.project.GmlSource;
 import org.datalift.fwk.project.RdfSource;
+import org.datalift.fwk.project.ShpSource;
 import org.datalift.fwk.project.SparqlSource;
 import org.datalift.fwk.project.SqlSource;
 import org.datalift.fwk.project.Ontology;
@@ -109,6 +122,7 @@ import org.datalift.fwk.project.CsvSource.Separator;
 import org.datalift.fwk.project.ProjectModule.UriDesc;
 import org.datalift.fwk.rdf.RdfFormat;
 import org.datalift.fwk.rdf.RdfUtils;
+import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.sparql.SparqlEndpoint;
 import org.datalift.fwk.sparql.SparqlEndpoint.DescribeType;
 import org.datalift.fwk.util.CloseableIterator;
@@ -152,6 +166,14 @@ public class Workspace extends BaseModule
     // Constants
     //-------------------------------------------------------------------------
 
+    /**
+     * The (optional) configuration property holding the path of
+     * the RDF file to load available project licenses from.
+     */
+    public final static String LICENSES_FILE_PROPERTY = "project.licenses.file";
+    /** The default license file, embedded in module JAR. */
+    private final static String DEFAULT_LICENSES_FILE = "default-licenses.ttl";
+
     /** The prefix for the URI of the project objects. */
     public final static String PROJECT_URI_PREFIX = "project";
     /** The prefix for the URI of the source objects, within projects. */
@@ -175,6 +197,11 @@ public class Workspace extends BaseModule
      * relevance first and then alphabetically.
      */
     private final static List<String> charsets;
+    /**
+     * The licenses available for new projects.
+     */
+    private final static Map<URI,License> licenses =
+                                            new LinkedHashMap<URI,License>();
 
     private final static Logger log = Logger.getLogger();
 
@@ -249,6 +276,14 @@ public class Workspace extends BaseModule
 
     /** {@inheritDoc} */
     @Override
+    public void init(Configuration configuration) {
+        // Load licenses.
+        this.loadLicenses(configuration.getProperty(LICENSES_FILE_PROPERTY),
+                          configuration);
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public void postInit(Configuration configuration) {
         this.projectManager = configuration.getBean(ProjectManager.class);
     }
@@ -290,7 +325,7 @@ public class Workspace extends BaseModule
     public Response registerProject(
                                 @FormParam("title") String title,
                                 @FormParam("description") String description,
-                                @FormParam("license") String license,
+                                @FormParam("license") URI license,
                                 @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
         Response response = null;
@@ -299,9 +334,8 @@ public class Workspace extends BaseModule
         if (this.findProject(projectId) == null) {
             try {
                 // Create new project.
-                License l = License.valueOf(license);
                 Project p = this.projectManager.newProject(projectId, title,
-                                                           description, l.uri);
+                                                           description, license);
                 // Persist project to RDF store.
                 this.projectManager.saveProject(p);
                 // Notify user of successful creation, redirecting HTML clients
@@ -363,7 +397,7 @@ public class Workspace extends BaseModule
 
             // Display project modification page.
             TemplateModel view = this.newView("workspaceModifyProject.vm", p);
-            view.put("licenses", License.values());
+            view.put("licenses", licenses.values());
             response = Response.ok(view, TEXT_HTML).build();
         }
         catch (Exception e) {
@@ -394,7 +428,7 @@ public class Workspace extends BaseModule
                     @PathParam("id") String id,
                     @FormParam("title") String title,
                     @FormParam("description") String description,
-                    @FormParam("license") String license,
+                    @FormParam("license") URI license,
                     @Context UriInfo uriInfo) throws WebApplicationException {
         Response response = null;
 
@@ -411,10 +445,9 @@ public class Workspace extends BaseModule
                 p.setDescription(description);
                 modified = true;
             }
-            if (! isBlank(license)) {
-                URI li = License.valueOf(license).uri;
-                if (!p.getLicense().equals(li)) {
-                    p.setLicense(li);
+            if (license != null) {
+                if (! p.getLicense().equals(license)) {
+                    p.setLicense(license);
                     modified = true;
                 }
             }
@@ -1274,6 +1307,349 @@ public class Workspace extends BaseModule
         return response;
     }
 
+    @POST
+	@Path("{id}/shpupload")
+	@Consumes(MULTIPART_FORM_DATA)
+	public Response uploadShpSource(
+			@PathParam("id") String projectId,
+			@FormDataParam("description") String description,
+			@FormDataParam("source1") InputStream fileData1,
+			@FormDataParam("source1")
+			FormDataContentDisposition fileDisposition1,
+			@FormDataParam("source2") InputStream fileData2,
+			@FormDataParam("source2")
+			FormDataContentDisposition fileDisposition2,
+			@FormDataParam("source3") InputStream fileData3,
+			@FormDataParam("source3")
+			FormDataContentDisposition fileDisposition3,
+			@FormDataParam("source4") InputStream fileData4,
+			@FormDataParam("source4")
+			FormDataContentDisposition fileDisposition4,			
+			@Context UriInfo uriInfo)
+					throws WebApplicationException {
+		if (fileData1 == null) {
+			this.throwInvalidParamError("source1", null);
+		}
+		if (fileData2 == null) {
+			this.throwInvalidParamError("source2", null);
+		}
+
+		if (fileData3 == null) {
+			this.throwInvalidParamError("source3", null);
+		}
+
+		if (fileData4 == null) {
+			this.throwInvalidParamError("source4", null);
+		}
+		
+		Response response = null;
+
+		String fileName1 = null;
+		String fileName2 = null;
+		String fileName3 = null;
+		String fileName4 = null;
+
+		URL fileUrl1 = null;
+		URL fileUrl2 = null;
+		URL fileUrl3 = null;
+		URL fileUrl4 = null;
+
+		File localFile1 = null;
+		File localFile2 = null;
+		File localFile3 = null;
+		File localFile4 = null;
+
+		fileName1 = fileDisposition1.getFileName();
+		if (isBlank(fileName1)) {
+			this.throwInvalidParamError("source1", null);
+		}
+
+		fileName2 = fileDisposition2.getFileName();
+		if (isBlank(fileName2)) {
+			this.throwInvalidParamError("source2", null);
+		}
+
+		fileName3 = fileDisposition3.getFileName();
+		if (isBlank(fileName3)) {
+			this.throwInvalidParamError("source3", null);
+		}
+		
+		fileName4 = fileDisposition4.getFileName();
+		if (isBlank(fileName4)) {
+			this.throwInvalidParamError("source4", null);
+		}
+
+		log.debug("Processing SHP source creation request for {}", fileName1);
+		log.debug("Processing PRJ source creation request for {}", fileName2);
+		log.debug("Processing SHX source creation request for {}", fileName3);
+		log.debug("Processing DBF source creation request for {}", fileName4);
+
+		try {
+			// Build object URIs from request path.
+			URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
+			URI sourceUri1 = new URI(projectUri.getScheme(), null,
+					projectUri.getHost(), projectUri.getPort(),
+					this.getSourceId(projectUri.getPath(), fileName1),
+					null, null);
+			URI sourceUri2 = new URI(projectUri.getScheme(), null,
+					projectUri.getHost(), projectUri.getPort(),
+					this.getSourceId(projectUri.getPath(), fileName2),
+					null, null);
+			URI sourceUri3 = new URI(projectUri.getScheme(), null,
+					projectUri.getHost(), projectUri.getPort(),
+					this.getSourceId(projectUri.getPath(), fileName3),
+					null, null);
+			URI sourceUri4 = new URI(projectUri.getScheme(), null,
+					projectUri.getHost(), projectUri.getPort(),
+					this.getSourceId(projectUri.getPath(), fileName4),
+					null, null);
+			
+			// Retrieve project.
+			Project p = this.loadProject(projectUri);
+			// Save new source data to public project storage.
+			String filePath1 = this.getProjectFilePath(projectId, fileName1);
+			String filePath2 = this.getProjectFilePath(projectId, fileName2);
+			String filePath3 = this.getProjectFilePath(projectId, fileName3);
+			String filePath4 = this.getProjectFilePath(projectId, fileName4);
+			localFile1 = this.getFileStorage(filePath1);
+			localFile2 = this.getFileStorage(filePath2);
+			localFile3 = this.getFileStorage(filePath3);
+			localFile4 = this.getFileStorage(filePath4);
+			this.getFileData(fileData1, fileUrl1, localFile1, uriInfo);
+			this.getFileData(fileData2, fileUrl2, localFile2, uriInfo);
+			this.getFileData(fileData3, fileUrl3, localFile3, uriInfo);
+			this.getFileData(fileData4, fileUrl4, localFile4, uriInfo);
+			// Initialize new source.
+			this.projectManager.newShpSource(p, sourceUri1, fileName1, description, filePath1);
+			//this.projectManager.newShpSource(p, sourceUri2, fileName2, description, filePath2);
+			//this.projectManager.newShpSource(p, sourceUri3, fileName3, description, filePath3);
+			//this.projectManager.newShpSource(p, sourceUri4, fileName4, description, filePath4);
+			// Persist new source.
+			this.projectManager.saveProject(p);
+			// Notify user of successful creation, redirecting HTML clients
+			response = this.created(p, sourceUri1, ProjectTab.Sources).build();
+
+			log.info("New SHP source \"{}\" created", sourceUri1);
+			log.info("New PRJ source \"{}\" created", sourceUri2);
+			log.info("New SHX source \"{}\" created", sourceUri3);
+			log.info("New DBF source \"{}\" created", sourceUri4);
+		}
+		catch (IOException e) {
+			if (localFile1 != null) {
+				localFile1.delete();
+			}
+			if (localFile2 != null) {
+				localFile2.delete();
+			}
+			if (localFile3 != null) {
+				localFile3.delete();
+			}
+			if (localFile4 != null) {
+				localFile4.delete();
+			}
+			String src1 = (fileData1 != null)? fileName1: (fileUrl1 != null)? fileUrl1.toString(): "file_url1";
+			log.fatal("Failed to save source data from {}", e, src1);
+			this.throwInvalidParamError(src1, e.getLocalizedMessage());
+			String src2 = (fileData2 != null)? fileName2: (fileUrl2 != null)? fileUrl2.toString(): "file_url2";
+			log.fatal("Failed to save source data from {}", e, src2);
+			this.throwInvalidParamError(src2, e.getLocalizedMessage());
+			String src3 = (fileData3 != null)? fileName3: (fileUrl3 != null)? fileUrl3.toString(): "file_url3";
+			log.fatal("Failed to save source data from {}", e, src3);
+			this.throwInvalidParamError(src3, e.getLocalizedMessage());
+			String src4 = (fileData4 != null)? fileName4: (fileUrl4 != null)? fileUrl4.toString(): "file_url4";
+			log.fatal("Failed to save source data from {}", e, src4);
+			this.throwInvalidParamError(src4, e.getLocalizedMessage());
+
+		}
+		catch (Exception e) {
+			if (localFile1 != null) {
+				localFile1.delete();
+			}
+			this.handleInternalError(e,
+					"Failed to create SHP source for {}", fileName1);
+			if (localFile2 != null) {
+				localFile2.delete();
+			}
+			this.handleInternalError(e,
+					"Failed to create PRJ source for {}", fileName2);
+			if (localFile3 != null) {
+				localFile3.delete();
+			}
+			this.handleInternalError(e,
+					"Failed to create SHX source for {}", fileName3);
+			if (localFile4 != null) {
+				localFile4.delete();
+			}
+			this.handleInternalError(e,
+					"Failed to create DBF source for {}", fileName4);
+		}
+		return response;
+	}
+
+	@POST
+	@Path("{id}/shpmodify")
+	@Consumes(MULTIPART_FORM_DATA)
+	public Response modifyShpSource(
+			@PathParam("id") String projectId,
+			@FormDataParam("current_source") URI sourceUri,
+			@FormDataParam("description") String description,
+			@Context UriInfo uriInfo)
+					throws WebApplicationException {
+		Response response = null;
+		try {
+			// Retrieve source.
+			Project p = this.loadProject(uriInfo, projectId);
+			ShpSource s = this.loadSource(p, sourceUri, ShpSource.class);
+			// Update source data.
+			s.setDescription(description);
+			// Save updated source.
+			this.projectManager.saveProject(p);
+			// Notify user of successful update, redirecting HTML clients
+			// (browsers) to the source tab of the project page.
+			response = this.redirect(p, ProjectTab.Sources).build();
+		}
+		catch (Exception e) {
+			this.handleInternalError(e, "Could not modify SHP source {}",
+					sourceUri);
+		}
+		return response;
+	}
+
+	@POST
+	@Path("{id}/gmlupload")
+	@Consumes(MULTIPART_FORM_DATA)
+	public Response uploadGmlSource(
+			@PathParam("id") String projectId,
+			@FormDataParam("description") String description,
+			@FormDataParam("source1") InputStream fileData1,
+			@FormDataParam("source1")
+			FormDataContentDisposition fileDisposition1,
+			@FormDataParam("source2") InputStream fileData2,
+			@FormDataParam("source2")
+			FormDataContentDisposition fileDisposition2,
+			@Context UriInfo uriInfo)
+					throws WebApplicationException {
+		if (fileData1 == null) {
+			this.throwInvalidParamError("source1", null);
+		}
+		if (fileData2 == null) {
+			this.throwInvalidParamError("source2", null);
+		}
+		
+		Response response = null;
+
+		String fileName1 = null;
+		String fileName2 = null;
+
+		URL fileUrl1 = null;
+		URL fileUrl2 = null;
+
+		File localFile1 = null;
+		File localFile2 = null;
+
+		fileName1 = fileDisposition1.getFileName();
+		if (isBlank(fileName1)) {
+			this.throwInvalidParamError("source1", null);
+		}
+
+		fileName2 = fileDisposition2.getFileName();
+		if (isBlank(fileName2)) {
+			this.throwInvalidParamError("source2", null);
+		}
+
+		log.debug("Processing GML source creation request for {}", fileName1);
+		log.debug("Processing XSD source creation request for {}", fileName2);
+
+		try {
+			// Build object URIs from request path.
+			URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
+			URI sourceUri1 = new URI(projectUri.getScheme(), null,
+					projectUri.getHost(), projectUri.getPort(),
+					this.getSourceId(projectUri.getPath(), fileName1),
+					null, null);
+			URI sourceUri2 = new URI(projectUri.getScheme(), null,
+					projectUri.getHost(), projectUri.getPort(),
+					this.getSourceId(projectUri.getPath(), fileName2),
+					null, null);
+			
+			// Retrieve project.
+			Project p = this.loadProject(projectUri);
+			// Save new source data to public project storage.
+			String filePath1 = this.getProjectFilePath(projectId, fileName1);
+			String filePath2 = this.getProjectFilePath(projectId, fileName2);
+			localFile1 = this.getFileStorage(filePath1);
+			localFile2 = this.getFileStorage(filePath2);
+			this.getFileData(fileData1, fileUrl1, localFile1, uriInfo);
+			this.getFileData(fileData2, fileUrl2, localFile2, uriInfo);
+			// Initialize new source.
+			this.projectManager.newGmlSource(p, sourceUri1, fileName1, description, filePath1);
+			//this.projectManager.newGmlSource(p, sourceUri2, fileName2, description, filePath2);
+			// Persist new source.
+			this.projectManager.saveProject(p);
+			// Notify user of successful creation, redirecting HTML clients
+			response = this.created(p, sourceUri1, ProjectTab.Sources).build();
+
+			log.info("New GML source \"{}\" created", sourceUri1);
+			log.info("New XSD source \"{}\" created", sourceUri2);
+		}
+		catch (IOException e) {
+			if (localFile1 != null) {
+				localFile1.delete();
+			}
+			if (localFile2 != null) {
+				localFile2.delete();
+			}
+			String src1 = (fileData1 != null)? fileName1: (fileUrl1 != null)? fileUrl1.toString(): "file_url1";
+			log.fatal("Failed to save source data from {}", e, src1);
+			this.throwInvalidParamError(src1, e.getLocalizedMessage());
+			String src2 = (fileData2 != null)? fileName2: (fileUrl2 != null)? fileUrl2.toString(): "file_url2";
+			log.fatal("Failed to save source data from {}", e, src2);
+			this.throwInvalidParamError(src2, e.getLocalizedMessage());
+		}
+		catch (Exception e) {
+			if (localFile1 != null) {
+				localFile1.delete();
+			}
+			this.handleInternalError(e,
+					"Failed to create GML source for {}", fileName1);
+			if (localFile2 != null) {
+				localFile2.delete();
+			}
+			this.handleInternalError(e,
+					"Failed to create XSD source for {}", fileName2);
+		}
+		return response;
+	}
+
+	@POST
+	@Path("{id}/gmlmodify")
+	@Consumes(MULTIPART_FORM_DATA)
+	public Response modifyGmlSource(
+			@PathParam("id") String projectId,
+			@FormDataParam("current_source") URI sourceUri,
+			@FormDataParam("description") String description,
+			@Context UriInfo uriInfo)
+					throws WebApplicationException {
+		Response response = null;
+		try {
+			// Retrieve source.
+			Project p = this.loadProject(uriInfo, projectId);
+			GmlSource s = this.loadSource(p, sourceUri, GmlSource.class);
+			// Update source data.
+			s.setDescription(description);
+			// Save updated source.
+			this.projectManager.saveProject(p);
+			// Notify user of successful update, redirecting HTML clients
+			// (browsers) to the source tab of the project page.
+			response = this.redirect(p, ProjectTab.Sources).build();
+		}
+		catch (Exception e) {
+			this.handleInternalError(e, "Could not modify GML source {}",
+					sourceUri);
+		}
+		return response;
+	}
+
     @GET
     @Path("{id}/{filename}")
     public Response getSourceData(@PathParam("id") String projectId,
@@ -1674,6 +2050,11 @@ public class Workspace extends BaseModule
         // Display selected project.
         if (p != null) {
             view.put("current", p);
+            License l = licenses.get(p.getLicense());
+            if (l == null) {
+                l = new License(p.getLicense());        // Unknown license.
+            }
+            view.put("license", l.getLabel());
             // Search for modules accepting the selected project.
             Collection<UriDesc> modules = new TreeSet<UriDesc>(
                     new Comparator<UriDesc>() {
@@ -1774,6 +2155,73 @@ public class Workspace extends BaseModule
      */
     protected final TemplateModel newView(String templateName, Object it) {
         return ViewFactory.newView(TEMPLATE_PATH + templateName, it);
+    }
+
+    private void loadLicenses(String path, Configuration cfg) {
+        InputStream in = null;
+        Repository r = null;
+        RepositoryConnection cnx = null;
+        try {
+            if (isSet(path)) {
+                // Licenses file specified. => Check presence.
+                log.info("Loading licenses from {}", path);
+                File f = new File(path);
+                if (! (f.isFile() && f.canRead())) {
+                    throw new FileNotFoundException(path);
+                }
+                in = new FileInputStream(f);
+            }
+            else {
+                // No licenses file specified. => Use default.
+                log.debug("No licenses file specified, using default licenses");
+                path = DEFAULT_LICENSES_FILE;
+                in = this.getClass().getClassLoader().getResourceAsStream(path);
+            }
+            r = cfg.newRepository(null, "sail:///", false);
+            cnx = r.newConnection();
+            // Load ontology into RDF store.
+            cnx.add(in, "", RdfUtils.guessRdfFormatFromExtension(path)
+                                    .getNativeFormat());
+            cnx.close();
+            // Extract licenses data from RDF triples.
+            String query =
+                    "PREFIX rdfs: <" + RDFS.NAMESPACE + ">\n" +
+                    "PREFIX doap: <http://usefulinc.com/ns/doap#>\n" +
+                    "SELECT ?uri ?label WHERE { ?s doap:license ?uri ; " +
+                                              "    rdfs:label ?label . }";
+            cnx = r.newConnection();
+            TupleQueryResult rs = cnx.prepareTupleQuery(SPARQL, query)
+                                     .evaluate();
+            while (rs.hasNext()) {
+                BindingSet bs = rs.next();
+                URI uri = new URI(bs.getValue("uri").stringValue());
+                License l = licenses.get(uri);
+                if (l == null) {
+                    l = new License(uri);
+                    licenses.put(uri, l);
+                    log.trace("Added license: {}", uri);
+                }
+                Literal v  = (Literal)(bs.getValue("label"));
+                if (v != null) {
+                    l.setLabel(v.getLanguage(), v.getLabel());
+                }
+            }
+            rs.close();
+        }
+        catch (Exception e) {
+            throw new TechnicalException("licenses.load.failed", e, path);
+        }
+        finally {
+            if (cnx != null) {
+                try { cnx.close(); } catch (Exception e) { /* Ignore... */ }
+            }
+            if (r != null) {
+                try { r.shutdown(); } catch (Exception e) { /* Ignore... */ }
+            }
+            if (in != null) {
+                try { in.close(); } catch (Exception e) { /* Ignore... */ }
+            }
+        }
     }
 
     private URI newProjectId(URI baseUri, String name) {
@@ -1954,5 +2402,4 @@ public class Workspace extends BaseModule
             this.sendError(INTERNAL_SERVER_ERROR, error.getMessage());
         }
     }
-   
 }

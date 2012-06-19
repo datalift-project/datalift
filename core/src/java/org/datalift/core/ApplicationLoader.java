@@ -356,6 +356,9 @@ public class ApplicationLoader extends LogServletContextListener
                     LogContext.pushContexts(prevCtx[0], prevCtx[1]);
                 }
             }
+            if (cfg instanceof DefaultConfiguration) {
+                ((DefaultConfiguration)cfg).shutdown();
+            }
             log.info("DataLift shutdown complete");
         }
         finally {

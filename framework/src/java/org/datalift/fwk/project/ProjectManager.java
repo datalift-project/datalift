@@ -227,13 +227,55 @@ public interface ProjectManager
                                 URI uri, String title, String description, 
                                 URI targetGraph, Source parent)
                                                             throws IOException;
+    
+    /**
+     * Creates a new SHP source object.
+     * @param  project       the owning project.
+     * @param  uri           the source URI.
+     * @param  title         the source label.
+     * @param  description   the description of the source content or
+     *                       intent.
+     * @param  filePath      the SHP file path in the public storage.
+     * @return a new SHP source, associated to the specified project.
+     * @throws IOException if any error occurred creating the source
+     *         or accessing the specified file.
+     */
+    public ShpSource newShpSource(Project project, URI uri, String title,
+                                  String description, String filePath)
+                                                            throws IOException;
+    
 
+    /**
+     * Creates a new GML source object.
+     * @param  project       the owning project.
+     * @param  uri           the source URI.
+     * @param  title         the source label.
+     * @param  description   the description of the source content or
+     *                       intent.
+     * @param  filePath      the GML file path in the public storage.
+     * @return a new GML source, associated to the specified project.
+     * @throws IOException if any error occurred creating the source
+     *         or accessing the specified file.
+     */
+    public GmlSource newGmlSource(Project project, URI uri, String title,
+                                  String description, String filePath)
+                                                            throws IOException;
+    
     /**
      * Deletes the specified source object and the associated resources
      * (local files, cached data...).
      * @param  source   the source object to delete.
      */
     public void delete(Source source);
+
+    /**
+     * Deletes the specified source object and, optionally, the
+     * associated resources (local files, cached data...).
+     * @param  source            the source object to delete.
+     * @param  deleteResources   whether to delete the resources
+     *                           associated with the source.
+     */
+    public void delete(Source source, boolean deleteResources);
 
     /**
      * Create a new ontology description.
