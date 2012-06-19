@@ -236,6 +236,15 @@ public interface ProjectManager
     public void delete(Source source);
 
     /**
+     * Deletes the specified source object and, optionally, the
+     * associated resources (local files, cached data...).
+     * @param  source            the source object to delete.
+     * @param  deleteResources   whether to delete the resources
+     *                           associated with the source.
+     */
+    public void delete(Source source, boolean deleteResources);
+
+    /**
      * Create a new ontology description.
      * @param  srcUrl   the ontology URL.
      * @param  title    the ontology name or description.

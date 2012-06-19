@@ -288,14 +288,22 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     /** {@inheritDoc} */
     @Override
     public void delete(Source source) {
+        this.delete(source, true);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void delete(Source source, boolean deleteResources) {
         if (source == null) {
             throw new IllegalArgumentException("source");
         }
         Project p = source.getProject();
         // Remove source from project.
         p.remove(source);
-        // Release source resources (files, caches...).
-        source.delete();
+        if (deleteResources) {
+            // Release source resources (files, caches...).
+            source.delete();
+        }
         // Persist changes.
         this.saveProject(p);
         this.projectDao.delete(source);
@@ -363,6 +371,11 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     /** {@inheritDoc} */
     @Override
     public void deleteProject(Project p) {
+        // Delete server-side resources attached to sources.
+        for (Source s : p.getSources()) {
+            s.delete();
+        }
+        // Delete project (and dependent objects: sources, ontologies...)
         this.projectDao.delete(p);
     }
 
