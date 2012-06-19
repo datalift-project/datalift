@@ -53,14 +53,8 @@
                      </xsl:if>
                      <xsl:value-of select="$subjectname"/>
                      <xsl:value-of select="name()"/>
-                     <!-- Add an ID to sibling element of identical name -->
-                     <xsl:variable name="number">
-                            <xsl:number/>
-                     </xsl:variable>
-                     <xsl:if test="$number > 1">
-                            <xsl:text>_</xsl:text>
-                            <xsl:number/>
-                     </xsl:if>
+                     <xsl:text>_</xsl:text>
+                     <xsl:number/>
               </xsl:variable>
 
               <xsl:variable name="ns">
