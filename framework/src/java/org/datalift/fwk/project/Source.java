@@ -58,7 +58,9 @@ public interface Source
         SqlSource,
         TransformedRdfSource,
         SparqlSource,
-        XmlSource;
+        XmlSource,
+        ShpSource,
+        GmlSource;
     }
 
     //-------------------------------------------------------------------------

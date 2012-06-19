@@ -105,7 +105,9 @@ import org.datalift.fwk.i18n.LocaleComparable;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.CachingSource;
 import org.datalift.fwk.project.CsvSource;
+import org.datalift.fwk.project.GmlSource;
 import org.datalift.fwk.project.RdfSource;
+import org.datalift.fwk.project.ShpSource;
 import org.datalift.fwk.project.SparqlSource;
 import org.datalift.fwk.project.SqlSource;
 import org.datalift.fwk.project.Ontology;
@@ -1304,6 +1306,349 @@ public class Workspace extends BaseModule
         }
         return response;
     }
+
+    @POST
+	@Path("{id}/shpupload")
+	@Consumes(MULTIPART_FORM_DATA)
+	public Response uploadShpSource(
+			@PathParam("id") String projectId,
+			@FormDataParam("description") String description,
+			@FormDataParam("source1") InputStream fileData1,
+			@FormDataParam("source1")
+			FormDataContentDisposition fileDisposition1,
+			@FormDataParam("source2") InputStream fileData2,
+			@FormDataParam("source2")
+			FormDataContentDisposition fileDisposition2,
+			@FormDataParam("source3") InputStream fileData3,
+			@FormDataParam("source3")
+			FormDataContentDisposition fileDisposition3,
+			@FormDataParam("source4") InputStream fileData4,
+			@FormDataParam("source4")
+			FormDataContentDisposition fileDisposition4,			
+			@Context UriInfo uriInfo)
+					throws WebApplicationException {
+		if (fileData1 == null) {
+			this.throwInvalidParamError("source1", null);
+		}
+		if (fileData2 == null) {
+			this.throwInvalidParamError("source2", null);
+		}
+
+		if (fileData3 == null) {
+			this.throwInvalidParamError("source3", null);
+		}
+
+		if (fileData4 == null) {
+			this.throwInvalidParamError("source4", null);
+		}
+		
+		Response response = null;
+
+		String fileName1 = null;
+		String fileName2 = null;
+		String fileName3 = null;
+		String fileName4 = null;
+
+		URL fileUrl1 = null;
+		URL fileUrl2 = null;
+		URL fileUrl3 = null;
+		URL fileUrl4 = null;
+
+		File localFile1 = null;
+		File localFile2 = null;
+		File localFile3 = null;
+		File localFile4 = null;
+
+		fileName1 = fileDisposition1.getFileName();
+		if (isBlank(fileName1)) {
+			this.throwInvalidParamError("source1", null);
+		}
+
+		fileName2 = fileDisposition2.getFileName();
+		if (isBlank(fileName2)) {
+			this.throwInvalidParamError("source2", null);
+		}
+
+		fileName3 = fileDisposition3.getFileName();
+		if (isBlank(fileName3)) {
+			this.throwInvalidParamError("source3", null);
+		}
+		
+		fileName4 = fileDisposition4.getFileName();
+		if (isBlank(fileName4)) {
+			this.throwInvalidParamError("source4", null);
+		}
+
+		log.debug("Processing SHP source creation request for {}", fileName1);
+		log.debug("Processing PRJ source creation request for {}", fileName2);
+		log.debug("Processing SHX source creation request for {}", fileName3);
+		log.debug("Processing DBF source creation request for {}", fileName4);
+
+		try {
+			// Build object URIs from request path.
+			URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
+			URI sourceUri1 = new URI(projectUri.getScheme(), null,
+					projectUri.getHost(), projectUri.getPort(),
+					this.getSourceId(projectUri.getPath(), fileName1),
+					null, null);
+			URI sourceUri2 = new URI(projectUri.getScheme(), null,
+					projectUri.getHost(), projectUri.getPort(),
+					this.getSourceId(projectUri.getPath(), fileName2),
+					null, null);
+			URI sourceUri3 = new URI(projectUri.getScheme(), null,
+					projectUri.getHost(), projectUri.getPort(),
+					this.getSourceId(projectUri.getPath(), fileName3),
+					null, null);
+			URI sourceUri4 = new URI(projectUri.getScheme(), null,
+					projectUri.getHost(), projectUri.getPort(),
+					this.getSourceId(projectUri.getPath(), fileName4),
+					null, null);
+			
+			// Retrieve project.
+			Project p = this.loadProject(projectUri);
+			// Save new source data to public project storage.
+			String filePath1 = this.getProjectFilePath(projectId, fileName1);
+			String filePath2 = this.getProjectFilePath(projectId, fileName2);
+			String filePath3 = this.getProjectFilePath(projectId, fileName3);
+			String filePath4 = this.getProjectFilePath(projectId, fileName4);
+			localFile1 = this.getFileStorage(filePath1);
+			localFile2 = this.getFileStorage(filePath2);
+			localFile3 = this.getFileStorage(filePath3);
+			localFile4 = this.getFileStorage(filePath4);
+			this.getFileData(fileData1, fileUrl1, localFile1, uriInfo);
+			this.getFileData(fileData2, fileUrl2, localFile2, uriInfo);
+			this.getFileData(fileData3, fileUrl3, localFile3, uriInfo);
+			this.getFileData(fileData4, fileUrl4, localFile4, uriInfo);
+			// Initialize new source.
+			this.projectManager.newShpSource(p, sourceUri1, fileName1, description, filePath1);
+			//this.projectManager.newShpSource(p, sourceUri2, fileName2, description, filePath2);
+			//this.projectManager.newShpSource(p, sourceUri3, fileName3, description, filePath3);
+			//this.projectManager.newShpSource(p, sourceUri4, fileName4, description, filePath4);
+			// Persist new source.
+			this.projectManager.saveProject(p);
+			// Notify user of successful creation, redirecting HTML clients
+			response = this.created(p, sourceUri1, ProjectTab.Sources).build();
+
+			log.info("New SHP source \"{}\" created", sourceUri1);
+			log.info("New PRJ source \"{}\" created", sourceUri2);
+			log.info("New SHX source \"{}\" created", sourceUri3);
+			log.info("New DBF source \"{}\" created", sourceUri4);
+		}
+		catch (IOException e) {
+			if (localFile1 != null) {
+				localFile1.delete();
+			}
+			if (localFile2 != null) {
+				localFile2.delete();
+			}
+			if (localFile3 != null) {
+				localFile3.delete();
+			}
+			if (localFile4 != null) {
+				localFile4.delete();
+			}
+			String src1 = (fileData1 != null)? fileName1: (fileUrl1 != null)? fileUrl1.toString(): "file_url1";
+			log.fatal("Failed to save source data from {}", e, src1);
+			this.throwInvalidParamError(src1, e.getLocalizedMessage());
+			String src2 = (fileData2 != null)? fileName2: (fileUrl2 != null)? fileUrl2.toString(): "file_url2";
+			log.fatal("Failed to save source data from {}", e, src2);
+			this.throwInvalidParamError(src2, e.getLocalizedMessage());
+			String src3 = (fileData3 != null)? fileName3: (fileUrl3 != null)? fileUrl3.toString(): "file_url3";
+			log.fatal("Failed to save source data from {}", e, src3);
+			this.throwInvalidParamError(src3, e.getLocalizedMessage());
+			String src4 = (fileData4 != null)? fileName4: (fileUrl4 != null)? fileUrl4.toString(): "file_url4";
+			log.fatal("Failed to save source data from {}", e, src4);
+			this.throwInvalidParamError(src4, e.getLocalizedMessage());
+
+		}
+		catch (Exception e) {
+			if (localFile1 != null) {
+				localFile1.delete();
+			}
+			this.handleInternalError(e,
+					"Failed to create SHP source for {}", fileName1);
+			if (localFile2 != null) {
+				localFile2.delete();
+			}
+			this.handleInternalError(e,
+					"Failed to create PRJ source for {}", fileName2);
+			if (localFile3 != null) {
+				localFile3.delete();
+			}
+			this.handleInternalError(e,
+					"Failed to create SHX source for {}", fileName3);
+			if (localFile4 != null) {
+				localFile4.delete();
+			}
+			this.handleInternalError(e,
+					"Failed to create DBF source for {}", fileName4);
+		}
+		return response;
+	}
+
+	@POST
+	@Path("{id}/shpmodify")
+	@Consumes(MULTIPART_FORM_DATA)
+	public Response modifyShpSource(
+			@PathParam("id") String projectId,
+			@FormDataParam("current_source") URI sourceUri,
+			@FormDataParam("description") String description,
+			@Context UriInfo uriInfo)
+					throws WebApplicationException {
+		Response response = null;
+		try {
+			// Retrieve source.
+			Project p = this.loadProject(uriInfo, projectId);
+			ShpSource s = this.loadSource(p, sourceUri, ShpSource.class);
+			// Update source data.
+			s.setDescription(description);
+			// Save updated source.
+			this.projectManager.saveProject(p);
+			// Notify user of successful update, redirecting HTML clients
+			// (browsers) to the source tab of the project page.
+			response = this.redirect(p, ProjectTab.Sources).build();
+		}
+		catch (Exception e) {
+			this.handleInternalError(e, "Could not modify SHP source {}",
+					sourceUri);
+		}
+		return response;
+	}
+
+	@POST
+	@Path("{id}/gmlupload")
+	@Consumes(MULTIPART_FORM_DATA)
+	public Response uploadGmlSource(
+			@PathParam("id") String projectId,
+			@FormDataParam("description") String description,
+			@FormDataParam("source1") InputStream fileData1,
+			@FormDataParam("source1")
+			FormDataContentDisposition fileDisposition1,
+			@FormDataParam("source2") InputStream fileData2,
+			@FormDataParam("source2")
+			FormDataContentDisposition fileDisposition2,
+			@Context UriInfo uriInfo)
+					throws WebApplicationException {
+		if (fileData1 == null) {
+			this.throwInvalidParamError("source1", null);
+		}
+		if (fileData2 == null) {
+			this.throwInvalidParamError("source2", null);
+		}
+		
+		Response response = null;
+
+		String fileName1 = null;
+		String fileName2 = null;
+
+		URL fileUrl1 = null;
+		URL fileUrl2 = null;
+
+		File localFile1 = null;
+		File localFile2 = null;
+
+		fileName1 = fileDisposition1.getFileName();
+		if (isBlank(fileName1)) {
+			this.throwInvalidParamError("source1", null);
+		}
+
+		fileName2 = fileDisposition2.getFileName();
+		if (isBlank(fileName2)) {
+			this.throwInvalidParamError("source2", null);
+		}
+
+		log.debug("Processing GML source creation request for {}", fileName1);
+		log.debug("Processing XSD source creation request for {}", fileName2);
+
+		try {
+			// Build object URIs from request path.
+			URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
+			URI sourceUri1 = new URI(projectUri.getScheme(), null,
+					projectUri.getHost(), projectUri.getPort(),
+					this.getSourceId(projectUri.getPath(), fileName1),
+					null, null);
+			URI sourceUri2 = new URI(projectUri.getScheme(), null,
+					projectUri.getHost(), projectUri.getPort(),
+					this.getSourceId(projectUri.getPath(), fileName2),
+					null, null);
+			
+			// Retrieve project.
+			Project p = this.loadProject(projectUri);
+			// Save new source data to public project storage.
+			String filePath1 = this.getProjectFilePath(projectId, fileName1);
+			String filePath2 = this.getProjectFilePath(projectId, fileName2);
+			localFile1 = this.getFileStorage(filePath1);
+			localFile2 = this.getFileStorage(filePath2);
+			this.getFileData(fileData1, fileUrl1, localFile1, uriInfo);
+			this.getFileData(fileData2, fileUrl2, localFile2, uriInfo);
+			// Initialize new source.
+			this.projectManager.newGmlSource(p, sourceUri1, fileName1, description, filePath1);
+			//this.projectManager.newGmlSource(p, sourceUri2, fileName2, description, filePath2);
+			// Persist new source.
+			this.projectManager.saveProject(p);
+			// Notify user of successful creation, redirecting HTML clients
+			response = this.created(p, sourceUri1, ProjectTab.Sources).build();
+
+			log.info("New GML source \"{}\" created", sourceUri1);
+			log.info("New XSD source \"{}\" created", sourceUri2);
+		}
+		catch (IOException e) {
+			if (localFile1 != null) {
+				localFile1.delete();
+			}
+			if (localFile2 != null) {
+				localFile2.delete();
+			}
+			String src1 = (fileData1 != null)? fileName1: (fileUrl1 != null)? fileUrl1.toString(): "file_url1";
+			log.fatal("Failed to save source data from {}", e, src1);
+			this.throwInvalidParamError(src1, e.getLocalizedMessage());
+			String src2 = (fileData2 != null)? fileName2: (fileUrl2 != null)? fileUrl2.toString(): "file_url2";
+			log.fatal("Failed to save source data from {}", e, src2);
+			this.throwInvalidParamError(src2, e.getLocalizedMessage());
+		}
+		catch (Exception e) {
+			if (localFile1 != null) {
+				localFile1.delete();
+			}
+			this.handleInternalError(e,
+					"Failed to create GML source for {}", fileName1);
+			if (localFile2 != null) {
+				localFile2.delete();
+			}
+			this.handleInternalError(e,
+					"Failed to create XSD source for {}", fileName2);
+		}
+		return response;
+	}
+
+	@POST
+	@Path("{id}/gmlmodify")
+	@Consumes(MULTIPART_FORM_DATA)
+	public Response modifyGmlSource(
+			@PathParam("id") String projectId,
+			@FormDataParam("current_source") URI sourceUri,
+			@FormDataParam("description") String description,
+			@Context UriInfo uriInfo)
+					throws WebApplicationException {
+		Response response = null;
+		try {
+			// Retrieve source.
+			Project p = this.loadProject(uriInfo, projectId);
+			GmlSource s = this.loadSource(p, sourceUri, GmlSource.class);
+			// Update source data.
+			s.setDescription(description);
+			// Save updated source.
+			this.projectManager.saveProject(p);
+			// Notify user of successful update, redirecting HTML clients
+			// (browsers) to the source tab of the project page.
+			response = this.redirect(p, ProjectTab.Sources).build();
+		}
+		catch (Exception e) {
+			this.handleInternalError(e, "Could not modify GML source {}",
+					sourceUri);
+		}
+		return response;
+	}
 
     @GET
     @Path("{id}/{filename}")
