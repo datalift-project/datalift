@@ -1,7 +1,17 @@
 S4AC Module - Instructions
 
 1- The module constrains the access to named graphs. This means that you must first identify the named graphs in the dataset (a test dataset whose named graphs are associated to the policies may be found in file berlin-test.trig from the Berlin Benchmark).
-2- You have to create a new repository called secured where you will store the access policies.
+
+2- You have to create a new repository called secured where you will store the access policies. The secured repository has to be added
+into the datalift-application.properties. The s4ac sparql endpoint protects the access to the lifted repository.
+To use the s4ac sparql endpoint instead of the normal one, you have to:
+a) cd s4ac
+b) ant dist
+c) copy dist/s4ac.jar in datalift-home/modules
+d) remove sparql-endpoint.jar from datalift-home/modules
+alternatively to points (a) and (b) just add the name "s4ac" to the list of modules to be processed by the root build.xml
+
+
 3- You have to associate to each policy (expressed in RDF) which are the named graphs it is associated to.
 
 EXAMPLE:
@@ -13,7 +23,9 @@ From file policies.rdf
 you substitute the URI of the test named graph with the named graph you want to protect.
 
 4- The policies have to be stored in the secured repository.
+
 5- You have to store the named graphs representing the users' profiles (contained in usersGraphs.txt) into the secured repository.
+
 6- Given the users' profiles in usersGraphs.txt, you have to update the file datalift-users.properties (core/build/datalift-home/conf/)
 with the following information:
 
