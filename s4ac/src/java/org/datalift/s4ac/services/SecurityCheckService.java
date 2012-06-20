@@ -54,15 +54,19 @@ public class SecurityCheckService extends BaseModule {
 	private Map<String, AccessPolicy> aps = new HashMap<String, AccessPolicy>();
 	private Map<CRUDType, Set<String>> apindex = new HashMap<CRUDType, Set<String>>();
 
+	@SuppressWarnings("deprecation")
 	public SecurityCheckService(){
 		super("s4ac-securityCheckService",true);
 	}
 	
+	
 	public void init() {
 		
 		try {
-			this.liftedRepository = Configuration.getDefault().getRepository("lifted");
+			this.liftedRepository = Configuration.getDefault().getDataRepository();
     		this.securedRepository = Configuration.getDefault().getRepository("secured");
+    		
+//    		this.securedRepository = Configuration.getDefault().newRepository("secured", null, false);
 		} catch (Exception e) {
 			log.fatal("Unable to get repositories", e);
 			throw new RuntimeException(e);
@@ -179,9 +183,8 @@ public class SecurityCheckService extends BaseModule {
 		
 		if(sessid != null && !sessid.equals("")){
 			queryContent += "\nBINDINGS ?context {(<"+ ContextURI.get(sessid) +"#ctx>)}";
-		}
-				
-		RepositoryConnection conn = this.liftedRepository.newConnection();
+		}		
+		RepositoryConnection conn = this.securedRepository.newConnection();
 		BooleanQuery bquery = conn.prepareBooleanQuery(QueryLanguage.SPARQL, queryContent);
 		boolean res = bquery.evaluate();
 		
@@ -191,9 +194,14 @@ public class SecurityCheckService extends BaseModule {
         
 	}
 
-	public List<String> getAccessibleGraphs(List<String> namedGraphUris) {
+	public Set<String> getAccessibleGraphs(List<String> namedGraphUris) {
+		
 		String logged_user = SecurityContext.getUserPrincipal();
+		
+		log.info("logged user = " + logged_user);
+		
 		Set<String> ng = null;
+		Set<String> tot = null;
 		try {
 			ng = this.check(logged_user);
 			log.debug("Named graph checking done. Found " +ng.size() +" named graphs" );
@@ -205,8 +213,62 @@ public class SecurityCheckService extends BaseModule {
 			e.printStackTrace();
 		}
 		
-		return new ArrayList<String>(ng);
+		if (ng.size() == 0) {
+			log.debug("NAMED GRAPH SIZE = 0... Computing difference...");
+			Set<String> prot = this.getProtectedNamedGraphs();
+			tot = this.getAllGraphsFromLifted();
+			tot.removeAll(prot);
+			return tot;
+		} else 
+			return ng;
 	}
+		
+	private Set<String> getAllGraphsFromLifted() {
+		Set<String> all = new HashSet<String>();
+		try {
+			RepositoryConnection conn = this.liftedRepository.newConnection();
+			String query = "SELECT DISTINCT ?g WHERE {GRAPH ?g {?s ?p ?o}}";
+            try {
+                TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, query);
+                TupleQueryResult result = tupleQuery.evaluate();
+                try {
+                	while (result.hasNext()) {
+                		BindingSet bindingSet = result.next();
+                		String g = bindingSet.getValue("g").stringValue();
+                		all.add(g);
+                		}
+                }
+                finally {
+                   result.close();
+                }
+             }
+             finally {
+                conn.close();
+             }
+          }
+          catch (OpenRDFException e) {
+             log.fatal("Failed to get graphs from lifted");
+             throw new RuntimeException(e);
+          }
+		
+		return all;
+	}
+	
+	
+	private Set<String> getProtectedNamedGraphs() {		
+		Set<String> graphs = new HashSet<String>();
+		graphs.add("http://example.com/default"); // on ajoute le graphe par défaut
+		for(AccessPolicy ap : aps.values()){
+			graphs.addAll(ap.getGraph());
+		}
+
+		if (graphs.size() >= 1 ) {
+			graphs.remove("http://example.com/default");
+		}
+		return graphs;
+	}
+	
+	
 
 /*
 	public Set<String> checkByPrivilege(SecuredSparqlQuery sqry, String sessid) throws RepositoryException, MalformedQueryException, QueryEvaluationException  {

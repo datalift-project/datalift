@@ -60,11 +60,15 @@
   <property file="${user.home}/datalift-build.properties"/>
   <property file="build.properties"/>
 
-  <property name="fwk.home"  location="${basedir}/../framework"/>
+  <property name="datalift.root" location="${basedir}/.."/>
+
+  <property name="fwk.home" location="${datalift.root}/framework"/>
   <property file="${fwk.home}/build.properties"/>
 
-  <property name="core.home" location="${basedir}/../core"/>
+  <property name="core.home" location="${datalift.root}/core"/>
   <property file="${core.home}/build.properties"/>
+
+  <property name="sparql.home" location="${datalift.root}/sparql-endpoint"/>
 
 
   <!-- ================ File and Directory Names ========================== -->
@@ -92,7 +96,7 @@
                         Defaults to "dist".
    -->
 
-  <property name="app.name"             value="s4ac-sample"/>
+  <property name="app.name"             value="s4ac"/>
   <property name="app.version"          value="0.1"/>
   <property name="app.path"             value="/${app.name}"/>
   <property name="app.long.name"        value="Sample s4ac module for DataLift"/>
@@ -103,24 +107,15 @@
   <property name="src.home"             location="${basedir}/src/java"/>
   <property name="web.home"             location="${basedir}/src/web"/>
 
-  <property name="lib.home"             location="${basedir}/lib"/>
-  <property name="run.lib.home"         location="${lib.home}/runtime"/>
-
-  <property name="s4ac.version"         value="snapshot"/>
-  <property name="s4ac.jar"
-            location="${run.lib.home}/s4ac-${s4ac.version}/s4ac.jar"/>
-
   <property name="fwk.web.home"         location="${fwk.home}/src/web"/>
   <property name="fwk.lib.home"         location="${fwk.home}/lib"/>
   <property name="fwk.dist.home"        location="${fwk.home}/dist"/>
   <property name="fwk.build.libs"       location="${fwk.lib.home}/buildtime"/>
   <property name="fwk.run.libs"         location="${fwk.lib.home}/runtime"/>
   <property name="core.run.libs"        location="${core.home}/lib/runtime"/>
+
   <property name="classes.dir"          location="${build.home}/classes"/>
   <property name="docs.dir"             location="${dist.home}/docs"/>
-  
-  <!-- ==========ADDED======= -->
-  <property name="sparql.dir"		location="${basedir}/../sparql-endpoint/dist" />
 
   <property name="jar.name"             value="${app.name}.jar"/>
   <property name="jar.path"             location="${dist.home}/${jar.name}"/>
@@ -163,14 +158,10 @@
     <fileset dir="${fwk.run.libs}">
       <include name="**/*.jar"/>
     </fileset>
-    <fileset dir="${run.lib.home}">
-      <include name="**/*.jar"/>
-    </fileset>
     <fileset dir="${fwk.dist.home}">
       <include name="**/*.jar"/>
     </fileset>
-    <!-- ==========ADDED======= -->
-    <fileset dir="${sparql.dir}">
+    <fileset dir="${dist.home}">
       <include name="**/*.jar"/>
     </fileset>
   </path>
@@ -185,12 +176,7 @@
     <fileset dir="${core.run.libs}">
       <include name="**/*.jar"/>
     </fileset>
-    <!-- ==========ADDED======= -->
-    <fileset dir="${sparql.dir}">
-      <include name="**/*.jar"/>
-    </fileset>
   </path>
-
 
 
   <!-- ================ All Target ======================================== -->
@@ -238,6 +224,10 @@
     <mkdir dir="${build.home}"/>
     <!-- Create compilation target directory -->
     <mkdir dir="${classes.dir}"/>
+    <!-- Create distribution target directory to store default
+         SPARQL endpoint JAR file, needed at compile time and
+         patched with subclasses when generating distribution. -->
+    <mkdir dir="${dist.home}"/>
   </target>
 
 
@@ -250,7 +240,16 @@
     unpacked directory hierarchy under "/WEB-INF/classes".
    -->
 
-  <target name="compile" depends="prepare"
+  <target name="compile-sparql" depends="prepare"
+                            description="Compiles the default SPARQL endpoint">
+    <delete file="${jar.path}"/>
+    <subant target="dist">
+      <filelist dir="${sparql.home}" files="build.xml"/>
+      <property name="jar.path" location="${jar.path}"/>
+    </subant>
+  </target>
+
+  <target name="compile" depends="compile-sparql"
                          description="Compiles Java sources">
     <!-- Compile Java classes as necessary -->
     <javac srcdir="${src.home}"
@@ -290,8 +289,6 @@
                                  preservelastmodified="true">
       <fileset dir="${web.home}" excludes="**/.*"/>
     </copy>
-    <!-- Create build directories as needed -->
-    <mkdir dir="${dist.home}"/>
   </target>
 
   <!--
@@ -307,7 +304,6 @@
   <target name="dist" depends="compile,prepare-dist,resource-copy"
                       description="Create binary distribution">
     <!-- Create module JAR file -->
-    <copy file="${s4ac.jar}" tofile="${jar.path}"/>
     <jar jarfile="${jar.path}" update="true">
       <fileset dir="${classes.dir}"/>
       <service type="org.datalift.fwk.Module">
