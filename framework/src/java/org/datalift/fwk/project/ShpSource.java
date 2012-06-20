@@ -34,16 +34,12 @@
 package org.datalift.fwk.project;
 
 /**
- * A file source object describing a SHP
- * file.
+ * A file source object describing a SHP file.
  *
  * @author Fayçal Hamdi
  */
-public interface ShpSource extends Source
+public interface ShpSource extends FileSource
 {
-    //-------------------------------------------------------------------------
-    // ShpSource contract definition
-    //-------------------------------------------------------------------------
-
-    // No specific method other than iterator().
+    // Just a marker interface for SHP sources.
+    // TODO: Add methods to access each Shape files: SHP, SHX, PRJ and DBX.
 }

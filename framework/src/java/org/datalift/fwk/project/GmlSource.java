@@ -34,16 +34,11 @@
 package org.datalift.fwk.project;
 
 /**
- * A file source object describing a GML
- * file.
+ * A file source object describing a GML file.
  *
  * @author Fayçal Hamdi
  */
-public interface GmlSource extends Source
+public interface GmlSource extends FileSource
 {
-    //-------------------------------------------------------------------------
-    // ShpSource contract definition
-    //-------------------------------------------------------------------------
-
-    // No specific method other than iterator().
+    // Just a marker interface for GML sources.
 }

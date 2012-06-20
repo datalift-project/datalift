@@ -34,7 +34,6 @@
 package org.datalift.geoconverter;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -61,7 +60,6 @@ import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.geoconverter.usgs.rdf.util.ConfigFinder;
 import org.datalift.geoconverter.usgs.rdf.util.GMLConverter;
 
-import static org.datalift.fwk.util.StringUtils.*;
 
 /**
  * A {@link ProjectModule project module} that loads the GML data
@@ -81,8 +79,6 @@ public class GmltoRdf extends BaseConverterModule
 	public final static String PROJECT_URI_PREFIX = "project";
 	/** The prefix for the URI of the source objects, within projects. */
 	public final static String SOURCE_URI_PREFIX  = "source";
-	/** The relative path prefix for project objects and resources. */
-	private final static String REL_PROJECT_PATH = PROJECT_URI_PREFIX + '/';
 	
 	/** The name of this module in the DataLift configuration. */
 	public final static String MODULE_NAME = "gmltordf";
@@ -135,9 +131,9 @@ public class GmltoRdf extends BaseConverterModule
             }
 //            StdOutErrLog.tieSystemOutAndErrToLog();
 
-            // Convert GLM data and load generated RDF.
-            String filePath = this.getProjectFilePath(p.getTitle(), s.getTitle());
-            File localFile = this.getFileStorage(filePath);
+            // Convert GML data and load generated RDF.
+            File localFile = new File(Configuration.getDefault().getPublicStorage(),
+                                      s.getFilePath());
             File path = localFile.getParentFile();
 //            String fileInGml = localFile.getAbsolutePath();
 //            String rootGml = fileInGml.substring(0, fileInGml.indexOf("."));
@@ -183,31 +179,6 @@ public class GmltoRdf extends BaseConverterModule
 		return response;
 	}
 
-    /*private String getFileName(String s) {
-        int i = Math.max(s.lastIndexOf('/'), s.lastIndexOf('#'));
-        return (i != -1)? (i == (s.length() - 1))?
-                        getFileName(s.substring(0, i)): s.substring(i + 1): s;
-    }*/
-    
-	private String getProjectFilePath(String projectId, String fileName) {
-		StringBuilder buf = new StringBuilder(80);
-		buf.append(REL_PROJECT_PATH).append(projectId);
-		if (isSet(fileName)) {
-			buf.append('/').append(fileName);
-		}
-		return buf.toString();
-	}
-
-	private File getFileStorage(String path) throws IOException {
-		File f = new File(Configuration.getDefault().getPublicStorage(), path);
-		if (! f.isFile()) {
-			if (! f.createNewFile()) {
-				throw new TechnicalException("file.create.error", f);
-			}
-		}
-		return f;
-	}
-
 //public final static class StdOutErrLog {
 //
 //    public static void tieSystemOutAndErrToLog() {
@@ -224,5 +195,4 @@ public class GmltoRdf extends BaseConverterModule
 //        };
 //    }
 //}
-
 }

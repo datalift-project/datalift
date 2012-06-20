@@ -34,7 +34,6 @@
 package org.datalift.geoconverter;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
@@ -135,53 +134,42 @@ public class ShptoGml extends BaseConverterModule
             }
             
             // Convert SHP data and load generated GML.
-            String filePath = this.getProjectFilePath(p.getTitle(), s.getTitle());
-            File localFile = this.getFileStorage(filePath);
-            String fileInShp = localFile.getAbsolutePath();
-            String rootShp = fileInShp.substring(0, fileInShp.indexOf("."));
+            File inShpFile = new File(Configuration.getDefault().getPublicStorage(),
+                                      s.getFilePath());
+            File path = inShpFile.getParentFile();
+            String rootShp = inShpFile.getName();
             Ogr2ogr shpconvert = new Ogr2ogr();
 
             // Convert SHP to WGS84
             // copy (libgdal.so.1, libgdaljni.so, libogrjni.so, libosrjni.so and libproj.so) to /usr/lib/
             // export GDAL_DATA=/usr/local/share/gdal/ (this folder must contains ellipsoid.csv and gcs.csv)
-            String fileOutShp = rootShp + "_wgs84.shp";
-            File shpExist = new File(fileOutShp);
-            if (shpExist.exists()) shpExist.delete();
-			String[] agrum1 = {"-t_srs", "EPSG:4326", fileOutShp, fileInShp};
-			shpconvert.convert(agrum1);
+            String fileOutShp = rootShp.substring(0, rootShp.lastIndexOf('.')) + "_wgs84.shp";
+            File outShpFile = new File(path, fileOutShp);
+            if (outShpFile.exists()) {
+                outShpFile.delete();
+            }
+            log.debug("Generating WGS84 projection: {}", outShpFile);
+            String[] agrum1 = {"-t_srs", "EPSG:4326", outShpFile.getCanonicalPath(),
+                                                      inShpFile.getCanonicalPath() };
+            shpconvert.convert(agrum1);
   
             // Convert SHP to GML
-            String fileOutGml = fileOutShp.substring(0, fileOutShp.indexOf(".")) + ".gml";
-			String[] agrum2 = {"-f", "GML", fileOutGml, fileOutShp};
-			shpconvert.convert(agrum2);
-			
+            String fileOutGml = fileOutShp.substring(0, fileOutShp.lastIndexOf('.')) + ".gml";
+            File outGmlFile = new File(path, fileOutGml);
+            log.debug("Generating GML representation from WGS84 projection: {}", outGmlFile);
+            String[] agrum2 = {"-f", "GML", outGmlFile.getCanonicalPath(),
+                                            outShpFile.getCanonicalPath() };
+            shpconvert.convert(agrum2);
+
 			// Register new transformed source.
-			
-			String fileNameOutGml = fileOutGml.substring(fileOutGml.lastIndexOf("/") + 1);
-			//String fileNameOutShp = fileOutShp.substring(fileOutShp.lastIndexOf("/") + 1);
-			
 			URI sourceUriGml = new URI(projectId.getScheme(), null,
 					projectId.getHost(), projectId.getPort(),
-					this.getSourceId(projectId.getPath(), fileNameOutGml),
+					this.getSourceId(projectId.getPath(), fileOutGml),
 					null, null);
-			
-			/*URI sourceUriShp = new URI(projectId.getScheme(), null,
-					projectId.getHost(), projectId.getPort(),
-					this.getSourceId(projectId.getPath(), fileNameOutShp),
-					null, null);*/
-		
-			String rootShpTitle = s.getTitle().substring(0, s.getTitle().indexOf("."));
-			String filePathoutGml = this.getProjectFilePath(p.getTitle(), rootShpTitle + "_wgs84.gml");
-			//String filePathoutShp = this.getProjectFilePath(p.getTitle(), rootShpTitle + "_wgs84.shp");
-			
-			
-			// Register new transformed source.
-			GmlSource srcGml = this.newGmlSource(p, sourceUriGml, fileNameOutGml, "", filePathoutGml);
-			//ShpSource srcShp = this.newShpSource(p, sourceUriShp, fileNameOutShp, "", filePathoutShp);
-			
-			response = this.created(srcGml).build();
-			//response = this.created(srcShp).build();
+			String filePathOutGml = this.getProjectFilePath(p.getTitle(), fileOutGml);
+			GmlSource srcGml = this.newGmlSource(p, sourceUriGml, fileOutGml, "", filePathOutGml);
 
+			response = this.created(srcGml).build();
 		}
 		catch (Exception e) {
 			this.handleInternalError(e);
@@ -189,25 +177,15 @@ public class ShptoGml extends BaseConverterModule
 		return response;
 	}
 
-  
 	private String getProjectFilePath(String projectId, String fileName) {
 		StringBuilder buf = new StringBuilder(80);
-		buf.append(REL_PROJECT_PATH).append(projectId);
+		buf.append(REL_PROJECT_PATH).append(urlify(projectId));
 		if (isSet(fileName)) {
 			buf.append('/').append(fileName);
 		}
 		return buf.toString();
 	}
 
-	private File getFileStorage(String path) throws IOException {
-		File f = new File(Configuration.getDefault().getPublicStorage(), path);
-		if (! f.isFile()) {
-			if (! f.createNewFile()) {
-				throw new TechnicalException("file.create.error", f);
-			}
-		}
-		return f;
-	}
 	private String getSourceId(String projectUri, String sourceName) {
 		return projectUri + SOURCE_PATH + urlify(sourceName);
 	}
