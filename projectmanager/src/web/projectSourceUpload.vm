@@ -252,6 +252,8 @@
 			collapsible: true,
 #if( $current )
 			event: ""
+#else
+			active: false
 #end
 		});
 
