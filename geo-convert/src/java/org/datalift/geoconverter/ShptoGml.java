@@ -155,6 +155,9 @@ public class ShptoGml extends BaseConverterModule
   
             // Convert SHP to GML
             String fileOutGml = fileOutShp.substring(0, fileOutShp.lastIndexOf('.')) + ".gml";
+            // Warning: OGR2OGR GML mapping substitutes all '_' with '_' in layer names
+            //          for "XML validity" (?). Adjusting GML file name to reflect this.
+            fileOutGml = fileOutGml.replace('-', '_');
             File outGmlFile = new File(path, fileOutGml);
             log.debug("Generating GML representation from WGS84 projection: {}", outGmlFile);
             String[] agrum2 = {"-f", "GML", outGmlFile.getCanonicalPath(),
