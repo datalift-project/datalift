@@ -18,7 +18,7 @@
 		<form id="converter_form" method="post" action="${baseUri}/rdftransformer">
 			<input type="hidden" name="project" id="project" value="${it.uri}"/>
 			<p><label for="source_to_select">#i18n("source.to_convert"):</label>
-			<select id="source">
+			<select name="source" id="source">
 #foreach( $curSrc in $it.getSources() )
 	#set( $count = 1 )
 	#if( $curSrc.getType() == $field.TransformedRdfSource )
@@ -27,7 +27,7 @@
 				#set( $count = $count + 1)
 			#end
 		#end
-				<option uri="${curSrc.uri}" name="${curSrc.title}" count="$count">$esc.html($curSrc.title)</option>
+				<option value="${curSrc.uri}" name="${curSrc.title}" count="$count">$esc.html($curSrc.title)</option>
 	#end
 #end
 			</select></p>
@@ -63,7 +63,7 @@
 		$("#source").change(function(){
 		 	$("#source option:selected").each(function () {
 		 		$("#dest_title").attr("value", $(this).attr('name') + " - (RDF #" + $(this).attr("count") + ")");
-				$("#dest_graph_uri").attr("value", $(this).attr("uri") + "-rdf-" + $(this).attr("count"));
+				$("#dest_graph_uri").attr("value", $(this).attr("value") + "-rdf-" + $(this).attr("count"));
 		 	});
 		});
 		$("#source").change();
