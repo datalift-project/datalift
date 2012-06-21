@@ -15,6 +15,7 @@ import java.util.Hashtable;
 import java.util.Set;
 
 
+import org.datalift.fwk.log.Logger;
 import org.datalift.geoconverter.usgs.gml2rdf.gui.ConfigurationEditor;
 import org.datalift.geoconverter.usgs.gml2rdf.gui.Filters;
 import org.datalift.geoconverter.usgs.rdf.util.Config;
@@ -70,6 +71,7 @@ public class FeatureParser {
 			String[] files = cPath.list(Filters.configFilter);
 			if (files.length > 0) {
 				for (String iFile : files) {
+Logger.getLogger().debug("Loading GML to RDF feature mapping: {}", iFile);
 					File cFile = new File(cPath.getPath() + "/" + iFile);
 					FeatureType ft = new FeatureType();
 					ft.loadFromFile(cFile.getPath());
@@ -183,7 +185,8 @@ public class FeatureParser {
 		    	String fname = f.getFeatureType().getName().getLocalPart();
 		    	// check for feature configurations
 		    	if (!this.m_featureConfigs.containsKey(fname)) {
-		    		this.addFeatureConfig(f);
+		    		// this.addFeatureConfig(f);
+		    	    throw new RuntimeException("No GML to RDF mapping configuration found for \"" + fname + '"');
 		    	}
 		    	// copy new data and NS prefixes into model
 		    	Model fmodel = this.featureToModel(f);
