@@ -58,6 +58,7 @@ application/epub+zip				epub
 # application/fastsoap
 # application/fits
 application/font-tdpfr				pfr
+application/gml+xml				gml
 # application/h224
 # application/held+xml
 # application/http
