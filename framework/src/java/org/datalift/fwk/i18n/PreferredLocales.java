@@ -46,6 +46,7 @@ import java.util.ResourceBundle;
 
 import javax.ws.rs.core.Context;
 
+import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.util.StringUtils;
 
 
@@ -70,8 +71,11 @@ public final class PreferredLocales extends AbstractList<Locale>
     // Class members
     //-------------------------------------------------------------------------
 
+    /** The user's preferred locales for the current HTTP request. */
     private final static ThreadLocal<PreferredLocales> current =
                                         new ThreadLocal<PreferredLocales>();
+
+    private final static Logger log = Logger.getLogger();
 
     //-------------------------------------------------------------------------
     // Instance members
@@ -186,8 +190,29 @@ public final class PreferredLocales extends AbstractList<Locale>
      * @return the user's preferred locales.
      */
     public static PreferredLocales get() {
+        return get(true);
+    }
+
+    /**
+     * Returns the user's preferred locales for the being-processed
+     * HTTP request (computed from the <code>Accept-Language</code>
+     * header). If no request is being processed and <code>create</code>
+     * is set to <code>true</code>, the locales are read
+     * from the {@link Locale#getDefault() JVM runtime environment}.
+     * @param  create   whether to create default locales if none
+     *                  were installed.
+     *
+     * @return the user's preferred locales.
+     */
+    public static PreferredLocales get(boolean create) {
         PreferredLocales l = current.get();
-        if (l == null) {
+        if ((l == null) && (create)) {
+            try {
+                throw new RuntimeException("Oops");
+            }
+            catch (Exception e) {
+                log.warn("Installing empty locales...");
+            }
             l = set(null);
         }
         return l;
@@ -206,6 +231,7 @@ public final class PreferredLocales extends AbstractList<Locale>
     public static PreferredLocales set(List<Locale> locales) {
         List<Locale> tmpLocales = new LinkedList<Locale>();
 
+        log.trace("Extracting preferred locales from: {}", locales);
         if ((locales == null) || (locales.isEmpty())) {
             // Not processing an HTTP request. => Get user locales from JVM.
             Locale l = Locale.getDefault();
@@ -232,6 +258,7 @@ public final class PreferredLocales extends AbstractList<Locale>
 
         PreferredLocales l = new PreferredLocales(tmpLocales);
         current.set(l);
+        log.debug("Preferred locales set to: {}", l);
         return l;
     }
 
@@ -241,6 +268,7 @@ public final class PreferredLocales extends AbstractList<Locale>
      * {@link Locale#getDefault() JVM runtime environment} apply.
      */
     public static void reset() {
+        log.trace("Preferred locales removed for current thread");
         current.set(null);
     }
 }

@@ -112,9 +112,10 @@ public final class PreferredLocalesProvider
      */
     public static PreferredLocales getPreferredLocales(
                                                 HttpRequestContext request) {
-        PreferredLocales locales = PreferredLocales.get();
-        if ((locales == null) && (request != null)) {
-            locales = PreferredLocales.set(request.getAcceptableLanguages());
+        PreferredLocales locales = PreferredLocales.get(false);
+        if (locales == null) {
+            locales = PreferredLocales.set((request != null)?
+                                        request.getAcceptableLanguages(): null);
         }
         return locales;
     }

@@ -37,8 +37,6 @@ package org.datalift.core.i18n.jersey;
 
 import com.sun.jersey.spi.container.ContainerRequest;
 import com.sun.jersey.spi.container.ContainerRequestFilter;
-import com.sun.jersey.spi.container.ContainerResponse;
-import com.sun.jersey.spi.container.ContainerResponseFilter;
 
 import org.datalift.fwk.i18n.PreferredLocales;
 
@@ -56,29 +54,16 @@ import org.datalift.fwk.i18n.PreferredLocales;
  *     &lt;param-name&gt;com.sun.jersey.spi.container.ContainerRequestFilters&lt;/param-name&gt;
  *     &lt;param-value&gt;org.datalift.core.i18n.jersey.PreferredLocalesFilter&lt;/param-value&gt;
  *   &lt;/init-param&gt
- *   &lt;init-param&gt
- *     &lt;param-name&gt;com.sun.jersey.spi.container.ContainerResponseFilters&lt;/param-name&gt;
- *     &lt;param-value&gt;org.datalift.core.i18n.jersey.PreferredLocalesFilter&lt;/param-value&gt;
- *   &lt;/init-param&gt;
  * </pre></blockquote>
  *
  * @author lbihanic
  */
-public class PreferredLocalesFilter implements ContainerRequestFilter,
-                                               ContainerResponseFilter
+public class PreferredLocalesFilter implements ContainerRequestFilter
 {
     /** {@inheritDoc} */
     @Override
     public ContainerRequest filter(ContainerRequest request) {
         PreferredLocales.set(request.getAcceptableLanguages());
         return request;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public ContainerResponse filter(ContainerRequest request,
-                                    ContainerResponse response) {
-        PreferredLocales.reset();
-        return response;
     }
 }
