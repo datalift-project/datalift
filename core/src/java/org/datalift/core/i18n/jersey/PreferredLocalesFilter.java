@@ -46,7 +46,7 @@ import org.datalift.fwk.i18n.PreferredLocales;
  * HTTP request <code>Accept-Language</code> header and make them
  * available through the {@link PreferredLocales} class.
  * <p>
- * When an application is deployed as a Servlet or Filter this Jersey
+ * When an application is deployed as a Servlet or Filter, this Jersey
  * filter can be registered using the following initialization
  * parameters:</p>
  * <blockquote><pre>

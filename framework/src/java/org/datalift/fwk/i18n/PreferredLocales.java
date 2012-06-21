@@ -207,12 +207,6 @@ public final class PreferredLocales extends AbstractList<Locale>
     public static PreferredLocales get(boolean create) {
         PreferredLocales l = current.get();
         if ((l == null) && (create)) {
-            try {
-                throw new RuntimeException("Oops");
-            }
-            catch (Exception e) {
-                log.warn("Installing empty locales...");
-            }
             l = set(null);
         }
         return l;
@@ -231,7 +225,6 @@ public final class PreferredLocales extends AbstractList<Locale>
     public static PreferredLocales set(List<Locale> locales) {
         List<Locale> tmpLocales = new LinkedList<Locale>();
 
-        log.trace("Extracting preferred locales from: {}", locales);
         if ((locales == null) || (locales.isEmpty())) {
             // Not processing an HTTP request. => Get user locales from JVM.
             Locale l = Locale.getDefault();
@@ -258,7 +251,7 @@ public final class PreferredLocales extends AbstractList<Locale>
 
         PreferredLocales l = new PreferredLocales(tmpLocales);
         current.set(l);
-        log.debug("Preferred locales set to: {}", l);
+        log.trace("Preferred locales set to: {}", l);
         return l;
     }
 
@@ -268,7 +261,7 @@ public final class PreferredLocales extends AbstractList<Locale>
      * {@link Locale#getDefault() JVM runtime environment} apply.
      */
     public static void reset() {
-        log.trace("Preferred locales removed for current thread");
+        log.trace("Preferred locales removed from current thread");
         current.set(null);
     }
 }

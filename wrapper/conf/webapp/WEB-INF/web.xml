@@ -46,9 +46,23 @@
       <param-value>false</param-value>
     </init-param>
   </filter>
-  <!-- Apply ccharacter encoding filter to all resources -->
+  <!-- Apply character encoding filter to all resources -->
   <filter-mapping>
     <filter-name>CharacterEncodingFilter</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
+
+  <!-- User preferred locales extraction filter -->
+  <filter>
+    <filter-name>PreferredLocalesFilter</filter-name>
+    <filter-class>
+      org.datalift.core.i18n.web.PreferredLocalesFilter
+    </filter-class>
+    <!-- No application default: use JVM default locale. -->
+  </filter>
+  <!-- Apply preferred locale filter to all resources -->
+  <filter-mapping>
+    <filter-name>PreferredLocalesFilter</filter-name>
     <url-pattern>/*</url-pattern>
   </filter-mapping>
 
@@ -177,8 +191,7 @@
       <param-name>com.sun.jersey.spi.container.ContainerRequestFilters</param-name>
       <param-value>
         com.sun.jersey.api.container.filter.GZIPContentEncodingFilter;
-        com.sun.jersey.api.container.filter.PostReplaceFilter;
-        org.datalift.core.i18n.jersey.PreferredLocalesFilter
+        com.sun.jersey.api.container.filter.PostReplaceFilter
       </param-value>
     </init-param>
     <init-param>
