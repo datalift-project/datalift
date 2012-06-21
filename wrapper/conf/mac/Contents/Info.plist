@@ -38,7 +38,13 @@
         <string>$JAVAROOT/datalift-wrapper.jar</string>
       </array>
       <key>VMOptions</key>
-      <string>-Xms256M -Xmx1024M -Xverify:none -Xshare:off</string>
+      <array>
+        <string>-Djava.library.path=$JAVAROOT/lib:$USER_HOME/Library/Application Support/DataLift/lib</string>
+        <string>-Xms256M</string>
+        <string>-Xmx1024M</string>
+        <string>-Xverify:none</string>
+        <string>-Xshare:off</string>
+      </array>
       <key>WorkingDirectory</key>
       <string>$APP_PACKAGE/Contents/Resources</string>
       <key>Properties</key>

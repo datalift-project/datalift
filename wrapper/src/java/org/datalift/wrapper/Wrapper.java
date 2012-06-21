@@ -295,6 +295,7 @@ public final class Wrapper
         if (path != null) {
             createDirectory(path);
             // Create working directory, if they do not exist yet...
+            createDirectory(new File(path, "lib"));
             createDirectory(new File(path, "modules"));
             createDirectory(new File(path, "storage/public"));
             createDirectory(new File(path, WEBAPPS_DIR));

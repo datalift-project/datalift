@@ -235,6 +235,8 @@
   <target name="prepare-dist" depends="compile,build-core,build-modules">
     <mkdir dir="${dist.home}"/>
     <mkdir dir="${gen.dist.dir}"/>
+    <!-- Creates directory for potential native libraries. -->
+    <mkdir dir="${gen.dist.dir}/bin/lib"/>
     <!-- Copy runtime directory structure -->
     <copy todir="${gen.dist.dir}/bin" flatten="true"
                                       preservelastmodified="true">
