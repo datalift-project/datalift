@@ -218,6 +218,13 @@ public final class Wrapper
                 }
             }
         }
+        // Check installation directory structure.
+        File webappDir = new File(dataliftRoot, WEBAPPS_DIR);
+        if (! webappDir.isDirectory()) {
+            System.err.println("Invalid directory: \"" + dataliftRoot
+                               + "\": not a Datalift installation directory");
+            System.exit(2);
+        }
         // Register web applications.
         FileFilter webappFilter = new FileFilter() {
                 public boolean accept(File f) {
@@ -226,11 +233,14 @@ public final class Wrapper
                 }
             };
         List<File> webapps = new LinkedList<File>();
-        for (File f : new File(dataliftRoot, WEBAPPS_DIR).listFiles(webappFilter)) {
+        for (File f : webappDir.listFiles(webappFilter)) {
             webapps.add(f);
         }
-        for (File f : new File(dataliftHome, WEBAPPS_DIR).listFiles(webappFilter)) {
-            webapps.add(f);
+        webappDir = new File(dataliftHome, WEBAPPS_DIR);
+        if (webappDir.isDirectory()) {
+            for (File f : webappDir.listFiles(webappFilter)) {
+                webapps.add(f);
+            }
         }
         for (File webapp : webapps) {
             WebAppContext ctx = new WebAppContext();
