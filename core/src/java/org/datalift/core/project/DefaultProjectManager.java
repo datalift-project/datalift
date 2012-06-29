@@ -385,6 +385,11 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     @Override
     public Project newProject(URI projectId, String title,
                               String description, URI license) {
+        // Check that no project with the same URI already exists.
+        if (this.findProject(projectId) != null) {
+            throw new DuplicateUriException("duplicate.project.uri",
+                                                           projectId, title);
+        }
         // Create new project.
         ProjectImpl p = new ProjectImpl(projectId.toString());
         p.setTitle(title);
@@ -560,6 +565,11 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
 
     private void initSource(BaseSource src, String title, String description,
                                             String sourceUrl) {
+        // Check that no source with the same URI already exists.
+        if (src.getProject().getSource(src.getUri()) != null) {
+            throw new DuplicateUriException("duplicate.source.uri",
+                            src.getUri(), title, src.getProject().getTitle());
+        }
         src.setTitle(title);
         src.setDescription(description);
         src.setSourceUrl(sourceUrl);
