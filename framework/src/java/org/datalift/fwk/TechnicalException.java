@@ -40,6 +40,7 @@ import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.MissingResourceException;
 
+import org.datalift.fwk.i18n.PreferredLocales;
 import org.datalift.fwk.log.Logger;
 
 
@@ -148,7 +149,7 @@ public abstract class TechnicalException extends RuntimeException
     }
 
     //------------------------------------------------------------------------
-    // Exception interface support
+    // Exception contract support
     //------------------------------------------------------------------------
 
     /**
@@ -162,13 +163,27 @@ public abstract class TechnicalException extends RuntimeException
      * Subclasses requiring specific user locale support shall
      * overwrite this method and consider overwriting
      * {@link #getLocalizedMessage()} as well.</p>
-     *
      * @return the detail message.
      *
      * @see    #getLocalizedMessage()
      */
+    @Override
     public String getMessage() {
         return this.getMessage(Locale.getDefault());
+    }
+
+    /**
+     * Returns the detail message for this exception, formatting
+     * it from the message code and arguments if need be.
+     * <p>
+     * This default implementation invokes
+     * {@link #getMessage(PreferredLocales))} with the user's preferred
+     * locales.</p>
+     * @return the detail message.
+     */
+    @Override
+    public String getLocalizedMessage() {
+        return this.getMessage(PreferredLocales.get());
     }
 
     //------------------------------------------------------------------------
@@ -215,12 +230,41 @@ public abstract class TechnicalException extends RuntimeException
      * @return a formatted detail message.
      */
     protected String getMessage(Locale locale) {
+        return this.formatMessage(
+                            this.getMessageFormat(this.messageCode, locale));
+    }
+
+    /**
+     * Formats the exception detail message.
+     *
+     * @param  locales   the user's preferred locales; the message will
+     *                   be formatted for the first available locale.
+     *
+     * @return a formatted detail message.
+     */
+    protected String getMessage(PreferredLocales locales) {
+        if (locales == null) {
+            locales = PreferredLocales.get();
+        }
+        return this.formatMessage(
+                            this.getMessageFormat(this.messageCode, locales));
+    }
+
+    /**
+     * Formats the exception detail message.
+     *
+     * @param  locale   the locale for which the message shall be
+     *                  formatted.  If no locale is specified, the
+     *                  default system one will be used.
+     *
+     * @return a formatted detail message.
+     */
+    protected String formatMessage(String format) {
         String message = null;
 
         if (this.messageCode != null) {
             Object[] args = this.messageArgs;
 
-            String format = this.getMessageFormat(this.messageCode, locale);
             if (format != null) {
                 if (args != null) {
                     // Arguments are provided. => Format message.
@@ -303,5 +347,45 @@ public abstract class TechnicalException extends RuntimeException
 
         return format;
     }
-}
 
+    /**
+     * Returns the format associated to the specified key.
+     *
+     * @param  key       the name of the message format to retrieve.
+     * @param  locales   the user's preferred locales from which
+     *                   retreiving the message format.
+     *
+     * @return the message format associated to the key, the key
+     *         itself (if no corresponding resource was found) or
+     *         <code>null</code> (if the
+     *         {@link #getMessageBundleName resource bundle} can not
+     *         be loaded).
+     */
+    private final String getMessageFormat(String key,
+                                          PreferredLocales locales) {
+        String format = key;
+        String bundleName = this.getMessageBundleName();
+
+        if ((key != null) && (bundleName != null)) {
+            try {
+                ResourceBundle bundle = locales.getBundle(bundleName, this);
+                try {
+                    format = bundle.getString(key);
+                }
+                catch (MissingResourceException e) {
+                    /* Ignore... */
+                    log.trace("Failed to resolve key \"{}\" in bundle \"{}\"",
+                              key, bundleName);
+                }
+            }
+            catch (MissingResourceException e) {
+                log.error("Resource bundle \"{}\" not found ({})", e,
+                          bundleName, e.getMessage());
+                format = null;
+            }
+        }
+        // Else: No message key or message formatting not supported.
+
+        return format;
+    }
+}
