@@ -105,6 +105,7 @@ import org.datalift.fwk.i18n.LocaleComparable;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.CachingSource;
 import org.datalift.fwk.project.CsvSource;
+import org.datalift.fwk.project.DuplicateObjectKeyException;
 import org.datalift.fwk.project.GmlSource;
 import org.datalift.fwk.project.RdfSource;
 import org.datalift.fwk.project.ShpSource;
@@ -246,7 +247,7 @@ public class Workspace extends BaseModule
                     }
                     return n;
                 }
-    
+
                 private int getPrefix(String key) {
                     for (int i=0; i<prefixes.length; i++) {
                         if (prefixes[i].matcher(key).matches()) return i;
@@ -329,29 +330,21 @@ public class Workspace extends BaseModule
                                 @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
         Response response = null;
-        // Check that project does not yet exist.
+
         URI projectId = this.newProjectId(uriInfo.getBaseUri(), title);
-        if (this.findProject(projectId) == null) {
-            try {
-                // Create new project.
-                Project p = this.projectManager.newProject(projectId, title,
-                                                           description, license);
-                // Persist project to RDF store.
-                this.projectManager.saveProject(p);
-                // Notify user of successful creation, redirecting HTML clients
-                // (browsers) to the project page.
-                response = this.created(p, null, null).build();
-            }
-            catch (Exception e) {
-                this.handleInternalError(e, "Failed to persist project");
-            }
+        try {
+            // Create new project.
+            Project p = this.projectManager.newProject(projectId, title,
+                                                       description, license);
+            // Persist project to RDF store.
+            this.projectManager.saveProject(p);
+            // Notify user of successful creation, redirecting HTML clients
+            // (browsers) to the project page.
+            response = this.created(p, null, null).build();
         }
-        else {
-            log.fatal("Duplicate identifier \"{}\" for new project \"{}\"",
-                                                        urlify(title), title);
-            TechnicalException error = new TechnicalException(
-                                                "duplicate.identifier", title);
-            this.sendError(CONFLICT, error.getMessage());
+        catch (Exception e) {
+            this.handleInternalError(e,
+                "Failed to create new project {} (\"{}\")", projectId, title);
         }
         return response;
     }
@@ -641,7 +634,7 @@ public class Workspace extends BaseModule
         return response;
     }
 
-    @POST 
+    @POST
     @Path("{id}/csvupload")
     @Consumes(MULTIPART_FORM_DATA)
     public Response uploadCsvSource(
@@ -698,6 +691,7 @@ public class Workspace extends BaseModule
         // Else: File data have been uploaded.
 
         log.debug("Processing CSV source creation request for {}", fileName);
+        boolean deleteFiles = false;
         try {
             // Build object URIs from request path.
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
@@ -748,20 +742,21 @@ public class Workspace extends BaseModule
             log.info("New CSV source \"{}\" created", sourceUri);
         }
         catch (IOException e) {
-            if (localFile != null) {
-                localFile.delete();
-            }
+            deleteFiles = true;
             String src = (fileData != null)? fileName:
                         (fileUrl != null)? fileUrl.toString(): "file_url";
             log.fatal("Failed to save source data from {}", e, src);
             this.throwInvalidParamError(src, e.getLocalizedMessage());
         }
         catch (Exception e) {
-            if (localFile != null) {
-                localFile.delete();
-            }
+            deleteFiles = true;
             this.handleInternalError(e,
                             "Failed to create CVS source for {}", fileName);
+        }
+        finally {
+            if ((deleteFiles) && (localFile != null)) {
+                localFile.delete();
+            }
         }
         return response;
     }
@@ -855,7 +850,7 @@ public class Workspace extends BaseModule
             catch (Exception e) {
                 // Conversion of source base URI to URL failed.
                 log.error("Failed to parse URL {}", e, sourceUrl);
-                this.throwInvalidParamError("file_url", 
+                this.throwInvalidParamError("file_url",
                                     sourceUrl + " (" + e.getMessage() + ')');
             }
         }
@@ -868,6 +863,7 @@ public class Workspace extends BaseModule
         // Else: File data have been uploaded.
 
         log.debug("Processing RDF source creation request for {}", fileName);
+        boolean deleteFiles = false;
         try {
             // Build object URIs from request path.
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
@@ -910,20 +906,21 @@ public class Workspace extends BaseModule
             log.info("New RDF source \"{}\" created", sourceUri);
         }
         catch (IOException e) {
-            if (localFile != null) {
-                localFile.delete();
-            }
+            deleteFiles = true;
             String src = (fileData != null)? fileName:
                         (fileUrl != null)? fileUrl.toString(): "file_url";
             log.fatal("Failed to save source data from {}", e, src);
             this.throwInvalidParamError(src, e.getLocalizedMessage());
         }
         catch (Exception e) {
-            if (localFile != null) {
-                localFile.delete();
-            }
+            deleteFiles = true;
             this.handleInternalError(e,
                             "Failed to create RDF source for {}", fileName);
+        }
+        finally {
+            if ((deleteFiles) && (localFile != null)) {
+                localFile.delete();
+            }
         }
         return response;
     }
@@ -1181,7 +1178,7 @@ public class Workspace extends BaseModule
         return response;
     }
 
-    @POST 
+    @POST
     @Path("{id}/xmlupload")
     @Consumes(MULTIPART_FORM_DATA)
     public Response uploadXmlSource(
@@ -1222,6 +1219,7 @@ public class Workspace extends BaseModule
         // Else: File data have been uploaded.
 
         log.debug("Processing XML source creation request for {}", fileName);
+        boolean deleteFiles = false;
         try {
             // Build object URIs from request path.
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
@@ -1259,20 +1257,21 @@ public class Workspace extends BaseModule
             log.info("New XML source \"{}\" created", sourceUri);
         }
         catch (IOException e) {
-            if (localFile != null) {
-                localFile.delete();
-            }
+            deleteFiles = true;
             String src = (fileData != null)? fileName:
                         (fileUrl != null)? fileUrl.toString(): "file_url";
             log.fatal("Failed to save source data from {}", e, src);
             this.throwInvalidParamError(src, e.getLocalizedMessage());
         }
         catch (Exception e) {
-            if (localFile != null) {
-                localFile.delete();
-            }
+            deleteFiles = true;
             this.handleInternalError(e,
                             "Failed to create XML source for {}", fileName);
+        }
+        finally {
+            if ((deleteFiles) && (localFile != null)) {
+                localFile.delete();
+            }
         }
         return response;
     }
@@ -1324,7 +1323,7 @@ public class Workspace extends BaseModule
 			FormDataContentDisposition fileDisposition3,
 			@FormDataParam("source4") InputStream fileData4,
 			@FormDataParam("source4")
-			FormDataContentDisposition fileDisposition4,			
+			FormDataContentDisposition fileDisposition4,
 			@Context UriInfo uriInfo)
 					throws WebApplicationException {
 		if (fileData1 == null) {
@@ -1341,7 +1340,7 @@ public class Workspace extends BaseModule
 		if (fileData4 == null) {
 			this.throwInvalidParamError("source4", null);
 		}
-		
+
 		Response response = null;
 
 		String fileName1 = null;
@@ -1373,7 +1372,7 @@ public class Workspace extends BaseModule
 		if (isBlank(fileName3)) {
 			this.throwInvalidParamError("source3", null);
 		}
-		
+
 		fileName4 = fileDisposition4.getFileName();
 		if (isBlank(fileName4)) {
 			this.throwInvalidParamError("source4", null);
@@ -1403,7 +1402,7 @@ public class Workspace extends BaseModule
 					projectUri.getHost(), projectUri.getPort(),
 					this.getSourceId(projectUri.getPath(), fileName4),
 					null, null);
-			
+
 			// Retrieve project.
 			Project p = this.loadProject(projectUri);
 			// Save new source data to public project storage.
@@ -1535,7 +1534,7 @@ public class Workspace extends BaseModule
 		if (fileData2 == null) {
 			this.throwInvalidParamError("source2", null);
 		}
-		
+
 		Response response = null;
 
 		String fileName1 = null;
@@ -1571,7 +1570,7 @@ public class Workspace extends BaseModule
 					projectUri.getHost(), projectUri.getPort(),
 					this.getSourceId(projectUri.getPath(), fileName2),
 					null, null);
-			
+
 			// Retrieve project.
 			Project p = this.loadProject(projectUri);
 			// Save new source data to public project storage.
@@ -2378,7 +2377,7 @@ public class Workspace extends BaseModule
         TechnicalException error = (value != null)?
                 new TechnicalException("ws.invalid.param.error", name, value):
                 new TechnicalException("ws.missing.param", name);
-        this.sendError(BAD_REQUEST, error.getMessage());
+        this.sendError(BAD_REQUEST, error.getLocalizedMessage());
     }
 
     private void handleInternalError(Exception e,
@@ -2390,6 +2389,9 @@ public class Workspace extends BaseModule
         if (e instanceof EntityNotFoundException) {
             this.sendError(NOT_FOUND, null);
         }
+        if (e instanceof DuplicateObjectKeyException) {
+            this.sendError(CONFLICT, e.getLocalizedMessage());
+        }
         else {
             if (isSet(logMsg)) {
                 log.fatal(logMsg, e, logArgs);
@@ -2397,9 +2399,15 @@ public class Workspace extends BaseModule
             else {
                 log.fatal(e.getMessage(), e);
             }
-            TechnicalException error = new TechnicalException(
-                                    "ws.internal.error", e, e.getMessage());
-            this.sendError(INTERNAL_SERVER_ERROR, error.getMessage());
+            TechnicalException error = null;
+            if (e instanceof TechnicalException) {
+                error = (TechnicalException)e;
+            }
+            else {
+                error = new TechnicalException(
+                            "ws.internal.error", e, e.getLocalizedMessage());
+            }
+            this.sendError(INTERNAL_SERVER_ERROR, error.getLocalizedMessage());
         }
     }
 }
