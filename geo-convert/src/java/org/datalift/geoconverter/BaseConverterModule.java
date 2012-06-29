@@ -62,7 +62,6 @@ import org.datalift.fwk.project.GmlSource;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectManager;
 import org.datalift.fwk.project.ProjectModule;
-import org.datalift.fwk.project.ShpSource;
 import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.project.Source.SourceType;
@@ -293,28 +292,6 @@ extends BaseModule implements ProjectModule
 		TransformedRdfSource newSrc =
 				this.projectManager.newTransformedRdfSource(p, uri,
 						name, null, uri, parent);
-		this.projectManager.saveProject(p);
-		return newSrc;
-	}
-
-	/**
-	 * Creates a new SHP source object.
-	 * @param  p		     the owning project.
-	 * @param  uri           the source URI.
-	 * @param  title         the source label.
-	 * @param  description   the description of the source content or
-	 *                       intent.
-	 * @param  filePath      the SHP file path in the public storage.
-	 * @return a new SHP source, associated to the specified project.
-	 * @throws IOException if any error occurred creating the source
-	 *         or accessing the specified file.
-	 */
-	public ShpSource newShpSource(Project p, URI uri, String title,
-			String description, String filePath)
-					throws IOException {
-		ShpSource newSrc =
-				this.projectManager.newShpSource(p, uri,
-						title, null, filePath);
 		this.projectManager.saveProject(p);
 		return newSrc;
 	}
