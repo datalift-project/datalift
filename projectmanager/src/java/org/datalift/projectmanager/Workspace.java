@@ -1312,175 +1312,91 @@ public class Workspace extends BaseModule
 	public Response uploadShpSource(
 			@PathParam("id") String projectId,
 			@FormDataParam("description") String description,
-			@FormDataParam("source1") InputStream fileData1,
+			@FormDataParam("source1") InputStream shpData,
 			@FormDataParam("source1")
-			FormDataContentDisposition fileDisposition1,
-			@FormDataParam("source2") InputStream fileData2,
-			@FormDataParam("source2")
-			FormDataContentDisposition fileDisposition2,
-			@FormDataParam("source3") InputStream fileData3,
-			@FormDataParam("source3")
-			FormDataContentDisposition fileDisposition3,
-			@FormDataParam("source4") InputStream fileData4,
-			@FormDataParam("source4")
-			FormDataContentDisposition fileDisposition4,
+			        FormDataContentDisposition shpDisposition,
+			@FormDataParam("source2") InputStream prjData,
+			@FormDataParam("source3") InputStream shxData,
+			@FormDataParam("source4") InputStream dbfData,
 			@Context UriInfo uriInfo)
-					throws WebApplicationException {
-		if (fileData1 == null) {
-			this.throwInvalidParamError("source1", null);
+		                                throws WebApplicationException {
+		// Extract common file root name from main (SHP) file.
+		String fileRoot = shpDisposition.getFileName();
+		int sep = fileRoot.lastIndexOf('.');
+		if (sep > 0) {
+		    fileRoot = fileRoot.substring(0, sep);
 		}
-		if (fileData2 == null) {
-			this.throwInvalidParamError("source2", null);
+		// Enforce strict naming convention (same root name) for all
+		// files composing the Shapefile, ignoring user-provided
+		// filenames for all files but the main(SHP) one.
+		String[] fileNames = new String[] {
+		                fileRoot + ".shp", fileRoot + ".shx",
+		                fileRoot + ".dbf", fileRoot + ".prj" };
+		InputStream[] fileData = new InputStream[] {
+		                shpData, shxData, dbfData, prjData };
+		// Check that both file name and data are present for all files.
+		for (int i=0; i<4; i++) {
+		    if ((fileData[i] == null) || (isBlank(fileNames[i]))) {
+			this.throwInvalidParamError("source" + i, null);
+		    }
 		}
-
-		if (fileData3 == null) {
-			this.throwInvalidParamError("source3", null);
-		}
-
-		if (fileData4 == null) {
-			this.throwInvalidParamError("source4", null);
-		}
-
 		Response response = null;
+		File[] localFiles = new File[4];
+		String title = fileNames[0];
 
-		String fileName1 = null;
-		String fileName2 = null;
-		String fileName3 = null;
-		String fileName4 = null;
-
-		URL fileUrl1 = null;
-		URL fileUrl2 = null;
-		URL fileUrl3 = null;
-		URL fileUrl4 = null;
-
-		File localFile1 = null;
-		File localFile2 = null;
-		File localFile3 = null;
-		File localFile4 = null;
-
-		fileName1 = fileDisposition1.getFileName();
-		if (isBlank(fileName1)) {
-			this.throwInvalidParamError("source1", null);
-		}
-
-		fileName2 = fileDisposition2.getFileName();
-		if (isBlank(fileName2)) {
-			this.throwInvalidParamError("source2", null);
-		}
-
-		fileName3 = fileDisposition3.getFileName();
-		if (isBlank(fileName3)) {
-			this.throwInvalidParamError("source3", null);
-		}
-
-		fileName4 = fileDisposition4.getFileName();
-		if (isBlank(fileName4)) {
-			this.throwInvalidParamError("source4", null);
-		}
-
-		log.debug("Processing SHP source creation request for {}", fileName1);
-		log.debug("Processing PRJ source creation request for {}", fileName2);
-		log.debug("Processing SHX source creation request for {}", fileName3);
-		log.debug("Processing DBF source creation request for {}", fileName4);
-
+		log.debug("Processing Shapefile source creation request for {}",
+		          title);
+		boolean deleteFiles = false;
 		try {
-			// Build object URIs from request path.
-			URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
-			URI sourceUri1 = new URI(projectUri.getScheme(), null,
-					projectUri.getHost(), projectUri.getPort(),
-					this.getSourceId(projectUri.getPath(), fileName1),
-					null, null);
-			URI sourceUri2 = new URI(projectUri.getScheme(), null,
-					projectUri.getHost(), projectUri.getPort(),
-					this.getSourceId(projectUri.getPath(), fileName2),
-					null, null);
-			URI sourceUri3 = new URI(projectUri.getScheme(), null,
-					projectUri.getHost(), projectUri.getPort(),
-					this.getSourceId(projectUri.getPath(), fileName3),
-					null, null);
-			URI sourceUri4 = new URI(projectUri.getScheme(), null,
-					projectUri.getHost(), projectUri.getPort(),
-					this.getSourceId(projectUri.getPath(), fileName4),
-					null, null);
+		    // Retrieve project.
+		    URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
+		    Project p = this.loadProject(projectUri);
 
-			// Retrieve project.
-			Project p = this.loadProject(projectUri);
-			// Save new source data to public project storage.
-			String filePath1 = this.getProjectFilePath(projectId, fileName1);
-			String filePath2 = this.getProjectFilePath(projectId, fileName2);
-			String filePath3 = this.getProjectFilePath(projectId, fileName3);
-			String filePath4 = this.getProjectFilePath(projectId, fileName4);
-			localFile1 = this.getFileStorage(filePath1);
-			localFile2 = this.getFileStorage(filePath2);
-			localFile3 = this.getFileStorage(filePath3);
-			localFile4 = this.getFileStorage(filePath4);
-			this.getFileData(fileData1, fileUrl1, localFile1, uriInfo);
-			this.getFileData(fileData2, fileUrl2, localFile2, uriInfo);
-			this.getFileData(fileData3, fileUrl3, localFile3, uriInfo);
-			this.getFileData(fileData4, fileUrl4, localFile4, uriInfo);
-			// Initialize new source.
-			this.projectManager.newShpSource(p, sourceUri1, fileName1, description, filePath1);
-			//this.projectManager.newShpSource(p, sourceUri2, fileName2, description, filePath2);
-			//this.projectManager.newShpSource(p, sourceUri3, fileName3, description, filePath3);
-			//this.projectManager.newShpSource(p, sourceUri4, fileName4, description, filePath4);
-			// Persist new source.
-			this.projectManager.saveProject(p);
-			// Notify user of successful creation, redirecting HTML clients
-			response = this.created(p, sourceUri1, ProjectTab.Sources).build();
-
-			log.info("New SHP source \"{}\" created", sourceUri1);
-			log.info("New PRJ source \"{}\" created", sourceUri2);
-			log.info("New SHX source \"{}\" created", sourceUri3);
-			log.info("New DBF source \"{}\" created", sourceUri4);
-		}
-		catch (IOException e) {
-			if (localFile1 != null) {
-				localFile1.delete();
-			}
-			if (localFile2 != null) {
-				localFile2.delete();
-			}
-			if (localFile3 != null) {
-				localFile3.delete();
-			}
-			if (localFile4 != null) {
-				localFile4.delete();
-			}
-			String src1 = (fileData1 != null)? fileName1: (fileUrl1 != null)? fileUrl1.toString(): "file_url1";
-			log.fatal("Failed to save source data from {}", e, src1);
-			this.throwInvalidParamError(src1, e.getLocalizedMessage());
-			String src2 = (fileData2 != null)? fileName2: (fileUrl2 != null)? fileUrl2.toString(): "file_url2";
-			log.fatal("Failed to save source data from {}", e, src2);
-			this.throwInvalidParamError(src2, e.getLocalizedMessage());
-			String src3 = (fileData3 != null)? fileName3: (fileUrl3 != null)? fileUrl3.toString(): "file_url3";
-			log.fatal("Failed to save source data from {}", e, src3);
-			this.throwInvalidParamError(src3, e.getLocalizedMessage());
-			String src4 = (fileData4 != null)? fileName4: (fileUrl4 != null)? fileUrl4.toString(): "file_url4";
-			log.fatal("Failed to save source data from {}", e, src4);
-			this.throwInvalidParamError(src4, e.getLocalizedMessage());
-
+		    String[] paths = new String[4];
+		    int i = 0;
+		    try {
+		        for (i=0; i<4; i++) {
+		            // Save new source data to public project storage.
+		            paths[i] = this.getProjectFilePath(projectId,
+		                                               fileNames[i]);
+		            localFiles[i] = this.getFileStorage(paths[i]);
+		            this.getFileData(fileData[i], null,
+		                             localFiles[i], uriInfo);
+		        }
+		    }
+		    catch (IOException e) {
+		        String src = (fileData[i] != null)? fileNames[i]:
+		                                            "source" + i;
+		        log.fatal("Failed to save data from {}", e, src);
+		        this.throwInvalidParamError(src, e.getLocalizedMessage());
+		    }
+		    // Build object URIs from request path.
+		    URI srcUri = new URI(projectUri.getScheme(), null,
+                                    projectUri.getHost(), projectUri.getPort(),
+                                    this.getSourceId(projectUri.getPath(), fileNames[0]),
+                                    null, null);
+		    // Initialize & persist new source.
+		    this.projectManager.newShpSource(p, srcUri, title,
+		        description, paths[0], paths[1], paths[2], paths[3]);
+		    this.projectManager.saveProject(p);
+		    // Notify user of successful creation, redirecting HTML clients
+		    response = this.created(p, srcUri, ProjectTab.Sources)
+		                   .build();
+		    log.info("New Shapefile source \"{}\" created", title);
 		}
 		catch (Exception e) {
-			if (localFile1 != null) {
-				localFile1.delete();
-			}
-			this.handleInternalError(e,
-					"Failed to create SHP source for {}", fileName1);
-			if (localFile2 != null) {
-				localFile2.delete();
-			}
-			this.handleInternalError(e,
-					"Failed to create PRJ source for {}", fileName2);
-			if (localFile3 != null) {
-				localFile3.delete();
-			}
-			this.handleInternalError(e,
-					"Failed to create SHX source for {}", fileName3);
-			if (localFile4 != null) {
-				localFile4.delete();
-			}
-			this.handleInternalError(e,
-					"Failed to create DBF source for {}", fileName4);
+		    deleteFiles = true;
+		    this.handleInternalError(e,
+		            "Failed to create Shapefile source for {}", title);
+		}
+		finally {
+		    if (deleteFiles) {
+		        for (File f : localFiles) {
+		            if (f != null) {
+		                f.delete();
+		            }
+		        }
+		    }
 		}
 		return response;
 	}
@@ -1508,8 +1424,8 @@ public class Workspace extends BaseModule
 			response = this.redirect(p, ProjectTab.Sources).build();
 		}
 		catch (Exception e) {
-			this.handleInternalError(e, "Could not modify SHP source {}",
-					sourceUri);
+			this.handleInternalError(e,
+			    "Could not modify Shapefile source {}", sourceUri);
 		}
 		return response;
 	}
@@ -1566,10 +1482,6 @@ public class Workspace extends BaseModule
 					projectUri.getHost(), projectUri.getPort(),
 					this.getSourceId(projectUri.getPath(), fileName1),
 					null, null);
-			URI sourceUri2 = new URI(projectUri.getScheme(), null,
-					projectUri.getHost(), projectUri.getPort(),
-					this.getSourceId(projectUri.getPath(), fileName2),
-					null, null);
 
 			// Retrieve project.
 			Project p = this.loadProject(projectUri);
@@ -1589,7 +1501,6 @@ public class Workspace extends BaseModule
 			response = this.created(p, sourceUri1, ProjectTab.Sources).build();
 
 			log.info("New GML source \"{}\" created", sourceUri1);
-			log.info("New XSD source \"{}\" created", sourceUri2);
 		}
 		catch (IOException e) {
 			if (localFile1 != null) {

@@ -193,7 +193,7 @@
 	</form>
 #end
 	</div>
-	<h3><a href="#">SHP</a></h3>
+	<h3><a href="#">Shapefile</a></h3>
 	<div>
 #if( (!$current) || ($current.getType() == $field.ShpSource) )
 	<form method="post" action="$target_shp" enctype="multipart/form-data" class="form_formated">

@@ -33,13 +33,77 @@
 
 package org.datalift.fwk.project;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 /**
- * A file source object describing a SHP file.
+ * A Shapefile source.
  *
  * @author Fayçal Hamdi
  */
 public interface ShpSource extends FileSource
 {
-    // Just a marker interface for SHP sources.
-    // TODO: Add methods to access each Shape files: SHP, SHX, PRJ and DBX.
+    /**
+     * Returns the path of the Shape file (SHP) for this Shapefile
+     * source.
+     * @return the Shape file path, relative to the DataLift public
+     *         storage directory.
+     */
+    public String getShapeFilePath();
+
+    /**
+     * Returns the path of the index file (SHX) for this Shapefile
+     * source.
+     * @return the index file path, relative to the DataLift public
+     *         storage directory.
+     */
+    public String getIndexFilePath();
+
+    /**
+     * Returns the path of the attribute file (DBF) for this Shapefile
+     * source.
+     * @return the attribute file path, relative to the DataLift public
+     *         storage directory.
+     */
+    public String getAttributeFilePath();
+
+    /**
+     * Returns the path of the projection file (PRJ) for this Shapefile
+     * source.
+     * @return the projection file path, relative to the DataLift public
+     *         storage directory.
+     */
+    public String getProjectionFilePath();
+
+    /**
+     * Returns an input stream for reading the Shape file (SHP)
+     * content.
+     * @return an input stream
+     * @throws IOException if any error occurred accessing the file.
+     */
+    public InputStream getShapeFileInputStream() throws IOException;
+
+    /**
+     * Returns an input stream for reading the index file (SHX)
+     * content.
+     * @return an input stream
+     * @throws IOException if any error occurred accessing the file.
+     */
+    public InputStream getIndexFileInputStream() throws IOException;
+
+    /**
+     * Returns an input stream for reading the attribute file (DBF)
+     * content.
+     * @return an input stream
+     * @throws IOException if any error occurred accessing the file.
+     */
+    public InputStream getAttributeFileInputStream() throws IOException;
+
+    /**
+     * Returns an input stream for reading the projection file (PRJ)
+     * content.
+     * @return an input stream
+     * @throws IOException if any error occurred accessing the file.
+     */
+    public InputStream getProjectionFileInputStream() throws IOException;
 }

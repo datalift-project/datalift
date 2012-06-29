@@ -34,12 +34,22 @@
 package org.datalift.core.project;
 
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+
 import javax.persistence.Entity;
 
+import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.RdfsClass;
 
+import org.datalift.core.TechnicalException;
+import org.datalift.fwk.Configuration;
 import org.datalift.fwk.project.ShpSource;
 import org.datalift.fwk.project.Project;
+import org.datalift.fwk.util.io.FileUtils;
+
+import static org.datalift.fwk.util.StringUtils.isSet;
 
 
 /**
@@ -53,18 +63,33 @@ public class ShpSourceImpl extends BaseFileSource
                            implements ShpSource
 {
     //-------------------------------------------------------------------------
+    // Instance members
+    //-------------------------------------------------------------------------
+
+    @RdfProperty("datalift:shapeIndex")
+    private String shxFilePath;
+    @RdfProperty("datalift:shapeAttr")
+    private String dbfFilePath;
+    @RdfProperty("datalift:shapeProj")
+    private String prjFilePath;
+
+    private transient File shxFile = null;
+    private transient File dbfFile = null;
+    private transient File prjFile = null;
+
+    //-------------------------------------------------------------------------
     // Constructors
     //-------------------------------------------------------------------------
 
     /**
-     * Creates a new SHP source.
+     * Creates a new Shapefile source.
      */
     public ShpSourceImpl() {
         super(SourceType.ShpSource);
     }
 
     /**
-     * Creates a new SHP source with the specified identifier and
+     * Creates a new Shapefile source with the specified identifier and
      * owning project.
      * @param  uri       the source unique identifier (URI) or
      *                   <code>null</code> if not known at this stage.
@@ -79,11 +104,130 @@ public class ShpSourceImpl extends BaseFileSource
     }
 
     //-------------------------------------------------------------------------
+    // Source contract support
+    //-------------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    @Override
+    public void delete() {
+        super.delete();
+
+        if (this.shxFile != null) {
+            this.shxFile.delete();
+        }
+        if (this.dbfFile != null) {
+            this.dbfFile.delete();
+        }
+        if (this.prjFile != null) {
+            this.prjFile.delete();
+        }
+    }
+
+    //-------------------------------------------------------------------------
     // ShpSource contract support
     //-------------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    @Override
+    public String getShapeFilePath() {
+        return this.getFilePath();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public String getIndexFilePath() {
+        return this.shxFilePath;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public String getAttributeFilePath() {
+        return this.dbfFilePath;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public String getProjectionFilePath() {
+        return this.prjFilePath;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public InputStream getShapeFileInputStream() throws IOException {
+        return this.getInputStream();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public InputStream getIndexFileInputStream() throws IOException {
+        this.init();
+        return (this.shxFile != null)?
+                FileUtils.getInputStream(this.shxFile, this.getBufferSize()):
+                null;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public InputStream getAttributeFileInputStream() throws IOException {
+        this.init();
+        return (this.dbfFile != null)?
+                FileUtils.getInputStream(this.dbfFile, this.getBufferSize()):
+                null;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public InputStream getProjectionFileInputStream() throws IOException {
+        this.init();
+        return (this.prjFile != null)?
+                FileUtils.getInputStream(this.prjFile, this.getBufferSize()):
+                null;
+    }
+
+    //-------------------------------------------------------------------------
+    // BaseFileSource contract support
+    //-------------------------------------------------------------------------
+
+    @Override
+    protected void init() {
+        super.init();
+
+        if (this.prjFile == null) {
+            File docRoot = Configuration.getDefault().getPublicStorage();
+            if ((docRoot == null) || (! docRoot.isDirectory())) {
+                throw new TechnicalException("public.storage.not.directory",
+                                             docRoot);
+            }
+            if (isSet(this.shxFilePath)) {
+                this.shxFile = new File(docRoot, this.shxFilePath);
+            }
+            if (isSet(this.dbfFilePath)) {
+                this.dbfFile = new File(docRoot, this.dbfFilePath);
+            }
+            if (isSet(this.prjFilePath)) {
+                this.prjFile = new File(docRoot, this.prjFilePath);
+            }
+        }
+        // Else: Already initialized.
+    }
 
     //-------------------------------------------------------------------------
     // Specific implementation
     //-------------------------------------------------------------------------
 
+    public void setShapeFilePath(String path) {
+        this.setFilePath(path);
+    }
+
+    public void setIndexFilePath(String path) {
+        this.shxFilePath = path;
+    }
+
+    public void setAttributeFilePath(String path) {
+        this.dbfFilePath = path;
+    }
+
+    public void setProjectionFilePath(String path) {
+        this.prjFilePath = path;
+    }
 }

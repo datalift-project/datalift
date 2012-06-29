@@ -290,17 +290,38 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     /** {@inheritDoc} */
     @Override
     public ShpSource newShpSource(Project project, URI uri, String title,
-                                  String description, String filePath)
+                                  String description, String shpFilePath,
+                                  String shxFilePath, String dbfFilePath,
+                                  String prjFilePath)
                                                             throws IOException {
-        // Create new SHP source.
+        // Create new Shapefile source.
     	ShpSourceImpl src = new ShpSourceImpl(uri.toString(), project);
         // Set source parameters.
         this.initSource(src, title, description, null);
-        File f = this.getFileStorage(filePath);
+        // Check and set Shape main file (SHP).
+        File f = this.getFileStorage(shpFilePath);
         if (! f.isFile()) {
-            throw new FileNotFoundException(filePath);
+            throw new FileNotFoundException(shpFilePath);
         }
-        src.setFilePath(filePath);
+        src.setShapeFilePath(shpFilePath);
+        // Check and set index file (SHX).
+        f = this.getFileStorage(shxFilePath);
+        if (! f.isFile()) {
+            throw new FileNotFoundException(shxFilePath);
+        }
+        src.setIndexFilePath(shxFilePath);
+        // Check and set attribute file (DBF).
+        f = this.getFileStorage(dbfFilePath);
+        if (! f.isFile()) {
+            throw new FileNotFoundException(dbfFilePath);
+        }
+        src.setAttributeFilePath(dbfFilePath);
+        // Check and set projection file (PRJ).
+        f = this.getFileStorage(prjFilePath);
+        if (! f.isFile()) {
+            throw new FileNotFoundException(prjFilePath);
+        }
+        src.setProjectionFilePath(prjFilePath);
         // Add source to project.
         project.add(src);
         return src;
