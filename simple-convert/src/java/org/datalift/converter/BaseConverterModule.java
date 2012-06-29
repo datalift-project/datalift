@@ -381,7 +381,7 @@ public abstract class BaseConverterModule
         TechnicalException error = (value != null)?
                 new TechnicalException("ws.invalid.param.error", name, value):
                 new TechnicalException("ws.missing.param", name);
-        this.sendError(BAD_REQUEST, error.getMessage());
+        this.sendError(BAD_REQUEST, error.getLocalizedMessage());
     }
 
     protected void handleInternalError(Exception e)
@@ -391,16 +391,16 @@ public abstract class BaseConverterModule
             throw (WebApplicationException)e;
         }
         else if (e instanceof ObjectNotFoundException) {
-            this.sendError(NOT_FOUND, e.getMessage());
+            this.sendError(NOT_FOUND, e.getLocalizedMessage());
         }
         else if (e instanceof TechnicalException) {
             error = (TechnicalException)e;
         }
         else {
             error = new TechnicalException(
-                                    "ws.internal.error", e, e.getMessage());
+                            "ws.internal.error", e, e.getLocalizedMessage());
         }
         log.fatal(e.getMessage(), e);
-        this.sendError(INTERNAL_SERVER_ERROR, error.getMessage());
+        this.sendError(INTERNAL_SERVER_ERROR, error.getLocalizedMessage());
     }
 }

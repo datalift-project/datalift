@@ -610,7 +610,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                                            "default.negotiation.failed",
                     l, expected);
             log.error(error.getMessage());
-            this.sendError(NOT_ACCEPTABLE, error.getMessage());
+            this.sendError(NOT_ACCEPTABLE, error.getLocalizedMessage());
         }
         log.debug("Negotiated content type: {}", responseType);
         return responseType;
@@ -649,15 +649,15 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
             // => Return HTTP status 413 (Request Entity Too Large).
             TechnicalException error = new TechnicalException(
                                         "query.max.duration.exceeded", query);
-            this.sendError(413, error.getMessage());
+            this.sendError(413, error.getLocalizedMessage());
         }
         else if (e.getCause() instanceof QueryDoneException) {
             // End of requested range (start/end offset) successfully reached.
         }
         else {
             log.error("Query processing failed: \"{}\" for: \"{}\"",
-                                                    e, e.getMessage(), query);
-            this.sendError(INTERNAL_SERVER_ERROR, e.getMessage());
+                                            e, e.getLocalizedMessage(), query);
+            this.sendError(INTERNAL_SERVER_ERROR, e.getLocalizedMessage());
         }
     }
 
@@ -665,7 +665,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         TechnicalException error = (value != null)?
                 new TechnicalException("ws.invalid.param.error", name, value):
                 new TechnicalException("ws.missing.param", name);
-        this.sendError(BAD_REQUEST, error.getMessage());
+        this.sendError(BAD_REQUEST, error.getLocalizedMessage());
     }
 
     protected final static String getQueryDesc(String query) {
