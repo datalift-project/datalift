@@ -9,9 +9,9 @@
 </head>
 <body>
 #banner
-#set($columnWidth = 100 / $it.Columns.size())
+#set( $columnWidth = 100 / $it.Columns.size() )
 	<div id="content" class="ui-widget-content dl-main-panel">
-		<h3 class="ui-widget-header dl-widget-header">#i18n("sparql.query.full")</h3>
+		<h3 class="ui-widget-header dl-widget-header">#i18n("sparql.query.full") #if( $min > 0 )#i18n("results.interval.start")${min}#if( $max > 0 )#i18n("results.interval.to")${max}#end#i18n("results.interval.end")#else#if( $max > 0)#i18n("results.first.start")${max}#i18n("results.first.end")#end#end</h3>
 		<div id="results" class="dl-result-panel">
 			<table id="queryresults" style="width:100%">
 				<thead>

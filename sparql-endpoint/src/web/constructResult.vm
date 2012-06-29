@@ -17,15 +17,16 @@
 	<div id="content" class="ui-widget-content dl-main-panel">
 #if( $describe-uri )
 	#if( $describe-type == "Graph" )
-		<h3 class="ui-widget-header dl-widget-header">#i18n("sparql.describe.graph") &lt;$esc.html($describe-uri)&gt;</h3>
+		#set( $title = "sparql.describe.graph" )
 	#elseif( $describe-type == "Predicate" )
-		<h3 class="ui-widget-header dl-widget-header">#i18n("sparql.describe.predicate") &lt;$esc.html($describe-uri)&gt;</h3>
+		#set( $title = "sparql.describe.predicate" )
 	#else
-		<h3 class="ui-widget-header dl-widget-header">#i18n("sparql.describe.object") &lt;$esc.html($describe-uri)&gt;</h3>
+		#set( $title = "sparql.describe.object" )
 	#end
 #else
-		<h3 class="ui-widget-header dl-widget-header">#i18n("sparql.query.full")</h3>
+	#set( $title = "sparql.query.full" )
 #end
+		<h3 class="ui-widget-header dl-widget-header">#i18n($title)#if( $describe-uri ) &lt;$esc.html($describe-uri)&gt;#end #if( $min > 0 )#i18n("results.interval.start")${min}#if( $max > 0 )#i18n("results.interval.to")${max}#end#i18n("results.interval.end")#else#if( $max > 0)#i18n("results.first.start")${max}#i18n("results.first.end")#end#end</h3>
 		<div id="results" class="dl-result-panel">
 			<table id="queryresults" style="width:100%">
 				<thead>
