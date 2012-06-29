@@ -181,14 +181,14 @@ public class CsvSourceImpl extends BaseFileSource
     /** {@inheritDoc} */
     @Override
     public List<String> getColumnNames() {
-        this.init();
+        this.initHeaders();
         return this.headers;
     }
 
     /** {@inheritDoc} */
     @Override
     public final CloseableIterator<Row<String>> iterator() {
-        this.init();
+        this.initHeaders();
         try {
             return new RowIterator(this.newReader());
         }
@@ -201,7 +201,7 @@ public class CsvSourceImpl extends BaseFileSource
     // Specific implementation
     //-------------------------------------------------------------------------
 
-    private void init() {
+    private void initHeaders() {
         if (this.headers == null) {
             CSVReader reader = null;
             try {

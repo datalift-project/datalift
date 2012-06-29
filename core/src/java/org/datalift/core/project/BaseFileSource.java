@@ -172,7 +172,7 @@ public abstract class BaseFileSource extends BaseSource
         return FileUtils.getInputStream(this.storage, this.getBufferSize());
     }
 
-    private void init() {
+    protected void init() {
         if (this.storage == null) {
             File docRoot = Configuration.getDefault().getPublicStorage();
             if ((docRoot == null) || (! docRoot.isDirectory())) {
