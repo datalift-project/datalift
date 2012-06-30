@@ -474,11 +474,7 @@ public class Workspace extends BaseModule
         URI uri = null;
         try {
             uri = this.newProjectId(uriInfo.getBaseUri(), id);
-            Project p = this.loadProject(uri);
-            for (Source s: p.getSources()) {
-                s.delete();
-            }
-            this.projectManager.deleteProject(p);
+            this.projectManager.deleteProject(this.loadProject(uri));
             // Notify user of successful deletion, redirecting HTML clients
             // (browsers) to the project page.
             URI targetUri = uriInfo.getBaseUriBuilder()
@@ -1726,6 +1722,10 @@ public class Workspace extends BaseModule
             Project p = this.loadProject(projectUri);
             // Search for requested source in project.
             Source s = p.getSource(srcUri);
+            if (s == null) {
+                // Not found.
+                this.sendError(NOT_FOUND, srcUri.toString());
+            }
             // Delete source.
             this.projectManager.delete(s);
             // Notify user of successful update, redirecting HTML clients
@@ -1907,6 +1907,10 @@ public class Workspace extends BaseModule
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
             Project p = this.loadProject(projectUri);
             Ontology o = p.getOntology(ontologyTitle);
+            if (o == null) {
+                // Not found.
+                this.sendError(NOT_FOUND, ontologyTitle);
+            }
             // Delete ontology.
             this.projectManager.deleteOntology(p, o);
             // Notify user of successful update, redirecting HTML clients

@@ -143,7 +143,7 @@ public class ProjectImpl extends BaseRdfEntity implements Project
     private URI execution;
 
     @RdfProperty("void:vocabulary")
-    @OneToMany(fetch = FetchType.EAGER, cascade = { CascadeType.ALL })
+    @OneToMany(fetch = FetchType.LAZY, cascade = { CascadeType.ALL })
     private Collection<Ontology> ontologies = new LinkedList<Ontology>();
 
     //-------------------------------------------------------------------------
@@ -311,11 +311,12 @@ public class ProjectImpl extends BaseRdfEntity implements Project
 
     /** {@inheritDoc} */
     @Override
-    public void removeOntology(String title) {
+    public Ontology removeOntology(String title) {
         Ontology ontology = getOntology(title);
         if (ontology != null) {
             this.ontologies.remove(ontology);
         }
+        return ontology;
     }
 
     /** {@inheritDoc} */

@@ -74,7 +74,7 @@ public interface Project
     public Collection<Ontology> getOntologies();
     public void addOntology(Ontology ontology);
     public Ontology getOntology(String title);
-    public void removeOntology(String title);
+    public Ontology removeOntology(String title);
 
     public URI getExecution();
     public void setExecution(URI execution);

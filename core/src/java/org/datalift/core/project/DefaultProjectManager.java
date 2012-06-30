@@ -395,11 +395,10 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
             throw new IllegalArgumentException("ontology");
         }
         // Remove ontology from project.
-        project.removeOntology(ontology.getTitle());
-        // Delete ontology from persistent store.
-        this.projectDao.delete(ontology);
-        // Update project.
+        ontology = project.removeOntology(ontology.getTitle());
+        // Persist changes.
         this.saveProject(project);
+        this.projectDao.delete(ontology);
     }
 
     /** {@inheritDoc} */
