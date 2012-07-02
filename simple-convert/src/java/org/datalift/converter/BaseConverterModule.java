@@ -302,13 +302,24 @@ public abstract class BaseConverterModule
      * @return a template model for rendering the specified template,
      *         populated with the specified project.
      */
-    protected final Response newProjectView(String templateName, URI projectId) {
-        // Retrieve project.
-        Project p = this.getProject(projectId);
-        // Display conversion configuration page.
-        TemplateModel view = this.newView(templateName, p);
-        view.put("converter", this);
-        return Response.ok(view).build();
+    protected final Response newProjectView(String templateName,
+                                            URI projectId) {
+        Response response = null;
+        try {
+            // Retrieve project.
+            Project p = this.getProject(projectId);
+            // Display conversion configuration page.
+            TemplateModel view = this.newView(templateName, p);
+            view.put("converter", this);
+            response = Response.ok(view).build();
+        }
+        catch (ObjectNotFoundException e) {
+            this.throwInvalidParamError("project", projectId);
+        }
+        catch (IllegalArgumentException e) {
+            this.throwInvalidParamError("project", projectId);
+        }
+        return response;
     }
 
     /**
