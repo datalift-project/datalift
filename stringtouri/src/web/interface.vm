@@ -1,0 +1,84 @@
+#set( $moduleUri = "$baseUri/stringtouri")
+## Velocity hack -- How to do it properly ? locale.default not used
+#set( $french = "fr")
+#set( $english = "en")
+#set( $current = "fr")
+
+## Doesn't work ? 
+## set( $pagetitle = "#i18n('stringtouri.title') - Datalift")
+## set( $paneltitle = "#if ($current == $french) ${it.title} #i18n('project.label') #{else} #i18n('project.label') ${it.title} #end &mdash; #i18n('stringtouri.title')")
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	#load("stringtouri/resources")
+	#load_core_resources
+
+	<title>#i18n('stringtouri.title') - Datalift</title>
+
+	#css_links
+	<link rel="stylesheet" type="text/css" href="http://localhost:8000/interface.css"/>
+	<!-- CSS link hack with `server` - Need to figure out how to do it properly. -->
+	<!--<link rel="stylesheet" type="text/css" href="${moduleUri}/interface.css"/>-->
+</head>
+<body>
+	#banner
+	<div class="ui-widget-content" id="workspace">
+		<h3 class="ui-widget-header dl-widget-header">#if ($current == $english) ${it.title} #i18n('project.label') #{else} #i18n('project.label') ${it.title} #end &mdash; #i18n('stringtouri.title')</h3>
+		<div class="dl-panel">
+			<form id="linkage-form" method="post" action="${baseUri}/stringtouri">
+				
+				<fieldset class="ui-widget-content dl-panel medium">
+					<legend>Données de ${it.title}</legend>
+					<div class="dl-form-elt form-stack">
+						<label for="our-dataset">#i18n('dataset.label')</label>
+						<input id="our-dataset" type="text" value="${it.title}" size="" disabled required/>
+						<p id="our-dataset-info">#i18n('dataset.info.ours')</p>
+					</div>
+					<div class="dl-form-elt form-stack">
+						<label for="our-class">#i18n('class.label')</label>
+						<input id="our-class" type="text" placeholder="#i18n('field.none')" tabindex="1"/>
+						<p id="our-class-info">#i18n('class.info.ours')</p>
+					</div>
+					<div class="dl-form-elt form-stack">
+						<label for="our-predicate">#i18n('predicate.label')</label>
+						<input id="our-predicate" type="text" placeholder="#i18n('field.mandatory')" required tabindex="2"/>
+						<p id="our-predicate-info">#i18n('predicate.info.ours') &mdash; #i18n('field.mandatory')</p>
+					</div>
+				</fieldset>
+
+				<fieldset class="ui-widget-content dl-panel medium">
+					<legend>Données externes</legend>
+					<div class="dl-form-elt form-stack">
+						<label for="their-dataset">#i18n('dataset.label')</label>
+						<input id="their-dataset" type="text" placeholder="#i18n('field.mandatory')" required tabindex="3"/>
+						<p id="their-dataset-info">#i18n('dataset.info.theirs') &mdash; #i18n('field.mandatory')</p>
+					</div>
+					<div class="dl-form-elt form-stack">
+						<label for="their-class">#i18n('class.label')</label>
+						<input id="their-class" type="text" placeholder="#i18n('field.none')" tabindex="4"/>
+						<p id="their-class-info">#i18n('class.info.theirs')</p>
+					</div>
+					<div class="dl-form-elt form-stack">
+						<label for="their-predicate">#i18n('predicate.label')</label>
+						<input id="their-predicate" type="text" placeholder="#i18n('field.mandatory')" required tabindex="5"/>
+						<p id="their-predicate-info">#i18n('predicate.info.theirs') &mdash; #i18n('field.mandatory')</p>
+					</div>
+				</fieldset>
+				<div class="dl-form-elt form-stack">
+					<input type="submit" id="convert-submit"  class="ui-priority-primary" value="#i18n('submit.label')" tabindex="6"/>
+					<!-- Possibilité d'avoir un bouton jQuery "action secondaire" ? -->
+					<a href="${baseUri}/project/${it.title}" id="convert-cancel"  class="ui-priority-secondary" title="#i18n('cancel.title')#i18n('project.workspace.link')" tabindex="7">#i18n('cancel.label')</a>
+				</div>
+			</form>
+		</div>
+	</div>
+	#footer
+	#script_links
+	<script type="text/javascript" src="http://localhost:8000/interface.js"></script>
+	<!-- JS link hack with `server` - Need to figure out how to do it properly. -->
+	<!--<script language="javascript" src="${moduleUri}/interface.js"/>-->
+</body>
+</html>
