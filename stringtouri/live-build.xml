@@ -15,7 +15,7 @@
 	<property name="project.home" value="/Library/Datalift/datalift-home"/>
 	<property name="project.modules" value="${project.home}/modules"/>
 
-	<property name="project.code" value="/Users/Will/Desktop/datalift"/>
+	<property name="project.code" value="/Users/Will/Projects/datalift"/>
 
 	<property name="module.name" value="stringtouri"/>
 	<property name="module.path" value="${project.code}/${module.name}"/>
@@ -63,9 +63,6 @@
 		<exec executable="say" spawn="yes">
 			<arg line="${tomcat.msg.start}"/>
 		</exec>
-		<exec executable="growlnotify" spawn="yes">
-			<arg line="growlnotify -a 'Tomcat Controller' -m '${tomcat.msg.start}'"/>
-		</exec>
 	</target>
 
 	<target name="stop">
@@ -80,9 +77,6 @@
 		</waitfor>
 		<exec executable="say" spawn="yes">
 			<arg line="${tomcat.msg.stop}"/>
-		</exec>
-		<exec executable="growlnotify" spawn="yes">
-			<arg line="growlnotify -a 'Tomcat Controller' -m '${tomcat.msg.stop}'"/>
 		</exec>
 	</target>
 

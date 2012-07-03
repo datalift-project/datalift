@@ -35,34 +35,32 @@ package org.datalift.stringtouri;
 
 import java.io.ObjectStreamException;
 import java.net.URI;
-import java.util.Map;
 import java.util.HashMap;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;
+import javax.ws.rs.HeaderParam;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 
-import static javax.ws.rs.core.Response.Status.*;
+import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 
-import org.datalift.fwk.Configuration;
-import org.datalift.fwk.log.Logger;
-import org.datalift.fwk.project.*;
 import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
+import org.datalift.fwk.ResourceResolver;
+import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectManager;
 import org.datalift.fwk.project.ProjectModule;
 
 import com.sun.jersey.api.view.Viewable;
-
-import static org.datalift.fwk.MediaTypes.*;
 
 
 /*
@@ -105,8 +103,8 @@ public class StringToURI extends BaseModule implements ProjectModule {
      */
     public StringToURI() {
         super(MODULE_NAME);
-        position = 10;
-        label = "!";
+        position = 99999999;
+        label = "Transformation des Strings en URIs";
     }
 
     //-------------------------------------------------------------------------
@@ -138,7 +136,7 @@ public class StringToURI extends BaseModule implements ProjectModule {
         try {           
             // The project can be handled if it has at least one source.
             if (p.getSources().size() > 0) {
-                uridesc = new UriDesc(this.getName() + "?project=" + p.getUri(),"StringToURI"); 
+                uridesc = new UriDesc(this.getName() + "?project=" + p.getUri(),this.label); 
                 
                 if (this.position > 0) {
                     uridesc.setPosition(this.position);
@@ -160,11 +158,39 @@ public class StringToURI extends BaseModule implements ProjectModule {
     @GET
     @Produces(MediaType.TEXT_HTML)
     public Response getIndexPage(@QueryParam("project") URI projectId) throws ObjectStreamException {
-        // Retrieve project.
+        // Retrieve the current project.
         Project proj = this.getProject(projectId);
-
         HashMap<String, Object> args = new HashMap<String, Object>();
         args.put("it", proj);
         return Response.ok(this.newViewable("/interface.vm", args)).build();
     }
+    
+    /**
+     * Traps accesses to module static resources and redirect them
+     * toward the default {@link ResourceResolver} for resolution.
+     * @param  path        the relative path of the module static
+     *                     resource being accessed.
+     * @param  uriInfo     the request URI data (injected).
+     * @param  request     the JAX-RS request object (injected).
+     * @param  acceptHdr   the HTTP "Accept" header value.
+     *
+     * @return a {@link Response JAX-RS response} to download the
+     *         content of the specified public resource.
+     * @throws WebApplicationException complete with status code and
+     *         plain-text error message if any error occurred while
+     *         accessing the requested resource.
+     */
+    @GET
+    @Path("static/{path: .*$}")
+    public Object getStaticResource(@PathParam("path") String path,
+                                    @Context UriInfo uriInfo,
+                                    @Context Request request,
+                                    @HeaderParam(ACCEPT) String acceptHdr)
+                                                throws WebApplicationException {
+        return Configuration.getDefault()
+                            .getBean(ResourceResolver.class)
+                            .resolveModuleResource(this.getName(),
+                                                   uriInfo, request, acceptHdr);
+    }
+
 }
