@@ -3,11 +3,6 @@
 ##
 #set( $moduleUri = "$baseUri/stringtouri")
 ##
-## $!esc.html($it.title)
-## Doesn't work ? 
-## set( $pagetitle = "#i18n('stringtouri.title') - Datalift")
-## set( $paneltitle = "#if ($current == $french) ${it.title} #i18n('project.label') #{else} #i18n('project.label') ${it.title} #end &mdash; #i18n('stringtouri.title')")
-##
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -45,6 +40,7 @@
 					<p id="our-predicate-info"><span class="ui-icon ui-icon-help"></span>#i18n('predicate.info.ours') &mdash; #i18n('field.mandatory')</p>
 				</div>
 			</fieldset>
+
 
 			<fieldset class="ui-widget-content dl-panel medium ui-corner-all">
 				<legend>Données référence</legend>
