@@ -30,20 +30,24 @@
 				</select>
 			</div>
 #end
-			<div id="result-format" class="dl-form-elt">
+			<div id="result_format" class="dl-form-elt">
 				<label>#i18n("sparql.parameter.format"): </label>
 				<input type="radio" id="html_format" name="format" value="application/json" checked="checked"/><label for="html_format">HTML</label>
 				<input type="radio" id="rdf_format" name="format" value="application/sparql-results+xml, application/rdf+xml, text/plain; q=0.5"/><label for="rdf_format">RDF/XML</label>
-				<input type="radio" id="turtle_format" name="format" value="text/turtle, text/plain; q=0.5"/><label for="turtle_format">Turtle</label>
+				<input type="radio" id="turtle_format" name="format" value="text/turtle, text/plain; q=0.5"/><label for="turtle_format">N3/Turtle</label>
+				<input type="radio" id="ntriples_format" name="format" value="application/n-triples, text/plain; q=0.5"/><label for="ntriples_format">NTriples</label>
+				<input type="radio" id="trig_format" name="format" value="application/x-trig, text/plain; q=0.5"/><label for="trig_format">TriG</label>
+				<input type="radio" id="trix_format" name="format" value="application/trix, text/plain; q=0.5"/><label for="trix_format">TriX</label>
 				<input type="hidden" id="format_save" />
 			</div>
-			<br />
 			<div class="dl-form-elt">
-				<label for="query">#i18n("sparql.query.light"): </label><br />
+				<p><label for="query">#i18n("sparql.query.light"): </label><br />
 				<textarea id="query" name="query" style="width:600px; height:100px;">$esc.html("SELECT * WHERE {
   ?s ?p ?o .
 }
-")</textarea>
+")</textarea></p>
+				<p><label for="max">#i18n("sparql.max.results"): </label>
+				<input type="text" name="max" id="max" value="5000"/></p>
 			</div>
 			<div class="dl-form-buttons">
 				<input type="submit" value="#i18n("sparql.query.execute")" id="query_submit" />
@@ -70,9 +74,26 @@
 		var responsePtr;
 
 		$(function() {
-			$("#result-format").buttonset();
 			$("#query_submit").button();
 			$("#goto_workspace").button();
+
+			$("#result_format").buttonset();
+			$("#turtle_format").button("option", "disabled", true);
+			$("#ntriples_format").button("option", "disabled", true);
+			$("#trig_format").button("option", "disabled", true);
+			$("#trix_format").button("option", "disabled", true);
+
+			$("#query").keyup(function() {
+				var disableConstruct = true;
+				var s = $(this).val();
+				if (s.match(/(^|\s+)(CONSTRUCT|DESCRIBE)\s+/i)) {
+					disableConstruct = false;
+				}
+				$("#turtle_format").button("option", "disabled", disableConstruct);
+				$("#ntriples_format").button("option", "disabled", disableConstruct);
+				$("#trig_format").button("option", "disabled", disableConstruct);
+				$("#trix_format").button("option", "disabled", disableConstruct);
+			});
 			$("#query_form").submit(function(e) {
 				var fmt = $("input[name=format]:checked").val();
 				$("#format_save").val(fmt);
@@ -81,7 +102,10 @@
 #if( ${collections.size()} > 1 )
 				requestUrl += "&" + $("#default-graph-uri").serialize();
 #end
-				requestUrl += "&endOffset=5000";
+				var maxResults = $("#max").val();
+				if (! isNaN(maxResults)) {
+					requestUrl += "&max=" + parseInt(maxResults);
+				}
 				if (fmt.match(/json/)) {
 					// Prevent the navigator from sending the form
 					e.preventDefault();
@@ -113,7 +137,7 @@
 				jsonGridSuccessRequest(response);
 
 				// Function called when modifying search text
-				$("#gridsearch").keyup(function () {
+				$("#gridsearch").keyup(function() {
 					gridSearch(response, $(this).val().toLowerCase());
 				});
 				// Function called when modifying search Column
@@ -163,12 +187,31 @@
 			$("#table_results").setGridWidth($("#results").width());
 		}
 
-		function unsuccessfulQuery(XMLHttpRequest, strError){
-			alert("#i18n("sparql.ajax.query.requesterror"): \n["
-				+ XMLHttpRequest.readyState + "]["
-				+ XMLHttpRequest.status + "]"
-				+ "\n#i18n("sparql.ajax.query.invalidQuery"). #i18n("sparql.ajax.query.error"): ["
-				+ strError+ "]");
+		function unsuccessfulQuery(xhr, textStatus, errorThrown) {
+			var msg = "";
+			if ((xhr.readyState == 4) && (xhr.status != 0)) {
+				msg = "#i18n("sparql.ajax.query.requestError"):\n"
+					+ xhr.status + " [" + errorThrown + "] "
+					+ "#i18n("sparql.ajax.query.invalidQuery"):\n"
+					+ xhr.responseText;
+			}
+			else {
+				msg = "#i18n("sparql.ajax.query.responseError"):\n["
+						+ xhr.readyState + "][" + xhr.status + "] ";
+				if (textStatus == 'parsererror') {
+					msg += "#i18n("sparql.ajax.query.parseError")";
+				}
+				else if (textStatus == 'timeout' ) {
+					msg += "#i18n("sparql.ajax.query.requestTimeout")";
+				}
+				else if (textStatus == 'abort' ) {
+					msg += "#i18n("sparql.ajax.query.serverAbort")";
+				}
+				else {
+					msg += "#i18n("sparql.ajax.query.browserError"): " + errorThrown.message;
+				}
+			}
+			alert(msg);
 		}
 
 		function gridSearch(gridData, searchString) {
