@@ -1,0 +1,125 @@
+#load_core_resources
+#load("stringtouri/resources")
+##
+#set( $moduleUri = "$baseUri/stringtouri")
+## Velocity hack -- How to do it properly ? locale.default not used
+#set( $french = "fr")
+#set( $english = "en")
+#set( $current = "fr")
+##
+## Max number of new triples to display on our page.
+#set( $maxEntries = 5000 )
+##
+## $!esc.html($it.title)
+## Doesn't work ? 
+## set( $pagetitle = "#i18n('stringtouri.title') - Datalift")
+## set( $paneltitle = "#if ($current == $french) ${it.title} #i18n('project.label') #{else} #i18n('project.label') ${it.title} #end &mdash; #i18n('stringtouri.title')")
+##
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<title>#i18n('stringtouri.title') - Datalift</title>
+	#css_links
+	<!-- Lien temporaire pour le développement . -->
+	<link rel="stylesheet" type="text/css" href="http://localhost:1337/static/css/result.css"/>
+	<!--<link rel="stylesheet" type="text/css" href="${moduleUri}/static/css/result.css"/>-->
+</head>
+<body>
+	<a href="${baseUri}/project/${it.title}" id="goto_workspace" class="ui-priority-primary" style="position:absolute;top:15px;right:15px;">#i18n("project.workspace.link")</a>
+	#banner
+	<div class="ui-widget-content" id="workspace">
+		<h3 class="ui-widget-header dl-widget-header">#if ($current == $english) ${it.title} #i18n('project.label') #{else} #i18n('project.label') ${it.title} #end &mdash; #i18n('stringtouri.title')</h3>
+		<p class="description dl-panel medium">
+			StringToURI est un module qui remplace des valeurs littérales par les URIs des entités décrites par ces valeurs.
+		</p>
+		<div class="dl-panel" id="result-display">
+			<div class="parameters ui-widget-content dl-panel medium ui-corner-all">
+				<h4>Données à modifier</h4>
+				<dl>
+					<dt>#i18n('dataset.label')</dt>
+					<dd>${targetdataset}</dd>
+					<dt>#i18n('class.label')</dt>
+					<dd>${targetclass}</dd>
+					<dt>#i18n('predicate.label')</dt>
+					<dd>${targetpredicate}</dd>
+				</dl>
+			</div>
+			<div class="parameters ui-widget-content dl-panel medium ui-corner-all">
+				<h4>Données référence</h4>
+				<dl>
+					<dt>#i18n('dataset.label')</dt>
+					<dd>${sourcedataset}</dd>
+					<dt>#i18n('class.label')</dt>
+					<dd>${sourceclass}</dd>
+					<dt>#i18n('predicate.label')</dt>
+					<dd>${sourcepredicate}</dd>
+				</dl>
+			</div>
+			<div class="results">
+				<h4>#i18n('grid.title') #i18n('stringtouri.title')</h4>
+				<table id="grid">
+					<thead>
+						<tr>
+							<th>#i18n("source.grid.row.heading")</th>
+							<th class="dl-grid-header-column">#i18n("rdf.voc.subject")</th>
+							<th class="dl-grid-header-column">#i18n("rdf.voc.predicate")</th>
+							<th class="dl-grid-header-column">#i18n("rdf.voc.object")</th>
+						</tr>
+					</thead>
+					<tbody>
+						## Pour chaque nouveau triplet, on va afficher ses S, P, O.
+						#foreach( $triple in $newtriples )
+							#if( $foreach.count > $maxEntries ) 
+								#break 
+							#end
+							## Ajout du numéro de ligne.
+							<tr><td>$velocityCount</td>
+						  	#foreach( $elt in $triple ) 
+						  		<td>$!esc.html($elt)</td> 
+						  	#end
+							</tr>
+						#end
+					</tbody>
+				</table>
+				<div id="pagernav"></div>
+				<div id="searchnav" style="display:none">
+					<label for="gridsearch">#i18n("grid.search.value.label")</label>
+					<input type="search" id="gridsearch" placeholder="#i18n("grid.search.value.placeholder")" results="0" class="gridsearch"/>
+					<label for="searchColumn">#i18n("grid.search.column.label")</label>
+					<select id="searchColumn">
+						<option value="all">#i18n("grid.search.column.option.all")</option>
+						## Same values as in the table's header.
+						<option>#i18n("rdf.voc.subject")</option>
+						<option>#i18n("rdf.voc.predicate")</option>
+						<option>#i18n("rdf.voc.object")</option>
+					</select>
+				</div>
+			</div>
+		</div>
+	</div>
+	#footer
+	#script_links
+	<script language="javascript" src="${moduleUri}/static/js/jqgrid.common.js"></script>
+	<script type="text/javascript">
+		$(document).ready(function(){
+			var params = [{ 
+				name: '#i18n("source.grid.row.heading")', 
+				index: '#i18n("source.grid.row.heading")', 
+				sorttype:'int'
+			}];
+			
+			htmlTableTojQGrid(params);
+		});
+	</script>
+	<!-- Lien temporaire pour le développement . -->
+	<script type="text/javascript" src="http://localhost:1337/static/js/result.js"></script>
+	<!--<script language="javascript" src="${moduleUri}/static/js/result.js"></script>-->
+</body>
+</html>
+
+
+
+
+
+

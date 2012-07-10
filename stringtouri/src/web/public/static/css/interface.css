@@ -1,16 +1,18 @@
 fieldset {
-	display:inline;
+	display:inline-block;
 }
 
 legend {
 	font-weight:bold;
 	font-size:120%;
+	margin:0 10px;
+	padding:0;
 }
 
 .form-stack {
 	display:block;
-	margin:20px 0 10px;
-	padding:0 5px 0;
+	margin:10px 0 0;
+	padding:10px;
 }
 
 .form-stack label {
@@ -20,15 +22,25 @@ legend {
 }
 
 .form-stack input[type=text] {
-	width:300px;
+	width:350px;
 }
 
 .form-stack p {
 	margin:2px 0;
 	color:#666;
-	font-size:80%;
+	font-size:75%;
+}
+
+.form-stack .ui-icon {
+	float:left;
+	margin-right: 5px;
+	display:none;
 }
 
 input[type=submit] {
 	margin: 0 20px;
+}
+
+.ui-state-success {
+	color:#690;
 }

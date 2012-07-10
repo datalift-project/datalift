@@ -1,84 +1,122 @@
+#load_core_resources
+#load("stringtouri/resources")
+##
 #set( $moduleUri = "$baseUri/stringtouri")
 ## Velocity hack -- How to do it properly ? locale.default not used
 #set( $french = "fr")
 #set( $english = "en")
 #set( $current = "fr")
-
+##
 ## $!esc.html($it.title)
 ## Doesn't work ? 
 ## set( $pagetitle = "#i18n('stringtouri.title') - Datalift")
 ## set( $paneltitle = "#if ($current == $french) ${it.title} #i18n('project.label') #{else} #i18n('project.label') ${it.title} #end &mdash; #i18n('stringtouri.title')")
-
-
+##
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-	#load("stringtouri/resources")
-	#load_core_resources
-
 	<title>#i18n('stringtouri.title') - Datalift</title>
-
 	#css_links
 	<!-- Lien temporaire pour le développement . -->
-	<link rel="stylesheet" type="text/css" href="http://localhost:8000/static/css/interface.css"/>
+	<link rel="stylesheet" type="text/css" href="http://localhost:1337/static/css/interface.css"/>
 	<!--<link rel="stylesheet" type="text/css" href="${moduleUri}/static/css/interface.css"/>-->
 </head>
 <body>
 	#banner
 	<div class="ui-widget-content" id="workspace">
 		<h3 class="ui-widget-header dl-widget-header">#if ($current == $english) ${it.title} #i18n('project.label') #{else} #i18n('project.label') ${it.title} #end &mdash; #i18n('stringtouri.title')</h3>
-		<div class="dl-panel">
-			<form id="linkage-form" method="post" action="${baseUri}/stringtouri">
-				
-				<fieldset class="ui-widget-content dl-panel medium">
-					<legend>Données de ${it.title}</legend>
-					<div class="dl-form-elt form-stack">
-						<label for="our-dataset">#i18n('dataset.label')</label>
-						<input id="our-dataset" type="text" value="${it.uri}" size="" disabled required/>
-						<p id="our-dataset-info">#i18n('dataset.info.ours')</p>
-					</div>
-					<div class="dl-form-elt form-stack">
-						<label for="our-class">#i18n('class.label')</label>
-						<input id="our-class" type="text" placeholder="#i18n('field.none')" tabindex="1"/>
-						<p id="our-class-info">#i18n('class.info.ours')</p>
-					</div>
-					<div class="dl-form-elt form-stack">
-						<label for="our-predicate">#i18n('predicate.label')</label>
-						<input id="our-predicate" type="text" placeholder="#i18n('field.mandatory')" required tabindex="2"/>
-						<p id="our-predicate-info">#i18n('predicate.info.ours') &mdash; #i18n('field.mandatory')</p>
-					</div>
-				</fieldset>
-
-				<fieldset class="ui-widget-content dl-panel medium">
-					<legend>Données externes</legend>
-					<div class="dl-form-elt form-stack">
-						<label for="their-dataset">#i18n('dataset.label')</label>
-						<input id="their-dataset" type="text" placeholder="#i18n('field.mandatory')" required tabindex="3"/>
-						<p id="their-dataset-info">#i18n('dataset.info.theirs') &mdash; #i18n('field.mandatory')</p>
-					</div>
-					<div class="dl-form-elt form-stack">
-						<label for="their-class">#i18n('class.label')</label>
-						<input id="their-class" type="text" placeholder="#i18n('field.none')" tabindex="4"/>
-						<p id="their-class-info">#i18n('class.info.theirs')</p>
-					</div>
-					<div class="dl-form-elt form-stack">
-						<label for="their-predicate">#i18n('predicate.label')</label>
-						<input id="their-predicate" type="text" placeholder="#i18n('field.mandatory')" required tabindex="5"/>
-						<p id="their-predicate-info">#i18n('predicate.info.theirs') &mdash; #i18n('field.mandatory')</p>
-					</div>
-				</fieldset>
-				<div class="dl-form-elt form-stack">
-					<input type="submit" id="convert-submit"  class="ui-priority-primary" value="#i18n('submit.label')" tabindex="6"/>
-					<a href="${baseUri}/project/${it.title}" id="convert-cancel"  class="ui-priority-secondary" title="#i18n('cancel.title')#i18n('project.workspace.link')" tabindex="7">#i18n('cancel.label')</a>
+		<p class="description dl-panel medium">
+			StringToURI est un module d'interconnexion qui remplace des valeurs littérales par les URIs des entités décrites par ces valeurs.
+		</p>
+		<form class="dl-panel" id="linkage-form" method="post" action="${baseUri}/stringtouri?project=${it.uri}">
+			
+			<fieldset class="ui-widget-content dl-panel medium ui-corner-all">
+				<legend>Données à modifier</legend>
+				<div class="dl-form-elt form-stack ui-state-default ui-corner-top">
+					<label for="our-dataset">#i18n('dataset.label')</label>
+					<input id="our-dataset" name="targetdataset" type="text" placeholder="#i18n('field.mandatory')" required tabindex="1"/>
+					<p id="our-dataset-info"><span class="ui-icon ui-icon-help"></span>#i18n('dataset.info.ours') &mdash; #i18n('field.mandatory')</p>
 				</div>
-			</form>
-		</div>
+				<div class="dl-form-elt form-stack ui-state-default">
+					<label for="our-class">#i18n('class.label')</label>
+					<input id="our-class" name="targetclass" type="text" placeholder="#i18n('field.none')" tabindex="2"/>
+					<p id="our-class-info"><span class="ui-icon ui-icon-help"></span>#i18n('class.info.ours')</p>
+				</div>
+				<div class="dl-form-elt form-stack ui-state-default ui-corner-bottom">
+					<label for="our-predicate">#i18n('predicate.label')</label>
+					<input id="our-predicate" name="targetpredicate" type="text" placeholder="#i18n('field.mandatory')" required tabindex="3"/>
+					<p id="our-predicate-info"><span class="ui-icon ui-icon-help"></span>#i18n('predicate.info.ours') &mdash; #i18n('field.mandatory')</p>
+				</div>
+			</fieldset>
+
+			<fieldset class="ui-widget-content dl-panel medium ui-corner-all">
+				<legend>Données référence</legend>
+				<div class="dl-form-elt form-stack ui-state-default ui-corner-top">
+					<label for="their-dataset">#i18n('dataset.label')</label>
+					<input id="their-dataset" name="sourcedataset" type="text" placeholder="#i18n('field.mandatory')" required tabindex="4"/>
+					<p id="their-dataset-info"><span class="ui-icon ui-icon-help"></span>#i18n('dataset.info.theirs') &mdash; #i18n('field.mandatory')</p>
+				</div>
+				<div class="dl-form-elt form-stack ui-state-default">
+					<label for="their-class">#i18n('class.label')</label>
+					<input id="their-class" name="sourceclass" type="text" placeholder="#i18n('field.none')" tabindex="5"/>
+					<p id="their-class-info"><span class="ui-icon ui-icon-help"></span>#i18n('class.info.theirs')</p>
+				</div>
+				<div class="dl-form-elt form-stack ui-state-default ui-corner-bottom">
+					<label for="their-predicate">#i18n('predicate.label')</label>
+					<input id="their-predicate" name="sourcepredicate" type="text" placeholder="#i18n('field.mandatory')" required tabindex="6"/>
+					<p id="their-predicate-info"><span class="ui-icon ui-icon-help"></span>#i18n('predicate.info.theirs') &mdash; #i18n('field.mandatory')</p>
+				</div>
+			</fieldset>
+			<div class="dl-form-elt form-stack">
+				<input type="submit" id="convert-submit"  class="ui-priority-primary" value="#i18n('submit.label')" tabindex="7"/>
+				<a href="${baseUri}/project/${it.title}" id="convert-cancel"  class="ui-priority-secondary" title="#i18n('cancel.title') #i18n('project.workspace.link')" tabindex="8">#i18n('cancel.label')</a>
+			</div>
+		</form>
 	</div>
 	#footer
 	#script_links
-	<!-- Lien temporaire pour le développement . -->
-	<script type="text/javascript" src="http://localhost:8000/static/js/interface.js"></script>
+	<script type="text/javascript">
+		var none = "#i18n('field.none')";
+
+		/*
+		* Does nothing on the client-side to forbid the two datasets to be identical.
+		* Does nothing to filter the possible values once chooses have been made.
+		* Does nothing to 
+		*/
+		var datasets = [
+			#foreach( $source in $sources )
+			"$source",
+			#end
+		];
+
+		var ourclasses = [
+			#foreach( $class in $classes )
+			"$class",
+			#end
+		];
+
+		var theirclasses = [
+			#foreach( $class in $classes )
+			"$class",
+			#end
+		];
+
+		var ourpredicates = [
+			#foreach( $predicate in $predicates)
+			"$predicate",
+			#end
+		];
+
+		var theirpredicates = [
+			#foreach( $predicate in $predicates )
+			"$predicate",
+			#end
+		];
+
+	</script>
+	<!-- Lien temporaire pour le développement. -->
+	<script type="text/javascript" src="http://localhost:1337/static/js/interface.js"></script>
 	<!--<script language="javascript" src="${moduleUri}/static/js/interface.js"></script>-->
 </body>
 </html>
