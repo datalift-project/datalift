@@ -60,10 +60,9 @@ public class DataliftApplication extends Application
     // Class members
     //-------------------------------------------------------------------------
 
-    /* Class-level booleans to prevent multiple logging of registered
-     * JAX-RS resources as Jersey invokes several times the getClasses()
-     * and getSingletons() methods at startup.
-     */
+    // Class-level booleans to prevent multiple logging of registered
+    // JAX-RS resources as Jersey invokes several times the getClasses()
+    // and getSingletons() methods at startup.
     private static volatile boolean classesLogged   = false;
     private static volatile boolean singletonLogged = false;
 
@@ -80,6 +79,8 @@ public class DataliftApplication extends Application
         // A VelocityTemplateProcessor instance shall be created for
         // each request as it accesses the HTTP request context.
         classes.add(VelocityTemplateProcessor.class);
+        // The PreferredLocalesProvider makes the user's preferred locales
+        // (PreferredLocales) available for Jersey context injection.
         classes.add(PreferredLocalesProvider.class);
 
         if (! classesLogged) {

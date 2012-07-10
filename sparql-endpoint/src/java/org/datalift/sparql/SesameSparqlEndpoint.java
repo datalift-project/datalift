@@ -78,7 +78,11 @@ import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.rio.RDFHandler;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.helpers.RDFHandlerWrapper;
+import org.openrdf.rio.n3.N3Writer;
+import org.openrdf.rio.ntriples.NTriplesWriter;
 import org.openrdf.rio.rdfxml.RDFXMLWriter;
+import org.openrdf.rio.trig.TriGWriter;
+import org.openrdf.rio.trix.TriXWriter;
 import org.openrdf.rio.turtle.TurtleWriter;
 
 import static org.openrdf.query.QueryLanguage.SPARQL;
@@ -139,6 +143,8 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                     new Variant(TEXT_RDF_N3_TYPE, null, null),
                     new Variant(APPLICATION_N3_TYPE, null, null),
                     new Variant(APPLICATION_NTRIPLES_TYPE, null, null),
+                    new Variant(APPLICATION_TRIG_TYPE, null, null),
+                    new Variant(APPLICATION_TRIX_TYPE, null, null),
                     new Variant(TEXT_HTML_TYPE, null, null),
                     new Variant(APPLICATION_XHTML_XML_TYPE, null, null),
                     new Variant(APPLICATION_XML_TYPE, null, null),
@@ -414,17 +420,55 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
             }
         }
         else if ((mediaType.isCompatible(TEXT_TURTLE_TYPE)) ||
-                 (mediaType.isCompatible(APPLICATION_TURTLE_TYPE)) ||
-                 (mediaType.isCompatible(TEXT_N3_TYPE)) ||
-                 (mediaType.isCompatible(TEXT_RDF_N3_TYPE)) ||
-                 (mediaType.isCompatible(APPLICATION_N3_TYPE)) ||
-                 (mediaType.isCompatible(APPLICATION_NTRIPLES_TYPE))) {
+                 (mediaType.isCompatible(APPLICATION_TURTLE_TYPE))) {
             handler = new ConstructStreamingOutput(repository, query,
                                     startOffset, endOffset, baseUri, dataset)
                 {
                     @Override
                     protected RDFHandler newHandler(OutputStream out) {
                         return new TurtleWriter(out);
+                    }
+                };
+        }
+        else if ((mediaType.isCompatible(TEXT_N3_TYPE)) ||
+                 (mediaType.isCompatible(TEXT_RDF_N3_TYPE)) ||
+                 (mediaType.isCompatible(APPLICATION_N3_TYPE))) {
+            handler = new ConstructStreamingOutput(repository, query,
+                                    startOffset, endOffset, baseUri, dataset)
+                {
+                    @Override
+                    protected RDFHandler newHandler(OutputStream out) {
+                        return new N3Writer(out);
+                    }
+                };
+        }
+        else if (mediaType.isCompatible(APPLICATION_NTRIPLES_TYPE)) {
+            handler = new ConstructStreamingOutput(repository, query,
+                                    startOffset, endOffset, baseUri, dataset)
+                {
+                    @Override
+                    protected RDFHandler newHandler(OutputStream out) {
+                        return new NTriplesWriter(out);
+                    }
+                };
+        }
+        else if (mediaType.isCompatible(APPLICATION_TRIG_TYPE)) {
+            handler = new ConstructStreamingOutput(repository, query,
+                                    startOffset, endOffset, baseUri, dataset)
+                {
+                    @Override
+                    protected RDFHandler newHandler(OutputStream out) {
+                        return new TriGWriter(out);
+                    }
+                };
+        }
+        else if (mediaType.isCompatible(APPLICATION_TRIX_TYPE)) {
+            handler = new ConstructStreamingOutput(repository, query,
+                                    startOffset, endOffset, baseUri, dataset)
+                {
+                    @Override
+                    protected RDFHandler newHandler(OutputStream out) {
+                        return new TriXWriter(out);
                     }
                 };
         }
