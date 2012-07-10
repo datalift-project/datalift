@@ -1,0 +1,36 @@
+.parameters {
+	display:inline-block;
+	margin:10px;
+	padding:10px 20px 0;
+}
+
+h4 {
+	font-weight:bold;
+	font-size:120%;
+	margin-top:0;
+}
+
+dt {
+	font-weight:bold;
+	margin:10px 0 3px;
+	display:block;
+}
+
+dd {
+	width:350px;
+	font-size:75%;
+	color:#666;
+	margin:0;
+	padding:3px;
+	background-color:#fff;
+	border:1px solid #e1e1e1;
+}
+
+.results {
+	padding:10px;
+}
+
+.results h4 {
+	margin-left:20px;
+}
+

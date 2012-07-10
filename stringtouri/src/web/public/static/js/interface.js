@@ -1,102 +1,149 @@
-$(document).ready(function(){
+/*
+ * An interface for a {@link ProjectModule project module} that replaces RDF object fields
+ * from a RDF data by URIs to RDF entities.
+ * Autocompletion using jQuery, custom-made form validation.
+ * 
+ * @author tcolas
+ */
 
-	var successcolor = "#690";
-	var defaultcolor = "#999";
-	var errorcolor = "#933";
-	var noneEN = "None";
-	var noneFR = "Aucune";
+$(document).ready(function() {
 
-	var form = $("#linkage-form");
-	var submit = $("#convert-submit");
-	var cancel = $("#convert-cancel");
+	var ourds = $("#our-dataset");
 	var theirds = $("#their-dataset");
 	var ourclass = $("#our-class");
 	var theirclass = $("#their-class");
 	var ourpredicate = $("#our-predicate");
 	var theirpredicate = $("#their-predicate");
 
-	// Stubs
-	var datasets = [
-		"datasetsone",
-		"datasetstwo",
-		"datasetsthree",
-		"datasetsfour",
-		"test-bis"
-	];
-
-	var ourclasses = [
-		"ourclassesone",
-		"ourclassestwo",
-		"ourclassesthree",
-		"ourclassesfour",
-		"geo:Commune"
-	];
-
-	var theirclasses = [
-		"theirclassesone",
-		"theirclassestwo",
-		"theirclassesthree",
-		"theirclassesfour"
-	];
-
-	var ourpredicates = [
-		"ourpredicatesone",
-		"ourpredicatestwo",
-		"ourpredicatesthree",
-		"ourpredicatesfour",
-		"geo:nom"
-	];
-
-	var theirpredicates = [
-		"theirpredicatesone",
-		"theirpredicatestwo",
-		"theirpredicatesthree",
-		"theirpredicatesfour"
-	];
-
+	/*
+	* Applies the ui-state-error style to the container of {@param field}.
+	* @param {object} field The DOM element which contains the error.
+	*/
 	function errorState(field) {
-		field.addClass("ui-state-error-text");
-		field.css("border-color",errorcolor);
-		field.next("p").addClass("ui-state-error-text");
-		return false;
+		field.removeClass("ui-state-success");
+		field.parent().addClass("ui-state-error");
+		field.next("p").contents().first()
+			.removeClass("ui-icon-help ui-icon-check")
+			.addClass("ui-icon-alert")
+			.show();
 	}
 
-	function okState(field, color) {
-		field.removeClass("ui-state-error-text");
-		field.css("border-color",color);
-		field.next("p").removeClass("ui-state-error-text");
-		return true;
+	/*
+	* Applies the ui-state-success style to the container of {@param field}.
+	* @param {object} field The DOM element which is correct.
+	*/
+	function successState(field) {
+		field.parent().removeClass("ui-state-error");
+		field.addClass("ui-state-success");
+		field.next("p").contents().first()
+			.removeClass("ui-icon-help ui-icon-alert")
+			.addClass("ui-icon-check")
+			.show();
 	}
 
+	/*
+	* Rolls back the container of {@param field} to its default styling.
+	* @param {object} field The DOM element which has a "default" value.
+	*/
+	function defaultState(field) {
+		field.removeClass("ui-state-success");
+		field.parent().removeClass("ui-state-error");
+		field.next("p").contents().first()
+			.removeClass("ui-icon-help ui-icon-alert ui-icon-check")
+			.hide();
+	}
+
+	/*
+	* Checks if {@param str} is empty, null or undefined.
+	* @param {string} str The string to be checked.
+	* @return {bool} True if real string, false if empty ("") or null/undefined.
+	*/
+	function isEmpty(str) {
+		return (!str || 0 === str.length);
+	}
+
+	/*
+	* Checks if {@param val} isn't empty and is in the array {@param values}.
+	* @param {string} val The string to be checked.
+	* @param {array} values The array of strings where {@param val} must be.
+	* @return {bool} True if val is in the array, false otherwise.
+	*/
+	function isValid(val, values) {
+		return !isEmpty(val) && jQuery.inArray(val, values) != -1;
+	}
+
+	/*
+	* Checks if {@param val} is empty or has a value equal to "none".
+	* @param {string} val The string to be checked.
+	* @return {bool} True if val is empty OR is equal to none (eg. "None").
+	*/
+	function isEmptyOptional(val) {
+		return isEmpty(val) || val === none;
+	}
+
+	/*
+	* Checks if the mandatory input {@param field} is valid by looking for its
+	* value inside a given array.
+	* @param {object} field The DOM element to validate.
+	* @param {array} values The array of strings where the value must be.
+	* @return {bool} True if {@param field} is valid, ie. is in {@param values}.
+	*/
 	function validateMandatory(field, values) {
-		var valid;
-		if(jQuery.inArray(field.val().trim(), values) != -1) {
-			valid = okState(field, successcolor);
+		var str = field.val().trim();
+		var valid = isValid(str, values);
+		if (valid) {
+			successState(field);
 		}
 		else {
-			valid = errorState(field);
+			errorState(field);
 		}
 		return valid;
 	}
 
+	/*
+	* Checks if the mandatory input {@param field} is valid by looking for its value inside a given array.
+	* @param {object} field The DOM element to validate.
+	* @param {array} values The array of strings where the value must be.
+	* @return {bool} True if {@param field} is valid, ie. is in {@param values} OR {@param field} is empty.
+	*/
 	function validateOptional(field, values) {
-		var v = field.val().trim();
-		var valid;
-		if(jQuery.inArray(v, values) != -1) {
-			valid = okState(field, successcolor);
+		var str = field.val().trim();
+		var valid = isValid(str, values);
+		if (valid) {
+			successState(field);
 		}
-		else if ( !v.length || v == noneEN || v == noneFR) {
-			valid = okState(field, defaultcolor);
+		else if (isEmptyOptional(str)) {
+			valid = true;
+			defaultState(field);
 		}
 		else {
-			valid = errorState(field);
+			errorState(field);
 		}
 		return valid;
+	}
+
+	/*
+	* Checks if all mandatory and optional fields are valid. Optional fields
+	* don't have to be filled. Mandatory fields are tested separately to make
+	* use of the error state highlight.
+	* @return {bool} True if all of the form's fields are valid.
+	*/
+	function validateAll() {
+		// We have to check fields separately in order to mark the errors.
+		var od = validateMandatory(ourds, datasets);
+		var td = validateMandatory(theirds, datasets);
+		var op = validateMandatory(ourpredicate, ourpredicates);
+		var tp = validateMandatory(theirpredicate, theirpredicates);
+		
+		return od && td && op && tp
+			&& validateOptional(ourclass, ourclasses)
+			&& validateOptional(theirclass, theirclasses);
 	}
 	
-	submit.button();
-	cancel.button();
+	$("#convert-submit, #convert-cancel").button();
 
+	ourds.autocomplete({source: datasets, minLength: 0, delay: 0});
+	ourds.blur(function() {validateMandatory(ourds, datasets);});
 	theirds.autocomplete({source: datasets, minLength: 0, delay: 0});
 	theirds.blur(function() {validateMandatory(theirds, datasets);});
 	ourclass.autocomplete({source: ourclasses, minLength: 0, delay: 200});
@@ -108,7 +155,5 @@ $(document).ready(function(){
 	theirpredicate.autocomplete({source: theirpredicates, minLength: 0, delay: 300});
 	theirpredicate.blur(function() {validateMandatory(theirpredicate, theirpredicates);});
 
-	form.submit(function(){
-		return false;
-	});
+	$("#linkage-form").submit(function(){return validateAll();});
 });
