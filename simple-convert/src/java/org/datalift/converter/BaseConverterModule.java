@@ -207,7 +207,7 @@ public abstract class BaseConverterModule
     @Override
     public String toString() {
         return this.getClass().getSimpleName()
-                + " (" + this.getName() + this.inputSources + ')';
+                + " (\"/" + this.getName() + "\" " + this.inputSources + ')';
     }
 
     //-------------------------------------------------------------------------

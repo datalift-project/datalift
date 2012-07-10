@@ -47,7 +47,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.spi.PersistenceProvider;
 
@@ -64,6 +63,7 @@ import javassist.ClassPool;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.LifeCycle;
 import org.datalift.fwk.MediaTypes;
+import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.CsvSource;
 import org.datalift.fwk.project.SparqlSource;
 import org.datalift.fwk.project.SqlSource;
@@ -98,11 +98,16 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     /* package */ final static String PROJECT_DIRECTORY_NAME = "project";
 
     //-------------------------------------------------------------------------
+    // Class members
+    //-------------------------------------------------------------------------
+
+    private final static Logger log = Logger.getLogger();
+
+    //-------------------------------------------------------------------------
     // Instance members
     //-------------------------------------------------------------------------
 
     private EntityManagerFactory emf = null;
-    private EntityManager entityMgr = null;
     private GenericRdfJpaDao<Project> projectDao = null;
 
     private final Collection<Class<?>> classes = new HashSet<Class<?>>();
@@ -121,12 +126,21 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     /** {@inheritDoc} */
     @Override
     public void postInit(Configuration configuration) {
-        this.emf = this.createEntityManagerFactory(
+        try {
+            // Configures Empire JPA persistence provider.
+            this.emf = this.createEntityManagerFactory(
                                         configuration.getInternalRepository());
-        this.entityMgr = this.emf.createEntityManager();
-        // Create Data Access Object for Projects.
-        this.projectDao = new GenericRdfJpaDao<Project>(
-                                            ProjectImpl.class, this.entityMgr);
+            // Create Data Access Object for persisting Project objects.
+            this.projectDao = new GenericRdfJpaDao<Project>(
+                                                ProjectImpl.class, this.emf);
+            // Register DAO so that it receives request lifecycle events.
+            configuration.registerBean(this.projectDao);
+            log.debug("Initialized Empire persistence provider");
+        }
+        catch (RuntimeException e) {
+            log.fatal("Failed to initialize Empire persistence provider", e);
+            throw e;
+        }
     }
 
     /** {@inheritDoc} */
@@ -134,10 +148,6 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     public void shutdown(Configuration configuration) {
         // Shutdown JPA persistence provider.
         if (this.emf != null) {
-            if (this.entityMgr != null) {
-                this.entityMgr.close();
-                this.entityMgr = null;
-            }
             this.emf.close();
             this.emf = null;
         }
@@ -471,7 +481,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     /** {@inheritDoc} */
     @Override
     public void addPersistentClasses(Collection<Class<?>> classes) {
-        if (this.entityMgr != null) {
+        if (this.emf != null) {
             // Too late! empire is already started.
             throw new IllegalStateException("Already started");
         }
@@ -499,7 +509,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
      * @param  ns   the RDF namespace to add.
      */
     public void registerRdfNamespace(RdfNamespace ns) {
-        if (this.entityMgr != null) {
+        if (this.emf != null) {
             // Too late! empire is already started.
             throw new IllegalStateException("Already started");
         }
@@ -559,11 +569,10 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
                                                         Repository repository) {
         // Build Empire configuration.
         EmpireConfiguration empireCfg = new EmpireConfiguration();
-        // Set persistent classes and associated (custom) annotation provider.
-        empireCfg.setAnnotationProvider(CustomAnnotationProvider.class);
+        // Register persistent classes in Empire configuration.
         Map<String,String> props = empireCfg.getGlobalConfig();
-        props.put(CustomAnnotationProvider.ANNOTATED_CLASSES_PROP,
-                  join(this.classes, ",").replace("class ", ""));
+        String classList = join(this.classes, ",").replace("class ", "");
+        props.put(CustomAnnotationProvider.ANNOTATED_CLASSES_PROP, classList);
         // Register the path of each persistent class to Javassist bytecode
         // generation tool (otherwise object instantiation will fail in
         // multi-classloader environments (such as web apps)).
@@ -571,6 +580,10 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         for (Class<?> c : this.classes) {
             cp.insertClassPath(new ClassClassPath(c));
         }
+        log.debug("Registered persistent classes: {}", classList);
+        // Register custom annotation provider to retrieve the list of
+        // persistent classes from Empire configuration rather than from a file.
+        empireCfg.setAnnotationProvider(CustomAnnotationProvider.class);
         // Initialize Empire.
         Empire.init(empireCfg, new OpenRdfEmpireModule());
         // Configure target repository.

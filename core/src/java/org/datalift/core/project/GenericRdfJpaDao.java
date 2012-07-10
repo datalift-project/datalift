@@ -41,11 +41,16 @@ import java.util.LinkedList;
 import java.util.List;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityNotFoundException;
+import javax.persistence.EntityTransaction;
 import javax.persistence.Query;
 
 import com.clarkparsia.empire.annotation.RdfsClass;
 import com.clarkparsia.empire.impl.RdfQuery;
+
+import org.datalift.core.util.web.RequestLifecycleFilter.RequestLifecycleListener;
+import org.datalift.fwk.log.Logger;
 
 import static org.datalift.fwk.util.StringUtils.*;
 
@@ -57,20 +62,46 @@ import static org.datalift.fwk.util.StringUtils.*;
  *
  * @author lbihanic
  */
-public class GenericRdfJpaDao<T>
+public class GenericRdfJpaDao<T> implements RequestLifecycleListener
 {
+    //-------------------------------------------------------------------------
+    // Class members
+    //-------------------------------------------------------------------------
+
+    /**
+     * The JPA {@link EntityManager} associated to the current thread.
+     * <p>
+     * Per the JPA specifications, EntityManager instances are not
+     * thread-safe. Moreover as an implicit persistence context is
+     * associated to each EntityManager instance, creating a new
+     * instance for each user request guarantees that requests
+     * isolation.</p>
+     */
+    private final static ThreadLocal<EntityManager> entityManager =
+                                            new ThreadLocal<EntityManager>();
+
+    private final static Logger log = Logger.getLogger();
+
+    //-------------------------------------------------------------------------
+    // Instance members
+    //-------------------------------------------------------------------------
+
     /** The class the instances of which are persisted through this DAO. */
     protected final Class<? extends T> persistentClass;
     /** The RDF type of the persistent class. */
     protected final String rdfType;
     /**
-     * The JPA entity manager this DAO relies on to access the
+     * The JPA entity manager factory this DAO relies on to access the
      * persistent object store.
      */
-    protected final EntityManager entityMgr;
+    protected final EntityManagerFactory entityMgrFactory;
+
+    //-------------------------------------------------------------------------
+    // LifeCycle contract support
+    //-------------------------------------------------------------------------
 
     public GenericRdfJpaDao(final Class<? extends T> persistentClass,
-                            final EntityManager entityMgr) {
+                            final EntityManagerFactory entityMgrFactory) {
         if (persistentClass == null) {
             throw new IllegalArgumentException("persistentClass");
         }
@@ -80,13 +111,27 @@ public class GenericRdfJpaDao<T>
         }
         this.persistentClass = persistentClass;
         this.rdfType = rdfsClass.value();
-        this.entityMgr = entityMgr;
+        this.entityMgrFactory = entityMgrFactory;
     }
 
+    //-------------------------------------------------------------------------
+    // GenericRdfJpaDao contract definition
+    //-------------------------------------------------------------------------
+
+    /**
+     * Retrieves all persistent instance of T.
+     * @return a collection (possibly empty) containing all persistent
+     *         instances found in the underlying storage.
+     */
     public Collection<? extends T> getAll() {
         return this.getAll(this.persistentClass, this.rdfType);
     }
 
+    /**
+     * 
+     * @param id
+     * @return
+     */
     public T find(URI id) {
         return this.find(this.persistentClass, id);
     }
@@ -100,15 +145,20 @@ public class GenericRdfJpaDao<T>
     }
 
     public void persist(Object entity) {
-        this.entityMgr.persist(entity);
+        EntityManager em = this.getEntityManager();
+        em.persist(entity);
+        em.flush();
     }
 
     public <C> C save(C entity) {
-        return this.entityMgr.merge(entity);
+        EntityManager em = this.getEntityManager();
+        entity = em.merge(entity);
+        em.flush();
+        return entity;
     }
 
     public void delete(Object entity) {
-        this.entityMgr.remove(entity);
+        this.getEntityManager().remove(entity);
     }
 
     public void delete(URI id) {
@@ -116,11 +166,11 @@ public class GenericRdfJpaDao<T>
     }
 
     protected <C> C find(Class<C> entityClass, URI primaryKey) {
-        return this.entityMgr.find(entityClass, primaryKey);
+        return this.getEntityManager().find(entityClass, primaryKey);
     }
 
     protected <C> C get(Class<C> entityClass, URI primaryKey) {
-        C entity = this.entityMgr.find(entityClass, primaryKey);
+        C entity = this.getEntityManager().find(entityClass, primaryKey);
         if (entity == null) {
             throw new EntityNotFoundException(String.valueOf(primaryKey));
         }
@@ -136,10 +186,32 @@ public class GenericRdfJpaDao<T>
         if (isBlank(query)) {
             throw new IllegalArgumentException("query");
         }
-        Query q = this.entityMgr.createQuery(query);
+        Query q = this.getEntityManager().createQuery(query);
         q.setHint(RdfQuery.HINT_ENTITY_CLASS, entityClass);
         return (List<C>)(q.getResultList());
     }
+
+    //-------------------------------------------------------------------------
+    // RequestLifecycleListener contract support
+    //-------------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    @Override
+    public void requestReceived() {
+        // Discard any pending transaction but there should be any.
+        this.flushTransaction(true);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void responseSent() {
+        // Flush and commit current transaction, if any.
+        this.flushTransaction(false);
+    }
+
+    //-------------------------------------------------------------------------
+    // Specific implementation
+    //-------------------------------------------------------------------------
 
     @SuppressWarnings("unchecked")
     private <C> Collection<C> getAll(Class<C> entityClass, String rdfType) {
@@ -155,12 +227,63 @@ public class GenericRdfJpaDao<T>
         }
         List<C> results = new LinkedList<C>();
 
-        Query query = this.entityMgr.createQuery(
+        Query query = this.getEntityManager().createQuery(
                                 "where { ?result rdf:type " + rdfType + " . }");
         query.setHint(RdfQuery.HINT_ENTITY_CLASS, entityClass);
         for (Object p : query.getResultList()) {
             results.add((C)p);
         }
         return results;
+    }
+
+    /**
+     * Returns the {@link EntityManager} for the current thread,
+     * initializing one if none is available.
+     * @return the {@link EntityManager} for the current thread.
+     */
+    private EntityManager getEntityManager() {
+        EntityManager em = entityManager.get();
+        if (em == null) {
+            // Create and install new transaction manager.
+            em = this.entityMgrFactory.createEntityManager();
+            log.trace("Installing EntityManager: {}", em);
+            entityManager.set(em);
+        }
+        EntityTransaction tx = em.getTransaction();
+        if (! tx.isActive()) {
+            // Initiate new transaction.
+            tx.begin();
+        }
+        return em;
+    }
+
+    private void flushTransaction(boolean expectNone) {
+        // Close any pending transaction for the current thread.
+        EntityManager em = entityManager.get();
+        if (em != null) {
+            EntityTransaction tx = em.getTransaction();
+            if (tx.isActive()) {
+                if (expectNone) {
+                    log.warn("Unexpected active transaction found for thread {}",
+                                            Thread.currentThread().getName());
+                }
+                try {
+                    if (! tx.getRollbackOnly()) {
+                        em.flush();
+                        tx.commit();
+                    }
+                    else {
+                        tx.rollback();
+                    }
+                    em.clear();
+                    // Do not close the entity manager: Empire would shut down
+                    // the whole EntityManagerFactory!
+                    // em.close();
+                }
+                catch (Exception e) {
+                    log.fatal("Failed to clear persistence context", e);
+                }
+            }
+        }
     }
 }
