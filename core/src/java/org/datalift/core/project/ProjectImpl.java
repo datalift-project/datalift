@@ -51,7 +51,6 @@ import com.clarkparsia.empire.annotation.RdfId;
 import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.RdfsClass;
 
-import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.Ontology;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.Source;
@@ -109,12 +108,6 @@ public class ProjectImpl extends BaseRdfEntity implements Project
         }
     }
 */
-
-    //-------------------------------------------------------------------------
-    // Class members
-    //-------------------------------------------------------------------------
-
-    private final static Logger log = Logger.getLogger();
 
     //-------------------------------------------------------------------------
     // Instance members
@@ -233,7 +226,6 @@ public class ProjectImpl extends BaseRdfEntity implements Project
                 return source;
             }
         }
-        log.error("Source not found: {}", uri);
         return null;
     }
 
