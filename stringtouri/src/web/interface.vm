@@ -2,10 +2,6 @@
 #load("stringtouri/resources")
 ##
 #set( $moduleUri = "$baseUri/stringtouri")
-## Velocity hack -- How to do it properly ? locale.default not used
-#set( $french = "fr")
-#set( $english = "en")
-#set( $current = "fr")
 ##
 ## $!esc.html($it.title)
 ## Doesn't work ? 
@@ -18,14 +14,13 @@
 <head>
 	<title>#i18n('stringtouri.title') - Datalift</title>
 	#css_links
-	<!-- Lien temporaire pour le développement . -->
-	<link rel="stylesheet" type="text/css" href="http://localhost:1337/static/css/interface.css"/>
-	<!--<link rel="stylesheet" type="text/css" href="${moduleUri}/static/css/interface.css"/>-->
+	## Lien temporaire pour le développement.
+	## <link rel="stylesheet" type="text/css" href="http://localhost:1337/static/css/interface.css"/>
+	<link rel="stylesheet" type="text/css" href="${moduleUri}/static/css/interface.css"/>
 </head>
 <body>
 	#banner
 	<div class="ui-widget-content" id="workspace">
-		## <h3 class="ui-widget-header dl-widget-header">#if ($current == $english) ${it.title} #i18n('project.label') #{else} #i18n('project.label') ${it.title} #end &mdash; #i18n('stringtouri.title')</h3>
 		<h3 class="ui-widget-header dl-widget-header">#i18n('project.label' ${it.title}) &mdash; #i18n('stringtouri.title')</h3> 
 		<p class="description dl-panel medium">
 			StringToURI est un module d'interconnexion qui remplace des valeurs littérales par les URIs des entités décrites par ces valeurs.
@@ -116,8 +111,8 @@
 		];
 
 	</script>
-	<!-- Lien temporaire pour le développement. -->
-	<script type="text/javascript" src="http://localhost:1337/static/js/interface.js"></script>
-	<!--<script language="javascript" src="${moduleUri}/static/js/interface.js"></script>-->
+	## Lien temporaire pour le développement.
+	##<script type="text/javascript" src="http://localhost:1337/static/js/interface.js"></script>
+	<script language="javascript" src="${moduleUri}/static/js/interface.js"></script>
 </body>
 </html>
