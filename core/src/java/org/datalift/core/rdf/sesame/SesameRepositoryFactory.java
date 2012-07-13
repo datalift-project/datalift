@@ -50,7 +50,7 @@ import org.datalift.fwk.Configuration;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.rdf.Repository;
 
-import static org.datalift.fwk.util.StringUtils.isBlank;
+import static org.datalift.fwk.util.StringUtils.*;
 
 
 /**
@@ -172,8 +172,14 @@ public final class SesameRepositoryFactory extends RepositoryFactory
             try {
                 repository = new HTTPRepository(this.url);
                 repository.initialize();
-                log.info("Sesame HTTP repository successfully connected: {}",
-                         this.url);
+                if (isSet(this.name)) {
+                    log.info("Sesame HTTP repository \"{}\" successfully connected at: {}",
+                             this.name, this.url);
+                }
+                else {
+                    log.info("Sesame HTTP repository successfully connected: {}",
+                             this.url);
+                }
             }
             catch (OpenRDFException e) {
                 throw new TechnicalException("repository.connect.error", e,
@@ -229,14 +235,21 @@ public final class SesameRepositoryFactory extends RepositoryFactory
                 if (path.startsWith(SAIL_URL_SCHEME)) {
                     path = path.substring(SAIL_URL_SCHEME.length());
                 }
-                MemoryStore store = (path.startsWith(FILE_URL_SCHEME))?
+                boolean hasFileBackend = path.startsWith(FILE_URL_SCHEME);
+                repository = new SailRepository((hasFileBackend)?
                                     new MemoryStore(new File(new URI(path))):
-                                    new MemoryStore();
-                repository = new SailRepository(store);
+                                    new MemoryStore());
                 repository.initialize();
-                log.info("Sesame SAIL repository successfully connected: {}",
-                         this.url);
-
+                if (hasFileBackend) {
+                    if (isSet(this.name)) {
+                        log.info("Sesame SAIL repository \"{}\" initialized with {}",
+                                 this.name, path);
+                    }
+                    else {
+                        log.info("New Sesame SAIL repository initialized for {}",
+                                 path);
+                    }
+                }
             }
             catch (IllegalArgumentException e) {
                 // File path URI rejected by File constructor.

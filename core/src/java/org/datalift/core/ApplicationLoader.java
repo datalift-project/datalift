@@ -514,7 +514,7 @@ public class ApplicationLoader extends LogServletContextListener
                 ModuleDesc desc = new ModuleDesc(m, cl, f);
                 this.modules.put(name, desc);
                 // Notify module registration.
-                log.info("Registered module \"{}\" with URL path \"{}\"",
+                log.info("Registered module \"{}\" with URL path \"/{}\"",
                                             m.getClass().getSimpleName(), name);
             }
         }
