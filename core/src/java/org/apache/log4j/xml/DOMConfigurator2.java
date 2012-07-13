@@ -556,7 +556,7 @@ public class DOMConfigurator2 extends DOMConfigurator
     }
 
     /**
-     * Analyses a DOM document, loading all Log4J configuration tags,
+     * Analyzes a DOM document, loading all Log4J configuration tags,
      * regardless their depth, and adding the configured elements to
      * the current repository.
      *
