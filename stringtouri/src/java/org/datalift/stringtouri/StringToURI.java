@@ -78,7 +78,7 @@ import org.openrdf.query.TupleQueryResult;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
 
-import util.SesameApp;
+import me.assembla.stringtouri.SesameApp;
 
 import com.sun.jersey.api.view.Viewable;
 
@@ -96,10 +96,17 @@ public class StringToURI extends BaseModule implements ProjectModule {
     // Constants
     //-------------------------------------------------------------------------
 
-    /** The module name. */
+    /** The module's name. */
     public static final String MODULE_NAME = "stringtouri";
+    /** Module's button label in french. */
+    public static final String BTN_LABEL_FR = "Transformation des Strings en URIs";
+    /** Module's button label in english. */
+    public static final String BTN_LABEL_EN = "String to URI Transform";
+    /** Binding for the default subject var in SPARQL. */
     public static final String sbind = "s";
+    /** Binding for the default predicate var in SPARQL. */
     public static final String pbind = "p";
+    /** Binding for the default object var in SPARQL. */
     public static final String obind = "o";
 
     //-------------------------------------------------------------------------
@@ -126,8 +133,10 @@ public class StringToURI extends BaseModule implements ProjectModule {
      */
     public StringToURI() {
         super(MODULE_NAME);
+        //TODO Déterminer la position utilisable.
         position = 99999999;
-        label = "Transformation des Strings en URIs";
+        //TODO Internationalization
+        label = (true) ? BTN_LABEL_FR : BTN_LABEL_EN;
     }
 
     //-------------------------------------------------------------------------
@@ -337,7 +346,6 @@ public class StringToURI extends BaseModule implements ProjectModule {
 		LinkedList<String> ret = new LinkedList<String>();
 		String classesQuery;
 		for (String srcuri : sourcesURIs) {
-			// SELECT DISTINCT ?o WHERE {?s <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?o}
 			classesQuery = "SELECT DISTINCT ?" + obind + " FROM <" + srcuri + "> WHERE {?" + sbind + " a ?" + obind + "}";
 			ret.addAll(selectQuery(co, classesQuery, obind));
 		}
@@ -389,6 +397,7 @@ public class StringToURI extends BaseModule implements ProjectModule {
         // Retrieve the current project and its sources.
         Project proj = this.getProject(projectId);
         LinkedList<String> sourcesURIs = getSourcesURIs(proj.getSources());
+        
         // Retrieve Datalift's internal repository.
         Repository internal = Configuration.getDefault().getInternalRepository();
         RepositoryConnection internalco = internal.newConnection();
@@ -425,16 +434,12 @@ public class StringToURI extends BaseModule implements ProjectModule {
     		            @FormParam("targetclass") String targetClass) throws ObjectStreamException {
     	
         Project proj = this.getProject(projectId);
-        //XXX Gérer les contextes <!>
         
-//        SesameApp test = new SesameApp(sourceDataset, targetDataset);
-//        test.useTypedLinkage(sourcePredicate, targetPredicate, sourceClass, targetClass);
-//        test.useSPARQLOutput(false);
-//        
-//        LinkedList<String> res = new LinkedList<String>();
-//        res.add(test.getOutput());
-        LinkedList<LinkedList<String>> newTriples = new LinkedList<LinkedList<String>>();
-//        newTriples.add(res);
+        SesameApp test = new SesameApp("http://localhost:8080/openrdf-sesame/repositories/dailymed","http://localhost:8080/openrdf-sesame/repositories/sider","<file://441.nt>","<file://sider_dump.nt>");
+		test.useSimpleLinkage("http://www4.wiwiss.fu-berlin.de/dailymed/resource/dailymed/name", "http://www4.wiwiss.fu-berlin.de/sider/resource/sider/drugName");
+		test.useSPARQLOutput(false);
+		
+        LinkedList<LinkedList<String>> newTriples = test.getOutputAsList();
         
         HashMap<String, Object> args = new HashMap<String, Object>();
 	    args.put("it", proj);
@@ -444,22 +449,6 @@ public class StringToURI extends BaseModule implements ProjectModule {
 	    args.put("targetpredicate", targetPredicate);
 	    args.put("sourceclass", sourceClass);
 	    args.put("targetclass", targetClass);
-	    
-	    
-	    LinkedList<String> tmp = new LinkedList<String>();
-	    tmp.add("http://data.lirmm.fr/passim/392");
-	    tmp.add("http://data.lirmm.fr/ontologies/passim#cityThrough");
-	    tmp.add("http://rdf.insee.fr/geo/2011/COM_51055");
-	    newTriples.add(new LinkedList<String>(tmp));
-	    tmp.removeLast();
-	    tmp.add("http://rdf.insee.fr/geo/2011/COM_54027");
-	    newTriples.add(new LinkedList<String>(tmp));
-	    tmp.removeLast();
-	    tmp.add("http://rdf.insee.fr/geo/2011/COM_54431");
-	    newTriples.add(new LinkedList<String>(tmp));
-	    tmp.removeLast();
-	    tmp.add("http://rdf.insee.fr/geo/2011/COM_44109");
-	    newTriples.add(new LinkedList<String>(tmp));
 	    args.put("newtriples",newTriples);
         return Response.ok(this.newViewable("/result.vm", args)).build();
 	}
