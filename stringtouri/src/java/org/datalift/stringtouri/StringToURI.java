@@ -435,8 +435,10 @@ public class StringToURI extends BaseModule implements ProjectModule {
     	
         Project proj = this.getProject(projectId);
         
-        SesameApp test = new SesameApp("http://localhost:8080/openrdf-sesame/repositories/dailymed","http://localhost:8080/openrdf-sesame/repositories/sider","<file://441.nt>","<file://sider_dump.nt>");
-		test.useSimpleLinkage("http://www4.wiwiss.fu-berlin.de/dailymed/resource/dailymed/name", "http://www4.wiwiss.fu-berlin.de/sider/resource/sider/drugName");
+        String repositoryURL = Configuration.getDefault().getInternalRepository().getUrl();
+        
+        SesameApp test = new SesameApp(repositoryURL, repositoryURL, sourceDataset, targetDataset);
+		test.useSimpleLinkage(sourcePredicate, targetPredicate);
 		test.useSPARQLOutput(false);
 		
         LinkedList<LinkedList<String>> newTriples = test.getOutputAsList();

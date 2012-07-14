@@ -10,8 +10,8 @@
 	<title>#i18n('stringtouri.title') - Datalift</title>
 	#css_links
 	## Lien temporaire pour le développement.
-	 <link rel="stylesheet" type="text/css" href="http://localhost:1337/static/css/interface.css"/>
-	##<link rel="stylesheet" type="text/css" href="${moduleUri}/static/css/interface.css"/>
+	 <link rel="stylesheet" type="text/css" href="http://localhost:1337/static/css/stringtouri-interface.css"/>
+	##<link rel="stylesheet" type="text/css" href="${moduleUri}/static/css/stringtouri-interface.css"/>
 </head>
 <body>
 	#banner
@@ -20,10 +20,10 @@
 		
 		## <p class="description dl-panel medium">#i18n('stringtouri.description')</p>
 
-		<form class="dl-panel" id="linkage-form" method="post" action="${baseUri}/stringtouri?project=${it.uri}">
+		<form class="dl-panel launching-form" id="linkage-form" method="post" action="${baseUri}/stringtouri?project=${it.uri}">
 			
 			<fieldset class="ui-widget-content dl-panel medium ui-corner-all">
-				<legend>Données à modifier</legend>
+				<legend>#i18n('modified.label')</legend>
 				<div class="dl-form-elt form-stack ui-state-default ui-corner-top">
 					<label for="our-dataset">#i18n('dataset.label')</label>
 					<input id="our-dataset" name="targetdataset" type="text" placeholder="#i18n('field.mandatory')" required tabindex="1"/>
@@ -43,7 +43,7 @@
 
 
 			<fieldset class="ui-widget-content dl-panel medium ui-corner-all">
-				<legend>Données référence</legend>
+				<legend>#i18n('reference.label')</legend>
 				<div class="dl-form-elt form-stack ui-state-default ui-corner-top">
 					<label for="their-dataset">#i18n('dataset.label')</label>
 					<input id="their-dataset" name="sourcedataset" type="text" placeholder="#i18n('field.mandatory')" required tabindex="4"/>
