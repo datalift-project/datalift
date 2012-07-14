@@ -13,40 +13,52 @@
 	<title>#i18n('stringtouri.title') - Datalift</title>
 	#css_links
 	## Lien temporaire pour le développement.
-	<link rel="stylesheet" type="text/css" href="http://localhost:1337/static/css/result.css"/>
-	## <link rel="stylesheet" type="text/css" href="${moduleUri}/static/css/result.css"/>
+	<link rel="stylesheet" type="text/css" href="http://localhost:1337/static/css/stringtouri-interface.css"/>
+	## <link rel="stylesheet" type="text/css" href="${moduleUri}/static/css/stringtouri-interface.css"/>
 </head>
 <body>
 	<a href="${baseUri}/project/${it.title}" id="goto_workspace" class="ui-priority-primary" style="position:absolute;top:15px;right:15px;">#i18n("project.workspace.link")</a>
 	#banner
 	<div class="ui-widget-content" id="workspace">
 		<h3 class="ui-widget-header dl-widget-header">#i18n('project.label' ${it.title}) &mdash; #i18n('stringtouri.title')</h3>
-		<div class="dl-panel" id="result-display">
+		<div class="dl-panel result-display">
 			<div class="parameters ui-widget-content dl-panel medium ui-corner-all">
-				<h4>Données à modifier</h4>
+				<h4>#i18n('modified.label')</h4>
 				<dl>
-					<dt>#i18n('dataset.label')</dt>
-					<dd title="${targetdataset}">${targetdataset}</dd>
-					<dt>#i18n('class.label')</dt>
-					<dd title="${targetclass}">${targetclass}</dd>
-					<dt>#i18n('predicate.label')</dt>
-					<dd title="${targetpredicate}">${targetpredicate}</dd>
+					<div class="dl-form-elt form-stack ui-state-default ui-corner-top">
+						<dt>#i18n('dataset.label')</dt>
+						<dd title="${targetdataset}">${targetdataset}</dd>
+					</div>
+					<div class="dl-form-elt form-stack ui-state-default">
+						<dt>#i18n('class.label')</dt>
+						<dd title="${targetclass}">${targetclass}</dd>
+					</div>
+					<div class="dl-form-elt form-stack ui-state-default ui-corner-bottom">
+						<dt>#i18n('predicate.label')</dt>
+						<dd title="${targetpredicate}">${targetpredicate}</dd>
+					</div>
 				</dl>
 			</div>
 			<div class="parameters ui-widget-content dl-panel medium ui-corner-all">
-				<h4>Données référence</h4>
+				<h4>#i18n('reference.label')</h4>
 				<dl>
-					<dt>#i18n('dataset.label')</dt>
-					<dd title="${sourcedataset}">${sourcedataset}</dd>
-					<dt>#i18n('class.label')</dt>
-					<dd title="${sourceclass}">${sourceclass}</dd>
-					<dt>#i18n('predicate.label')</dt>
-					<dd title="${sourcepredicate}">${sourcepredicate}</dd>
+					<div class="dl-form-elt form-stack ui-state-default ui-corner-top">
+						<dt>#i18n('dataset.label')</dt>
+						<dd title="${sourcedataset}">${sourcedataset}</dd>
+					</div>
+					<div class="dl-form-elt form-stack ui-state-default">
+						<dt>#i18n('class.label')</dt>
+						<dd title="${sourceclass}">${sourceclass}</dd>
+					</div>
+					<div class="dl-form-elt form-stack ui-state-default ui-corner-bottom">
+						<dt>#i18n('predicate.label')</dt>
+						<dd title="${sourcepredicate}">${sourcepredicate}</dd>
+					</div>
 				</dl>
 			</div>
 			<div class="results">
-				<h4>#i18n('grid.title') #i18n('stringtouri.title')</h4>
-				<table id="grid">
+				<h4>#i18n('result.title') #i18n('stringtouri.title')</h4>
+				<table id="grid" class="results-grid">
 					<thead>
 						<tr>
 							<th>#i18n("source.grid.row.heading")</th>
@@ -56,12 +68,12 @@
 						</tr>
 					</thead>
 					<tbody>
-						## Pour chaque nouveau triplet, on va afficher ses S, P, O.
+						## For each new triple, we'll display its S, P, O.
 						#foreach( $triple in $newtriples )
 							#if( $foreach.count > $maxEntries ) 
 								#break 
 							#end
-							## Ajout du numéro de ligne.
+							## Line number may be useful.
 							<tr><td>$velocityCount</td>
 						  	#foreach( $elt in $triple ) 
 						  		<td title="$!esc.html($elt)">$!esc.html($elt)</td> 
@@ -70,8 +82,8 @@
 						#end
 					</tbody>
 				</table>
-				<div id="pagernav"></div>
-				<div id="searchnav" style="display:none">
+				<div id="pagernav" class="results-grid"></div>
+				<div id="searchnav" class="results-grid" style="display:none">
 					<label for="gridsearch">#i18n("grid.search.value.label")</label>
 					<input type="search" id="gridsearch" placeholder="#i18n("grid.search.value.placeholder")" results="0" class="gridsearch"/>
 					<label for="searchColumn">#i18n("grid.search.column.label")</label>
