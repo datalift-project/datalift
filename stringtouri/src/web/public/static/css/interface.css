@@ -1,3 +1,9 @@
+.description {
+	margin: 10px 20px;
+	text-align:justify;
+	color:#666;
+}
+
 fieldset {
 	display:inline-block;
 }

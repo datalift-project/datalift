@@ -135,9 +135,14 @@ $(document).ready(function() {
 		var op = validateMandatory(ourpredicate, ourpredicates);
 		var tp = validateMandatory(theirpredicate, theirpredicates);
 		
-		return od && td && op && tp
+		var ret = od && td && op && tp
 			&& validateOptional(ourclass, ourclasses)
 			&& validateOptional(theirclass, theirclasses);
+
+		if(ret) {
+			$("#convert-submit").attr("disabled", true);
+		}
+		return ret;
 	}
 	
 	$("#convert-submit, #convert-cancel").button();

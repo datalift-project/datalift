@@ -11,19 +11,20 @@ h4 {
 }
 
 dt {
-	font-weight:bold;
 	margin:10px 0 3px;
 	display:block;
 }
 
 dd {
 	width:350px;
-	font-size:75%;
+	font-size:70%;
 	color:#666;
 	margin:0;
 	padding:3px;
 	background-color:#fff;
 	border:1px solid #e1e1e1;
+	overflow:hidden;
+	height:1.1em;
 }
 
 .results {
