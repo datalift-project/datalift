@@ -1,12 +1,13 @@
 Title: StringToURI Readme
 Author: Thibaud Colas
-Date: 10/07/12
+Date: 15/07/12
 
 # StringToURI Readme #
 
 ## tl;dr ##
 
-This module is an interface for [StringToURI]("http://stringtouri.assembla.me/").
+This module is an interface for [StringToURI]("http://stringtouri.assembla.me/").  
+Version 0.8
 
 ## What is StringToURI ? ##
 
@@ -48,5 +49,3 @@ We can compare the two predicates `<givenDataset:takesPlaceIn>` and `<referenceD
 * StringToURI was made in Java using the OpenRDF Sesame API and RDF repositories.
 * [StringToURI documentation]("http://stringtouri.assembla.me/")
 * [StringToURI interface design and development]("http://thibweb.github.com/linked-lifted/")
-* [Resources on designing large web forms]("https://delicious.com/stacks/view/EqgnIa")
-* [Live build.xml]("https://gist.github.com/2989006")

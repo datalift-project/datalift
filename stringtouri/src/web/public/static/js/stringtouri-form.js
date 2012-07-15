@@ -161,4 +161,5 @@ $(document).ready(function() {
 	theirpredicate.blur(function() {validateMandatory(theirpredicate, theirpredicates);});
 
 	$("#linkage-form").submit(function(){return validateAll();});
+
 });
