@@ -66,7 +66,6 @@
   <property name="core.home" location="${basedir}/../core"/>
   <property file="${core.home}/build.properties"/>
 
-
   <!-- ================ File and Directory Names ========================== -->
 
   <!--
@@ -93,7 +92,7 @@
    -->
 
   <property name="app.name"             value="stringtouri"/>
-  <property name="app.version"          value="0.4"/>
+  <property name="app.version"          value="0.8"/>
   <property name="app.path"             value="/${app.name}"/>
   <property name="app.long.name"        value="StringToURI module for DataLift"/>
 
@@ -106,8 +105,8 @@
   <property name="lib.home"             location="${basedir}/lib"/>
   <property name="run.lib.home"         location="${lib.home}/runtime"/>
 
-  <property name="stringtouri.version"         value="1.0"/>
-  <property name="stringtouri.jar" location="${run.lib.home}/stringtouri-${stringtouri.version}/stringtouri.jar"/>
+  <property name="stu.version"          value="1.0"/>
+  <property name="stringtouri.jar"      location="${run.lib.home}/stringtouri-${stu.version}/stringtouri.jar"/>
 
   <property name="fwk.web.home"         location="${fwk.home}/src/web"/>
   <property name="fwk.lib.home"         location="${fwk.home}/lib"/>
@@ -128,21 +127,19 @@
 
   <available property="locale.exists" file="${locale.default_resources}"/>
 
-
   <!-- ================ Compilation Control Options ======================= -->
 
   <!--
     These properties control option settings on the Javac compiler when it
-    is invoked using the <javac> task.
+    is invoked using the <javac>
+  task.
      - compile.debug        Should compilation include the debug option?
      - compile.deprecation  Should compilation include the deprecation option?
      - compile.optimize     Should compilation include the optimize option?
    -->
-
   <property name="compile.debug"        value="true"/>
   <property name="compile.deprecation"  value="false"/>
   <property name="compile.optimize"     value="false"/>
-
 
   <!-- ================ Compilation Classpath ============================= -->
 
@@ -160,7 +157,7 @@
     <fileset dir="${fwk.run.libs}">
       <include name="**/*.jar"/>
     </fileset>
-	<fileset dir="${run.lib.home}">
+    <fileset dir="${run.lib.home}">
       <include name="**/*.jar"/>
     </fileset>
     <fileset dir="${fwk.dist.home}">
@@ -180,8 +177,6 @@
     </fileset>
   </path>
 
-
-
   <!-- ================ All Target ======================================== -->
 
   <!--
@@ -191,7 +186,6 @@
 
   <target name="all" depends="clean,dist"
    description="Cleans build and dist directories, then rebuilds distribution"/>
-
 
   <!-- ================ Clean Target ====================================== -->
 
@@ -205,7 +199,6 @@
     <delete dir="${build.home}"/>
     <delete dir="${dist.home}"/>
   </target>
-
 
   <!-- ================ Prepare Target ==================================== -->
 
@@ -228,7 +221,6 @@
     <!-- Create compilation target directory -->
     <mkdir dir="${classes.dir}"/>
   </target>
-
 
   <!-- ================ Compile Target ==================================== -->
 
@@ -255,7 +247,6 @@
       <fileset dir="${src.home}" excludes="**/*.java,**/*.html,**/.*"/>
     </copy>
   </target>
-
 
   <!-- ================ Dist Target ======================================= -->
 
@@ -296,15 +287,14 @@
   <target name="dist" depends="compile,prepare-dist,resource-copy"
                       description="Create binary distribution">
     <!-- Create module JAR file -->
-	<copy file="${stringtouri.jar}" tofile="${jar.path}"/>
+    <copy file="${stringtouri.jar}" tofile="${jar.path}"/>
     <jar jarfile="${jar.path}" update="true">
       <fileset dir="${classes.dir}"/>
       <service type="org.datalift.fwk.Module">
-        <provider classname="org.datalift.stringtouri.StringToURI"/>
+        <provider classname="org.datalift.stringtouri.InterconnectionController"/>
       </service>
     </jar>
   </target>
-
 
   <!-- ================ Helper Targets ==================================== -->
 

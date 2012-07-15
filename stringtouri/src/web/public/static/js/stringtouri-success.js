@@ -9,4 +9,10 @@
 $(document).ready(function() {
 
 	$("#goto_workspace").button();
+
+	htmlTableTojQGrid({ 
+		name: '#', 
+		index: '#', 
+		sorttype:'int'
+	});
 });

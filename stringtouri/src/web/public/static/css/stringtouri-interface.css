@@ -4,51 +4,61 @@
  * @date 14072012
  */
 
+.description {
+	margin: 10px 20px;
+	text-align: justify;
+	color: #666;
+}
+
 /**
  * ---------------------------------------------------------------------------
  * StringToURI' overall interface.
  */
 
-.launching-form, .result-display {
-	width:auto;
+.launching-form, .success-display, .error-display {
+	width: auto;
 }
 
 fieldset, .parameters {
-	display:inline-block;
+	display: inline-block;
 }
 
 legend, h4 {
-	font-weight:bold;
-	font-size:120%;
-	margin:10px 10px;
-	padding:0;
+	font-weight: bold;
+	font-size: 120%;
+	margin: 10px 10px;
+	padding: 0;
+}
+
+.parameters h4, .results h4, .error-display h4, .error-display .form-stack {
+	margin-left: 20px;
 }
 
 .form-stack, dl {
-	display:block;
-	margin:10px 0 0;
-	padding:10px;
+	display: block;
+	margin: 10px 0 0;
+	padding: 10px;
 }
 
 .form-stack label, .form-stack dt {
-	font-weight:bold;	
-	margin-bottom:3px;
-	display:block;
+	font-weight: bold;	
+	margin-bottom: 3px;
+	display: block;
 }
 
 .form-stack input[type=text], .form-stack dd {
-	width:98%;
-	min-width:350px;
+	width: 98%;
+	min-width: 350px;
 }
 
 .form-stack p, dd {
-	margin:2px 0;
-	color:#666;
-	font-size:75%;
+	margin: 2px 0;
+	color: #666;
+	font-size: 75%;
 }
 
 .ui-state-success {
-	color:#690;
+	color: #690;
 }
 
 /** 
@@ -57,13 +67,13 @@ legend, h4 {
  */
 
 fieldset {
-	width:45%;
+	width: 45%;
 }
 
 .form-stack .ui-icon {
-	float:left;
+	float: left;
 	margin-right: 5px;
-	display:none;
+	display: none;
 }
 
 input[type=submit] {
@@ -72,58 +82,77 @@ input[type=submit] {
 
 /**
  * ---------------------------------------------------------------------------
- * StringToURI' post-process page.
+ * StringToURI' post-process success page.
  */
 
-.result-display {
-	padding-top:20px;
+.success-display {
+	padding-top: 20px;
 }
 
 .parameters {
-	width:47%;
-	min-width:400px;
-}
-
-.parameters h4 {
-	margin-left:20px;
+	width: 47%;
+	min-width: 400px;
 }
 
 .form-stack dd {
-	font-weight:normal;
-	background-color:#fff;
-	border:1px solid #e1e1e1;
+	font-weight: normal;
+	background-color: #fff;
+	border: 1px solid #e1e1e1;
 
-	-webkit-box-shadow:inset 0 1px 0 #999;
-	   -moz-box-shadow:inset 0 1px 0 #999;
-			box-shadow:inset 0 1px 0 #999;
+	-webkit-box-shadow: inset 0 1px 0 #999;
+	   -moz-box-shadow: inset 0 1px 0 #999;
+			box-shadow: inset 0 1px 0 #999;
 
-	padding:3px;
-	height:1.3em;
+	padding: 3px;
+	height: 1.3em;
 	line-height: 1.4em;
 
-	overflow:hidden;
-	word-wrap:break-word;
+	overflow: hidden;
+	word-wrap: break-word;
 	-ms-word-break: break-all;
     	word-break: break-all;
     	word-break: break-word;
-	overflow-wrap:break-word;
+	overflow-wrap: break-word;
 	-webkit-hyphens: auto;
        -moz-hyphens: auto;
     		hyphens: auto;
 }
 
 .results {
-	width:auto;
-	padding:10px;
+	width: auto;
+	padding: 10px;
 }
 
-.results h4 {
-	margin-left:20px;
+/**
+ * ---------------------------------------------------------------------------
+ * StringToURI' post-process error page.
+ */
+
+.error-display img {
+	margin-left: 50px;
+	position: relative;
+	top: 15px;
 }
 
-.description {
-	margin:10px 20px;
-	text-align:justify;
-	color:#666;
+ul {
+	list-style-type: none;
+	background-image: none;
+	padding: 0 10px;
 }
 
+ul li {
+	margin: 10px 0;
+}
+
+ul li .ui-icon {
+	float: left;
+	margin-right: 5px;
+}
+
+.error-label {
+	text-transform: uppercase;
+}
+
+.error-label: after {
+	content: ' — ';
+}
