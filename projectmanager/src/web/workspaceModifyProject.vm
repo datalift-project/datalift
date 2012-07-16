@@ -24,7 +24,7 @@
 			<a href="${baseUri}/project">#i18n("back")</a>
 			<form method="post" action="$target" class="form_formated">
 				<p><label for="title" class="medium">#i18n("project.name"):</label>
-				<input type="text" id="title" name="title" value="$!esc.html($it.title)"/></p>
+				<input type="text" id="title" name="title" value="$!esc.html($it.title)" autofocus="true"/></p>
 				<p><label for="description" class="medium">#i18n("project.description"): </label>
 				<input type="text" id="description" name="description" value="$!esc.html($it.description)" /></p>
 				<p><label for="license" class="medium">#i18n("project.license"): </label>
