@@ -144,6 +144,9 @@ public final class FileUtils
             throw new IllegalArgumentException(
                                 new FileNotFoundException(String.valueOf(f)));
         }
+        if (bufferSize <= 0) {
+            throw new IllegalArgumentException("bufferSize");
+        }
         InputStream in = null;
         try {
             // Get a buffered input stream on file data.
