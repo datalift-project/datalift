@@ -551,7 +551,7 @@ public class DOMConfigurator2 extends DOMConfigurator
                 Thread.currentThread().interrupt();
             }
             LogLog.error("Could not parse Log4J configuration at "
-                         + source + ".", e);
+                         + source.getSystemId(), e);
         }
     }
 
