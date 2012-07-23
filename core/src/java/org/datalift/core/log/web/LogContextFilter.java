@@ -54,6 +54,17 @@ import org.datalift.fwk.security.SecurityContext;
  * A servlet filter that initializes the
  * {@link Logger#setContext(Object, Object) log diagnostic contexts}
  * from the HTTP request context.
+ * <p>
+ * Configuration of this filter is based on the following initialization
+ * parameters:</p>
+ * <dl>
+ *  <dt><code>allow-force-debug</code></dt>
+ *  <dd>If set to "true", the filter checks for the
+ *   <code>force-debug</code> parameter in incoming HTTP requests and,
+ *   if set to <code>true</code>, forces the debug log traces for the
+ *   processing of the request.<br />
+ *   By default, this parameter is set to "true".</dd>
+ * </dl>
  *
  * @author lbihanic
  */
@@ -63,7 +74,24 @@ public class LogContextFilter implements Filter
     // Constants
     //-------------------------------------------------------------------------
 
+    /**
+     * The filter configuration parameter to allow ignoring the
+     * {@link LogContextFilter#FORCE_DEBUG_REQUEST_PARAMETER} in
+     * requests.
+     * <p>
+     * Defaults to <code>true</code>.</p>
+     */
+    public final static String ALLOW_FORCE_DEBUG_CONFIG_PARAMETER =
+                                                            "allow-force-debug";
+    /** The request parameter to force debug log for a given request. */
     public final static String FORCE_DEBUG_REQUEST_PARAMETER = "force-debug";
+
+    //-------------------------------------------------------------------------
+    // Instance members
+    //-------------------------------------------------------------------------
+
+    /** Should the force-debug request parameter be honored. */
+    private boolean allowForceDebug = true;
 
     //-------------------------------------------------------------------------
     // Filter contract support
@@ -72,7 +100,14 @@ public class LogContextFilter implements Filter
     /** {@inheritDoc} */
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
-        // NOP
+        // Read filter configuration.
+        String value = filterConfig.getInitParameter(
+                                            ALLOW_FORCE_DEBUG_CONFIG_PARAMETER);
+        if ((value != null) && (value.length() != 0)) {
+            value = value.trim();
+            this.allowForceDebug = (! ((value.equalsIgnoreCase("false")) ||
+                                       (value.equalsIgnoreCase("no"))));
+        }
     }
 
     /** {@inheritDoc} */
@@ -95,13 +130,14 @@ public class LogContextFilter implements Filter
         if (loggedUser != null) {
             Logger.setContext(LogContext.User, loggedUser);
         }
-
         // Check for forced debug traces.
-        String forceDebug = request.getParameter(FORCE_DEBUG_REQUEST_PARAMETER);
-        if (forceDebug != null) {
-            Logger.promoteDebugTraces(true);
+        if (this.allowForceDebug) {
+            String forceDebug = request.getParameter(
+                                                FORCE_DEBUG_REQUEST_PARAMETER);
+            if (forceDebug != null) {
+                Logger.promoteDebugTraces(true);
+            }
         }
-
         // Forward request.
         chain.doFilter(request, response);
         // Clean diagnostic contexts up.

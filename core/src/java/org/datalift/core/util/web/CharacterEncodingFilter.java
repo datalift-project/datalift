@@ -42,7 +42,7 @@ import javax.servlet.ServletResponse;
  *   is set to the value returned by {@link #selectEncoding}.  If set
  *   to "false", {@link #selectEncoding} is called
  *   <strong>only</strong> if the client has not specified an encoding.<br />
- *   By default, this parameter is set to "true".</dd>
+ *   By default, this parameter is set to "false".</dd>
  * </dl>
  * <p>
  * Although this filter can be used unchanged, it is also easy to
@@ -57,6 +57,26 @@ import javax.servlet.ServletResponse;
 public class CharacterEncodingFilter implements Filter
 {
     //-------------------------------------------------------------------------
+    // Constants
+    //-------------------------------------------------------------------------
+
+    /**
+     * The filter configuration parameter defining the character
+     * encoding to apply.
+     * <p>
+     * Defaults to "<code>utf-8</code>".</p>
+     */
+    public final static String ENCODING_CONFIG_PARAMETER = "encoding";
+
+    /**
+     * The filter configuration parameter defining whether to ignore
+     * the character encoding specified by the HTTP request.
+     * <p>
+     * Defaults to <code>false</code>.</p>
+     */
+    public final static String IGNORE_CONFIG_PARAMETER = "ignore";
+
+    //-------------------------------------------------------------------------
     // Instance members
     //-------------------------------------------------------------------------
 
@@ -67,7 +87,7 @@ public class CharacterEncodingFilter implements Filter
     private String encoding = "utf-8";
 
     /** Should the character encoding specified by the client be ignored? */
-    private boolean ignore = true;
+    private boolean ignore = false;
 
     //-------------------------------------------------------------------------
     // Filter contract support
@@ -77,12 +97,13 @@ public class CharacterEncodingFilter implements Filter
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
         // Read filter configuration.
-        String value = filterConfig.getInitParameter("encoding");
+        String value = filterConfig.getInitParameter(ENCODING_CONFIG_PARAMETER);
         if ((value != null) && (value.length() != 0)) {
-            this.encoding = value;
+            this.encoding = value.trim();
         }
-        value = filterConfig.getInitParameter("ignore");
+        value = filterConfig.getInitParameter(IGNORE_CONFIG_PARAMETER);
         if ((value != null) && (value.length() != 0)) {
+            value = value.trim();
             this.ignore = (! ((value.equalsIgnoreCase("false")) ||
                               (value.equalsIgnoreCase("no"))));
         }
