@@ -86,47 +86,43 @@ public class I18nDirective extends Directive
         return LINE;
     }
 
-	/**
-	 * {@inheritDoc}
-	 * Call syntax -> #i18n('project.label' ${it.title})
-	 * Properties syntax -> project.label = {0} Project
-	 * @return True if the given key exists for our context, false otherwise.
-	 */
-	@Override
-	public boolean render(InternalContextAdapter context, 
-						  Writer writer, Node node) throws IOException, 
-	ResourceNotFoundException, ParseErrorException, MethodInvocationException {
-		
-		String key = String.valueOf(node.jjtGetChild(0).value(context));
-		BundleList b = (BundleList)(context.get(BundleList.KEY));
-		
-		if (b != null) {
-			String msg = b.getValue(key);
-			int params = node.jjtGetNumChildren();
-			
-			// Stronger: indexOf('{') != -1 && indexOf('{') < indexOf('}')
-			if ((params > 1) && (msg.indexOf('{') != -1)) {
-				
-				Object[] args = new Object[params - 1];
-					for (int i=1; i<params; i++) {
-						args[i-1] = node.jjtGetChild(i).value(context);
-					}
-					// Replaces all of the {vars} with {args}. Needs import.
-					msg = MessageFormat.format(msg, args);
-
-					if (log.isDebugEnabled()) {
-						log.debug("#i18n render - args inserted for " + key);
-					}
-				}
-				
-				writer.write(msg);
-				return true;
-			}
-			else {
-				log.warn("{}: Failed to resolved key \"{}\"" +
-					": no bundle defined in template {}",
-					this.getName(), key, node.getTemplateName());
-				return false;
-			}
-		}
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Call syntax: #i18n(message_key, arg1, arg2, ... argN)</p>
+     * @return <code>true</code> if message_key exists in the resource
+     *         bundles {@link LoadDirective associated to the context};
+     *         <code>false</code> otherwise.
+     */
+    @Override
+    public boolean render(InternalContextAdapter context, Writer writer,
+                          Node node)
+                        throws IOException, ResourceNotFoundException,
+                               ParseErrorException, MethodInvocationException {
+        String key = String.valueOf(node.jjtGetChild(0).value(context));
+        // Get bundles from context.
+        BundleList b = (BundleList)(context.get(BundleList.KEY));
+        if (b != null) {
+            // Get value from bundles
+            String msg = b.getValue(key);
+            int params = node.jjtGetNumChildren();
+            if ((params > 1) && (msg.indexOf('{') != -1)) {
+                // Replaces message format parameters with arguments.
+                Object[] args = new Object[params - 1];
+                for (int i=1; i<params; i++) {
+                    args[i-1] = node.jjtGetChild(i).value(context);
+                }
+                msg = MessageFormat.format(msg, args);
+            }
+            log.debug("{}: Render {} -> {}", this.getName(), key, msg);
+            writer.write(msg);
+            return true;
+        }
+        else {
+            log.warn("{}: Failed to resolved key \"{}\"" +
+                    ": no bundle defined in template {}",
+                    this.getName(), key, node.getTemplateName());
+            return false;
+        }
+    }
 }

@@ -114,7 +114,7 @@ public class LoadDirective extends Directive
     /** {@inheritDoc} */
     @Override
     public boolean render(InternalContextAdapter context, Writer writer,
-                          Node node) 
+                          Node node)
                         throws IOException, ResourceNotFoundException,
                                ParseErrorException, MethodInvocationException {
         // Get user locales.
