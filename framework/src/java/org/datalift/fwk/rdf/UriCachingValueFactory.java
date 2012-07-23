@@ -263,9 +263,11 @@ public final class UriCachingValueFactory implements ValueFactory
 
     /** Logs the cache statistics. */
     public void displatStats() {
-        Logger.getLogger().info("Cache hits: {}/{} ({}%)",
+        if (this.callCount != 0L) {
+            Logger.getLogger().info("Cache hits: {}/{} ({}%)",
                     Long.valueOf(this.cacheHits), Long.valueOf(this.callCount),
                     Double.valueOf(
                         ((this.cacheHits * 10000) / this.callCount) / 100.0));
+        }
     }
 }
