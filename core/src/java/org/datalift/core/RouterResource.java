@@ -638,12 +638,15 @@ public class RouterResource implements LifeCycle, ResourceResolver
                 response = response.expires(cal.getTime());
             }
             else {
-                // Else: cache entries for 2 hours.
+                // Else: cache entries for specified duration.
+                long expiry = System.currentTimeMillis()
+                                                + (this.cacheDuration * 1000L);
                 CacheControl cc = new CacheControl();
                 cc.setMaxAge(this.cacheDuration);
                 cc.setPrivate(false);
                 cc.setNoTransform(false);
-                response = response.cacheControl(cc);
+                response = response.cacheControl(cc)
+                                   .expires(new Date(expiry));
             }
         }
         // Else: caching disabled.
