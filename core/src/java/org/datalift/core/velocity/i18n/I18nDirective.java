@@ -114,7 +114,7 @@ public class I18nDirective extends Directive
                 }
                 msg = MessageFormat.format(msg, args);
             }
-            log.debug("{}: Render {} -> {}", this.getName(), key, msg);
+            log.trace("{}: Render {} -> {}", this.getName(), key, msg);
             writer.write(msg);
             return true;
         }
