@@ -589,7 +589,7 @@ public final class ConfigurationFileWriter {
    			TransformerFactory transformerFactory = TransformerFactory.newInstance();
    			Transformer transformer = transformerFactory.newTransformer();
    			DOMSource source = new DOMSource(doc);
-   			ret = new File(Configuration.getDefault().getPublicStorage().getAbsoluteFile() + File.separatorChar + "interlink-config.xml");
+   			ret = new File(Configuration.getDefault().getPublicStorage().getAbsoluteFile() + File.separator + "interlink-config.xml");
    			ret.createNewFile();
    			ret.deleteOnExit();
 
