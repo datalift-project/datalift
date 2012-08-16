@@ -92,7 +92,7 @@
    -->
 
   <property name="app.name"             value="stringtouri"/>
-  <property name="app.version"          value="0.8"/>
+  <property name="app.version"          value="0.9"/>
   <property name="app.path"             value="/${app.name}"/>
   <property name="app.long.name"        value="StringToURI module for DataLift"/>
 
@@ -291,7 +291,7 @@
     <jar jarfile="${jar.path}" update="true">
       <fileset dir="${classes.dir}"/>
       <service type="org.datalift.fwk.Module">
-        <provider classname="org.datalift.stringtouri.InterconnectionController"/>
+        <provider classname="org.datalift.stringtouri.StringToURIController"/>
       </service>
     </jar>
   </target>
