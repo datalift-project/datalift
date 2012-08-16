@@ -1,15 +1,15 @@
 Title: StringToURI Readme
 Author: Thibaud Colas
-Date: 15/07/12
+Date: 15/08/12
 
 # StringToURI Readme #
 
 ## tl;dr ##
 
 This module is an interface for [StringToURI]("http://stringtouri.assembla.me/").  
-Version 0.8
+Version 0.9
 
-## What is StringToURI ? ##
+## What is StringToURI ##
 
 StringToURI is a simple interconnection module which converts Strings to URIs _(hence the name)_.
 StringToURI takes two predicates and matches their objects' values. When the values are equal, the object (a string value) of the triple to be modified is replaced by the subject of the reference triple (a URI).
@@ -44,6 +44,16 @@ We can compare the two predicates `<givenDataset:takesPlaceIn>` and `<referenceD
 
 	<givenDataset:AwesomeMusicFestival> . <givenDataset:takesPlaceIn> . <referenceDataset:Acapulco>
 	
+## Future development ##
+
+- Server-side form field validation with AJAX
+- Source filtering so that they can't be equal
+- Filter classes to keep only those of the chosen source
+- Filter predicates to keep only those of the chosen class
+- Form field precompletion via GET
+- Prefix management
+- Use http://jqueryui.com/demos/autocomplete/#combobox
+
 ## External resources ##
 
 * StringToURI was made in Java using the OpenRDF Sesame API and RDF repositories.

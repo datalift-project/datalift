@@ -50,6 +50,7 @@ import org.openrdf.query.QueryEvaluationException;
 import org.openrdf.query.QueryLanguage;
 import org.openrdf.query.TupleQuery;
 import org.openrdf.query.TupleQueryResult;
+import org.openrdf.query.UpdateExecutionException;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
 
@@ -429,6 +430,7 @@ public class InterconnectionModel {
      * @param targetClass class in target data.
      * @param sourcePredicate predicate in source data.
      * @param targetPredicate predicate in target data.
+     * @param update tells if we want to update everything or just preview.
      * @param validateAll Tells if we need to validate everything or not.
      * @return Newly created triples.
      */
@@ -439,6 +441,7 @@ public class InterconnectionModel {
     										String targetClass, 
     										String sourcePredicate, 
     										String targetPredicate,
+    										boolean update,
     										boolean validateAll) {
     	 LinkedList<LinkedList<String>> ret;
     	 
@@ -456,6 +459,22 @@ public class InterconnectionModel {
             stu.useSPARQLOutput(false);
             ret = stu.getOutputAsList();
             
+            if (update) {
+            	if (LOG.isDebugEnabled()) {
+            		LOG.debug(MODULE_NAME + " - the data is going to be updated.");
+            	}
+            	try {
+					stu.updateData();
+					//TODO Management d'exceptions ?
+				} catch (RepositoryException e) {
+					LOG.fatal(MODULE_NAME + e);
+				} catch (UpdateExecutionException e) {
+					LOG.fatal(MODULE_NAME + e);
+				} catch (MalformedQueryException e) {
+					LOG.fatal(MODULE_NAME + e);
+				}
+            }
+                        
             if (LOG.isInfoEnabled()) {
             	LOG.info(MODULE_NAME + " interconnection OK.");
             }
