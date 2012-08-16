@@ -18,7 +18,9 @@
 		<h3 class="ui-widget-header dl-widget-header">#i18n('project.label' ${it.title}) &mdash; #i18n('interlink.title')</h3>
 		<div class="dl-panel error-display">
 			<h4>#i18n('error.title')</h4>
-			<img src="http://localhost:1337/static/images/cogs-error.png" alt="Cogs" width="363" height="87"/>
+			## Temporary link for dev. purposes.
+			## <img src="http://localhost:1337/static/images/cogs-error.png" alt="Cogs" width="363" height="87"/>
+			<img src="${moduleUri}/static/images/cogs-error.png" alt="Cogs" width="363" height="87"/>
 			<ul class="ui-widget-content ui-state-error dl-panel medium ui-corner-all">
 			  	#foreach( $elt in $errormessages ) 
 			  		<li><span class="ui-icon ui-icon-alert"></span><span class="error-label">#i18n('error.label') </span> $!esc.html($elt)</li> 
