@@ -291,7 +291,7 @@
     <jar jarfile="${jar.path}" update="true">
       <fileset dir="${classes.dir}"/>
       <service type="org.datalift.fwk.Module">
-        <provider classname="org.datalift.interlink.SilkInterlinkController"/>
+        <provider classname="org.datalift.interlink.SilkController"/>
       </service>
     </jar>
   </target>
