@@ -17,7 +17,7 @@
 
 	<property name="project.code" value="/Users/Will/Projects/datalift"/>
 
-	<property name="module.name" value="interconnection"/>
+	<property name="module.name" value="interlink"/>
 	<property name="module.path" value="${project.code}/${module.name}"/>
 	<property name="module.jar" value="${module.path}/dist/${module.name}.jar"/>
 	<property name="module.url" value="${tomcat.url}/datalift/${module.name}"/>

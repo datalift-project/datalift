@@ -8,8 +8,7 @@
 
 $(document).ready(function() {
 
-	$("#go_back").button();
-	$("#goto_workspace").button();
+	$(".multiple-choices a").button();
 	$(".multiple-choices").buttonset();
 	
 });

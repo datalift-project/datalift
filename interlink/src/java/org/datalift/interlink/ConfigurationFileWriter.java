@@ -40,14 +40,14 @@ public final class ConfigurationFileWriter {
     //-------------------------------------------------------------------------
 
     /** The default fallback max number of links created per RDF entity. */
-    public static final int DEFAULT_MAX_LINKS = SilkInterlinkModel.DEFAULT_MAX_LINKS;
+    public static final int DEFAULT_MAX_LINKS = SilkModel.DEFAULT_MAX_LINKS;
     
     //-------------------------------------------------------------------------
     // Class members
     //-------------------------------------------------------------------------
     
     /** Base name of the resource bundle for converter GUI. */
-    private static final String GUI_RESOURCES_BUNDLE = SilkInterlinkController.GUI_RESOURCES_BUNDLE;
+    private static final String GUI_RESOURCES_BUNDLE = SilkController.GUI_RESOURCES_BUNDLE;
     /** Datalift's internal Sesame {@link Repository repository}. **/
     private static final Repository INTERNAL_REPO = Configuration.getDefault().getInternalRepository();
     /** Datalift's internal Sesame {@link Repository repository} URL. */
@@ -76,7 +76,7 @@ public final class ConfigurationFileWriter {
      * @return The value of key.
      */
     private static String getTranslatedResource(String key) {
-    	return PreferredLocales.get().getBundle(GUI_RESOURCES_BUNDLE, SilkInterlinkController.class).getString(key);
+    	return PreferredLocales.get().getBundle(GUI_RESOURCES_BUNDLE, SilkController.class).getString(key);
     }
     
     /**
@@ -133,9 +133,10 @@ public final class ConfigurationFileWriter {
      * @param doc The doc where to create the tag.
      * @param id Source identifier.
      * @param address Source address.
+     * @param context graph to use if sparqlENdpoint.
      * @return A DOM Element.
      */
-	private static Element getDataSourceTag(Document doc, String id, String address) {
+	private static Element getDataSourceTag(Document doc, String id, String address, String context) {
     	Element dataSourceTag = doc.createElement("DataSource");
     	Element param = doc.createElement("Param");
     	
@@ -149,6 +150,7 @@ public final class ConfigurationFileWriter {
     	else {
     		type = "sparqlEndpoint";
     		name = "endpointURI";
+    		
     	}
     	dataSourceTag.setAttribute("id", id);
     	dataSourceTag.setAttribute("type", type);
@@ -164,6 +166,14 @@ public final class ConfigurationFileWriter {
         	
         	dataSourceTag.appendChild(paramBis);
     	}
+    	// Essentially for Datalift sources.
+    	else if (!context.isEmpty()) {
+			Element paramTer = doc.createElement("Param");
+			paramTer.setAttribute("name", "graph");
+			paramTer.setAttribute("value", context);
+			
+			dataSourceTag.appendChild(paramTer);
+		}
     	
     	return dataSourceTag;
     }
@@ -413,7 +423,8 @@ public final class ConfigurationFileWriter {
     private static Element getOutputsTag(Document doc, String endpointURL) {
     	Element outputs = doc.createElement("Outputs");
     	Element output = doc.createElement("Output");
-    	output.setAttribute("type", "sparql");
+    	// "sparul" apparently isn't a typo. Weird.
+    	output.setAttribute("type", "sparul");
   
     	Element param = doc.createElement("Param");
     	param.setAttribute("name", "uri");
@@ -438,6 +449,7 @@ public final class ConfigurationFileWriter {
     		// Source fields.
     		String sourceId,
     		String sourceAddress,
+    		String sourceContext,
     		String sourceQuery,
     		String sourceVariable,
     		String sourcePropertyFirst,
@@ -462,6 +474,7 @@ public final class ConfigurationFileWriter {
     		// Target fields.
     		String targetId,
     		String targetAddress,
+    		String targetContext,
     		String targetQuery,
     		String targetVariable,
     		String targetPropertyFirst,
@@ -528,6 +541,9 @@ public final class ConfigurationFileWriter {
    			tmpPrefixes.put("dcterms", "http://purl.org/dc/terms/");
    			tmpPrefixes.put("insee", "http://rdf.insee.fr/geo/");
    			tmpPrefixes.put("eurostat", "http://ec.europa.eu/eurostat/ramon/ontologies/geographic.rdf#");
+   			tmpPrefixes.put("geo", "http://www.telegraphis.net/ontology/geography/geography#");
+   			tmpPrefixes.put("gn", "http://www.geonames.org/ontology#");
+
    			root.appendChild(getPrefixesTag(doc, tmpPrefixes));
    			
    			if (isEmptyValue(sourceId) || isEmptyValue(targetId) || isEmptyValue(sourceAddress) || isEmptyValue(targetAddress)) {
@@ -535,8 +551,8 @@ public final class ConfigurationFileWriter {
    			}
    			
    			Element dataSources = doc.createElement("DataSources");
-   			dataSources.appendChild(getDataSourceTag(doc, sourceId, sourceAddress));
-   			dataSources.appendChild(getDataSourceTag(doc, targetId, targetAddress));
+   			dataSources.appendChild(getDataSourceTag(doc, sourceId, sourceAddress, sourceContext));
+   			dataSources.appendChild(getDataSourceTag(doc, targetId, targetAddress, targetContext));
    			root.appendChild(dataSources);
    			
    			Element interlinks = doc.createElement("Interlinks");
