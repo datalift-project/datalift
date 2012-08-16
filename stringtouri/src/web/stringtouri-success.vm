@@ -20,43 +20,48 @@
 	#banner
 	<div class="ui-widget-content" id="workspace">
 		<h3 class="ui-widget-header dl-widget-header">#i18n('project.label' ${it.title}) &mdash; #i18n('stringtouri.title')</h3>
-		<div class="dl-panel success-display">
-			<div class="parameters ui-widget-content dl-panel medium ui-corner-all">
+		
+		<div class="success-display">
+
+			<div class="field-stack ui-widget-content ui-corner-all">
 				<h4>#i18n('modified.label')</h4>
 				<dl>
-					<div class="dl-form-elt form-stack ui-state-default ui-corner-top">
+					<div class="form-stack ui-state-default ui-corner-top">
 						<dt>#i18n('dataset.label')</dt>
 						<dd title="${targetdataset}">${targetdataset}</dd>
 					</div>
-					<div class="dl-form-elt form-stack ui-state-default">
+					<div class="form-stack ui-state-default">
 						<dt>#i18n('class.label')</dt>
 						<dd title="${targetclass}">${targetclass}</dd>
 					</div>
-					<div class="dl-form-elt form-stack ui-state-default ui-corner-bottom">
+					<div class="form-stack ui-state-default ui-corner-bottom">
 						<dt>#i18n('predicate.label')</dt>
 						<dd title="${targetpredicate}">${targetpredicate}</dd>
 					</div>
 				</dl>
 			</div>
-			<div class="parameters ui-widget-content dl-panel medium ui-corner-all">
+
+			<div class="field-stack ui-widget-content ui-corner-all">
 				<h4>#i18n('reference.label')</h4>
 				<dl>
-					<div class="dl-form-elt form-stack ui-state-default ui-corner-top">
+					<div class="form-stack ui-state-default ui-corner-top">
 						<dt>#i18n('dataset.label')</dt>
 						<dd title="${sourcedataset}">${sourcedataset}</dd>
 					</div>
-					<div class="dl-form-elt form-stack ui-state-default">
+					<div class="form-stack ui-state-default">
 						<dt>#i18n('class.label')</dt>
 						<dd title="${sourceclass}">${sourceclass}</dd>
 					</div>
-					<div class="dl-form-elt form-stack ui-state-default ui-corner-bottom">
+					<div class="form-stack ui-state-default ui-corner-bottom">
 						<dt>#i18n('predicate.label')</dt>
 						<dd title="${sourcepredicate}">${sourcepredicate}</dd>
 					</div>
 				</dl>
 			</div>
+
 			<div class="results">
 				<h4>#i18n('result.title') #i18n('stringtouri.title')</h4>
+				
 				<table id="grid" class="results-grid">
 					<thead>
 						<tr>
@@ -95,6 +100,7 @@
 					</select>
 				</div>
 			</div>
+
 		</div>
 	</div>
 	#footer

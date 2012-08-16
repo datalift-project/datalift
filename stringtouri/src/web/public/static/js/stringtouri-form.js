@@ -10,12 +10,28 @@ $(document).ready(function() {
 
 	$(".hidden-field-js").hide();
 
-	var ourds = $("#targetdataset");
-	var theirds = $("#sourcedataset");
-	var ourclass = $("#targetclass");
-	var theirclass = $("#sourceclass");
-	var ourpredicate = $("#targetpredicate");
-	var theirpredicate = $("#sourcepredicate");
+	$("#convert-submit, #convert-preview, #convert-run, #convert-help, #convert-cancel").button();
+	$(".multiple-choices").buttonset();
+
+	var $ourds = $("#targetdataset");
+	var $theirds = $("#sourcedataset");
+	var $ourclass = $("#targetclass");
+	var $theirclass = $("#sourceclass");
+	var $ourpredicate = $("#targetpredicate");
+	var $theirpredicate = $("#sourcepredicate");
+
+	$ourds.autocomplete({source: datasets, minLength: 0, delay: 0});
+	$ourds.blur(function() {validateMandatory($ourds, datasets);});
+	$theirds.autocomplete({source: datasets, minLength: 0, delay: 0});
+	$theirds.blur(function() {validateMandatory($theirds, datasets);});
+	$ourclass.autocomplete({source: ourclasses, minLength: 0, delay: 200});
+	$ourclass.blur(function() {validateOptional($ourclass, ourclasses);});
+	$theirclass.autocomplete({source: theirclasses, minLength: 0, delay: 200});
+	$theirclass.blur(function() {validateOptional($theirclass, theirclasses);});
+	$ourpredicate.autocomplete({source: ourpredicates, minLength: 0, delay: 300});
+	$ourpredicate.blur(function() {validateMandatory($ourpredicate, ourpredicates);});
+	$theirpredicate.autocomplete({source: theirpredicates, minLength: 0, delay: 300});
+	$theirpredicate.blur(function() {validateMandatory($theirpredicate, theirpredicates);});
 
 	/*
 	* Applies the ui-state-error style to the container of {@param field}.
@@ -132,15 +148,15 @@ $(document).ready(function() {
 	*/
 	function validateAll() {
 		// We have to check fields separately in order to mark the errors.
-		var od = validateMandatory(ourds, datasets);
-		var td = validateMandatory(theirds, datasets);
-		var op = validateMandatory(ourpredicate, ourpredicates);
-		var tp = validateMandatory(theirpredicate, theirpredicates);
+		var od = validateMandatory($ourds, datasets);
+		var td = validateMandatory($theirds, datasets);
+		var op = validateMandatory($ourpredicate, ourpredicates);
+		var tp = validateMandatory($theirpredicate, theirpredicates);
 
 		// Require user confirmation if the data is going to be modified permanently.
 		var ret = od && td && op && tp
-					 && validateOptional(ourclass, ourclasses)
-					 && validateOptional(theirclass, theirclasses)
+					 && validateOptional($ourclass, ourclasses)
+					 && validateOptional($theirclass, theirclasses)
 					 && ($("input:radio[name=update]:checked").val() === "false"
 					 || confirm(confirmationMessage));
 
@@ -152,27 +168,13 @@ $(document).ready(function() {
 		return ret;
 	}
 
-	$("#convert-submit, #convert-preview, #convert-run, #convert-help, #convert-cancel").button();
-	$(".multiple-choices").buttonset();
-
 	$("#convert-help").click(function () {
 		// Could also use slideToggle.
 		$('.help-js').toggle();
 	});
 
-	ourds.autocomplete({source: datasets, minLength: 0, delay: 0});
-	ourds.blur(function() {validateMandatory(ourds, datasets);});
-	theirds.autocomplete({source: datasets, minLength: 0, delay: 0});
-	theirds.blur(function() {validateMandatory(theirds, datasets);});
-	ourclass.autocomplete({source: ourclasses, minLength: 0, delay: 200});
-	ourclass.blur(function() {validateOptional(ourclass, ourclasses);});
-	theirclass.autocomplete({source: theirclasses, minLength: 0, delay: 200});
-	theirclass.blur(function() {validateOptional(theirclass, theirclasses);});
-	ourpredicate.autocomplete({source: ourpredicates, minLength: 0, delay: 300});
-	ourpredicate.blur(function() {validateMandatory(ourpredicate, ourpredicates);});
-	theirpredicate.autocomplete({source: theirpredicates, minLength: 0, delay: 300});
-	theirpredicate.blur(function() {validateMandatory(theirpredicate, theirpredicates);});
-
-	$("#linkage-form").submit(function(){return validateAll();});
+	$("#linkage-form").submit(function(){
+		return validateAll();
+	});
 
 });

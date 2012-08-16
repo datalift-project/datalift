@@ -29,12 +29,12 @@
 			  		<li><span class="ui-icon ui-icon-alert"></span><span class="error-label">#i18n('error.label') </span> $!esc.html($elt)</li> 
 			  	#end
 			</ul>
-			<div class="form-stack multiple-choices">
+			<div class="multiple-choices">
 				<a href="${moduleUri}?project=${it.uri}" class="ui-priority-primary" title="#i18n('back.title')" tabindex="1">#i18n('back.label')</a>
 				<a href="${baseUri}/project/${it.title}" class="ui-priority-secondary" title="#i18n('cancel.title')#i18n('project.workspace.link')" tabindex="2">#i18n('project.workspace.link')</a>
 			</div>
-
 		</div>
+
 	</div>
 	#footer
 	#script_links
