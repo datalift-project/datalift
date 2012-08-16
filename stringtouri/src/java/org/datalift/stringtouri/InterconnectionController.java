@@ -234,7 +234,8 @@ public class InterconnectionController extends BaseModule implements ProjectModu
     		            @FormParam("sourcepredicate") String sourcePredicate,
     		            @FormParam("targetpredicate") String targetPredicate,
     		            @FormParam("sourceclass") String sourceClass,
-    		            @FormParam("targetclass") String targetClass) throws ObjectStreamException {
+    		            @FormParam("targetclass") String targetClass,
+    		            @FormParam("update") String update) throws ObjectStreamException {
     	// Retrieves our project and its sources.
         Project proj = this.getProject(projectId);
         
@@ -244,6 +245,7 @@ public class InterconnectionController extends BaseModule implements ProjectModu
         targetPredicate = targetPredicate.trim();
         sourceClass = sourceClass.trim();
         targetClass = targetClass.trim();
+        boolean modifyPermanently = Boolean.parseBoolean(update.trim());
         
         String view;
         HashMap<String, Object> args = new HashMap<String, Object>();
@@ -260,15 +262,15 @@ public class InterconnectionController extends BaseModule implements ProjectModu
     	    args.put("sourceclass", sourceClass);
     	    args.put("targetclass", targetClass);
     	    // StringToURI is launched if and only if our values are all valid.
-            args.put("newtriples", model.launchStringToURI(proj, sourceDataset, targetDataset, sourceClass, targetClass, sourcePredicate, targetPredicate, false));
-            view = "/stringtouri-success.vm";
+            args.put("newtriples", model.launchStringToURI(proj, sourceDataset, targetDataset, sourceClass, targetClass, sourcePredicate, targetPredicate, modifyPermanently, false));
+            view = "stringtouri-success.vm";
         }
         else {
         	args.put("errormessages", errorMessages);
-        	view = "/stringtouri-error.vm";
+        	view = "stringtouri-error.vm";
         }
 
-        return Response.ok(this.newViewable(view, args)).build();
+        return Response.ok(this.newViewable("/" + view, args)).build();
 	}
     
     /**
@@ -280,6 +282,7 @@ public class InterconnectionController extends BaseModule implements ProjectModu
      * @param targetPredicate predicate in target data.
      * @param sourceClass class in source data.
      * @param targetClass class in target data.
+     * @param update tells if the data is to be updated or not.
      * @return Our module's post-process page.
      * @throws ObjectStreamException
      */
@@ -292,7 +295,8 @@ public class InterconnectionController extends BaseModule implements ProjectModu
     		@QueryParam("sourcepredicate") String sourcePredicate,
     		@QueryParam("targetpredicate") String targetPredicate,
             @QueryParam("sourceclass") String sourceClass,
-            @QueryParam("targetclass") String targetClass) throws ObjectStreamException {
+            @QueryParam("targetclass") String targetClass,
+            @FormParam("update") String update) throws ObjectStreamException {
     	// Remote call example : http://localhost:8080/datalift/stringtouri/go
     	// ?project=http://localhost:8080/datalift/project/world
     	// &targetdataset=http://localhost:8080/datalift/project/world/source/countries-tolink-rdf-rdf
@@ -301,7 +305,7 @@ public class InterconnectionController extends BaseModule implements ProjectModu
     	// &sourcedataset=http://localhost:8080/datalift/project/world/source/continents-rdf-rdf
     	// &sourceclass=http://www.telegraphis.net/ontology/geography/geography%23Continent
     	// &sourcepredicate=http://www.geonames.org/ontology%23name
-    	return doSubmit(projectId, sourceDataset, targetDataset, sourcePredicate, targetPredicate, sourceClass, targetClass);
+    	return doSubmit(projectId, sourceDataset, targetDataset, sourcePredicate, targetPredicate, sourceClass, targetClass, update);
     }
     
     /**

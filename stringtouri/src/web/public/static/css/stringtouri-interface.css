@@ -1,14 +1,8 @@
 /**
  * StringToURI module cascading stylesheet.
  * @author tcolas
- * @date 14072012
+ * @date 15082012
  */
-
-.description {
-	margin: 10px 20px;
-	text-align: justify;
-	color: #666;
-}
 
 /**
  * ---------------------------------------------------------------------------
@@ -17,6 +11,7 @@
 
 .launching-form, .success-display, .error-display {
 	width: auto;
+	margin: 10px;
 }
 
 fieldset, .parameters {
@@ -67,7 +62,7 @@ legend, h4 {
  */
 
 fieldset {
-	width: 45%;
+	width: 47%;
 }
 
 .form-stack .ui-icon {
@@ -76,8 +71,32 @@ fieldset {
 	display: none;
 }
 
-input[type=submit] {
-	margin: 0 20px;
+.multiple-choices {
+	margin: 0 10px;
+}
+
+fieldset.help-js {
+	width: 97%;
+}
+
+p.help {
+	background-color: #fff;
+	font-weight: normal;
+	height: 50px;
+	padding: 2px;
+	border: 1px solid #ddd;
+	border-left: 4px solid #ddd;
+	padding-right: 5px;
+}
+
+.multiple-choices label {
+	display:inline-block;
+}
+
+.description, .help {
+	font-size: 90%;
+	text-align: justify;
+	color: #666;
 }
 
 /**

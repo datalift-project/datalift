@@ -16,18 +16,24 @@
 	#banner
 	<div class="ui-widget-content" id="workspace">
 		<h3 class="ui-widget-header dl-widget-header">#i18n('project.label' ${it.title}) &mdash; #i18n('stringtouri.title')</h3>
-		<div class="dl-panel error-display">
+
+		<div class="error-display">
 			<h4>#i18n('error.title')</h4>
-			<img src="http://localhost:1337/static/images/sonic-robotnic-error.png" alt="Sonic" width="363" height="87"/>
-			<ul class="ui-widget-content ui-state-error dl-panel medium ui-corner-all">
+
+			## Temporary link for dev. purposes.
+			## <img src="http://localhost:1337/static/images/sonic-robotnic-error.png" alt="Sonic" width="363" height="87"/>
+			<img src="${moduleUri}/static/images/sonic-robotnic-error.png" alt="Sonic" width="363" height="87"/>
+
+			<ul class="ui-widget-content ui-state-error ui-corner-all">
 			  	#foreach( $elt in $errormessages ) 
 			  		<li><span class="ui-icon ui-icon-alert"></span><span class="error-label">#i18n('error.label') </span> $!esc.html($elt)</li> 
 			  	#end
 			</ul>
-			<div class="dl-form-elt form-stack">
-				<a href="${moduleUri}?project=${it.uri}" id="go_back" class="ui-priority-primary" title="#i18n('back.title')" tabindex="1">#i18n('back.label')</a>
-				<a href="${baseUri}/project/${it.title}" id="goto_workspace" class="ui-priority-secondary" title="#i18n('cancel.title')#i18n('project.workspace.link')" tabindex="2">#i18n('project.workspace.link')</a>
+			<div class="form-stack multiple-choices">
+				<a href="${moduleUri}?project=${it.uri}" class="ui-priority-primary" title="#i18n('back.title')" tabindex="1">#i18n('back.label')</a>
+				<a href="${baseUri}/project/${it.title}" class="ui-priority-secondary" title="#i18n('cancel.title')#i18n('project.workspace.link')" tabindex="2">#i18n('project.workspace.link')</a>
 			</div>
+
 		</div>
 	</div>
 	#footer

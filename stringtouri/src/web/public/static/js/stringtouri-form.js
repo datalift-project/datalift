@@ -8,12 +8,14 @@
 
 $(document).ready(function() {
 
-	var ourds = $("#our-dataset");
-	var theirds = $("#their-dataset");
-	var ourclass = $("#our-class");
-	var theirclass = $("#their-class");
-	var ourpredicate = $("#our-predicate");
-	var theirpredicate = $("#their-predicate");
+	$(".hidden-field-js").hide();
+
+	var ourds = $("#targetdataset");
+	var theirds = $("#sourcedataset");
+	var ourclass = $("#targetclass");
+	var theirclass = $("#sourceclass");
+	var ourpredicate = $("#targetpredicate");
+	var theirpredicate = $("#sourcepredicate");
 
 	/*
 	* Applies the ui-state-error style to the container of {@param field}.
@@ -48,7 +50,7 @@ $(document).ready(function() {
 	function defaultState(field) {
 		field.removeClass("ui-state-success");
 		field.parent().removeClass("ui-state-error");
-		field.next("p").contents().first()
+		field.next("p.info").contents().first()
 			.removeClass("ui-icon-help ui-icon-alert ui-icon-check")
 			.hide();
 	}
@@ -134,18 +136,29 @@ $(document).ready(function() {
 		var td = validateMandatory(theirds, datasets);
 		var op = validateMandatory(ourpredicate, ourpredicates);
 		var tp = validateMandatory(theirpredicate, theirpredicates);
-		
-		var ret = od && td && op && tp
-			&& validateOptional(ourclass, ourclasses)
-			&& validateOptional(theirclass, theirclasses);
 
-		if(ret) {
+		// Require user confirmation if the data is going to be modified permanently.
+		var ret = od && td && op && tp
+					 && validateOptional(ourclass, ourclasses)
+					 && validateOptional(theirclass, theirclasses)
+					 && ($("input:radio[name=update]:checked").val() === "false"
+					 || confirm(confirmationMessage));
+
+		// To avoid forms being sent multiple times.
+		if (ret) {
 			$("#convert-submit").attr("disabled", true);
 		}
+
 		return ret;
 	}
-	
-	$("#convert-submit, #convert-cancel").button();
+
+	$("#convert-submit, #convert-preview, #convert-run, #convert-help, #convert-cancel").button();
+	$(".multiple-choices").buttonset();
+
+	$("#convert-help").click(function () {
+		// Could also use slideToggle.
+		$('.help-js').toggle();
+	});
 
 	ourds.autocomplete({source: datasets, minLength: 0, delay: 0});
 	ourds.blur(function() {validateMandatory(ourds, datasets);});
