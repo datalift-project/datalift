@@ -74,6 +74,7 @@ import org.openrdf.query.parser.ParsedQuery;
 import org.openrdf.query.parser.ParsedTupleQuery;
 import org.openrdf.query.parser.sparql.SPARQLParserFactory;
 import org.openrdf.query.resultio.sparqlxml.SPARQLResultsXMLWriter;
+import org.openrdf.query.resultio.text.csv.SPARQLResultsCSVWriter;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.rio.RDFHandler;
 import org.openrdf.rio.RDFHandlerException;
@@ -132,7 +133,10 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                     new Variant(TEXT_HTML_TYPE, null, null),
                     new Variant(APPLICATION_XHTML_XML_TYPE, null, null),
                     new Variant(APPLICATION_XML_TYPE, null, null),
-                    new Variant(TEXT_XML_TYPE, null, null));
+                    new Variant(TEXT_XML_TYPE, null, null),
+                    new Variant(TEXT_CSV_TYPE, null, null),
+                    new Variant(APPLICATION_CSV_TYPE, null, null),
+                    new Variant(TEXT_COMMA_SEPARATED_VALUES_TYPE, null, null));
     private final static List<Variant> CONSTRUCT_RESPONSE_TYPES = Arrays.asList(
                     new Variant(APPLICATION_RDF_XML_TYPE, null, null),
                     new Variant(APPLICATION_SPARQL_RESULT_JSON_TYPE, null, null),
@@ -522,6 +526,18 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                         }
                     };
             }
+        }
+        else if ((mediaType.isCompatible(TEXT_CSV_TYPE)) ||
+                 (mediaType.isCompatible(APPLICATION_CSV_TYPE)) ||
+                 (mediaType.isCompatible(TEXT_COMMA_SEPARATED_VALUES_TYPE))) {
+            handler = new SelectStreamingOutput(repository, query,
+                                    startOffset, endOffset, baseUri, dataset)
+                {
+                    @Override
+                    protected TupleQueryResultHandler newHandler(OutputStream out) {
+                        return new SPARQLResultsCSVWriter(out);
+                    }
+                };
         }
         else {
             // Assume SPARQL Results/XML...

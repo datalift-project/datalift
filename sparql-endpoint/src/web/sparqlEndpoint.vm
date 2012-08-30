@@ -38,6 +38,7 @@
 				<input type="radio" id="ntriples_format" name="format" value="application/n-triples, text/plain; q=0.5"/><label for="ntriples_format">NTriples</label>
 				<input type="radio" id="trig_format" name="format" value="application/x-trig, text/plain; q=0.5"/><label for="trig_format">TriG</label>
 				<input type="radio" id="trix_format" name="format" value="application/trix, text/plain; q=0.5"/><label for="trix_format">TriX</label>
+				<input type="radio" id="csv_format" name="format" value="text/csv, text/plain; q=0.5"/><label for="csv_format">CSV</label>
 				<input type="hidden" id="format_save" />
 			</div>
 			<div class="dl-form-elt">
@@ -84,15 +85,20 @@
 			$("#trix_format").button("option", "disabled", true);
 
 			$("#query").keyup(function() {
+				var disableSelect = true;
 				var disableConstruct = true;
 				var s = $(this).val();
 				if (s.match(/(^|\s+)(CONSTRUCT|DESCRIBE)\s+/i)) {
 					disableConstruct = false;
 				}
+				if (s.match(/(^|\s+)SELECT\s+/i)) {
+					disableSelect = false;
+				}
 				$("#turtle_format").button("option", "disabled", disableConstruct);
 				$("#ntriples_format").button("option", "disabled", disableConstruct);
 				$("#trig_format").button("option", "disabled", disableConstruct);
 				$("#trix_format").button("option", "disabled", disableConstruct);
+				$("#csv_format").button("option", "disabled", disableSelect);
 			});
 			$("#query_form").submit(function(e) {
 				var fmt = $("input[name=format]:checked").val();

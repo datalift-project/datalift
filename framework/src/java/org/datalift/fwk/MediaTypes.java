@@ -119,4 +119,21 @@ public class MediaTypes extends MediaType
     /** "text/csv" */
     public final static MediaType TEXT_CSV_TYPE =
                                         MediaType.valueOf(TEXT_CSV);
+    /** "application/csv", a deprecated alias for {@link #TEXT_CSV}. */
+    public final static String APPLICATION_CSV = "application/csv";
+    /** "application/csv", a deprecated alias for {@link #TEXT_CSV_TYPE} */
+    public final static MediaType APPLICATION_CSV_TYPE =
+                                        MediaType.valueOf(APPLICATION_CSV);
+    /**
+     * "text/comma-separated-values", a deprecated alias for
+     * {@link #TEXT_CSV}.
+     */
+    public final static String TEXT_COMMA_SEPARATED_VALUES =
+                                        "text/comma-separated-values";
+    /**
+     * "text/comma-separated-values", a deprecated alias for
+     * {@link #TEXT_CSV_TYPE}.
+     */
+    public final static MediaType TEXT_COMMA_SEPARATED_VALUES_TYPE =
+                                MediaType.valueOf(TEXT_COMMA_SEPARATED_VALUES);
 }
