@@ -54,10 +54,6 @@ public final class ConfigurationFileWriter {
     private static final String INTERNAL_URL = INTERNAL_REPO.getEndpointUrl();
     /** Datalift's logging system. */
     private static final Logger LOG = Logger.getLogger();
-    
-    //-------------------------------------------------------------------------
-    // Instance members
-    //-------------------------------------------------------------------------
 
     //-------------------------------------------------------------------------
     // Constructors
