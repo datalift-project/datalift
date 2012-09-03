@@ -53,9 +53,12 @@ We can compare the two predicates `<givenDataset:takesPlaceIn>` and `<referenceD
 - Form field precompletion via GET
 - Prefix management
 - Use http://jqueryui.com/demos/autocomplete/#combobox
+- Add a help page on the Datalift wiki ?
+- Add an example to work with ?
+- Add unit tests ?
 
 ## External resources ##
 
-* StringToURI was made in Java using the OpenRDF Sesame API and RDF repositories.
+* StringToURI is made with the Sesame API and repositories.
 * [StringToURI documentation]("http://stringtouri.assembla.me/")
 * [StringToURI interface design and development]("http://thibweb.github.com/linked-lifted/")
