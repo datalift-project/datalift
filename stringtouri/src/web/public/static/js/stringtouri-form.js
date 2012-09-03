@@ -2,7 +2,7 @@
  * An interface for a {@link ProjectModule project module} that replaces RDF object fields
  * from a RDF data by URIs to RDF entities.
  * Autocompletion using jQuery, custom-made form validation.
- * 
+ *
  * @author tcolas
  */
 
@@ -71,30 +71,16 @@ $(document).ready(function() {
 			.hide();
 	}
 
-	/*
-	* Checks if {@param str} is empty, null or undefined.
-	* @param {string} str The string to be checked.
-	* @return {bool} True if real string, false if empty ("") or null/undefined.
-	*/
+
+
 	function isEmpty(str) {
 		return (!str || 0 === str.length);
 	}
 
-	/*
-	* Checks if {@param val} isn't empty and is in the array {@param values}.
-	* @param {string} val The string to be checked.
-	* @param {array} values The array of strings where {@param val} must be.
-	* @return {bool} True if val is in the array, false otherwise.
-	*/
 	function isValid(val, values) {
 		return !isEmpty(val) && jQuery.inArray(val, values) != -1;
 	}
 
-	/*
-	* Checks if {@param val} is empty or has a value equal to "none".
-	* @param {string} val The string to be checked.
-	* @return {bool} True if val is empty OR is equal to none (eg. "None").
-	*/
 	function isEmptyOptional(val) {
 		return isEmpty(val) || val === none;
 	}
@@ -140,12 +126,6 @@ $(document).ready(function() {
 		return valid;
 	}
 
-	/*
-	* Checks if all mandatory and optional fields are valid. Optional fields
-	* don't have to be filled. Mandatory fields are tested separately to make
-	* use of the error state highlight.
-	* @return {bool} True if all of the form's fields are valid.
-	*/
 	function validateAll() {
 		// We have to check fields separately in order to mark the errors.
 		var od = validateMandatory($ourds, datasets);
