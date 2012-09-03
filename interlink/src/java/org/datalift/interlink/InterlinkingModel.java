@@ -386,7 +386,7 @@ public abstract class InterlinkingModel {
     /**
      * TODO Future refactoring plans :
      * - Generic error-handling function.
-     * - Each interlinking parameter is stored inside an HashMap : 
+     * - Each interlinking parameter is stored inside a HashMap : 
      * key = parameter name, value = parameter value.
      * each value can be checked easily.
      * can be passed around functions easily.
