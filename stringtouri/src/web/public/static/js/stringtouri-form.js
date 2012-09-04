@@ -101,6 +101,7 @@ $(document).ready(function() {
 		else {
 			errorState(field);
 		}
+
 		return valid;
 	}
 
@@ -136,25 +137,24 @@ $(document).ready(function() {
 		// Require user confirmation if the data is going to be modified permanently.
 		var ret = od && td && op && tp
 					 && validateOptional($ourclass, ourclasses)
-					 && validateOptional($theirclass, theirclasses)
-					 && ($("input:radio[name=update]:checked").val() === "false"
-					 || confirm(confirmationMessage));
-
-		// To avoid forms being sent multiple times.
-		if (ret) {
-			$("#convert-submit").attr("disabled", true);
-		}
+					 && validateOptional($theirclass, theirclasses);
 
 		return ret;
 	}
 
 	$("#convert-help").click(function () {
-		// Could also use slideToggle.
 		$('.help-js').toggle();
 	});
 
 	$("#linkage-form").submit(function(){
-		return validateAll();
+		var ok = validateAll() && ($("input:radio[name=update]:checked").val() === "false" || confirm(confirmationMessage));
+		
+		if (ok) {
+			// To avoid forms being sent multiple times.
+			$("#convert-submit").attr("disabled", true);
+		}
+
+	return ok;
 	});
 
 });

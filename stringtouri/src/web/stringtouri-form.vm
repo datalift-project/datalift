@@ -78,7 +78,7 @@
 			<div class="clearfix"/>
 
 			<div class="multiple-choices">
-				<input type="submit" id="convert-submit" value="#i18n('submit.label')" tabindex="7"/>
+				<input type="submit" id="convert-submit" value="#i18n('send.label')" tabindex="7"/>
 				<input type="radio" id="convert-preview" name="update" value="false" checked="checked"/>
 				<label for="convert-preview" title="#i18n('preview.title')">#i18n('preview.label')</label>
 				<input type="radio" id="convert-run" name="update" value="true"/>
