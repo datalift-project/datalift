@@ -46,18 +46,14 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
 import java.nio.charset.Charset;
-import java.text.Collator;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
-import java.util.regex.Pattern;
 
 import javax.persistence.EntityNotFoundException;
 import javax.ws.rs.Consumes;
@@ -101,7 +97,6 @@ import com.sun.jersey.multipart.FormDataParam;
 import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.ResourceResolver;
-import org.datalift.fwk.i18n.LocaleComparable;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.CachingSource;
 import org.datalift.fwk.project.CsvSource;
@@ -128,6 +123,7 @@ import org.datalift.fwk.sparql.SparqlEndpoint;
 import org.datalift.fwk.sparql.SparqlEndpoint.DescribeType;
 import org.datalift.fwk.util.CloseableIterator;
 import org.datalift.fwk.util.io.FileUtils;
+import org.datalift.fwk.util.web.Charsets;
 import org.datalift.fwk.view.TemplateModel;
 import org.datalift.fwk.view.ViewFactory;
 
@@ -194,11 +190,6 @@ public class Workspace extends BaseModule
     //-------------------------------------------------------------------------
 
     /**
-     * The character sets supported by the local JVM, sorted by
-     * relevance first and then alphabetically.
-     */
-    private final static List<String> charsets;
-    /**
      * The licenses available for new projects.
      */
     private final static Map<URI,License> licenses =
@@ -212,55 +203,6 @@ public class Workspace extends BaseModule
 
     /** Project Manager bean. */
     private ProjectManager projectManager = null;
-
-    //-------------------------------------------------------------------------
-    // Class initializer
-    //-------------------------------------------------------------------------
-
-    static {
-        List<LocaleComparable<Charset>> l1 =
-                                    new ArrayList<LocaleComparable<Charset>>();
-        Collator c = Collator.getInstance();
-        for (Charset cs : Charset.availableCharsets().values()) {
-            if (cs.isRegistered()) {
-                l1.add(new LocaleComparable<Charset>(cs.displayName(), cs, c));
-            }
-        }
-        Collections.sort(l1, new Comparator<LocaleComparable<Charset>>() {
-                private Pattern[] prefixes = new Pattern[] {
-                                        Pattern.compile("ISO-8859-1"),
-                                        Pattern.compile("UTF-.[^E]*"),
-                                        Pattern.compile("ISO-8859-.*"),
-                                        Pattern.compile("US-ASCII"),
-                                        Pattern.compile("windows-12.*") };
-                @Override
-                public int compare(LocaleComparable<Charset> o1,
-                                   LocaleComparable<Charset> o2) {
-                    int n = 0;
-                    int i1 = this.getPrefix(o1.key);
-                    int i2 = this.getPrefix(o2.key);
-                    if (i1 == i2) {
-                        n = o1.compareTo(o2);
-                    }
-                    else {
-                        n = i1 - i2;
-                    }
-                    return n;
-                }
-
-                private int getPrefix(String key) {
-                    for (int i=0; i<prefixes.length; i++) {
-                        if (prefixes[i].matcher(key).matches()) return i;
-                    }
-                    return prefixes.length;
-                }
-            });
-        List<String> l2 = new ArrayList<String>(l1.size());
-        for (LocaleComparable<Charset> cs : l1) {
-            l2.add(cs.data.displayName());
-        }
-        charsets = Collections.unmodifiableList(l2);
-    }
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -609,7 +551,7 @@ public class Workspace extends BaseModule
         try {
             // Prepare model for building view.
             TemplateModel view = this.newView("projectSourceUpload.vm", p);
-            view.put("charsets", charsets);
+            view.put("charsets", Charsets.availableCharsets);
             view.put("rdfFormats", RdfFormat.values());
             view.put("sep", Separator.values());
 
