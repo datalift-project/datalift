@@ -49,11 +49,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 
 import org.openrdf.OpenRDFException;
-import org.openrdf.model.Statement;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.rio.RDFHandler;
-import org.openrdf.rio.RDFHandlerException;
-import org.openrdf.rio.helpers.RDFHandlerWrapper;
 
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.log.Logger;
@@ -135,7 +132,7 @@ public class RdfExporter extends BaseConverterModule
                 this.throwInvalidParamError("source", sourceId);
             }
             // Build default file name for downloaded data.
-            String name = this.getFileName(s.getUri())
+            String name = this.getTerminalName(s.getUri())
                                             + '.' + rdfType.getFileExtension();
             // Dump selected to directly into the socket.
             StreamingOutput out = new SourceDumpStreamingOutput(internal,
@@ -150,12 +147,6 @@ public class RdfExporter extends BaseConverterModule
             this.handleInternalError(e);
         }
         return response;
-    }
-
-    private String getFileName(String s) {
-        int i = Math.max(s.lastIndexOf('/'), s.lastIndexOf('#'));
-        return (i != -1)? (i == (s.length() - 1))?
-                        getFileName(s.substring(0, i)): s.substring(i + 1): s;
     }
 
 
@@ -179,7 +170,7 @@ public class RdfExporter extends BaseConverterModule
             try {
                 RDFHandler h = this.rdfType.newWriter(out);
                 if (log.isDebugEnabled()) {
-                    h = getDebugHandler(h);
+                    h = getDebugHandler(h, this.namedGraph);
                 }
                 cnx.export(h, cnx.getValueFactory().createURI(namedGraph));
             }
@@ -189,39 +180,6 @@ public class RdfExporter extends BaseConverterModule
             finally {
                 try { cnx.close(); } catch (Exception e) { /* Ignore... */ }
             }
-        }
-
-        private RDFHandler getDebugHandler(RDFHandler h) {
-            return new RDFHandlerWrapper(h) {
-                    private long statementCount = -1L;
-                    private long t0 = -1L;
-
-                    /** {@inheritDoc} */
-                    @Override
-                    public void startRDF() throws RDFHandlerException {
-                        super.startRDF();
-                        this.t0 = System.currentTimeMillis();
-                        this.statementCount = 0L;
-                    }
-
-                    /** {@inheritDoc} */
-                    @Override
-                    public void handleStatement(Statement st)
-                                            throws RDFHandlerException {
-                        super.handleStatement(st);
-                        this.statementCount++;
-                    }
-
-                    /** {@inheritDoc} */
-                    @Override
-                    public void endRDF() throws RDFHandlerException {
-                        super.endRDF();
-                        long delay = System.currentTimeMillis() - this.t0;
-                        log.debug("Exported {} triples from <{}> in {} seconds",
-                                  Long.valueOf(this.statementCount), namedGraph,
-                                  Double.valueOf(delay / 1000.0));
-                    }
-                };
         }
     }
 }

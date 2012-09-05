@@ -50,6 +50,11 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
+import org.openrdf.model.Statement;
+import org.openrdf.rio.RDFHandler;
+import org.openrdf.rio.RDFHandlerException;
+import org.openrdf.rio.helpers.RDFHandlerWrapper;
+
 import static javax.ws.rs.core.Response.Status.*;
 
 import org.datalift.fwk.BaseModule;
@@ -386,6 +391,71 @@ public abstract class BaseConverterModule
         return endpoint.describe(namedGraph.toString(), DescribeType.Graph,
                                  repository, 5000, null, null,
                                  uriInfo, request, acceptHdr).build();
+    }
+
+    /**
+     * Returns the last component of a URI, using both '/' and '#' as
+     * separators and ignoring any trailing separator.
+     * @param  uri   the URI to parse.
+     * @return the last component of <code>uri</code>.
+     */
+    protected String getTerminalName(String uri) {
+        int i = Math.max(uri.lastIndexOf('/'), uri.lastIndexOf('#'));
+        return (i != -1)? (i == (uri.length() - 1))?
+                                this.getTerminalName(uri.substring(0, i)):
+                                uri.substring(i + 1): uri;
+    }
+
+    /**
+     * Returns an {@link RDFHandler} logging a debug message to measure
+     * the performance of the specified RDFHandler. The message includes
+     * the number of statements (triples) processed and the elapsed
+     * time.
+     * @param  h            the {@link RDFHandler} to monitor.
+     * @param  namedGraph   the URI of the named graph from which the
+     *                      triples are being extracted or
+     *                      <code>null</code>.
+     * @return a logging {@link RDFHandler} wrapping the specified one.
+     */
+    protected RDFHandler getDebugHandler(final RDFHandler h,
+                                         final String namedGraph) {
+        return new RDFHandlerWrapper(h) {
+                private long statementCount = -1L;
+                private long t0 = -1L;
+
+                /** {@inheritDoc} */
+                @Override
+                public void startRDF() throws RDFHandlerException {
+                    super.startRDF();
+                    this.t0 = System.currentTimeMillis();
+                    this.statementCount = 0L;
+                }
+
+                /** {@inheritDoc} */
+                @Override
+                public void handleStatement(Statement st)
+                                                    throws RDFHandlerException {
+                    super.handleStatement(st);
+                    this.statementCount++;
+                }
+
+                /** {@inheritDoc} */
+                @Override
+                public void endRDF() throws RDFHandlerException {
+                    super.endRDF();
+                    long delay = System.currentTimeMillis() - this.t0;
+                    if (namedGraph != null) {
+                       log.debug("Exported {} triples from <{}> in {} seconds",
+                              Long.valueOf(this.statementCount), namedGraph,
+                              Double.valueOf(delay / 1000.0));
+                    }
+                    else {
+                       log.debug("Exported {} triples in {} seconds",
+                              Long.valueOf(this.statementCount),
+                              Double.valueOf(delay / 1000.0));
+                    }
+                }
+            };
     }
 
     protected void throwInvalidParamError(String name, Object value) {

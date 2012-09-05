@@ -314,6 +314,7 @@
         <provider classname="org.datalift.converter.RdfUriMapper"/>
         <provider classname="org.datalift.converter.SimplePublisher"/>
         <provider classname="org.datalift.converter.RdfExporter"/>
+        <provider classname="org.datalift.converter.CsvExporter"/>
       </service>
     </jar>
   </target>
