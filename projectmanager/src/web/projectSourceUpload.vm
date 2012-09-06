@@ -43,13 +43,13 @@
 #if( (!$current) || ($current.getType() == $field.CsvSource) )
 	<form method="post" action="$target_csv" enctype="multipart/form-data" class="form_formated">
 #if( !$current )
-		<p><label for="file">#i18n("project.upload_csv"): </label>
+		<p><label for="file">#i18n("project.source.csv.upload"): </label>
 		<input type="file" name="source" size="64"/><br />
 		<label for="file_url">#i18n("project.upload_source.file_url"): </label>
 		<input type="text" id="file_url" name="file_url"/></p>
 #else
 		<input type="hidden" name="current_source" value="$current.uri"/>
-		<p>#i18n("project.update_csv"): <a href="$current.uri">$esc.html($current.title)</a></p>
+		<p>#i18n("project.source.csv.update"): <a href="$current.uri">$esc.html($current.title)</a></p>
 #end
 		<p><label for="description">#i18n("project.upload_source.description"): </label>
 		<input type="text" id="description" name="description" value="$!esc.html($current.description)"/></p>
@@ -63,7 +63,7 @@
 #end
 #end
 		</select></p>
-		<p><label for="separator">#i18n("project.upload_csv_separator"): </label>
+		<p><label for="separator">#i18n("project.source.csv.separator"): </label>
 		<select id="separator" name="separator">
 #foreach( $s in $sep )
 #set( $label = "csv.source.${s.name()}.separator" )
@@ -74,14 +74,14 @@
 #end
 #end
 		</select></p>
-		<p><label for="title_row">#i18n("project.upload_csv_activate"): </label>
-#if( $current && $current.hasTitleRow() == true )
-		<input type="checkbox" id="title_row" name="title_row" checked="on"/></p>
-#else
-		<input type="checkbox" id="title_row" name="title_row"/></p>
-#end
-		<p><label for="quote">#i18n("project.upload_csv_quote"): </label>
-		<input type="text" id="quote" name="quote" title="#i18n('project.upload_csv_quote.help')" value='$!esc.html($current.quote)'/></p>
+		<p><label for="title_row">#i18n("project.source.csv.title_row"): </label>
+		<input type="text" id="title_row" name="title_row" value="#if( $current && $current.hasTitleRow() == true )$!esc.html($current.titleRow)#end" /></p>
+		<p><label for="first_row">#i18n("project.source.csv.first_row"): </label>
+		<input type="text" id="first_row" name="first_row" value="#if( $current && $current.firstDataRow > 0 )$!esc.html($current.firstDataRow)#end" /></p>
+		<p><label for="last_row">#i18n("project.source.csv.last_row"): </label>
+		<input type="text" id="last_row" name="last_row" value="#if( $current && $current.lastDataRow > 0 )$!esc.html($current.lastDataRow)#end" /></p>
+		<p><label for="quote">#i18n("project.source.csv.quote"): </label>
+		<input type="text" id="quote" name="quote" title="#i18n('project.source.csv.quote.help')" value='$!esc.html($current.quote)'/></p>
 		<input type="submit" value="#i18n("$submit")"/>
 	</form>
 #end

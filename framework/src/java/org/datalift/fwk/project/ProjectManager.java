@@ -110,16 +110,14 @@ public interface ProjectManager
      *                       intent.
      * @param  filePath      the CSV file path in the public storage.
      * @param  separator     the column separator character.
-     * @param  hasTitleRow   whether the first row holds the column
-     *                       titles.
+     *
      * @return a new CSV source, associated to the specified project.
      * @throws IOException if any error occurred creating the source
      *         or accessing the specified file.
      */
     public CsvSource newCsvSource(Project project, URI uri, String title,
                                   String description, String filePath,
-                                  char separator, boolean hasTitleRow)
-                                                            throws IOException;
+                                  char separator) throws IOException;
 
     /**
      * Creates a new RDF source object.

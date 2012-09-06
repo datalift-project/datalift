@@ -173,7 +173,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     @Override
     public CsvSource newCsvSource(Project project, URI uri, String title,
                                   String description, String filePath,
-                                  char separator, boolean hasTitleRow)
+                                  char separator)
                                                             throws IOException {
         // Create new CSV source.
         CsvSourceImpl src = new CsvSourceImpl(uri.toString(), project);
@@ -183,7 +183,6 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         if (!f.isFile()) {
             throw new FileNotFoundException(filePath);
         }
-        src.setTitleRow(hasTitleRow);
         src.setFilePath(filePath);
         src.setMimeType(MediaTypes.TEXT_CSV);
         src.setSeparator(String.valueOf(separator));

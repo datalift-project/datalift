@@ -58,6 +58,7 @@ import java.util.TreeSet;
 import javax.persistence.EntityNotFoundException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
@@ -576,18 +577,19 @@ public class Workspace extends BaseModule
     @Path("{id}/csvupload")
     @Consumes(MULTIPART_FORM_DATA)
     public Response uploadCsvSource(
-                            @PathParam("id") String projectId,
-                            @FormDataParam("description") String description,
-                            @FormDataParam("source") InputStream fileData,
-                            @FormDataParam("source")
+                    @PathParam("id") String projectId,
+                    @FormDataParam("description") String description,
+                    @FormDataParam("source") InputStream fileData,
+                    @FormDataParam("source")
                                     FormDataContentDisposition fileDisposition,
-                            @FormDataParam("file_url") String sourceUrl,
-                            @FormDataParam("charset") String charset,
-                            @FormDataParam("separator") String separator,
-                            @FormDataParam("title_row") String titleRow,
-                            @FormDataParam("quote") String quote,
-                            @Context UriInfo uriInfo)
-                                                throws WebApplicationException {
+                    @FormDataParam("file_url") String sourceUrl,
+                    @FormDataParam("charset") String charset,
+                    @FormDataParam("separator") String separator,
+                    @FormDataParam("title_row") @DefaultValue("0") int titleRow,
+                    @FormDataParam("first_row") @DefaultValue("0") int firstRow,
+                    @FormDataParam("last_row") @DefaultValue("0") int lastRow,
+                    @FormDataParam("quote") String quote,
+                    @Context UriInfo uriInfo) throws WebApplicationException {
         if (!isSet(separator)) {
             this.throwInvalidParamError("separator", separator);
         }
@@ -645,15 +647,16 @@ public class Workspace extends BaseModule
             this.getFileData(fileData, fileUrl, localFile, uriInfo);
 
             Separator sep = Separator.valueOf(separator);
-            boolean hasTitleRow = ((titleRow != null) &&
-                                   (titleRow.toLowerCase().equals("on")));
             // Initialize new source.
             CsvSource src = this.projectManager.newCsvSource(p, sourceUri,
                                         fileName, description,
-                                        filePath, sep.getValue(), hasTitleRow);
+                                        filePath, sep.getValue());
             if (encoding != null) {
                 src.setEncoding(encoding.name());
             }
+            src.setFirstDataRow(firstRow);
+            src.setLastDataRow(lastRow);
+            src.setTitleRow(titleRow);
             src.setQuote(quote);
             // Iterate on source content to validate uploaded file.
             int n = 0;
@@ -703,15 +706,16 @@ public class Workspace extends BaseModule
     @Path("{id}/csvmodify")
     @Consumes(MULTIPART_FORM_DATA)
     public Response modifyCsvSource(
-                            @PathParam("id") String projectId,
-                            @FormDataParam("current_source") URI sourceUri,
-                            @FormDataParam("description") String description,
-                            @FormDataParam("charset") String charset,
-                            @FormDataParam("separator") String separator,
-                            @FormDataParam("title_row") String titleRow,
-                            @FormDataParam("quote") String quote,
-                            @Context UriInfo uriInfo)
-                                                throws WebApplicationException {
+                    @PathParam("id") String projectId,
+                    @FormDataParam("current_source") URI sourceUri,
+                    @FormDataParam("description") String description,
+                    @FormDataParam("charset") String charset,
+                    @FormDataParam("separator") String separator,
+                    @FormDataParam("title_row") @DefaultValue("0") int titleRow,
+                    @FormDataParam("first_row") @DefaultValue("0") int firstRow,
+                    @FormDataParam("last_row") @DefaultValue("0") int lastRow,
+                    @FormDataParam("quote") String quote,
+                    @Context UriInfo uriInfo) throws WebApplicationException {
         if (!isSet(separator)) {
             this.throwInvalidParamError("separator", separator);
         }
@@ -735,10 +739,10 @@ public class Workspace extends BaseModule
             if (encoding != null) {
                 s.setEncoding(encoding.name());
             }
-            boolean hasTitleRow = ((titleRow != null) &&
-                                   (titleRow.toLowerCase().equals("on")));
-            s.setTitleRow(hasTitleRow);
             s.setSeparator(separator);
+            s.setFirstDataRow(firstRow);
+            s.setLastDataRow(lastRow);
+            s.setTitleRow(titleRow);
             if (isSet(quote)) {
                 s.setQuote(quote);
             }

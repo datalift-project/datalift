@@ -85,13 +85,19 @@ public interface CsvSource extends FileSource, CloseableIterable<Row<String>>
     public boolean hasTitleRow();
 
     /**
-     * Defines whether the first line of the file contains column
-     * headings.
-     * @param  titleRow   <code>true</code> if the first line of the
-     *                    file contains column heading;
-     *                    <code>false</code> otherwise.
+     * Returns the row of the file that contains the column headings.
+     * @return the row of the file that contains the column headings,
+     *         <code>0</code> if no title row is present.
      */
-    public void	setTitleRow(boolean titleRow);
+    public int getTitleRow();
+
+    /**
+     * Defines the row that contains the column headings.
+     * @param  titleRow   the row number (starting at 1), any non
+     *                    positive number (0, -1...) indicating that no
+     *                    title row is present.
+     */
+    public void	setTitleRow(int titleRow);
 
     /**
      * Returns the separator character.
@@ -125,6 +131,39 @@ public interface CsvSource extends FileSource, CloseableIterable<Row<String>>
      *                  tab, etc.
      */
     public void setQuote(String quote);
+
+    /**
+     * Returns the first row of data to take into account when
+     * importing data form this source, thus excluding the title row
+     * (if any).
+     * @return the first row to take into account.
+     */
+    public int getFirstDataRow();
+
+    /**
+     * Sets the first row of data to take into account when importing
+     * data form this source, thus excluding the title row (if any).
+     * @param  row   the first row to take into account, starting
+     *               at 1.
+     */
+    public void setFirstDataRow(int row);
+
+    /**
+     * Returns the last row to take into account when importing
+     * data form this source.
+     * @return the last row to take into account, <code>0</code>
+     *         if unspecified.
+     */
+    public int getLastDataRow();
+
+    /**
+     * Sets the last row to take into account when importing
+     * data form this source.
+     * @param  row   the last row to take into account, any non
+     *               positive number (0, -1...) indicating the last
+     *               row present in the file.
+     */
+    public void setLastDataRow(int row);
 
     /**
      * Returns the number of data columns present in the file.

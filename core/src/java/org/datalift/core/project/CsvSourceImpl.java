@@ -55,12 +55,13 @@ import com.clarkparsia.empire.annotation.RdfsClass;
 import au.com.bytecode.opencsv.CSVReader;
 
 import org.datalift.core.TechnicalException;
+import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.CsvSource;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.Row;
 import org.datalift.fwk.util.CloseableIterator;
 
-import static org.datalift.fwk.util.StringUtils.isSet;
+import static org.datalift.fwk.util.StringUtils.*;
 
 
 /**
@@ -74,6 +75,12 @@ public class CsvSourceImpl extends BaseFileSource
                            implements CsvSource
 {
     //-------------------------------------------------------------------------
+    // Class members
+    //-------------------------------------------------------------------------
+
+    private final static Logger log = Logger.getLogger();
+
+    //-------------------------------------------------------------------------
     // Instance members
     //-------------------------------------------------------------------------
 
@@ -82,7 +89,11 @@ public class CsvSourceImpl extends BaseFileSource
     @RdfProperty("datalift:quote")
     private String quote;
     @RdfProperty("datalift:titleRow")
-    private boolean titleRow = false;
+    private int titleRow = 0;
+    @RdfProperty("datalift:firstDataRow")
+    private int firstDataRow = 1;
+    @RdfProperty("datalift:lastDataRow")
+    private int lastDataRow = 0;
 
     private transient List<String> headers = null;
 
@@ -130,13 +141,35 @@ public class CsvSourceImpl extends BaseFileSource
     /** {@inheritDoc} */
     @Override
     public boolean hasTitleRow() {
+        return (this.titleRow != 0);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public int getTitleRow() {
         return this.titleRow;
     }
 
     /** {@inheritDoc} */
     @Override
+    public void setTitleRow(int titleRow) {
+        this.titleRow = (titleRow > 0)? titleRow: 0;
+        if ((this.titleRow > 0) && (this.getFirstDataRow() <= this.titleRow)) {
+            this.setFirstDataRow(this.titleRow + 1);
+        }
+    }
+
+    /**
+     * Defines whether the first line of the file contains column
+     * headings.
+     * @param  titleRow   <code>true</code> if the first line of the
+     *                    file contains column heading;
+     *                    <code>false</code> otherwise.
+     *
+     * @deprecated replaced by {@link #setTitleRow(int)}.
+     */
     public void setTitleRow(boolean titleRow) {
-        this.titleRow = titleRow;
+        this.setTitleRow(1);
     }
 
     /** {@inheritDoc} */
@@ -174,6 +207,41 @@ public class CsvSourceImpl extends BaseFileSource
 
     /** {@inheritDoc} */
     @Override
+    public int getFirstDataRow() {
+        return this.firstDataRow;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void setFirstDataRow(int row) {
+        this.firstDataRow = (row > 0)? row: this.getTitleRow() + 1;
+        if ((this.hasTitleRow()) && (this.firstDataRow <= this.getTitleRow())) {
+            throw new IllegalArgumentException("row");
+        }
+        int lastRow = this.getLastDataRow();
+        if ((lastRow > 0) && (lastRow < this.firstDataRow)) {
+            this.setLastDataRow(this.firstDataRow);
+        }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public int getLastDataRow() {
+        return this.lastDataRow;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void setLastDataRow(int row) {
+        if (row < 0) row = 0;
+        if ((row > 0) && (row < this.getFirstDataRow())) {
+            throw new IllegalArgumentException("row");
+        }
+        this.lastDataRow = row;
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public int getColumnCount() {
         return this.getColumnNames().size();
     }
@@ -207,19 +275,36 @@ public class CsvSourceImpl extends BaseFileSource
             try {
                 reader = this.newReader();
 
-                String[] firstRow = reader.readNext();
-                if ((! this.titleRow) && (firstRow != null)) {
-                    // Generate generic column names (A, B... Z, AA, AB...).
-                    for (int i=0; i<firstRow.length; i++) {
-                        firstRow[i] = this.getColumnName(i);
+                log.trace("Extracting row headings...");
+                String[] titleRow = null;
+                if (this.hasTitleRow()) {
+                    if (this.skipRows(reader, this.getTitleRow() - 1)) {
+                        titleRow = reader.readNext();
+                    }
+                    // Else: End of file hit before reaching title row.
+                }
+                else {
+                    // Build column names from first data row content.
+                    if (this.skipRows(reader, this.getFirstDataRow() - 1)) {
+                        String[] r = reader.readNext();
+                        // Allocate a blank array, sized from the number of
+                        // columns found in the first data row. Heading names
+                        // will be populated below.
+                        titleRow = new String[r.length];
                     }
                 }
-                // Check column names to ensure uniqueness.  
-                if (firstRow != null) {
+                if (titleRow != null) {
+                    // Generate missing headings (A, B... Z, AA, AB...).
+                    for (int i=0; i<titleRow.length; i++) {
+                        if (isBlank(titleRow[i])) {
+                            titleRow[i] = this.getColumnName(i);
+                        }
+                    }
+                    // Check headings to ensure uniqueness.  
                     Map<String,AtomicInteger> duplicatedColumns =
                                             new HashMap<String,AtomicInteger>();
-                    for (int i=0, max=firstRow.length; i<max; i++) {
-                        String s = firstRow[i];
+                    for (int i=0, max=titleRow.length; i<max; i++) {
+                        String s = titleRow[i];
                         AtomicInteger count = duplicatedColumns.get(s);
                         if (count == null) {
                             count = new AtomicInteger(0);
@@ -227,12 +312,13 @@ public class CsvSourceImpl extends BaseFileSource
                         }
                         int n = count.incrementAndGet();
                         if (n > 1) {
-                            firstRow[i] = s + ' ' + n;
+                            titleRow[i] = s + ' ' + n;
                         }
                     }
                 }
                 this.headers = Collections.unmodifiableList(
-                    Arrays.asList((firstRow != null)? firstRow: new String[0]));
+                    Arrays.asList((titleRow != null)? titleRow: new String[0]));
+                log.debug("Row headings: {}", this.headers);
             }
             catch (IOException e) {
                 throw new TechnicalException("file.read.error", e,
@@ -260,6 +346,27 @@ public class CsvSourceImpl extends BaseFileSource
             s.insert(0, (char)(n % 26 + 65));
         }
         return s.toString();
+    }
+
+    /**
+     * Skips the specified number of rows.
+     * @param  reader   the CSV reader to read from.
+     * @param  count    the number of rows to skip.
+     *
+     * @return <code>true</code> if the end of the stream has not been
+     *         reached while skipping rows; <code>false</code>
+     *         otherwise.
+     * @throws IOException if any error occurred while reading
+     *         from the CSV stream.
+     */
+    private boolean skipRows(CSVReader reader, int count) throws IOException {
+        if (count < 0) {
+            count = 0;
+        }
+        log.trace("Skipping {} rows...", Integer.valueOf(count));
+        while ((count > 0) && (reader.readNext() != null)) count--;
+
+        return (count == 0);
     }
 
     private char quote2char(String s) {
@@ -366,6 +473,7 @@ public class CsvSourceImpl extends BaseFileSource
         private final CSVReader reader;
         private final Map<String,Integer> keyMapping;
         private Row<String> nextRow = null;
+        private int maxRows = -1;
         private boolean closed = false;
 
         /**
@@ -383,11 +491,14 @@ public class CsvSourceImpl extends BaseFileSource
                 m.put(s, Integer.valueOf(i++));
             }
             this.keyMapping = Collections.unmodifiableMap(m);
-            if (hasTitleRow()) {
-                // Skip title row to exclude it from actual data.
-                this.getNextRow();
+            // Skip rows until start of actual data and read first row.
+            this.nextRow = (skipRows(reader, getFirstDataRow() - 1))?
+                                                        this.getNextRow(): null;
+            if (getLastDataRow() > 0) {
+                // Last data row set. => Compute number of rows to read.
+                this.maxRows = getLastDataRow() - getFirstDataRow() + 1;
             }
-            this.nextRow = this.getNextRow();
+            log.debug("Rows to read: {}", Integer.valueOf(this.maxRows));
         }
 
         /** {@inheritDoc} */
@@ -401,11 +512,19 @@ public class CsvSourceImpl extends BaseFileSource
         public Row<String> next() {
             if (this.nextRow != null) {
                 Row<String> current = this.nextRow;
-                try {
-                    this.nextRow = this.getNextRow();
+                this.maxRows--;
+                if (this.maxRows == 0) {
+                    // Last data row reached. => Terminate reading.
+                    this.nextRow = null;
                 }
-                catch (IOException e) {
-                    throw new TechnicalException(null, e);
+                else {
+                    // Read next row from stream.
+                    try {
+                        this.nextRow = this.getNextRow();
+                    }
+                    catch (IOException e) {
+                        throw new TechnicalException(null, e);
+                    }
                 }
                 return current;
             }
