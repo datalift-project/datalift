@@ -45,7 +45,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -58,8 +57,12 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 
+import org.openrdf.model.BNode;
+import org.openrdf.model.Literal;
 import org.openrdf.model.Value;
+import org.openrdf.model.datatypes.XMLDatatypeUtil;
 import org.openrdf.model.vocabulary.RDF;
+import org.openrdf.model.vocabulary.XMLSchema;
 import org.openrdf.query.BindingSet;
 import org.openrdf.query.TupleQueryResultHandlerBase;
 
@@ -103,12 +106,10 @@ public class CsvExporter extends BaseConverterModule
 
     private final static String SOURCE_PREDICATES_QUERY =
                 "SELECT DISTINCT ?p WHERE { GRAPH ?g { ?s ?p ?o . } }";
-    private final static String SOURCE_SUBJECTS_QUERY =
-                "SELECT DISTINCT ?s WHERE {\n" +
+    private final static String EXTRACT_VALUES_QUERY =
+                "SELECT ?s ?p ?o WHERE {\n" +
                     "GRAPH ?g { ?s ?p ?o . }\n" +
                 "} ORDER BY DESC(?s)";
-    private final static String SUBJECT_VALUES_QUERY =
-                "SELECT ?p ?o WHERE { GRAPH ?g { ?s ?p ?o . } }";
 
     //-------------------------------------------------------------------------
     // Class members
@@ -212,16 +213,17 @@ public class CsvExporter extends BaseConverterModule
         @Override
         public void write(OutputStream out)
                                 throws IOException, WebApplicationException {
-            CSVWriter w = new CSVWriter(
-                                new BufferedWriter(
+            final CSVWriter w = new CSVWriter(
+                                    new BufferedWriter(
                                         new OutputStreamWriter(out, charset),
                                         Env.getFileBufferSize()),
-                                separator.getValue());
-            long lineCount = 0L;
-            long t0 = System.currentTimeMillis();
+                                    separator.getValue());
+            final long t0 = System.currentTimeMillis();
             try {
+                log.trace("Preparing CSV export of <{}>", this.namedGraph);
+
                 Map<String,Object> bindings = new HashMap<String,Object>();
-                bindings.put("g", URI.create(namedGraph));
+                bindings.put("g", URI.create(this.namedGraph));
                 // Extract all predicates from the source named graph.
                 final List<org.openrdf.model.URI> predicates =
                                         new ArrayList<org.openrdf.model.URI>();
@@ -238,61 +240,75 @@ public class CsvExporter extends BaseConverterModule
                         }
                     });
                 // Sort predicates by local name.
-                Collections.sort(predicates, new Comparator<org.openrdf.model.URI>() {
+                Collections.sort(predicates,
+                     new Comparator<org.openrdf.model.URI>() {
                         @Override
                         public int compare(org.openrdf.model.URI u1,
                                            org.openrdf.model.URI u2) {
                             return u1.getLocalName().compareTo(u2.getLocalName());
                         }
                     });
-                // Extract all entries (subjects) from the source named graph.
-                final List<org.openrdf.model.URI> subjects =
-                                        new LinkedList<org.openrdf.model.URI>();
-                this.repository.select(SOURCE_SUBJECTS_QUERY, bindings,
-                    new TupleQueryResultHandlerBase() {
-                        @Override
-                        public void handleSolution(BindingSet b) {
-                            subjects.add(
-                                    (org.openrdf.model.URI)(b.getValue("s")));
-                        }
-                    });
+                log.trace("Found {} predicates to export",
+                                            Integer.valueOf(predicates.size()));
                 // Write header line.
-                String[] data = new String[predicates.size() + 1];
+                final String[] data = new String[predicates.size() + 1];
                 data[0] = "URI";
                 int i = 1;
                 for (org.openrdf.model.URI u : predicates) {
                     data[i++] = u.getLocalName();
                 }
                 w.writeNext(data);
-                // Write one line per source entry.
-                final Map<org.openrdf.model.URI,Value> values =
+                // Extract source data and output one line per subject.
+                this.repository.select(EXTRACT_VALUES_QUERY, bindings,
+                    new TupleQueryResultHandlerBase() {
+                        private long lineCount = 0L;
+                        private org.openrdf.model.URI subject = null;
+                        private Map<org.openrdf.model.URI,Value> values =
                                     new HashMap<org.openrdf.model.URI,Value>();
-                for (org.openrdf.model.URI s : subjects) {
-                    values.clear();
-                    bindings.put("s", s);
-                    this.repository.select(SUBJECT_VALUES_QUERY, bindings,
-                        new TupleQueryResultHandlerBase() {
-                            @Override
-                            public void handleSolution(BindingSet b) {
-                                values.put(
-                                    (org.openrdf.model.URI)(b.getValue("p")),
-                                    b.getValue("o"));
+
+                        @Override
+                        public void handleSolution(BindingSet b) {
+                            org.openrdf.model.URI s =
+                                    (org.openrdf.model.URI)(b.getValue("s"));
+                            if (! s.equals(subject)) {
+                                // Write CSV data for previous subject.
+                                this.writeLine();
+                                // Switch subject.
+                                subject = s;
                             }
-                        });
-                    data[0] = s.stringValue();
-                    i = 1;
-                    for (org.openrdf.model.URI p : predicates) {
-                        Value v = values.get(p);
-                        data[i++] = (v != null)? v.stringValue(): null;
-                    }
-                    w.writeNext(data);
-                    lineCount++;
-                }
+                            // Store value for predicate.
+                            values.put((org.openrdf.model.URI)(b.getValue("p")),
+                                       b.getValue("o"));
+                        }
+
+                        @Override
+                        public void endQueryResult() {
+                            // Write CSV data for last subject.
+                            this.writeLine();
+                            // Log export elapsed time.
+                            long delay = System.currentTimeMillis() - t0;
+                            log.debug("Exported {} CSV lines from <{}> in {} seconds",
+                                      Long.valueOf(lineCount), namedGraph,
+                                      Double.valueOf(delay / 1000.0));
+                        }
+
+                        private void writeLine() {
+                            if (! values.isEmpty()) {
+                                // Format and write CSV data.
+                                data[0] = getValue(subject);
+                                int i = 1;
+                                for (org.openrdf.model.URI p : predicates) {
+                                    Value v = values.get(p);
+                                    data[i++] = (v != null)? getValue(v): null;
+                                }
+                                w.writeNext(data);
+                                this.lineCount++;
+                                values.clear();
+                            }
+                            // Else: ignore...
+                        }
+                    });
                 w.flush();
-                long delay = System.currentTimeMillis() - t0;
-                log.debug("Exported {} CSV lines from <{}> in {} seconds",
-                          Long.valueOf(lineCount), this.namedGraph,
-                          Double.valueOf(delay / 1000.0));
             }
             catch (RdfException e) {
                 handleInternalError(e);
@@ -300,6 +316,36 @@ public class CsvExporter extends BaseConverterModule
             finally {
                 try { w.close(); } catch (Exception e) { /* Ignore... */ }
             }
+        }
+
+        /**
+         * Returns a proper string representation for RDF value data
+         * types.
+         * @param  v   the RDF value
+         * @return the string representation of <code>v</code> suitable
+         *         for writing to a CSV cell.
+         */
+        private String getValue(Value v) {
+            String s = null;
+            if (v instanceof org.openrdf.model.URI) {
+                s = ((org.openrdf.model.URI)v).toString();
+            }
+            else if (v instanceof BNode) {
+                s = ((BNode)v).getID();
+            }
+            else if (v instanceof Literal) {
+                Literal l = (Literal)v;
+                s = l.getLabel();
+
+                org.openrdf.model.URI t = l.getDatatype();
+                if ((t != null) &&
+                    ((XMLDatatypeUtil.isIntegerDatatype(t)) ||
+                     (XMLDatatypeUtil.isDecimalDatatype(t)) ||
+                     (XMLSchema.DOUBLE.equals(t)))) {
+                    s = XMLDatatypeUtil.normalize(s, t);
+                }
+            }
+            return s;
         }
     }
 }
