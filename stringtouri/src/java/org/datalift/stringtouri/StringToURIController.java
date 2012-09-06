@@ -62,20 +62,14 @@ import org.datalift.fwk.project.RdfFileSource;
  * @version 15082012
  */
 @Path(StringToURIController.MODULE_NAME)
-public class StringToURIController extends InterlinkingController {
-    
+public class StringToURIController extends InterlinkingController
+{
     //-------------------------------------------------------------------------
     // Constants
     //-------------------------------------------------------------------------
 
     /** The module's name. */
     public static final String MODULE_NAME = "stringtouri";
-    /** Base name of the resource bundle for converter GUI. */
-    protected static final  String GUI_RESOURCES_BUNDLE = "resources";
-
-    //-------------------------------------------------------------------------
-    // Class members
-    //-------------------------------------------------------------------------
 
     //-------------------------------------------------------------------------
     // Instance members
@@ -96,7 +90,7 @@ public class StringToURIController extends InterlinkingController {
         super(MODULE_NAME, 13371337);
 
         label = getTranslatedResource(MODULE_NAME + ".button");
-        model = new StringToURIModel();
+        model = new StringToURIModel(MODULE_NAME);
     }
 
     //-------------------------------------------------------------------------
@@ -121,19 +115,14 @@ public class StringToURIController extends InterlinkingController {
                 if (this.position > 0) {
                     uridesc.setPosition(this.position);
                 }
-                if (LOG.isDebugEnabled()) {
-                	LOG.debug(MODULE_NAME + " Project " + p.getTitle() + " can use StringToURI.");
-                }
+                LOG.debug("Project {} can use StringToURI", p.getTitle());
             }
             else {
-            	if (LOG.isDebugEnabled()) {
-                	LOG.debug(MODULE_NAME + " Project " + p.getTitle() + " can't use StringToURI.");
-                }
+                LOG.debug("Project {} can not use StringToURI", p.getTitle());
             }
-            
         }
         catch (URISyntaxException e) {
-            LOG.fatal("Uh !", e);
+            LOG.fatal("Uh!", e);
             throw new RuntimeException(e);
         }
         return uridesc;

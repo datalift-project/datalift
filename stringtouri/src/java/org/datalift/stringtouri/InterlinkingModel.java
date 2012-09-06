@@ -33,16 +33,14 @@ import org.openrdf.repository.RepositoryException;
  */
 public abstract class InterlinkingModel {
 	
-	//-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
     // Constants
     //-------------------------------------------------------------------------
 
-	/** The module's name. */
-    public static String MODULE_NAME;
     /** Base name of the resource bundle for converter GUI. */
     protected static String GUI_RESOURCES_BUNDLE = InterlinkingController.GUI_RESOURCES_BUNDLE;
     
-	/** Binding for the default subject var in SPARQL. */
+    /** Binding for the default subject var in SPARQL. */
     protected static final String SB = "s";
     /** Binding for the default predicate var in SPARQL. */
     protected static final String PB = "p";
@@ -69,8 +67,8 @@ public abstract class InterlinkingModel {
     // Instance members
     //-------------------------------------------------------------------------
 
-    /** Connection to the internal Sesame {@link Repository repository}. **/
-    protected RepositoryConnection internal;
+    /** The module name. */
+    protected final String moduleName;
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -78,14 +76,12 @@ public abstract class InterlinkingModel {
 
     /**
      * Creates a new InterconnectionModel instance.
-     * @param name Name of the module.
+     * @param module Name of the module.
      */
-    public InterlinkingModel(String name) {
-    	MODULE_NAME = name;
-    	internal =  INTERNAL_REPO.newConnection();
+    public InterlinkingModel(String module) {
+        this.moduleName = module;
     }
-    
-    
+
     /**
      * Resource getter.
      * @param key The key to retrieve.
@@ -94,7 +90,7 @@ public abstract class InterlinkingModel {
     protected String getTranslatedResource(String key) {
     	return PreferredLocales.get().getBundle(GUI_RESOURCES_BUNDLE, InterlinkingModel.class).getString(key);
     }
-    
+
     //-------------------------------------------------------------------------
     // Sources management.
     //-------------------------------------------------------------------------
@@ -167,12 +163,10 @@ public abstract class InterlinkingModel {
 		TupleQueryResult tqr;
 		LinkedList<String> ret = new LinkedList<String>();
 		
-		if (LOG.isDebugEnabled()) {
-			LOG.debug(MODULE_NAME + " " + query);
-		}
-		
+		LOG.debug("Processing query: \"{}\"", query);
+		RepositoryConnection cnx = INTERNAL_REPO.newConnection();
 		try {
-			tq = internal.prepareTupleQuery(QueryLanguage.SPARQL, query);
+			tq = cnx.prepareTupleQuery(QueryLanguage.SPARQL, query);
 			tqr = tq.evaluate();
 			
 			if (!hasCorrectBindingNames(tqr, bind)) {
@@ -184,11 +178,14 @@ public abstract class InterlinkingModel {
 			}
 		}
 		catch (MalformedQueryException e) {
-			LOG.fatal(MODULE_NAME + " " + query + " - " + e);
+			LOG.fatal("Failed to process query \"{}\":", e, query);
 		} catch (QueryEvaluationException e) {
-			LOG.fatal(MODULE_NAME + " " + query + " - " + e);
+			LOG.fatal("Failed to process query \"{}\":", e, query);
 		} catch (RepositoryException e) {
-			LOG.fatal(MODULE_NAME + " " + query + " - " + e);
+			LOG.fatal("Failed to process query \"{}\":", e, query);
+		}
+		finally {
+		    try { cnx.close(); } catch (Exception e) { /* Ignore... */ }
 		}
 	    return ret;
 	}

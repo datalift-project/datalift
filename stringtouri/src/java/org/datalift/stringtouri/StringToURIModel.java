@@ -55,35 +55,20 @@ import org.openrdf.repository.RepositoryException;
  * @author tcolas
  * @version 15082012
  */
-public class StringToURIModel extends InterlinkingModel {
-
-	//-------------------------------------------------------------------------
-    // Constants
-    //-------------------------------------------------------------------------
-
-	/** The module's name. */
-    public static final String MODULE_NAME = StringToURIController.MODULE_NAME;
-    
-    //-------------------------------------------------------------------------
-    // Class members
-    //-------------------------------------------------------------------------
-
-    //-------------------------------------------------------------------------
-    // Instance members
-    //-------------------------------------------------------------------------
-    
+public class StringToURIModel extends InterlinkingModel
+{
     //-------------------------------------------------------------------------
     // Constructors
     //-------------------------------------------------------------------------
 
     /**
      * Creates a new StringToURIModel instance.
+     * @param name Name of the module.
      */
-    public StringToURIModel() {
-    	super(MODULE_NAME);
+    public StringToURIModel(String name) {
+    	super(name);
     }
-    
-    
+
     //-------------------------------------------------------------------------
     // Sources management.
     //-------------------------------------------------------------------------
@@ -217,24 +202,19 @@ public class StringToURIModel extends InterlinkingModel {
             ret = stu.getOutputAsList();
             
             if (update) {
-            	if (LOG.isDebugEnabled()) {
-            		LOG.debug(MODULE_NAME + " - the data is going to be updated.");
-            	}
+            	LOG.debug("{} - the data is going to be updated.", this.moduleName);
             	try {
 					stu.updateData();
 					//TODO Management d'exceptions ?
 				} catch (RepositoryException e) {
-					LOG.fatal(MODULE_NAME + e);
+					LOG.fatal("{} - Update failed:", e, this.moduleName);
 				} catch (UpdateExecutionException e) {
-					LOG.fatal(MODULE_NAME + e);
+					LOG.fatal("{} - Update failed:", e, this.moduleName);
 				} catch (MalformedQueryException e) {
-					LOG.fatal(MODULE_NAME + e);
+					LOG.fatal("{} - Update failed:", e, this.moduleName);
 				}
             }
-                        
-            if (LOG.isInfoEnabled()) {
-            	LOG.info(MODULE_NAME + " interconnection OK.");
-            }
+            LOG.info("{} - Interconnection OK.", this.moduleName);
     	}
     	else {
     		// Should never happen.
@@ -244,12 +224,9 @@ public class StringToURIModel extends InterlinkingModel {
     		error.add(getTranslatedResource("error.label"));
     		ret = new LinkedList<LinkedList<String>>();
     		ret.add(error);
-    		
-    		if (LOG.isInfoEnabled()) {
-            	LOG.info(MODULE_NAME + " interconnection KO.");
-            }
+
+            	LOG.info("{} - Interconnection failed.", this.moduleName);
     	}
-    	
     	return ret;
     }
 }

@@ -16,10 +16,8 @@ import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
@@ -130,17 +128,14 @@ public abstract class InterlinkingController extends BaseModule implements Proje
     //-------------------------------------------------------------------------
     // Web services
     //-------------------------------------------------------------------------
-    
-    
+
     /**
      * Index page handler for interlinking modules.
      * @param projectId the project using our module.
      * @return Our module's interface.
      * @throws ObjectStreamException A Obscene Reject Mixt Opt.
      */
-    @GET
-    @Produces(MediaType.TEXT_HTML)
-    protected abstract Response getIndexPage(@QueryParam("project") URI projectId) throws ObjectStreamException;
+    public abstract Response getIndexPage(@QueryParam("project") URI projectId) throws ObjectStreamException;
     
     /**
      * Traps accesses to module static resources and redirect them
