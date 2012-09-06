@@ -35,6 +35,10 @@
 		<input type="text" name="dest_graph_uri" id="dest_graph_uri" title="#i18n('dest.graph.help')" value=""/></p>
 		<p><label for="base_uri">#i18n("dest.base_uri"): </label>
 		<input type="text" id="base_uri" name="base_uri" title="#i18n('dest.base_uri.help')" value=""/></p>
+		<p><label for="key_column">#i18n("csv.map.key"): </label>
+		<select id="key_column" name="key_column"/>
+			<option value="-1" selected="true">#i18n("csv.map.key.auto")</option>
+		</select></p>
 
 		<div id="accordion" class="ui-widget">
 		    <h3><a href="#">#i18n("csv.type.mapping")</a></h3>
@@ -83,28 +87,31 @@
 
 	function handleSourceColumnResponse(response) {
 		var acc  = $("#accordion");
-		var cols = $("#columns");
 		acc.accordion("activate", false);
 		acc.accordion("disable");
+		var cols = $("#columns");
 		cols.empty();
+		var keyCol = $("#key_column");
+		keyCol.empty();
+		keyCol.append('<option value="-1" selected="true">#i18n("csv.map.key.auto")</option>');
 		for (var i=0; i<response.length; i++) {
 			var h = [];
 			var colName = 'col_' + i;
-			h[h.length] = '<p><label for="' + colName + '">Colonne "' + response[i] + '" </label>';
-			h[h.length] = '<select name="' + colName + '" id="' + colName + '">';
-			h[h.length] = '<option value="string" selected="true">#i18n("csv.map.string")</option>';
-			h[h.length] = '<option value="ignore">#i18n("csv.map.ignore")</option>';
-			h[h.length] = '<option value="id">#i18n("csv.map.key")</option>';
-			h[h.length] = '<option value="int">#i18n("csv.map.int")</option>';
-			h[h.length] = '<option value="float">#i18n("csv.map.float")</option>';
-			h[h.length] = '<option value="boolean">#i18n("csv.map.boolean")</option>';
-			h[h.length] = '<option value="date">#i18n("csv.map.date")</option>';
-			h[h.length] = '<option value="auto">#i18n("csv.map.autodetect")</option>';
-			h[h.length] = '</select></p>';
+			h.push('<p><label for="' + colName + '">#i18n("csv.map.column") "' + response[i] + '"#i18n("form.colon.prefix"):</label>');
+			h.push('<select name="' + colName + '" id="' + colName + '">');
+			h.push('<option value="string" selected="true">#i18n("csv.map.string")</option>');
+			h.push('<option value="ignore">#i18n("csv.map.ignore")</option>');
+			h.push('<option value="int">#i18n("csv.map.int")</option>');
+			h.push('<option value="float">#i18n("csv.map.float")</option>');
+			h.push('<option value="boolean">#i18n("csv.map.boolean")</option>');
+			h.push('<option value="date">#i18n("csv.map.date")</option>');
+			h.push('<option value="auto">#i18n("csv.map.autodetect")</option>');
+			h.push('</select></p>');
 			cols.append(h.join(''));
+			keyCol.append('<option value="' + i + '">#i18n("csv.map.column") "' + response[i] + '"</option>');
 		}
-		cols.append('<p><label for="true_values">#i18n("csv.map.truevalues") :</label><input type="text" name="true_values" id="true_values" title="#i18n('csv.map.truevalues.help')" value=""/></p>');
-		cols.append('<p><label for="date_format">#i18n("csv.map.dateformat") :</label><input type="text" name="date_format" id="date_format" title="#i18n('csv.map.dateformat.help')" value=""/></p>');
+		cols.append('<p><label for="true_values">#i18n("csv.map.truevalues"):</label><input type="text" name="true_values" id="true_values" title="#i18n('csv.map.truevalues.help')" value=""/></p>');
+		cols.append('<p><label for="date_format">#i18n("csv.map.dateformat"):</label><input type="text" name="date_format" id="date_format" title="#i18n('csv.map.dateformat.help')" value=""/></p>');
 		acc.accordion("resize");
 		acc.accordion("enable");
 	}

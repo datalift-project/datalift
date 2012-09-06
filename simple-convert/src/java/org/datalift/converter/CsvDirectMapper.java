@@ -49,6 +49,7 @@ import java.util.Map;
 import static java.util.Calendar.*;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -109,7 +110,6 @@ public class CsvDirectMapper extends BaseConverterModule
         Float           ("float"),
         Boolean         ("boolean"),
         Date            ("date"),
-        Id              ("id"),
         Automatic       ("auto"),
         Ignore          ("ignore");
 
@@ -174,14 +174,16 @@ public class CsvDirectMapper extends BaseConverterModule
 
     @POST
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public Response mapCsvData(@FormParam("project") URI projectId,
-                               @FormParam("source") URI sourceId,
-                               @FormParam("dest_title") String destTitle,
-                               @FormParam("dest_graph_uri") URI targetGraph,
-                               @FormParam("base_uri") URI baseUri,
-                               @FormParam("true_values") String trueValues,
-                               @FormParam("date_format") String dateFormat,
-                               MultivaluedMap<String,String> params)
+    public Response mapCsvData(
+                    @FormParam("project") URI projectId,
+                    @FormParam("source") URI sourceId,
+                    @FormParam("dest_title") String destTitle,
+                    @FormParam("dest_graph_uri") URI targetGraph,
+                    @FormParam("base_uri") URI baseUri,
+                    @FormParam("true_values") String trueValues,
+                    @FormParam("date_format") String dateFormat,
+                    @FormParam("key_column") @DefaultValue("-1") int keyColumn,
+                    MultivaluedMap<String,String> params)
                                                 throws WebApplicationException {
         // Note: There a bug in Jersey that cause the MultivalueMap to be
         // empty unless at least one @FormParm annotation is present.
@@ -212,7 +214,8 @@ public class CsvDirectMapper extends BaseConverterModule
             }
             MappingDesc desc = null;
             try {
-                desc = new MappingDesc(typeMappings, trueValues, dateFormat);
+                desc = new MappingDesc(typeMappings, keyColumn,
+                                                     trueValues, dateFormat);
             }
             catch (IllegalArgumentException e) {
                 this.throwInvalidParamError("date_format", dateFormat);
@@ -277,6 +280,7 @@ public class CsvDirectMapper extends BaseConverterModule
                             new LinkedHashMap<org.openrdf.model.URI,Value>();
             for (Row<String> row : src) {
                 statements.clear();
+                boolean skipRow = false;
                 // Scan columns to map values and build triples.
                 org.openrdf.model.URI subject = null;
                 for (int j=0, max=row.size(); j<max; j++) {
@@ -284,18 +288,22 @@ public class CsvDirectMapper extends BaseConverterModule
                     Mapping m = mapping.getMapping(j);
                     Value value = null;
                     if (isSet(v)) {
-                        if (m == Mapping.Id) {
+                        value = this.mapValue(v, valueFactory, m, mapping);                            
+                        if (j == mapping.keyColumn) {
                             subject = valueFactory.createURI(objUri + urlify(v)); // + "#_";
                         }
-                        else {
-                            value = this.mapValue(v, valueFactory, m, mapping);                            
-                        }
+                    }
+                    else {
+                        // Skip row without identifier.
+                        if (j == mapping.keyColumn) skipRow = true;
                     }
                     if (value != null) {
                         statements.put(predicates[j], value);
                     }
                     // Else: Ignore cell.
                 }
+                if (skipRow) continue;
+
                 // Auto-generate row URI if no identifier column was defined.
                 if (subject == null) {
                     subject = valueFactory.createURI(objUri + i); // + "#_";
@@ -452,17 +460,19 @@ public class CsvDirectMapper extends BaseConverterModule
     private final static class MappingDesc
     {
         private final Mapping[] mappings;
+        private final int keyColumn;
         private final List<String> trueValues;
         private final DateFormat dateFormat;
         private final DatatypeFactory dateFactory;
 
-        public MappingDesc(Mapping[] typeMappings,
+        public MappingDesc(Mapping[] typeMappings, int keyColumn,
                            String trueValues, String dateFormat) {
             if ((typeMappings == null) || (typeMappings.length == 0)) {
                 throw new IllegalArgumentException("typeMappings");
             }
             // Type mappings.
             this.mappings = typeMappings;
+            this.keyColumn = keyColumn;
             // Boolean TRUE values.
             List<String> l = Collections.emptyList();
             if (isSet(trueValues)) {
