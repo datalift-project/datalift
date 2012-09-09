@@ -83,9 +83,10 @@
       <xsl:when test="count(@*|.//*) = 0">
         <!-- No child nodes nor attributes.
              => Create attribute triple with text data, ignoring comments. -->
-        <xsl:if test="normalize-space(text()) != ''">
+        <xsl:variable name="content" select="normalize-space(text())"/>
+        <xsl:if test="$content != ''">
           <xsl:element name="{name()}" namespace="{$ns}">
-             <xsl:value-of select="text()"/>
+             <xsl:value-of select="$content"/>
           </xsl:element>
         </xsl:if>
         <!-- Else: empty node. => Ignore... -->
