@@ -4,12 +4,6 @@ body {
   font-family: Lucida Grande, Lucida Sans, Arial, sans-serif;
   font-size:.9em;
   overflow-y:scroll;
-/*
-  width:95%;
-  margin:auto;
-  padding-left:20px;
-  padding-right:20px;
-*/
 }
 
 .dl-widget-header {
@@ -18,22 +12,21 @@ body {
 }
 
 .dl-main-panel {
-  margin:10px
+  margin:10px;
 }
 
 .dl-panel {
   position:relative;
-  margin:10px
+  margin:10px;
 }
 
 .dl-result-panel {
   display:none;
-  margin:10px
+  margin:10px;
 }
 
 .dl-form-elt {
   display:inline-block;
-  margin-right:2em;
 }
 
 .dl-form-buttons {

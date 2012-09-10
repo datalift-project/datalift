@@ -30,6 +30,7 @@
 				</select>
 			</div>
 #end
+			<span>&nbsp;</span>
 			<div id="result_format" class="dl-form-elt">
 				<label>#i18n("sparql.parameter.format"): </label>
 				<input type="radio" id="html_format" name="format" value="application/json" checked="checked"/><label for="html_format">HTML</label>
@@ -41,12 +42,16 @@
 				<input type="radio" id="csv_format" name="format" value="text/csv, text/plain; q=0.5"/><label for="csv_format">CSV</label>
 				<input type="hidden" id="format_save" />
 			</div>
-			<div class="dl-form-elt">
-				<p><label for="query">#i18n("sparql.query.light"): </label><br />
-				<textarea id="query" name="query" style="width:600px; height:100px;">$esc.html("SELECT * WHERE {
-  ?s ?p ?o .
-}
-")</textarea></p>
+			<div class="dl-form-elt" style="width: 100%;">
+				<p />
+				<label for="query">#i18n("sparql.query.light"): </label><br />
+				<textarea id="query" name="query" style="width:100%; min-height:100px;"></textarea></p>
+				<div id="predef-queries">
+					<label>#i18n("sparql.predef.queries"): </label>
+					<button query="#i18n("sparql.allTriples.query")">#i18n("sparql.query.allTriples")</button> 
+					<button query="#i18n("sparql.types.query")">#i18n("sparql.query.types")</button> 
+					<button query="#i18n("sparql.contexts.query")">#i18n("sparql.query.contexts")</button>
+				</div>
 				<p><label for="max">#i18n("sparql.max.results"): </label>
 				<input type="text" name="max" id="max" value="5000"/></p>
 			</div>
@@ -74,32 +79,47 @@
 		var searchData = new Array();
 		var responsePtr;
 
+		function queryUpdate() {
+			var disableSelect = true;
+			var disableConstruct = true;
+			var s = $("#query").val();
+			if (s.match(/(^|\s+)(CONSTRUCT|DESCRIBE)\s+/i)) {
+				disableConstruct = false;
+			}
+			if (s.match(/(^|\s+)SELECT\s+/i)) {
+				disableSelect = false;
+			}
+			$("#turtle_format").button("option", "disabled", disableConstruct);
+			$("#ntriples_format").button("option", "disabled", disableConstruct);
+			$("#trig_format").button("option", "disabled", disableConstruct);
+			$("#trix_format").button("option", "disabled", disableConstruct);
+			$("#csv_format").button("option", "disabled", disableSelect);
+		};
+
 		$(function() {
 			$("#query_submit").button();
 			$("#goto_workspace").button();
-
 			$("#result_format").buttonset();
-			$("#turtle_format").button("option", "disabled", true);
-			$("#ntriples_format").button("option", "disabled", true);
-			$("#trig_format").button("option", "disabled", true);
-			$("#trix_format").button("option", "disabled", true);
+
+			var firstButton = true;
+			$("#predef-queries button").each(function(button) {
+				$(this).button();
+				$(this).click(function() {
+					$("#query").val($(this).attr("query"));
+					queryUpdate();
+					return false;
+				});
+				if (firstButton) {
+					$("#query").val($(this).attr("query"));
+					queryUpdate();
+					firstButton = false;
+				}
+			});
 
 			$("#query").keyup(function() {
-				var disableSelect = true;
-				var disableConstruct = true;
-				var s = $(this).val();
-				if (s.match(/(^|\s+)(CONSTRUCT|DESCRIBE)\s+/i)) {
-					disableConstruct = false;
-				}
-				if (s.match(/(^|\s+)SELECT\s+/i)) {
-					disableSelect = false;
-				}
-				$("#turtle_format").button("option", "disabled", disableConstruct);
-				$("#ntriples_format").button("option", "disabled", disableConstruct);
-				$("#trig_format").button("option", "disabled", disableConstruct);
-				$("#trix_format").button("option", "disabled", disableConstruct);
-				$("#csv_format").button("option", "disabled", disableSelect);
+				queryUpdate();
 			});
+
 			$("#query_form").submit(function(e) {
 				var fmt = $("input[name=format]:checked").val();
 				$("#format_save").val(fmt);
@@ -129,16 +149,10 @@
 					});
 				}
 				// Else: let the browser send the form request.
-/*
-				else {
-					// Download document.
-					window.location = requestUrl + "&format=" + fmt;
-				}
-*/
 			});
 		});
 
-		function successfulQuery(response){
+		function successfulQuery(response) {
 			if ($("#format_save").val() == "application/json") {
 				jsonGridSuccessRequest(response);
 
