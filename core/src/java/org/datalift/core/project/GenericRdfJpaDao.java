@@ -252,6 +252,7 @@ public class GenericRdfJpaDao<T> implements RequestLifecycleListener
         EntityTransaction tx = em.getTransaction();
         if (! tx.isActive()) {
             // Initiate new transaction.
+            log.trace("Initiating new JPA transaction");
             tx.begin();
         }
         return em;
@@ -269,10 +270,12 @@ public class GenericRdfJpaDao<T> implements RequestLifecycleListener
                 }
                 try {
                     if (! tx.getRollbackOnly()) {
+                        log.trace("Committing pending JPA transaction");
                         em.flush();
                         tx.commit();
                     }
                     else {
+                        log.trace("Rolling back pending JPA transaction");
                         tx.rollback();
                     }
                     em.clear();

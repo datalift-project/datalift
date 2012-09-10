@@ -150,6 +150,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         if (this.emf != null) {
             this.emf.close();
             this.emf = null;
+            log.debug("Empire persistence provider shut down");
         }
     }
 
@@ -194,6 +195,8 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         }
         // Add source to project.
         project.add(src);
+        log.debug("New CSV source <{}> added to project \"{}\"",
+                                                    uri, project.getTitle());
         return src;
     }
 
@@ -216,6 +219,8 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         src.setMimeType(mimeType);
         // Add source to project.
         project.add(src);
+        log.debug("New RDF file source <{}> added to project \"{}\"",
+                                                    uri, project.getTitle());
         return src;
     }
 
@@ -237,6 +242,8 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         src.setCacheDuration(cacheDuration);
         // Add source to project.
         project.add(src);
+        log.debug("New SQL source <{}> added to project \"{}\"",
+                                                    uri, project.getTitle());
         return src;
     }
 
@@ -255,6 +262,8 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         src.setCacheDuration(cacheDuration);
         // Add source to project.
         project.add(src);
+        log.debug("New SPARQL source <{}> added to project \"{}\"",
+                                                    uri, project.getTitle());
         return src;
     }
 
@@ -275,6 +284,8 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         src.setMimeType(MediaTypes.APPLICATION_XML);
         // Add source to project.
         project.add(src);
+        log.debug("New XML source <{}> added to project \"{}\"",
+                                                    uri, project.getTitle());
         return src;
     }
 
@@ -293,6 +304,8 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         src.setParent(parent);
         // Add source to project.
         project.add(src);
+        log.debug("New transformed RDF source <{}> added to project \"{}\"",
+                                                    uri, project.getTitle());
         return src;
     }
     
@@ -333,6 +346,8 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         src.setProjectionFilePath(prjFilePath);
         // Add source to project.
         project.add(src);
+        log.debug("New ShapeFile source <{}> added to project \"{}\"",
+                                                    uri, project.getTitle());
         return src;
     }
     
@@ -352,6 +367,8 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         src.setFilePath(filePath);
         // Add source to project.
         project.add(src);
+        log.debug("New GML source <{}> added to project \"{}\"",
+                                                    uri, project.getTitle());
         return src;
     }
 
@@ -372,11 +389,14 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         p.remove(source);
         if (deleteResources) {
             // Release source resources (files, caches...).
+            log.debug("Releasing resources for source <{}>", source.getUri());
             source.delete();
         }
         // Persist changes.
         this.saveProject(p);
         this.projectDao.delete(source);
+        log.debug("Source <{}> removed from project \"{}\"",
+                                                source.getUri(), p.getTitle());
     }
 
     /** {@inheritDoc} */
@@ -391,6 +411,8 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         ontology.setOperator(SecurityContext.getUserPrincipal());
         // Add ontology to project.
         project.addOntology(ontology);
+        log.debug("New ontology <{}> added to project \"{}\"",
+                                                    url, project.getTitle());
         return ontology;
     }
 
@@ -408,6 +430,8 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         // Persist changes.
         this.saveProject(project);
         this.projectDao.delete(ontology);
+        log.debug("Ontology <{}> removed form project \"{}\"",
+                                    ontology.getSource(), project.getTitle());
     }
 
     /** {@inheritDoc} */
@@ -429,6 +453,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         p.setCreationDate(date);
         p.setModificationDate(date);
         p.setOwner(SecurityContext.getUserPrincipal());
+        log.debug("New project <{}> created", p.getUri());
         return p;
     }
 
@@ -451,6 +476,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         }
         // Delete project (and dependent objects: sources, ontologies...)
         this.projectDao.delete(p);
+        log.debug("Project <{}> deleted", p.getUri());
     }
 
     /** {@inheritDoc} */
@@ -471,6 +497,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
             else {
                 this.projectDao.save(p);
             }
+            log.debug("Project <{}> saved to RDF store", p.getUri());
         }
         catch (Exception e) {
             throw new RuntimeException("Invalid project URI: " + p.getUri(), e);
@@ -512,6 +539,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
             // Too late! empire is already started.
             throw new IllegalStateException("Already started");
         }
+        log.trace("Added mapping \"{}\" to RDF JPA provider", ns);
         PrefixMapping.GLOBAL.addMapping(ns.prefix, ns.uri);
     }
 
