@@ -50,6 +50,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -129,6 +130,7 @@ import org.datalift.fwk.view.TemplateModel;
 import org.datalift.fwk.view.ViewFactory;
 
 import static org.datalift.fwk.MediaTypes.*;
+import static org.datalift.fwk.project.SparqlSource.*;
 import static org.datalift.fwk.util.StringUtils.*;
 
 
@@ -185,6 +187,9 @@ public class Workspace extends BaseModule
     private final static String SOURCE_PATH = "/" + SOURCE_URI_PREFIX  + '/';
     /** The path prefix for HTML page Velocity templates. */
     private final static String TEMPLATE_PATH = "/" + MODULE_NAME  + '/';
+    /** The MIME type for GML files. */
+    private final static MediaType GML_TYPE =
+                                    MediaType.valueOf(GmlSource.GML_MIME_TYPE);
 
     //-------------------------------------------------------------------------
     // Class members
@@ -644,13 +649,17 @@ public class Workspace extends BaseModule
             // Save new source data to public project storage.
             String filePath = this.getProjectFilePath(projectId, fileName);
             localFile = this.getFileStorage(filePath);
-            this.getFileData(fileData, fileUrl, localFile, uriInfo);
+            this.getFileData(fileData, fileUrl, localFile, uriInfo,
+                                                APPLICATION_CSV_TYPE);
 
             Separator sep = Separator.valueOf(separator);
             // Initialize new source.
             CsvSource src = this.projectManager.newCsvSource(p, sourceUri,
                                         fileName, description,
                                         filePath, sep.getValue());
+            if (fileUrl != null) {
+                src.setSourceUrl(fileUrl.toString());
+            }
             if (encoding != null) {
                 src.setEncoding(encoding.name());
             }
@@ -804,6 +813,8 @@ public class Workspace extends BaseModule
         }
         // Else: File data have been uploaded.
 
+        // Check requested MIME type.
+        RdfFormat format = RdfFormat.get(mimeType);
         log.debug("Processing RDF source creation request for {}", fileName);
         boolean deleteFiles = false;
         try {
@@ -818,11 +829,15 @@ public class Workspace extends BaseModule
             // Save new source data to public project storage.
             String filePath = this.getProjectFilePath(projectId, fileName);
             localFile = this.getFileStorage(filePath);
-            this.getFileData(fileData, fileUrl, localFile, uriInfo);
+            this.getFileData(fileData, fileUrl, localFile, uriInfo,
+                                                format.getMimeTypes());
             // Initialize new source.
-            RdfFileSource src = this.projectManager.newRdfSource(p,
-                                            sourceUri, fileName, description,
-                                            baseUri, filePath, mimeType);
+            RdfFileSource src = this.projectManager.newRdfSource(p, sourceUri,
+                                    fileName, description, baseUri, filePath,
+                                    format.getMimeType().toString());
+            if (fileUrl != null) {
+                src.setSourceUrl(fileUrl.toString());
+            }
             // Iterate on source content to validate uploaded file.
             int n = 0;
             CloseableIterator<?> i = src.iterator();
@@ -1025,6 +1040,11 @@ public class Workspace extends BaseModule
                                                 throws WebApplicationException {
         Response response = null;
         try {
+            // Check SPARQL query is a CONSTRUCT or DESCRIBE.
+            if ((sparqlQuery == null) ||
+                (! CONSTRUCT_VALIDATION_PATTERN.matcher(sparqlQuery).find())) {
+                this.throwInvalidParamError("sparqlQuery", sparqlQuery);
+            }
             log.debug("Processing SPARQL source creation request for \"{}\"",
                       title);
             // Build object URIs from request path.
@@ -1079,6 +1099,11 @@ public class Workspace extends BaseModule
                                                 throws WebApplicationException {
         Response response = null;
         try {
+            // Check SPARQL query is a CONSTRUCT or DESCRIBE.
+            if ((sparqlQuery != null) &&
+                (! CONSTRUCT_VALIDATION_PATTERN.matcher(sparqlQuery).find())) {
+                this.throwInvalidParamError("sparqlQuery", sparqlQuery);
+            }
             // Retrieve source.
             Project p = this.loadProject(uriInfo, projectId);
             SparqlSource s = this.loadSource(p, sourceUri, SparqlSource.class);
@@ -1174,10 +1199,14 @@ public class Workspace extends BaseModule
             // Save new source data to public project storage.
             String filePath = this.getProjectFilePath(projectId, fileName);
             localFile = this.getFileStorage(filePath);
-            this.getFileData(fileData, fileUrl, localFile, uriInfo);
+            this.getFileData(fileData, fileUrl, localFile, uriInfo,
+                         Arrays.asList(APPLICATION_XML_TYPE, TEXT_XML_TYPE));
             // Initialize new source.
             XmlSource src = this.projectManager.newXmlSource(p, sourceUri,
                                             fileName, description, filePath);
+            if (fileUrl != null) {
+                src.setSourceUrl(fileUrl.toString());
+            }
             // Parse XML file content to validate well-formedness.
             try {
                 SAXParserFactory spf = SAXParserFactory.newInstance();
@@ -1302,8 +1331,8 @@ public class Workspace extends BaseModule
 		            paths[i] = this.getProjectFilePath(projectId,
 		                                               fileNames[i]);
 		            localFiles[i] = this.getFileStorage(paths[i]);
-		            this.getFileData(fileData[i], null,
-		                             localFiles[i], uriInfo);
+		            this.getFileData(fileData[i], null, localFiles[i],
+		                             uriInfo, (MediaType)null);
 		        }
 		    }
 		    catch (IOException e) {
@@ -1414,9 +1443,8 @@ public class Workspace extends BaseModule
 			this.throwInvalidParamError("source2", null);
 		}
 
-		log.debug("Processing GML source creation request for {}", fileName1);
-		log.debug("Processing XSD source creation request for {}", fileName2);
-
+		log.debug("Processing GML source creation request for \"{}\""
+		          + " (schema file: \"{}\")", fileName1, fileName2);
 		try {
 			// Build object URIs from request path.
 			URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
@@ -1432,11 +1460,10 @@ public class Workspace extends BaseModule
 			String filePath2 = this.getProjectFilePath(projectId, fileName2);
 			localFile1 = this.getFileStorage(filePath1);
 			localFile2 = this.getFileStorage(filePath2);
-			this.getFileData(fileData1, fileUrl1, localFile1, uriInfo);
-			this.getFileData(fileData2, fileUrl2, localFile2, uriInfo);
+			this.getFileData(fileData1, fileUrl1, localFile1, uriInfo, GML_TYPE);
+			this.getFileData(fileData2, fileUrl2, localFile2, uriInfo, APPLICATION_XML_TYPE);
 			// Initialize new source.
 			this.projectManager.newGmlSource(p, sourceUri1, fileName1, description, filePath1);
-			//this.projectManager.newGmlSource(p, sourceUri2, fileName2, description, filePath2);
 			// Persist new source.
 			this.projectManager.saveProject(p);
 			// Notify user of successful creation, redirecting HTML clients
@@ -2203,8 +2230,15 @@ public class Workspace extends BaseModule
         }
     }
 
-    private void getFileData(InputStream in, URL u,
-                             File destFile, UriInfo uriInfo)
+    private void getFileData(InputStream in, URL u, File destFile,
+                             UriInfo uriInfo, MediaType mimeType)
+                                                        throws IOException {
+        this.getFileData(in, u, destFile, uriInfo,
+                         (mimeType != null)? Arrays.asList(mimeType): null);
+    }
+
+    private void getFileData(InputStream in, URL u, File destFile,
+                             UriInfo uriInfo, Collection<MediaType> mimeTypes)
                                                         throws IOException {
         if (in != null) {
             FileUtils.save(in, destFile);
@@ -2229,7 +2263,26 @@ public class Workspace extends BaseModule
             }
             else {
                 // Not a local file. => Download data from the provided URL.
-                FileUtils.save(u, destFile);
+                Map<String,String> headers = null;
+                if ((mimeTypes != null) && (! mimeTypes.isEmpty())) {
+                    // Set HTTP Accept header.
+                    StringBuilder buf = new StringBuilder();
+                    for (MediaType m : mimeTypes) {
+                        if (buf.length() == 0) {
+                            // Preferred MIME type (q=1.0).
+                            buf.append(m);
+                        }
+                        else {
+                            // Secondary MIME types.
+                            buf.append(", ").append(m).append("; q=0.5");
+                        }
+                    }
+                    headers = new HashMap<String,String>();
+                    headers.put(ACCEPT, buf.toString());
+                    log.debug("Downloading source data from \"{}\" to \"{}\","
+                              + " using MIME types \"{}\"", u, destFile, buf);
+                }
+                FileUtils.save(u, null, headers, destFile);
             }
         }
     }
