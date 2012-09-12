@@ -7,7 +7,7 @@
   <appender name="defaultLog" class="org.apache.log4j.RollingFileAppender">
     <param name="file" value="${datalift.log.path}/datalift.log"/>
     <param name="maxFileSize"    value="100KB"/>
-    <param name="maxBackupIndex" value="10"/>
+    <param name="maxBackupIndex" value="9"/>
 
     <layout class="org.apache.log4j.PatternLayout">
       <param name="conversionPattern"
