@@ -245,7 +245,7 @@ public final class FileUtils
                 out = null;
             }
             // Force server connection.
-            log.debug("Connecting to \"{}\"...", u);
+            log.trace("Connecting to \"{}\"...", u);
             cnx.connect();
             // Check for HTTP status code.
             int status = 0;
@@ -257,7 +257,7 @@ public final class FileUtils
             }
             if (status == 0) {
                 // No error. => Save data locally.
-                log.debug("Downloading source data from \"{}\"...", u);
+                log.debug("Downloading data from \"{}\"...", u);
                 save(cnx.getInputStream(), to);
             }
             else {
@@ -355,7 +355,7 @@ public final class FileUtils
             }
             else {
                 long delay = System.currentTimeMillis() - t0;
-                log.debug("Saved {} MBs of data to {} in {} seconds",
+                log.debug("{} MBs of data written to {} in {} seconds",
                           Double.valueOf((byteCount / 1000) / 1000.0), to,
                           Double.valueOf(delay / 1000.0));
             }
