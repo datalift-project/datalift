@@ -40,5 +40,15 @@ package org.datalift.fwk.project;
  */
 public interface GmlSource extends FileSource
 {
-    // Just a marker interface for GML sources.
+    //-------------------------------------------------------------------------
+    // Constants
+    //-------------------------------------------------------------------------
+
+    public final static String GML_MIME_TYPE = "application/gml+xml";
+
+    //-------------------------------------------------------------------------
+    // Methods
+    //-------------------------------------------------------------------------
+
+    // None.
 }

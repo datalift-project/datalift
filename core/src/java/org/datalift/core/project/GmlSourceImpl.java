@@ -61,6 +61,7 @@ public class GmlSourceImpl extends BaseFileSource
      */
     public GmlSourceImpl() {
         super(SourceType.GmlSource);
+        this.setMimeType(GML_MIME_TYPE);
     }
 
     /**
@@ -76,6 +77,7 @@ public class GmlSourceImpl extends BaseFileSource
      */
     public GmlSourceImpl(String uri, Project project) {
         super(SourceType.GmlSource, uri, project);
+        this.setMimeType(GML_MIME_TYPE);
     }
 
     //-------------------------------------------------------------------------
