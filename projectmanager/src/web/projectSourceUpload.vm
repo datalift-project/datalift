@@ -49,7 +49,7 @@
 		<input type="text" id="file_url" name="file_url"/></p>
 #else
 		<input type="hidden" name="current_source" value="$current.uri"/>
-		<p>#i18n("project.source.csv.update"): <a href="$current.uri">$esc.html($current.title)</a></p>
+		<p>#i18n("project.source.csv.update"): <a href="$current.uri">$esc.html($current.title)</a>#if( $current.sourceUrl ) (#i18n('project.update_source.src_url'): <a href='${current.sourceUrl}'>$!esc.html($current.sourceUrl)</a>)#end</p>
 #end
 		<p><label for="description">#i18n("project.upload_source.description"): </label>
 		<input type="text" id="description" name="description" value="$!esc.html($current.description)"/></p>
@@ -98,7 +98,7 @@
 		<input type="text" id="file_url" name="file_url"/></p>
 #else
 		<input type="hidden" id="current_source" name="current_source" value="$current.uri"/>
-		<p>#i18n("project.update_rdf"): <a href="$current.uri">$esc.html($current.title)</a></p>
+		<p>#i18n("project.update_rdf"): <a href="$current.uri">$esc.html($current.title)</a>#if( $current.sourceUrl ) (#i18n('project.update_source.src_url'): <a href='${current.sourceUrl}'>$!esc.html($current.sourceUrl)</a>)#end</p>
 #end
 		<p><label for="description">#i18n("project.upload_source.description"): </label>
 		<input type="text" id="description" name="description" value="$!esc.html($current.description)"/></p>
@@ -109,7 +109,7 @@
 #end
 		</select></p>
 		<p><label for="base_uri">#i18n("project.upload_source.base_uri"): </label>
-		<input type="text" id="base_uri" name="base_uri" value="$!esc.html($current.sourceUrl)"/></p>
+		<input type="text" id="base_uri" name="base_uri" value="$!esc.html($current.baseUri)"/></p>
 		<input type="submit" value="#i18n("$submit")"/>
 	</form>
 #end
@@ -185,7 +185,7 @@
 		<input type="text" id="file_url" name="file_url"/></p>
 #else
 		<input type="hidden" name="current_source" value="$current.uri"/>
-		<p>#i18n("project.update_xml"): <a href="$current.uri">$esc.html($current.title)</a></p>
+		<p>#i18n("project.update_xml"): <a href="$current.uri">$esc.html($current.title)</a>#if( $current.sourceUrl ) (#i18n('project.update_source.src_url'): <a href='${current.sourceUrl}'>$!esc.html($current.sourceUrl)</a>)#end</p>
 #end
 		<p><label for="description">#i18n("project.upload_source.description"): </label>
 		<input type="text" id="description" name="description" value="$!esc.html($current.description)"/></p>
@@ -208,11 +208,10 @@
 		<input type="file" name="source4" size="64"/><br />
 #else
 		<input type="hidden" name="current_source" value="$current.uri"/>
-		<p>#i18n("project.update_shp"): <a href="$current.uri">$esc.html($current.title)</a></p>
+		<p>#i18n("project.update_shp"): <a href="$current.uri">$esc.html($current.title)</a>#if( $current.sourceUrl ) (#i18n('project.update_source.src_url'): <a href='${current.sourceUrl}'>$!esc.html($current.sourceUrl)</a>)#end</p>
 #end
 		<p><label for="description">#i18n("project.upload_source.description"): </label>
 		<input type="text" id="description" name="description" value="$!esc.html($current.description)"/></p>
-		</select></p>
 		<input type="submit" value="#i18n("$submit")"/>
 	</form>
 #end
@@ -228,11 +227,10 @@
 		<input type="file" name="source2" size="64"/><br />
 #else
 		<input type="hidden" name="current_source" value="$current.uri"/>
-		<p>#i18n("project.update_gml"): <a href="$current.uri">$esc.html($current.title)</a></p>
+		<p>#i18n("project.update_gml"): <a href="$current.uri">$esc.html($current.title)</a>#if( $current.sourceUrl ) (#i18n('project.update_source.src_url'): <a href='${current.sourceUrl}'>$!esc.html($current.sourceUrl)</a>)#end</p>
 #end
 		<p><label for="description">#i18n("project.upload_source.description"): </label>
 		<input type="text" id="description" name="description" value="$!esc.html($current.description)"/></p>
-		</select></p>
 		<input type="submit" value="#i18n("$submit")"/>
 	</form>
 #end
