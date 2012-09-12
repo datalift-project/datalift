@@ -55,6 +55,7 @@ import com.clarkparsia.empire.annotation.RdfsClass;
 import au.com.bytecode.opencsv.CSVReader;
 
 import org.datalift.core.TechnicalException;
+import org.datalift.fwk.MediaTypes;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.CsvSource;
 import org.datalift.fwk.project.Project;
@@ -106,6 +107,7 @@ public class CsvSourceImpl extends BaseFileSource
      */
     public CsvSourceImpl() {
         super(SourceType.CsvSource);
+        this.setMimeType(MediaTypes.TEXT_CSV);
     }
 
     /**
@@ -121,6 +123,7 @@ public class CsvSourceImpl extends BaseFileSource
      */
     public CsvSourceImpl(String uri, Project project) {
         super(SourceType.CsvSource, uri, project);
+        this.setMimeType(MediaTypes.TEXT_CSV);
     }
 
     //-------------------------------------------------------------------------
