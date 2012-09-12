@@ -156,9 +156,16 @@ public final class PreferredLocales extends AbstractList<Locale>
      *         specified base name can be found.
      */
     public ResourceBundle getBundle(String baseName, Class<?> owner) {
-        return ResourceBundle.getBundle(baseName, this.locales.get(0),
-                                        owner.getClassLoader(),
-                                        this.getBundleControl());
+        try {
+            return ResourceBundle.getBundle(baseName, this.locales.get(0),
+                                            owner.getClassLoader(),
+                                            this.getBundleControl());
+        }
+        catch (MissingResourceException e) {
+            log.fatal("Failed to resolved bundle \"{}\" for locales {}",
+                                                        baseName, this.locales);
+            throw e;
+        }
     }
 
     /**
@@ -174,6 +181,12 @@ public final class PreferredLocales extends AbstractList<Locale>
                 public List<Locale> getCandidateLocales(String baseName,
                                                         Locale locale) {
                     return locales;
+                }
+
+                @Override
+                public Locale getFallbackLocale(String baseName,
+                                                Locale locale) {
+                    return (Locale.ENGLISH.equals(locale))? null: Locale.ENGLISH;
                 }
             };
     }
