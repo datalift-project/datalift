@@ -166,6 +166,12 @@ public class XsltXmlConverter extends BaseConverterModule
             if (targetGraph != null) {
                 ctx = cnx.getValueFactory().createURI(targetGraph.toString());
             }
+            // Compute 2 base URIs: one without ending separator, for the
+            // XSLT stylesheet to append ad-hoc separator ('/' for elements,
+            // '#' for attributes) and another for the RDF parser.
+            String xmlBaseUri = this.getBaseUri(baseUri);
+            String rdfBaseUri = RdfUtils.getBaseUri(
+                            (baseUri != null)? baseUri.toString(): null, '/');
             // Create XML RDF parser and content handler, to insert triples
             // in RDF store in stream mode, without intermediate file storage.
             BatchStatementAppender appender =
@@ -175,9 +181,9 @@ public class XsltXmlConverter extends BaseConverterModule
             rdfParser.setRDFHandler(appender);
             // Apply XSL transformation to build RDF XML from XML data.
             Transformer t = this.newTransformer(null);
-            t.setParameter("BaseURI", baseUri.toString());
+            t.setParameter("BaseURI", xmlBaseUri);
             t.transform(new StreamSource(src.getInputStream()),
-                        rdfParser.getSAXResult(baseUri.toString()));
+                        rdfParser.getSAXResult(rdfBaseUri));
 
             log.debug("Inserted {} RDF triples into <{}> in {} seconds",
                       Long.valueOf(appender.getStatementCount()), targetGraph,
@@ -229,5 +235,18 @@ public class XsltXmlConverter extends BaseConverterModule
             throw new TechnicalException("xml.stylesheet.parse.failed", e);
         }
         return t;
+    }
+
+    private String getBaseUri(URI uri) {
+        String baseUri = "";
+        if (uri != null) {
+            baseUri = uri.toString();
+            int n = baseUri.length() - 1;
+            char c = baseUri.charAt(n);
+            if ((c == '/') || (c == '#')) {
+                baseUri = baseUri.substring(0, n);
+            }
+        }
+        return baseUri;
     }
 }
