@@ -179,7 +179,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         // Create new CSV source.
         CsvSourceImpl src = new CsvSourceImpl(uri.toString(), project);
         // Set source parameters.
-        this.initSource(src, title, description, null);
+        this.initSource(src, title, description);
         File f = this.getFileStorage(filePath);
         if (!f.isFile()) {
             throw new FileNotFoundException(filePath);
@@ -209,14 +209,16 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         // Create new CSV source.
         RdfFileSourceImpl src = new RdfFileSourceImpl(uri.toString(), project);
         // Set source parameters.
-        this.initSource(src, title, description,
-                             (baseUri != null)? baseUri.toString(): null);
+        this.initSource(src, title, description);
         File f = this.getFileStorage(filePath);
         if (!f.isFile()) {
             throw new FileNotFoundException(filePath);
         }
         src.setFilePath(filePath);
         src.setMimeType(mimeType);
+        if (baseUri != null) {
+            src.setBaseUri(baseUri.toString());
+        }
         // Add source to project.
         project.add(src);
         log.debug("New RDF file source <{}> added to project \"{}\"",
@@ -234,7 +236,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         // Create new CSV source.
         SqlSourceImpl src = new SqlSourceImpl(uri.toString(), project);
         // Set source parameters.
-        this.initSource(src, title, description, null);
+        this.initSource(src, title, description);
         src.setConnectionUrl(srcUrl);
         src.setUser(user);
         src.setPassword(password);
@@ -256,7 +258,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         // Create new CSV source.
         SparqlSourceImpl src = new SparqlSourceImpl(uri.toString(), project);
         // Set source parameters.
-        this.initSource(src, title, description, null);
+        this.initSource(src, title, description);
         src.setEndpointUrl(endpointUrl);
         src.setQuery(sparqlQuery);
         src.setCacheDuration(cacheDuration);
@@ -275,7 +277,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         // Create new XML source.
         XmlSourceImpl src = new XmlSourceImpl(uri.toString(), project);
         // Set source parameters.
-        this.initSource(src, title, description, null);
+        this.initSource(src, title, description);
         File f = this.getFileStorage(filePath);
         if (! f.isFile()) {
             throw new FileNotFoundException(filePath);
@@ -299,7 +301,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         TransformedRdfSourceImpl src =
                         new TransformedRdfSourceImpl(uri.toString(), project);
         // Set source parameters.
-        this.initSource(src, title, description, null);
+        this.initSource(src, title, description);
         src.setTargetGraph(targetGraph.toString());
         src.setParent(parent);
         // Add source to project.
@@ -319,7 +321,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         // Create new Shapefile source.
     	ShpSourceImpl src = new ShpSourceImpl(uri.toString(), project);
         // Set source parameters.
-        this.initSource(src, title, description, null);
+        this.initSource(src, title, description);
         // Check and set Shape main file (SHP).
         File f = this.getFileStorage(shpFilePath);
         if (! f.isFile()) {
@@ -359,7 +361,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         // Create new GML source.
     	GmlSourceImpl src = new GmlSourceImpl(uri.toString(), project);
         // Set source parameters.
-        this.initSource(src, title, description, null);
+        this.initSource(src, title, description);
         File f = this.getFileStorage(filePath);
         if (! f.isFile()) {
             throw new FileNotFoundException(filePath);
@@ -623,8 +625,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         return provider.createEntityManagerFactory("", map);
     }
 
-    private void initSource(BaseSource src, String title, String description,
-                                            String sourceUrl) {
+    private void initSource(BaseSource src, String title, String description) {
         // Check that no source with the same URI already exists.
         if (src.getProject().getSource(src.getUri()) != null) {
             throw new DuplicateUriException("duplicate.source.uri",
@@ -632,7 +633,6 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         }
         src.setTitle(title);
         src.setDescription(description);
-        src.setSourceUrl(sourceUrl);
         src.setCreationDate(new Date());
         src.setOperator(SecurityContext.getUserPrincipal());
     }
