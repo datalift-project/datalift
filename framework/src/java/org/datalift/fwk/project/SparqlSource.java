@@ -34,6 +34,8 @@
 
 package org.datalift.fwk.project;
 
+import java.util.regex.Pattern;
+
 
 /**
  * A source object reading data from a SPARQL endpoint by executing a
@@ -43,6 +45,19 @@ package org.datalift.fwk.project;
  */
 public interface SparqlSource extends RdfSource
 {
+    //-------------------------------------------------------------------------
+    // Constants
+    //-------------------------------------------------------------------------
+
+    /** The regular expression to validate the CONSTRUCT SPARQL queries. */
+    public final static Pattern CONSTRUCT_VALIDATION_PATTERN =
+                        Pattern.compile("(^|\\s+)(CONSTRUCT|DESCRIBE)\\s+",
+                                        Pattern.CASE_INSENSITIVE);
+
+    //-------------------------------------------------------------------------
+    // Methods
+    //-------------------------------------------------------------------------
+
     /**
      * Returns the URL of the SPARQL endpoint this source reads data
      * from.

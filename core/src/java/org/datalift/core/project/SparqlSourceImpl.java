@@ -66,7 +66,7 @@ import org.datalift.fwk.util.CloseableIterator;
 import org.datalift.fwk.util.Env;
 
 import static org.datalift.fwk.MediaTypes.*;
-import static org.datalift.fwk.util.StringUtils.isBlank;
+import static org.datalift.fwk.util.StringUtils.*;
 
 
 /**
@@ -159,6 +159,10 @@ public class SparqlSourceImpl extends CachingSourceImpl implements SparqlSource
     /** {@inheritDoc} */
     @Override
     public void setQuery(String query) {
+        if ((query == null) ||
+            (! CONSTRUCT_VALIDATION_PATTERN.matcher(query).find())) {
+            throw new IllegalArgumentException("query");
+        }
         this.query = query;
         // Invalidate cache to force data reload.
         this.invalidateCache();
@@ -230,16 +234,24 @@ public class SparqlSourceImpl extends CachingSourceImpl implements SparqlSource
         try {
             // Build HTTP query string.
             StringBuilder buf = new StringBuilder(2048);
+            // Extract query data from endpoint URL, if any.
+            u = new URL(this.getEndpointUrl());
+            String q = u.getQuery();
+            if (isSet(q)) {
+                buf.append(u.getQuery()).append('&');
+                u = new URI(u.getProtocol(), null,
+                            u.getHost(), u.getPort(), u.getPath(),
+                            null, null).toURL();
+            }
             if (! isBlank(this.getDefaultGraphUri())) {
-                buf.append("default-graph-uri")
+                buf.append("default-graph-uri=")
                      .append(this.getDefaultGraphUri())
                      .append('&');
             }
             query = buf.append("query=").append(this.getQuery()).toString();
             // Use HTTP GET or POST depending on query length: use HTTP POST
             // to bypass URL length limitations of GET method.
-            u = new URL(this.getEndpointUrl());
-            if ((this.getEndpointUrl() + '?' + query).length() > 2048) {
+            if ((u.toString() + '?' + query).length() > 2048) {
                 // Use HTTP POST.
                 cnx = (HttpURLConnection)(u.openConnection());
                 cnx.setRequestMethod(HttpMethod.POST);
@@ -346,7 +358,7 @@ public class SparqlSourceImpl extends CachingSourceImpl implements SparqlSource
 
         final String CHARSET_TAG = "charset=";
         if ((contentType != null) && (contentType.length() != 0)) {
-            String[] s = contentType.split("\\s;\\s");
+            String[] s = contentType.split("\\s*;\\s*");
             elts[0] = s[0];
             if ((s.length > 1) && (s[1].startsWith(CHARSET_TAG))) {
                 elts[1] = s[1].substring(CHARSET_TAG.length());
