@@ -43,5 +43,22 @@ package org.datalift.fwk.project;
  */
 public interface RdfFileSource extends RdfSource, FileSource
 {
-    // No specific method, just a fusion of RdfSource and FileSource.
+    //-------------------------------------------------------------------------
+    // RdfFileSource contract definition
+    //-------------------------------------------------------------------------
+
+    /**
+     * Returns the base URI to apply when resolving relative URIs
+     * in this source.
+     * @return the base URI or <code>null</code> if none was set.
+     */
+    public String getBaseUri();
+
+    /**
+     * Sets the base URI to apply when resolving relative URIs
+     * in this source.
+     * @param  uri   the base URI or <code>null</code> if no resolution
+     *               of relative URIs shall be performed.
+     */
+    public void setBaseUri(String uri);
 }

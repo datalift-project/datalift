@@ -41,6 +41,7 @@ import javax.persistence.Entity;
 
 import org.openrdf.model.Statement;
 
+import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.RdfsClass;
 
 import org.datalift.core.TechnicalException;
@@ -62,6 +63,13 @@ import org.datalift.fwk.util.Env;
 public class RdfFileSourceImpl extends BaseFileSource
                                implements RdfFileSource
 {
+    //-------------------------------------------------------------------------
+    // Instance members
+    //-------------------------------------------------------------------------
+
+    @RdfProperty("datalift:baseUri")
+    private String baseUri;
+
     //-------------------------------------------------------------------------
     // Constructors
     //-------------------------------------------------------------------------
@@ -107,11 +115,27 @@ public class RdfFileSourceImpl extends BaseFileSource
     public CloseableIterator<Statement> iterator() {
         try {
             return BoundedAsyncRdfParser.parse(this.getInputStream(),
-                                    this.getMimeType(), this.getSourceUrl(),
+                                    this.getMimeType(), this.getBaseUri(),
                                     Env.getRdfBatchSize());
         }
         catch (IOException e) {
             throw new TechnicalException(e.getMessage(), e);
         }
+    }
+
+    //-------------------------------------------------------------------------
+    // RdfFileSource contract support
+    //-------------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    @Override
+    public String getBaseUri() {
+        return this.baseUri;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void setBaseUri(String uri) {
+        this.baseUri = uri;
     }
 }
