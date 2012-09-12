@@ -700,7 +700,7 @@ public final class RdfUtils
      *         data.
      */
     public static MediaType parseMimeType(String mimeType) {
-        return RdfFormat.find(mimeType).getMimeType();
+        return RdfFormat.get(mimeType).getMimeType();
     }
 
     /**
@@ -729,8 +729,8 @@ public final class RdfUtils
         String baseUri = "";
         if (StringUtils.isSet(uri)) {
             baseUri = uri;
-            int n = uri.length() - 1;
-            if (! ((uri.charAt(n) == '/') || (uri.charAt(n) == '#'))) {
+            char c = uri.charAt(uri.length() - 1);
+            if ((c != '/') && (c != '#')) {
                 baseUri += sep;
             }
         }
