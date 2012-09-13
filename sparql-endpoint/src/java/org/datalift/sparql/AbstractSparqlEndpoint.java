@@ -35,6 +35,10 @@
 package org.datalift.sparql;
 
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
 import java.text.MessageFormat;
@@ -67,14 +71,22 @@ import javax.ws.rs.core.Response.Status;
 
 import static javax.ws.rs.core.Response.Status.*;
 
+import org.openrdf.model.Literal;
+import org.openrdf.model.Value;
 import org.openrdf.model.impl.URIImpl;
+import org.openrdf.model.vocabulary.RDF;
+import org.openrdf.model.vocabulary.RDFS;
 import org.openrdf.query.BindingSet;
 import org.openrdf.query.QueryInterruptedException;
+import org.openrdf.query.TupleQueryResultHandlerBase;
 
 import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
+import org.datalift.fwk.i18n.BaseLocalizedItem;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.rdf.BaseTupleQueryResultMapper;
+import org.datalift.fwk.rdf.RdfNamespace;
+import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.rdf.TupleQueryResultMapper;
 import org.datalift.fwk.security.SecurityContext;
@@ -102,6 +114,15 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
 
     /** The SPARQL endpoint module name. */
     public final static String MODULE_NAME = "sparql";
+
+    /**
+     * The (optional) configuration property holding the path of
+     * the RDF file to load predefined queries from.
+     */
+    public final static String QUERIES_FILE_PROPERTY =
+                                            "sparql.predefined.queries.file";
+    /** The default queries file, embedded in module JAR. */
+    private final static String DEFAULT_QUERIES_FILE = "predefined-queries.ttl";
 
     private final static Pattern QUERY_START_PATTERN = Pattern.compile(
                     "SELECT|CONSTRUCT|ASK|DESCRIBE", Pattern.CASE_INSENSITIVE);
@@ -131,9 +152,23 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
             "  OPTIONAL { GRAPH ?g { ?s2 ?p2 ?o3 . FILTER( ?g = ?u ) } }\n" +
             "} LIMIT 1";
 
+    /** The SPARQL query to extract predefined query data. */
+    private final static String LOAD_PREDEFINED_QUERIES_QUERY =
+                    "PREFIX rdf: <" + RDF.NAMESPACE + ">\n" +
+                    "PREFIX rdfs: <" + RDFS.NAMESPACE + ">\n" +
+                    "PREFIX datalift: <" + RdfNamespace.DataLift.uri + ">\n" +
+                    "SELECT ?s ?label ?query WHERE { " +
+                        "?s a datalift:SparqlQuery ; " +
+                        "   rdfs:label ?label ; rdf:value ?query . " +
+                    "} ORDER BY ?s";
+
     //-------------------------------------------------------------------------
     // Class members
     //-------------------------------------------------------------------------
+
+    /** The predefined SPARQL queries. */
+    private final static List<PredefinedQuery> predefinedQueries =
+                                            new LinkedList<PredefinedQuery>();
 
     protected final static Logger log = Logger.getLogger();
 
@@ -149,6 +184,13 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     //-------------------------------------------------------------------------
     // Module contract support
     //-------------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    @Override
+    public void init(Configuration configuration) {
+        // Load predefined SPARQL queries.
+        this.loadPredefinedQueries(configuration);
+    }
 
     /**
      * {@inheritDoc}
@@ -526,6 +568,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                                         .getRepositories(! userAuthenticated);
             TemplateModel view = this.newView("sparqlEndpoint.vm", null);
             view.put("collections", c);
+            view.put("queries", predefinedQueries);
             view.put("isAuth", Boolean.valueOf(userAuthenticated));
             response = Response.ok(view, MediaType.TEXT_HTML);
         }
@@ -727,6 +770,89 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         }
         return type;
     }
+    /**
+     * Loads the available predefined SPARQL queries from the RDF
+     * file {@link #QUERIES_FILE_PROPERTY} specified in the Datalift
+     * configuration or from the default query definition file present
+     * in the module JAR.
+     * @param  cfg   the Datalift configuration.
+     *
+     * @throws TechnicalException if any error occurred while loading
+     *         the query definitions.
+     */
+    private void loadPredefinedQueries(Configuration cfg) {
+        String path = cfg.getProperty(QUERIES_FILE_PROPERTY);
+        InputStream in = null;
+        try {
+            if (isSet(path)) {
+                // Query definition file specified. => Check presence.
+                log.info("Loading predefined SPARQL queries from {}", path);
+                File f = new File(path);
+                if (! (f.isFile() && f.canRead())) {
+                    throw new FileNotFoundException(path);
+                }
+                in = new FileInputStream(f);
+            }
+            else {
+                // No query definition file specified. => Use default.
+                log.debug("No queries file specified, using default");
+                path = DEFAULT_QUERIES_FILE;
+                in = this.getClass().getClassLoader().getResourceAsStream(path);
+            }
+            // Extract predefined queries from RDF file.
+            RdfUtils.queryFile(cfg, in,
+                RdfUtils.guessRdfFormatFromExtension(path),
+                LOAD_PREDEFINED_QUERIES_QUERY,
+                new TupleQueryResultHandlerBase() {
+                    private Value currentId = null;
+                    private String query;
+                    private Map<String,String> labels =
+                                                new HashMap<String,String>();
+                    @Override
+                    public void handleSolution(BindingSet b) {
+                        Value id = b.getValue("s");
+                        if (! id.equals(this.currentId)) {
+                            // Register current query.
+                            this.registerQuery();
+                            // Switch to next query.
+                            this.currentId = id;
+                        }
+                        this.query = b.getValue("query").stringValue();
+                        Literal v  = (Literal)(b.getValue("label"));
+                        if (v != null) {
+                            this.labels.put(v.getLanguage(), v.getLabel());
+                        }
+                    }
+
+                    @Override
+                    public void endQueryResult() {
+                        this.registerQuery();
+                    }
+
+                    private void registerQuery() {
+                        if ((isSet(this.query)) && (! this.labels.isEmpty())) {
+                            // Create and register new query.
+                            PredefinedQuery q = new PredefinedQuery(
+                                                    this.query, this.labels);
+                            predefinedQueries.add(q);
+                            log.trace("Registered predefined SPARQL query \"{}\": {}",
+                                      q.getLabel(), q.query);
+                            this.labels.clear();
+                            this.query = null;
+                        }
+                        // Else: Ignore...
+                    }
+                });
+        }
+        catch (Exception e) {
+            throw new TechnicalException("queries.load.failed", e, path);
+        }
+        finally {
+            if (in != null) {
+                try { in.close(); } catch (Exception e) { /* Ignore... */ }
+            }
+        }
+    }
 
     //-------------------------------------------------------------------------
     // QueryDescription
@@ -853,6 +979,29 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         @Override
         public String toString() {
             return this.mimeType + "; q=" + this.priority;
+        }
+    }
+
+    //-------------------------------------------------------------------------
+    // PredefinedQuery nested class
+    //-------------------------------------------------------------------------
+
+    public final static class PredefinedQuery extends BaseLocalizedItem
+    {
+        public final String query;
+
+        public PredefinedQuery(String query, Map<String,String> labels) {
+            super(labels);
+            if (isBlank(query)) {
+                throw new IllegalArgumentException("query");
+            }
+            this.query = query;
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public String toString() {
+            return this.query;
         }
     }
 }
