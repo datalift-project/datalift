@@ -51,15 +51,10 @@ import org.apache.velocity.exception.ResourceNotFoundException;
 import org.apache.velocity.runtime.directive.Directive;
 import org.apache.velocity.runtime.parser.node.Node;
 
-import org.datalift.core.i18n.jersey.PreferredLocalesProvider;
 import org.datalift.core.util.SimpleCache;
 import org.datalift.core.velocity.i18n.BundleList.Bundle;
 import org.datalift.fwk.i18n.PreferredLocales;
 import org.datalift.fwk.log.Logger;
-
-import static org.datalift.core.velocity.jersey.VelocityTemplateProcessor.CTX_HTTP_REQUEST;
-
-import com.sun.jersey.api.core.HttpRequestContext;
 
 
 /**
@@ -117,10 +112,8 @@ public class LoadDirective extends Directive
                           Node node)
                         throws IOException, ResourceNotFoundException,
                                ParseErrorException, MethodInvocationException {
-        // Get user locales.
-        List<Locale> locales = new ArrayList<Locale>(
-                PreferredLocalesProvider.getPreferredLocales(
-                        (HttpRequestContext)(context.get(CTX_HTTP_REQUEST))));
+        // Get a local copy of the user locales (unmodifiable list).
+        List<Locale> locales = new ArrayList<Locale>(PreferredLocales.get());
         // Reverse locale list to get least wanted locales first.
         Collections.reverse(locales);
         // Get existing bundle list, to add new bundles.
