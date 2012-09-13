@@ -36,11 +36,9 @@ package org.datalift.projectmanager;
 
 
 import java.net.URI;
-import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 
-import org.datalift.fwk.i18n.PreferredLocales;
+import org.datalift.fwk.i18n.BaseLocalizedItem;
 
 
 /**
@@ -48,18 +46,18 @@ import org.datalift.fwk.i18n.PreferredLocales;
  *
  * @author lbihanic
  */
-public class License
+public class License extends BaseLocalizedItem
 {
     /** The license identifier, as a URI. */
     public final URI uri;
-    /** The license labels. */
-    private final Map<String,String> labels = new HashMap<String,String>();
 
     /**
      * Default constructor.
-     * @param  uri   the license URI.  
+     * @param  uri      the license URI.
+     * @param  labels   the license labels.
      */
-    public License(URI uri) {
+    public License(URI uri, Map<String,String> labels) {
+        super(labels);
         if (uri == null) {
             throw new IllegalArgumentException("uri");
         }
@@ -74,84 +72,9 @@ public class License
         return this.uri;
     }
 
-    /**
-     * Returns the license label for the user's
-     * {@link PreferredLocales preferred locale}.
-     * @return the license label in the user's preferred locale if
-     *         defined, the default license otherwise or, if no default
-     *         label has been defined, the license URI.
-     */
-    public String getLabel() {
-        String label = null;
-        for (Locale l : PreferredLocales.get()) {
-            label = this.getLabel(l.toString(), false);
-            if (label != null) break;
-        }
-        if (label == null) {
-            label = this.uri.toString();
-        }
-        return label;
-    }
-
-    /**
-     * Returns the license label for the specified locale.
-     * @param  locale   a locale.
-     *
-     * @return the license label for the locale country or language if
-     *         defined, the default license otherwise or, if no default
-     *         label has been defined, the license URI.
-     */
-    public String getLabel(Locale locale) {
-        return this.getLabel(locale.toString(), true);
-    }
-
-    /**
-     * Returns the license label for the specified language or
-     * language and country.
-     * @param  language   the language code or language and country
-     *                    codes, separated with an hyphen ('-') or an
-     *                    underscore ('_') character.
-     *
-     * @return the license label for the specified language if defined,
-     *         the default license otherwise or, if no default label has
-     *         been defined, the license URI.
-     */
-    public String getLabel(String language) {
-        return this.getLabel(language, true);
-    }
-
-    private String getLabel(String language, boolean acceptUri) {
-        String v = null;
-        String[] elts = language.split("-|_");
-        if ((elts.length > 1) && (elts[1].length() != 0)) {
-            v = this.labels.get(elts[0] + '_' + elts[1].toUpperCase());
-        }
-        if (v == null) {
-            v = this.labels.get(elts[0]);
-        }
-        if (v == null) {
-            v = this.labels.get("");
-        }
-        if ((v == null) && (acceptUri)) {
-            v = this.uri.toString();
-        }
-        return v;
-    }
-
-    /**
-     * Sets the license label for the specified language or language
-     * and country.
-     * @param language
-     * @param label
-     */
-    /* package */  void setLabel(String language, String label) {
-        if (language == null) {
-            language = "";
-        }
-        String[] elts = language.split("-|_");
-        this.labels.put(elts[0], label);
-        if ((elts.length > 1) && (elts[1].length() != 0)) {
-            this.labels.put(elts[0] + '_' + elts[1].toUpperCase(), label);
-        }
+    /** {@inheritDoc} */
+    @Override
+    public String toString() {
+        return this.uri.toString();
     }
 }

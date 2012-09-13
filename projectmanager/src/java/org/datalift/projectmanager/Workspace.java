@@ -82,15 +82,13 @@ import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 import static javax.ws.rs.core.Response.Status.*;
 
 import org.openrdf.model.Literal;
+import org.openrdf.model.Value;
 import org.openrdf.model.vocabulary.RDFS;
 import org.openrdf.query.BindingSet;
-import org.openrdf.query.TupleQueryResult;
-import org.openrdf.repository.RepositoryConnection;
+import org.openrdf.query.TupleQueryResultHandlerBase;
 import org.xml.sax.InputSource;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
-
-import static org.openrdf.query.QueryLanguage.SPARQL;
 
 import com.google.gson.Gson;
 import com.sun.jersey.core.header.FormDataContentDisposition;
@@ -119,8 +117,8 @@ import org.datalift.fwk.project.XmlSource;
 import org.datalift.fwk.project.CsvSource.Separator;
 import org.datalift.fwk.project.ProjectModule.UriDesc;
 import org.datalift.fwk.rdf.RdfFormat;
+import org.datalift.fwk.rdf.RdfNamespace;
 import org.datalift.fwk.rdf.RdfUtils;
-import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.sparql.SparqlEndpoint;
 import org.datalift.fwk.sparql.SparqlEndpoint.DescribeType;
 import org.datalift.fwk.util.CloseableIterator;
@@ -173,6 +171,15 @@ public class Workspace extends BaseModule
     public final static String LICENSES_FILE_PROPERTY = "project.licenses.file";
     /** The default license file, embedded in module JAR. */
     private final static String DEFAULT_LICENSES_FILE = "default-licenses.ttl";
+    /** The SPARQL query to extract licenses data. */
+    private final static String LOAD_LICENSES_QUERY =
+                    "PREFIX rdfs: <" + RDFS.NAMESPACE + ">\n" +
+                    "PREFIX dcterms: <" + RdfNamespace.DC_Terms.uri + ">\n" +
+                    "PREFIX datalift: <" + RdfNamespace.DataLift.uri + ">\n" +
+                    "SELECT ?s ?uri ?label WHERE { " +
+                        "?s a datalift:License ; " +
+                        "   dcterms:license ?uri ; rdfs:label ?label . " +
+                    "} ORDER BY ?s";
 
     /** The prefix for the URI of the project objects. */
     public final static String PROJECT_URI_PREFIX = "project";
@@ -227,8 +234,7 @@ public class Workspace extends BaseModule
     @Override
     public void init(Configuration configuration) {
         // Load licenses.
-        this.loadLicenses(configuration.getProperty(LICENSES_FILE_PROPERTY),
-                          configuration);
+        this.loadLicenses(configuration);
     }
 
     /** {@inheritDoc} */
@@ -1939,7 +1945,7 @@ public class Workspace extends BaseModule
             view.put("current", p);
             License l = licenses.get(p.getLicense());
             if (l == null) {
-                l = new License(p.getLicense());        // Unknown license.
+                l = new License(p.getLicense(), null);  // Unknown license.
             }
             view.put("license", l.getLabel());
             // Search for modules accepting the selected project.
@@ -2044,19 +2050,27 @@ public class Workspace extends BaseModule
         return ViewFactory.newView(TEMPLATE_PATH + templateName, it);
     }
 
-    private void loadLicenses(String path, Configuration cfg) {
+    /**
+     * Loads the available project licenses from the RDF file
+     * {@link #LICENSES_FILE_PROPERTY specified} in the Datalift
+     * configuration or from the default license file present in
+     * the module JAR.
+     * @param  cfg   the Datalift configuration.
+     *
+     * @throws TechnicalException if any error occurred while loading
+     *         the license data.
+     */
+    private void loadLicenses(Configuration cfg) {
+        String path = cfg.getProperty(LICENSES_FILE_PROPERTY);
         InputStream in = null;
-        Repository r = null;
-        RepositoryConnection cnx = null;
         try {
             if (isSet(path)) {
                 // Licenses file specified. => Check presence.
                 log.info("Loading licenses from {}", path);
                 File f = new File(path);
-                if (! (f.isFile() && f.canRead())) {
-                    throw new FileNotFoundException(path);
+                if (f.isFile() && f.canRead()) {
+                    in = new FileInputStream(f);
                 }
-                in = new FileInputStream(f);
             }
             else {
                 // No licenses file specified. => Use default.
@@ -2064,47 +2078,51 @@ public class Workspace extends BaseModule
                 path = DEFAULT_LICENSES_FILE;
                 in = this.getClass().getClassLoader().getResourceAsStream(path);
             }
-            r = cfg.newRepository(null, "sail:///", false);
-            cnx = r.newConnection();
-            // Load ontology into RDF store.
-            cnx.add(in, "", RdfUtils.guessRdfFormatFromExtension(path)
-                                    .getNativeFormat());
-            cnx.close();
-            // Extract licenses data from RDF triples.
-            String query =
-                    "PREFIX rdfs: <" + RDFS.NAMESPACE + ">\n" +
-                    "PREFIX doap: <http://usefulinc.com/ns/doap#>\n" +
-                    "SELECT ?uri ?label WHERE { ?s doap:license ?uri ; " +
-                                              "    rdfs:label ?label . }";
-            cnx = r.newConnection();
-            TupleQueryResult rs = cnx.prepareTupleQuery(SPARQL, query)
-                                     .evaluate();
-            while (rs.hasNext()) {
-                BindingSet bs = rs.next();
-                URI uri = new URI(bs.getValue("uri").stringValue());
-                License l = licenses.get(uri);
-                if (l == null) {
-                    l = new License(uri);
-                    licenses.put(uri, l);
-                    log.trace("Added license: {}", uri);
-                }
-                Literal v  = (Literal)(bs.getValue("label"));
-                if (v != null) {
-                    l.setLabel(v.getLanguage(), v.getLabel());
-                }
+            if (in == null) {
+                throw new FileNotFoundException(path);
             }
-            rs.close();
+            // Extract licenses data from RDF file.
+            RdfUtils.queryFile(cfg, in,
+                RdfUtils.guessRdfFormatFromExtension(path), LOAD_LICENSES_QUERY,
+                new TupleQueryResultHandlerBase() {
+                    private Value licenseUri = null;
+                    private Map<String,String> labels =
+                                                new HashMap<String,String>();
+                    @Override
+                    public void handleSolution(BindingSet b) {
+                        Value uri = b.getValue("uri");
+                        if (! uri.equals(this.licenseUri)) {
+                            // Register current query.
+                            this.registerLicense();
+                            // Switch to next query.
+                            this.licenseUri = uri;
+                        }
+                        Literal v  = (Literal)(b.getValue("label"));
+                        if (v != null) {
+                            this.labels.put(v.getLanguage(), v.getLabel());
+                        }
+                    }
+
+                    @Override
+                    public void endQueryResult() {
+                        this.registerLicense();
+                    }
+
+                    private void registerLicense() {
+                        if (! this.labels.isEmpty()) {
+                            URI u = URI.create(this.licenseUri.stringValue());
+                            licenses.put(u, new License(u, this.labels));
+                            log.trace("Registered license <{}> with label translations {}",
+                                      u, this.labels);
+                            this.labels.clear();
+                        }
+                    }
+                });
         }
         catch (Exception e) {
             throw new TechnicalException("licenses.load.failed", e, path);
         }
         finally {
-            if (cnx != null) {
-                try { cnx.close(); } catch (Exception e) { /* Ignore... */ }
-            }
-            if (r != null) {
-                try { r.shutdown(); } catch (Exception e) { /* Ignore... */ }
-            }
             if (in != null) {
                 try { in.close(); } catch (Exception e) { /* Ignore... */ }
             }
