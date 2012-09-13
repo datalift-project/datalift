@@ -1,0 +1,50 @@
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix datalift: <http://www.datalift.org/core#> .
+
+_:1 a datalift:License ;
+    dcterms:license <http://creativecommons.org/licenses/by/3.0> ;
+    rdfs:label
+        "Attribution 3.0 Unported (CC BY 3.0)" ,
+        "Attribution, 3.0 non transposé (CC BY 3.0)"@fr ,
+        "姓名標示 3.0 Unported (CC BY 3.0)"@zh-TW .
+
+_:2 a datalift:License ;
+    dcterms:license <http://creativecommons.org/licenses/by-sa/3.0> ;
+    rdfs:label
+        "Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0)" ,
+        "Paternité - Partage à l'identique, 3.0 non transposé (CC BY-SA 3.0)"@fr ,
+        "姓名標示-相同方式分享 3.0 Unported (CC BY-SA 3.0)"@zh-TW .
+
+_:3 a datalift:License ;
+    dcterms:license <http://creativecommons.org/licenses/by-nd/3.0> ;
+    rdfs:label
+        "Attribution-NoDerivs 3.0 Unported (CC BY-ND 3.0)" ,
+        "Paternité - Pas de modifications, 3.0 non transposé (CC BY-ND 3.0)"@fr ,
+        "姓名標示-禁止改作 3.0 Unported (CC BY-ND 3.0)"@zh-TW .
+
+_:4 a datalift:License ;
+    dcterms:license <http://creativecommons.org/licenses/by-nc/3.0> ;
+    rdfs:label
+        "Attribution-NonCommercial 3.0 Unported (CC BY-NC 3.0)" ,
+        "Paternité - Pas d'utilisation commerciale, 3.0 non transposé (CC BY-NC 3.0)"@fr ,
+        "姓名標示-非商業性 3.0 Unported (CC BY-NC 3.0)"@zh-TW .
+
+_:5 a datalift:License ;
+    dcterms:license <http://creativecommons.org/licenses/by-nc-sa/3.0> ;
+    rdfs:label
+        "Attribution-NonCommercial-ShareAlike 3.0 Unported (CC BY-NC-SA 3.0)" ,
+        "Attribution - Pas d'utilisation commerciale - Partage à l'identique, 3.0 non transposé (CC BY-NC-SA 3.0)"@fr ,
+        "姓名標示-非商業性-相同方式分享 3.0 Unported (CC BY-NC-SA 3.0)"@zh-TW .
+
+_:6 a datalift:License ;
+    dcterms:license <http://creativecommons.org/licenses/by-nc-nd/3.0> ;
+    rdfs:label
+        "Attribution-NonCommercial-NoDerivs 3.0 Unported (CC BY-NC-ND 3.0)" ,
+        "Attribution - Pas d'utilisation commerciale - Pas de modifications, 3.0 non transposé (CC BY-NC-ND 3.0)"@fr ,
+        "姓名標示-非商業性-禁止改作 3.0 Unported (CC BY-NC-ND 3.0)"@zh-TW .
+
+_:7 a datalift:License ;
+    dcterms:license <http://opendatacommons.org/licenses/odbl/1.0/> ;
+    rdfs:label "Open Data Commons Open Database License (ODbL)" .
+
