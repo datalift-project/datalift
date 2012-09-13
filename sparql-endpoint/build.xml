@@ -95,7 +95,7 @@
    -->
 
   <property name="app.name"             value="sparql-endpoint"/>
-  <property name="app.version"          value="0.6.3"/>
+  <property name="app.version"          value="0.6.5"/>
   <property name="app.path"             value="/${app.name}"/>
   <property name="app.long.name"        value="DataLift SPARQL Endpoint"/>
 

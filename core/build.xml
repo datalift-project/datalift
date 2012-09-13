@@ -92,7 +92,7 @@
    -->
 
   <property name="app.name"             value="datalift"/>
-  <property name="app.version"          value="0.6.3"/>
+  <property name="app.version"          value="0.6.5"/>
   <property name="app.path"             value="/${app.name}"/>
   <property name="app.long.name"        value="DataLift"/>
 
