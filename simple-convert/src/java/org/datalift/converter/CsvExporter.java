@@ -270,15 +270,16 @@ public class CsvExporter extends BaseConverterModule
                         public void handleSolution(BindingSet b) {
                             org.openrdf.model.URI s =
                                     (org.openrdf.model.URI)(b.getValue("s"));
-                            if (! s.equals(subject)) {
+                            if (! s.equals(this.subject)) {
                                 // Write CSV data for previous subject.
                                 this.writeLine();
                                 // Switch subject.
-                                subject = s;
+                                this.subject = s;
                             }
                             // Store value for predicate.
-                            values.put((org.openrdf.model.URI)(b.getValue("p")),
-                                       b.getValue("o"));
+                            this.values.put(
+                                    (org.openrdf.model.URI)(b.getValue("p")),
+                                    b.getValue("o"));
                         }
 
                         @Override
@@ -293,17 +294,17 @@ public class CsvExporter extends BaseConverterModule
                         }
 
                         private void writeLine() {
-                            if (! values.isEmpty()) {
+                            if (! this.values.isEmpty()) {
                                 // Format and write CSV data.
-                                data[0] = getValue(subject);
+                                data[0] = getValue(this.subject);
                                 int i = 1;
                                 for (org.openrdf.model.URI p : predicates) {
-                                    Value v = values.get(p);
+                                    Value v = this.values.get(p);
                                     data[i++] = (v != null)? getValue(v): null;
                                 }
                                 w.writeNext(data);
                                 this.lineCount++;
-                                values.clear();
+                                this.values.clear();
                             }
                             // Else: ignore...
                         }
