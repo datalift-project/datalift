@@ -64,6 +64,17 @@ public class RdfException extends Exception
      * Constructs a new exception with the specified cause but no
      * detail message.  The detail message of this exception will
      * be the detail message of the cause.
+     * @param  cause   the cause.
+     */
+    public RdfException(Throwable cause) {
+        super(cause);
+        this.query = null;
+    }
+
+    /**
+     * Constructs a new exception with the specified cause but no
+     * detail message.  The detail message of this exception will
+     * be the detail message of the cause.
      * @param  query   the query.
      * @param  cause   the cause.
      */

@@ -45,16 +45,20 @@ import javax.ws.rs.core.MediaType;
 import org.openrdf.model.Statement;
 import org.openrdf.query.GraphQuery;
 import org.openrdf.query.QueryLanguage;
+import org.openrdf.query.TupleQueryResultHandler;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
 import org.openrdf.rio.RDFParser;
 
+import org.datalift.fwk.Configuration;
 import org.datalift.fwk.MediaTypes;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.util.CloseableIterable;
 import org.datalift.fwk.util.StringUtils;
 import org.datalift.fwk.util.UriMapper;
 import org.datalift.fwk.util.io.FileUtils;
+
+import static org.datalift.fwk.util.StringUtils.isBlank;
 
 
 /**
@@ -805,10 +809,84 @@ public final class RdfUtils
         }
     }
 
+    /**
+     * Loads the content of the specified RDF file in a temporary
+     * in-memory RDF store, apply the specified SPARQL SELECT query and
+     * finally deletes the temporary RDF store.
+     * @param  cfg       the Datalift configuration, used a factory for
+     *                   creating the in-memory RDF store.
+     * @param  in        an input stream to read the RDF file content
+     *                   from. This stream is left open once the RDF
+     *                   parse performed; it is the caller's
+     *                   responsibility to close this stream.
+     * @param  format    the format (RDF/XML, N3, Turtle...) of the
+     *                   file data.
+     * @param  query     the SPARQL SELECT query to execute.
+     * @param  handler   the query result handler
+     *
+     * @throws RdfException if any error occurred while parsing or
+     *         querying the data.
+     */
+    public static void queryFile(Configuration cfg,
+                                 InputStream in, RdfFormat format,
+                                 String query, TupleQueryResultHandler handler)
+                                                        throws RdfException {
+        if (cfg == null) {
+            throw new IllegalArgumentException("cfg");
+        }
+        if (in == null) {
+            throw new IllegalArgumentException("in");
+        }
+        if (format == null) {
+            throw new IllegalArgumentException("format");
+        }
+        if (isBlank(query)) {
+            throw new IllegalArgumentException("query");
+        }
+        if (handler == null) {
+            throw new IllegalArgumentException("handler");
+        }
+        Repository r = null;
+        RepositoryConnection cnx = null;
+        try {
+            // Create temporary in-memory RDF store.
+            r = cfg.newRepository(null, "sail:///", false);
+            cnx = r.newConnection();
+            // Parse file and insert data into RDF store.
+            cnx.add(in, "", format.getNativeFormat());
+            // Release connection.
+            cnx.close();
+            cnx = null;
+            // Execute data extraction query.
+            r.select(query, handler);
+        }
+        catch (Exception e) {
+            throw new RdfException(e);
+        }
+        finally {
+            if (cnx != null) {
+                try { cnx.close(); } catch (Exception e) { /* Ignore... */ }
+            }
+            if (r != null) {
+                try { r.shutdown(); } catch (Exception e) { /* Ignore... */ }
+            }
+        }
+    }
+
     //-------------------------------------------------------------------------
     // Specific implementation
     //-------------------------------------------------------------------------
 
+    /**
+     * Creates the OpenRDF URI object for the specified named graph
+     * URI, optionally clearing the graph content.
+     * @param  graphName   the named graph URI as a java.net.URI object,
+     *                     or <code>null</code>.
+     * @param  cnx         the repository connection.
+     * @param  clear       whether to clear the named graph content.
+     *
+     * @return the OpenRDF URI for the specified named graph URI.
+     */
     private static org.openrdf.model.URI getGraphUri(URI graphName,
                                     RepositoryConnection cnx, boolean clear)
                                                      throws RepositoryException {
