@@ -90,9 +90,11 @@ public final class Wrapper
      */
     private final static String SESAME_HOME =
                                         "info.aduna.platform.appdata.basedir";
+    private final static String JETTY_HOME = "jetty.home";
 
     private final static String SESAME_REPOSITORIES_DIR = "repositories";
     private final static String WEBAPPS_DIR = "webapps";
+    private final static String CONFIG_DIR  = "conf";
 
     private final static String MAC_DATALIFT_NAME = "DataLift";
     private final static String MAC_APPL_DATA_PATH =
@@ -118,6 +120,15 @@ public final class Wrapper
     private final static String OTHER_APPL_CACHE_PATH = "temp";
     private final static String OTHER_APPL_LOGS_PATH  = "logs";
     private final static String OTHER_WEB_APPS_PATH   = "work";
+
+    private final static String LOCALHOST = "localhost";
+    private final static String DATALIFT_PAGE = "/datalift/sparql";
+
+    private final static String WAR_EXTENSION = ".war";
+
+    private final static String JAVA_CURRENT_DIR_PROP  = "user.dir";
+    private final static String JAVA_USER_HOMEDIR_PROP = "user.home";
+    private final static String JAVA_TEMP_DIR_PROP = "java.io.tmpdir";
 
     /**
      * The wrapper main method to run Datalift from the command line.
@@ -152,8 +163,8 @@ public final class Wrapper
             // Parse other arguments.
             String[] otherArgs = parser.getRemainingArgs();
             // 3. DataLift installation directory.
-            String runDir = (otherArgs.length > 0)?
-                                otherArgs[0]: System.getProperty("user.dir");
+            String runDir = (otherArgs.length > 0)? otherArgs[0]:
+                                    System.getProperty(JAVA_CURRENT_DIR_PROP);
             // Validate installation directory.
             dataliftRoot = new File(runDir);
             if (! ((dataliftRoot.exists()) && (dataliftRoot.isDirectory()))) {
@@ -170,7 +181,7 @@ public final class Wrapper
         }
         System.setProperty(DATALIFT_ROOT, dataliftRoot.getCanonicalPath());
         System.setProperty(DATALIFT_PORT, String.valueOf(httpPort));
-        System.setProperty("jetty.home",  dataliftRoot.getCanonicalPath());
+        System.setProperty(JETTY_HOME,    dataliftRoot.getCanonicalPath());
         // Check (user-specific) runtime environment.
         String homeDir = System.getProperty(DATALIFT_HOME);
         File dataliftHome = (homeDir == null)? getUserEnv(): new File(homeDir);
@@ -207,14 +218,24 @@ public final class Wrapper
                                 getUserPath(MAC_APPL_CACHE_PATH):
                                 new File(dataliftHome, OTHER_APPL_CACHE_PATH);
         createDirectory(tempDir);
-        System.setProperty("java.io.tmpdir", tempDir.getAbsolutePath());
+        System.setProperty(JAVA_TEMP_DIR_PROP, tempDir.getAbsolutePath());
+        // On Windows and Linux/Gnome 2.x systems, gather proxy configuration
+        // from the system (it's the default value for Mac OS X).
+        if ((CURRENT_OS != MacOS) &&
+            (System.getProperty("http.proxyHost") == null)) {
+            // No HTTP proxy explicitly set. => Ask Java to check system config.
+            System.setProperty("java.net.useSystemProxies",
+                                                    Boolean.TRUE.toString());
+        }
         // Create Jetty server.
         final Server httpServer = new Server(httpPort);
         httpServer.setSendServerVersion(false);     // No Server HTTP header.
+        // Check the network interfaces to listen to.
         if (loopbackOnly) {
+            // Listen only to the loopback interface.
             for (Connector c : httpServer.getConnectors()) {
                 if (c instanceof SocketConnector) {
-                    c.setHost("localhost");
+                    c.setHost(LOCALHOST);
                 }
             }
         }
@@ -229,7 +250,7 @@ public final class Wrapper
         FileFilter webappFilter = new FileFilter() {
                 public boolean accept(File f) {
                     return ((f.isDirectory()) ||
-                            (f.isFile() && (f.getName().endsWith(".war"))));
+                            (f.isFile() && (f.getName().endsWith(WAR_EXTENSION))));
                 }
             };
         List<File> webapps = new LinkedList<File>();
@@ -245,7 +266,7 @@ public final class Wrapper
         for (File webapp : webapps) {
             WebAppContext ctx = new WebAppContext();
             String path = webapp.getName();
-            int i = path.indexOf(".war");
+            int i = path.indexOf(WAR_EXTENSION);
             if (i > 0) {
                 // Remove ending .war extension.
                 path = path.substring(0, i);
@@ -265,7 +286,7 @@ public final class Wrapper
                                                 Integer.valueOf(httpPort));
         // Open new browser window on user's display.
         BareBonesBrowserLaunch.openUrl(
-                        "http://localhost:" + httpPort + "/datalift/sparql");
+                        "http://" + LOCALHOST + ':' + httpPort + DATALIFT_PAGE);
         // Wait for server termination.
         httpServer.join();
         System.exit(0);
@@ -296,7 +317,8 @@ public final class Wrapper
             // Path shall be relative to user home directory.
             path = path.substring(1);
         }
-        return new File(new File(System.getProperty("user.home")), path);
+        return new File(new File(System.getProperty(JAVA_USER_HOMEDIR_PROP)),
+                        path);
     }
 
     private static void installUserEnv(File path,
@@ -316,9 +338,9 @@ public final class Wrapper
 
             if ((source != null) && (! source.equals(path))) {
                 // Copy runtime templates: configuration...
-                File target = new File(path, "conf");
+                File target = new File(path, CONFIG_DIR);
                 if (! target.exists()) {
-                    copy(new File(source, "conf"), target);
+                    copy(new File(source, CONFIG_DIR), target);
                 }
                 // and empty Sesame repositories.
                 target= (CURRENT_OS == Other)?
