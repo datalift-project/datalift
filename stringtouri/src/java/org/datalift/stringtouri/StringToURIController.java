@@ -238,7 +238,7 @@ public class StringToURIController extends InterlinkingController
     		@QueryParam("targetpredicate") String targetPredicate,
             @QueryParam("sourceclass") String sourceClass,
             @QueryParam("targetclass") String targetClass,
-            @FormParam("update") String update) throws ObjectStreamException {
+            @QueryParam("update") String update) throws ObjectStreamException {
     	// Remote call example : http://localhost:8080/datalift/stringtouri/go
     	// ?project=http://localhost:8080/datalift/project/world
     	// &targetdataset=http://localhost:8080/datalift/project/world/source/countries-tolink-rdf-rdf
