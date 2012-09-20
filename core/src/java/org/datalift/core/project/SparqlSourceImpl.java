@@ -64,6 +64,7 @@ import org.datalift.fwk.project.SparqlSource;
 import org.datalift.fwk.util.Base64;
 import org.datalift.fwk.util.CloseableIterator;
 import org.datalift.fwk.util.Env;
+import org.datalift.fwk.util.web.Charsets;
 
 import static org.datalift.fwk.MediaTypes.*;
 import static org.datalift.fwk.util.StringUtils.*;
@@ -287,7 +288,7 @@ public class SparqlSourceImpl extends CachingSourceImpl implements SparqlSource
         if (query != null) {
             cnx.setDoOutput(true);
             OutputStream out = cnx.getOutputStream();
-            out.write(query.getBytes("UTF-8"));
+            out.write(query.getBytes(Charsets.UTF_8));
             out.flush();
             out.close();
         }

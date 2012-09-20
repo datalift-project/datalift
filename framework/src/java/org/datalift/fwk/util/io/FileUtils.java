@@ -67,6 +67,8 @@ import org.itadaki.bzip2.BZip2InputStream;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.util.Env;
 
+import static org.datalift.fwk.util.web.Charsets.UTF_8;
+
 
 /**
  * A set of utility methods to help handling file-based data:
@@ -239,7 +241,7 @@ public final class FileUtils
                     ((HttpURLConnection)cnx).setRequestMethod(HttpMethod.POST);
                 }
                 out = cnx.getOutputStream();
-                out.write(query.getBytes("UTF-8"));
+                out.write(query.getBytes(UTF_8));
                 out.flush();
                 out.close();
                 out = null;

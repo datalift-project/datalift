@@ -41,7 +41,6 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.net.URLEncoder;
-import java.nio.charset.Charset;
 import java.text.ChoiceFormat;
 import java.text.MessageFormat;
 import java.util.Iterator;
@@ -54,6 +53,8 @@ import org.openrdf.model.Value;
 
 import info.aduna.io.IndentingWriter;
 import info.aduna.text.StringUtil;
+
+import static org.datalift.fwk.util.web.Charsets.UTF_8;
 
 
 /**
@@ -113,7 +114,7 @@ public abstract class AbstractJsonWriter
     public AbstractJsonWriter(OutputStream out,
                               String urlPattern, String defaultGraphUri,
                               String jsonCallback) {
-        this(new OutputStreamWriter(out, Charset.forName("UTF-8")),
+        this(new OutputStreamWriter(out, UTF_8),
              urlPattern, defaultGraphUri, jsonCallback);
     }
 
@@ -219,7 +220,7 @@ public abstract class AbstractJsonWriter
         if ((type != null) && (this.urlPattern != null) &&
             ((type != ResourceType.Unknown) ||
              (value.startsWith("http://") || (value.startsWith("https://"))))) {
-            Object[] args = new Object[] { URLEncoder.encode(value, "UTF-8"),
+            Object[] args = new Object[] { URLEncoder.encode(value, UTF_8.name()),
                                            Integer.valueOf(type.value),
                                            this.defaultGraphUri };
             value = "<a href=\"" + this.urlPattern.format(args) + "\">"
