@@ -37,7 +37,8 @@ package org.datalift.fwk.i18n;
 
 import java.util.AbstractList;
 import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.MissingResourceException;
@@ -47,7 +48,8 @@ import java.util.ResourceBundle;
 import javax.ws.rs.core.Context;
 
 import org.datalift.fwk.log.Logger;
-import org.datalift.fwk.util.StringUtils;
+
+import static org.datalift.fwk.util.StringUtils.isSet;
 
 
 /**
@@ -74,6 +76,8 @@ public final class PreferredLocales extends AbstractList<Locale>
     /** The user's preferred locales for the current HTTP request. */
     private final static ThreadLocal<PreferredLocales> current =
                                         new ThreadLocal<PreferredLocales>();
+    /** The JVM default locales. */
+    private final static PreferredLocales defaultLocales;
 
     private final static Logger log = Logger.getLogger();
 
@@ -81,7 +85,22 @@ public final class PreferredLocales extends AbstractList<Locale>
     // Instance members
     //-------------------------------------------------------------------------
 
-    private final ArrayList<Locale> locales;
+    private final List<Locale> locales;
+
+    //-------------------------------------------------------------------------
+    // Class initializer
+    //-------------------------------------------------------------------------
+
+    static {
+        Collection<Locale> locales = new ArrayList<Locale>();
+        // Build default locales from JVM default locale.
+        addLocale(Locale.getDefault(), locales);
+        // Add English default locales.
+        addLocale(Locale.US, locales);
+        // Add empty locale for accessing default bundle (no locale suffix).
+        locales.add(Locale.ROOT);
+        defaultLocales = new PreferredLocales(locales);
+    }
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -92,7 +111,7 @@ public final class PreferredLocales extends AbstractList<Locale>
      * locales.
      * @param  c   the preferred locales, the most preferred first.
      */
-    public PreferredLocales(List<? extends Locale> c) {
+    public PreferredLocales(Collection<? extends Locale> c) {
         super();
         if ((c == null) || (c.isEmpty())) {
             throw new IllegalArgumentException("c");
@@ -236,36 +255,23 @@ public final class PreferredLocales extends AbstractList<Locale>
      *         specified locales.
      */
     public static PreferredLocales set(List<Locale> locales) {
-        List<Locale> tmpLocales = new LinkedList<Locale>();
+        PreferredLocales prefs = defaultLocales;
 
-        if ((locales == null) || (locales.isEmpty())) {
-            // Not processing an HTTP request. => Get user locales from JVM.
-            Locale l = Locale.getDefault();
-            tmpLocales.add(l);
-            // If a variant is present, add a locale without it.
-            String s = l.getVariant();
-            if (! StringUtils.isBlank(s)) {
-                tmpLocales.add(new Locale(l.getLanguage(), l.getCountry()));
+        if ((locales != null) && (! locales.isEmpty())) {
+            // Add the specified locales. A LinkedHashSet is used to both
+            // respect ordering and a avoid duplicate locales.
+            Collection<Locale> tmpLocales = new LinkedHashSet<Locale>(locales);
+            // Add missing generic locales (without variant and country).
+            for (Locale l : locales) {
+                addLocale(l, tmpLocales);
             }
-            // If a country is present, add a locale without it. 
-            s = l.getCountry();
-            if (! StringUtils.isBlank(s)) {
-                tmpLocales.add(new Locale(l.getLanguage()));
-            }
-            // Add English default locales.
-            tmpLocales.add(Locale.US);
-            tmpLocales.add(Locale.ENGLISH);
+            // Add empty locale for accessing default bundle (no locale suffix).
+            tmpLocales.add(Locale.ROOT);
+            prefs = new PreferredLocales(tmpLocales);
         }
-        else {
-            tmpLocales.addAll(locales);
-        }
-        // Add empty locale for accessing default bundle (no locale suffix).
-        tmpLocales.add(Locale.ROOT);
-
-        PreferredLocales l = new PreferredLocales(tmpLocales);
-        current.set(l);
-        log.trace("Preferred locales set to: {}", l);
-        return l;
+        current.set(prefs);
+        log.trace("Preferred locales set to: {}", prefs);
+        return prefs;
     }
 
     /**
@@ -276,5 +282,20 @@ public final class PreferredLocales extends AbstractList<Locale>
     public static void reset() {
         log.trace("Preferred locales removed from current thread");
         current.set(null);
+    }
+
+    private static void addLocale(Locale l, Collection<Locale> locales) {
+        // Add the specified locale.
+        locales.add(l);
+        // If a variant is present, add a locale without it.
+        String language = l.getLanguage();
+        String country  = l.getCountry();
+        if (isSet(l.getVariant())) {
+            locales.add(new Locale(language, country));
+        }
+        // If a country is present, add a locale without it. 
+        if (isSet(country)) {
+            locales.add(new Locale(language));
+        }
     }
 }
