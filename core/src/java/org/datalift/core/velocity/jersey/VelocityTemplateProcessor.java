@@ -84,6 +84,7 @@ import org.datalift.fwk.security.SecurityContext;
 import org.datalift.fwk.view.TemplateModel;
 
 import static org.datalift.fwk.util.StringUtils.join;
+import static org.datalift.fwk.util.web.Charsets.UTF_8;
 
 
 /**
@@ -253,6 +254,7 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
         // Commit the status and headers to the HttpServletResponse
         out.flush();
 
+        log.trace("Starting rendering template {}", t.getName());
         try {
             // Populate Velocity context from model data.
             Map<String,Object> ctx = null;
@@ -322,6 +324,7 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
             Writer w = new OutputStreamWriter(out, this.getCharset());
             t.merge(new VelocityContext(ctx), w);
             w.flush();
+            log.trace("Completed rendering template {}", t.getName());
         }
         catch (Exception e) {
             log.error("Error merging template \"{}\": {}", e,
@@ -342,9 +345,9 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
      *         if no character set information can be retrieved.
      */
     private String getCharset() {
-        MediaType m = this.httpContext.getRequest().getMediaType();
-        String name = (m == null)? null: m.getParameters().get("charset");
-        return (name == null)? "UTF-8": name;
+        MediaType m = this.httpContext.getResponse().getMediaType();
+        String cs = (m == null)? null: m.getParameters().get("charset");
+        return (cs == null)? UTF_8.name(): cs;
     }
 
     /**
