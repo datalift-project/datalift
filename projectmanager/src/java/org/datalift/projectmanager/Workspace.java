@@ -277,6 +277,7 @@ public class Workspace extends BaseModule
      * @throws WebApplicationException if any error occurred.
      */
     @POST
+    @Consumes(APPLICATION_FORM_URLENCODED)
     public Response registerProject(
                                 @FormParam("title") String title,
                                 @FormParam("description") String description,
@@ -345,7 +346,7 @@ public class Workspace extends BaseModule
             // Display project modification page.
             TemplateModel view = this.newView("workspaceModifyProject.vm", p);
             view.put("licenses", licenses.values());
-            response = Response.ok(view, TEXT_HTML).build();
+            response = Response.ok(view, TEXT_HTML_UTF8).build();
         }
         catch (Exception e) {
             this.handleInternalError(e, "Failed to load project");
@@ -371,6 +372,7 @@ public class Workspace extends BaseModule
      */
     @POST
     @Path("{id}")
+    @Consumes(APPLICATION_FORM_URLENCODED)
     public Response modifyProject(
                     @PathParam("id") String id,
                     @FormParam("title") String title,
@@ -1630,13 +1632,11 @@ public class Workspace extends BaseModule
 
     @GET
     @Path("{id}/source/{srcid}/{prop}")
-    @Produces({ APPLICATION_JSON + ";charset=UTF-8" })
+    @Produces({ APPLICATION_JSON_UTF8 })
     public Response displayProperty(@PathParam("id") String projectId,
                                     @PathParam("srcid") String srcId,
                                     @PathParam("prop") String prop,
-                                    @Context UriInfo uriInfo,
-                                    @Context Request request,
-                                    @HeaderParam(ACCEPT) String acceptHdr)
+                                    @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
         Response response = null;
         try {
@@ -1674,15 +1674,6 @@ public class Workspace extends BaseModule
         }
         return response;
     }
-
-//    @GET
-//    @Path("{id}/source/{srcid}/delete")
-//    @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
-//    public Response deleteSource(@PathParam("id") String projectId,
-//                                 @PathParam("srcid") String sourceId,
-//                                 @Context UriInfo uriInfo)
-//                                                throws WebApplicationException {
-//    }
 
     @GET
     @Path("{id}/source/delete")
@@ -1986,7 +1977,7 @@ public class Workspace extends BaseModule
             cc.setMustRevalidate(true);
             response = response.cacheControl(cc);
         }
-        return response.entity(view).type(TEXT_HTML);
+        return response.entity(view).type(TEXT_HTML_UTF8);
     }
 
     private Project findProject(URI uri) throws WebApplicationException {
