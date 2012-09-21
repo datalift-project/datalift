@@ -30,8 +30,8 @@ import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectManager;
 import org.datalift.fwk.project.ProjectModule;
-
-import com.sun.jersey.api.view.Viewable;
+import org.datalift.fwk.view.TemplateModel;
+import org.datalift.fwk.view.ViewFactory;
 
 /**
  * An abstract class for all of the interlinking modules, combining default 
@@ -113,8 +113,8 @@ public abstract class InterlinkingController extends BaseModule implements Proje
      * @param it Parameters for the template.
      * @return A new viewable in Velocity Template Language
      */
-    protected final Viewable newViewable(String templateName, Object it) {
-        return new Viewable("/" + this.getName() + templateName, it);
+    protected final TemplateModel newViewable(String templateName, Object it) {
+        return ViewFactory.newView("/" + this.getName() + templateName, it);
     }
     
     /**
