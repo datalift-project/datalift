@@ -39,10 +39,12 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URI;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
@@ -61,6 +63,8 @@ import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.rdf.RdfFormat;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.view.TemplateModel;
+
+import static org.datalift.fwk.MediaTypes.*;
 
 
 /**
@@ -100,6 +104,7 @@ public class RdfExporter extends BaseConverterModule
     //-------------------------------------------------------------------------
     
     @GET
+    @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
     public Response getIndexPage(@QueryParam("project") URI projectId) {
         // Retrieve project.
         Project p = this.getProject(projectId);
@@ -111,6 +116,7 @@ public class RdfExporter extends BaseConverterModule
     }
 
     @POST
+    @Consumes(APPLICATION_FORM_URLENCODED)
     public Response exportRdfSource(@FormParam("project") URI projectId,
                                     @FormParam("source") URI sourceId,
                                     @FormParam("mime_type") String mimeType)

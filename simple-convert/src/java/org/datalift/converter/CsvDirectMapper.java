@@ -54,9 +54,9 @@ import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.xml.datatype.DatatypeFactory;
@@ -84,6 +84,7 @@ import org.datalift.fwk.rdf.UriCachingValueFactory;
 import org.datalift.fwk.util.Env;
 
 import static org.datalift.fwk.util.StringUtils.*;
+import static org.datalift.fwk.MediaTypes.*;
 
 
 /**
@@ -168,12 +169,13 @@ public class CsvDirectMapper extends BaseConverterModule
     //-------------------------------------------------------------------------
 
     @GET
+    @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
     public Response getIndexPage(@QueryParam("project") URI projectId) {
         return this.newProjectView("csvDirectMapper.vm", projectId);
     }
 
     @POST
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Consumes(APPLICATION_FORM_URLENCODED)
     public Response mapCsvData(
                     @FormParam("project") URI projectId,
                     @FormParam("source") URI sourceId,

@@ -37,11 +37,13 @@ package org.datalift.converter;
 
 import java.net.URI;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
@@ -59,6 +61,8 @@ import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
+
+import static org.datalift.fwk.MediaTypes.*;
 
 
 /**
@@ -91,11 +95,13 @@ public class SimplePublisher extends BaseConverterModule
     //-------------------------------------------------------------------------
 
     @GET
+    @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
     public Response getIndexPage(@QueryParam("project") URI projectId) {
         return this.newProjectView("publisher.vm", projectId);
     }
 
     @POST
+    @Consumes(APPLICATION_FORM_URLENCODED)
     public Response publishRdfSource(
                                 @FormParam("project") URI projectId,
                                 @FormParam("source") URI sourceId,

@@ -48,10 +48,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
@@ -69,7 +71,6 @@ import org.openrdf.query.TupleQueryResultHandlerBase;
 import au.com.bytecode.opencsv.CSVWriter;
 
 import org.datalift.fwk.Configuration;
-import org.datalift.fwk.MediaTypes;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectModule;
@@ -81,6 +82,8 @@ import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.util.Env;
 import org.datalift.fwk.util.web.Charsets;
 import org.datalift.fwk.view.TemplateModel;
+
+import static org.datalift.fwk.MediaTypes.*;
 
 
 /**
@@ -131,6 +134,7 @@ public class CsvExporter extends BaseConverterModule
     //-------------------------------------------------------------------------
     
     @GET
+    @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
     public Response getIndexPage(@QueryParam("project") URI projectId) {
         // Retrieve project.
         Project p = this.getProject(projectId);
@@ -143,6 +147,7 @@ public class CsvExporter extends BaseConverterModule
     }
 
     @POST
+    @Consumes(APPLICATION_FORM_URLENCODED)
     public Response exportSourceAsCsv(@FormParam("project") URI projectId,
                                       @FormParam("source") URI sourceId,
                                       @FormParam("charset") String charset,
@@ -180,7 +185,7 @@ public class CsvExporter extends BaseConverterModule
             // Dump selected to directly into the socket.
             StreamingOutput out = new SourceDumpStreamingOutput(internal,
                                                 s.getTargetGraph(), cs, sep);
-            response = Response.ok(out, MediaTypes.APPLICATION_CSV_TYPE)
+            response = Response.ok(out, APPLICATION_CSV_TYPE)
                                .header("Content-Disposition",
                                        "attachment; filename=" + name)
                                .header("Refresh", "0.1; " + p.getUri())

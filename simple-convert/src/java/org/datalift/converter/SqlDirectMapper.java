@@ -43,6 +43,7 @@ import java.util.GregorianCalendar;
 
 import static java.util.GregorianCalendar.*;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -62,7 +63,6 @@ import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.repository.RepositoryConnection;
 
 import org.datalift.fwk.Configuration;
-import org.datalift.fwk.MediaTypes;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.CachingSource;
 import org.datalift.fwk.project.Project;
@@ -76,6 +76,7 @@ import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.util.Env;
 
 import static org.datalift.fwk.util.StringUtils.*;
+import static org.datalift.fwk.MediaTypes.*;
 
 
 /**
@@ -126,13 +127,14 @@ public class SqlDirectMapper extends BaseConverterModule
     //-------------------------------------------------------------------------
 
     @GET
+    @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
     public Response getIndexPage(@QueryParam("project") URI projectId) {
         return this.newProjectView("sqlDirectMapper.vm", projectId);
     }
 
     @GET
     @Path("columns")
-    @Produces(MediaTypes.APPLICATION_JSON)
+    @Produces(APPLICATION_JSON)
     public Response getColumnNames(@QueryParam("project") URI projectId,
                                    @QueryParam("source") URI sourceId,
                                    @Context Request request)
@@ -163,7 +165,7 @@ public class SqlDirectMapper extends BaseConverterModule
                 sb.setLength(sb.length() - 1);  // Remove last separator.
                 sb.append(']');                 // End JSON array.
 
-                response = Response.ok(sb.toString());
+                response = Response.ok(sb.toString(), APPLICATION_JSON_UTF8);
                 // Set page expiry & last modification date.
                 if (lastModified != null) {
                     response = response.lastModified(lastModified)
@@ -178,6 +180,7 @@ public class SqlDirectMapper extends BaseConverterModule
     }
 
     @POST
+    @Consumes(APPLICATION_FORM_URLENCODED)
     public Response mapSqlData(@FormParam("project") URI projectId,
                                @FormParam("source") URI sourceId,
                                @FormParam("dest_title") String destTitle,

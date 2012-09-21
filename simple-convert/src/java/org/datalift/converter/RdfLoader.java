@@ -38,10 +38,12 @@ package org.datalift.converter;
 import java.net.URI;
 import java.util.regex.Pattern;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
@@ -61,6 +63,7 @@ import org.datalift.fwk.util.StringUtils;
 import org.datalift.fwk.util.UriMapper;
 
 import static org.datalift.fwk.util.StringUtils.*;
+import static org.datalift.fwk.MediaTypes.*;
 
 
 /**
@@ -101,11 +104,13 @@ public class RdfLoader extends BaseConverterModule
     //-------------------------------------------------------------------------
 
     @GET
+    @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
     public Response getIndexPage(@QueryParam("project") URI projectId) {
         return this.newProjectView("rdfLoader.vm", projectId);
     }
 
     @POST
+    @Consumes(APPLICATION_FORM_URLENCODED)
     public Response loadRdfData(
                     @FormParam("project") URI projectId,
                     @FormParam("source") URI sourceId,

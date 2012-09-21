@@ -316,7 +316,7 @@ public abstract class BaseConverterModule
             // Display conversion configuration page.
             TemplateModel view = this.newView(templateName, p);
             view.put("converter", this);
-            response = Response.ok(view).build();
+            response = Response.ok(view, TEXT_HTML_UTF8).build();
         }
         catch (ObjectNotFoundException e) {
             this.throwInvalidParamError("project", projectId);
@@ -358,7 +358,7 @@ public abstract class BaseConverterModule
             String targetUrl = src.getProject().getUri() + "#source";
             return Response.created(new URI(src.getUri()))
                            .entity(this.newView("redirect.vm", targetUrl))
-                           .type(TEXT_HTML);
+                           .type(TEXT_HTML_UTF8);
         }
         catch (Exception e) {
             throw new TechnicalException(e);
@@ -389,7 +389,7 @@ public abstract class BaseConverterModule
         SparqlEndpoint endpoint = Configuration.getDefault()
                                                .getBean(SparqlEndpoint.class);
         return endpoint.describe(namedGraph.toString(), DescribeType.Graph,
-                                 repository, 5000, null, null,
+                                 repository, 5000, TEXT_HTML, null,
                                  uriInfo, request, acceptHdr).build();
     }
 
