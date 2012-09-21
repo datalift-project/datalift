@@ -26,8 +26,11 @@ public class Charsets
      * relevance first and then alphabetically.
      */
     public final static List<String> availableCharsets;
+
+    /** The character set name for the UTF-8 encoding. */
+    public final static String UTF8_CHARSET = "UTF-8";
     /** The UTF-8 character set. */
-    public final static Charset UTF_8 = Charset.forName("UTF-8"); 
+    public final static Charset UTF_8 = Charset.forName(UTF8_CHARSET);
 
     //-------------------------------------------------------------------------
     // Class initializer

@@ -37,6 +37,8 @@ package org.datalift.fwk;
 
 import javax.ws.rs.core.MediaType;
 
+import org.datalift.fwk.util.web.Charsets;
+
 
 /**
  * An extension to JAX-RS {@link MediaType standard media types} with
@@ -136,4 +138,16 @@ public class MediaTypes extends MediaType
      */
     public final static MediaType TEXT_COMMA_SEPARATED_VALUES_TYPE =
                                 MediaType.valueOf(TEXT_COMMA_SEPARATED_VALUES);
+
+    /**
+     * The suffix specifying the content is UTF-8 encoded
+     * in the HTTP Content-Type header.
+     */
+    public final static String UTF8_ENCODED =
+                                        "; charset=" + Charsets.UTF8_CHARSET;
+    /** text/html; charset=utf-8 */
+    public final static String TEXT_HTML_UTF8 = TEXT_HTML + UTF8_ENCODED;
+    /** application/json; charset=utf-8 */
+    public final static String APPLICATION_JSON_UTF8 =
+                                            APPLICATION_JSON + UTF8_ENCODED;
 }
