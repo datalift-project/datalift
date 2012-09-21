@@ -1,7 +1,6 @@
 package org.datalift.s4ac.sparql;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -12,8 +11,6 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.UriInfo;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.datalift.fwk.Configuration;
 import org.datalift.s4ac.resources.SecuredSparqlQuery;
 import org.datalift.s4ac.services.SecurityCheckService;
@@ -25,7 +22,6 @@ import org.datalift.sparql.SesameSparqlEndpoint;
 @Path("/" + AbstractSparqlEndpoint.MODULE_NAME)
 public class S4acSparqlEndpoint extends SesameSparqlEndpoint {
 	
-	private String cfgBaseUri;
 	private SecurityCheckService scs;
 	
 
@@ -33,7 +29,6 @@ public class S4acSparqlEndpoint extends SesameSparqlEndpoint {
     @Override
     public void init(Configuration configuration) {
         super.init(configuration);
-        this.cfgBaseUri = configuration.getProperty(BASE_URI_PROPERTY);
         this.scs = new SecurityCheckService();
     }
 
