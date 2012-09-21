@@ -1,6 +1,5 @@
 package org.datalift.s4ac.services;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -33,8 +32,6 @@ public class SecurityCheckService extends BaseModule {
 	private Repository securedRepository;
 	private Repository liftedRepository;	
 	
-	private SecurityContext ctx = SecurityContext.getContext();
-	
 	private static final Log log = LogFactory.getLog(SecurityCheckService.class);
 	
 	String queryCtx = "PREFIX s4ac:<http://ns.inria.fr/s4ac/v2#> " +
@@ -59,14 +56,10 @@ public class SecurityCheckService extends BaseModule {
 		super("s4ac-securityCheckService",true);
 	}
 	
-	
 	public void init() {
-		
 		try {
 			this.liftedRepository = Configuration.getDefault().getDataRepository();
-    		this.securedRepository = Configuration.getDefault().getRepository("secured");
-    		
-//    		this.securedRepository = Configuration.getDefault().newRepository("secured", null, false);
+			this.securedRepository = Configuration.getDefault().newRepository("secured", null, false);
 		} catch (Exception e) {
 			log.fatal("Unable to get repositories", e);
 			throw new RuntimeException(e);
