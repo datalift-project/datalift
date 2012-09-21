@@ -38,9 +38,9 @@
 
 			<div id="description"><p>
 				#i18n("project.description"): $!esc.html($current.description)<br />
-				#i18n("project.license"): <a href="$current.getLicense()">$esc.html($!license)</a><br />
-				#i18n("project.modification_s") $date.format("medium", $current.modificationDate)<br />
-				#i18n("project.creation_s") $date.format("medium", $current.creationDate) #i18n("project.owner_s") $!esc.html($current.owner)</p>
+				#i18n("project.license"): <a href="$!current.getLicense()">$!esc.html($license)</a><br />
+				#i18n("project.modification_s") $!date.format("medium", $current.modificationDate)<br />
+				#i18n("project.creation_s") $!date.format("medium", $current.creationDate) #i18n("project.owner_s") $!esc.html($current.owner)</p>
 #if( !${canHandle.isEmpty()} )
 				<div id="module_can_handle">
 					<p>#i18n("project.module_available")</p>
@@ -273,7 +273,7 @@
 			uri:"$!esc.html($curOnto.uri)",
 			title:"$!esc.html($curOnto.title)",
 			source:"$!esc.html($curOnto.source)",
-			dateSubmitted:"$date.format("medium", $curOnto.dateSubmitted)",
+			dateSubmitted:"$!date.format("medium", $curOnto.dateSubmitted)",
 			operator:"$!esc.html($curOnto.operator)"
 		},
 #end
