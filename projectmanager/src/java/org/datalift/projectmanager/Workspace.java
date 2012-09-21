@@ -576,7 +576,7 @@ public class Workspace extends BaseModule
                 }
                 view.put("current", src);
             }
-            response = Response.ok(view, TEXT_HTML).build();
+            response = Response.ok(view, TEXT_HTML + ";charset=utf-8").build();
         }
         catch (Exception e) {
             this.handleInternalError(e, "Failed to load source {}", srcUri);
@@ -634,7 +634,7 @@ public class Workspace extends BaseModule
             }
         }
         else {
-            fileName = fileDisposition.getFileName();
+            fileName = this.toFileName(fileDisposition.getFileName());
             if (isBlank(fileName)) {
                 this.throwInvalidParamError("source", null);
             }
@@ -812,7 +812,7 @@ public class Workspace extends BaseModule
             }
         }
         else {
-            fileName = fileDisposition.getFileName();
+            fileName = this.toFileName(fileDisposition.getFileName());
             if (isBlank(fileName)) {
                 this.throwInvalidParamError("source", null);
             }
@@ -1184,7 +1184,7 @@ public class Workspace extends BaseModule
             }
         }
         else {
-            fileName = fileDisposition.getFileName();
+            fileName = this.toFileName(fileDisposition.getFileName());
             if (isBlank(fileName)) {
                 this.throwInvalidParamError("source", null);
             }
@@ -1298,7 +1298,7 @@ public class Workspace extends BaseModule
 			@Context UriInfo uriInfo)
 		                                throws WebApplicationException {
 		// Extract common file root name from main (SHP) file.
-		String fileRoot = shpDisposition.getFileName();
+		String fileRoot = this.toFileName(shpDisposition.getFileName());
 		int sep = fileRoot.lastIndexOf('.');
 		if (sep > 0) {
 		    fileRoot = fileRoot.substring(0, sep);
@@ -1439,12 +1439,12 @@ public class Workspace extends BaseModule
 		File localFile1 = null;
 		File localFile2 = null;
 
-		fileName1 = fileDisposition1.getFileName();
+		fileName1 = this.toFileName(fileDisposition1.getFileName());
 		if (isBlank(fileName1)) {
 			this.throwInvalidParamError("source1", null);
 		}
 
-		fileName2 = fileDisposition2.getFileName();
+		fileName2 = this.toFileName(fileDisposition2.getFileName());
 		if (isBlank(fileName2)) {
 			this.throwInvalidParamError("source2", null);
 		}
@@ -2248,6 +2248,41 @@ public class Workspace extends BaseModule
         }
     }
 
+    /**
+     * Translates the uploaded filename read from the ContentDisposition
+     * into a name suitable for the local file system. Regardless the
+     * character encoding (the browser should use the encoding of the
+     * page containing the HTML form), the filename is not correctly
+     * decoded by Jersey, leading to weird character sequences whenever
+     * accentuated characters are present. This method decodes the
+     * filename from the JVM default encoding to a byte array and reads
+     * it using UTF-8.
+     * @param  fileName   the filename to convert.
+     *
+     * @return the filename, correctly decoded.
+     */
+    private String toFileName(String fileName) {
+        return new String(fileName.getBytes(), Charsets.UTF_8);
+    }
+
+    /**
+     * Reads the data of the file to upload and stored them in the
+     * specified local file.
+     * @param  in          the input stream in the case the file is
+     *                     directly uploaded from the user's browser or
+     *                     <code>null</code> if the data shall be
+     *                     downloaded from a remote server.
+     * @param  u           the URL to download the file from, ignored
+     *                     if an input stream is specified.
+     * @param  destFile    the local file to store data into.
+     * @param  uriInfo     the requested URI, to optimize download by
+     *                     detecting filenames pointing to local URLs.
+     * @param  mimeType    the requested MIME type when downloading
+     *                     data from a remote server.
+     *
+     * @throws IOException if any error occurred reading or downloading
+     *                     the file data.
+     */
     private void getFileData(InputStream in, URL u, File destFile,
                              UriInfo uriInfo, MediaType mimeType)
                                                         throws IOException {
@@ -2255,6 +2290,27 @@ public class Workspace extends BaseModule
                          (mimeType != null)? Arrays.asList(mimeType): null);
     }
 
+    /**
+     * Reads the data of the file to upload and stored them in the
+     * specified local file.
+     * @param  in          the input stream in the case the file is
+     *                     directly uploaded from the user's browser or
+     *                     <code>null</code> if the data shall be
+     *                     downloaded from a remote server.
+     * @param  u           the URL to download the file from, ignored
+     *                     if an input stream is specified.
+     * @param  destFile    the local file to store data into.
+     * @param  uriInfo     the requested URI, to optimize download by
+     *                     detecting filenames pointing to local URLs.
+     * @param  mimeTypes   the accepted MIME types when downloading
+     *                     data from a remote server. The first entry
+     *                     is the preferred one (q=1.0), the others
+     *                     being fallback types in case the server
+     *                     cannot provide the expected type (q=0.5).
+     *
+     * @throws IOException if any error occurred reading or downloading
+     *                     the file data.
+     */
     private void getFileData(InputStream in, URL u, File destFile,
                              UriInfo uriInfo, Collection<MediaType> mimeTypes)
                                                         throws IOException {
