@@ -52,8 +52,6 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 
 import static javax.ws.rs.core.Response.Status.*;
 
-import com.sun.jersey.api.view.Viewable;
-
 import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.i18n.PreferredLocales;
@@ -67,6 +65,8 @@ import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.sparql.SparqlEndpoint;
+import org.datalift.fwk.view.TemplateModel;
+import org.datalift.fwk.view.ViewFactory;
 
 import static org.datalift.fwk.MediaTypes.*;
 
@@ -329,8 +329,8 @@ extends BaseModule implements ProjectModule
 	 *
 	 * @return a populated viewable.
 	 */
-	protected final Viewable newViewable(String templateName, Object it) {
-		return new Viewable("/" + this.getName() + templateName, it);
+	protected final TemplateModel newViewable(String templateName, Object it) {
+		return ViewFactory.newView("/" + this.getName() + templateName, it);
 	}
 
 	/**
