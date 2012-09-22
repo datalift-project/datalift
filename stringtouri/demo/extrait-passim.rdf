@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rdf:RDF
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+    xmlns:geo-fr="http://rdf.insee.fr/geo/"
+    xmlns:foaf="http://xmlns.com/foaf/0.1/"
+    xmlns:owl="http://www.w3.org/2002/07/owl#"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+    xmlns:passim="http://data.lirmm.fr/ontologies/passim#"
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+
+  <rdf:Description rdf:about="http://data.lirmm.fr/passim/local">
+    <rdf:type rdf:resource="http://data.lirmm.fr/ontologies/passim#Coverage"/>
+  </rdf:Description>
+
+  <rdf:Description rdf:about="http://data.lirmm.fr/passim/départementale">
+    <rdf:type rdf:resource="http://data.lirmm.fr/ontologies/passim#Coverage"/>
+  </rdf:Description>
+
+  <rdf:Description rdf:about="http://data.lirmm.fr/passim/Transport+%C3%A0+la+demande">
+    <rdf:type rdf:resource="http://data.lirmm.fr/ontologies/passim#Mode"/>
+  </rdf:Description>
+
+  <rdf:Description rdf:about="http://data.lirmm.fr/passim/Autocar">
+    <rdf:type rdf:resource="http://data.lirmm.fr/ontologies/passim#Mode"/>
+  </rdf:Description>
+
+  <rdf:Description rdf:about="http://data.lirmm.fr/passim/Transports+Collectifs+Urbains">
+    <rdf:type rdf:resource="http://data.lirmm.fr/ontologies/passim#Mode"/>
+  </rdf:Description>
+
+  <rdf:Description rdf:about="http://data.lirmm.fr/passim/Calcul+d%27itin%C3%A9raire">
+    <rdf:type rdf:resource="http://data.lirmm.fr/ontologies/passim#Service"/>
+  </rdf:Description>
+  
+  <rdf:Description rdf:about="http://data.lirmm.fr/passim/+Description+du+r%C3%A9seau">
+    <rdf:type rdf:resource="http://data.lirmm.fr/ontologies/passim#Service"/>
+  </rdf:Description>
+
+  <rdf:Description rdf:about="http://data.lirmm.fr/passim/+Horaires">
+    <rdf:type rdf:resource="http://data.lirmm.fr/ontologies/passim#Service"/>
+  </rdf:Description>
+
+  <rdf:Description rdf:about="http://data.lirmm.fr/passim/+Tarifs">
+    <rdf:type rdf:resource="http://data.lirmm.fr/ontologies/passim#Serv+Horairesice"/>
+  </rdf:Description>
+  
+  <rdf:Description rdf:about="http://data.lirmm.fr/passim/861">
+    <rdf:type rdf:resource="http://data.lirmm.fr/ontologies/passim#TransportServiceInformation"/>
+    <passim:region rdf:resource="http://dbpedia.org/resource/Franche-Comt%C3%A9"/>
+    <passim:serviceName>TAD - Bassin de Lons le Saunier</passim:serviceName>
+    <passim:serviceCoverage rdf:resource="http://data.lirmm.fr/passim/local"/>
+    <passim:department>Jura</passim:department>
+    <passim:centerTown>Lons-le-Saunier</passim:centerTown>
+    <passim:modeOfTransport rdf:resource="http://data.lirmm.fr/passim/Transport+%C3%A0+la+demande"/>
+    <passim:isAccessibilityForDisabledPerson rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">false</passim:isAccessibilityForDisabledPerson>
+    <passim:webSite>http://www.malis.fr</passim:webSite>
+    <passim:isWebSiteAccessibilityForDisabledPerson rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">false</passim:isWebSiteAccessibilityForDisabledPerson>
+    <passim:infoPoint>,,LONS LE SAUNIER,0800881846,</passim:infoPoint>
+    <passim:comment>Réservation TAD au 0800 88 18 46 (gratuit depuis poste fixe) du mardi au samedi, de 9h à 11h30 et de 14h à 17h30</passim:comment>
+  </rdf:Description>
+
+  <rdf:Description rdf:about="http://data.lirmm.fr/passim/446">
+    <rdf:type rdf:resource="http://data.lirmm.fr/ontologies/passim#TransportServiceInformation"/>
+    <passim:region rdf:resource="http://dbpedia.org/resource/Franche-Comt%C3%A9"/>
+    <passim:serviceName>Le réseau de transport de voyageurs du JURA</passim:serviceName>
+    <passim:serviceCoverage rdf:resource="http://data.lirmm.fr/passim/local"/>
+    <passim:department>Jura</passim:department>
+    <passim:centerTown>Lons-le-Saunier</passim:centerTown>
+    <passim:modeOfTransport rdf:resource="http://data.lirmm.fr/passim/Transport+%C3%A0+la+demande"/>
+    <passim:isAccessibilityForDisabledPerson rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">false</passim:isAccessibilityForDisabledPerson>
+    <passim:webSite>aucune</passim:webSite>
+    <passim:isWebSiteAccessibilityForDisabledPerson rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">false</passim:isWebSiteAccessibilityForDisabledPerson>
+    <passim:infoPoint>Le réseau de transport de voyageurs du JURA 366 rue des Frères Lumière,39000,LONS-LE-SAUNIER,0800 100 988,</passim:infoPoint>
+    <passim:comment>réservation la veille entre 9h et 11h30 ou entre 14h et 16h30 auprès du numéro vert</passim:comment>
+  </rdf:Description>
+
+  <rdf:Description rdf:about="http://data.lirmm.fr/passim/681">
+    <rdf:type rdf:resource="http://data.lirmm.fr/ontologies/passim#TransportServiceInformation"/>
+    <passim:region rdf:resource="http://dbpedia.org/resource/Lorraine_%28region%29"/>
+    <passim:serviceName>Réseau de transport départemental Vosges (88)</passim:serviceName>
+    <passim:serviceCoverage rdf:resource="http://data.lirmm.fr/passim/départementale"/>
+    <passim:department>Vosges</passim:department>
+    <passim:centerTown>Épinal</passim:centerTown>
+    <passim:modeOfTransport rdf:resource="http://data.lirmm.fr/passim/Autocar"/>
+    <passim:isAccessibilityForDisabledPerson rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">false</passim:isAccessibilityForDisabledPerson>
+    <passim:webSite>http://www.cg88.fr</passim:webSite>
+    <passim:isWebSiteAccessibilityForDisabledPerson rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">false</passim:isWebSiteAccessibilityForDisabledPerson>
+  </rdf:Description>
+
+  <rdf:Description rdf:about="http://data.lirmm.fr/passim/919">
+    <rdf:type rdf:resource="http://data.lirmm.fr/ontologies/passim#TransportServiceInformation"/>
+    <passim:region rdf:resource="http://dbpedia.org/resource/Languedoc-Roussillon"/>
+    <passim:serviceName>TaM</passim:serviceName>
+    <passim:serviceCoverage rdf:resource="http://data.lirmm.fr/passim/local"/>
+    <passim:department>Hérault</passim:department>
+    <passim:centerTown>Montpellier</passim:centerTown>
+    <passim:modeOfTransport rdf:resource="http://data.lirmm.fr/passim/Transports+Collectifs+Urbains"/>
+    <passim:typeOfService rdf:resource="http://data.lirmm.fr/passim/Calcul+d%27itin%C3%A9raire"/>
+    <passim:typeOfService rdf:resource="http://data.lirmm.fr/passim/+Description+du+r%C3%A9seau"/>
+    <passim:typeOfService rdf:resource="http://data.lirmm.fr/passim/+Horaires"/>
+    <passim:typeOfService rdf:resource="http://data.lirmm.fr/passim/+Tarifs"/>
+    <passim:isAccessibilityForDisabledPerson rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</passim:isAccessibilityForDisabledPerson>
+    <passim:webSite>http://www.tam-way.com</passim:webSite>
+    <passim:isWebSiteAccessibilityForDisabledPerson rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">false</passim:isWebSiteAccessibilityForDisabledPerson>
+    <passim:infoPoint>Point Info-Services-27 rue Maguelone,34000,MONTPELLIER,04 67 22 87 87,</passim:infoPoint>
+    <passim:cityThrough>Baillargues</passim:cityThrough>
+    <passim:cityThrough>Beaulieu</passim:cityThrough>
+    <passim:cityThrough>Castelnau-le-Lez</passim:cityThrough>
+    <passim:cityThrough>Castries</passim:cityThrough>
+    <passim:cityThrough>Clapiers</passim:cityThrough>
+    <passim:cityThrough>Cournonsec</passim:cityThrough>
+    <passim:cityThrough>Cournonterral</passim:cityThrough>
+    <passim:cityThrough>Le Crès</passim:cityThrough>
+    <passim:cityThrough>Fabrègues</passim:cityThrough>
+    <passim:cityThrough>Grabels</passim:cityThrough>
+    <passim:cityThrough>Jacou</passim:cityThrough>
+    <passim:cityThrough>Juvignac</passim:cityThrough>
+    <passim:cityThrough>Lattes</passim:cityThrough>
+    <passim:cityThrough>Lavérune</passim:cityThrough>
+    <passim:cityThrough>Montaud</passim:cityThrough>
+    <passim:cityThrough>Montferrier-sur-Lez</passim:cityThrough>
+    <passim:cityThrough>Montpellier</passim:cityThrough>
+    <passim:cityThrough>Murviel-lès-Montpellier</passim:cityThrough>
+    <passim:cityThrough>Pérols</passim:cityThrough>
+    <passim:cityThrough>Pignan</passim:cityThrough>
+    <passim:cityThrough>Prades-le-Lez</passim:cityThrough>
+    <passim:cityThrough>Restinclières</passim:cityThrough>
+	<passim:cityThrough>Saint-Brès</passim:cityThrough>
+    <passim:cityThrough>Saint-Drézéry</passim:cityThrough>
+    <passim:cityThrough>Saint-Geniès-des-Mourgues</passim:cityThrough>
+    <passim:cityThrough>Saint-Georges-d'Orques</passim:cityThrough>
+    <passim:cityThrough>Saint-Jean-de-Védas</passim:cityThrough>
+    <passim:cityThrough>Saussan</passim:cityThrough>
+    <passim:cityThrough>Sussargues</passim:cityThrough>
+    <passim:cityThrough>Vendargues</passim:cityThrough>
+    <passim:cityThrough>Villeneuve-lès-Maguelone</passim:cityThrough>
+  </rdf:Description>  
+</rdf:RDF>

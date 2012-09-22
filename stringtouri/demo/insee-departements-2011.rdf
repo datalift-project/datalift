@@ -1,0 +1,3167 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<rdf:RDF xml:base="http://rdf.insee.fr/geo/2011/"
+	xmlns:geo="http://rdf.insee.fr/geo/"
+	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+	xmlns:dc="http://purl.org/dc/elements/1.1/"
+	xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#">
+
+	<rdf:Description rdf:about="http://rdf.insee.fr/geo/2011/departements-2011.rdf">
+		<dc:title xml:lang="fr">Départements et arrondissements de France</dc:title>
+		<dc:date>2011-02-21</dc:date>
+		<dc:publisher>INSEE</dc:publisher>
+		<dc:format>XML-RDF</dc:format>
+	</rdf:Description>
+
+	<geo:Departement rdf:about="DEP_01">
+		<geo:code_departement>01</geo:code_departement>
+		<geo:nom xml:lang="fr">Ain</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_01053">
+		<geo:code_commune>01053</geo:code_commune>
+		<geo:nom xml:lang="fr">Bourg-en-Bresse</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_011">
+				<geo:code_arrondissement>011</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Belley</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_012">
+				<geo:code_arrondissement>012</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Bourg-en-Bresse</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_013">
+				<geo:code_arrondissement>013</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Gex</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_014">
+				<geo:code_arrondissement>014</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Nantua</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_02">
+		<geo:code_departement>02</geo:code_departement>
+		<geo:nom xml:lang="fr">Aisne</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_02408">
+		<geo:code_commune>02408</geo:code_commune>
+		<geo:nom xml:lang="fr">Laon</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_021">
+				<geo:code_arrondissement>021</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Château-Thierry</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_022">
+				<geo:code_arrondissement>022</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Laon</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_023">
+				<geo:code_arrondissement>023</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Saint-Quentin</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_024">
+				<geo:code_arrondissement>024</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Soissons</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_025">
+				<geo:code_arrondissement>025</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Vervins</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_03">
+		<geo:code_departement>03</geo:code_departement>
+		<geo:nom xml:lang="fr">Allier</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_03190">
+		<geo:code_commune>03190</geo:code_commune>
+		<geo:nom xml:lang="fr">Moulins</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_031">
+				<geo:code_arrondissement>031</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Montluçon</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_032">
+				<geo:code_arrondissement>032</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Moulins</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_033">
+				<geo:code_arrondissement>033</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Vichy</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_04">
+		<geo:code_departement>04</geo:code_departement>
+		<geo:nom xml:lang="fr">Alpes-de-Haute-Provence</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_04070">
+		<geo:code_commune>04070</geo:code_commune>
+		<geo:nom xml:lang="fr">Digne-les-Bains</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_041">
+				<geo:code_arrondissement>041</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Barcelonnette</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_042">
+				<geo:code_arrondissement>042</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Castellane</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_043">
+				<geo:code_arrondissement>043</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Digne-les-Bains</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_044">
+				<geo:code_arrondissement>044</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Forcalquier</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_05">
+		<geo:code_departement>05</geo:code_departement>
+		<geo:nom xml:lang="fr">Hautes-Alpes</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_05061">
+		<geo:code_commune>05061</geo:code_commune>
+		<geo:nom xml:lang="fr">Gap</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_051">
+				<geo:code_arrondissement>051</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Briançon</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_052">
+				<geo:code_arrondissement>052</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Gap</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_06">
+		<geo:code_departement>06</geo:code_departement>
+		<geo:nom xml:lang="fr">Alpes-Maritimes</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_06088">
+		<geo:code_commune>06088</geo:code_commune>
+		<geo:nom xml:lang="fr">Nice</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_061">
+				<geo:code_arrondissement>061</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Grasse</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_062">
+				<geo:code_arrondissement>062</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Nice</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_07">
+		<geo:code_departement>07</geo:code_departement>
+		<geo:nom xml:lang="fr">Ardèche</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_07186">
+		<geo:code_commune>07186</geo:code_commune>
+		<geo:nom xml:lang="fr">Privas</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_071">
+				<geo:code_arrondissement>071</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Largentière</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_072">
+				<geo:code_arrondissement>072</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Privas</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_073">
+				<geo:code_arrondissement>073</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Tournon-sur-Rhône</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_08">
+		<geo:code_departement>08</geo:code_departement>
+		<geo:nom xml:lang="fr">Ardennes</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_08105">
+		<geo:code_commune>08105</geo:code_commune>
+		<geo:nom xml:lang="fr">Charleville-Mézières</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_081">
+				<geo:code_arrondissement>081</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Charleville-Mézières</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_082">
+				<geo:code_arrondissement>082</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Rethel</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_083">
+				<geo:code_arrondissement>083</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Sedan</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_084">
+				<geo:code_arrondissement>084</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Vouziers</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_09">
+		<geo:code_departement>09</geo:code_departement>
+		<geo:nom xml:lang="fr">Ariège</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_09122">
+		<geo:code_commune>09122</geo:code_commune>
+		<geo:nom xml:lang="fr">Foix</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_091">
+				<geo:code_arrondissement>091</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Foix</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_092">
+				<geo:code_arrondissement>092</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Pamiers</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_093">
+				<geo:code_arrondissement>093</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Saint-Girons</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_10">
+		<geo:code_departement>10</geo:code_departement>
+		<geo:nom xml:lang="fr">Aube</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_10387">
+		<geo:code_commune>10387</geo:code_commune>
+		<geo:nom xml:lang="fr">Troyes</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_101">
+				<geo:code_arrondissement>101</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Bar-sur-Aube</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_102">
+				<geo:code_arrondissement>102</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Nogent-sur-Seine</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_103">
+				<geo:code_arrondissement>103</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Troyes</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_11">
+		<geo:code_departement>11</geo:code_departement>
+		<geo:nom xml:lang="fr">Aude</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_11069">
+		<geo:code_commune>11069</geo:code_commune>
+		<geo:nom xml:lang="fr">Carcassonne</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_111">
+				<geo:code_arrondissement>111</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Carcassonne</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_112">
+				<geo:code_arrondissement>112</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Limoux</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_113">
+				<geo:code_arrondissement>113</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Narbonne</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_12">
+		<geo:code_departement>12</geo:code_departement>
+		<geo:nom xml:lang="fr">Aveyron</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_12202">
+		<geo:code_commune>12202</geo:code_commune>
+		<geo:nom xml:lang="fr">Rodez</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_121">
+				<geo:code_arrondissement>121</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Millau</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_122">
+				<geo:code_arrondissement>122</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Rodez</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_123">
+				<geo:code_arrondissement>123</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Villefranche-de-Rouergue</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_13">
+		<geo:code_departement>13</geo:code_departement>
+		<geo:nom xml:lang="fr">Bouches-du-Rhône</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_13055">
+		<geo:code_commune>13055</geo:code_commune>
+		<geo:nom xml:lang="fr">Marseille</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_131">
+				<geo:code_arrondissement>131</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Aix-en-Provence</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_132">
+				<geo:code_arrondissement>132</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Arles</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_133">
+				<geo:code_arrondissement>133</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Marseille</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_134">
+				<geo:code_arrondissement>134</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Istres</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_14">
+		<geo:code_departement>14</geo:code_departement>
+		<geo:nom xml:lang="fr">Calvados</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_14118">
+		<geo:code_commune>14118</geo:code_commune>
+		<geo:nom xml:lang="fr">Caen</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_141">
+				<geo:code_arrondissement>141</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Bayeux</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_142">
+				<geo:code_arrondissement>142</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Caen</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_143">
+				<geo:code_arrondissement>143</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Lisieux</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_144">
+				<geo:code_arrondissement>144</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Vire</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_15">
+		<geo:code_departement>15</geo:code_departement>
+		<geo:nom xml:lang="fr">Cantal</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_15014">
+		<geo:code_commune>15014</geo:code_commune>
+		<geo:nom xml:lang="fr">Aurillac</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_151">
+				<geo:code_arrondissement>151</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Aurillac</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_152">
+				<geo:code_arrondissement>152</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Mauriac</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_153">
+				<geo:code_arrondissement>153</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Saint-Flour</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_16">
+		<geo:code_departement>16</geo:code_departement>
+		<geo:nom xml:lang="fr">Charente</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_16015">
+		<geo:code_commune>16015</geo:code_commune>
+		<geo:nom xml:lang="fr">Angoulême</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_161">
+				<geo:code_arrondissement>161</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Angoulême</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_162">
+				<geo:code_arrondissement>162</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Cognac</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_163">
+				<geo:code_arrondissement>163</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Confolens</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_17">
+		<geo:code_departement>17</geo:code_departement>
+		<geo:nom xml:lang="fr">Charente-Maritime</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_17300">
+		<geo:code_commune>17300</geo:code_commune>
+		<geo:nom xml:lang="fr">La Rochelle</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_171">
+				<geo:code_arrondissement>171</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Jonzac</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_172">
+				<geo:code_arrondissement>172</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Rochefort</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_173">
+				<geo:code_arrondissement>173</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">La Rochelle</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_174">
+				<geo:code_arrondissement>174</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Saintes</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_175">
+				<geo:code_arrondissement>175</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Saint-Jean-d'Angély</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_18">
+		<geo:code_departement>18</geo:code_departement>
+		<geo:nom xml:lang="fr">Cher</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_18033">
+		<geo:code_commune>18033</geo:code_commune>
+		<geo:nom xml:lang="fr">Bourges</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_181">
+				<geo:code_arrondissement>181</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Bourges</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_182">
+				<geo:code_arrondissement>182</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Saint-Amand-Montrond</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_183">
+				<geo:code_arrondissement>183</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Vierzon</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_19">
+		<geo:code_departement>19</geo:code_departement>
+		<geo:nom xml:lang="fr">Corrèze</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_19272">
+		<geo:code_commune>19272</geo:code_commune>
+		<geo:nom xml:lang="fr">Tulle</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_191">
+				<geo:code_arrondissement>191</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Brive-la-Gaillarde</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_192">
+				<geo:code_arrondissement>192</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Tulle</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_193">
+				<geo:code_arrondissement>193</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Ussel</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_21">
+		<geo:code_departement>21</geo:code_departement>
+		<geo:nom xml:lang="fr">Côte-d'Or</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_21231">
+		<geo:code_commune>21231</geo:code_commune>
+		<geo:nom xml:lang="fr">Dijon</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_211">
+				<geo:code_arrondissement>211</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Beaune</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_212">
+				<geo:code_arrondissement>212</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Dijon</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_213">
+				<geo:code_arrondissement>213</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Montbard</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_22">
+		<geo:code_departement>22</geo:code_departement>
+		<geo:nom xml:lang="fr">Côtes-d'Armor</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_22278">
+		<geo:code_commune>22278</geo:code_commune>
+		<geo:nom xml:lang="fr">Saint-Brieuc</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_221">
+				<geo:code_arrondissement>221</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Dinan</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_222">
+				<geo:code_arrondissement>222</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Guingamp</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_223">
+				<geo:code_arrondissement>223</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Lannion</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_224">
+				<geo:code_arrondissement>224</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Saint-Brieuc</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_23">
+		<geo:code_departement>23</geo:code_departement>
+		<geo:nom xml:lang="fr">Creuse</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_23096">
+		<geo:code_commune>23096</geo:code_commune>
+		<geo:nom xml:lang="fr">Guéret</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_231">
+				<geo:code_arrondissement>231</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Aubusson</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_232">
+				<geo:code_arrondissement>232</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Guéret</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_24">
+		<geo:code_departement>24</geo:code_departement>
+		<geo:nom xml:lang="fr">Dordogne</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_24322">
+		<geo:code_commune>24322</geo:code_commune>
+		<geo:nom xml:lang="fr">Périgueux</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_241">
+				<geo:code_arrondissement>241</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Bergerac</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_242">
+				<geo:code_arrondissement>242</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Nontron</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_243">
+				<geo:code_arrondissement>243</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Périgueux</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_244">
+				<geo:code_arrondissement>244</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Sarlat-la-Canéda</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_25">
+		<geo:code_departement>25</geo:code_departement>
+		<geo:nom xml:lang="fr">Doubs</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_25056">
+		<geo:code_commune>25056</geo:code_commune>
+		<geo:nom xml:lang="fr">Besançon</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_251">
+				<geo:code_arrondissement>251</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Besançon</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_252">
+				<geo:code_arrondissement>252</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Montbéliard</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_253">
+				<geo:code_arrondissement>253</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Pontarlier</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_26">
+		<geo:code_departement>26</geo:code_departement>
+		<geo:nom xml:lang="fr">Drôme</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_26362">
+		<geo:code_commune>26362</geo:code_commune>
+		<geo:nom xml:lang="fr">Valence</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_261">
+				<geo:code_arrondissement>261</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Die</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_262">
+				<geo:code_arrondissement>262</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Nyons</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_263">
+				<geo:code_arrondissement>263</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Valence</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_27">
+		<geo:code_departement>27</geo:code_departement>
+		<geo:nom xml:lang="fr">Eure</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_27229">
+		<geo:code_commune>27229</geo:code_commune>
+		<geo:nom xml:lang="fr">Évreux</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_271">
+				<geo:code_arrondissement>271</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Les Andelys</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_272">
+				<geo:code_arrondissement>272</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Bernay</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_273">
+				<geo:code_arrondissement>273</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Évreux</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_28">
+		<geo:code_departement>28</geo:code_departement>
+		<geo:nom xml:lang="fr">Eure-et-Loir</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_28085">
+		<geo:code_commune>28085</geo:code_commune>
+		<geo:nom xml:lang="fr">Chartres</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_281">
+				<geo:code_arrondissement>281</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Chartres</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_282">
+				<geo:code_arrondissement>282</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Châteaudun</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_283">
+				<geo:code_arrondissement>283</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Dreux</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_284">
+				<geo:code_arrondissement>284</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Nogent-le-Rotrou</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_29">
+		<geo:code_departement>29</geo:code_departement>
+		<geo:nom xml:lang="fr">Finistère</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_29232">
+		<geo:code_commune>29232</geo:code_commune>
+		<geo:nom xml:lang="fr">Quimper</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_291">
+				<geo:code_arrondissement>291</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Brest</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_292">
+				<geo:code_arrondissement>292</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Châteaulin</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_293">
+				<geo:code_arrondissement>293</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Morlaix</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_294">
+				<geo:code_arrondissement>294</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Quimper</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_2A">
+		<geo:code_departement>2A</geo:code_departement>
+		<geo:nom xml:lang="fr">Corse-du-Sud</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_2A004">
+		<geo:code_commune>2A004</geo:code_commune>
+		<geo:nom xml:lang="fr">Ajaccio</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_2A1">
+				<geo:code_arrondissement>2A1</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Ajaccio</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_2A4">
+				<geo:code_arrondissement>2A4</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Sartène</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_2B">
+		<geo:code_departement>2B</geo:code_departement>
+		<geo:nom xml:lang="fr">Haute-Corse</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_2B033">
+		<geo:code_commune>2B033</geo:code_commune>
+		<geo:nom xml:lang="fr">Bastia</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_2B2">
+				<geo:code_arrondissement>2B2</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Bastia</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_2B3">
+				<geo:code_arrondissement>2B3</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Corte</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_2B5">
+				<geo:code_arrondissement>2B5</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Calvi</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_30">
+		<geo:code_departement>30</geo:code_departement>
+		<geo:nom xml:lang="fr">Gard</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_30189">
+		<geo:code_commune>30189</geo:code_commune>
+		<geo:nom xml:lang="fr">Nîmes</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_301">
+				<geo:code_arrondissement>301</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Alès</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_302">
+				<geo:code_arrondissement>302</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Nîmes</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_303">
+				<geo:code_arrondissement>303</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Le Vigan</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_31">
+		<geo:code_departement>31</geo:code_departement>
+		<geo:nom xml:lang="fr">Haute-Garonne</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_31555">
+		<geo:code_commune>31555</geo:code_commune>
+		<geo:nom xml:lang="fr">Toulouse</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_311">
+				<geo:code_arrondissement>311</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Muret</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_312">
+				<geo:code_arrondissement>312</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Saint-Gaudens</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_313">
+				<geo:code_arrondissement>313</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Toulouse</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_32">
+		<geo:code_departement>32</geo:code_departement>
+		<geo:nom xml:lang="fr">Gers</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_32013">
+		<geo:code_commune>32013</geo:code_commune>
+		<geo:nom xml:lang="fr">Auch</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_321">
+				<geo:code_arrondissement>321</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Auch</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_322">
+				<geo:code_arrondissement>322</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Condom</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_323">
+				<geo:code_arrondissement>323</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Mirande</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_33">
+		<geo:code_departement>33</geo:code_departement>
+		<geo:nom xml:lang="fr">Gironde</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_33063">
+		<geo:code_commune>33063</geo:code_commune>
+		<geo:nom xml:lang="fr">Bordeaux</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_331">
+				<geo:code_arrondissement>331</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Blaye</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_332">
+				<geo:code_arrondissement>332</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Bordeaux</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_333">
+				<geo:code_arrondissement>333</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Langon</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_334">
+				<geo:code_arrondissement>334</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Lesparre-Médoc</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_335">
+				<geo:code_arrondissement>335</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Libourne</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_336">
+				<geo:code_arrondissement>336</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Arcachon</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_34">
+		<geo:code_departement>34</geo:code_departement>
+		<geo:nom xml:lang="fr">Hérault</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_34172">
+		<geo:code_commune>34172</geo:code_commune>
+		<geo:nom xml:lang="fr">Montpellier</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_341">
+				<geo:code_arrondissement>341</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Béziers</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_342">
+				<geo:code_arrondissement>342</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Lodève</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_343">
+				<geo:code_arrondissement>343</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Montpellier</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_35">
+		<geo:code_departement>35</geo:code_departement>
+		<geo:nom xml:lang="fr">Ille-et-Vilaine</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_35238">
+		<geo:code_commune>35238</geo:code_commune>
+		<geo:nom xml:lang="fr">Rennes</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_351">
+				<geo:code_arrondissement>351</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Fougères-Vitré</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_352">
+				<geo:code_arrondissement>352</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Redon</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_353">
+				<geo:code_arrondissement>353</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Rennes</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_354">
+				<geo:code_arrondissement>354</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Saint-Malo</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_36">
+		<geo:code_departement>36</geo:code_departement>
+		<geo:nom xml:lang="fr">Indre</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_36044">
+		<geo:code_commune>36044</geo:code_commune>
+		<geo:nom xml:lang="fr">Châteauroux</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_361">
+				<geo:code_arrondissement>361</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Le Blanc</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_362">
+				<geo:code_arrondissement>362</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Châteauroux</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_363">
+				<geo:code_arrondissement>363</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">La Châtre</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_364">
+				<geo:code_arrondissement>364</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Issoudun</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_37">
+		<geo:code_departement>37</geo:code_departement>
+		<geo:nom xml:lang="fr">Indre-et-Loire</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_37261">
+		<geo:code_commune>37261</geo:code_commune>
+		<geo:nom xml:lang="fr">Tours</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_371">
+				<geo:code_arrondissement>371</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Chinon</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_372">
+				<geo:code_arrondissement>372</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Tours</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_373">
+				<geo:code_arrondissement>373</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Loches</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_38">
+		<geo:code_departement>38</geo:code_departement>
+		<geo:nom xml:lang="fr">Isère</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_38185">
+		<geo:code_commune>38185</geo:code_commune>
+		<geo:nom xml:lang="fr">Grenoble</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_381">
+				<geo:code_arrondissement>381</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Grenoble</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_382">
+				<geo:code_arrondissement>382</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">La Tour-du-Pin</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_383">
+				<geo:code_arrondissement>383</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Vienne</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_39">
+		<geo:code_departement>39</geo:code_departement>
+		<geo:nom xml:lang="fr">Jura</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_39300">
+		<geo:code_commune>39300</geo:code_commune>
+		<geo:nom xml:lang="fr">Lons-le-Saunier</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_391">
+				<geo:code_arrondissement>391</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Dole</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_392">
+				<geo:code_arrondissement>392</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Lons-le-Saunier</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_393">
+				<geo:code_arrondissement>393</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Saint-Claude</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_40">
+		<geo:code_departement>40</geo:code_departement>
+		<geo:nom xml:lang="fr">Landes</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_40192">
+		<geo:code_commune>40192</geo:code_commune>
+		<geo:nom xml:lang="fr">Mont-de-Marsan</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_401">
+				<geo:code_arrondissement>401</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Dax</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_402">
+				<geo:code_arrondissement>402</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Mont-de-Marsan</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_41">
+		<geo:code_departement>41</geo:code_departement>
+		<geo:nom xml:lang="fr">Loir-et-Cher</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_41018">
+		<geo:code_commune>41018</geo:code_commune>
+		<geo:nom xml:lang="fr">Blois</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_411">
+				<geo:code_arrondissement>411</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Blois</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_412">
+				<geo:code_arrondissement>412</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Vendôme</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_413">
+				<geo:code_arrondissement>413</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Romorantin-Lanthenay</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_42">
+		<geo:code_departement>42</geo:code_departement>
+		<geo:nom xml:lang="fr">Loire</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_42218">
+		<geo:code_commune>42218</geo:code_commune>
+		<geo:nom xml:lang="fr">Saint-Étienne</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_421">
+				<geo:code_arrondissement>421</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Montbrison</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_422">
+				<geo:code_arrondissement>422</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Roanne</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_423">
+				<geo:code_arrondissement>423</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Saint-Étienne</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_43">
+		<geo:code_departement>43</geo:code_departement>
+		<geo:nom xml:lang="fr">Haute-Loire</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_43157">
+		<geo:code_commune>43157</geo:code_commune>
+		<geo:nom xml:lang="fr">Le Puy-en-Velay</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_431">
+				<geo:code_arrondissement>431</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Brioude</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_432">
+				<geo:code_arrondissement>432</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Le Puy-en-Velay</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_433">
+				<geo:code_arrondissement>433</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Yssingeaux</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_44">
+		<geo:code_departement>44</geo:code_departement>
+		<geo:nom xml:lang="fr">Loire-Atlantique</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_44109">
+		<geo:code_commune>44109</geo:code_commune>
+		<geo:nom xml:lang="fr">Nantes</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_441">
+				<geo:code_arrondissement>441</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Châteaubriant</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_442">
+				<geo:code_arrondissement>442</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Nantes</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_443">
+				<geo:code_arrondissement>443</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Saint-Nazaire</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_444">
+				<geo:code_arrondissement>444</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Ancenis</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_45">
+		<geo:code_departement>45</geo:code_departement>
+		<geo:nom xml:lang="fr">Loiret</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_45234">
+		<geo:code_commune>45234</geo:code_commune>
+		<geo:nom xml:lang="fr">Orléans</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_451">
+				<geo:code_arrondissement>451</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Montargis</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_452">
+				<geo:code_arrondissement>452</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Orléans</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_453">
+				<geo:code_arrondissement>453</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Pithiviers</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_46">
+		<geo:code_departement>46</geo:code_departement>
+		<geo:nom xml:lang="fr">Lot</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_46042">
+		<geo:code_commune>46042</geo:code_commune>
+		<geo:nom xml:lang="fr">Cahors</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_461">
+				<geo:code_arrondissement>461</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Cahors</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_462">
+				<geo:code_arrondissement>462</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Figeac</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_463">
+				<geo:code_arrondissement>463</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Gourdon</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_47">
+		<geo:code_departement>47</geo:code_departement>
+		<geo:nom xml:lang="fr">Lot-et-Garonne</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_47001">
+		<geo:code_commune>47001</geo:code_commune>
+		<geo:nom xml:lang="fr">Agen</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_471">
+				<geo:code_arrondissement>471</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Agen</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_472">
+				<geo:code_arrondissement>472</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Marmande</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_473">
+				<geo:code_arrondissement>473</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Villeneuve-sur-Lot</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_474">
+				<geo:code_arrondissement>474</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Nérac</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_48">
+		<geo:code_departement>48</geo:code_departement>
+		<geo:nom xml:lang="fr">Lozère</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_48095">
+		<geo:code_commune>48095</geo:code_commune>
+		<geo:nom xml:lang="fr">Mende</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_481">
+				<geo:code_arrondissement>481</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Florac</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_482">
+				<geo:code_arrondissement>482</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Mende</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_49">
+		<geo:code_departement>49</geo:code_departement>
+		<geo:nom xml:lang="fr">Maine-et-Loire</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_49007">
+		<geo:code_commune>49007</geo:code_commune>
+		<geo:nom xml:lang="fr">Angers</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_491">
+				<geo:code_arrondissement>491</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Angers</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_492">
+				<geo:code_arrondissement>492</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Cholet</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_493">
+				<geo:code_arrondissement>493</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Saumur</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_494">
+				<geo:code_arrondissement>494</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Segré</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_50">
+		<geo:code_departement>50</geo:code_departement>
+		<geo:nom xml:lang="fr">Manche</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_50502">
+		<geo:code_commune>50502</geo:code_commune>
+		<geo:nom xml:lang="fr">Saint-Lô</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_501">
+				<geo:code_arrondissement>501</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Avranches</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_502">
+				<geo:code_arrondissement>502</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Cherbourg</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_503">
+				<geo:code_arrondissement>503</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Coutances</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_504">
+				<geo:code_arrondissement>504</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Saint-Lô</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_51">
+		<geo:code_departement>51</geo:code_departement>
+		<geo:nom xml:lang="fr">Marne</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_51108">
+		<geo:code_commune>51108</geo:code_commune>
+		<geo:nom xml:lang="fr">Châlons-en-Champagne</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_511">
+				<geo:code_arrondissement>511</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Châlons-en-Champagne</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_512">
+				<geo:code_arrondissement>512</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Épernay</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_513">
+				<geo:code_arrondissement>513</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Reims</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_514">
+				<geo:code_arrondissement>514</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Vitry-le-François</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_515">
+				<geo:code_arrondissement>515</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Sainte-Menehould</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_52">
+		<geo:code_departement>52</geo:code_departement>
+		<geo:nom xml:lang="fr">Haute-Marne</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_52121">
+		<geo:code_commune>52121</geo:code_commune>
+		<geo:nom xml:lang="fr">Chaumont</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_521">
+				<geo:code_arrondissement>521</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Chaumont</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_522">
+				<geo:code_arrondissement>522</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Langres</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_523">
+				<geo:code_arrondissement>523</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Saint-Dizier</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_53">
+		<geo:code_departement>53</geo:code_departement>
+		<geo:nom xml:lang="fr">Mayenne</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_53130">
+		<geo:code_commune>53130</geo:code_commune>
+		<geo:nom xml:lang="fr">Laval</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_531">
+				<geo:code_arrondissement>531</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Château-Gontier</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_532">
+				<geo:code_arrondissement>532</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Laval</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_533">
+				<geo:code_arrondissement>533</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Mayenne</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_54">
+		<geo:code_departement>54</geo:code_departement>
+		<geo:nom xml:lang="fr">Meurthe-et-Moselle</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_54395">
+		<geo:code_commune>54395</geo:code_commune>
+		<geo:nom xml:lang="fr">Nancy</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_541">
+				<geo:code_arrondissement>541</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Briey</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_542">
+				<geo:code_arrondissement>542</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Lunéville</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_543">
+				<geo:code_arrondissement>543</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Nancy</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_544">
+				<geo:code_arrondissement>544</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Toul</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_55">
+		<geo:code_departement>55</geo:code_departement>
+		<geo:nom xml:lang="fr">Meuse</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_55029">
+		<geo:code_commune>55029</geo:code_commune>
+		<geo:nom xml:lang="fr">Bar-le-Duc</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_551">
+				<geo:code_arrondissement>551</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Bar-le-Duc</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_552">
+				<geo:code_arrondissement>552</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Commercy</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_553">
+				<geo:code_arrondissement>553</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Verdun</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_56">
+		<geo:code_departement>56</geo:code_departement>
+		<geo:nom xml:lang="fr">Morbihan</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_56260">
+		<geo:code_commune>56260</geo:code_commune>
+		<geo:nom xml:lang="fr">Vannes</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_561">
+				<geo:code_arrondissement>561</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Lorient</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_562">
+				<geo:code_arrondissement>562</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Pontivy</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_563">
+				<geo:code_arrondissement>563</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Vannes</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_57">
+		<geo:code_departement>57</geo:code_departement>
+		<geo:nom xml:lang="fr">Moselle</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_57463">
+		<geo:code_commune>57463</geo:code_commune>
+		<geo:nom xml:lang="fr">Metz</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_571">
+				<geo:code_arrondissement>571</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Boulay-Moselle</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_572">
+				<geo:code_arrondissement>572</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Château-Salins</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_573">
+				<geo:code_arrondissement>573</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Forbach</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_574">
+				<geo:code_arrondissement>574</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Metz-Campagne</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_575">
+				<geo:code_arrondissement>575</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Sarrebourg</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_576">
+				<geo:code_arrondissement>576</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Sarreguemines</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_577">
+				<geo:code_arrondissement>577</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Thionville-Est</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_578">
+				<geo:code_arrondissement>578</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Thionville-Ouest</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_579">
+				<geo:code_arrondissement>579</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Metz-Ville</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_58">
+		<geo:code_departement>58</geo:code_departement>
+		<geo:nom xml:lang="fr">Nièvre</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_58194">
+		<geo:code_commune>58194</geo:code_commune>
+		<geo:nom xml:lang="fr">Nevers</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_581">
+				<geo:code_arrondissement>581</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Château-Chinon (Ville)</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_582">
+				<geo:code_arrondissement>582</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Clamecy</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_583">
+				<geo:code_arrondissement>583</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Nevers</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_584">
+				<geo:code_arrondissement>584</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Cosne-Cours-sur-Loire</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_59">
+		<geo:code_departement>59</geo:code_departement>
+		<geo:nom xml:lang="fr">Nord</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_59350">
+		<geo:code_commune>59350</geo:code_commune>
+		<geo:nom xml:lang="fr">Lille</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_591">
+				<geo:code_arrondissement>591</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Avesnes-sur-Helpe</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_592">
+				<geo:code_arrondissement>592</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Cambrai</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_593">
+				<geo:code_arrondissement>593</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Douai</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_594">
+				<geo:code_arrondissement>594</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Dunkerque</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_595">
+				<geo:code_arrondissement>595</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Lille</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_596">
+				<geo:code_arrondissement>596</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Valenciennes</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_60">
+		<geo:code_departement>60</geo:code_departement>
+		<geo:nom xml:lang="fr">Oise</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_60057">
+		<geo:code_commune>60057</geo:code_commune>
+		<geo:nom xml:lang="fr">Beauvais</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_601">
+				<geo:code_arrondissement>601</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Beauvais</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_602">
+				<geo:code_arrondissement>602</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Clermont</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_603">
+				<geo:code_arrondissement>603</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Compiègne</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_604">
+				<geo:code_arrondissement>604</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Senlis</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_61">
+		<geo:code_departement>61</geo:code_departement>
+		<geo:nom xml:lang="fr">Orne</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_61001">
+		<geo:code_commune>61001</geo:code_commune>
+		<geo:nom xml:lang="fr">Alençon</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_611">
+				<geo:code_arrondissement>611</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Alençon</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_612">
+				<geo:code_arrondissement>612</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Argentan</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_613">
+				<geo:code_arrondissement>613</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Mortagne-au-Perche</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_62">
+		<geo:code_departement>62</geo:code_departement>
+		<geo:nom xml:lang="fr">Pas-de-Calais</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_62041">
+		<geo:code_commune>62041</geo:code_commune>
+		<geo:nom xml:lang="fr">Arras</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_621">
+				<geo:code_arrondissement>621</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Arras</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_622">
+				<geo:code_arrondissement>622</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Béthune</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_623">
+				<geo:code_arrondissement>623</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Boulogne-sur-Mer</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_624">
+				<geo:code_arrondissement>624</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Montreuil</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_625">
+				<geo:code_arrondissement>625</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Saint-Omer</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_626">
+				<geo:code_arrondissement>626</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Calais</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_627">
+				<geo:code_arrondissement>627</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Lens</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_63">
+		<geo:code_departement>63</geo:code_departement>
+		<geo:nom xml:lang="fr">Puy-de-Dôme</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_63113">
+		<geo:code_commune>63113</geo:code_commune>
+		<geo:nom xml:lang="fr">Clermont-Ferrand</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_631">
+				<geo:code_arrondissement>631</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Ambert</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_632">
+				<geo:code_arrondissement>632</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Clermont-Ferrand</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_633">
+				<geo:code_arrondissement>633</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Issoire</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_634">
+				<geo:code_arrondissement>634</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Riom</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_635">
+				<geo:code_arrondissement>635</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Thiers</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_64">
+		<geo:code_departement>64</geo:code_departement>
+		<geo:nom xml:lang="fr">Pyrénées-Atlantiques</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_64445">
+		<geo:code_commune>64445</geo:code_commune>
+		<geo:nom xml:lang="fr">Pau</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_641">
+				<geo:code_arrondissement>641</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Bayonne</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_642">
+				<geo:code_arrondissement>642</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Oloron-Sainte-Marie</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_643">
+				<geo:code_arrondissement>643</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Pau</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_65">
+		<geo:code_departement>65</geo:code_departement>
+		<geo:nom xml:lang="fr">Hautes-Pyrénées</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_65440">
+		<geo:code_commune>65440</geo:code_commune>
+		<geo:nom xml:lang="fr">Tarbes</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_651">
+				<geo:code_arrondissement>651</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Argelès-Gazost</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_652">
+				<geo:code_arrondissement>652</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Bagnères-de-Bigorre</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_653">
+				<geo:code_arrondissement>653</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Tarbes</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_66">
+		<geo:code_departement>66</geo:code_departement>
+		<geo:nom xml:lang="fr">Pyrénées-Orientales</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_66136">
+		<geo:code_commune>66136</geo:code_commune>
+		<geo:nom xml:lang="fr">Perpignan</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_661">
+				<geo:code_arrondissement>661</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Céret</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_662">
+				<geo:code_arrondissement>662</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Perpignan</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_663">
+				<geo:code_arrondissement>663</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Prades</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_67">
+		<geo:code_departement>67</geo:code_departement>
+		<geo:nom xml:lang="fr">Bas-Rhin</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_67482">
+		<geo:code_commune>67482</geo:code_commune>
+		<geo:nom xml:lang="fr">Strasbourg</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_672">
+				<geo:code_arrondissement>672</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Haguenau</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_673">
+				<geo:code_arrondissement>673</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Molsheim</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_674">
+				<geo:code_arrondissement>674</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Saverne</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_675">
+				<geo:code_arrondissement>675</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Sélestat-Erstein</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_676">
+				<geo:code_arrondissement>676</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Strasbourg-Campagne</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_677">
+				<geo:code_arrondissement>677</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Wissembourg</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_678">
+				<geo:code_arrondissement>678</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Strasbourg-Ville</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_68">
+		<geo:code_departement>68</geo:code_departement>
+		<geo:nom xml:lang="fr">Haut-Rhin</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_68066">
+		<geo:code_commune>68066</geo:code_commune>
+		<geo:nom xml:lang="fr">Colmar</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_681">
+				<geo:code_arrondissement>681</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Altkirch</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_682">
+				<geo:code_arrondissement>682</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Colmar</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_683">
+				<geo:code_arrondissement>683</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Guebwiller</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_684">
+				<geo:code_arrondissement>684</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Mulhouse</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_685">
+				<geo:code_arrondissement>685</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Ribeauvillé</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_686">
+				<geo:code_arrondissement>686</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Thann</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_69">
+		<geo:code_departement>69</geo:code_departement>
+		<geo:nom xml:lang="fr">Rhône</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_69123">
+		<geo:code_commune>69123</geo:code_commune>
+		<geo:nom xml:lang="fr">Lyon</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_691">
+				<geo:code_arrondissement>691</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Lyon</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_692">
+				<geo:code_arrondissement>692</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Villefranche-sur-Saône</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_70">
+		<geo:code_departement>70</geo:code_departement>
+		<geo:nom xml:lang="fr">Haute-Saône</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_70550">
+		<geo:code_commune>70550</geo:code_commune>
+		<geo:nom xml:lang="fr">Vesoul</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_701">
+				<geo:code_arrondissement>701</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Lure</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_702">
+				<geo:code_arrondissement>702</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Vesoul</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_71">
+		<geo:code_departement>71</geo:code_departement>
+		<geo:nom xml:lang="fr">Saône-et-Loire</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_71270">
+		<geo:code_commune>71270</geo:code_commune>
+		<geo:nom xml:lang="fr">Mâcon</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_711">
+				<geo:code_arrondissement>711</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Autun</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_712">
+				<geo:code_arrondissement>712</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Chalon-sur-Saône</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_713">
+				<geo:code_arrondissement>713</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Charolles</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_714">
+				<geo:code_arrondissement>714</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Louhans</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_715">
+				<geo:code_arrondissement>715</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Mâcon</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_72">
+		<geo:code_departement>72</geo:code_departement>
+		<geo:nom xml:lang="fr">Sarthe</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_72181">
+		<geo:code_commune>72181</geo:code_commune>
+		<geo:nom xml:lang="fr">Le Mans</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_721">
+				<geo:code_arrondissement>721</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">La Flèche</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_722">
+				<geo:code_arrondissement>722</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Mamers</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_723">
+				<geo:code_arrondissement>723</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Le Mans</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_73">
+		<geo:code_departement>73</geo:code_departement>
+		<geo:nom xml:lang="fr">Savoie</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_73065">
+		<geo:code_commune>73065</geo:code_commune>
+		<geo:nom xml:lang="fr">Chambéry</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_731">
+				<geo:code_arrondissement>731</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Albertville</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_732">
+				<geo:code_arrondissement>732</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Chambéry</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_733">
+				<geo:code_arrondissement>733</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Saint-Jean-de-Maurienne</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_74">
+		<geo:code_departement>74</geo:code_departement>
+		<geo:nom xml:lang="fr">Haute-Savoie</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_74010">
+		<geo:code_commune>74010</geo:code_commune>
+		<geo:nom xml:lang="fr">Annecy</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_741">
+				<geo:code_arrondissement>741</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Annecy</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_742">
+				<geo:code_arrondissement>742</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Bonneville</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_743">
+				<geo:code_arrondissement>743</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Saint-Julien-en-Genevois</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_744">
+				<geo:code_arrondissement>744</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Thonon-les-Bains</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_75">
+		<geo:code_departement>75</geo:code_departement>
+		<geo:nom xml:lang="fr">Paris</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_75056">
+		<geo:code_commune>75056</geo:code_commune>
+		<geo:nom xml:lang="fr">Paris</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_751">
+				<geo:code_arrondissement>751</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Paris</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_76">
+		<geo:code_departement>76</geo:code_departement>
+		<geo:nom xml:lang="fr">Seine-Maritime</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_76540">
+		<geo:code_commune>76540</geo:code_commune>
+		<geo:nom xml:lang="fr">Rouen</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_761">
+				<geo:code_arrondissement>761</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Dieppe</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_762">
+				<geo:code_arrondissement>762</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Le Havre</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_763">
+				<geo:code_arrondissement>763</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Rouen</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_77">
+		<geo:code_departement>77</geo:code_departement>
+		<geo:nom xml:lang="fr">Seine-et-Marne</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_77288">
+		<geo:code_commune>77288</geo:code_commune>
+		<geo:nom xml:lang="fr">Melun</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_771">
+				<geo:code_arrondissement>771</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Meaux</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_772">
+				<geo:code_arrondissement>772</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Melun</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_773">
+				<geo:code_arrondissement>773</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Provins</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_774">
+				<geo:code_arrondissement>774</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Fontainebleau</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_775">
+				<geo:code_arrondissement>775</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Torcy</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_78">
+		<geo:code_departement>78</geo:code_departement>
+		<geo:nom xml:lang="fr">Yvelines</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_78646">
+		<geo:code_commune>78646</geo:code_commune>
+		<geo:nom xml:lang="fr">Versailles</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_781">
+				<geo:code_arrondissement>781</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Mantes-la-Jolie</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_782">
+				<geo:code_arrondissement>782</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Rambouillet</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_783">
+				<geo:code_arrondissement>783</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Saint-Germain-en-Laye</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_784">
+				<geo:code_arrondissement>784</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Versailles</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_79">
+		<geo:code_departement>79</geo:code_departement>
+		<geo:nom xml:lang="fr">Deux-Sèvres</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_79191">
+		<geo:code_commune>79191</geo:code_commune>
+		<geo:nom xml:lang="fr">Niort</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_791">
+				<geo:code_arrondissement>791</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Bressuire</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_792">
+				<geo:code_arrondissement>792</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Niort</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_793">
+				<geo:code_arrondissement>793</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Parthenay</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_80">
+		<geo:code_departement>80</geo:code_departement>
+		<geo:nom xml:lang="fr">Somme</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_80021">
+		<geo:code_commune>80021</geo:code_commune>
+		<geo:nom xml:lang="fr">Amiens</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_801">
+				<geo:code_arrondissement>801</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Abbeville</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_802">
+				<geo:code_arrondissement>802</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Amiens</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_803">
+				<geo:code_arrondissement>803</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Montdidier</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_804">
+				<geo:code_arrondissement>804</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Péronne</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_81">
+		<geo:code_departement>81</geo:code_departement>
+		<geo:nom xml:lang="fr">Tarn</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_81004">
+		<geo:code_commune>81004</geo:code_commune>
+		<geo:nom xml:lang="fr">Albi</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_811">
+				<geo:code_arrondissement>811</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Albi</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_812">
+				<geo:code_arrondissement>812</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Castres</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_82">
+		<geo:code_departement>82</geo:code_departement>
+		<geo:nom xml:lang="fr">Tarn-et-Garonne</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_82121">
+		<geo:code_commune>82121</geo:code_commune>
+		<geo:nom xml:lang="fr">Montauban</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_821">
+				<geo:code_arrondissement>821</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Castelsarrasin</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_822">
+				<geo:code_arrondissement>822</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Montauban</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_83">
+		<geo:code_departement>83</geo:code_departement>
+		<geo:nom xml:lang="fr">Var</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_83137">
+		<geo:code_commune>83137</geo:code_commune>
+		<geo:nom xml:lang="fr">Toulon</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_831">
+				<geo:code_arrondissement>831</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Draguignan</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_832">
+				<geo:code_arrondissement>832</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Toulon</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_833">
+				<geo:code_arrondissement>833</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Brignoles</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_84">
+		<geo:code_departement>84</geo:code_departement>
+		<geo:nom xml:lang="fr">Vaucluse</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_84007">
+		<geo:code_commune>84007</geo:code_commune>
+		<geo:nom xml:lang="fr">Avignon</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_841">
+				<geo:code_arrondissement>841</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Apt</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_842">
+				<geo:code_arrondissement>842</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Avignon</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_843">
+				<geo:code_arrondissement>843</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Carpentras</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_85">
+		<geo:code_departement>85</geo:code_departement>
+		<geo:nom xml:lang="fr">Vendée</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_85191">
+		<geo:code_commune>85191</geo:code_commune>
+		<geo:nom xml:lang="fr">La Roche-sur-Yon</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_851">
+				<geo:code_arrondissement>851</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Fontenay-le-Comte</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_852">
+				<geo:code_arrondissement>852</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">La Roche-sur-Yon</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_853">
+				<geo:code_arrondissement>853</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Les Sables-d'Olonne</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_86">
+		<geo:code_departement>86</geo:code_departement>
+		<geo:nom xml:lang="fr">Vienne</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_86194">
+		<geo:code_commune>86194</geo:code_commune>
+		<geo:nom xml:lang="fr">Poitiers</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_861">
+				<geo:code_arrondissement>861</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Châtellerault</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_862">
+				<geo:code_arrondissement>862</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Montmorillon</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_863">
+				<geo:code_arrondissement>863</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Poitiers</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_87">
+		<geo:code_departement>87</geo:code_departement>
+		<geo:nom xml:lang="fr">Haute-Vienne</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_87085">
+		<geo:code_commune>87085</geo:code_commune>
+		<geo:nom xml:lang="fr">Limoges</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_871">
+				<geo:code_arrondissement>871</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Bellac</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_872">
+				<geo:code_arrondissement>872</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Limoges</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_873">
+				<geo:code_arrondissement>873</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Rochechouart</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_88">
+		<geo:code_departement>88</geo:code_departement>
+		<geo:nom xml:lang="fr">Vosges</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_88160">
+		<geo:code_commune>88160</geo:code_commune>
+		<geo:nom xml:lang="fr">Épinal</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_881">
+				<geo:code_arrondissement>881</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Épinal</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_882">
+				<geo:code_arrondissement>882</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Neufchâteau</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_883">
+				<geo:code_arrondissement>883</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Saint-Dié-des-Vosges</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_89">
+		<geo:code_departement>89</geo:code_departement>
+		<geo:nom xml:lang="fr">Yonne</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_89024">
+		<geo:code_commune>89024</geo:code_commune>
+		<geo:nom xml:lang="fr">Auxerre</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_891">
+				<geo:code_arrondissement>891</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Auxerre</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_892">
+				<geo:code_arrondissement>892</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Avallon</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_893">
+				<geo:code_arrondissement>893</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Sens</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_90">
+		<geo:code_departement>90</geo:code_departement>
+		<geo:nom xml:lang="fr">Territoire de Belfort</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_90010">
+		<geo:code_commune>90010</geo:code_commune>
+		<geo:nom xml:lang="fr">Belfort</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_901">
+				<geo:code_arrondissement>901</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Belfort</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_91">
+		<geo:code_departement>91</geo:code_departement>
+		<geo:nom xml:lang="fr">Essonne</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_91228">
+		<geo:code_commune>91228</geo:code_commune>
+		<geo:nom xml:lang="fr">Évry</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_911">
+				<geo:code_arrondissement>911</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Étampes</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_912">
+				<geo:code_arrondissement>912</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Évry</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_913">
+				<geo:code_arrondissement>913</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Palaiseau</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_92">
+		<geo:code_departement>92</geo:code_departement>
+		<geo:nom xml:lang="fr">Hauts-de-Seine</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_92050">
+		<geo:code_commune>92050</geo:code_commune>
+		<geo:nom xml:lang="fr">Nanterre</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_921">
+				<geo:code_arrondissement>921</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Antony</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_922">
+				<geo:code_arrondissement>922</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Nanterre</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_923">
+				<geo:code_arrondissement>923</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Boulogne-Billancourt</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_93">
+		<geo:code_departement>93</geo:code_departement>
+		<geo:nom xml:lang="fr">Seine-Saint-Denis</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_93008">
+		<geo:code_commune>93008</geo:code_commune>
+		<geo:nom xml:lang="fr">Bobigny</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_931">
+				<geo:code_arrondissement>931</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Bobigny</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_932">
+				<geo:code_arrondissement>932</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Le Raincy</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_933">
+				<geo:code_arrondissement>933</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Saint-Denis</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_94">
+		<geo:code_departement>94</geo:code_departement>
+		<geo:nom xml:lang="fr">Val-de-Marne</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_94028">
+		<geo:code_commune>94028</geo:code_commune>
+		<geo:nom xml:lang="fr">Créteil</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_941">
+				<geo:code_arrondissement>941</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Créteil</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_942">
+				<geo:code_arrondissement>942</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Nogent-sur-Marne</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_943">
+				<geo:code_arrondissement>943</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">L'Haÿ-les-Roses</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_95">
+		<geo:code_departement>95</geo:code_departement>
+		<geo:nom xml:lang="fr">Val-d'Oise</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_95500">
+		<geo:code_commune>95500</geo:code_commune>
+		<geo:nom xml:lang="fr">Pontoise</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_951">
+				<geo:code_arrondissement>951</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Argenteuil</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_952">
+				<geo:code_arrondissement>952</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Sarcelles</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_953">
+				<geo:code_arrondissement>953</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Pontoise</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_971">
+		<geo:code_departement>971</geo:code_departement>
+		<geo:nom xml:lang="fr">Guadeloupe</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_97105">
+		<geo:code_commune>97105</geo:code_commune>
+		<geo:nom xml:lang="fr">Basse-Terre</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_9711">
+				<geo:code_arrondissement>9711</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Basse-Terre</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_9712">
+				<geo:code_arrondissement>9712</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Pointe-à-Pitre</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_972">
+		<geo:code_departement>972</geo:code_departement>
+		<geo:nom xml:lang="fr">Martinique</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_97209">
+		<geo:code_commune>97209</geo:code_commune>
+		<geo:nom xml:lang="fr">Fort-de-France</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_9721">
+				<geo:code_arrondissement>9721</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Fort-de-France</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_9722">
+				<geo:code_arrondissement>9722</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">La Trinité</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_9723">
+				<geo:code_arrondissement>9723</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Le Marin</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_9724">
+				<geo:code_arrondissement>9724</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Saint-Pierre</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_973">
+		<geo:code_departement>973</geo:code_departement>
+		<geo:nom xml:lang="fr">Guyane</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_97302">
+		<geo:code_commune>97302</geo:code_commune>
+		<geo:nom xml:lang="fr">Cayenne</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_9731">
+				<geo:code_arrondissement>9731</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Cayenne</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_9732">
+				<geo:code_arrondissement>9732</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Saint-Laurent-du-Maroni</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+	<geo:Departement rdf:about="DEP_974">
+		<geo:code_departement>974</geo:code_departement>
+		<geo:nom xml:lang="fr">La Réunion</geo:nom>
+		<geo:chef-lieu>
+		<geo:Commune rdf:about="COM_97411">
+		<geo:code_commune>97411</geo:code_commune>
+		<geo:nom xml:lang="fr">Saint-Denis</geo:nom>
+		</geo:Commune>
+		</geo:chef-lieu>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_9741">
+				<geo:code_arrondissement>9741</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Saint-Denis</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_9742">
+				<geo:code_arrondissement>9742</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Saint-Pierre</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_9743">
+				<geo:code_arrondissement>9743</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Saint-Benoît</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+		<geo:subdivision>
+			<geo:Arrondissement rdf:about="ARR_9744">
+				<geo:code_arrondissement>9744</geo:code_arrondissement>
+				<geo:nom xml:lang="fr">Saint-Paul</geo:nom>
+			</geo:Arrondissement>
+		</geo:subdivision>
+	</geo:Departement>
+
+</rdf:RDF>

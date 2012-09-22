@@ -1,13 +1,13 @@
 Title: StringToURI Readme
 Author: Thibaud Colas
-Date: 15/08/12
+Date: 21/09/12
 
 # StringToURI Readme #
 
 ## tl;dr ##
 
 This module is an interface for [StringToURI]("http://stringtouri.assembla.me/").  
-Version 0.9
+Version 1.0
 
 ## What is StringToURI ##
 
@@ -43,6 +43,29 @@ Let's find a reference dataset which contains the entity Acapulco.
 We can compare the two predicates `<givenDataset:takesPlaceIn>` and `<referenceDataset:name>` to obtain :
 
 	<givenDataset:AwesomeMusicFestival> . <givenDataset:takesPlaceIn> . <referenceDataset:Acapulco>
+
+------------------------------------------------------------------------------
+
+### A real example with real data ###
+
+Provided with StringToURI's source code are two RDFXML files:
+
+- insee-departements-2011.rdf contains data from the french statistics institute about french departments.
+- extrait-passim.rdf is a subset of a french dataset about transport companies.
+
+Those two datasets can be interlinked with StringToURI: PASSIM's transport services each have a passim:department predicate which contains the name of their main department. They can be replaced by their department's URI in the INSEE dataset.
+
+StringToURI's parameters:
+
+- Datasets
+-- To be modified: extrait-passim.rdf
+-- To use as reference: insee-departements-2011.rdf
+- Classes
+-- None on the PASSIM side
+-- http://rdf.insee.fr/geo/Region
+- Predicates
+-- http://data.lirmm.fr/ontologies/passim#department
+-- http://rdf.insee.fr/geo/nom
 	
 ## Future development ##
 
@@ -52,13 +75,9 @@ We can compare the two predicates `<givenDataset:takesPlaceIn>` and `<referenceD
 - Filter predicates to keep only those of the chosen class
 - Form field precompletion via GET
 - Prefix management
-- Use http://jqueryui.com/demos/autocomplete/#combobox
-- Add a help page on the Datalift wiki ?
-- Add an example to work with ?
-- Add unit tests ?
 
 ## External resources ##
 
-* StringToURI is made with the Sesame API and repositories.
+* StringToURI works with the Sesame API and repositories.
 * [StringToURI documentation]("http://stringtouri.assembla.me/")
 * [StringToURI interface design and development]("http://thibweb.github.com/linked-lifted/")
