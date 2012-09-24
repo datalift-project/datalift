@@ -7,6 +7,8 @@
 
 package org.datalift.stringtouri;
 
+import java.io.IOException;
+import java.net.URI;
 import java.util.Iterator;
 import java.util.LinkedList;
 
@@ -14,7 +16,9 @@ import org.datalift.fwk.Configuration;
 import org.datalift.fwk.i18n.PreferredLocales;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.Project;
+import org.datalift.fwk.project.ProjectManager;
 import org.datalift.fwk.project.Source;
+import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.rdf.Repository;
 import org.openrdf.query.MalformedQueryException;
 import org.openrdf.query.QueryEvaluationException;
@@ -330,5 +334,22 @@ public abstract class InterlinkingModel {
     // Launcher management.
     //-------------------------------------------------------------------------
 
+    /**
+     * Creates a new transformed RDF source and attaches it to a project.
+     * @param  p        the owning project.
+     * @param  parent   the parent source object.
+     * @param  name     the new source name.
+     * @param  uri      the new source URI.
+     *
+     * @return the newly created transformed RDF source.
+     * @throws IOException if any error occurred creating the source.
+     */
+    protected void addResultSource(Project p, Source parent, String name, URI uri) throws IOException {
+    	ProjectManager pm = Configuration.getDefault().getBean(ProjectManager.class);
+        pm.newTransformedRdfSource(p, uri, name, null, uri, parent);
+        pm.saveProject(p);
+    }
+    
+    
 }
 

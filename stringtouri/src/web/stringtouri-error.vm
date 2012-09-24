@@ -20,10 +20,6 @@
 		<div class="error-display">
 			<h4>#i18n('error.title')</h4>
 
-			## Temporary dev. link.
-			## <img src="http://localhost:1337/static/images/sonic-robotnic-error.png" alt="Sonic" width="363" height="87"/>
-			<img src="${moduleUri}/static/images/sonic-robotnic-error.png" alt="Sonic" width="363" height="87"/>
-
 			<ul class="ui-widget-content ui-state-error ui-corner-all">
 			  	#foreach( $elt in $errormessages ) 
 			  		<li><span class="ui-icon ui-icon-alert"></span><span class="error-label">#i18n('error.label') </span> $!esc.html($elt)</li> 
