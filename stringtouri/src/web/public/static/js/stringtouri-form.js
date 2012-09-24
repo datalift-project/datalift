@@ -6,32 +6,139 @@
  * @author tcolas
  */
 
-$(document).ready(function() {
+(function($) {
+	$.widget("ui.combobox", {
+		_create: function() {
+			var input,
+				self = this,
+				select = this.element.hide(),
+				selected = select.children(":selected"),
+				value = selected.val() ? selected.text() : "",
+				wrapper = this.wrapper = $( "<span>")
+					.addClass("ui-combobox")
+					.css("width","100%")
+					.insertAfter(select);
+
+			input = $("<input>")
+				.appendTo(wrapper)
+				.val(value)
+				.attr("name", select.attr("name"))
+				.attr("id", select.attr("id"))
+				.attr("tabindex", select.attr("tabindex"))
+				.attr("placeholder", select.children(":first-child").val())
+				.addClass("ui-state-default ui-combobox-input")
+				.autocomplete({
+					delay: 0,
+					minLength: 0,
+					source: function(request, response) {
+						var matcher = new RegExp($.ui.autocomplete.escapeRegex(request.term), "i");
+						response(select.children("option").map(function() {
+							var text = $(this).text();
+							if (this.value && (!request.term || matcher.test(text)))
+								return {
+									label: text.replace(
+										new RegExp(
+											"(?![^&;]+;)(?!<[^<>]*)(" +
+											$.ui.autocomplete.escapeRegex(request.term) +
+											")(?![^<>]*>)(?![^&;]+;)", "gi"
+										), "<strong>$1</strong>"),
+									value: text,
+									option: this
+								};
+						}));
+					},
+					select: function(event, ui) {
+						ui.item.option.selected = true;
+						self._trigger("selected", event, {
+							item: ui.item.option
+						});
+					},
+					change: function(event, ui) {
+						if (!ui.item) {
+							var matcher = new RegExp("^" + $.ui.autocomplete.escapeRegex($(this).val()) + "$", "i"),
+								valid = false;
+							select.children("option").each(function() {
+								if ($(this).text().match(matcher)) {
+									this.selected = valid = true;
+									return false;
+								}
+							});
+						}
+					}
+				})
+				.addClass("ui-widget ui-widget-content ui-corner-left")
+				.css({
+					background : "none white",
+					color : "#333",
+					"font-weight" : "normal",
+					});
+
+			input.data("autocomplete")._renderItem = function(ul, item) {
+				return $("<li></li>")
+					.data("item.autocomplete", item)
+					.append("<a>" + item.label + "</a>")
+					.appendTo(ul);
+			};
+
+			$("<a>")
+				.attr("tabIndex", -1)
+				.attr("title", "Show All Items")
+				.appendTo(wrapper)
+				.css({background : "#fff", "font-size": "80%"})
+				.button({ label : '&#9660;' })
+				.removeClass("ui-corner-all")
+				.addClass("ui-corner-right ui-combobox-toggle")
+				.click(function() {
+					// close if already visible
+					if (input.autocomplete("widget").is(":visible")) {
+						input.autocomplete("close");
+						return;
+					}
+
+					// work around a bug (likely same cause as #5265)
+					$(this).blur();
+
+					// pass empty string as value to search for, displaying all results
+					input.autocomplete("search", "");
+					input.focus();
+
+					select.attr("name", "");
+					select.attr("id", "");
+					select.attr("tabindex", -10)
+				});
+		},
+
+		destroy: function() {
+			this.wrapper.remove();
+			this.element.show();
+			$.Widget.prototype.destroy.call(this);
+		}
+	});
+})(jQuery);
+
+$(function() {
+
+
 
 	$(".hidden-field-js").hide();
 
-	$("#convert-submit, #convert-preview, #convert-run, #convert-help, #convert-cancel").button();
+	$("#convert-submit, #convert-help, #convert-cancel, input:radio").button();
 	$(".multiple-choices").buttonset();
+	$("select").combobox();
 
-	var $ourds = $("#targetdataset");
-	var $theirds = $("#sourcedataset");
-	var $ourclass = $("#targetclass");
-	var $theirclass = $("#sourceclass");
-	var $ourpredicate = $("#targetpredicate");
-	var $theirpredicate = $("#sourcepredicate");
+	var $ourds = $(".target-js .dataset-js input");
+	var $theirds = $(".source-js .dataset-js input");
+	var $ourclass = $(".target-js .class-js input");
+	var $theirclass = $(".source-js .class-js input");
+	var $ourpredicate = $(".target-js .predicate-js input");
+	var $theirpredicate = $(".source-js .predicate-js input");
 
-	$ourds.autocomplete({source: datasets, minLength: 0, delay: 0});
-	$ourds.blur(function() {validateMandatory($ourds, datasets);});
-	$theirds.autocomplete({source: datasets, minLength: 0, delay: 0});
-	$theirds.blur(function() {validateMandatory($theirds, datasets);});
-	$ourclass.autocomplete({source: ourclasses, minLength: 0, delay: 200});
-	$ourclass.blur(function() {validateOptional($ourclass, ourclasses);});
-	$theirclass.autocomplete({source: theirclasses, minLength: 0, delay: 200});
-	$theirclass.blur(function() {validateOptional($theirclass, theirclasses);});
-	$ourpredicate.autocomplete({source: ourpredicates, minLength: 0, delay: 300});
-	$ourpredicate.blur(function() {validateMandatory($ourpredicate, ourpredicates);});
-	$theirpredicate.autocomplete({source: theirpredicates, minLength: 0, delay: 300});
-	$theirpredicate.blur(function() {validateMandatory($theirpredicate, theirpredicates);});
+	$ourds.blur(function() {window.setTimeout(validateMandatory, 100, $ourds, datasets);});
+	$theirds.blur(function() {window.setTimeout(validateMandatory, 100, $theirds, datasets);});
+	$ourclass.blur(function() {window.setTimeout(validateOptional, 100, $ourclass, ourclasses);});
+	$theirclass.blur(function() {window.setTimeout(validateOptional, 100, $theirclass, theirclasses);});
+	$ourpredicate.blur(function() {window.setTimeout(validateMandatory, 100, $ourpredicate, ourpredicates);});
+	$theirpredicate.blur(function() {window.setTimeout(validateMandatory, 100, $theirpredicate, theirpredicates);});
 
 	/*
 	* Applies the ui-state-error style to the container of {@param field}.
@@ -39,8 +146,8 @@ $(document).ready(function() {
 	*/
 	function errorState(field) {
 		field.removeClass("ui-state-success");
-		field.parent().addClass("ui-state-error");
-		field.next("p").contents().first()
+		field.parent().parent().addClass("ui-state-error");
+		field.parent().next(".info").contents().first()
 			.removeClass("ui-icon-help ui-icon-check")
 			.addClass("ui-icon-alert")
 			.show();
@@ -51,9 +158,9 @@ $(document).ready(function() {
 	* @param {object} field The DOM element which is correct.
 	*/
 	function successState(field) {
-		field.parent().removeClass("ui-state-error");
+		field.parent().parent().removeClass("ui-state-error");
 		field.addClass("ui-state-success");
-		field.next("p").contents().first()
+		field.parent().next(".info").contents().first()
 			.removeClass("ui-icon-help ui-icon-alert")
 			.addClass("ui-icon-check")
 			.show();
@@ -65,8 +172,8 @@ $(document).ready(function() {
 	*/
 	function defaultState(field) {
 		field.removeClass("ui-state-success");
-		field.parent().removeClass("ui-state-error");
-		field.next("p.info").contents().first()
+		field.parent().parent().removeClass("ui-state-error");
+		field.parent().next(".info").contents().first()
 			.removeClass("ui-icon-help ui-icon-alert ui-icon-check")
 			.hide();
 	}
@@ -142,13 +249,18 @@ $(document).ready(function() {
 		return ret;
 	}
 
-	$("#convert-help").click(function () {
-		$('.help-js').toggle();
+	$("#convert-help").click(function (event) {
+		$('.help-js').slideToggle(50);
+		event.preventDefault();
 	});
 
 	$("#linkage-form").submit(function(){
-		var ok = validateAll() && ($("input:radio[name=update]:checked").val() === "false" || confirm(confirmationMessage));
-		
+		var update = $("input:radio[name=update]:checked").val();
+		var ok = validateAll()
+					&& (update === "preview"
+					|| (update === "new" && !isEmpty($("#newpredicate").val()))
+					|| confirm(confirmationMessage));
+
 		if (ok) {
 			// To avoid forms being sent multiple times.
 			$("#convert-submit").attr("disabled", true);
