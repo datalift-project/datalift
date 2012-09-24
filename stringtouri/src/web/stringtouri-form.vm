@@ -9,8 +9,8 @@
 	<title>#i18n('stringtouri.title') - Datalift</title>
 	#css_links
 	## Temporary link for dev. purposes.
-	## <link rel="stylesheet" type="text/css" href="http://localhost:1337/static/css/stringtouri-interface.css"/>
-	<link rel="stylesheet" type="text/css" href="${moduleUri}/static/css/stringtouri-interface.css"/>
+	<link rel="stylesheet" type="text/css" href="http://localhost:1337/static/css/stringtouri-interface.css"/>
+	## <link rel="stylesheet" type="text/css" href="${moduleUri}/static/css/stringtouri-interface.css"/>
 </head>
 <body>
 	#banner
@@ -177,7 +177,7 @@
 
 	</script>
 	## Lien temporaire pour le développement.
-	## <script type="text/javascript" src="http://localhost:1337/static/js/stringtouri-form.js"></script>
-	<script language="javascript" src="${moduleUri}/static/js/stringtouri-form.js"></script>
+	<script type="text/javascript" src="http://localhost:1337/static/js/stringtouri-form.js"></script>
+	## <script language="javascript" src="${moduleUri}/static/js/stringtouri-form.js"></script>
 </body>
 </html>
