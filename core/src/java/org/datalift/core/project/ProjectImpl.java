@@ -136,7 +136,7 @@ public class ProjectImpl extends BaseRdfEntity implements Project
     private URI execution;
 
     @RdfProperty("void:vocabulary")
-    @OneToMany(fetch = FetchType.LAZY, cascade = { CascadeType.ALL })
+    @OneToMany(fetch = FetchType.EAGER, cascade = { CascadeType.ALL })
     private Collection<Ontology> ontologies = new LinkedList<Ontology>();
 
     //-------------------------------------------------------------------------
