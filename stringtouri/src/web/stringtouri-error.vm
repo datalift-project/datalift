@@ -8,7 +8,7 @@
 <head>
 	<title>#i18n('stringtouri.title') - Datalift</title>
 	#css_links
-	## Temporary link for dev. purposes.
+	## Temporary dev. link.
 	## <link rel="stylesheet" type="text/css" href="http://localhost:1337/static/css/stringtouri-interface.css"/>
 	<link rel="stylesheet" type="text/css" href="${moduleUri}/static/css/stringtouri-interface.css"/>
 </head>
@@ -19,10 +19,6 @@
 
 		<div class="error-display">
 			<h4>#i18n('error.title')</h4>
-
-			## Temporary link for dev. purposes.
-			## <img src="http://localhost:1337/static/images/sonic-robotnic-error.png" alt="Sonic" width="363" height="87"/>
-			<img src="${moduleUri}/static/images/sonic-robotnic-error.png" alt="Sonic" width="363" height="87"/>
 
 			<ul class="ui-widget-content ui-state-error ui-corner-all">
 			  	#foreach( $elt in $errormessages ) 
@@ -38,7 +34,7 @@
 	</div>
 	#footer
 	#script_links
-	## Lien temporaire pour le développement.
+	## Temporary dev. link.
 	## <script type="text/javascript" src="http://localhost:1337/static/js/stringtouri-error.js"></script>
 	<script language="javascript" src="${moduleUri}/static/js/stringtouri-error.js"></script>
 </body>

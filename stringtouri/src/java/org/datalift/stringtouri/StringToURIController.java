@@ -187,7 +187,7 @@ public class StringToURIController extends InterlinkingController
         targetPredicate = targetPredicate.trim();
         sourceClass = sourceClass.trim();
         targetClass = targetClass.trim();
-        boolean modifyPermanently = Boolean.parseBoolean(update.trim());
+        update = update.trim();
         
         String view;
         HashMap<String, Object> args = new HashMap<String, Object>();
@@ -204,7 +204,7 @@ public class StringToURIController extends InterlinkingController
     	    args.put("sourceclass", sourceClass);
     	    args.put("targetclass", targetClass);
     	    // StringToURI is launched if and only if our values are all valid.
-            args.put("newtriples", model.launchStringToURI(proj, sourceDataset, targetDataset, sourceClass, targetClass, sourcePredicate, targetPredicate, modifyPermanently, false));
+            args.put("newtriples", model.launchStringToURI(proj, sourceDataset, targetDataset, sourceClass, targetClass, sourcePredicate, targetPredicate, update, false));
             view = "stringtouri-success.vm";
         }
         else {

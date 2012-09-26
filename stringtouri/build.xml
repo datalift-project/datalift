@@ -92,7 +92,7 @@
    -->
 
   <property name="app.name"             value="stringtouri"/>
-  <property name="app.version"          value="0.9"/>
+  <property name="app.version"          value="1.0"/>
   <property name="app.path"             value="/${app.name}"/>
   <property name="app.long.name"        value="StringToURI module for DataLift"/>
 
@@ -105,8 +105,8 @@
   <property name="lib.home"             location="${basedir}/lib"/>
   <property name="run.lib.home"         location="${lib.home}/runtime"/>
 
-  <property name="stu.version"          value="1.1"/>
-  <property name="stringtouri.jar"      location="${run.lib.home}/stringtouri-${stu.version}/stringtouri.jar"/>
+  <property name="stu.version"          value="1.2"/>
+  <property name="stringtouri.jar"      location="${run.lib.home}/stringtouri/stringtouri-${stu.version}.jar"/>
 
   <property name="fwk.web.home"         location="${fwk.home}/src/web"/>
   <property name="fwk.lib.home"         location="${fwk.home}/lib"/>

@@ -33,6 +33,9 @@
 
 package org.datalift.stringtouri;
 
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.LinkedList;
 
 import me.assembla.stringtouri.SesameApp;
@@ -44,7 +47,11 @@ import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.project.TransformedRdfSource;
 import org.openrdf.query.MalformedQueryException;
+import org.openrdf.query.QueryEvaluationException;
+import org.openrdf.query.QueryLanguage;
+import org.openrdf.query.Update;
 import org.openrdf.query.UpdateExecutionException;
+import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
 
 /**
@@ -183,37 +190,56 @@ public class StringToURIModel extends InterlinkingModel
     										String targetClass, 
     										String sourcePredicate, 
     										String targetPredicate,
-    										boolean update,
+    										String update,
     										boolean validateAll) {
-    	 LinkedList<LinkedList<String>> ret;
+    	 LinkedList<LinkedList<String>> ret = new LinkedList<LinkedList<String>>();
     	 
     	if (!validateAll || validateAll(proj, sourceContext, targetContext, sourceClass, targetClass, sourcePredicate, targetPredicate)) {
-    		// Launches a new StringToURI process.
-            SesameApp stu = new SesameApp(INTERNAL_URL, INTERNAL_URL, sourceContext, targetContext);
-           
-            if (sourceClass.isEmpty() || targetClass.isEmpty()) {
-            	stu.useSimpleLinkage(sourcePredicate, targetPredicate);
-            }
-            else {
-            	stu.useTypedLinkage(sourcePredicate, targetPredicate, sourceClass, targetClass);
-            }
+    		try {
+    			// If the data is going to be updated, we have to create a new Datalift source.
+    			String finalTargetContext = update.equals("preview") ? targetContext : targetContext + "-stu";
+    			if (!update.equals("preview")) {
+    				Source parent = proj.getSource(targetContext);
+    				addResultSource(proj, parent, parent.getTitle() + "-stu", new URI(finalTargetContext));
+    				RepositoryConnection cnx = INTERNAL_REPO.newConnection();
+    				
+    				// Copy all of the data to the new graph.
+    				String updateQy = "INSERT {GRAPH <" + finalTargetContext + "> {?s ?p ?o}} WHERE {GRAPH <" + targetContext + "> {?s ?p ?o}}";
+    				Update up = cnx.prepareUpdate(QueryLanguage.SPARQL, updateQy);
+    				up.execute();
+    			}
+    			
+	    		// Launches a new StringToURI process.
+    			
+	            SesameApp stu = new SesameApp(INTERNAL_URL, INTERNAL_URL, sourceContext, finalTargetContext);
+	           
+	            if (sourceClass.isEmpty() && targetClass.isEmpty()) {
+	            	stu.useSimpleLinkage(sourcePredicate, targetPredicate);
+	            }
+	            else {
+	            	stu.useTypedLinkage(sourcePredicate, targetPredicate, sourceClass, targetClass);
+	            }
             
-            stu.useSPARQLOutput(false);
-            ret = stu.getOutputAsList();
-            
-            if (update) {
-            	LOG.debug("{} - the data is going to be updated.", this.moduleName);
-            	try {
+	            stu.useSPARQLOutput(update.equals("new") ? targetPredicate + "_URI" : "");
+	            ret = stu.getOutputAsList();
+	            
+	            if (!update.equals("preview")) {
+	            	LOG.debug("{} - the data is going to be updated.", this.moduleName);
 					stu.updateData();
-					//TODO Management d'exceptions ?
-				} catch (RepositoryException e) {
-					LOG.fatal("{} - Update failed:", e, this.moduleName);
-				} catch (UpdateExecutionException e) {
-					LOG.fatal("{} - Update failed:", e, this.moduleName);
-				} catch (MalformedQueryException e) {
-					LOG.fatal("{} - Update failed:", e, this.moduleName);
-				}
-            }
+	            }
+			} catch (RepositoryException e) {
+				LOG.fatal("{} - Update failed:", e, this.moduleName);
+			} catch (UpdateExecutionException e) {
+				LOG.fatal("{} - Update failed:", e, this.moduleName);
+			} catch (MalformedQueryException e) {
+				LOG.fatal("{} - Update failed:", e, this.moduleName);
+			} catch (QueryEvaluationException e) {
+				LOG.fatal("{} - Update failed:", e, this.moduleName);
+			} catch (IOException e) {
+				LOG.fatal("{} - Update failed:", e, this.moduleName);
+			} catch (URISyntaxException e) {
+				LOG.fatal("{} - Update failed:", e, this.moduleName);
+			}
             LOG.info("{} - Interconnection OK.", this.moduleName);
     	}
     	else {
@@ -225,7 +251,7 @@ public class StringToURIModel extends InterlinkingModel
     		ret = new LinkedList<LinkedList<String>>();
     		ret.add(error);
 
-            	LOG.info("{} - Interconnection failed.", this.moduleName);
+            LOG.info("{} - Interconnection failed.", this.moduleName);
     	}
     	return ret;
     }
