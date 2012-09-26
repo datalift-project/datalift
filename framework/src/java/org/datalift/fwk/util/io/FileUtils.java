@@ -64,8 +64,10 @@ import javax.ws.rs.HttpMethod;
 
 import org.itadaki.bzip2.BZip2InputStream;
 
+import org.datalift.fwk.MediaTypes;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.util.Env;
+import org.datalift.fwk.util.StringUtils;
 
 import static org.datalift.fwk.util.web.Charsets.UTF_8;
 
@@ -199,11 +201,13 @@ public final class FileUtils
      * @param  u    the URL to download the data from.
      * @param  to   the local file to save data to.
      *
+     * @return the MIME type of the file content, as returned by the
+     *         server.
      * @throws IOException   if any error occurred reading or writing
      *                       the data.
      */
-    public static void save(URL u, File to) throws IOException {
-        save(u, null, null, to);
+    public static MediaTypes save(URL u, File to) throws IOException {
+        return save(u, null, null, to);
     }
 
     /**
@@ -215,12 +219,15 @@ public final class FileUtils
      * @param  properties   the request properties, i.e. HTTP headers.
      * @param  to           the local file to save data to.
      *
+     * @return the MIME type of the file content, as returned by the
+     *         server.
      * @throws IOException   if any error occurred reading or writing
      *                       the data.
      */
-    public static void save(URL u, String query,
-                            Map<String,String> properties, File to)
+    public static MediaTypes save(URL u, String query,
+                                 Map<String,String> properties, File to)
                                                             throws IOException {
+        MediaTypes mimeType = null;
         OutputStream out = null;
         try {
             URLConnection cnx = u.openConnection();
@@ -257,10 +264,19 @@ public final class FileUtils
                     status = 0;                 // Success!
                 }
             }
+            mimeType = parseContentType(cnx.getContentType());
             if (status == 0) {
                 // No error. => Save data locally.
                 log.debug("Downloading data from \"{}\"...", u);
                 save(cnx.getInputStream(), to);
+            }
+            else if (status == 304) {
+                // Not modified: Local file is up-to-date.
+                // => NOP!
+            }
+            else if (status == 404) {
+                // Not found.
+                throw new FileNotFoundException(u.toString());
             }
             else {
                 // Error. => Gather (first 1024 characters of) error message.
@@ -268,10 +284,10 @@ public final class FileUtils
                 int l = 0;
                 Reader r = null;
                 try {
-                    String[] ct = parseContentType(cnx.getContentType());
+                    String cs = mimeType.getCharset();
                     InputStream in = ((HttpURLConnection)cnx).getErrorStream();
-                    r = (ct[1] == null)? new InputStreamReader(in):
-                                         new InputStreamReader(in, ct[1]);
+                    r = (cs == null)? new InputStreamReader(in):
+                                      new InputStreamReader(in, cs);
                     l = r.read(buf);
                 }
                 catch (Exception e) { /* Ignore... */ }
@@ -288,6 +304,7 @@ public final class FileUtils
         finally {
             close(out);
         }
+        return mimeType;
     }
 
     /**
@@ -468,18 +485,10 @@ public final class FileUtils
      * @return the content type and character encoding as an array of
      *         strings.
      */
-    private static String[] parseContentType(String contentType) {
-        String[] elts = new String[2];
-
-        final String CHARSET_TAG = "charset=";
-        if ((contentType != null) && (contentType.length() != 0)) {
-            String[] s = contentType.split("\\s;\\s");
-            elts[0] = s[0];
-            if ((s.length > 1) && (s[1].startsWith(CHARSET_TAG))) {
-                elts[1] = s[1].substring(CHARSET_TAG.length());
-            }
-        }
-        return elts;
+    private static MediaTypes parseContentType(String contentType) {
+        return (StringUtils.isSet(contentType))?
+                    new MediaTypes(contentType):
+                    new MediaTypes(MediaTypes.APPLICATION_OCTET_STREAM_TYPE);
     }
 
     /**

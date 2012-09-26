@@ -139,15 +139,38 @@ public class MediaTypes extends MediaType
     public final static MediaType TEXT_COMMA_SEPARATED_VALUES_TYPE =
                                 MediaType.valueOf(TEXT_COMMA_SEPARATED_VALUES);
 
+    public final static String CHARSET_PARAMETER = "charset";
     /**
      * The suffix specifying the content is UTF-8 encoded
      * in the HTTP Content-Type header.
      */
     public final static String UTF8_ENCODED =
-                                        "; charset=" + Charsets.UTF8_CHARSET;
+                        "; " + CHARSET_PARAMETER + '=' + Charsets.UTF8_CHARSET;
     /** text/html; charset=utf-8 */
     public final static String TEXT_HTML_UTF8 = TEXT_HTML + UTF8_ENCODED;
     /** application/json; charset=utf-8 */
     public final static String APPLICATION_JSON_UTF8 =
                                             APPLICATION_JSON + UTF8_ENCODED;
+
+    public MediaTypes(String mimeType) {
+        this(MediaType.valueOf(mimeType));
+    }
+
+    public MediaTypes(MediaType m) {
+        super(m.getType(), m.getSubtype(), m.getParameters());
+    }
+
+    /**
+     * Returns the {@link #CHARSET_PARAMETER character set} parameter
+     * for this media type or <code>null</code> if none was set. 
+     * @return the "<code>charset</code>" parameter.
+     */
+    public String getCharset() {
+        return this.getParameters().get(CHARSET_PARAMETER);
+    }
+
+    public String toString(boolean includeParameters) {
+        return (includeParameters)? super.toString():
+                                    this.getType() + '/' + this.getSubtype();
+    }
 }
