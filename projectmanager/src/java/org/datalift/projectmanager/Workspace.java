@@ -1929,8 +1929,12 @@ public class Workspace extends BaseModule
     private ResponseBuilder displayIndexPage(ResponseBuilder response,
                                              Project p) {
         // Populate view with project list.
-        TemplateModel view = this.newView("workspace.vm",
-                                          this.projectManager.listProjects());
+        Collection<Project> projects = this.projectManager.listProjects();
+        TemplateModel view = this.newView("workspace.vm", projects);
+        // If no project is selected but only one is available, select it.
+        if (projects.size() == 1) {
+            p = projects.iterator().next();
+        }
         // Display selected project.
         if (p != null) {
             view.put("current", p);
