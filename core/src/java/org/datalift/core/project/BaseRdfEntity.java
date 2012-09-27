@@ -42,7 +42,7 @@ import javax.persistence.MappedSuperclass;
 import com.clarkparsia.empire.SupportsRdfId;
 import com.clarkparsia.empire.annotation.SupportsRdfIdImpl;
 
-import org.datalift.fwk.i18n.Iso8601DateFormat;
+import org.datalift.fwk.util.Iso8601DateFormat;
 
 
 /**
