@@ -166,8 +166,9 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
 
     /** {@inheritDoc} */
     @Override
-    public Collection<? extends Project> listProjects() {
-        return this.projectDao.getAll();
+    @SuppressWarnings("unchecked")
+    public Collection<Project> listProjects() {
+        return (Collection<Project>)(this.projectDao.getAll());
     }
 
     /** {@inheritDoc} */
