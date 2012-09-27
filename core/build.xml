@@ -320,13 +320,15 @@
     </copy>
     <!-- Copy web application static content and context definition -->
     <copy todir="${web-inf.dir}" encoding="UTF-8" preservelastmodified="true">
-      <fileset dir="${conf.home}" includes="web.xml,wro.xml"/>
+      <fileset dir="${conf.home}" includes="web.xml"/>
       <filterset refid="webapp.param.filters"/>
     </copy>
     <!-- Copy application configuration files -->
-    <copy todir="${classes.dir}" encoding="UTF-8" preservelastmodified="true">
-      <fileset dir="${conf.home}" excludes="web.xml,datalift/**,**/.*"/>
-      <filterset refid="webapp.param.filters"/>
+    <copy todir="${web-inf.dir}" preservelastmodified="true">
+      <fileset dir="${conf.home}" includes="wro.*"/>
+    </copy>
+    <copy todir="${classes.dir}" preservelastmodified="true">
+      <fileset dir="${conf.home}" excludes="web.xml,wro.*,datalift/**,**/.*"/>
     </copy>
     <!-- Copy external dependencies as required -->
     <copy todir="${lib.dir}" preservelastmodified="true" flatten="true">
