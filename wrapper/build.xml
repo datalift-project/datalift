@@ -88,7 +88,7 @@
 
   <property name="linux.conf"           location="${conf.home}/linux"/>
 
-  <property name="core.home"            location="${basedir}/../core"/>
+  <property name="core.home"            location="${datalift.root}/core"/>
   <property name="datalift.war.name"    value="datalift.war"/>
   <property name="datalift.war.path"
             location="${core.home}/dist/${datalift.war.name}"/>
@@ -222,7 +222,7 @@
 
   <target name="build-core">
     <subant target="dist">
-      <filelist dir="${basedir}/.." files="framework,core"/>
+      <filelist dir="${datalift.root}" files="framework,core"/>
     </subant>
   </target>
 
