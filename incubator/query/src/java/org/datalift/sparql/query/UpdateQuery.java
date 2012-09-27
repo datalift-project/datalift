@@ -680,12 +680,12 @@ public abstract class UpdateQuery
         if (! this.whereClauses.isEmpty()) {
             b.append("WHERE {\n");
             b = this.append(this.whereClauses, b, 0);
+            // Local variable bindings
+            for (Binding bnd : this.bindings) {
+                b.append("\t").append(bnd).append('\n');
+            }
+            b.append('}');
         }
-        // Local variable bindings
-        for (Binding bnd : this.bindings) {
-            b.append("\t").append(bnd).append('\n');
-        }
-        b.append('}');
         return b.toString();
     }
 
