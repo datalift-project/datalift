@@ -68,6 +68,7 @@ import org.datalift.fwk.MediaTypes;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.util.Env;
 import org.datalift.fwk.util.StringUtils;
+import org.datalift.fwk.util.web.HttpDateFormat;
 
 import static org.datalift.fwk.util.web.Charsets.UTF_8;
 
@@ -201,12 +202,12 @@ public final class FileUtils
      * @param  u    the URL to download the data from.
      * @param  to   the local file to save data to.
      *
-     * @return the MIME type of the file content, as returned by the
-     *         server.
+     * @return a {@link DownloadInfo} object holding some information
+     *         provided by the server.
      * @throws IOException   if any error occurred reading or writing
      *                       the data.
      */
-    public static MediaTypes save(URL u, File to) throws IOException {
+    public static DownloadInfo save(URL u, File to) throws IOException {
         return save(u, null, null, to);
     }
 
@@ -219,15 +220,15 @@ public final class FileUtils
      * @param  properties   the request properties, i.e. HTTP headers.
      * @param  to           the local file to save data to.
      *
-     * @return the MIME type of the file content, as returned by the
-     *         server.
+     * @return a {@link DownloadInfo} object holding some information
+     *         provided by the server.
      * @throws IOException   if any error occurred reading or writing
      *                       the data.
      */
-    public static MediaTypes save(URL u, String query,
-                                 Map<String,String> properties, File to)
+    public static DownloadInfo save(URL u, String query,
+                                    Map<String,String> properties, File to)
                                                             throws IOException {
-        MediaTypes mimeType = null;
+        DownloadInfo info = null;
         OutputStream out = null;
         try {
             URLConnection cnx = u.openConnection();
@@ -264,7 +265,9 @@ public final class FileUtils
                     status = 0;                 // Success!
                 }
             }
-            mimeType = parseContentType(cnx.getContentType());
+            info = new DownloadInfo(status,
+                            parseContentType(cnx.getContentType()),
+                            getExpiration(cnx, System.currentTimeMillis()));
             if (status == 0) {
                 // No error. => Save data locally.
                 log.debug("Downloading data from \"{}\"...", u);
@@ -284,7 +287,7 @@ public final class FileUtils
                 int l = 0;
                 Reader r = null;
                 try {
-                    String cs = mimeType.getCharset();
+                    String cs = info.mimeType.getCharset();
                     InputStream in = ((HttpURLConnection)cnx).getErrorStream();
                     r = (cs == null)? new InputStreamReader(in):
                                       new InputStreamReader(in, cs);
@@ -304,7 +307,7 @@ public final class FileUtils
         finally {
             close(out);
         }
-        return mimeType;
+        return info;
     }
 
     /**
@@ -492,6 +495,42 @@ public final class FileUtils
     }
 
     /**
+     * Returns the time when the document should be considered expired.
+     * @return the time when the document should be considered expired,
+     *         <code>0</code> if the document shall always be
+     *         revalidated or <code>-1</code> if no expiry time was
+     *         specified by the server.
+     */
+    private static long getExpiration(URLConnection cnx, long baseTime) {
+        long expiry = -1L;
+        String header = cnx.getHeaderField("Cache-Control");
+        if (header != null) {
+            for (String token : header.split("\\s*,\\s*")) {
+               if ("must-revalidate".equals(token)) {
+                   expiry = 0L;
+               }
+               else if (token.startsWith("max-age")) {
+                   try {
+                       int seconds = Integer.parseInt(
+                                       token.substring(token.indexOf('=') + 1));
+                       expiry = baseTime + (seconds * 1000L);
+                   }
+                   catch (Exception e) { /* Ignore... */ }
+               }
+            }
+        }
+        header = cnx.getHeaderField("Expires");
+        if (header != null) {
+            try {
+                long expires = HttpDateFormat.parseDate(header).getTime();
+                expiry = (expiry > 0L)? Math.min(expiry, expires): expires;
+            }
+            catch (Exception e) { /* Ignore... */ }
+        }
+        return expiry;
+    }
+
+    /**
      * Closes a file or a (byte or character) stream, absorbing errors.
      * @param  c   the stream to close.
      */
@@ -528,6 +567,22 @@ public final class FileUtils
         return get16(b, offset) | ((long)get16(b, offset+2) << 16);
     }
 
+    //-------------------------------------------------------------------------
+    // DownloadInfo nested class
+    //-------------------------------------------------------------------------
+
+    public final static class DownloadInfo
+    {
+        public final int httpStatus;
+        public final MediaTypes mimeType;
+        public final long expires;
+
+        public DownloadInfo(int status, MediaTypes mediaType, long expires) {
+            this.httpStatus = status;
+            this.mimeType = mediaType;
+            this.expires = expires;
+        }
+    }
     //-------------------------------------------------------------------------
     // ByteCounterInputStream nested class
     //-------------------------------------------------------------------------
