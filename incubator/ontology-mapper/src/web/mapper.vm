@@ -48,7 +48,7 @@
         </div>
         <div class="nav-collapse collapse">
           <p class="navbar-text pull-right">
-            #i18n("login.label") <a href="#" class="navbar-link">$esc.html($login)</a>
+            #i18n("login.label") <a href="#" class="navbar-link">$esc.html(${securityCtx.userPrincipal})</a>
           </p>
           <ul class="nav">
             <li><a href="${baseUri}/sparql">#i18n("sparql.endpoint.link")</a></li>
@@ -184,11 +184,11 @@
     $(function() {
       var sources = [
 #foreach( $s in $it.sources )#if( $s.type == $srcType )
-        { uri:"$!{s.uri}", title:"$!{s.title}" }, #end
+        { uri:"$esc.javascript($!{s.uri})", title:"$esc.javascript($!{s.title})" }, #end
 #end ];
       var ontologies = [
 #foreach( $o in $it.ontologies )
-        { uri:"$!{o.source}", title:"$!{o.title}" },
+        { uri:"$esc.javascript($!{o.source})", title:"$esc.javascript($!{o.title})" },
 #end ];
       ko.applyBindings(new MappingViewModel("$!{baseUri}", "$!{it.uri}", sources, ontologies));
     });

@@ -62,7 +62,6 @@ import org.datalift.fwk.project.Source;
 import org.datalift.fwk.rdf.RdfFormat;
 import org.datalift.fwk.rdf.RdfNamespace;
 import org.datalift.fwk.rdf.RdfUtils;
-import org.datalift.fwk.security.SecurityContext;
 import org.datalift.fwk.util.StringUtils;
 import org.datalift.fwk.util.io.FileUtils;
 import org.datalift.fwk.util.web.Charsets;
@@ -186,7 +185,6 @@ public class OntologyMapper extends BaseModule implements ProjectModule
             // Display conversion configuration page.
             TemplateModel view = this.newView("mapper.vm", p);
             view.put("srcType", TransformedRdfSource);
-            view.put("login", SecurityContext.getUserPrincipal());
             response = Response.ok(view, TEXT_HTML_UTF8).build();
         }
         catch (IllegalArgumentException e) {
