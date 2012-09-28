@@ -1661,7 +1661,8 @@ public class Workspace extends BaseModule
                 if (resolved) {
                     ResponseBuilder b = Response.ok();
                     if (value != null) {
-                        b.entity(new Gson().toJson(value));
+                        b.entity(new Gson().toJson(value))
+                         .type(APPLICATION_JSON_UTF8);
                     }
                     response = b.build();
                 }
