@@ -553,6 +553,14 @@ public abstract class UpdateQuery
     }
 
     /**
+     * Creates a new variable with a generated (unique) name.
+     * @return a new variable.
+     */
+    public Variable variable() {
+        return this.variable((String)null);
+    }
+
+    /**
      * Creates a new variable, the name of which is derived from the
      * specified URI.
      * @param  u   the URI to build the variable name from.
@@ -875,7 +883,7 @@ public abstract class UpdateQuery
                 // Node URI. => Use an intermediate SPARQL variable to create
                 // the link between the triple to insert and the WHERE clause.
                 URI u = (URI)o;
-                Variable var = this.variable(u.getLocalName());
+                Variable var = this.mapVariable(u);
                 this.where(from, u, var, srcGraph, null, opt)
                     .triple(to, p, var, null);
             }
@@ -914,7 +922,7 @@ public abstract class UpdateQuery
                         Value x = this.mapValue(p[i]);
                         if (x instanceof URI) {
                             URI u = (URI)x;
-                            Variable y = this.variable(u.getLocalName());
+                            Variable y = this.mapVariable(u);
                             vars.put(u, y);
                             x = y;
                         }
@@ -957,6 +965,19 @@ public abstract class UpdateQuery
         return v;
     }
 
+    private Map<Variable,URI> mappedVariables = new HashMap<Variable,URI>();
+
+    private Variable mapVariable(URI u) {
+        Variable var = this.variable(u.getLocalName());
+        URI x = this.mappedVariables.get(var);
+        if ((x != null) && (! u.equals(x))) {
+            // Same name but different URIs. => Create new variable.
+            var = this.variable();
+        }
+        // Register variable.
+        this.mappedVariables.put(var, u);
+        return var;
+    }
 
     /**
      * SPARQL <a href="http://www.w3.org/TR/sparql11-query/#bind">variable
