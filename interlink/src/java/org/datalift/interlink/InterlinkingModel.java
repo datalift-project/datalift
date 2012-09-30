@@ -7,6 +7,8 @@
 
 package org.datalift.interlink;
 
+import java.io.IOException;
+import java.net.URI;
 import java.util.Iterator;
 import java.util.LinkedList;
 
@@ -14,7 +16,10 @@ import org.datalift.fwk.Configuration;
 import org.datalift.fwk.i18n.PreferredLocales;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.Project;
+import org.datalift.fwk.project.ProjectManager;
 import org.datalift.fwk.project.Source;
+import org.datalift.fwk.project.SparqlSource;
+import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.rdf.Repository;
 import org.openrdf.query.BindingSet;
 import org.openrdf.query.MalformedQueryException;
@@ -38,8 +43,6 @@ public abstract class InterlinkingModel {
     // Constants
     //-------------------------------------------------------------------------
 
-	/** The module's name. */
-    public String MODULE_NAME;
     /** Base name of the resource bundle for converter GUI. */
     protected static String GUI_RESOURCES_BUNDLE = InterlinkingController.GUI_RESOURCES_BUNDLE;
     
@@ -70,8 +73,8 @@ public abstract class InterlinkingModel {
     // Instance members
     //-------------------------------------------------------------------------
 
-    /** Connection to the internal Sesame {@link Repository repository}. **/
-    protected RepositoryConnection internal;
+    /** The module name. */
+    protected final String moduleName;
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -79,11 +82,10 @@ public abstract class InterlinkingModel {
 
     /**
      * Creates a new InterconnectionModel instance.
-     * @param name Name of the module.
+     * @param module Name of the module.
      */
-    public InterlinkingModel(String name) {
-    	MODULE_NAME = name;
-    	internal =  INTERNAL_REPO.newConnection();
+    public InterlinkingModel(String module) {
+        this.moduleName = module;
     }
     
     
@@ -168,12 +170,10 @@ public abstract class InterlinkingModel {
 		TupleQueryResult tqr;
 		LinkedList<String> ret = new LinkedList<String>();
 		
-		if (LOG.isDebugEnabled()) {
-			LOG.debug(MODULE_NAME + " " + query);
-		}
-		
+		LOG.debug("Processing query: \"{}\"", query);
+		RepositoryConnection cnx = INTERNAL_REPO.newConnection();
 		try {
-			tq = internal.prepareTupleQuery(QueryLanguage.SPARQL, query);
+			tq = cnx.prepareTupleQuery(QueryLanguage.SPARQL, query);
 			tqr = tq.evaluate();
 			
 			if (!hasCorrectBindingNames(tqr, bind)) {
@@ -185,11 +185,14 @@ public abstract class InterlinkingModel {
 			}
 		}
 		catch (MalformedQueryException e) {
-			LOG.fatal(MODULE_NAME + " " + query + " - " + e);
+			LOG.fatal("Failed to process query \"{}\":", e, query);
 		} catch (QueryEvaluationException e) {
-			LOG.fatal(MODULE_NAME + " " + query + " - " + e);
+			LOG.fatal("Failed to process query \"{}\":", e, query);
 		} catch (RepositoryException e) {
-			LOG.fatal(MODULE_NAME + " " + query + " - " + e);
+			LOG.fatal("Failed to process query \"{}\":", e, query);
+		}
+		finally {
+		    try { cnx.close(); } catch (Exception e) { /* Ignore... */ }
 		}
 	    return ret;
 	}
@@ -207,12 +210,10 @@ public abstract class InterlinkingModel {
 		BindingSet bs;
 		LinkedList<LinkedList<String>> ret = new LinkedList<LinkedList<String>>();
 		
-		if (LOG.isDebugEnabled()) {
-			LOG.debug(MODULE_NAME + " " + query);
-		}
-		
+		LOG.debug("Processing query: \"{}\"", query);
+		RepositoryConnection cnx = INTERNAL_REPO.newConnection();
 		try {
-			tq = internal.prepareTupleQuery(QueryLanguage.SPARQL, query);
+			tq = cnx.prepareTupleQuery(QueryLanguage.SPARQL, query);
 			tqr = tq.evaluate();
 			LinkedList<String> tmp;
 			while (tqr.hasNext()) {
@@ -225,11 +226,11 @@ public abstract class InterlinkingModel {
 			}
 		}
 		catch (MalformedQueryException e) {
-			LOG.fatal(MODULE_NAME + " " + query + " - " + e);
+			LOG.fatal("Failed to process query \"{}\":", e, query);
 		} catch (QueryEvaluationException e) {
-			LOG.fatal(MODULE_NAME + " " + query + " - " + e);
+			LOG.fatal("Failed to process query \"{}\":", e, query);
 		} catch (RepositoryException e) {
-			LOG.fatal(MODULE_NAME + " " + query + " - " + e);
+			LOG.fatal("Failed to process query \"{}\":", e, query);
 		}
 	    return ret;
 	}
@@ -383,6 +384,22 @@ public abstract class InterlinkingModel {
     // Launcher management.
     //-------------------------------------------------------------------------
 
+    /**
+     * Creates a new transformed RDF source and attaches it to a project.
+     * @param  p        the owning project.
+     * @param  parent   the parent source object.
+     * @param  name     the new source name.
+     * @param  uri      the new source URI.
+     *
+     * @return the newly created transformed RDF source.
+     * @throws IOException if any error occurred creating the source.
+     */
+    protected void addResultSource(Project p, Source parent, String name, URI uri) throws IOException {
+    	ProjectManager pm = Configuration.getDefault().getBean(ProjectManager.class);
+        pm.newTransformedRdfSource(p, uri, name, null, uri, parent);
+        pm.saveProject(p);
+    }
+    
     /**
      * TODO Future refactoring plans :
      * - Generic error-handling function.

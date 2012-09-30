@@ -1,8 +1,34 @@
 /*
- * Copyright / LIRMM 2011-2012
+ * Copyright / LIRMM 2012
  * Contributor(s) : T. Colas, F. Scharffe
  *
  * Contact: thibaud.colas@etud.univ-montp2.fr
+ *
+ * This software is governed by the CeCILL license under French law and
+ * abiding by the rules of distribution of free software. You can use,
+ * modify and/or redistribute the software under the terms of the CeCILL
+ * license as circulated by CEA, CNRS and INRIA at the following URL
+ * "http://www.cecill.info".
+ *
+ * As a counterpart to the access to the source code and rights to copy,
+ * modify and redistribute granted by the license, users are provided only
+ * with a limited warranty and the software's author, the holder of the
+ * economic rights, and the successive licensors have only limited
+ * liability.
+ *
+ * In this respect, the user's attention is drawn to the risks associated
+ * with loading, using, modifying and/or developing or reproducing the
+ * software by the user in light of its specific status of free software,
+ * that may mean that it is complicated to manipulate, and that also
+ * therefore means that it is reserved for developers and experienced
+ * professionals having in-depth computer knowledge. Users are therefore
+ * encouraged to load and test the software's suitability as regards their
+ * requirements in conditions enabling the security of their systems and/or
+ * data to be ensured and, more generally, to use and operate it in the
+ * same conditions as regards security.
+ *
+ * The fact that you are presently reading this means that you have had
+ * knowledge of the CeCILL license and that you accept its terms.
  */
 
 package org.datalift.interlink;
@@ -39,7 +65,7 @@ import com.sun.jersey.multipart.FormDataParam;
  * TODO Add a way to set form fields via GET.
  *
  * @author tcolas
- * @version 15082012
+ * @version 30092012
  */
 @Path(SilkController.MODULE_NAME)
 public class SilkController extends InterlinkingController {
@@ -56,21 +82,21 @@ public class SilkController extends InterlinkingController {
     //-------------------------------------------------------------------------
 
     /** The module's back-end logic handler. */
-    private final SilkModel model;
+    protected SilkModel model;
 
     //-------------------------------------------------------------------------
     // Constructors
     //-------------------------------------------------------------------------
 
-	/**
-     * Creates a new SilkInterlinkController instance.
+    /**
+     * Creates a new InterconnectionController instance.
      */
     public SilkController() {
         //TODO Switch to the right position.
         super(MODULE_NAME, 13371337);
-        
+
         label = getTranslatedResource(MODULE_NAME + ".button");
-        model = new SilkModel();
+        model = new SilkModel(MODULE_NAME);
     }
     
     //-------------------------------------------------------------------------
@@ -83,7 +109,6 @@ public class SilkController extends InterlinkingController {
      * @param p Our current project.
      * @return The URI to our project's main page.
      */
-    @Override
     public final UriDesc canHandle(Project p) {
         UriDesc uridesc = null;
 
@@ -96,49 +121,44 @@ public class SilkController extends InterlinkingController {
                 if (this.position > 0) {
                     uridesc.setPosition(this.position);
                 }
-                if (LOG.isDebugEnabled()) {
-                	LOG.debug(MODULE_NAME + " Project " + p.getTitle() + " can use Silk Interconnection.");
-                }
+                LOG.debug("Project {} can use StringToURI", p.getTitle());
             }
             else {
-            	if (LOG.isDebugEnabled()) {
-                	LOG.debug(MODULE_NAME + " Project " + p.getTitle() + " can't use Silk Interconnection.");
-                }
+                LOG.debug("Project {} can not use StringToURI", p.getTitle());
             }
-            
         }
         catch (URISyntaxException e) {
-            LOG.fatal("Uh !", e);
+            LOG.fatal("Uh!", e);
             throw new RuntimeException(e);
         }
         return uridesc;
     }
 
-	//-------------------------------------------------------------------------
-	// Web services
-	//-------------------------------------------------------------------------
-	
-	/**
-     * Index page handler of the Interlink module.
-     * @param projectId the project using Interlink
+    //-------------------------------------------------------------------------
+    // Web services
+    //-------------------------------------------------------------------------
+
+    /**
+     * Index page handler of the StringToURI module.
+     * @param projectId the project using StringToURI
      * @return Our module's interface.
-     * @throws ObjectStreamException ?
+     * @throws ObjectStreamException
      */
     @GET
     @Produces(MediaType.TEXT_HTML)
-    public final Response getIndexPage(@QueryParam("project") URI projectId) throws ObjectStreamException {
-        // Retrieve the current project.
+    public Response getIndexPage(@QueryParam("project") URI projectId) throws ObjectStreamException {
+        // Retrieve the current project and its sources.
         Project proj = this.getProject(projectId);
         LinkedList<String> sourcesURIs = model.getSourcesURIs(proj);
         
         HashMap<String, Object> args = new HashMap<String, Object>();
-        
         args.put("it", proj);
+        
         args.put("sources", sourcesURIs);
         args.put("classes", model.getAllClasses(sourcesURIs));
         args.put("predicates", model.getAllPredicates(sourcesURIs));
-                
-		return Response.ok(this.newViewable("/interlink-form.vm", args)).build();
+        
+        return Response.ok(this.newViewable("/interlink-form.vm", args)).build();
     }
 
     /**
@@ -293,9 +313,7 @@ public class SilkController extends InterlinkingController {
 	    HashMap<String, Object> args = new HashMap<String, Object>();
 	    args.put("it", proj);
 	    
-	    if (LOG.isDebugEnabled()) {
-	    	LOG.debug(sourceAddress + " | " + sourceQuery + " | " + sourceVariable + " | " + sourcePropertyFirst + " | " + sourceTransformationFirst + " | " + sourceRegexpTokenFirst + " | " + sourceStopWordsFirst + " | " + sourceSearchFirst + " | " + sourceReplaceFirst + " | " + sourcePropertySecund + " | " + sourceTransformationSecund + " | " + sourceRegexpTokenSecund + " | " + sourceStopWordsSecund + " | " + sourceSearchSecund + " | " + sourceReplaceSecund + " | " + sourcePropertyThird + " | " + sourceTransformationThird + " | " + sourceRegexpTokenThird + " | " + sourceStopWordsThird + " | " + sourceSearchThird + " | " + sourceReplaceThird + " | " + targetAddress + " | " + targetQuery + " | " + targetVariable + " | " + targetPropertyFirst + " | " + targetTransformationFirst + " | " + targetRegexpTokenFirst + " | " + targetStopWordsFirst + " | " + targetSearchFirst + " | " + targetReplaceFirst + " | " + targetPropertySecund + " | " + targetTransformationSecund + " | " + targetRegexpTokenSecund + " | " + targetStopWordsSecund + " | " + targetSearchSecund + " | " + targetReplaceSecund + " | " + targetPropertyThird + " | " + targetTransformationThird + " | " + targetRegexpTokenThird + " | " + targetStopWordsThird + " | " + targetSearchThird + " | " + targetReplaceThird + " | " + metricFirst + " | " + minFirst + " | " + maxFirst + " | " + unitFirst + " | " + curveFirst + " | " + weightFirst + " | " + thresholdFirst + " | " + metricSecund + " | " + minSecund + " | " + maxSecund + " | " + unitSecund + " | " + curveSecund + " | " + weightSecund + " | " + thresholdSecund + " | " + metricThird + " | " + minThird + " | " + maxThird + " | " + unitThird + " | " + curveThird + " | " + weightThird + " | " + thresholdThird + " | " + aggregation + " | " + runScript);
-	    }
+	    LOG.debug(sourceAddress + " | " + sourceQuery + " | " + sourceVariable + " | " + sourcePropertyFirst + " | " + sourceTransformationFirst + " | " + sourceRegexpTokenFirst + " | " + sourceStopWordsFirst + " | " + sourceSearchFirst + " | " + sourceReplaceFirst + " | " + sourcePropertySecund + " | " + sourceTransformationSecund + " | " + sourceRegexpTokenSecund + " | " + sourceStopWordsSecund + " | " + sourceSearchSecund + " | " + sourceReplaceSecund + " | " + sourcePropertyThird + " | " + sourceTransformationThird + " | " + sourceRegexpTokenThird + " | " + sourceStopWordsThird + " | " + sourceSearchThird + " | " + sourceReplaceThird + " | " + targetAddress + " | " + targetQuery + " | " + targetVariable + " | " + targetPropertyFirst + " | " + targetTransformationFirst + " | " + targetRegexpTokenFirst + " | " + targetStopWordsFirst + " | " + targetSearchFirst + " | " + targetReplaceFirst + " | " + targetPropertySecund + " | " + targetTransformationSecund + " | " + targetRegexpTokenSecund + " | " + targetStopWordsSecund + " | " + targetSearchSecund + " | " + targetReplaceSecund + " | " + targetPropertyThird + " | " + targetTransformationThird + " | " + targetRegexpTokenThird + " | " + targetStopWordsThird + " | " + targetSearchThird + " | " + targetReplaceThird + " | " + metricFirst + " | " + minFirst + " | " + maxFirst + " | " + unitFirst + " | " + curveFirst + " | " + weightFirst + " | " + thresholdFirst + " | " + metricSecund + " | " + minSecund + " | " + maxSecund + " | " + unitSecund + " | " + curveSecund + " | " + weightSecund + " | " + thresholdSecund + " | " + metricThird + " | " + minThird + " | " + maxThird + " | " + unitThird + " | " + curveThird + " | " + weightThird + " | " + thresholdThird + " | " + aggregation + " | " + runScript);
 		
 		// We first validate all of the fields.
         LinkedList<String> errorMessages = model.getErrorMessages(sourceAddress, sourceQuery, sourceVariable, sourcePropertyFirst, sourceTransformationFirst, sourceRegexpTokenFirst, sourceStopWordsFirst, sourceSearchFirst, sourceReplaceFirst, sourcePropertySecund, sourceTransformationSecund, sourceRegexpTokenSecund, sourceStopWordsSecund, sourceSearchSecund, sourceReplaceSecund, sourcePropertyThird, sourceTransformationThird, sourceRegexpTokenThird, sourceStopWordsThird, sourceSearchThird, sourceReplaceThird, targetAddress, targetQuery, targetVariable, targetPropertyFirst, targetTransformationFirst, targetRegexpTokenFirst, targetStopWordsFirst, targetSearchFirst, targetReplaceFirst, targetPropertySecund, targetTransformationSecund, targetRegexpTokenSecund, targetStopWordsSecund, targetSearchSecund, targetReplaceSecund, targetPropertyThird, targetTransformationThird, targetRegexpTokenThird, targetStopWordsThird, targetSearchThird, targetReplaceThird, metricFirst, minFirst, maxFirst, unitFirst, curveFirst, weightFirst, thresholdFirst, metricSecund, minSecund, maxSecund, unitSecund, curveSecund, weightSecund, thresholdSecund, metricThird, minThird, maxThird, unitThird, curveThird, weightThird, thresholdThird, aggregation);

@@ -1,13 +1,13 @@
 Title: Silk Interlink Readme 
 Author: Thibaud Colas 
-Date: 16/08/12 
+Date: 30/09/12 
 
 # Silk Interconnection Readme #
 
 ## tl;dr ##
 
 This module is an interface for [Silk]("http://www4.wiwiss.fu-berlin.de/bizer/silk/").  
-Version 0.7
+Version 0.8
 
 ## What is Silk Interlink ##
 

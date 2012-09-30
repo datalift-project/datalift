@@ -16,10 +16,8 @@ import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
@@ -32,8 +30,8 @@ import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectManager;
 import org.datalift.fwk.project.ProjectModule;
-
-import com.sun.jersey.api.view.Viewable;
+import org.datalift.fwk.view.TemplateModel;
+import org.datalift.fwk.view.ViewFactory;
 
 /**
  * An abstract class for all of the interlinking modules, combining default 
@@ -115,8 +113,8 @@ public abstract class InterlinkingController extends BaseModule implements Proje
      * @param it Parameters for the template.
      * @return A new viewable in Velocity Template Language
      */
-    protected final Viewable newViewable(String templateName, Object it) {
-        return new Viewable("/" + this.getName() + templateName, it);
+    protected final TemplateModel newViewable(String templateName, Object it) {
+        return ViewFactory.newView("/" + this.getName() + templateName, it);
     }
     
     /**
@@ -138,9 +136,7 @@ public abstract class InterlinkingController extends BaseModule implements Proje
      * @return Our module's interface.
      * @throws ObjectStreamException A Obscene Reject Mixt Opt.
      */
-    @GET
-    @Produces(MediaType.TEXT_HTML)
-    protected abstract Response getIndexPage(@QueryParam("project") URI projectId) throws ObjectStreamException;
+    public abstract Response getIndexPage(@QueryParam("project") URI projectId) throws ObjectStreamException;
     
     /**
      * Traps accesses to module static resources and redirect them

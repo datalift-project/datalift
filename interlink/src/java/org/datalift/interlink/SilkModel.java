@@ -1,8 +1,34 @@
 /*
- * Copyright / LIRMM 2011-2012
+ * Copyright / LIRMM 2012
  * Contributor(s) : T. Colas, F. Scharffe
  *
  * Contact: thibaud.colas@etud.univ-montp2.fr
+ *
+ * This software is governed by the CeCILL license under French law and
+ * abiding by the rules of distribution of free software. You can use,
+ * modify and/or redistribute the software under the terms of the CeCILL
+ * license as circulated by CEA, CNRS and INRIA at the following URL
+ * "http://www.cecill.info".
+ *
+ * As a counterpart to the access to the source code and rights to copy,
+ * modify and redistribute granted by the license, users are provided only
+ * with a limited warranty and the software's author, the holder of the
+ * economic rights, and the successive licensors have only limited
+ * liability.
+ *
+ * In this respect, the user's attention is drawn to the risks associated
+ * with loading, using, modifying and/or developing or reproducing the
+ * software by the user in light of its specific status of free software,
+ * that may mean that it is complicated to manipulate, and that also
+ * therefore means that it is reserved for developers and experienced
+ * professionals having in-depth computer knowledge. Users are therefore
+ * encouraged to load and test the software's suitability as regards their
+ * requirements in conditions enabling the security of their systems and/or
+ * data to be ensured and, more generally, to use and operate it in the
+ * same conditions as regards security.
+ *
+ * The fact that you are presently reading this means that you have had
+ * knowledge of the CeCILL license and that you accept its terms.
  */
 
 package org.datalift.interlink;
@@ -33,22 +59,15 @@ import de.fuberlin.wiwiss.silk.Silk;
  * A {@link ProjectModule project module} that uses the Silk link generation
  * framework to generate links between two datasets.
  * This class handles Silk interlink constraints.
- * TODO Configuration file.
- * TODO Might not work well if used with external files / endpoints. Is it supposed to ?
- * TODO Add namespace prefixing management
- * TODO Refactoring : InterconnectionController, InterconnectionModel, SilkManager, ConfigurationWriter, SilkInterface
  *
  * @author tcolas
- * @version 12082012
+ * @version 30092012
  */
 public class SilkModel extends InterlinkingModel {
 	
 	//-------------------------------------------------------------------------
     // Constants
     //-------------------------------------------------------------------------
-
-	/** The module's name. */
-    public static final String MODULE_NAME = SilkController.MODULE_NAME;
     
     /** The default fallback number of threads to use when executing Silk. */
     public static final int DEFAULT_NB_THREADS = 1;
@@ -62,11 +81,11 @@ public class SilkModel extends InterlinkingModel {
     //-------------------------------------------------------------------------
 
     /**
-     * Creates a new SilkInterlinkModel instance.
+     * Creates a new SilkModel instance.
+     * @param name Name of the module.
      */
-    public SilkModel() {
-    	super(MODULE_NAME);
-    	internal =  INTERNAL_REPO.newConnection();
+    public SilkModel(String name) {
+    	super(name);
     }
     
     //-------------------------------------------------------------------------
@@ -148,9 +167,7 @@ public class SilkModel extends InterlinkingModel {
     public final File importConfigFile(String name, InputStream data) {
     	File ret = null;
     	
-    	if (LOG.isDebugEnabled()) {
-    		LOG.debug(MODULE_NAME + " - Uploading new config file - " + name);
-    	}
+    	LOG.debug("Uploading new Silk config file - " + name);
 	    
 		try {
 			ret = File.createTempFile(name, ".xml");
@@ -170,7 +187,7 @@ public class SilkModel extends InterlinkingModel {
 			bis.close();
 			
 		} catch (IOException e) {
-			LOG.fatal(MODULE_NAME + " - Error while uploading file - " + e);
+			LOG.fatal("Error while uploading Silk file - " + e);
 		}
 		
 		return ret;
@@ -282,9 +299,7 @@ public class SilkModel extends InterlinkingModel {
     														targetId, targetAddress, targetContext, targetQuery, targetVariable, targetPropertyFirst, targetTransformationFirst, targetRegexpTokenFirst, targetStopWordsFirst, targetSearchFirst, targetReplaceFirst, targetPropertySecund, targetTransformationSecund, targetRegexpTokenSecund, targetStopWordsSecund, targetSearchSecund, targetReplaceSecund, targetPropertyThird, targetTransformationThird, targetRegexpTokenThird, targetStopWordsThird, targetSearchThird, targetReplaceThird, metricFirst, minFirst, maxFirst, unitFirst, curveFirst, weightFirst, thresholdFirst, metricSecund, minSecund, maxSecund, unitSecund, curveSecund, weightSecund, thresholdSecund, metricThird, minThird, maxThird, unitThird, curveThird, weightThird, thresholdThird, aggregation);
 		
     	
-    	if (LOG.isDebugEnabled()) {
-    		LOG.debug(MODULE_NAME + " - Created new config file.");
-    	}
+    	LOG.debug("Created new Silk config file.");
     	
     	return ret;
     }
@@ -332,11 +347,11 @@ public class SilkModel extends InterlinkingModel {
 				}
 			}
 			catch (IOException e) {
-				LOG.fatal(MODULE_NAME + " - Configuration file DOM parsing failed - " + e);
+				LOG.fatal("Silk Configuration file DOM parsing failed - " + e);
 			} catch (SAXException e) {
-				LOG.fatal(MODULE_NAME + " - Configuration file DOM parsing failed - " + e);
+				LOG.fatal("Silk Configuration file DOM parsing failed - " + e);
 			} catch (ParserConfigurationException e) {
-				LOG.fatal(MODULE_NAME + " - Configuration file DOM parsing failed - " + e);
+				LOG.fatal("Silk Configuration file DOM parsing failed - " + e);
 			}
 		}
 		
@@ -607,9 +622,8 @@ public class SilkModel extends InterlinkingModel {
     	String resultPredicate = "<http://www.w3.org/2002/07/owl#sameAs>";
     	String resultQuery = "SELECT DISTINCT ?" + SB + " ?" + OB + " WHERE { ?" + SB + " " + resultPredicate + " ?" + OB + "}";
     	if (!validateFile || getErrorMessages(config, linkID).isEmpty()) {
-	    	if (LOG.isInfoEnabled()) {
-	    		LOG.info(MODULE_NAME + " - Launching Silk on " + config.getAbsolutePath() + " - " + linkID);
-	    	}
+    		
+    		LOG.info("Launching Silk on " + config.getAbsolutePath() + " - " + linkID);
 	    	
 	    	LinkedList<LinkedList<String>> before = pairSelectQuery(resultQuery, resultPredicate);
 	    	
@@ -627,9 +641,7 @@ public class SilkModel extends InterlinkingModel {
     		error.add(getTranslatedResource("error.label"));
     		ret.add(error);
     		
-    		if (LOG.isInfoEnabled()) {
-            	LOG.info(MODULE_NAME + " interconnection KO.");
-            }
+    		LOG.info("Silk interlinking KO.");
     	}
     	
     	return ret;
@@ -655,11 +667,11 @@ public class SilkModel extends InterlinkingModel {
 			interlinkId = doc.getElementsByTagName("Interlink").item(0).getAttributes().getNamedItem("id").getTextContent();
     	}
     	catch (IOException e) {
-			LOG.fatal(MODULE_NAME + " - Configuration file DOM parsing failed - " + e);
+			LOG.fatal("Silk Configuration file DOM parsing failed - " + e);
 		} catch (SAXException e) {
-			LOG.fatal(MODULE_NAME + " - Configuration file DOM parsing failed - " + e);
+			LOG.fatal("Silk Configuration file DOM parsing failed - " + e);
 		} catch (ParserConfigurationException e) {
-			LOG.fatal(MODULE_NAME + " - Configuration file DOM parsing failed - " + e);
+			LOG.fatal("Silk Configuration file DOM parsing failed - " + e);
 		}
     	
     	return interlinkId != null ? launchSilk(config, interlinkId, threads, reload, validateFile) : null;
