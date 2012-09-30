@@ -658,7 +658,9 @@ public class Workspace extends BaseModule
             String filePath = this.getProjectFilePath(projectId, fileName);
             localFile = this.getFileStorage(filePath);
             this.getFileData(fileData, fileUrl, localFile, uriInfo,
-                                                APPLICATION_CSV_TYPE);
+                             Arrays.asList(TEXT_CSV_TYPE, APPLICATION_CSV_TYPE,
+                                           TEXT_COMMA_SEPARATED_VALUES_TYPE,
+                                           TEXT_PLAIN_TYPE), true);
 
             Separator sep = Separator.valueOf(separator);
             // Initialize new source.
@@ -838,7 +840,7 @@ public class Workspace extends BaseModule
             String filePath = this.getProjectFilePath(projectId, fileName);
             localFile = this.getFileStorage(filePath);
             this.getFileData(fileData, fileUrl, localFile, uriInfo,
-                                                format.getMimeTypes());
+                                                format.getMimeTypes(), false);
             // Initialize new source.
             RdfFileSource src = this.projectManager.newRdfSource(p, sourceUri,
                                     fileName, description, baseUri, filePath,
@@ -1208,7 +1210,7 @@ public class Workspace extends BaseModule
             String filePath = this.getProjectFilePath(projectId, fileName);
             localFile = this.getFileStorage(filePath);
             this.getFileData(fileData, fileUrl, localFile, uriInfo,
-                         Arrays.asList(APPLICATION_XML_TYPE, TEXT_XML_TYPE));
+                     Arrays.asList(APPLICATION_XML_TYPE, TEXT_XML_TYPE), false);
             // Initialize new source.
             XmlSource src = this.projectManager.newXmlSource(p, sourceUri,
                                             fileName, description, filePath);
@@ -2283,7 +2285,7 @@ public class Workspace extends BaseModule
                              UriInfo uriInfo, MediaType mimeType)
                                                         throws IOException {
         this.getFileData(in, u, destFile, uriInfo,
-                         (mimeType != null)? Arrays.asList(mimeType): null);
+                     (mimeType != null)? Arrays.asList(mimeType): null, false);
     }
 
     /**
@@ -2308,8 +2310,8 @@ public class Workspace extends BaseModule
      *                     the file data.
      */
     private void getFileData(InputStream in, URL u, File destFile,
-                             UriInfo uriInfo, Collection<MediaType> mimeTypes)
-                                                        throws IOException {
+                             UriInfo uriInfo, Collection<MediaType> mimeTypes,
+                             boolean allowAny) throws IOException {
         if (in != null) {
             FileUtils.save(in, destFile);
         }
@@ -2346,6 +2348,9 @@ public class Workspace extends BaseModule
                             // Secondary MIME types.
                             buf.append(", ").append(m).append("; q=0.5");
                         }
+                    }
+                    if (allowAny) {
+                        buf.append(", ").append(WILDCARD).append("; q=0.1");
                     }
                     headers = new HashMap<String,String>();
                     headers.put(ACCEPT, buf.toString());
