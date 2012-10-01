@@ -26,34 +26,8 @@
 			</div>
 		</noscript>
 
-		<form id="file-form" action="${moduleUri}/run?project=$esc.url($it.uri)" method="post" enctype="multipart/form-data">
-			<h4>#i18n('interlink.file.title')</h4>
-
-			<fieldset class="ui-widget-content ui-corner-all">
-				<div class="form-inline ui-state-default ui-corner-left" title="#i18n('file.title')">
-					<label for="configFile" title="#i18n('file.title')">#i18n('file.label')</label>
-					<input type="file" id="configFile" name="configFile" title="#i18n('file.title')" required="required"/>
-				</div>
-
-				<div class="form-inline ui-state-default ui-corner-right" title="#i18n('identifier.title')">
-					<label for="linkSpecId" title="#i18n('identifier.title')">#i18n('identifier.label')</label>
-					<input type="text" id="linkSpecId" name="linkSpecId" title="#i18n('identifier.title')" placeholder="#i18n('field.mandatory')" required="required"/>
-				</div>
-
-				<div class="multiple-choices">
-					<input type="submit" id="file-submit" value="#i18n('submit.label')"/>
-					<a class="cancel-button ui-priority-secondary" href="${baseUri}/project/${it.title}" title="#i18n('cancel.title') #i18n('project.workspace.link')">#i18n('cancel.label')</a>
-				</div>
-			</fieldset>
-
-			<p class="info">#i18n('interlink.file.description')</p>
-		</form>
-
-		<!-- Blueish two pixel high line. -->
-		<hr class="ui-widget-content"/>
-
 		<form id="script-form" action="${moduleUri}/script?project=$esc.url($it.uri)" method="post">
-			<h4>#i18n('interlink.script.title')</h4>
+			## <h4>#i18n('interlink.script.title')</h4>
 
 			<fieldset class="source field-stack ui-widget-content dl-panel medium ui-corner-all">
 				<legend>#i18n('source.title')</legend>
@@ -655,7 +629,7 @@
 				<a class="remove-compare-js hidden-field-js ui-priority-secondary" href="#" title="TODO">Retirer une comparaison</a>
 			</fieldset>
 
-			<div class="clearfix"/>
+			<div class="clearfix"></div>
 
 			<div class="measure-stack">
 				<h4>#i18n('metric.title')</h4>
@@ -708,13 +682,13 @@
 							</optgroup>
 						</select>
 					</div>
-					<div class="weight-js form-inline ui-state-default" title="#i18n('weight.title')">
-						<label for="weightFirst" title="#i18n('weight.title')">#i18n('compare.measure.weight')</label>
-						<input type="text" name="weightFirst" id="weightFirst" class="numeric-field" title="#i18n('weight.title')" placeholder="#i18n('field.optional')"/>
-					</div>
-					<div class="form-inline ui-state-default ui-corner-right" title="#i18n('threshold.title')">
+					<div class="form-inline ui-state-default" title="#i18n('threshold.title')">
 						<label for="thresholdFirst" title="#i18n('threshold.title')">#i18n('compare.measure.threshold')</label>
 						<input type="text" name="thresholdFirst" id="thresholdFirst" class="numeric-field" title="#i18n('threshold.title')" placeholder="#i18n('field.mandatory')" required="required"/>
+					</div>
+					<div class="weight-js form-inline ui-state-default ui-corner-right" title="#i18n('weight.title')">
+						<label for="weightFirst" title="#i18n('weight.title')">#i18n('compare.measure.weight')</label>
+						<input type="text" name="weightFirst" id="weightFirst" class="numeric-field" title="#i18n('weight.title')" placeholder="#i18n('field.optional')"/>
 					</div>
 				</fieldset>
 
@@ -766,13 +740,13 @@
 							</optgroup>
 						</select>
 					</div>
-					<div class="weight-js form-inline ui-state-default" title="#i18n('weight.title')">
-						<label for="weightSecund" title="#i18n('weight.title')">#i18n('compare.measure.weight')</label>
-						<input type="text" name="weightSecund" id="weightSecund" class="numeric-field" title="#i18n('weight.title')" placeholder="#i18n('field.optional')"/>
-					</div>
-					<div class="form-inline ui-state-default ui-corner-right" title="#i18n('threshold.title')">
+					<div class="form-inline ui-state-default" title="#i18n('threshold.title')">
 						<label for="thresholdSecund" title="#i18n('threshold.title')">#i18n('compare.measure.threshold')</label>
 						<input type="text" name="thresholdSecund" id="thresholdSecund" class="numeric-field" title="#i18n('threshold.title')" placeholder="#i18n('field.optional')"/>
+					</div>
+					<div class="weight-js form-inline ui-state-default ui-corner-right" title="#i18n('weight.title')">
+						<label for="weightSecund" title="#i18n('weight.title')">#i18n('compare.measure.weight')</label>
+						<input type="text" name="weightSecund" id="weightSecund" class="numeric-field" title="#i18n('weight.title')" placeholder="#i18n('field.optional')"/>
 					</div>
 				</fieldset>
 
@@ -824,13 +798,13 @@
 							</optgroup>
 						</select>
 					</div>
-					<div class="weight-js form-inline ui-state-default" title="#i18n('weight.title')">
-						<label for="weightThird" title="#i18n('weight.title')">#i18n('compare.measure.weight')</label>
-						<input type="text" name="weightThird" id="weightThird" class="numeric-field" title="#i18n('weight.title')" placeholder="#i18n('field.optional')"/>
-					</div>
-					<div class="form-inline ui-state-default ui-corner-right" title="#i18n('threshold.title')">
+					<div class="form-inline ui-state-default" title="#i18n('threshold.title')">
 						<label for="thresholdThird" title="#i18n('threshold.title')">#i18n('compare.measure.threshold')</label>
 						<input type="text" name="thresholdThird" id="thresholdThird" class="numeric-field" title="#i18n('threshold.title')" placeholder="#i18n('field.optional')"/>
+					</div>
+					<div class="weight-js form-inline ui-state-default ui-corner-right" title="#i18n('weight.title')">
+						<label for="weightThird" title="#i18n('weight.title')">#i18n('compare.measure.weight')</label>
+						<input type="text" name="weightThird" id="weightThird" class="numeric-field" title="#i18n('weight.title')" placeholder="#i18n('field.optional')"/>
 					</div>
 				</fieldset>
 
@@ -919,6 +893,32 @@
 				<label for="saveScript" title="#i18n('save.title')">#i18n('save.label')</label>
 				<a class="cancel-button ui-priority-secondary" href="${baseUri}/project/${it.title}" title="#i18n('cancel.title') #i18n('project.workspace.link')">#i18n('cancel.label')</a>
 			</div>
+		</form>
+
+		<!-- Blueish two pixel high line. -->
+		<hr class="ui-widget-content"/>
+
+		<form id="file-form" action="${moduleUri}/run?project=$esc.url($it.uri)" method="post" enctype="multipart/form-data">
+			<h4>#i18n('interlink.file.title')</h4>
+
+			<fieldset class="ui-widget-content ui-corner-all">
+				<div class="form-inline ui-state-default ui-corner-left" title="#i18n('file.title')">
+					<label for="configFile" title="#i18n('file.title')">#i18n('file.label')</label>
+					<input type="file" id="configFile" name="configFile" title="#i18n('file.title')" required="required"/>
+				</div>
+
+				<div class="form-inline ui-state-default ui-corner-right" title="#i18n('identifier.title')">
+					<label for="linkSpecId" title="#i18n('identifier.title')">#i18n('identifier.label')</label>
+					<input type="text" id="linkSpecId" name="linkSpecId" title="#i18n('identifier.title')" placeholder="#i18n('field.mandatory')" required="required"/>
+				</div>
+
+				<div class="multiple-choices">
+					<input type="submit" id="file-submit" value="#i18n('submit.label')"/>
+					<a class="cancel-button ui-priority-secondary" href="${baseUri}/project/${it.title}" title="#i18n('cancel.title') #i18n('project.workspace.link')">#i18n('cancel.label')</a>
+				</div>
+			</fieldset>
+
+			<p class="info">#i18n('interlink.file.description')</p>
 		</form>
 
 	</div>
