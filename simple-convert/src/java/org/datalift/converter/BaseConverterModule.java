@@ -458,13 +458,30 @@ public abstract class BaseConverterModule
             };
     }
 
-    protected void throwInvalidParamError(String name, Object value) {
+    /**
+     * Throws a {@link WebApplicationException} with a HTTP status set
+     * to 400 (Bad request) to signal an invalid or missing web service
+     * parameter.
+     * @param  name    the parameter name in the web service interface.
+     * @param  value   the invalid parameter value or <code>null</code>
+     *                 if the parameter was absent.
+     *
+     * @throws WebApplicationException always.
+     */
+    protected void throwInvalidParamError(String name, Object value)
+                                                throws WebApplicationException {
         TechnicalException error = (value != null)?
                 new TechnicalException("ws.invalid.param.error", name, value):
                 new TechnicalException("ws.missing.param", name);
         this.sendError(BAD_REQUEST, error.getLocalizedMessage());
     }
 
+    /**
+     * Logs and map an internal processing error onto HTTP status codes.
+     * @param  e   the error to map.
+     *
+     * @throws WebApplicationException always.
+     */
     protected void handleInternalError(Exception e)
                                                 throws WebApplicationException {
         TechnicalException error = null;
