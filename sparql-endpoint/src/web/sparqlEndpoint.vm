@@ -8,7 +8,7 @@
 #css_links
 </head>
 <body>
-#if($isAuth)
+#if( ${securityCtx.userAuthenticated} )
 	<a href="${baseUri}/project" id="goto_workspace" class="button" style="position:absolute;top:15px;right:15px;">#i18n("project.workspace.link")</a>
 #end
 #banner
@@ -16,11 +16,11 @@
 		<h3 class="ui-widget-header dl-widget-header">#i18n("sparql.query.full")</h3>
 		<div class="dl-panel">
 		    <form id="query_form" action="${baseUri}/sparql" method="get">
-#if( ${collections.size()} > 1 )
+#if( ${repositories.size()} > 1 )
 			<div class="dl-form-elt">
 				<label for="default-graph-uri">#i18n("sparql.repository"): </label>
 				<select id="default-graph-uri" name="default-graph-uri">
-#foreach( $item in $collections )
+#foreach( $item in $repositories )
 #if( $foreach.count == 1 )
 					<option value="$esc.html($!{item.name})" selected="true">#i18n($!{item.label})</option>
 #else
@@ -127,7 +127,7 @@
 				$("#format_save").val(fmt);
 				var requestUrl = $("#query_form").attr("action")
 							+ "?" + $("#query").serialize();
-#if( ${collections.size()} > 1 )
+#if( ${repositories.size()} > 1 )
 				requestUrl += "&" + $("#default-graph-uri").serialize();
 #end
 				var maxResults = $("#max").val();
