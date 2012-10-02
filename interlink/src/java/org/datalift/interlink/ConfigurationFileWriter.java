@@ -447,7 +447,6 @@ public final class ConfigurationFileWriter {
     		String sourceAddress,
     		String sourceContext,
     		String sourceQuery,
-    		String sourceVariable,
     		String sourcePropertyFirst,
     		String sourceTransformationFirst,
     		String sourceRegexpTokenFirst,
@@ -472,7 +471,6 @@ public final class ConfigurationFileWriter {
     		String targetAddress,
     		String targetContext,
     		String targetQuery,
-    		String targetVariable,
     		String targetPropertyFirst,
     		String targetTransformationFirst,
     		String targetRegexpTokenFirst,
@@ -555,9 +553,10 @@ public final class ConfigurationFileWriter {
    			Element interlink = doc.createElement("Interlink");
    			interlink.setAttribute("id", interlinkId);
    			
-   			if (isEmptyValue(sourceVariable) || isEmptyValue(targetVariable)) {
-   				throw new ParserConfigurationException("Required Dataset fields can't be empty");
-   			}
+   			
+   			//TODO Set it elsewhere ?
+   			String sourceVariable = SilkModel.SB;
+   			String targetVariable = SilkModel.SB;
    			
    	    	interlink.appendChild(getLinkTypeTag(doc, "owl:sameAs"));
    	    	interlink.appendChild(getSourceDatasetTag(doc, sourceId, sourceVariable, sourceQuery));

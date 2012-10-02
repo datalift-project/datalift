@@ -40,21 +40,12 @@
 					</p>
 				</div>
 
-				<div class="dl-form-elt form-stack ui-state-default">
+				<div class="dl-form-elt form-stack ui-state-default ui-corner-bottom">
 					<label for="sourceQuery">#i18n('dataset.query.label')</label>
 					<textarea name="sourceQuery" id="sourceQuery" rows="2" cols="53" wrap="off" placeholder="#i18n('field.optional') &mdash; #i18n('dataset.query.example')"></textarea>
 					<p class="info">
 						<span class="ui-icon ui-icon-help"></span>
 						#i18n('dataset.query.info') &mdash; #i18n('field.optional')
-					</p>
-				</div>
-
-				<div class="dl-form-elt form-stack ui-state-default ui-corner-bottom">
-					<label for="sourceVariable">#i18n('dataset.variable.label')</label>
-					<input type="text" name="sourceVariable" id="sourceVariable" placeholder="#i18n('field.mandatory')" required="required"/>
-					<p class="info">
-						<span class="ui-icon ui-icon-help"></span>
-						#i18n('dataset.variable.info') &mdash; #i18n('field.mandatory')
 					</p>
 				</div>
 
@@ -340,21 +331,12 @@
 					</p>
 				</div>
 
-				<div class="dl-form-elt form-stack ui-state-default">
+				<div class="dl-form-elt form-stack ui-state-default ui-corner-bottom">
 					<label for="targetQuery">#i18n('dataset.query.label')</label>
 					<textarea name="targetQuery" id="targetQuery" rows="2" cols="53" wrap="off" placeholder="#i18n('field.optional') &mdash; #i18n('dataset.query.example')"></textarea>
 					<p class="info">
 						<span class="ui-icon ui-icon-help"></span>
 						#i18n('dataset.query.info') &mdash; #i18n('field.optional')
-					</p>
-				</div>
-
-				<div class="dl-form-elt form-stack ui-state-default ui-corner-bottom">
-					<label for="targetVariable">#i18n('dataset.variable.label')</label>
-					<input type="text" name="targetVariable" id="targetVariable" placeholder="#i18n('field.mandatory')" required="required"/>
-					<p class="info">
-						<span class="ui-icon ui-icon-help"></span>
-						#i18n('dataset.variable.info') &mdash; #i18n('field.mandatory')
 					</p>
 				</div>
 

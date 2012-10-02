@@ -131,8 +131,6 @@ $(document).ready(function() {
 	var $targetAddress = $("#targetAddress");
 	var $sourceQuery = $("#sourceQuery");
 	var $targetQuery = $("#targetQuery");
-	var $sourceVariable = $("#sourceVariable");
-	var $targetVariable = $("#targetVariable");
 	var $sourcePropertyFirst  = $("#sourcePropertyFirst");
 	var $sourcePropertySecund = $("#sourcePropertySecund");
 	var $sourcePropertyThird  = $("#sourcePropertyThird");
@@ -150,8 +148,6 @@ $(document).ready(function() {
 	$targetAddress.autocomplete({source: datasets, minLength: 0, delay: 0});
 	$sourceQuery.autocomplete({source: queries, minLength: 0, delay: 0});
 	$targetQuery.autocomplete({source: queries, minLength: 0, delay: 0});
-	$sourceVariable.autocomplete({source: variables, minLength: 0, delay: 0});
-	$targetVariable.autocomplete({source: variables, minLength: 0, delay: 0});
 	$sourcePropertyFirst.autocomplete({source: predicates, minLength: 0, delay: 0});
 	$sourcePropertySecund.autocomplete({source: predicates, minLength: 0, delay: 0});
 	$sourcePropertyThird.autocomplete({source: predicates, minLength: 0, delay: 0});

@@ -135,7 +135,7 @@ public class SilkModel extends InterlinkingModel {
      * @param var Return variable.
      * @return True if query is valid.
      */
-    private boolean isValidQuery(String query, String var) {
+    public boolean isValidQuery(String query, String var) {
     	// Might make use of a better validation.
     	return query.contains("?" + var);
     }
@@ -197,7 +197,6 @@ public class SilkModel extends InterlinkingModel {
     		// Source fields.
     		String sourceAddress,
     		String sourceQuery,
-    		String sourceVariable,
     		String sourcePropertyFirst,
     		String sourceTransformationFirst,
     		String sourceRegexpTokenFirst,
@@ -220,7 +219,6 @@ public class SilkModel extends InterlinkingModel {
     		// Target fields.
     		String targetAddress,
     		String targetQuery,
-    		String targetVariable,
     		String targetPropertyFirst,
     		String targetTransformationFirst,
     		String targetRegexpTokenFirst,
@@ -295,8 +293,8 @@ public class SilkModel extends InterlinkingModel {
 
     	String interlinkId = sourceId + "-and-" + targetId;
     	 	
-    	File ret = ConfigurationFileWriter.createConfigFile(interlinkId, sourceId, sourceAddress, sourceContext, sourceQuery, sourceVariable, sourcePropertyFirst, sourceTransformationFirst, sourceRegexpTokenFirst, sourceStopWordsFirst, sourceSearchFirst, sourceReplaceFirst, sourcePropertySecund, sourceTransformationSecund, sourceRegexpTokenSecund, sourceStopWordsSecund, sourceSearchSecund, sourceReplaceSecund, sourcePropertyThird, sourceTransformationThird, sourceRegexpTokenThird, sourceStopWordsThird, sourceSearchThird, sourceReplaceThird, 
-    														targetId, targetAddress, targetContext, targetQuery, targetVariable, targetPropertyFirst, targetTransformationFirst, targetRegexpTokenFirst, targetStopWordsFirst, targetSearchFirst, targetReplaceFirst, targetPropertySecund, targetTransformationSecund, targetRegexpTokenSecund, targetStopWordsSecund, targetSearchSecund, targetReplaceSecund, targetPropertyThird, targetTransformationThird, targetRegexpTokenThird, targetStopWordsThird, targetSearchThird, targetReplaceThird, metricFirst, minFirst, maxFirst, unitFirst, curveFirst, weightFirst, thresholdFirst, metricSecund, minSecund, maxSecund, unitSecund, curveSecund, weightSecund, thresholdSecund, metricThird, minThird, maxThird, unitThird, curveThird, weightThird, thresholdThird, aggregation);
+    	File ret = ConfigurationFileWriter.createConfigFile(interlinkId, sourceId, sourceAddress, sourceContext, sourceQuery, sourcePropertyFirst, sourceTransformationFirst, sourceRegexpTokenFirst, sourceStopWordsFirst, sourceSearchFirst, sourceReplaceFirst, sourcePropertySecund, sourceTransformationSecund, sourceRegexpTokenSecund, sourceStopWordsSecund, sourceSearchSecund, sourceReplaceSecund, sourcePropertyThird, sourceTransformationThird, sourceRegexpTokenThird, sourceStopWordsThird, sourceSearchThird, sourceReplaceThird, 
+    														targetId, targetAddress, targetContext, targetQuery, targetPropertyFirst, targetTransformationFirst, targetRegexpTokenFirst, targetStopWordsFirst, targetSearchFirst, targetReplaceFirst, targetPropertySecund, targetTransformationSecund, targetRegexpTokenSecund, targetStopWordsSecund, targetSearchSecund, targetReplaceSecund, targetPropertyThird, targetTransformationThird, targetRegexpTokenThird, targetStopWordsThird, targetSearchThird, targetReplaceThird, metricFirst, minFirst, maxFirst, unitFirst, curveFirst, weightFirst, thresholdFirst, metricSecund, minSecund, maxSecund, unitSecund, curveSecund, weightSecund, thresholdSecund, metricThird, minThird, maxThird, unitThird, curveThird, weightThird, thresholdThird, aggregation);
 		
     	
     	LOG.debug("Created new Silk config file.");
@@ -364,7 +362,7 @@ public class SilkModel extends InterlinkingModel {
      * TODO 250 lines instead of the maximum 150.
      * @return A list of errors in the given fields.
      */
-    public final LinkedList<String> getErrorMessages(String sourceAddress, String sourceQuery, String sourceVariable, String sourcePropertyFirst, String sourceTransformationFirst, String sourceRegexpTokenFirst, String sourceStopWordsFirst, String sourceSearchFirst, String sourceReplaceFirst, String sourcePropertySecund, String sourceTransformationSecund, String sourceRegexpTokenSecund, String sourceStopWordsSecund, String sourceSearchSecund, String sourceReplaceSecund, String sourcePropertyThird, String sourceTransformationThird, String sourceRegexpTokenThird, String sourceStopWordsThird, String sourceSearchThird, String sourceReplaceThird, String targetAddress, String targetQuery, String targetVariable, String targetPropertyFirst, String targetTransformationFirst, String targetRegexpTokenFirst, String targetStopWordsFirst, String targetSearchFirst, String targetReplaceFirst, String targetPropertySecund, String targetTransformationSecund, String targetRegexpTokenSecund, String targetStopWordsSecund, String targetSearchSecund, String targetReplaceSecund, String targetPropertyThird, String targetTransformationThird, String targetRegexpTokenThird, String targetStopWordsThird, String targetSearchThird, String targetReplaceThird, String metricFirst, String minFirst, String maxFirst, String unitFirst, String curveFirst, String weightFirst, String thresholdFirst, String metricSecund, String minSecund, String maxSecund, String unitSecund, String curveSecund, String weightSecund, String thresholdSecund, String metricThird, String minThird, String maxThird, String unitThird, String curveThird, String weightThird, String thresholdThird, String aggregation) {
+    public final LinkedList<String> getErrorMessages(String sourceAddress, String sourceQuery, String sourcePropertyFirst, String sourceTransformationFirst, String sourceRegexpTokenFirst, String sourceStopWordsFirst, String sourceSearchFirst, String sourceReplaceFirst, String sourcePropertySecund, String sourceTransformationSecund, String sourceRegexpTokenSecund, String sourceStopWordsSecund, String sourceSearchSecund, String sourceReplaceSecund, String sourcePropertyThird, String sourceTransformationThird, String sourceRegexpTokenThird, String sourceStopWordsThird, String sourceSearchThird, String sourceReplaceThird, String targetAddress, String targetQuery, String targetPropertyFirst, String targetTransformationFirst, String targetRegexpTokenFirst, String targetStopWordsFirst, String targetSearchFirst, String targetReplaceFirst, String targetPropertySecund, String targetTransformationSecund, String targetRegexpTokenSecund, String targetStopWordsSecund, String targetSearchSecund, String targetReplaceSecund, String targetPropertyThird, String targetTransformationThird, String targetRegexpTokenThird, String targetStopWordsThird, String targetSearchThird, String targetReplaceThird, String metricFirst, String minFirst, String maxFirst, String unitFirst, String curveFirst, String weightFirst, String thresholdFirst, String metricSecund, String minSecund, String maxSecund, String unitSecund, String curveSecund, String weightSecund, String thresholdSecund, String metricThird, String minThird, String maxThird, String unitThird, String curveThird, String weightThird, String thresholdThird, String aggregation) {
     	LinkedList<String> errors = new LinkedList<String>();
     	//TODO Might use a refactoring, but how to handle so many fields ?
     	//TODO For now we only check for empty values / dependencies, but we also
@@ -377,22 +375,6 @@ public class SilkModel extends InterlinkingModel {
     	}
     	if (isEmptyValue(targetAddress)) {
     		errors.add(getTranslatedResource("error.emptyfield") + " : \"" + getTranslatedResource("dataset.address.label") + "\" (" + getTranslatedResource("target.label") + ").");
-    	}
-    	if (isEmptyValue(sourceVariable)) {
-    		errors.add(getTranslatedResource("error.emptyfield") + " : \"" + getTranslatedResource("dataset.variable.label") + "\" (" + getTranslatedResource("source.label") + ").");
-    	}
-    	else {
-    		if (!isEmptyValue(sourceQuery) && !isValidQuery(sourceQuery, sourceVariable)) {
-    			errors.add(getTranslatedResource("error.invalidquery") + " : \"" + sourceQuery + "\" (" + getTranslatedResource("source.label") + ") .");
-    		}
-    	}
-    	if (isEmptyValue(targetVariable)) {
-    		errors.add(getTranslatedResource("error.emptyfield") + " : \"" + getTranslatedResource("dataset.variable.label") + "\" (" + getTranslatedResource("target.label") + ").");
-    	} else {
-    		//TODO Append else and if.
-    		if (!isEmptyValue(targetQuery) && !isValidQuery(targetQuery, targetVariable)) {
-    			errors.add(getTranslatedResource("error.invalidquery") + " : \"" + targetQuery + "\" (" + getTranslatedResource("target.label") + ") .");
-    		}
     	}
     	
     	// Comparison properties, transformations and additional fields for certain transformations only.
