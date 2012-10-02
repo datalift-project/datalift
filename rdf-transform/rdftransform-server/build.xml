@@ -281,7 +281,7 @@
     <!-- Copy web application page templates and resources -->
     <copy todir="${classes.dir}" includeEmptyDirs="false"
                                  preservelastmodified="true">
-      <fileset dir="${web.home}" excludes="**/.*"/>
+      <!-- <fileset dir="${web.home}" excludes="**/.*"/> -->
       <fileset dir="${rsc.home}" excludes="**/.*"/>
     </copy>
     <!-- Copy runtime JARs to embed in distribution -->
