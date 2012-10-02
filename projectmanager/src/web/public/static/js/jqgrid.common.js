@@ -75,12 +75,12 @@ function htmlTableTojQGrid(params) {
 			},
 		});
 		
-		gridParams = { 
+		var gridParams = { 
 	 			datatype: "local", 
 	 			pager: $('#pagernav'), 
 	 			rowNum: 500,
 				rowList: [50,100,200,500,1000,2000],
-		}
+		};
 		if (params != null) {
 			gridParams = jsonConcat(params, gridParams);
 		}

@@ -44,11 +44,8 @@
 	<script language="javascript" src="${baseUri}/project/static/js/jqgrid.common.js"></script>
 	<script type="text/javascript">
 		$(function() {
-			var params = [{ 
-				name: '#i18n("source.grid.row.heading")', 
-				index: '#i18n("source.grid.row.heading")', 
-				sorttype:'int' }];
-			htmlTableTojQGrid(params);
+			htmlTableTojQGrid();
+			jQuery("#grid").jqGrid('setColProp', '#i18n("source.grid.row.heading")', { sorttype:'int' });
 		});
 	</script>
 </body>
