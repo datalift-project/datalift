@@ -101,6 +101,7 @@ import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.CachingSource;
 import org.datalift.fwk.project.CsvSource;
 import org.datalift.fwk.project.DuplicateObjectKeyException;
+import org.datalift.fwk.project.FileSource;
 import org.datalift.fwk.project.GmlSource;
 import org.datalift.fwk.project.RdfSource;
 import org.datalift.fwk.project.ShpSource;
@@ -1611,6 +1612,11 @@ public class Workspace extends BaseModule
                                         uriInfo, request, acceptHdr);
             }
             else {
+                // Ensure the source is not corrupt.
+                if (src instanceof FileSource) {
+                    // Check that the underlying data file exists.
+                    ((FileSource)src).getInputStream().close();
+                }
                 // Return the HTML template matching the source type.
                 String template = null;
                 if ((src instanceof CsvSource) || (src instanceof SqlSource)) {
