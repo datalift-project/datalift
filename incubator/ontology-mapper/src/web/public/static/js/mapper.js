@@ -10,6 +10,17 @@ function localName(s) {
   return (i != -1)? s.slice(i+1): s;
 }
 
+function buildDescription(desc) {
+  if (desc) {
+    if (desc.length > 65) {
+      var i = desc.lastIndexOf(' ', 65);
+      if (i < 48) i = 64;
+      desc = desc.substring(0, i) + "..."
+    }
+  }
+  return desc;
+}
+
 function compare(a, b) {
   return a.compareTo(b);
 }
@@ -17,6 +28,8 @@ function compare(a, b) {
 function indent(e) {
   return (e == undefined)? 0: (1 + indent(e.owner));
 }
+
+var propertyMap = [];
 
 /**
  * The OwlOntology class
@@ -26,12 +39,12 @@ function OwlOntology(uri, name, desc, classes, properties) {
 
   self.uri = uri;
   self.name = name;
-  self.desc = desc;
+  self.desc = buildDescription(desc);
 
   self.classList = classes;
   self.classes = [];
   if (classes != undefined) {
-    // Populate class by uri map.
+    // Populate class-by-URI map.
     for (var i=0; i<classes.length; i++) {
       var c = classes[i];
       self.classes[c.uri] = c;
@@ -114,7 +127,7 @@ function OwlClass(uri, data) {
 
   self.uri  = uri;
   self.name = localName(uri);
-  self.desc = data.desc;
+  self.desc = buildDescription(data.desc);
   self.parentUris = (data.parents)? data.parents: [];
   self.subclassUris = (data.subclasses)? data.subclasses: [];
   self.disjoints = (data.disjoints)? data.disjoints: [];
@@ -126,7 +139,11 @@ function OwlClass(uri, data) {
   self.props = [];
 
   self.toString = function() {
-    return self.name + ' - ' + self.desc;
+    var s = self.name;
+    if (self.desc) {
+      s += ' - ' + self.desc;
+    }
+    return s;
   };
   self.compareTo = function(o) {
     return (o == null)? 1:
@@ -211,14 +228,18 @@ function OwlProperty(uri, data) {
   self.uri  = uri;
   self.name = localName(uri);
   self.type = data.type;
-  self.desc = data.desc;
+  self.desc = buildDescription(data.desc);
   // Ignore domains as properties are directly linked by domain classes.
   self.rangeUris = (data.ranges)? data.ranges: [];
 
   self.ranges = [];
 
   self.toString = function() {
-    return self.name + ' - ' + self.desc;
+    var s = self.name;
+    if (self.desc) {
+      s += ' - ' + self.desc;
+    }
+    return s;
   };
   self.compareTo = function(o) {
     return (o == null)? 1:
@@ -289,7 +310,22 @@ function MappingDesc(owner, owlClass, property, value) {
       js.types = self.types();
     }
     if (self.value) {
-      js.value = self.value;
+      var elts = self.value.split(/\+/);
+      var v = '';
+      for (var i=0; i<elts.length; i++) {
+        if (i != 0) {
+          v += '+';
+        }
+        // Trim value to try to resolve a property name."
+        var uri = propertyMap[elts[i].replace(/^\s+|\s+$/, '')];
+        if (uri) {
+          v += uri;
+        }
+        else {
+          v += elts[i];
+        }
+      }
+      js.value = v;
     }
     if (self.children().length != 0) {
       js.children = self.children();
@@ -316,8 +352,8 @@ function MappingViewModel(baseUri, projectUri, sources, ontologies) {
 
   self.selectedSource = ko.observable();
   self.createNewSource = ko.observable(false);
-  self.targetSrcName  = ko.observable("A source");
-  self.targetSrcGraph = ko.observable(self.sources[0].uri + '-onto');
+  self.targetSrcName  = ko.observable("New source");
+  self.targetSrcGraph = ko.observable(self.sources[0].uri + '-mapped');
   self.availableSrcProps = [];
 
   self.selectedOntology = ko.observable();
@@ -325,6 +361,9 @@ function MappingViewModel(baseUri, projectUri, sources, ontologies) {
 
   self.mappings = ko.observableArray([]);
   self.currentMapping = ko.observable();
+
+  self.prefixMapping = [];
+  self.availableSrcProps = [];
 
   self.primaryTypes = ko.observable();
   self.selectedPrimaryType = ko.observable();
@@ -335,6 +374,7 @@ function MappingViewModel(baseUri, projectUri, sources, ontologies) {
   self.valueExpected = ko.observable(false);
   self.propertyValue = ko.observable();
 
+  self.displayPreview = ko.observable(false);
   self.preview = ko.observable();
   self.queryComplete = ko.observable(false);
 
@@ -373,23 +413,38 @@ function MappingViewModel(baseUri, projectUri, sources, ontologies) {
         }
       }
     });
-
-  self.selectSource = function(src) {
-    self.selectedSource(src);
-    url = self.baseUri + "/sparql?default-graph-uri=internal&query=SELECT DISTINCT ?p WHERE { graph <" + src.uri + "> { ?s ?p ?o.}}&max=25";
-    $.get(url, function(data) {
-        var rdf = new RegExp("http://www.w3.org/1999/02/22-rdf-syntax-ns#");
-        var rdfs = new RegExp("http://www.w3.org/2000/01/rdf-schema#");
-        var owl = new RegExp("http://www.w3.org/2002/07/owl#");
-        var srcNs = new RegExp(src.uri + "(/|#)");
-        self.availableSrcProps = [];
-        for (var i=0; i<data.results.bindings.length; i++ ) {
-          var p = data.results.bindings[i].p.value;
-          self.availableSrcProps.push(p.replace(rdf, "rdf:").replace(rdfs, "rdfs:").replace(owl, "owl:").replace(srcNs, ""));
-        }
-      }, "json");
-  }
-  self.selectSource(self.sources[0]);
+  self.selectedSource.subscribe(function() {
+      url = self.baseUri + "/sparql?default-graph-uri=internal&query=SELECT DISTINCT ?p WHERE { graph <" + self.selectedSource().uri + "> { ?s ?p ?o . }}&max=25";
+      $.get(url, function(data) {
+          var rdf = new RegExp("http://www.w3.org/1999/02/22-rdf-syntax-ns#");
+          var rdfs= new RegExp("http://www.w3.org/2000/01/rdf-schema#");
+          var owl = new RegExp("http://www.w3.org/2002/07/owl#");
+          var prefixMapping = [];
+          self.availableSrcProps = [];
+          for (var i=0; i<data.results.bindings.length; i++ ) {
+            var p = data.results.bindings[i].p.value;
+            // Substitute well-known prefixes.
+            var name = p.replace(rdf, "rdf:").replace(rdfs, "rdfs:").replace(owl, "owl:");
+            if (name == p) {
+              // Not a well-known prefix. => Extract namespace
+              var j = Math.max(p.lastIndexOf('#'), p.lastIndexOf('/')) + 1;
+              var ns = p.substring(0, j);
+              name = p.substring(j);
+              // Resolve name conflicts.
+              var k = prefixMapping.indexOf(ns);
+              if (k == -1) {
+                // Namespace not yet known.
+                k = prefixMapping.push(ns) - 1;
+              }
+              if (k != 0) {
+                name = 'ns' + k + ':' + name;
+              }
+              propertyMap[name] = p;
+            }
+            self.availableSrcProps.push(name);
+          }
+        }, "json");
+    });
 
   self.addTypeMapping = function() {
     var m = new MappingDesc(self.currentMapping(),
@@ -443,29 +498,37 @@ function MappingViewModel(baseUri, projectUri, sources, ontologies) {
     self.updatePreview();
   }
 
-  self.execute = function(preview) {
-    if (self.currentMapping()) {
+  self.updatePreview = function() {
+    if (self.mappings().length != 0) {
       var args = {
-          preview:     preview,
           sourceGraph: self.selectedSource().uri,
           ontology:    ko.toJSON(self.selectedOntology()),
-          mapping:     ko.toJSON(self.mappings()[0]),
+          mapping:     ko.toJSON(self.mappings()[0])
         };
-      if (self.createNewSource()) {
-          args.targetName  = self.targetSrcName();
-          args.targetGraph = self.targetSrcGraph();
-      }
       $.post(self.baseUri + "/ontology-mapper/preview", args,
              function(data) {
                self.preview(data);
                self.queryComplete((data.search("WHERE") != -1));
              });
     }
+    else {
+      self.preview(null);
+      self.queryComplete(false);
+    }
   }
 
-  self.updatePreview = function() {
-    self.execute(true);
-  }
+  $("#submit-button").click(function(event) {
+    // Set form fields.
+    $("#submit-srcGraph").val(self.selectedSource().uri);
+    $("#submit-ontology").val(ko.toJSON(self.selectedOntology()));
+    $("#submit-mapping").val(ko.toJSON(self.mappings()[0]));
+    if (self.createNewSource()) {
+      $("#submit-targetName").val(self.targetSrcName());
+      $("#submit-targetGraph").val(self.targetSrcGraph());
+    }
+    // Submit form.
+    $("#execute-mapping-form").submit();
+  });
 
   self.selectMapping = function(m) {
     if (m == self.currentMapping()) return;
@@ -533,15 +596,6 @@ function MappingViewModel(baseUri, projectUri, sources, ontologies) {
 
   self.removeMapping = function(m) {
     var p = m.owner;
-    //var t = self.mappings();
-    //// Search for child mappings.
-    //var children = [];
-    //for (var i=0; i<t.length; i++) {
-    //  if (t[i].owner == m) {
-    //    children.push(t[i]);
-    //  }
-    //}
-    // Removed children recursively.
     for (var i=0; i<m.children.length; i++) {
       self.removeMapping(children[i]);
     }
@@ -554,4 +608,3 @@ function MappingViewModel(baseUri, projectUri, sources, ontologies) {
   }
 };
 
-// ko.applyBindings(new MappingViewModel());
