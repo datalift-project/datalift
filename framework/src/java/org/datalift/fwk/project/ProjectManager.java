@@ -74,7 +74,7 @@ public interface ProjectManager
      * RDF repository.
      * @return a list of all known projects, possible empty.
      */
-    public Collection<? extends Project> listProjects();
+    public Collection<Project> listProjects();
 
     /**
      * Creates a new project.

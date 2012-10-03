@@ -152,7 +152,7 @@ application/prs.cww				cww
 # application/prs.nprend
 # application/prs.plucker
 # application/qsig
-application/rdf+xml				rdf
+application/rdf+xml				rdf owl
 application/reginfo+xml				rif
 application/relax-ng-compact-syntax		rnc
 # application/remote-printing

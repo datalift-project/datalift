@@ -101,6 +101,7 @@ import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.CachingSource;
 import org.datalift.fwk.project.CsvSource;
 import org.datalift.fwk.project.DuplicateObjectKeyException;
+import org.datalift.fwk.project.FileSource;
 import org.datalift.fwk.project.GmlSource;
 import org.datalift.fwk.project.RdfSource;
 import org.datalift.fwk.project.ShpSource;
@@ -658,7 +659,9 @@ public class Workspace extends BaseModule
             String filePath = this.getProjectFilePath(projectId, fileName);
             localFile = this.getFileStorage(filePath);
             this.getFileData(fileData, fileUrl, localFile, uriInfo,
-                                                APPLICATION_CSV_TYPE);
+                             Arrays.asList(TEXT_CSV_TYPE, APPLICATION_CSV_TYPE,
+                                           TEXT_COMMA_SEPARATED_VALUES_TYPE,
+                                           TEXT_PLAIN_TYPE), true);
 
             Separator sep = Separator.valueOf(separator);
             // Initialize new source.
@@ -838,7 +841,7 @@ public class Workspace extends BaseModule
             String filePath = this.getProjectFilePath(projectId, fileName);
             localFile = this.getFileStorage(filePath);
             this.getFileData(fileData, fileUrl, localFile, uriInfo,
-                                                format.getMimeTypes());
+                                                format.getMimeTypes(), false);
             // Initialize new source.
             RdfFileSource src = this.projectManager.newRdfSource(p, sourceUri,
                                     fileName, description, baseUri, filePath,
@@ -1208,7 +1211,7 @@ public class Workspace extends BaseModule
             String filePath = this.getProjectFilePath(projectId, fileName);
             localFile = this.getFileStorage(filePath);
             this.getFileData(fileData, fileUrl, localFile, uriInfo,
-                         Arrays.asList(APPLICATION_XML_TYPE, TEXT_XML_TYPE));
+                     Arrays.asList(APPLICATION_XML_TYPE, TEXT_XML_TYPE), false);
             // Initialize new source.
             XmlSource src = this.projectManager.newXmlSource(p, sourceUri,
                                             fileName, description, filePath);
@@ -1609,6 +1612,11 @@ public class Workspace extends BaseModule
                                         uriInfo, request, acceptHdr);
             }
             else {
+                // Ensure the source is not corrupt.
+                if (src instanceof FileSource) {
+                    // Check that the underlying data file exists.
+                    ((FileSource)src).getInputStream().close();
+                }
                 // Return the HTML template matching the source type.
                 String template = null;
                 if ((src instanceof CsvSource) || (src instanceof SqlSource)) {
@@ -1661,7 +1669,8 @@ public class Workspace extends BaseModule
                 if (resolved) {
                     ResponseBuilder b = Response.ok();
                     if (value != null) {
-                        b.entity(new Gson().toJson(value));
+                        b.entity(new Gson().toJson(value))
+                         .type(APPLICATION_JSON_UTF8);
                     }
                     response = b.build();
                 }
@@ -1929,8 +1938,12 @@ public class Workspace extends BaseModule
     private ResponseBuilder displayIndexPage(ResponseBuilder response,
                                              Project p) {
         // Populate view with project list.
-        TemplateModel view = this.newView("workspace.vm",
-                                          this.projectManager.listProjects());
+        Collection<Project> projects = this.projectManager.listProjects();
+        TemplateModel view = this.newView("workspace.vm", projects);
+        // If no project is selected but only one is available, select it.
+        if (projects.size() == 1) {
+            p = projects.iterator().next();
+        }
         // Display selected project.
         if (p != null) {
             view.put("current", p);
@@ -2278,7 +2291,7 @@ public class Workspace extends BaseModule
                              UriInfo uriInfo, MediaType mimeType)
                                                         throws IOException {
         this.getFileData(in, u, destFile, uriInfo,
-                         (mimeType != null)? Arrays.asList(mimeType): null);
+                     (mimeType != null)? Arrays.asList(mimeType): null, false);
     }
 
     /**
@@ -2303,8 +2316,8 @@ public class Workspace extends BaseModule
      *                     the file data.
      */
     private void getFileData(InputStream in, URL u, File destFile,
-                             UriInfo uriInfo, Collection<MediaType> mimeTypes)
-                                                        throws IOException {
+                             UriInfo uriInfo, Collection<MediaType> mimeTypes,
+                             boolean allowAny) throws IOException {
         if (in != null) {
             FileUtils.save(in, destFile);
         }
@@ -2341,6 +2354,9 @@ public class Workspace extends BaseModule
                             // Secondary MIME types.
                             buf.append(", ").append(m).append("; q=0.5");
                         }
+                    }
+                    if (allowAny) {
+                        buf.append(", ").append(WILDCARD).append("; q=0.1");
                     }
                     headers = new HashMap<String,String>();
                     headers.put(ACCEPT, buf.toString());

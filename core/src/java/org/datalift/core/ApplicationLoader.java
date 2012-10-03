@@ -50,6 +50,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.ServiceConfigurationError;
 import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.TreeMap;
@@ -466,13 +467,7 @@ public class ApplicationLoader extends LogServletContextListener
             File f = p.root;
             try {
                 log.debug("Searching \"{}\" for modules...", f.getName());
-                try {
-                    this.loadModules(p.classLoader, f);
-                }
-                catch (Exception e) {
-                    throw new TechnicalException("module.load.error", e,
-                                                 f.getName(), e.getMessage());
-                }
+                this.loadModules(p.classLoader, f);
             }
             catch (Exception e) {
                 log.fatal("Failed to load modules from {}. Skipping...",
@@ -517,6 +512,16 @@ public class ApplicationLoader extends LogServletContextListener
                 log.info("Registered module \"{}\" with URL path \"/{}\"",
                                             m.getClass().getSimpleName(), name);
             }
+        }
+        catch (ServiceConfigurationError e) {
+            // Map ServiceConfigurationError to exception, as explained in
+            // the doc. of ServiceLoader.iterator() to "write robust code"!
+            throw new TechnicalException("module.load.error", e,
+                                         f.getName(), e.getMessage());
+        }
+        catch (Exception e) {
+            throw new TechnicalException("module.load.error", e,
+                                         f.getName(), e.getMessage());
         }
         finally {
             if (prevCtx != null) {

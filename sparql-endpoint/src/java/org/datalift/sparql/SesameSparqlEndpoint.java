@@ -194,8 +194,8 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
         // Parse SPARQL query to make sure it's valid.
         ParsedQuery parsedQuery = null;
         try {
-           parsedQuery = new SPARQLParserFactory()
-                                       .getParser().parseQuery(query, baseUri);
+           parsedQuery = new SPARQLParserFactory().getParser()
+                                                  .parseQuery(query, baseUri);
         }
         catch (MalformedQueryException e) {
             this.handleError(query, "Syntax error: " + e.getMessage(),

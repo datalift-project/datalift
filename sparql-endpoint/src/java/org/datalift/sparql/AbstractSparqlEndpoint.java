@@ -45,6 +45,7 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -171,11 +172,17 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     // Class members
     //-------------------------------------------------------------------------
 
-    /** The predefined SPARQL queries. */
-    private final static List<PredefinedQuery> predefinedQueries =
-                                            new LinkedList<PredefinedQuery>();
-
     protected final static Logger log = Logger.getLogger();
+
+    //-------------------------------------------------------------------------
+    // Instance members
+    //-------------------------------------------------------------------------
+
+    /** The predefined SPARQL queries. */
+    private List<PredefinedQuery> predefinedQueries =
+                                            new LinkedList<PredefinedQuery>();
+    /** The welcome page. */
+    private final String welcomeTemplate;
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -183,7 +190,28 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
 
     /** Default constructor. */
     protected AbstractSparqlEndpoint() {
-        super(MODULE_NAME);
+        this(null);
+    }
+
+    /**
+     * Creates a new SPARQL endpoint resource.
+     * @param  welcomeTemplate   the Velocity template to display as
+     *                           welcome page.
+     */
+    protected AbstractSparqlEndpoint(String welcomeTemplate) {
+        this(MODULE_NAME, welcomeTemplate);
+    }
+
+    /**
+     * Creates a new SPARQL endpoint resource.
+     * @param  name              the module name.
+     * @param  welcomeTemplate   the Velocity template to display as
+     *                           welcome page.
+     */
+    protected AbstractSparqlEndpoint(String name, String welcomeTemplate) {
+        super(name);
+        this.welcomeTemplate = (isSet(welcomeTemplate))? welcomeTemplate:
+                                       "/" + name + "/sparqlEndpoint.vm";
     }
 
     //-------------------------------------------------------------------------
@@ -194,7 +222,8 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     @Override
     public void init(Configuration configuration) {
         // Load predefined SPARQL queries.
-        this.loadPredefinedQueries(configuration);
+        this.predefinedQueries = Collections.unmodifiableList(
+                                    this.loadPredefinedQueries(configuration));
     }
 
     /**
@@ -621,10 +650,10 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
             boolean userAuthenticated = SecurityContext.isUserAuthenticated();
             Collection<Repository> c = Configuration.getDefault()
                                         .getRepositories(! userAuthenticated);
-            TemplateModel view = this.newView("sparqlEndpoint.vm", null);
-            view.put("collections", c);
+            TemplateModel view = ViewFactory.newView(this.welcomeTemplate);
+            view.put("repositories", c);
             view.put("queries", predefinedQueries);
-            view.put("isAuth", Boolean.valueOf(userAuthenticated));
+            view.put("namespaces", RdfNamespace.values());
             response = Response.ok(view, TEXT_HTML_UTF8);
         }
         return response.build();
@@ -712,6 +741,16 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         }
         log.debug("Negotiated content type: {}", responseType);
         return responseType;
+    }
+
+    /**
+     * Returns the list of predefined queries to offer the user on this
+     * SPARQL endpoint.
+     * @return the unmodifiable list of predefined queries, read from
+     *         the Datalift configuration.
+     */
+    protected final List<PredefinedQuery> getPredefinedQueries() {
+        return this.predefinedQueries;
     }
 
     protected final TemplateModel newView(String templateName, Object it) {
@@ -832,10 +871,13 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
      * in the module JAR.
      * @param  cfg   the Datalift configuration.
      *
+     * @return the loaded queries, as a list.
      * @throws TechnicalException if any error occurred while loading
      *         the query definitions.
      */
-    private void loadPredefinedQueries(Configuration cfg) {
+    private List<PredefinedQuery> loadPredefinedQueries(Configuration cfg) {
+        final List<PredefinedQuery> queries = new LinkedList<PredefinedQuery>();
+
         String path = cfg.getProperty(QUERIES_FILE_PROPERTY);
         InputStream in = null;
         try {
@@ -889,7 +931,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                             // Create and register new query.
                             PredefinedQuery q = new PredefinedQuery(
                                                     this.query, this.labels);
-                            predefinedQueries.add(q);
+                            queries.add(q);
                             log.trace("Registered predefined SPARQL query \"{}\": {}",
                                       q.getLabel(), q.query);
                             this.labels.clear();
@@ -907,6 +949,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                 try { in.close(); } catch (Exception e) { /* Ignore... */ }
             }
         }
+        return queries;
     }
 
     //-------------------------------------------------------------------------

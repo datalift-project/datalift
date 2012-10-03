@@ -32,7 +32,7 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 
-package org.datalift.fwk.i18n;
+package org.datalift.fwk.util;
 
 
 import java.text.DateFormatSymbols;
@@ -42,76 +42,18 @@ import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
 import java.util.TimeZone;
 
 
 /**
- * Formats and parses dates according to the
- * <a href="http://en.wikipedia.org/wiki/ISO_8601">ISO-8601</a> format,
- * in a thread-safe manner.
+ * A {@Link SimpleDateFormat date format} that can be shared among
+ * threads.
  *
  * @author lbihanic
  */
-public class Iso8601DateFormat extends SimpleDateFormat
+abstract public class ThreadSafeDateFormat extends SimpleDateFormat
 {
-    //-------------------------------------------------------------------------
-    // Constants
-    //-------------------------------------------------------------------------
-
-    /** ISO-8601 date-only format {@link SimpleDateFormat pattern}. */
-    public final static String DATE_PATTERN  = "yyyy-MM-dd";
-    /**
-     * ISO-8601 time-only format {@link SimpleDateFormat pattern},
-     * with timezone.
-     */
-    public final static String TIME_TZ_PATTERN  = "HH:mm:ssZ";
-    /** ISO-8601 UTC time-only format {@link SimpleDateFormat pattern}. */
-    public final static String TIME_UTC_PATTERN = "HH:mm:ss'Z'";
-    /**
-     * ISO-8601 date and time format {@link SimpleDateFormat pattern},
-     * with timezone.
-     */
-    public final static String DATETIME_TZ_PATTERN  =
-                                        DATE_PATTERN + "'T'" + TIME_TZ_PATTERN;
-    /** ISO-8601 UTC date and time format {@link SimpleDateFormat pattern}. */
-    public final static String DATETIME_UTC_PATTERN =
-                                        DATE_PATTERN + "'T'" + TIME_UTC_PATTERN;
-
-    /** The supported ISO-8601 date formats. */
-    public enum Format {
-        /** Date-only format. */
-        Date    (DATE_PATTERN),
-        /** Time-only format. */
-        Time    (TIME_TZ_PATTERN, TIME_UTC_PATTERN),
-        /** Date and time format. */
-        DateTime(DATETIME_TZ_PATTERN, DATETIME_UTC_PATTERN);
-
-        private final String tzPattern;
-        private final String utcPattern;
-
-        Format(String pattern) {
-            this(pattern, pattern);
-        }
-
-        Format(String tzPattern, String utcPattern) {
-            this.tzPattern  = tzPattern;
-            this.utcPattern = utcPattern;
-        }
-
-        public String getFormat(boolean utc) {
-            return (utc)? this.utcPattern: this.tzPattern;
-        }
-    }
-
-    /**
-     * ISO-8601 date time format, with local timezone.
-     */
-    public final static Iso8601DateFormat DATETIME_TZ  =
-                                new Iso8601DateFormat(Format.DateTime, false);
-    /** ISO-8601 UTC date time format. */
-    public final static Iso8601DateFormat DATETIME_UTC =
-                                new Iso8601DateFormat(Format.DateTime, true);
-
     //-------------------------------------------------------------------------
     // Instance members
     //-------------------------------------------------------------------------
@@ -123,39 +65,42 @@ public class Iso8601DateFormat extends SimpleDateFormat
     //-------------------------------------------------------------------------
 
     /**
-     * Constructs a <code>Iso8601DateFormat</code> for
-     * outputting/parsing date and time using the local timezone.
+     * Constructs a <code>DateFormat</code> with the specified
+     * format and using the default locale and timezone.
+     * @param  pattern   the date format pattern.
      */
-    public Iso8601DateFormat() {
-        this(Format.DateTime);
+    public ThreadSafeDateFormat(String pattern) {
+        this(pattern, null, false);
     }
 
     /**
-     * Constructs a <code>Iso8601DateFormat</code> with the specified
-     * format and using the local timezone.
-     * @param  format   the ISO-8601 date format to apply.
+     * Constructs a <code>DateFormat</code> with the specified
+     * format and locale, using the local timezone.
+     * @param  pattern   the date format pattern.
      */
-    public Iso8601DateFormat(Format format) {
-        this(format, false);
+    public ThreadSafeDateFormat(String pattern, Locale locale) {
+        this(pattern, locale, false);
     }
 
     /**
-     * Constructs a <code>Iso8601DateFormat</code> for
-     * outputting/parsing date and time in UTC or the local timezone.
-     * @param  utc   whether to use UTC or local timezone.
+     * Constructs a <code>DateFormat</code> with the specified
+     * format, using the default locale.
+     * @param  pattern   the date format pattern.
+     * @param  utc       whether to use UTC or local timezone.
      */
-    public Iso8601DateFormat(boolean utc) {
-        this(Format.DateTime, utc);
+    public ThreadSafeDateFormat(final String pattern, final boolean utc) {
+        this(pattern, null, utc);
     }
 
     /**
-     * Constructs a <code>Iso8601DateFormat</code> with the specified
+     * Constructs a <code>DateFormat</code> with the specified
      * format.
-     * @param  mode   the ISO-8601 date format to apply.
-     * @param  utc    whether to use UTC or local timezone.
+     * @param  pattern   the date format pattern.
+     * @param  utc       whether to use UTC or local timezone.
      */
-    public Iso8601DateFormat(final Format mode, final boolean utc) {
-        super(mode.getFormat(utc));
+    public ThreadSafeDateFormat(final String pattern,
+                                final Locale locale, final boolean utc) {
+        super(pattern, (locale != null)? locale: Locale.getDefault());
         if (utc) {
             super.setTimeZone(TimeZone.getTimeZone("UTC"));
         }
@@ -255,5 +200,20 @@ public class Iso8601DateFormat extends SimpleDateFormat
     @Override
     public void setDateFormatSymbols(DateFormatSymbols newFormatSymbols) {
         throw new UnsupportedOperationException();
+    }
+
+    //-------------------------------------------------------------------------
+    // Specific implementation
+    //-------------------------------------------------------------------------
+
+    /**
+     * Formats a date expressed as a number of milliseconds
+     * (since midnight, January 1, 1970 UTC) into a date/time string.
+     * @param  millis   the date/time to be formatted into a string.
+     *
+     * @return the formatted date/time string.
+     */
+    public final String format(long millis) {
+        return this.format(new Date(millis));
     }
 }

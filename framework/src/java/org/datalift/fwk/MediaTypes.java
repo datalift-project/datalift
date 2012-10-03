@@ -59,9 +59,12 @@ public class MediaTypes extends MediaType
     /** "text/turtle" */
     public final static MediaType TEXT_TURTLE_TYPE =
                                         MediaType.valueOf(TEXT_TURTLE);
-    /** "application/x-turtle" */
+    /** "application/x-turtle", a deprecated alias for {@link #TEXT_TURTLE} */
     public final static String APPLICATION_TURTLE = "application/x-turtle";
-    /** "application/x-turtle" */
+    /**
+     * "application/x-turtle", a deprecated alias for
+     * {@link #TEXT_TURTLE_TYPE}
+     */
     public final static MediaType APPLICATION_TURTLE_TYPE =
                                         MediaType.valueOf(APPLICATION_TURTLE);
 
@@ -69,14 +72,14 @@ public class MediaTypes extends MediaType
     public final static String TEXT_N3 = "text/n3";
     /** "text/n3" */
     public final static MediaType TEXT_N3_TYPE = MediaType.valueOf(TEXT_N3);
-    /** "text/rdf+n3" */
+    /** "text/rdf+n3", a deprecated alias for {@link #TEXT_N3} */
     public final static String TEXT_RDF_N3 = "text/rdf+n3";
-    /** "text/rdf+n3" */
+    /** "text/rdf+n3", a deprecated alias for {@link #TEXT_N3_TYPE} */
     public final static MediaType TEXT_RDF_N3_TYPE =
                                             MediaType.valueOf(TEXT_RDF_N3);
-    /** "application/n3" */
+    /** "application/n3", a deprecated alias for {@link #TEXT_N3} */
     public final static String APPLICATION_N3 = "application/n3";
-    /** "application/n3" */
+    /** "application/n3", a deprecated alias for {@link #TEXT_N3_TYPE} */
     public final static MediaType APPLICATION_N3_TYPE =
                                             MediaType.valueOf(APPLICATION_N3);
 
