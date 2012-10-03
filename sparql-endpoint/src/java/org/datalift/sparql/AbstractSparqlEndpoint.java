@@ -43,7 +43,6 @@ import java.net.URI;
 import java.net.URL;
 import java.text.MessageFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -478,9 +477,9 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                 @Context Request request,
                 @HeaderParam("Accept") String acceptHdr)
                                                 throws WebApplicationException {
-        return this.dispatchQuery(defaultGraphUris, namedGraphUris, query,
-                                  startOffset, endOffset, gridJson, format,
-                                  jsonCallback, uriInfo, request, acceptHdr);
+        return this.getQuery(defaultGraphUris, namedGraphUris, query,
+                             startOffset, endOffset, gridJson, format,
+                             jsonCallback, uriInfo, request, acceptHdr);
     }
     
     @GET
@@ -499,9 +498,10 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                 @Context Request request,
                 @HeaderParam("Accept") String acceptHdr)
                                                 throws WebApplicationException {
-        List<String> defGraphUris = Arrays.asList(repository);
+        List<String> defGraphUris = new LinkedList<String>();
+        defGraphUris.add(repository);
         if (defaultGraphUris != null) {
-            defGraphUris.addAll(defGraphUris);
+            defGraphUris.addAll(defaultGraphUris);
         }
         return this.dispatchQuery(defGraphUris, namedGraphUris, query,
                                   startOffset, endOffset, gridJson, format,
@@ -525,7 +525,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                 @Context Request request,
                 @HeaderParam("Accept") String acceptHdr)
                                                 throws WebApplicationException {
-        return this.dispatchQuery(defaultGraphUris, namedGraphUris, query,
+        return this.getStoreQuery(repository, defaultGraphUris, namedGraphUris, query,
                                   startOffset, endOffset, gridJson, format,
                                   jsonCallback, uriInfo, request, acceptHdr);
     }
