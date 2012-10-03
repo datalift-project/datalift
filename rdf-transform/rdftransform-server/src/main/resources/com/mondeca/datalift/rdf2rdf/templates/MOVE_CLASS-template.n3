@@ -1,0 +1,19 @@
+@prefix tpl: <http://www.mondeca.com/sesame/toolkit/template#> .
+
+_:template a tpl:Template ;
+	tpl:body "DELETE { ?s a ?source } INSERT { ?s a ?target } WHERE { ?s a ?source }" ;
+	tpl:displayName "Move class to another" ;
+	tpl:hasArgument _:target , _:source ;
+	tpl:name "MOVE_CLASS" .
+
+_:target a tpl:Argument ;
+	tpl:displayName "Target type" ;
+	tpl:mandatory "true" ;
+	tpl:order "1"^^<http://www.w3.org/2001/XMLSchema#int> ;
+	tpl:varName "target" .
+
+_:source a tpl:Argument ;
+	tpl:displayName "Source type" ;
+	tpl:mandatory "true" ;
+	tpl:order "0"^^<http://www.w3.org/2001/XMLSchema#int> ;
+	tpl:varName "source" .

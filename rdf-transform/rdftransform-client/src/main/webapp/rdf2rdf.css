@@ -1,0 +1,342 @@
+/***************** COMMON ************************/
+
+body {
+margin: 0px;
+padding: 0px;
+font-family: Arial;
+font-size: 12px;
+}
+
+a.hover {
+text-decoration: none;
+}
+
+.small {
+font-size: 16px;
+}
+
+.floatl {
+float: left;
+}
+
+.clear {
+clear: both;
+font-size: 1px;
+}
+
+table {
+font-size: 12px;
+}
+
+.clickable{
+	cursor:pointer;
+	color:#0000FF;
+	
+}
+.uriPrefixed{
+	color:#088A08;
+}
+
+
+.tableActions{padding: 1px; border: 1px solid #B5B5B5; margin-top: 6px; margin-bottom: 6px; line-height: 14px; font-size:12px;}
+.tableActions td{padding: 2px 4px 2px 4px;}
+.row_odd{background: #EEEEEE;}
+
+.headerLbl{margin-right:15px;margin-left:5px; font-weight:bold;}
+
+/********************* STRUCTURE PAGE *************/
+
+.header {
+background-color: #3BA9ED;
+text-transform: uppercase;
+height: 35px;
+padding-top: 10px;
+padding-left: 20px;
+
+}
+
+td.window_name {
+color: white;
+font-size: 21px;
+width: 85%;
+}
+
+div.execute {
+display: block;
+height: 20px;
+background-color: #FAFDFF;;
+-moz-box-shadow: 0 0 6px #E7F1F7 inset, 0 0 10px #E7F1F7 inset, 0 0 2px #EDEFEF;  
+-webkit-box-shadow: 0 0 6px #E7F1F7 inset, 0 0 10px #E7F1F7 inset, 0 0 2px #EDEFEF;  
+box-shadow: 0 0 6px #E7F1F7 inset, 0 0 10px #E7F1F7 inset, 0 0 2px #EDEFEF; 
+text-transform: uppercase;
+color: #3FA9F5;
+text-decoration: none;
+margin-left:10px;
+margin-right:10px;
+padding: 6px 15px 0px 15px;
+border: 1px solid #B9E1F9;
+width: 80px;
+}
+
+div.execute:hover {
+background-color: white;
+border: 1px solid #2378A3;
+cursor:pointer;
+}
+
+div.cancel {
+display: block;
+height: 20px;
+background-color: #FAFDFF;;
+-moz-box-shadow: 0 0 6px #E7F1F7 inset, 0 0 10px #E7F1F7 inset, 0 0 2px #EDEFEF;  
+-webkit-box-shadow: 0 0 6px #E7F1F7 inset, 0 0 10px #E7F1F7 inset, 0 0 2px #EDEFEF;  
+box-shadow: 0 0 6px #E7F1F7 inset, 0 0 10px #E7F1F7 inset, 0 0 2px #EDEFEF; 
+text-transform: uppercase;
+color: #3FA9F5;
+text-decoration: none;
+margin-left:10px;
+margin-right:10px;
+padding: 6px 15px 0px 15px;
+border: 1px solid #B9E1F9;
+width: 200px;
+}
+
+div.cancel:hover {
+background-color: white;;
+border: 1px solid #2378A3;
+cursor:pointer;
+}
+
+
+.col_left {
+width: 45%;
+}
+
+
+.col_right {
+width: 55%;
+}
+
+.container {
+margin: 20px 20px;
+width:100%;
+height:100%;
+}
+
+.SourceSelector{
+	padding:20px;
+}
+
+/********************* PANNEAUX *************/
+
+
+.title {
+position: relative;
+top: -12px;
+color: #3BA9ED;
+font-size: 18px;
+height: 22px;
+}
+
+.white_bg {
+background-color: white;
+}
+
+.bar_title {
+height: 10px; 
+border-bottom: 1px solid #3BA9ED;
+}
+
+
+.gray_box {
+background-color: #F9F9F9;
+border: 1px solid E6E6E6;
+-webkit-border-radius: 15px;
+-moz-border-radius: 15px;
+border-radius: 15px;
+-moz-box-shadow: 0 0 20px #F4F4F4 inset, 0 0 10px #F4F4F4 inset, 0 0 2px #EDEFEF;  
+-webkit-box-shadow: 0 0 20px #F4F4F4 inset, 0 0 10px #F4F4F4 inset, 0 0 2px #EDEFEF;  
+box-shadow: 0 0 20px #F4F4F4 inset, 0 0 10px #F4F4F4 inset, 0 0 2px #EDEFEF; 
+padding: 15px;
+margin-bottom: 25px;
+}
+
+
+
+/**************** TABLEAU selection class / property *********/
+
+.breadcrumbs, .breadcrumbs a {
+color: #496C7C;
+font-size: 13px;
+}
+
+.breadcrumbs a:hover {
+color: 4E8EA5;
+}
+
+.miller_columns {
+font-size: 12px;
+border: 1px solid #CCCCCC;
+margin-top: 15px;
+background-color: #EDEDED;
+border-spacing: 0px;
+}
+
+
+.miller_columns th {
+background-color: #EDEDED;
+-moz-box-shadow: 0 0 30px #E4E4E4 inset;  
+-webkit-box-shadow: 0 0 30px #E4E4E4 inset;  
+box-shadow: 0 0 30px #E4E4E4 inset; 
+width: 50%;
+height: 25px;
+overflow: hidden;
+font-weight: normal;
+text-transform: uppercase;
+font-size: 11px;
+border-bottom: 1px solid #cccccc;
+}
+
+.miller_columns th:first-child, .miller_columns td:first-child {
+border-right: 1px solid #CCCCCC;
+}
+
+
+
+.tab_class {
+height: 14px;
+width: 65px;
+background: #F9F9F9 url('./images/ico_class.png') no-repeat left ;
+border-top: 1px solid #CCCCCC;
+border-left: 1px solid #CCCCCC;
+border-right: 1px solid #CCCCCC;
+border-bottom: 1px solid white;
+margin-bottom: -2px;
+padding: 4px 0px 2px 35px;
+margin-left: 5px;
+cursor:pointer;
+}
+
+.tab_class.selected, .tab_property.selected{
+	background-color: white;
+}
+
+.tab_property {
+height: 14px;
+width: 65px;
+background: #F9F9F9 url('./images/ico_prop.png') no-repeat left;
+border-top: 1px solid #CCCCCC;
+border-left: 1px solid #CCCCCC;
+border-right: 1px solid #CCCCCC;
+margin-bottom: -2px;
+padding: 4px 0px 2px 35px;
+margin-left: 5px;
+cursor:pointer;
+}
+
+.miller_columns  td {
+width: 50%;
+
+}
+
+.miller_columns ul {
+margin: 0px;
+padding: 0px;
+list-style-type: none;
+width: 100%;
+}
+
+.miller_columns_element {
+border-bottom: 1px solid #cccccc;
+height: 20px;
+padding: 8px 0px 0px 15px;
+background-color: white;
+}
+
+.miller_columns_element:hover {
+background: #3FA9F5;
+color: white;
+}
+
+.miller_columns_element:hover{
+color: white;
+}
+
+.miller_columns_element.with_child:hover, .miller_columns_element.with_child:hover table {
+background: #3FA9F5 url('../img/arrow_white.png') right no-repeat;
+color: white;
+}
+
+.miller_columns_element.selected {
+background-color: #3FA9F5;
+color: white;
+}
+.miller_columns_element[class="with_child selected"] {
+background: #3FA9F5 url('../img/arrow_white.png') right no-repeat;
+}
+
+
+.search_result {
+margin-top: 20px;
+}
+
+.search {
+font-size: 11px;
+}
+
+.ico_search {
+position: relative; top: 2px;
+}
+
+a.match {
+color: #3FA9F5;
+text-decoration: none;
+}
+
+a.match:hover {
+color: #89C9EF;
+}
+
+ul.list_class, ul.list_prop {
+margin: 0px;
+padding: 0px;
+list-style-type : none;
+width: 90%;
+margin-right: 10%;
+}
+
+ul.list_class li, ul.list_prop li {
+float: left;
+border: 1px solid #cccccc;
+margin-top: -1px;
+height: 20px;
+padding: 8px 0px 0px 0px;
+background-color: white;
+width: 100%;
+}
+
+table.result {
+width: 100%;
+font-size: 12px;
+}
+
+table.result td:first-child {
+width: 10%;
+}
+
+table.result td:first-child img {
+margin-top: -5px;
+}
+
+table.result td.name {
+width: 75%;
+}
+
+table.existing_matches {
+font-size: 12px;
+}
+
+table.existing_matches td.found_match img {
+position: relative;
+top: 4px;
+}
