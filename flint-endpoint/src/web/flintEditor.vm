@@ -40,7 +40,7 @@
 						"namespaces" : [
 						                #foreach($ns in $namespaces)
 						                {
-						                	"name" : "$esc.javascript(${ns.prefix})",
+						                	"name" : "$esc.javascript(${ns.label})",
 						                	"prefix" : "$esc.javascript(${ns.prefix})",
 						                	"uri" : "${ns.uri}"
 						                },
