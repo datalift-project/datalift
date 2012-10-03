@@ -43,6 +43,7 @@ import java.net.URI;
 import java.net.URL;
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -53,11 +54,14 @@ import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
@@ -95,6 +99,7 @@ import org.datalift.fwk.util.StringUtils;
 import org.datalift.fwk.view.TemplateModel;
 import org.datalift.fwk.view.ViewFactory;
 
+import static org.datalift.fwk.MediaTypes.*;
 import static org.datalift.fwk.util.StringUtils.*;
 import static org.datalift.fwk.sparql.SparqlEndpoint.DescribeType.*;
 
@@ -249,7 +254,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         ResponseBuilder response = null;
         try {
             if ((! isBlank(jsonCallback)) && (isBlank(format))) {
-                format = MediaType.APPLICATION_JSON;
+                format = APPLICATION_JSON;
             }
             response = this.doExecute(defaultGraphUris, namedGraphUris, query,
                                       startOffset, endOffset, gridJson,
@@ -430,7 +435,29 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
      *         to execute the specified query.
      */
     @POST
+    @Consumes(APPLICATION_FORM_URLENCODED)
     public final Response postQuery(
+                @FormParam("default-graph-uri") List<String> defaultGraphUris,
+                @FormParam("named-graph-uri") List<String> namedGraphUris,
+                @FormParam("query") String query,
+                @FormParam("min") @DefaultValue("-1") int startOffset,
+                @FormParam("max") @DefaultValue("-1") int endOffset,
+                @FormParam("grid") @DefaultValue("false") boolean gridJson,
+                @FormParam("format") String format,
+                @FormParam("callback") String jsonCallback,
+                @Context UriInfo uriInfo,
+                @Context Request request,
+                @HeaderParam("Accept") String acceptHdr)
+                                                throws WebApplicationException {
+        return this.dispatchQuery(defaultGraphUris, namedGraphUris, query,
+                                  startOffset, endOffset, gridJson, format,
+                                  jsonCallback, uriInfo, request, acceptHdr);
+    }
+    
+    @GET
+    @Path("{store}")
+    public Response getStoreQuery(
+                @PathParam("store") String repository,
                 @QueryParam("default-graph-uri") List<String> defaultGraphUris,
                 @QueryParam("named-graph-uri") List<String> namedGraphUris,
                 @QueryParam("query") String query,
@@ -443,10 +470,37 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                 @Context Request request,
                 @HeaderParam("Accept") String acceptHdr)
                                                 throws WebApplicationException {
+        List<String> defGraphUris = Arrays.asList(repository);
+        if (defaultGraphUris != null) {
+            defGraphUris.addAll(defGraphUris);
+        }
+        return this.dispatchQuery(defGraphUris, namedGraphUris, query,
+                                  startOffset, endOffset, gridJson, format,
+                                  jsonCallback, uriInfo, request, acceptHdr);
+    }
+    
+    @POST
+    @Path("{store}")
+    @Consumes(APPLICATION_FORM_URLENCODED)
+    public final Response postStoreQuery(
+    			@PathParam("store") String repository,
+                @FormParam("default-graph-uri") List<String> defaultGraphUris,
+                @FormParam("named-graph-uri") List<String> namedGraphUris,
+                @FormParam("query") String query,
+                @FormParam("min") @DefaultValue("-1") int startOffset,
+                @FormParam("max") @DefaultValue("-1") int endOffset,
+                @FormParam("grid") @DefaultValue("false") boolean gridJson,
+                @FormParam("format") String format,
+                @FormParam("callback") String jsonCallback,
+                @Context UriInfo uriInfo,
+                @Context Request request,
+                @HeaderParam("Accept") String acceptHdr)
+                                                throws WebApplicationException {
         return this.dispatchQuery(defaultGraphUris, namedGraphUris, query,
                                   startOffset, endOffset, gridJson, format,
                                   jsonCallback, uriInfo, request, acceptHdr);
     }
+
 
     /**
      * <i>[Resource method]</i> Returns the description of the specified
@@ -524,11 +578,12 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
      */
     @POST
     @Path("describe")
+    @Consumes(APPLICATION_FORM_URLENCODED)
     public final Response postDescribe(
-                            @QueryParam("uri") String uri,
-                            @QueryParam("type") String type,
-                            @QueryParam("default-graph") String defaultGraph,
-                            @QueryParam("max") @DefaultValue("-1") int max,
+                            @FormParam("uri") String uri,
+                            @FormParam("type") String type,
+                            @FormParam("default-graph") String defaultGraph,
+                            @FormParam("max") @DefaultValue("-1") int max,
                             @Context UriInfo uriInfo,
                             @Context Request request,
                             @HeaderParam("Accept") String acceptHdr)
@@ -570,7 +625,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
             view.put("collections", c);
             view.put("queries", predefinedQueries);
             view.put("isAuth", Boolean.valueOf(userAuthenticated));
-            response = Response.ok(view, MediaType.TEXT_HTML);
+            response = Response.ok(view, TEXT_HTML_UTF8);
         }
         return response.build();
     }
