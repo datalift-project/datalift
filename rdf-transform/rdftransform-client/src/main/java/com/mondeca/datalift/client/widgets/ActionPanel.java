@@ -3,7 +3,6 @@ package com.mondeca.datalift.client.widgets;
 
 import java.util.List;
 
-import com.google.gwt.cell.client.AbstractEditableCell;
 import com.google.gwt.cell.client.ActionCell;
 import com.google.gwt.cell.client.Cell;
 import com.google.gwt.cell.client.FieldUpdater;
@@ -20,7 +19,6 @@ import com.google.gwt.user.cellview.client.Column;
 import com.google.gwt.user.cellview.client.SimplePager;
 import com.google.gwt.user.cellview.client.SimplePager.TextLocation;
 import com.google.gwt.user.cellview.client.TextColumn;
-import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.DialogBox;
@@ -45,8 +43,6 @@ import com.mondeca.datalift.client.actions.TransformationAction;
 import com.mondeca.datalift.client.objects.Resource;
 import com.mondeca.datalift.client.objects.VocabElement;
 import com.mondeca.datalift.client.objects.VocabElementDataArray;
-import com.mondeca.datalift.client.objects.VocabularyData;
-import com.sun.corba.se.pept.transport.ContactInfo;
 
 public class ActionPanel extends VerticalPanel {
 	
