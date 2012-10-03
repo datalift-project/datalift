@@ -48,14 +48,12 @@ import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.ResourceResolver;
-import org.datalift.fwk.log.Logger;
 import org.datalift.sparql.SesameSparqlEndpoint;
 
 
 /**
- * A class allowing the use of the Flint Sparql editor.
+ * A class allowing the use of Flint SPARQL query editor.
  * 
- *
  * @author adasilva
  */
 @Path(SesameSparqlEndpoint.MODULE_NAME)
@@ -73,18 +71,18 @@ public class FlintSparqlEditor extends SesameSparqlEndpoint
     //-------------------------------------------------------------------------
     // Specific implementation
     //-------------------------------------------------------------------------
-	
-	@GET
-	@Path("editor{path: .*$}")
-	public Object getStaticResource(@PathParam("path") String path,
-	                                @Context UriInfo uriInfo,
-	                                @Context Request request,
-	                                @HeaderParam(ACCEPT) String acceptHdr)
-	                                		throws WebApplicationException {
-		Logger.getLogger().debug("path {}", path);
-	        return Configuration.getDefault()
-	                            .getBean(ResourceResolver.class)
-	                            .resolveModuleResource(this.getName(),
-	                                        uriInfo, request, acceptHdr);
-	    }
+
+    @GET
+    @Path("editor/{path: .*$}")
+    public Object getStaticResource(@PathParam("path") String path,
+                                    @Context UriInfo uriInfo,
+                                    @Context Request request,
+                                    @HeaderParam(ACCEPT) String acceptHdr)
+                                                throws WebApplicationException {
+        log.trace("Reading static resource: {}", path);
+        return Configuration.getDefault()
+                            .getBean(ResourceResolver.class)
+                            .resolveModuleResource(this.getName(),
+                                                   uriInfo, request, acceptHdr);
+    }
 }
