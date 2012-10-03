@@ -96,6 +96,7 @@ import org.datalift.fwk.util.StringUtils;
 import org.datalift.fwk.view.TemplateModel;
 import org.datalift.fwk.view.ViewFactory;
 
+import static org.datalift.fwk.MediaTypes.*;
 import static org.datalift.fwk.util.StringUtils.*;
 import static org.datalift.fwk.sparql.SparqlEndpoint.DescribeType.*;
 
@@ -278,7 +279,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         ResponseBuilder response = null;
         try {
             if ((! isBlank(jsonCallback)) && (isBlank(format))) {
-                format = MediaType.APPLICATION_JSON;
+                format = APPLICATION_JSON;
             }
             response = this.doExecute(defaultGraphUris, namedGraphUris, query,
                                       startOffset, endOffset, gridJson,
@@ -598,7 +599,8 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
             TemplateModel view = ViewFactory.newView(this.welcomeTemplate);
             view.put("repositories", c);
             view.put("queries", predefinedQueries);
-            response = Response.ok(view, MediaType.TEXT_HTML);
+            view.put("namespaces", RdfNamespace.values());
+            response = Response.ok(view, TEXT_HTML_UTF8);
         }
         return response.build();
     }
