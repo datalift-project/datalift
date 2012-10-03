@@ -351,18 +351,12 @@ public abstract class BaseConverterModule
      *               be reported.
      *
      * @return an HTTP response redirecting to the project main page.
-     * @throws TechnicalException if any error occurred.
      */
     protected final ResponseBuilder created(Source src) {
-        try {
-            String targetUrl = src.getProject().getUri() + "#source";
-            return Response.created(new URI(src.getUri()))
-                           .entity(this.newView("redirect.vm", targetUrl))
-                           .type(TEXT_HTML_UTF8);
-        }
-        catch (Exception e) {
-            throw new TechnicalException(e);
-        }
+        String targetUrl = src.getProject().getUri() + "#source";
+        return Response.created(URI.create(src.getUri()))
+                       .entity(this.newView("redirect.vm", targetUrl))
+                       .type(TEXT_HTML_UTF8);
     }
 
     /**
