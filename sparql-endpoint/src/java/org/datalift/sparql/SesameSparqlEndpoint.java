@@ -174,6 +174,34 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
             ResourceType.Graph.value     + "<}&default-graph={2}";
 
     //-------------------------------------------------------------------------
+    // Constructors
+    //-------------------------------------------------------------------------
+
+    /** Default constructor. */
+    public SesameSparqlEndpoint() {
+        this(null);
+    }
+
+    /**
+     * Creates a new SPARQL endpoint resource.
+     * @param  welcomeTemplate   the Velocity template to display as
+     *                           welcome page.
+     */
+    protected SesameSparqlEndpoint(String welcomeTemplate) {
+        this(MODULE_NAME, welcomeTemplate);
+    }
+
+    /**
+     * Creates a new SPARQL endpoint resource.
+     * @param  name              the module name.
+     * @param  welcomeTemplate   the Velocity template to display as
+     *                           welcome page.
+     */
+    protected SesameSparqlEndpoint(String name, String welcomeTemplate) {
+        super(name, welcomeTemplate);
+    }
+
+    //-------------------------------------------------------------------------
     // AbstractSparqlEndpoint contract support
     //-------------------------------------------------------------------------
 
