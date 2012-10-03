@@ -158,4 +158,12 @@ public enum RdfNamespace
         }
         return ns;
     }
+    
+    public String getPrefix() {
+    	return this.prefix;
+    }
+    
+    public String getUri() {
+    	return this.uri;
+    }
 }
