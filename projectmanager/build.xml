@@ -95,7 +95,7 @@
    -->
 
   <property name="app.name"             value="project-manager"/>
-  <property name="app.version"          value="0.6.5"/>
+  <property name="app.version"          value="0.6.6"/>
   <property name="app.path"             value="/${app.name}"/>
   <property name="app.long.name"        value="ProjectManager"/>
 
