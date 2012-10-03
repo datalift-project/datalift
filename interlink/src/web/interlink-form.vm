@@ -38,6 +38,7 @@
 						<span class="ui-icon ui-icon-help"></span>
 						#i18n('dataset.address.info') &mdash; #i18n('field.mandatory')
 					</p>
+					<p class="help hidden-field-js help-js">TODO</p>
 				</div>
 
 				<div class="dl-form-elt form-stack ui-state-default ui-corner-bottom">
@@ -47,6 +48,7 @@
 						<span class="ui-icon ui-icon-help"></span>
 						#i18n('dataset.query.info') &mdash; #i18n('field.optional')
 					</p>
+					<p class="help hidden-field-js help-js">TODO</p>
 				</div>
 
 				<div class="compare-js first-js">
@@ -59,6 +61,7 @@
 							<span class="ui-icon ui-icon-help"></span>
 							#i18n('dataset.property.info') &mdash; #i18n('field.mandatory')
 						</p>
+						<p class="help hidden-field-js help-js">TODO</p>
 					</div>
 
 					<div class="dl-form-elt form-stack ui-state-default ui-corner-bottom">
@@ -103,6 +106,7 @@
 							<span class="ui-icon ui-icon-help"></span>
 							#i18n('transform.info') &mdash; #i18n('field.optional')
 						</p>
+						<p class="help hidden-field-js help-js">TODO</p>
 					</div>
 					<div class="tokenize-js hidden-field-js dl-form-elt form-stack ui-state-default ui-corner-all">
 						<label for="sourceRegexpTokenFirst">#i18n('field.label.regexpToken')</label>
@@ -329,6 +333,7 @@
 						<span class="ui-icon ui-icon-help"></span>
 						#i18n('dataset.address.info') &mdash; #i18n('field.mandatory')
 					</p>
+					<p class="help hidden-field-js help-js">TODO</p>
 				</div>
 
 				<div class="dl-form-elt form-stack ui-state-default ui-corner-bottom">
@@ -338,6 +343,7 @@
 						<span class="ui-icon ui-icon-help"></span>
 						#i18n('dataset.query.info') &mdash; #i18n('field.optional')
 					</p>
+					<p class="help hidden-field-js help-js">TODO</p>
 				</div>
 
 				<div class="compare-js first-js">
@@ -350,6 +356,7 @@
 							<span class="ui-icon ui-icon-help"></span>
 							#i18n('dataset.property.info') &mdash; #i18n('field.mandatory')
 						</p>
+						<p class="help hidden-field-js help-js">TODO</p>
 					</div>
 
 					<div class="dl-form-elt form-stack ui-state-default ui-corner-bottom">
@@ -394,6 +401,7 @@
 							<span class="ui-icon ui-icon-help"></span>
 							#i18n('transform.info') &mdash; #i18n('field.optional')
 						</p>
+						<p class="help hidden-field-js help-js">TODO</p>
 					</div>
 					<div class="tokenize-js hidden-field-js dl-form-elt form-stack ui-state-default ui-corner-all">
 						<label for="targetRegexpTokenFirst">#i18n('field.label.regexpToken')</label>
@@ -868,13 +876,26 @@
 			</div>
 
 			<div class="multiple-choices">
-				<input type="submit" id="form-submit" value="#i18n('submit.label')"/>
+				<input type="submit" id="form-submit" value="#i18n('send.label')"/>
+				<input type="checkbox" id="form-help" class="ui-priority-secondary"/>
+				<label for="form-help" title="#i18n('help.title')">#i18n('help.label')</label>
+				<a class="cancel-button ui-priority-secondary" href="${baseUri}/project/${it.title}" title="#i18n('cancel.title') #i18n('project.workspace.link')">#i18n('cancel.label')</a>
+			</div>
+			<div class="multiple-choices">
+				<h5 class="info">#i18n('method.title') :</h5>
 				<input type="radio" id="runScript" name="runScript" value="true" title="#i18n('run.title')" checked="checked"/>
 				<label for="runScript" title="#i18n('run.title')">#i18n('run.label')</label>
 				<input type="radio" id="saveScript" name="runScript" value="false" title="#i18n('save.title')"/>
 				<label for="saveScript" title="#i18n('save.title')">#i18n('save.label')</label>
-				<a class="cancel-button ui-priority-secondary" href="${baseUri}/project/${it.title}" title="#i18n('cancel.title') #i18n('project.workspace.link')">#i18n('cancel.label')</a>
 			</div>
+
+			<!-- Optionaly displayed help content. -->
+			<fieldset class="help-js hidden-field-js ui-widget-content ui-corner-all">
+				<p class="description">#i18n('interlink.description')</p>
+				<p class="description">#i18n('interlink.script.description')</p>
+				<p class="description"><strong>#i18n('interlink.doc.title'): </strong><a href="#i18n('interlink.doc.link')" title="#i18n('interlink.doc.title')">#i18n('interlink.doc.link')</a></p>
+			</fieldset>
+
 		</form>
 
 		<!-- Blueish two pixel high line. -->

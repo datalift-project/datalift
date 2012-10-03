@@ -52,17 +52,32 @@ label {
 	cursor: pointer;
 }
 
-.info {
+.info, p.help {
 	color: #666;
 	font-size: 75%;
 	text-align: justify;
+}
+
+p.help {
+	background-color:#fff;
+	font-weight:normal;
+	height:60px;
+	padding:2px;
+	border:1px solid #ddd;
+	border-left:4px solid #ddd;
+	padding-right:5px;
+	margin-top:5px;
+}
+
+h5.info {
+	display:inline-block;
 }
 
 input[type=submit] {
 	min-width: 100px;
 }
 
-div.multiple-choices {
+.multiple-choices {
 	display: inline-block;
 }
 
@@ -146,10 +161,6 @@ div.form-stack {
 
 #script-form .form-inline select {
 	margin: 2px 0 1px;
-}
-
-#script-form div.multiple-choices {
-	margin:5px 20px;
 }
 
 .field-stack h5:after {
