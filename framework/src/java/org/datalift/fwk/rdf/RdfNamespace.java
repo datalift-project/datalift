@@ -47,35 +47,52 @@ public enum RdfNamespace
     //-------------------------------------------------------------------------
 
     /** datalift: &lt;http://www.datalift.org/core#&gt; */
-    DataLift    ("datalift",    "http://www.datalift.org/core#"),
+    DataLift    ("datalift",    "http://www.datalift.org/core#", "Datalift"),
     /** dc: &lt;http://purl.org/dc/elements/1.1/&gt; */
-    DC_Elements ("dc",          "http://purl.org/dc/elements/1.1/"),
+    DC_Elements ("dc",          "http://purl.org/dc/elements/1.1/",
+                                "Dublin Core"),
     /** dcterms: &lt;http://purl.org/dc/terms/&gt; */
-    DC_Terms    ("dcterms",     "http://purl.org/dc/terms/"),
+    DC_Terms    ("dcterms",     "http://purl.org/dc/terms/",
+                                "Dublin Core Terms"),
     /** dct: &lt;http://purl.org/dc/terms/&gt; */
-    DCTerms     ("dct",         "http://purl.org/dc/terms/"),
+    DCTerms     ("dct",         "http://purl.org/dc/terms/",
+                                "Dublin Core Terms"),
     /** foaf: &lt;http://xmlns.com/foaf/0.1/&gt; */
-    FOAF        ("foaf",        "http://xmlns.com/foaf/0.1/"),
+    FOAF        ("foaf",        "http://xmlns.com/foaf/0.1/",
+                                "Friend of a Friend"),
     /** xsd: &lt;http://www.w3.org/2001/XMLSchema#&gt; */
-    XSD         ("xsd",         "http://www.w3.org/2001/XMLSchema#"),
+    XSD         ("xsd",         "http://www.w3.org/2001/XMLSchema#",
+                                "XML schema"),
     /** rdf: &lt;http://www.w3.org/1999/02/22-rdf-syntax-ns#&gt; */
-    RDF         ("rdf",         "http://www.w3.org/1999/02/22-rdf-syntax-ns#"),
+    RDF         ("rdf",         "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                                "Resource Description Framework"),
     /** rdfs: &lt;http://www.w3.org/2000/01/rdf-schema#&gt; */
-    RDFS        ("rdfs",        "http://www.w3.org/2000/01/rdf-schema#"),
+    RDFS        ("rdfs",        "http://www.w3.org/2000/01/rdf-schema#",
+                                "RDF Schema"),
     /** owl: &lt;http://www.w3.org/2002/07/owl#&gt; */
-    OWL         ("owl",         "http://www.w3.org/2002/07/owl#"),
+    OWL         ("owl",         "http://www.w3.org/2002/07/owl#",
+                                "Web Ontology Language"),
     /** void: &lt;http://rdfs.org/ns/void#&gt; */
-    VOID        ("void",        "http://rdfs.org/ns/void#"),
+    VOID        ("void",        "http://rdfs.org/ns/void#",
+                                "Vocabulary of Interlinked Datasets"),
     /** doap: &lt;http://usefulinc.com/ns/doap#&gt; */
-    DOAP        ("doap",        "http://usefulinc.com/ns/doap#"),
+    DOAP        ("doap",        "http://usefulinc.com/ns/doap#",
+                                "Description of a Project"),
     /** vdpp: &lt;http://data.lirmm.fr/ontologies/vdpp#&gt; */
-    VDPP        ("vdpp",        "http://data.lirmm.fr/ontologies/vdpp#"),
+    VDPP        ("vdpp",        "http://data.lirmm.fr/ontologies/vdpp#",
+                                "Vocabulary of Dataset Publication Projects"),
     /** prv: &lt;http://purl.org/net/provenance/ns#&gt; */
-    PRV         ("prv",         "http://purl.org/net/provenance/ns#"),
+    PRV         ("prv",         "http://purl.org/net/provenance/ns#",
+                                "Provenance Vocabulary"),
     /** cnt: &lt;http://www.w3.org/2011/content#&gt; */
-    CNT         ("cnt",         "http://www.w3.org/2011/content#"),
+    CNT         ("cnt",         "http://www.w3.org/2011/content#",
+                                "Representing Content in RDF"),
     /** wgs84: &lt;http://www.w3.org/2003/01/geo/wgs84_pos#&gt; */
-    WGS84       ("wgs84",       "http://www.w3.org/2003/01/geo/wgs84_pos#");
+    WGS84       ("wgs84",       "http://www.w3.org/2003/01/geo/wgs84_pos#",
+                                "Geography"),
+    /** skos: &lt;http://www.w3.org/2004/02/skos/core#&gt; */
+    SKOS        ("skos",        "http://www.w3.org/2004/02/skos/core#",
+                                "Simple Knowledge Organisation System");
 
     //-------------------------------------------------------------------------
     // Instance members
@@ -85,6 +102,8 @@ public enum RdfNamespace
     public final String prefix;
     /** The namespace URI. */
     public final String uri;
+    /** A namespace description. */
+    public final String label;
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -95,7 +114,7 @@ public enum RdfNamespace
      * @param  prefix   the prefix.
      * @param  uri      the namespace URI.
      */
-    RdfNamespace(String prefix, String uri) {
+    RdfNamespace(String prefix, String uri, String label) {
         if ((prefix == null) || (prefix.length() == 0)) {
             throw new IllegalArgumentException("prefix");
         }
@@ -104,6 +123,7 @@ public enum RdfNamespace
         }
         this.prefix = prefix;
         this.uri    = uri;
+        this.label  = label;
     }
 
     //-------------------------------------------------------------------------
@@ -158,12 +178,28 @@ public enum RdfNamespace
         }
         return ns;
     }
-    
+
+    /**
+     * Returns the namespace prefix.
+     * @return the namespace prefix.
+     */
     public String getPrefix() {
     	return this.prefix;
     }
-    
+
+    /**
+     * Returns the namespace URI.
+     * @return the namespace URI.
+     */
     public String getUri() {
     	return this.uri;
+    }
+
+    /**
+     * Returns the namespace description.
+     * @return the namespace description.
+     */
+    public String getLabel() {
+    	return this.label;
     }
 }
