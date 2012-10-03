@@ -278,14 +278,12 @@
     <!-- Copy web application page templates and resources -->
     <copy todir="${classes.dir}" encoding="UTF-8" includeEmptyDirs="false"
                                  preservelastmodified="true">
-      <fileset dir="${web.home}" excludes="**/.*,**/*.properties"/>
+      <fileset dir="${web.home}" includes="**/*.vm"/>
       <filterset refid="webapp.param.filters"/>
     </copy>
-    <copy todir="${classes.dir}" encoding="ISO-8859-1"
-                                 includeEmptyDirs="false"
+    <copy todir="${classes.dir}" includeEmptyDirs="false"
                                  preservelastmodified="true">
-      <fileset dir="${web.home}" includes="**/*.properties"/>
-      <filterset refid="webapp.param.filters"/>
+      <fileset dir="${web.home}" excludes="**/*.vm,**/.*"/>
     </copy>
     <!-- Create build directories as needed -->
     <mkdir dir="${dist.home}"/>
