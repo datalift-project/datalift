@@ -78,8 +78,6 @@ import static javax.ws.rs.core.Response.Status.*;
 import org.openrdf.model.Literal;
 import org.openrdf.model.Value;
 import org.openrdf.model.impl.URIImpl;
-import org.openrdf.model.vocabulary.RDF;
-import org.openrdf.model.vocabulary.RDFS;
 import org.openrdf.query.BindingSet;
 import org.openrdf.query.QueryInterruptedException;
 import org.openrdf.query.TupleQueryResultHandlerBase;
@@ -101,6 +99,7 @@ import org.datalift.fwk.view.ViewFactory;
 
 import static org.datalift.fwk.MediaTypes.*;
 import static org.datalift.fwk.util.StringUtils.*;
+import static org.datalift.fwk.rdf.RdfNamespace.*;
 import static org.datalift.fwk.sparql.SparqlEndpoint.DescribeType.*;
 
 
@@ -159,12 +158,14 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
 
     /** The SPARQL query to extract predefined query data. */
     private final static String LOAD_PREDEFINED_QUERIES_QUERY =
-                    "PREFIX rdf: <" + RDF.NAMESPACE + ">\n" +
-                    "PREFIX rdfs: <" + RDFS.NAMESPACE + ">\n" +
-                    "PREFIX datalift: <" + RdfNamespace.DataLift.uri + ">\n" +
-                    "SELECT ?s ?label ?query WHERE { " +
+                    "PREFIX rdf: <" + RDF.uri + ">\n" +
+                    "PREFIX rdfs: <" + RDFS.uri + ">\n" +
+                    "PREFIX dcterms: <" + DC_Terms.uri + ">\n" +
+                    "PREFIX datalift: <" + DataLift.uri + ">\n" +
+                    "SELECT ?s ?label ?query ?description WHERE { " +
                         "?s a datalift:SparqlQuery ; " +
                         "   rdfs:label ?label ; rdf:value ?query . " +
+                        "OPTIONAL { ?s dcterms:description ?description . } " +
                     "} ORDER BY ?s";
 
     //-------------------------------------------------------------------------
@@ -905,6 +906,8 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                     private String query;
                     private Map<String,String> labels =
                                                 new HashMap<String,String>();
+                    private Map<String,String> descriptions =
+                                                new HashMap<String,String>();
                     @Override
                     public void handleSolution(BindingSet b) {
                         Value id = b.getValue("s");
@@ -919,6 +922,10 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                         if (v != null) {
                             this.labels.put(v.getLanguage(), v.getLabel());
                         }
+                        v  = (Literal)(b.getValue("description"));
+                        if (v != null) {
+                            this.descriptions.put(v.getLanguage(), v.getLabel());
+                        }
                     }
 
                     @Override
@@ -930,7 +937,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                         if ((isSet(this.query)) && (! this.labels.isEmpty())) {
                             // Create and register new query.
                             PredefinedQuery q = new PredefinedQuery(
-                                                    this.query, this.labels);
+                                    this.query, this.labels, this.descriptions);
                             queries.add(q);
                             log.trace("Registered predefined SPARQL query \"{}\": {}",
                                       q.getLabel(), q.query);
@@ -1086,20 +1093,32 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
 
     public final static class PredefinedQuery extends BaseLocalizedItem
     {
+        private final static String DESCRIPTION_LABEL = "description";
         public final String query;
 
-        public PredefinedQuery(String query, Map<String,String> labels) {
+        public PredefinedQuery(String query, Map<String,String> labels,
+                                             Map<String,String> descriptions) {
             super(labels);
             if (isBlank(query)) {
                 throw new IllegalArgumentException("query");
             }
             this.query = query;
+            this.setLabels(DESCRIPTION_LABEL, descriptions);
         }
 
         /** {@inheritDoc} */
         @Override
         public String toString() {
             return this.query;
+        }
+
+        /**
+         * Returns the description of this query in the user's preferred
+         * locale.
+         * @return the description of this query.
+         */
+        public String getDescription() {
+            return this.getTypeLabel(DESCRIPTION_LABEL);
         }
     }
 }
