@@ -37,3 +37,4 @@ Note that if you introduce a new user profile in the internal repository, you mu
 
 The actual users' profiles and the defined policies allow uid1 to access to all named graphs, uid2 cannot access any named graph, and uid3 is
 allowed to access only few named graphs. 
+If the SPARQL endpoint is not protected, i.e., there are no policies defined, then everybody can access the data, i.e., the S4AC SPARQL endpoint is equivalent to a non protected SPARQL endpoint.
