@@ -40,6 +40,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import org.datalift.fwk.log.Logger;
+
 import static org.datalift.fwk.util.StringUtils.isBlank;
 
 
@@ -205,24 +207,11 @@ public abstract class BaseLocalizedItem implements LocalizedItem
             for (Map.Entry<String,String> e : labels.entrySet()) {
                 String label = e.getValue();
                 if (! isBlank(label)) {
-                    this.setLabel(e.getKey(), label);
+                    this.setLabel(type, e.getKey(), label);
                 }
                 // Else: ignore...
             }
         }
-    }
-
-    /**
-     * Sets the item label for the specified language or language
-     * and country.
-     * @param  language   the language code or language and country
-     *                    codes, separated with an hyphen ('-') or an
-     *                    underscore ('_') character.
-     * @param  label      the label for the specified language or
-     *                    language and country.
-     */
-    private void setLabel(String language, String label) {
-        this.setLabel(null, language, label);
     }
 
     /**
