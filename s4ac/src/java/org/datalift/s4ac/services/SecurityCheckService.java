@@ -1,6 +1,5 @@
 package org.datalift.s4ac.services;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -33,8 +32,6 @@ public class SecurityCheckService extends BaseModule {
 	private Repository securedRepository;
 	private Repository liftedRepository;	
 	
-	private SecurityContext ctx = SecurityContext.getContext();
-	
 	private static final Log log = LogFactory.getLog(SecurityCheckService.class);
 	
 	String queryCtx = "PREFIX s4ac:<http://ns.inria.fr/s4ac/v2#> " +
@@ -59,9 +56,7 @@ public class SecurityCheckService extends BaseModule {
 		super("s4ac-securityCheckService",true);
 	}
 	
-	
 	public void init() {
-		
 		try {
 			this.liftedRepository = Configuration.getDefault().getDataRepository();
     		this.securedRepository = Configuration.getDefault().getRepository("secured");
@@ -131,10 +126,8 @@ public class SecurityCheckService extends BaseModule {
              log.fatal("Failed to get Access Policies");
              throw new RuntimeException(e);
           }
-    	
-    	
 	}
-	
+
 	public Map<String, AccessPolicy> getAps() {
 		return aps;
 	}
@@ -191,7 +184,6 @@ public class SecurityCheckService extends BaseModule {
         log.debug("RESULT ASK : "+String.valueOf(res));		
         
         return res;
-        
 	}
 
 	public Set<String> getAccessibleGraphs(List<String> namedGraphUris) {
@@ -222,7 +214,7 @@ public class SecurityCheckService extends BaseModule {
 		} else 
 			return ng;
 	}
-		
+
 	private Set<String> getAllGraphsFromLifted() {
 		Set<String> all = new HashSet<String>();
 		try {
@@ -250,10 +242,8 @@ public class SecurityCheckService extends BaseModule {
              log.fatal("Failed to get graphs from lifted");
              throw new RuntimeException(e);
           }
-		
 		return all;
 	}
-	
 	
 	private Set<String> getProtectedNamedGraphs() {		
 		Set<String> graphs = new HashSet<String>();
@@ -268,8 +258,6 @@ public class SecurityCheckService extends BaseModule {
 		return graphs;
 	}
 	
-	
-
 /*
 	public Set<String> checkByPrivilege(SecuredSparqlQuery sqry, String sessid) throws RepositoryException, MalformedQueryException, QueryEvaluationException  {
 		
@@ -313,6 +301,4 @@ public class SecurityCheckService extends BaseModule {
 		return graphs;
 	}
 */
-	
-
 }

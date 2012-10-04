@@ -1,10 +1,10 @@
 package org.datalift.s4ac.services;
+
+
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.datalift.s4ac.utils.CRUDType;
-
 
 
 public class AccessPolicy {
@@ -77,6 +77,5 @@ public class AccessPolicy {
 
 	public void addGraph(String g) {
 		this.graphs.add(g);
-		
 	}
 }

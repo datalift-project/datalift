@@ -1,7 +1,7 @@
 package org.datalift.s4ac.sparql;
 
+
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -12,28 +12,21 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.UriInfo;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.datalift.fwk.Configuration;
 import org.datalift.s4ac.resources.SecuredSparqlQuery;
 import org.datalift.s4ac.services.SecurityCheckService;
-import org.datalift.sparql.AbstractSparqlEndpoint;
 import org.datalift.sparql.SesameSparqlEndpoint;
 
 
-
-@Path("/" + AbstractSparqlEndpoint.MODULE_NAME)
-public class S4acSparqlEndpoint extends SesameSparqlEndpoint {
-	
-	private String cfgBaseUri;
-	private SecurityCheckService scs;
-	
+@Path(SesameSparqlEndpoint.MODULE_NAME)
+public class S4acSparqlEndpoint extends SesameSparqlEndpoint
+{
+    private SecurityCheckService scs;
 
     /** {@inheritDoc} */
     @Override
     public void init(Configuration configuration) {
         super.init(configuration);
-        this.cfgBaseUri = configuration.getProperty(BASE_URI_PROPERTY);
         this.scs = new SecurityCheckService();
     }
 
@@ -42,11 +35,10 @@ public class S4acSparqlEndpoint extends SesameSparqlEndpoint {
         return false;
     }
 
-
     //-------------------------------------------------------------------------
     // AbstractSparqlEndpoint contract support
     //-------------------------------------------------------------------------
-    
+
     /** {@inheritDoc} */
     @Override
     protected ResponseBuilder doExecute(List<String> defaultGraphUris,
@@ -84,15 +76,12 @@ public class S4acSparqlEndpoint extends SesameSparqlEndpoint {
             		newQuery, startOffset, endOffset, gridJson,
                                    format, jsonCallback, uriInfo, request,
                                    acceptHdr, viewData);
-            
-        } else {
+        }
+        else {
         	log.info("Not secured query execution: SPARQL endpoint not protected (no AP)");
         	return super.doExecute(defaultGraphUris, namedGraphUris, query, startOffset,
                     endOffset, gridJson,format, jsonCallback,uriInfo, request,
                     acceptHdr,viewData);
         }
-
-
     }
 }
-
