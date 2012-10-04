@@ -104,7 +104,7 @@
 
 					select.attr("name", "");
 					select.attr("id", "");
-					select.attr("tabindex", -10)
+					select.attr("tabindex", -10);
 				});
 		},
 
@@ -116,20 +116,119 @@
 	});
 })(jQuery);
 
-$(document).ready(function() {
+
+$(function() {
+	$(".hidden-field-js").hide();
+
 	$("#file-submit, #form-submit, .cancel-button, #form-help").button();
 	$(".multiple-choices").buttonset();
 	$('.add-compare-js, .remove-compare-js').button();
 
-	$(".hidden-field-js").hide();
+	$(".address-js select, .property-first-js select, .property-secund-js select, .property-third-js select").combobox();
+	$(".measure-js .num-js select").combobox();
+
+		/*
+	* Applies the ui-state-error style to the container of {@param field}.
+	* @param {object} field The DOM element which contains the error.
+	*/
+	function errorState(field) {
+		field.removeClass("ui-state-success");
+		field.parent().parent().addClass("ui-state-error");
+		field.parent().next(".info").children('span')
+			.removeClass("ui-icon-help ui-icon-check")
+			.addClass("ui-icon-alert")
+			.show();
+	}
 
 	/*
-	* Checks if {@param str} is empty, null or undefined.
-	* @param {string} str The string to be checked.
-	* @return {bool} True if real string, false if empty ("") or null/undefined.
+	* Applies the ui-state-success style to the container of {@param field}.
+	* @param {object} field The DOM element which is correct.
 	*/
-	function isEmpty(str) {
+	function successState(field) {
+		field.parent().parent().removeClass("ui-state-error");
+		field.addClass("ui-state-success");
+		field.parent().next(".info").children('span')
+			.removeClass("ui-icon-help ui-icon-alert")
+			.addClass("ui-icon-check")
+			.show();
+	}
+
+	/*
+	* Rolls back the container of {@param field} to its default styling.
+	* @param {object} field The DOM element which has a "default" value.
+	*/
+	function defaultState(field) {
+		field.removeClass("ui-state-success");
+		field.parent().parent().removeClass("ui-state-error");
+		field.parent().next(".info").children('span')
+			.removeClass("ui-icon-help ui-icon-alert ui-icon-check")
+			.hide();
+	}
+
+		function isEmpty(str) {
 		return (!str || 0 === str.length);
+	}
+
+	function isValid(val, values) {
+		return !isEmpty(val) && jQuery.inArray(val, values) != -1;
+	}
+
+	function isEmptyOptional(val) {
+		return isEmpty(val) || val === none;
+	}
+
+	/*
+	* Checks if the mandatory input {@param field} is valid by looking for its
+	* value inside a given array.
+	* @param {object} field The DOM element to validate.
+	* @param {array} values The array of strings where the value must be.
+	* @return {bool} True if {@param field} is valid, ie. is in {@param values}.
+	*/
+	function validateMandatory(field, values) {
+		var str = field.val().trim();
+		var valid = isValid(str, values);
+		if (valid) {
+			successState(field);
+		}
+		else {
+			errorState(field);
+		}
+
+		return valid;
+	}
+
+		/*
+	* Checks if the optional input {@param field} is valid by looking for its value inside a given array.
+	* @param {object} field The DOM element to validate.
+	* @param {array} values The array of strings where the value must be.
+	* @return {bool} True if {@param field} is valid, ie. is in {@param values} OR {@param field} is empty.
+	*/
+	function validateOptional(field, values) {
+		var str = field.val().trim();
+		var valid = isValid(str, values);
+		if (valid) {
+			successState(field);
+		}
+		else if (isEmptyOptional(str)) {
+			valid = true;
+			defaultState(field);
+		}
+		else {
+			errorState(field);
+		}
+		return valid;
+	}
+
+	function validateUnknown(field) {
+		var str = field.val().trim();
+		if (!isEmptyOptional(str)) {
+			valid = true;
+			successState(field);
+		}
+		else {
+			defaultState(field);
+		}
+		return valid;
 	}
 
 	/*
@@ -243,34 +342,34 @@ $(document).ready(function() {
 		return true;
 	});
 
-	var $sourceAddress = $("#sourceAddress");
-	var $targetAddress = $("#targetAddress");
+
+
+	var $sourceAddress = $(".source .address-js input");
+	var $targetAddress = $(".target .address-js input");
 	var $sourceQuery = $("#sourceQuery");
 	var $targetQuery = $("#targetQuery");
-	var $sourcePropertyFirst  = $("#sourcePropertyFirst");
-	var $sourcePropertySecund = $("#sourcePropertySecund");
-	var $sourcePropertyThird  = $("#sourcePropertyThird");
-	var $targetPropertyFirst  = $("#targetPropertyFirst");
-	var $targetPropertySecund = $("#targetPropertySecund");
-	var $targetPropertyThird  = $("#targetPropertyThird");
+	var $sourcePropertyFirst  = $(".source .property-first-js input");
+	var $sourcePropertySecund = $(".source .property-secund-js input");
+	var $sourcePropertyThird  = $(".source .property-third-js input");
+	var $targetPropertyFirst  = $(".target .property-first-js input");
+	var $targetPropertySecund = $(".target .property-secund-js input");
+	var $targetPropertyThird  = $(".target .property-third-js input");
 	var $thresholdFirst  = $("#thresholdFirst");
 	var $thresholdSecund = $("#thresholdSecund");
-	var $thresholdThird  = $("#thresholdThird");
+	var $thresholdThird  = $(".measure-js .num-js input");
 	var $weightFirst  = $("#weightFirst");
 	var $weightSecund = $("#weightSecund");
 	var $weightThird  = $("#weightThird");
-	
-	$sourceAddress.autocomplete({source: datasets, minLength: 0, delay: 0});
-	$targetAddress.autocomplete({source: datasets, minLength: 0, delay: 0});
-	$sourceQuery.autocomplete({source: queries, minLength: 0, delay: 0});
-	$targetQuery.autocomplete({source: queries, minLength: 0, delay: 0});
-	$sourcePropertyFirst.autocomplete({source: predicates, minLength: 0, delay: 0});
-	$sourcePropertySecund.autocomplete({source: predicates, minLength: 0, delay: 0});
-	$sourcePropertyThird.autocomplete({source: predicates, minLength: 0, delay: 0});
-	$targetPropertyFirst.autocomplete({source: predicates, minLength: 0, delay: 0});
-	$targetPropertySecund.autocomplete({source: predicates, minLength: 0, delay: 0});
-	$targetPropertyThird.autocomplete({source: predicates, minLength: 0, delay: 0});
-	$thresholdFirst.autocomplete({source: zeroToOne, minLength: 0, delay: 0});
+
+	$sourceAddress.blur(function() {window.setTimeout(validateMandatory, 100, $sourceAddress, datasets);});
+	$targetAddress.blur(function() {window.setTimeout(validateMandatory, 100, $targetAddress, datasets);});
+	$sourcePropertyFirst.blur(function() {window.setTimeout(validateMandatory, 100, $sourcePropertyFirst, predicates);});
+	$targetPropertyFirst.blur(function() {window.setTimeout(validateMandatory, 100, $targetPropertyFirst, predicates);});
+	$sourcePropertySecund.blur(function() {window.setTimeout(validateMandatory, 100, $sourcePropertySecund, predicates);});
+	$targetPropertySecund.blur(function() {window.setTimeout(validateMandatory, 100, $targetPropertySecund, predicates);});
+	$sourcePropertyThird.blur(function() {window.setTimeout(validateMandatory, 100, $sourcePropertyThird, predicates);});
+	$targetPropertyThird.blur(function() {window.setTimeout(validateMandatory, 100, $targetPropertyThird, predicates);});
+	//$thresholdFirst.autocomplete({source: zeroToOne, minLength: 0, delay: 0});
 	$thresholdSecund.autocomplete({source: zeroToOne, minLength: 0, delay: 0});
 	$thresholdThird.autocomplete({source: zeroToOne, minLength: 0, delay: 0});
 	$weightFirst.autocomplete({source: zeroToOne, minLength: 0, delay: 0});

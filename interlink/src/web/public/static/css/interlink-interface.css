@@ -12,6 +12,11 @@
 .clearfix:after { clear: both; }
 .clearfix { *zoom: 1; }
 
+.ui-state-success {
+	color:#690 !important;
+}
+
+
 /**
  * ---------------------------------------------------------------------------
  * Silk Interconnection's overall interface.
@@ -97,7 +102,7 @@ div.form-stack {
 	display: block;
 }
 
-.form-stack input[type=text], .form-stack select, .form-stack textarea {
+.form-stack input[type=text], .form-stack select, .form-stack textarea, .form-stack .ui-combobox {
 	width: 100%;
 	min-width: 350px;
 }
@@ -107,6 +112,7 @@ div.form-stack {
 	vertical-align: top;
 	resize: vertical;
 	padding:2px;
+	border: 1px solid #c5dbec;
 }
 
 .form-stack p.info {
@@ -250,4 +256,43 @@ noscript h4 {
 
 .error-label:after {
 	content: ' — ';
+}
+
+
+/**
+ * ---------------------------------------------------------------------------
+ * UI Combobox Styling.
+ */
+
+
+.ui-combobox {
+	position:relative;
+	display:inline-block;
+}
+
+.ui-combobox-toggle {
+	position:absolute;
+	top:0;
+	bottom:0;
+	margin-left:-1px;
+	width:6%;
+}
+
+.ui-combobox-toggle .ui-button-text {
+	padding-left:30%;
+}
+
+.ui-combobox-input {
+	margin:0;
+	padding:0.3em;
+	width:94%;
+	font-size:80%;
+}
+
+.ui-menu {
+	font-size:80%;
+}
+
+.ui-menu strong {
+	color:#690;
 }

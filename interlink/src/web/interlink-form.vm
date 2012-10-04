@@ -15,9 +15,7 @@
 <body>
 	#banner
 	<div class="ui-widget-content" id="workspace">
-		<h3 class="ui-widget-header dl-widget-header">
-			#i18n('project.label' ${it.title}) &mdash; #i18n('interlink.title')
-		</h3>
+		<h3 class="ui-widget-header dl-widget-header">#i18n('project.label' ${it.title}) &mdash; #i18n('interlink.title')</h3>
 
 		<noscript>
 			<div class="ui-widget-content ui-corner-all ui-state-error">
@@ -29,339 +27,51 @@
 		<form id="script-form" action="${moduleUri}/script?project=$esc.url($it.uri)" method="post">
 			## <h4>#i18n('interlink.script.title')</h4>
 
-			<fieldset class="source field-stack ui-widget-content dl-panel medium ui-corner-all">
-				<legend>#i18n('source.title')</legend>
-				<div class="dl-form-elt form-stack ui-state-default ui-corner-top">
-					<label for="sourceAddress">#i18n('dataset.address.label')</label>
-					<input type="text" name="sourceAddress" id="sourceAddress" placeholder="#i18n('field.mandatory')" required="required"/>
-					<p class="info">
-						<span class="ui-icon ui-icon-help"></span>
-						#i18n('dataset.address.info') &mdash; #i18n('field.mandatory')
-					</p>
-					<p class="help hidden-field-js help-js">TODO</p>
-				</div>
 
-				<div class="dl-form-elt form-stack ui-state-default ui-corner-bottom">
-					<label for="sourceQuery">#i18n('dataset.query.label')</label>
-					<textarea name="sourceQuery" id="sourceQuery" rows="2" cols="53" wrap="off" placeholder="#i18n('field.optional') &mdash; #i18n('dataset.query.example')"></textarea>
-					<p class="info">
-						<span class="ui-icon ui-icon-help"></span>
-						#i18n('dataset.query.info') &mdash; #i18n('field.optional')
-					</p>
-					<p class="help hidden-field-js help-js">TODO</p>
-				</div>
 
-				<div class="compare-js first-js">
-					<h5>#i18n('compare.title')</h5>
 
-					<div class="dl-form-elt form-stack ui-state-default ui-corner-top">
-						<label for="sourcePropertyFirst">#i18n('dataset.property.label')</label>
-						<input type="text" name="sourcePropertyFirst" id="sourcePropertyFirst" placeholder="#i18n('field.mandatory') &mdash; #i18n('field.example'): #i18n('dataset.property.example')" required="required"/>
-						<p class="info">
-							<span class="ui-icon ui-icon-help"></span>
-							#i18n('dataset.property.info') &mdash; #i18n('field.mandatory')
-						</p>
-						<p class="help hidden-field-js help-js">TODO</p>
-					</div>
 
-					<div class="dl-form-elt form-stack ui-state-default ui-corner-bottom">
-						<label for="sourceTransformationFirst">#i18n('transform.title')</label>
-						<select name="sourceTransformationFirst" id="sourceTransformationFirst"  class="transform-js" required="required">
-							<option value="#i18n('field.none')" selected="selected">#i18n('field.none')</option>
-							<optgroup label="#i18n('transform.function.first')">
-								<option value="lowerCase">#i18n('function.title.lowerCase')</option>
-								<option value="upperCase">#i18n('function.title.upperCase')</option>
-								<option value="capitalizeFirst">#i18n('function.title.capitalizeFirst')</option>
-								<option value="capitalizeAll">#i18n('function.title.capitalizeAll')</option>
-							</optgroup>
-							<optgroup label="#i18n('transform.function.secund')">
-								<option value="removeBlanks">#i18n('function.title.removeBlanks')</option>
-								<option value="removeSpecialChars">#i18n('function.title.removeSpecialChars')</option>
-								<option value="alphaReduce">#i18n('function.title.alphaReduce')</option>
-								<option value="numReduce">#i18n('function.title.numReduce')</option>
-								<option value="stem">#i18n('function.title.stem')</option>
-							</optgroup>
-							<optgroup label="#i18n('transform.function.third')">
-								<option value="stripPrefix">#i18n('function.title.stripPrefix')</option>
-								<option value="stripPostfix">#i18n('function.title.stripPostfix')</option>
-								<option value="stripUriPrefix">#i18n('function.title.stripUriPrefix')</option>
-							</optgroup>
-							<optgroup label="#i18n('transform.function.fourth')">
-								<option value="replace">#i18n('function.title.replace')</option>
-								<option value="regexReplace">#i18n('function.title.regexReplace')</option>
-								<option value="tokenize">#i18n('function.title.tokenize')</option>
-								<option value="removeValues">#i18n('function.title.removeValues')</option>
-							</optgroup>
-							<optgroup label="#i18n('transform.function.fifth')">
-								<option value="convertUTFISO">#i18n('function.title.convertUTFISO')</option>
-								<option value="convertISOUTF">#i18n('function.title.convertISOUTF')</option>
-							</optgroup>
-							<optgroup label="#i18n('transform.function.sixth')">
-								<option value="commonLogarithm">#i18n('function.title.commonLogarithm')</option>
-								<option value="naturalLogarithm">#i18n('function.title.naturalLogarithm')</option>
-								<option value="binaryLogarithm">#i18n('function.title.binaryLogarithm')</option>
-							</optgroup>
-						</select>
-						<p class="info">
-							<span class="ui-icon ui-icon-help"></span>
-							#i18n('transform.info') &mdash; #i18n('field.optional')
-						</p>
-						<p class="help hidden-field-js help-js">TODO</p>
-					</div>
-					<div class="tokenize-js hidden-field-js dl-form-elt form-stack ui-state-default ui-corner-all">
-						<label for="sourceRegexpTokenFirst">#i18n('field.label.regexpToken')</label>
-						<input type="text" name="sourceRegexpTokenFirst" id="sourceRegexpTokenFirst" placeholder="#i18n('field.example'): #i18n('field.example.regexpToken')"/>
-						<p class="info">
-							<span class="ui-icon ui-icon-help"></span>
-							#i18n('field.info.regexpToken')
-						</p>
-					</div>
-					<div class="removeValues-js hidden-field-js dl-form-elt form-stack ui-state-default ui-corner-all">
-						<label for="sourceStopWordsFirst">#i18n('field.label.stopWords')</label>
-						<input type="text" name="sourceStopWordsFirst" id="sourceStopWordsFirst" placeholder="#i18n('field.example'): #i18n('field.example.stopWords')"/>
-						<p class="info">
-							<span class="ui-icon ui-icon-help"></span>
-							#i18n('field.info.stopWords')
-						</p>
-					</div>
-					<div class="replace-js regexReplace-js hidden-field-js dl-form-elt form-stack ui-state-default ui-corner-top">
-						<label for="sourceSearchFirst">#i18n('field.label.search')</label>
-						<input type="text" name="sourceSearchFirst" id="sourceSearchFirst"/>
-						<p class="info">
-							<span class="ui-icon ui-icon-help"></span>
-							#i18n('field.info.search')
-						</p>
-					</div>
-					<div class="replace-js regexReplace-js hidden-field-js dl-form-elt form-stack ui-state-default ui-corner-bottom">
-						<label for="sourceReplaceFirst">#i18n('field.label.replace')</label>
-						<input type="text" name="sourceReplaceFirst" id="sourceReplaceFirst"/>
-						<p class="info">
-							<span class="ui-icon ui-icon-help"></span>
-							#i18n('field.info.replace')
-						</p>
-					</div>
-				</div>
 
-				<div class="compare-js secund-js hidden-field-js">
-					<h5>#i18n('compare.title')</h5>
-
-					<div class="dl-form-elt form-stack ui-state-default ui-corner-top">
-						<label for="sourcePropertySecund">#i18n('dataset.property.label')</label>
-						<input type="text" name="sourcePropertySecund" id="sourcePropertySecund" placeholder="#i18n('field.optional') &mdash; #i18n('field.example'): #i18n('dataset.property.example')"/>
-						<p class="info">
-							<span class="ui-icon ui-icon-help"></span>
-							#i18n('dataset.property.info') &mdash; #i18n('field.optional')
-						</p>
-					</div>
-
-					<div class="dl-form-elt form-stack ui-state-default ui-corner-bottom">
-						<label for="sourceTransformationSecund">#i18n('transform.title')</label>
-						<select name="sourceTransformationSecund" id="sourceTransformationSecund" class="transform-js">
-							<option value="#i18n('field.none')" selected="selected">#i18n('field.none')</option>
-							<optgroup label="#i18n('transform.function.first')">
-								<option value="lowerCase">#i18n('function.title.lowerCase')</option>
-								<option value="upperCase">#i18n('function.title.upperCase')</option>
-								<option value="capitalizeFirst">#i18n('function.title.capitalizeFirst')</option>
-								<option value="capitalizeAll">#i18n('function.title.capitalizeAll')</option>
-							</optgroup>
-							<optgroup label="#i18n('transform.function.secund')">
-								<option value="removeBlanks">#i18n('function.title.removeBlanks')</option>
-								<option value="removeSpecialChars">#i18n('function.title.removeSpecialChars')</option>
-								<option value="alphaReduce">#i18n('function.title.alphaReduce')</option>
-								<option value="numReduce">#i18n('function.title.numReduce')</option>
-								<option value="stem">#i18n('function.title.stem')</option>
-							</optgroup>
-							<optgroup label="#i18n('transform.function.third')">
-								<option value="stripPrefix">#i18n('function.title.stripPrefix')</option>
-								<option value="stripPostfix">#i18n('function.title.stripPostfix')</option>
-								<option value="stripUriPrefix">#i18n('function.title.stripUriPrefix')</option>
-							</optgroup>
-							<optgroup label="#i18n('transform.function.fourth')">
-								<option value="replace">#i18n('function.title.replace')</option>
-								<option value="regexReplace">#i18n('function.title.regexReplace')</option>
-								<option value="tokenize">#i18n('function.title.tokenize')</option>
-								<option value="removeValues">#i18n('function.title.removeValues')</option>
-							</optgroup>
-							<optgroup label="#i18n('transform.function.fifth')">
-								<option value="convertUTFISO">#i18n('function.title.convertUTFISO')</option>
-								<option value="convertISOUTF">#i18n('function.title.convertISOUTF')</option>
-							</optgroup>
-							<optgroup label="#i18n('transform.function.sixth')">
-								<option value="commonLogarithm">#i18n('function.title.commonLogarithm')</option>
-								<option value="naturalLogarithm">#i18n('function.title.naturalLogarithm')</option>
-								<option value="binaryLogarithm">#i18n('function.title.binaryLogarithm')</option>
-							</optgroup>
-						</select>
-						<p class="info">
-							<span class="ui-icon ui-icon-help"></span>
-							#i18n('transform.info') &mdash; #i18n('field.optional')
-						</p>
-					</div>
-					<div class="tokenize-js hidden-field-js dl-form-elt form-stack ui-state-default ui-corner-all">
-						<label for="sourceRegexpTokenSecund">#i18n('field.label.regexpToken')</label>
-						<input type="text" name="sourceRegexpTokenSecund" id="sourceRegexpTokenSecund" placeholder="#i18n('field.example'): #i18n('field.example.regexpToken')"/>
-						<p class="info">
-							<span class="ui-icon ui-icon-help"></span>
-							#i18n('field.info.regexpToken')
-						</p>
-					</div>
-					<div class="removeValues-js hidden-field-js dl-form-elt form-stack ui-state-default ui-corner-all">
-						<label for="sourceStopWordsSecund">#i18n('field.label.stopWords')</label>
-						<input type="text" name="sourceStopWordsSecund" id="sourceStopWordsSecund" placeholder="#i18n('field.example'): #i18n('field.example.stopWords')"/>
-						<p class="info">
-							<span class="ui-icon ui-icon-help"></span>
-							#i18n('field.info.stopWords')
-						</p>
-					</div>
-					<div class="replace-js regexReplace-js hidden-field-js dl-form-elt form-stack ui-state-default ui-corner-top">
-						<label for="sourceSearchSecund">#i18n('field.label.search')</label>
-						<input type="text" name="sourceSearchSecund" id="sourceSearchSecund"/>
-						<p class="info">
-							<span class="ui-icon ui-icon-help"></span>
-							#i18n('field.info.search')
-						</p>
-					</div>
-					<div class="replace-js regexReplace-js hidden-field-js dl-form-elt form-stack ui-state-default ui-corner-bottom">
-						<label for="sourceReplaceSecund">#i18n('field.label.replace')</label>
-						<input type="text" name="sourceReplaceSecund" id="sourceReplaceSecund"/>
-						<p class="info">
-							<span class="ui-icon ui-icon-help"></span>
-							#i18n('field.info.replace')
-						</p>
-					</div>
-				</div>
-
-				<div class="compare-js third-js hidden-field-js">
-					<h5>#i18n('compare.title')</h5>
-
-					<div class="dl-form-elt form-stack ui-state-default ui-corner-top">
-						<label for="sourcePropertyThird">#i18n('dataset.property.label')</label>
-						<input type="text" name="sourcePropertyThird" id="sourcePropertyThird" placeholder="#i18n('field.optional') &mdash; #i18n('field.example'): #i18n('dataset.property.example')"/>
-						<p class="info">
-							<span class="ui-icon ui-icon-help"></span>
-							#i18n('dataset.property.info') &mdash; #i18n('field.optional')
-						</p>
-					</div>
-
-					<div class="dl-form-elt form-stack ui-state-default ui-corner-bottom">
-						<label for="sourceTransformationThird">#i18n('transform.title')</label>
-						<select name="sourceTransformationThird" id="sourceTransformationThird" class="transform-js">
-							<option value="#i18n('field.none')" selected="selected">#i18n('field.none')</option>
-							<optgroup label="#i18n('transform.function.first')">
-								<option value="lowerCase">#i18n('function.title.lowerCase')</option>
-								<option value="upperCase">#i18n('function.title.upperCase')</option>
-								<option value="capitalizeFirst">#i18n('function.title.capitalizeFirst')</option>
-								<option value="capitalizeAll">#i18n('function.title.capitalizeAll')</option>
-							</optgroup>
-							<optgroup label="#i18n('transform.function.secund')">
-								<option value="removeBlanks">#i18n('function.title.removeBlanks')</option>
-								<option value="removeSpecialChars">#i18n('function.title.removeSpecialChars')</option>
-								<option value="alphaReduce">#i18n('function.title.alphaReduce')</option>
-								<option value="numReduce">#i18n('function.title.numReduce')</option>
-								<option value="stem">#i18n('function.title.stem')</option>
-							</optgroup>
-							<optgroup label="#i18n('transform.function.third')">
-								<option value="stripPrefix">#i18n('function.title.stripPrefix')</option>
-								<option value="stripPostfix">#i18n('function.title.stripPostfix')</option>
-								<option value="stripUriPrefix">#i18n('function.title.stripUriPrefix')</option>
-							</optgroup>
-							<optgroup label="#i18n('transform.function.fourth')">
-								<option value="replace">#i18n('function.title.replace')</option>
-								<option value="regexReplace">#i18n('function.title.regexReplace')</option>
-								<option value="tokenize">#i18n('function.title.tokenize')</option>
-								<option value="removeValues">#i18n('function.title.removeValues')</option>
-							</optgroup>
-							<optgroup label="#i18n('transform.function.fifth')">
-								<option value="convertUTFISO">#i18n('function.title.convertUTFISO')</option>
-								<option value="convertISOUTF">#i18n('function.title.convertISOUTF')</option>
-							</optgroup>
-							<optgroup label="#i18n('transform.function.sixth')">
-								<option value="commonLogarithm">#i18n('function.title.commonLogarithm')</option>
-								<option value="naturalLogarithm">#i18n('function.title.naturalLogarithm')</option>
-								<option value="binaryLogarithm">#i18n('function.title.binaryLogarithm')</option>
-							</optgroup>
-						</select>
-						<p class="info">
-							<span class="ui-icon ui-icon-help"></span>
-							#i18n('transform.info') &mdash; #i18n('field.optional')
-						</p>
-					</div>
-					<div class="tokenize-js hidden-field-js dl-form-elt form-stack ui-state-default ui-corner-all">
-						<label for="sourceRegexpTokenThird">#i18n('field.label.regexpToken')</label>
-						<input type="text" name="sourceRegexpTokenThird" id="sourceRegexpTokenThird" placeholder="#i18n('field.example'): #i18n('field.example.regexpToken')"/>
-						<p class="info">
-							<span class="ui-icon ui-icon-help"></span>
-							#i18n('field.info.regexpToken')
-						</p>
-					</div>
-					<div class="removeValues-js hidden-field-js dl-form-elt form-stack ui-state-default ui-corner-all">
-						<label for="sourceStopWordsThird">#i18n('field.label.stopWords')</label>
-						<input type="text" name="sourceStopWordsThird" id="sourceStopWordsThird" placeholder="#i18n('field.example'): #i18n('field.example.stopWords')"/>
-						<p class="info">
-							<span class="ui-icon ui-icon-help"></span>
-							#i18n('field.info.stopWords')
-						</p>
-					</div>
-					<div class="replace-js regexReplace-js hidden-field-js dl-form-elt form-stack ui-state-default ui-corner-top">
-						<label for="sourceSearchThird">#i18n('field.label.search')</label>
-						<input type="text" name="sourceSearchThird" id="sourceSearchThird"/>
-						<p class="info">
-							<span class="ui-icon ui-icon-help"></span>
-							#i18n('field.info.search')
-						</p>
-					</div>
-					<div class="replace-js regexReplace-js hidden-field-js dl-form-elt form-stack ui-state-default ui-corner-bottom">
-						<label for="sourceReplaceThird">#i18n('field.label.replace')</label>
-						<input type="text" name="sourceReplaceThird" id="sourceReplaceThird"/>
-						<p class="info">
-							<span class="ui-icon ui-icon-help"></span>
-							#i18n('field.info.replace')
-						</p>
-					</div>
-				</div>
-
-				<a class="add-compare-js ui-priority-secondary" href="#" title="TODO">Ajouter une comparaison</a>
-				<a class="remove-compare-js hidden-field-js ui-priority-secondary" href="#" title="TODO">Retirer une comparaison</a>
-			</fieldset>
 
 			<fieldset class="target field-stack ui-widget-content dl-panel medium ui-corner-all">
 				<legend>#i18n('target.title')</legend>
-				<div class="dl-form-elt form-stack ui-state-default ui-corner-top">
+				<div class="address-js dl-form-elt form-stack ui-state-default ui-corner-top" title="#i18n('dataset.address.help')">
 					<label for="targetAddress">#i18n('dataset.address.label')</label>
-					<input type="text" name="targetAddress" id="targetAddress" placeholder="#i18n('field.mandatory')" required="required"/>
-					<p class="info">
-						<span class="ui-icon ui-icon-help"></span>
-						#i18n('dataset.address.info') &mdash; #i18n('field.mandatory')
-					</p>
-					<p class="help hidden-field-js help-js">TODO</p>
+					<select id="targetAddress" name="targetAddress">
+						<option value="#i18n('field.mandatory')" selected="selected" disabled="disabled"></option>
+						#foreach( $source in $sources )
+							<option value="$source">$source</option>
+						#end
+					</select>
+					<p class="info"><span class="ui-icon ui-icon-help"></span>#i18n('dataset.address.info' ${it.title}) &mdash; #i18n('field.mandatory')</p>
+					<p class="help hidden-field-js help-js">#i18n('dataset.address.help')</p>
 				</div>
 
-				<div class="dl-form-elt form-stack ui-state-default ui-corner-bottom">
+				<div class="dl-form-elt form-stack ui-state-default ui-corner-bottom" title="#i18n('dataset.query.help')">
 					<label for="targetQuery">#i18n('dataset.query.label')</label>
-					<textarea name="targetQuery" id="targetQuery" rows="2" cols="53" wrap="off" placeholder="#i18n('field.optional') &mdash; #i18n('dataset.query.example')"></textarea>
-					<p class="info">
-						<span class="ui-icon ui-icon-help"></span>
-						#i18n('dataset.query.info') &mdash; #i18n('field.optional')
-					</p>
-					<p class="help hidden-field-js help-js">TODO</p>
+					<textarea name="targetQuery" id="targetQuery" rows="2" cols="53" wrap="off" placeholder="#i18n('field.optional') &mdash; #i18n('field.example') : #i18n('dataset.query.example')"></textarea>
+					<p class="info"><span class="ui-icon ui-icon-help"></span>#i18n('dataset.query.info') &mdash; #i18n('field.optional')</p>
+					<p class="help hidden-field-js help-js">#i18n('dataset.query.help')</p>
 				</div>
 
 				<div class="compare-js first-js">
 					<h5>#i18n('compare.title')</h5>
 
-					<div class="dl-form-elt form-stack ui-state-default ui-corner-top">
+					<div class="property-first-js dl-form-elt form-stack ui-state-default ui-corner-top" title="#i18n('dataset.property.help')">
 						<label for="targetPropertyFirst">#i18n('dataset.property.label')</label>
-						<input type="text" name="targetPropertyFirst" id="targetPropertyFirst" placeholder="#i18n('field.mandatory') &mdash; #i18n('field.example'): #i18n('dataset.property.example')" required="required"/>
-						<p class="info">
-							<span class="ui-icon ui-icon-help"></span>
-							#i18n('dataset.property.info') &mdash; #i18n('field.mandatory')
-						</p>
-						<p class="help hidden-field-js help-js">TODO</p>
+						<select id="targetPropertyFirst" name="targetPropertyFirst" required="required">
+							<option value="#i18n('field.mandatory') &mdash; #i18n('field.example') : #i18n('dataset.property.example')" selected="selected" disabled="disabled"></option>
+							#foreach( $predicate in $predicates )
+							<option value="$predicate">$predicate</option>
+							#end
+						</select>
+						<p class="info"><span class="ui-icon ui-icon-help"></span>#i18n('dataset.property.info') &mdash; #i18n('field.mandatory')</p>
+						<p class="help hidden-field-js help-js">#i18n('dataset.property.help')</p>
 					</div>
 
-					<div class="dl-form-elt form-stack ui-state-default ui-corner-bottom">
+					<div class="dl-form-elt form-stack ui-state-default ui-corner-bottom" title="#i18n('transform.help')">
 						<label for="targetTransformationFirst">#i18n('transform.title')</label>
-						<select name="targetTransformationFirst" id="targetTransformationFirst"  class="transform-js"required="required">
+						<select name="targetTransformationFirst" id="targetTransformationFirst" class="transform-js" required="required">
 							<option value="#i18n('field.none')" selected="selected">#i18n('field.none')</option>
 							<optgroup label="#i18n('transform.function.first')">
 								<option value="lowerCase">#i18n('function.title.lowerCase')</option>
@@ -397,59 +107,46 @@
 								<option value="binaryLogarithm">#i18n('function.title.binaryLogarithm')</option>
 							</optgroup>
 						</select>
-						<p class="info">
-							<span class="ui-icon ui-icon-help"></span>
-							#i18n('transform.info') &mdash; #i18n('field.optional')
-						</p>
-						<p class="help hidden-field-js help-js">TODO</p>
+						<p class="info"><span class="ui-icon ui-icon-help"></span>#i18n('transform.info') &mdash; #i18n('field.optional')</p>
+						<p class="help hidden-field-js help-js">#i18n('transform.help')</p>
 					</div>
 					<div class="tokenize-js hidden-field-js dl-form-elt form-stack ui-state-default ui-corner-all">
 						<label for="targetRegexpTokenFirst">#i18n('field.label.regexpToken')</label>
-						<input type="text" name="targetRegexpTokenFirst" id="targetRegexpTokenFirst" placeholder="#i18n('field.example'): #i18n('field.example.regexpToken')"/>
-						<p class="info">
-							<span class="ui-icon ui-icon-help"></span>
-							#i18n('field.info.regexpToken')
-						</p>
+						<input type="text" name="targetRegexpTokenFirst" id="targetRegexpTokenFirst" placeholder="#i18n('field.example') : #i18n('field.example.regexpToken')"/>
+						<p class="info"><span class="ui-icon ui-icon-help"></span>#i18n('field.info.regexpToken')</p>
 					</div>
 					<div class="removeValues-js hidden-field-js dl-form-elt form-stack ui-state-default ui-corner-all">
 						<label for="targetStopWordsFirst">#i18n('field.label.stopWords')</label>
-						<input type="text" name="targetStopWordsFirst" id="targetStopWordsFirst" placeholder="#i18n('field.example'): #i18n('field.example.stopWords')"/>
-						<p class="info">
-							<span class="ui-icon ui-icon-help"></span>
-							#i18n('field.info.stopWords')
-						</p>
+						<input type="text" name="targetStopWordsFirst" id="targetStopWordsFirst" placeholder="#i18n('field.example')   : #i18n('field.example.stopWords')"/>
+						<p class="info"><span class="ui-icon ui-icon-help"></span>#i18n('field.info.stopWords')</p>
 					</div>
 					<div class="replace-js regexReplace-js hidden-field-js dl-form-elt form-stack ui-state-default ui-corner-top">
 						<label for="targetSearchFirst">#i18n('field.label.search')</label>
 						<input type="text" name="targetSearchFirst" id="targetSearchFirst"/>
-						<p class="info">
-							<span class="ui-icon ui-icon-help"></span>
-							#i18n('field.info.search')
-						</p>
+						<p class="info"><span class="ui-icon ui-icon-help"></span>#i18n('field.info.search')</p>
 					</div>
 					<div class="replace-js regexReplace-js hidden-field-js dl-form-elt form-stack ui-state-default ui-corner-bottom">
 						<label for="targetReplaceFirst">#i18n('field.label.replace')</label>
 						<input type="text" name="targetReplaceFirst" id="targetReplaceFirst"/>
-						<p class="info">
-							<span class="ui-icon ui-icon-help"></span>
-							#i18n('field.info.replace')
-						</p>
+						<p class="info"><span class="ui-icon ui-icon-help"></span>#i18n('field.info.replace')</p>
 					</div>
 				</div>
 
 				<div class="compare-js secund-js hidden-field-js">
 					<h5>#i18n('compare.title')</h5>
 
-					<div class="dl-form-elt form-stack ui-state-default ui-corner-top">
+					<div class="property-secund-js dl-form-elt form-stack ui-state-default ui-corner-top" title="#i18n('dataset.property.help')">
 						<label for="targetPropertySecund">#i18n('dataset.property.label')</label>
-						<input type="text" name="targetPropertySecund" id="targetPropertySecund" placeholder="#i18n('field.optional') &mdash; #i18n('field.example'): #i18n('dataset.property.example')"/>
-						<p class="info">
-							<span class="ui-icon ui-icon-help"></span>
-							#i18n('dataset.property.info') &mdash; #i18n('field.optional')
-						</p>
+						<select id="targetPropertySecund" name="targetPropertySecund" required="required">
+							<option value="#i18n('field.mandatory') &mdash; #i18n('field.example') : #i18n('dataset.property.example')" selected="selected" disabled="disabled"></option>
+							#foreach( $predicate in $predicates )
+							<option value="$predicate">$predicate</option>
+							#end
+						</select>
+						<p class="info"><span class="ui-icon ui-icon-help"></span>#i18n('dataset.property.info') &mdash; #i18n('field.optional')</p>
 					</div>
 
-					<div class="dl-form-elt form-stack ui-state-default ui-corner-bottom">
+					<div class="dl-form-elt form-stack ui-state-default ui-corner-bottom" title="#i18n('transform.help')">
 						<label for="targetTransformationSecund">#i18n('transform.title')</label>
 						<select name="targetTransformationSecund" id="targetTransformationSecund" class="transform-js">
 							<option value="#i18n('field.none')" selected="selected">#i18n('field.none')</option>
@@ -487,58 +184,46 @@
 								<option value="binaryLogarithm">#i18n('function.title.binaryLogarithm')</option>
 							</optgroup>
 						</select>
-						<p class="info">
-							<span class="ui-icon ui-icon-help"></span>
-							#i18n('transform.info') &mdash; #i18n('field.optional')
-						</p>
+						<p class="info"><span class="ui-icon ui-icon-help"></span>#i18n('transform.info') &mdash; #i18n('field.optional')</p>
+						<p class="help hidden-field-js help-js">#i18n('transform.help')</p>
 					</div>
 					<div class="tokenize-js hidden-field-js dl-form-elt form-stack ui-state-default ui-corner-all">
 						<label for="targetRegexpTokenSecund">#i18n('field.label.regexpToken')</label>
-						<input type="text" name="targetRegexpTokenSecund" id="targetRegexpTokenSecund" placeholder="#i18n('field.example'): #i18n('field.example.regexpToken')"/>
-						<p class="info">
-							<span class="ui-icon ui-icon-help"></span>
-							#i18n('field.info.regexpToken')
-						</p>
+						<input type="text" name="targetRegexpTokenSecund" id="targetRegexpTokenSecund" placeholder="#i18n('field.example') : #i18n('field.example.regexpToken')"/>
+						<p class="info"><span class="ui-icon ui-icon-help"></span>#i18n('field.info.regexpToken')</p>
 					</div>
 					<div class="removeValues-js hidden-field-js dl-form-elt form-stack ui-state-default ui-corner-all">
 						<label for="targetStopWordsSecund">#i18n('field.label.stopWords')</label>
-						<input type="text" name="targetStopWordsSecund" id="targetStopWordsSecund" placeholder="#i18n('field.example'): #i18n('field.example.stopWords')"/>
-						<p class="info">
-							<span class="ui-icon ui-icon-help"></span>
-							#i18n('field.info.stopWords')
-						</p>
+						<input type="text" name="targetStopWordsSecund" id="targetStopWordsSecund" placeholder="#i18n('field.example') : #i18n('field.example.stopWords')"/>
+						<p class="info"><span class="ui-icon ui-icon-help"></span>#i18n('field.info.stopWords')</p>
 					</div>
 					<div class="replace-js regexReplace-js hidden-field-js dl-form-elt form-stack ui-state-default ui-corner-top">
 						<label for="targetSearchSecund">#i18n('field.label.search')</label>
 						<input type="text" name="targetSearchSecund" id="targetSearchSecund"/>
-						<p class="info">
-							<span class="ui-icon ui-icon-help"></span>
-							#i18n('field.info.search')
-						</p>
+						<p class="info"><span class="ui-icon ui-icon-help"></span>#i18n('field.info.search')</p>
 					</div>
 					<div class="replace-js regexReplace-js hidden-field-js dl-form-elt form-stack ui-state-default ui-corner-bottom">
 						<label for="targetReplaceSecund">#i18n('field.label.replace')</label>
 						<input type="text" name="targetReplaceSecund" id="targetReplaceSecund"/>
-						<p class="info">
-							<span class="ui-icon ui-icon-help"></span>
-							#i18n('field.info.replace')
-						</p>
+						<p class="info"><span class="ui-icon ui-icon-help"></span>#i18n('field.info.replace')</p>
 					</div>
 				</div>
 
 				<div class="compare-js third-js hidden-field-js">
 					<h5>#i18n('compare.title')</h5>
 
-					<div class="dl-form-elt form-stack ui-state-default ui-corner-top">
+					<div class="property-third-js dl-form-elt form-stack ui-state-default ui-corner-top" title="#i18n('dataset.property.help')">
 						<label for="targetPropertyThird">#i18n('dataset.property.label')</label>
-						<input type="text" name="targetPropertyThird" id="targetPropertyThird" placeholder="#i18n('field.optional') &mdash; #i18n('field.example'): #i18n('dataset.property.example')"/>
-						<p class="info">
-							<span class="ui-icon ui-icon-help"></span>
-							#i18n('dataset.property.info') &mdash; #i18n('field.optional')
-						</p>
+						<select id="targetPropertyThird" name="targetPropertyThird" required="required">
+							<option value="#i18n('field.mandatory') &mdash; #i18n('field.example') : #i18n('dataset.property.example')" selected="selected" disabled="disabled"></option>
+							#foreach( $predicate in $predicates )
+							<option value="$predicate">$predicate</option>
+							#end
+						</select>
+						<p class="info"><span class="ui-icon ui-icon-help"></span>#i18n('dataset.property.info') &mdash; #i18n('field.optional')</p>
 					</div>
 
-					<div class="dl-form-elt form-stack ui-state-default ui-corner-bottom">
+					<div class="dl-form-elt form-stack ui-state-default ui-corner-bottom" title="#i18n('transform.help')">
 						<label for="targetTransformationThird">#i18n('transform.title')</label>
 						<select name="targetTransformationThird" id="targetTransformationThird" class="transform-js">
 							<option value="#i18n('field.none')" selected="selected">#i18n('field.none')</option>
@@ -576,55 +261,328 @@
 								<option value="binaryLogarithm">#i18n('function.title.binaryLogarithm')</option>
 							</optgroup>
 						</select>
-						<p class="info">
-							<span class="ui-icon ui-icon-help"></span>
-							#i18n('transform.info') &mdash; #i18n('field.optional')
-						</p>
+						<p class="info"><span class="ui-icon ui-icon-help"></span>#i18n('transform.info') &mdash; #i18n('field.optional')</p>
+						<p class="help hidden-field-js help-js">#i18n('transform.help')</p>
 					</div>
 					<div class="tokenize-js hidden-field-js dl-form-elt form-stack ui-state-default ui-corner-all">
 						<label for="targetRegexpTokenThird">#i18n('field.label.regexpToken')</label>
-						<input type="text" name="targetRegexpTokenThird" id="targetRegexpTokenThird" placeholder="#i18n('field.example'): #i18n('field.example.regexpToken')"/>
-						<p class="info">
-							<span class="ui-icon ui-icon-help"></span>
-							#i18n('field.info.regexpToken')
-						</p>
+						<input type="text" name="targetRegexpTokenThird" id="targetRegexpTokenThird" placeholder="#i18n('field.example') : #i18n('field.example.regexpToken')"/>
+						<p class="info"><span class="ui-icon ui-icon-help"></span>#i18n('field.info.regexpToken')</p>
 					</div>
 					<div class="removeValues-js hidden-field-js dl-form-elt form-stack ui-state-default ui-corner-all">
 						<label for="targetStopWordsThird">#i18n('field.label.stopWords')</label>
-						<input type="text" name="targetStopWordsThird" id="targetStopWordsThird" placeholder="#i18n('field.example'): #i18n('field.example.stopWords')"/>
-						<p class="info">
-							<span class="ui-icon ui-icon-help"></span>
-							#i18n('field.info.stopWords')
-						</p>
+						<input type="text" name="targetStopWordsThird" id="targetStopWordsThird" placeholder="#i18n('field.example') : #i18n('field.example.stopWords')"/>
+						<p class="info"><span class="ui-icon ui-icon-help"></span>#i18n('field.info.stopWords')</p>
 					</div>
 					<div class="replace-js regexReplace-js hidden-field-js dl-form-elt form-stack ui-state-default ui-corner-top">
 						<label for="targetSearchThird">#i18n('field.label.search')</label>
 						<input type="text" name="targetSearchThird" id="targetSearchThird"/>
-						<p class="info">
-							<span class="ui-icon ui-icon-help"></span>
-							#i18n('field.info.search')
-						</p>
+						<p class="info"><span class="ui-icon ui-icon-help"></span>#i18n('field.info.search')</p>
 					</div>
 					<div class="replace-js regexReplace-js hidden-field-js dl-form-elt form-stack ui-state-default ui-corner-bottom">
 						<label for="targetReplaceThird">#i18n('field.label.replace')</label>
 						<input type="text" name="targetReplaceThird" id="targetReplaceThird"/>
-						<p class="info">
-							<span class="ui-icon ui-icon-help"></span>
-							#i18n('field.info.replace')
-						</p>
+						<p class="info"><span class="ui-icon ui-icon-help"></span>#i18n('field.info.replace')</p>
 					</div>
 				</div>
 
-				<a class="add-compare-js ui-priority-secondary" href="#" title="TODO">Ajouter une comparaison</a>
-				<a class="remove-compare-js hidden-field-js ui-priority-secondary" href="#" title="TODO">Retirer une comparaison</a>
+				<a class="add-compare-js ui-priority-secondary ui-button" href="#" title="#i18n('compare.add')">#i18n('compare.add')</a>
+				<a class="remove-compare-js hidden-field-js ui-priority-secondary ui-button" href="#" title="#i18n('compare.remove')">#i18n('compare.remove')</a>
+				
+				<div class="hidden-field-js help-js dl-form-elt form-stack ui-state-default ui-corner-all">
+					<p class="help">#i18n('compare.add.help')</p>
+				</div>
 			</fieldset>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+			<fieldset class="source field-stack ui-widget-content dl-panel medium ui-corner-all">
+				<legend>#i18n('source.title')</legend>
+				<div class="address-js dl-form-elt form-stack ui-state-default ui-corner-top" title="#i18n('dataset.address.help')">
+					<label for="sourceAddress">#i18n('dataset.address.label')</label>
+					<select id="sourceAddress" name="sourceAddress">
+						<option value="#i18n('field.mandatory')" selected="selected" disabled="disabled"></option>
+						#foreach( $source in $sources )
+							<option value="$source">$source</option>
+						#end
+					</select>
+					<p class="info"><span class="ui-icon ui-icon-help"></span>#i18n('dataset.address.info' ${it.title})  &mdash; #i18n('field.mandatory')</p>
+					<p class="help hidden-field-js help-js">#i18n('dataset.address.help')</p>
+				</div>
+
+				<div class="dl-form-elt form-stack ui-state-default ui-corner-bottom" title="#i18n('dataset.query.help')">
+					<label for="sourceQuery">#i18n('dataset.query.label')</label>
+					<textarea name="sourceQuery" id="sourceQuery" rows="2" cols="53" wrap="off" placeholder="#i18n('field.optional') &mdash; #i18n('field.example') : #i18n('dataset.query.example')"></textarea>
+					<p class="info"><span class="ui-icon ui-icon-help"></span>#i18n('dataset.query.info') &mdash; #i18n('field.optional')</p>
+					<p class="help hidden-field-js help-js">#i18n('dataset.query.help')</p>
+				</div>
+
+				<div class="compare-js first-js">
+					<h5 id="compare-first">#i18n('compare.title')</h5>
+
+					<div class="property-first-js dl-form-elt form-stack ui-state-default ui-corner-top" title="#i18n('dataset.property.help')">
+						<label for="sourcePropertyFirst">#i18n('dataset.property.label')</label>
+						<select id="sourcePropertyFirst" name="sourcePropertyFirst" required="required">
+							<option value="#i18n('field.mandatory') &mdash; #i18n('field.example') : #i18n('dataset.property.example')" selected="selected" disabled="disabled"></option>
+							#foreach( $predicate in $predicates )
+							<option value="$predicate">$predicate</option>
+							#end
+						</select>
+						<p class="info"><span class="ui-icon ui-icon-help"></span>#i18n('dataset.property.info') &mdash; #i18n('field.mandatory')</p>
+						<p class="help hidden-field-js help-js">#i18n('dataset.property.help')</p>
+					</div>
+
+					<div class="dl-form-elt form-stack ui-state-default ui-corner-bottom" title="#i18n('transform.help')">
+						<label for="sourceTransformationFirst">#i18n('transform.title')</label>
+						<select name="sourceTransformationFirst" id="sourceTransformationFirst"  class="transform-js" required="required">
+							<option value="#i18n('field.none')" selected="selected">#i18n('field.none')</option>
+							<optgroup label="#i18n('transform.function.first')">
+								<option value="lowerCase">#i18n('function.title.lowerCase')</option>
+								<option value="upperCase">#i18n('function.title.upperCase')</option>
+								<option value="capitalizeFirst">#i18n('function.title.capitalizeFirst')</option>
+								<option value="capitalizeAll">#i18n('function.title.capitalizeAll')</option>
+							</optgroup>
+							<optgroup label="#i18n('transform.function.secund')">
+								<option value="removeBlanks">#i18n('function.title.removeBlanks')</option>
+								<option value="removeSpecialChars">#i18n('function.title.removeSpecialChars')</option>
+								<option value="alphaReduce">#i18n('function.title.alphaReduce')</option>
+								<option value="numReduce">#i18n('function.title.numReduce')</option>
+								<option value="stem">#i18n('function.title.stem')</option>
+							</optgroup>
+							<optgroup label="#i18n('transform.function.third')">
+								<option value="stripPrefix">#i18n('function.title.stripPrefix')</option>
+								<option value="stripPostfix">#i18n('function.title.stripPostfix')</option>
+								<option value="stripUriPrefix">#i18n('function.title.stripUriPrefix')</option>
+							</optgroup>
+							<optgroup label="#i18n('transform.function.fourth')">
+								<option value="replace">#i18n('function.title.replace')</option>
+								<option value="regexReplace">#i18n('function.title.regexReplace')</option>
+								<option value="tokenize">#i18n('function.title.tokenize')</option>
+								<option value="removeValues">#i18n('function.title.removeValues')</option>
+							</optgroup>
+							<optgroup label="#i18n('transform.function.fifth')">
+								<option value="convertUTFISO">#i18n('function.title.convertUTFISO')</option>
+								<option value="convertISOUTF">#i18n('function.title.convertISOUTF')</option>
+							</optgroup>
+							<optgroup label="#i18n('transform.function.sixth')">
+								<option value="commonLogarithm">#i18n('function.title.commonLogarithm')</option>
+								<option value="naturalLogarithm">#i18n('function.title.naturalLogarithm')</option>
+								<option value="binaryLogarithm">#i18n('function.title.binaryLogarithm')</option>
+							</optgroup>
+						</select>
+						<p class="info"><span class="ui-icon ui-icon-help"></span>#i18n('transform.info') &mdash; #i18n('field.optional')</p>
+						<p class="help hidden-field-js help-js">#i18n('transform.help')</p>
+					</div>
+					<div class="tokenize-js hidden-field-js dl-form-elt form-stack ui-state-default ui-corner-all">
+						<label for="sourceRegexpTokenFirst">#i18n('field.label.regexpToken')</label>
+						<input type="text" name="sourceRegexpTokenFirst" id="sourceRegexpTokenFirst" placeholder="#i18n('field.example') : #i18n('field.example.regexpToken')"/>
+						<p class="info"><span class="ui-icon ui-icon-help"></span>#i18n('field.info.regexpToken')</p>
+					</div>
+					<div class="removeValues-js hidden-field-js dl-form-elt form-stack ui-state-default ui-corner-all">
+						<label for="sourceStopWordsFirst">#i18n('field.label.stopWords')</label>
+						<input type="text" name="sourceStopWordsFirst" id="sourceStopWordsFirst" placeholder="#i18n('field.example') : #i18n('field.example.stopWords')"/>
+						<p class="info"><span class="ui-icon ui-icon-help"></span>#i18n('field.info.stopWords')</p>
+					</div>
+					<div class="replace-js regexReplace-js hidden-field-js dl-form-elt form-stack ui-state-default ui-corner-top">
+						<label for="sourceSearchFirst">#i18n('field.label.search')</label>
+						<input type="text" name="sourceSearchFirst" id="sourceSearchFirst"/>
+						<p class="info"><span class="ui-icon ui-icon-help"></span>#i18n('field.info.search')</p>
+					</div>
+					<div class="replace-js regexReplace-js hidden-field-js dl-form-elt form-stack ui-state-default ui-corner-bottom">
+						<label for="sourceReplaceFirst">#i18n('field.label.replace')</label>
+						<input type="text" name="sourceReplaceFirst" id="sourceReplaceFirst"/>
+						<p class="info"><span class="ui-icon ui-icon-help"></span>#i18n('field.info.replace')</p>
+					</div>
+				</div>
+
+				<div class="compare-js secund-js hidden-field-js">
+					<h5 id="compare-secund">#i18n('compare.title')</h5>
+
+					<div class="property-secund-js dl-form-elt form-stack ui-state-default ui-corner-top" title="#i18n('dataset.property.help')">
+						<label for="sourcePropertySecund">#i18n('dataset.property.label')</label>
+						<select id="sourcePropertySecund" name="sourcePropertySecund" required="required">
+							<option value="#i18n('field.mandatory') &mdash; #i18n('field.example') : #i18n('dataset.property.example')" selected="selected" disabled="disabled"></option>
+							#foreach( $predicate in $predicates )
+							<option value="$predicate">$predicate</option>
+							#end
+						</select>
+						<p class="info"><span class="ui-icon ui-icon-help"></span>#i18n('dataset.property.info') &mdash; #i18n('field.optional')</p>
+					</div>
+
+					<div class="dl-form-elt form-stack ui-state-default ui-corner-bottom" title="#i18n('transform.help')">
+						<label for="sourceTransformationSecund">#i18n('transform.title')</label>
+						<select name="sourceTransformationSecund" id="sourceTransformationSecund" class="transform-js">
+							<option value="#i18n('field.none')" selected="selected">#i18n('field.none')</option>
+							<optgroup label="#i18n('transform.function.first')">
+								<option value="lowerCase">#i18n('function.title.lowerCase')</option>
+								<option value="upperCase">#i18n('function.title.upperCase')</option>
+								<option value="capitalizeFirst">#i18n('function.title.capitalizeFirst')</option>
+								<option value="capitalizeAll">#i18n('function.title.capitalizeAll')</option>
+							</optgroup>
+							<optgroup label="#i18n('transform.function.secund')">
+								<option value="removeBlanks">#i18n('function.title.removeBlanks')</option>
+								<option value="removeSpecialChars">#i18n('function.title.removeSpecialChars')</option>
+								<option value="alphaReduce">#i18n('function.title.alphaReduce')</option>
+								<option value="numReduce">#i18n('function.title.numReduce')</option>
+								<option value="stem">#i18n('function.title.stem')</option>
+							</optgroup>
+							<optgroup label="#i18n('transform.function.third')">
+								<option value="stripPrefix">#i18n('function.title.stripPrefix')</option>
+								<option value="stripPostfix">#i18n('function.title.stripPostfix')</option>
+								<option value="stripUriPrefix">#i18n('function.title.stripUriPrefix')</option>
+							</optgroup>
+							<optgroup label="#i18n('transform.function.fourth')">
+								<option value="replace">#i18n('function.title.replace')</option>
+								<option value="regexReplace">#i18n('function.title.regexReplace')</option>
+								<option value="tokenize">#i18n('function.title.tokenize')</option>
+								<option value="removeValues">#i18n('function.title.removeValues')</option>
+							</optgroup>
+							<optgroup label="#i18n('transform.function.fifth')">
+								<option value="convertUTFISO">#i18n('function.title.convertUTFISO')</option>
+								<option value="convertISOUTF">#i18n('function.title.convertISOUTF')</option>
+							</optgroup>
+							<optgroup label="#i18n('transform.function.sixth')">
+								<option value="commonLogarithm">#i18n('function.title.commonLogarithm')</option>
+								<option value="naturalLogarithm">#i18n('function.title.naturalLogarithm')</option>
+								<option value="binaryLogarithm">#i18n('function.title.binaryLogarithm')</option>
+							</optgroup>
+						</select>
+						<p class="info"><span class="ui-icon ui-icon-help"></span>#i18n('transform.info') &mdash; #i18n('field.optional')</p>
+						<p class="help hidden-field-js help-js">#i18n('transform.help')</p>
+					</div>
+					<div class="tokenize-js hidden-field-js dl-form-elt form-stack ui-state-default ui-corner-all">
+						<label for="sourceRegexpTokenSecund">#i18n('field.label.regexpToken')</label>
+						<input type="text" name="sourceRegexpTokenSecund" id="sourceRegexpTokenSecund" placeholder="#i18n('field.example') : #i18n('field.example.regexpToken')"/>
+						<p class="info"><span class="ui-icon ui-icon-help"></span>#i18n('field.info.regexpToken')</p>
+					</div>
+					<div class="removeValues-js hidden-field-js dl-form-elt form-stack ui-state-default ui-corner-all">
+						<label for="sourceStopWordsSecund">#i18n('field.label.stopWords')</label>
+						<input type="text" name="sourceStopWordsSecund" id="sourceStopWordsSecund" placeholder="#i18n('field.example') : #i18n('field.example.stopWords')"/>
+						<p class="info"><span class="ui-icon ui-icon-help"></span>#i18n('field.info.stopWords')</p>
+					</div>
+					<div class="replace-js regexReplace-js hidden-field-js dl-form-elt form-stack ui-state-default ui-corner-top">
+						<label for="sourceSearchSecund">#i18n('field.label.search')</label>
+						<input type="text" name="sourceSearchSecund" id="sourceSearchSecund"/>
+						<p class="info"><span class="ui-icon ui-icon-help"></span>#i18n('field.info.search')</p>
+					</div>
+					<div class="replace-js regexReplace-js hidden-field-js dl-form-elt form-stack ui-state-default ui-corner-bottom">
+						<label for="sourceReplaceSecund">#i18n('field.label.replace')</label>
+						<input type="text" name="sourceReplaceSecund" id="sourceReplaceSecund"/>
+						<p class="info"><span class="ui-icon ui-icon-help"></span>#i18n('field.info.replace')</p>
+					</div>
+				</div>
+
+				<div class="compare-js third-js hidden-field-js">
+					<h5 id="compare-third">#i18n('compare.title')</h5>
+
+					<div class="property-third-js dl-form-elt form-stack ui-state-default ui-corner-top" title="#i18n('dataset.property.help')">
+						<label for="sourcePropertyThird">#i18n('dataset.property.label')</label>
+						<select id="sourcePropertyThird" name="sourcePropertyThird" required="required">
+							<option value="#i18n('field.mandatory') &mdash; #i18n('field.example') : #i18n('dataset.property.example')" selected="selected" disabled="disabled"></option>
+							#foreach( $predicate in $predicates )
+							<option value="$predicate">$predicate</option>
+							#end
+						</select>
+						<p class="info"><span class="ui-icon ui-icon-help"></span>#i18n('dataset.property.info') &mdash; #i18n('field.optional')</p>
+					</div>
+
+					<div class="dl-form-elt form-stack ui-state-default ui-corner-bottom" title="#i18n('transform.help')">
+						<label for="sourceTransformationThird">#i18n('transform.title')</label>
+						<select name="sourceTransformationThird" id="sourceTransformationThird" class="transform-js">
+							<option value="#i18n('field.none')" selected="selected">#i18n('field.none')</option>
+							<optgroup label="#i18n('transform.function.first')">
+								<option value="lowerCase">#i18n('function.title.lowerCase')</option>
+								<option value="upperCase">#i18n('function.title.upperCase')</option>
+								<option value="capitalizeFirst">#i18n('function.title.capitalizeFirst')</option>
+								<option value="capitalizeAll">#i18n('function.title.capitalizeAll')</option>
+							</optgroup>
+							<optgroup label="#i18n('transform.function.secund')">
+								<option value="removeBlanks">#i18n('function.title.removeBlanks')</option>
+								<option value="removeSpecialChars">#i18n('function.title.removeSpecialChars')</option>
+								<option value="alphaReduce">#i18n('function.title.alphaReduce')</option>
+								<option value="numReduce">#i18n('function.title.numReduce')</option>
+								<option value="stem">#i18n('function.title.stem')</option>
+							</optgroup>
+							<optgroup label="#i18n('transform.function.third')">
+								<option value="stripPrefix">#i18n('function.title.stripPrefix')</option>
+								<option value="stripPostfix">#i18n('function.title.stripPostfix')</option>
+								<option value="stripUriPrefix">#i18n('function.title.stripUriPrefix')</option>
+							</optgroup>
+							<optgroup label="#i18n('transform.function.fourth')">
+								<option value="replace">#i18n('function.title.replace')</option>
+								<option value="regexReplace">#i18n('function.title.regexReplace')</option>
+								<option value="tokenize">#i18n('function.title.tokenize')</option>
+								<option value="removeValues">#i18n('function.title.removeValues')</option>
+							</optgroup>
+							<optgroup label="#i18n('transform.function.fifth')">
+								<option value="convertUTFISO">#i18n('function.title.convertUTFISO')</option>
+								<option value="convertISOUTF">#i18n('function.title.convertISOUTF')</option>
+							</optgroup>
+							<optgroup label="#i18n('transform.function.sixth')">
+								<option value="commonLogarithm">#i18n('function.title.commonLogarithm')</option>
+								<option value="naturalLogarithm">#i18n('function.title.naturalLogarithm')</option>
+								<option value="binaryLogarithm">#i18n('function.title.binaryLogarithm')</option>
+							</optgroup>
+						</select>
+						<p class="info"><span class="ui-icon ui-icon-help"></span>#i18n('transform.info') &mdash; #i18n('field.optional')</p>
+						<p class="help hidden-field-js help-js">#i18n('transform.help')</p>
+					</div>
+					<div class="tokenize-js hidden-field-js dl-form-elt form-stack ui-state-default ui-corner-all">
+						<label for="sourceRegexpTokenThird">#i18n('field.label.regexpToken')</label>
+						<input type="text" name="sourceRegexpTokenThird" id="sourceRegexpTokenThird" placeholder="#i18n('field.example') : #i18n('field.example.regexpToken')"/>
+						<p class="info"><span class="ui-icon ui-icon-help"></span>#i18n('field.info.regexpToken')</p>
+					</div>
+					<div class="removeValues-js hidden-field-js dl-form-elt form-stack ui-state-default ui-corner-all">
+						<label for="sourceStopWordsThird">#i18n('field.label.stopWords')</label>
+						<input type="text" name="sourceStopWordsThird" id="sourceStopWordsThird" placeholder="#i18n('field.example') : #i18n('field.example.stopWords')"/>
+						<p class="info"><span class="ui-icon ui-icon-help"></span>#i18n('field.info.stopWords')</p>
+					</div>
+					<div class="replace-js regexReplace-js hidden-field-js dl-form-elt form-stack ui-state-default ui-corner-top">
+						<label for="sourceSearchThird">#i18n('field.label.search')</label>
+						<input type="text" name="sourceSearchThird" id="sourceSearchThird"/>
+						<p class="info"><span class="ui-icon ui-icon-help"></span>#i18n('field.info.search')</p>
+					</div>
+					<div class="replace-js regexReplace-js hidden-field-js dl-form-elt form-stack ui-state-default ui-corner-bottom">
+						<label for="sourceReplaceThird">#i18n('field.label.replace')</label>
+						<input type="text" name="sourceReplaceThird" id="sourceReplaceThird"/>
+						<p class="info"><span class="ui-icon ui-icon-help"></span>#i18n('field.info.replace')</p>
+					</div>
+				</div>
+
+				<a class="add-compare-js ui-priority-secondary ui-button" href="#" title="#i18n('compare.add')">#i18n('compare.add')</a>
+				<a class="remove-compare-js hidden-field-js ui-priority-secondary ui-button" href="#" title="#i18n('compare.remove')">#i18n('compare.remove')</a>
+
+				<div class="hidden-field-js help-js dl-form-elt form-stack ui-state-default ui-corner-all">
+					<p class="help">#i18n('compare.add.help')</p>
+				</div>
+			</fieldset>
+
+
+
+
+
+
+
+
+
 
 			<div class="clearfix"></div>
 
 			<div class="measure-stack">
 				<h4>#i18n('metric.title')</h4>
 
-				<h5 class="measure-js first-js">#i18n('compare.title')</h5>
+				<h5 class="measure-js first-js"><a href="#compare-first">#i18n('compare.title')</a></h5>
 
 				<fieldset class="measure-js first-js ui-widget-content ui-corner-all">
 					<div class="form-inline ui-state-default ui-corner-left">
@@ -682,7 +640,7 @@
 					</div>
 				</fieldset>
 
-				<h5 class="measure-js secund-js hidden-field-js">#i18n('compare.title')</h5>
+				<h5 class="measure-js secund-js hidden-field-js"><a href="#compare-secund">#i18n('compare.title')</a></h5>
 
 				<fieldset class="measure-js secund-js hidden-field-js ui-widget-content ui-corner-all">
 					<div class="form-inline ui-state-default ui-corner-left">
@@ -740,7 +698,7 @@
 					</div>
 				</fieldset>
 
-				<h5 class="measure-js third-js hidden-field-js">#i18n('compare.title')</h5>
+				<h5 class="measure-js third-js hidden-field-js"><a href="#compare-third">#i18n('compare.title')</a></h5>
 
 				<fieldset class="measure-js third-js hidden-field-js ui-widget-content ui-corner-all">
 					<div class="form-inline ui-state-default ui-corner-left">
@@ -893,6 +851,7 @@
 			<fieldset class="help-js hidden-field-js ui-widget-content ui-corner-all">
 				<p class="description">#i18n('interlink.description')</p>
 				<p class="description">#i18n('interlink.script.description')</p>
+				<p class="description">#i18n('interlink.silk.description')</p>
 				<p class="description"><strong>#i18n('interlink.doc.title'): </strong><a href="#i18n('interlink.doc.link')" title="#i18n('interlink.doc.title')">#i18n('interlink.doc.link')</a></p>
 			</fieldset>
 
@@ -935,16 +894,6 @@
 		var datasets = [
 			#foreach( $source in $sources )
 			"$source",
-			#end
-		];
-
-		/*
-		* TODO extract types from the datasets.
-		* Quite useless query examples.
-		*/
-		var queries = [
-			#foreach( $class in $classes )
-			"?s rdf:type $class",
 			#end
 		];
 
