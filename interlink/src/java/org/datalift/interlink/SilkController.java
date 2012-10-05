@@ -320,7 +320,7 @@ public class SilkController extends InterlinkingController {
     		if (Boolean.parseBoolean(runScript)) {    			
     			// Last false means that we don't have to validate all again.
             	args.put("newtriples", model.launchSilk(proj, targetAddress ,configFile, SilkModel.DEFAULT_NB_THREADS, SilkModel.DEFAULT_RELOAD_CACHE, false));
-            	view = "interlink-success.vm";
+            	view = "redirect.vm";
     		}
     		else {
     			// Return the XML file.
@@ -369,7 +369,7 @@ public class SilkController extends InterlinkingController {
         if (errorMessages.isEmpty()) {
         	// Last false means that we don't have to validate all again.
         	args.put("newtriples", model.launchSilk(proj, null, configFile, linkSpecId, SilkModel.DEFAULT_NB_THREADS, SilkModel.DEFAULT_RELOAD_CACHE, false));
-        	view = "interlink-success.vm";
+        	view = "redirect.vm";
 	    }
 	    else {
 	    	args.put("errormessages", errorMessages);
