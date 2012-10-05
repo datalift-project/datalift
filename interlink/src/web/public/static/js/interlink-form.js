@@ -369,7 +369,7 @@ $(function() {
 	$targetPropertySecund.blur(function() {window.setTimeout(validateMandatory, 100, $targetPropertySecund, predicates);});
 	$sourcePropertyThird.blur(function() {window.setTimeout(validateMandatory, 100, $sourcePropertyThird, predicates);});
 	$targetPropertyThird.blur(function() {window.setTimeout(validateMandatory, 100, $targetPropertyThird, predicates);});
-	//$thresholdFirst.autocomplete({source: zeroToOne, minLength: 0, delay: 0});
+	$thresholdFirst.autocomplete({source: zeroToOne, minLength: 0, delay: 0});
 	$thresholdSecund.autocomplete({source: zeroToOne, minLength: 0, delay: 0});
 	$thresholdThird.autocomplete({source: zeroToOne, minLength: 0, delay: 0});
 	$weightFirst.autocomplete({source: zeroToOne, minLength: 0, delay: 0});

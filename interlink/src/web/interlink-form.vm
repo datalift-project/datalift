@@ -71,7 +71,7 @@
 
 					<div class="dl-form-elt form-stack ui-state-default ui-corner-bottom" title="#i18n('transform.help')">
 						<label for="targetTransformationFirst">#i18n('transform.title')</label>
-						<select name="targetTransformationFirst" id="targetTransformationFirst" class="transform-js" required="required">
+						<select name="targetTransformationFirst" id="targetTransformationFirst" class="transform-js">
 							<option value="#i18n('field.none')" selected="selected">#i18n('field.none')</option>
 							<optgroup label="#i18n('transform.function.first')">
 								<option value="lowerCase">#i18n('function.title.lowerCase')</option>
@@ -137,7 +137,7 @@
 
 					<div class="property-secund-js dl-form-elt form-stack ui-state-default ui-corner-top" title="#i18n('dataset.property.help')">
 						<label for="targetPropertySecund">#i18n('dataset.property.label')</label>
-						<select id="targetPropertySecund" name="targetPropertySecund" required="required">
+						<select id="targetPropertySecund" name="targetPropertySecund">
 							<option value="#i18n('field.mandatory') &mdash; #i18n('field.example') : #i18n('dataset.property.example')" selected="selected" disabled="disabled"></option>
 							#foreach( $predicate in $predicates )
 							<option value="$predicate">$predicate</option>
@@ -214,7 +214,7 @@
 
 					<div class="property-third-js dl-form-elt form-stack ui-state-default ui-corner-top" title="#i18n('dataset.property.help')">
 						<label for="targetPropertyThird">#i18n('dataset.property.label')</label>
-						<select id="targetPropertyThird" name="targetPropertyThird" required="required">
+						<select id="targetPropertyThird" name="targetPropertyThird">
 							<option value="#i18n('field.mandatory') &mdash; #i18n('field.example') : #i18n('dataset.property.example')" selected="selected" disabled="disabled"></option>
 							#foreach( $predicate in $predicates )
 							<option value="$predicate">$predicate</option>
@@ -345,7 +345,7 @@
 
 					<div class="dl-form-elt form-stack ui-state-default ui-corner-bottom" title="#i18n('transform.help')">
 						<label for="sourceTransformationFirst">#i18n('transform.title')</label>
-						<select name="sourceTransformationFirst" id="sourceTransformationFirst"  class="transform-js" required="required">
+						<select name="sourceTransformationFirst" id="sourceTransformationFirst"  class="transform-js">
 							<option value="#i18n('field.none')" selected="selected">#i18n('field.none')</option>
 							<optgroup label="#i18n('transform.function.first')">
 								<option value="lowerCase">#i18n('function.title.lowerCase')</option>
@@ -411,7 +411,7 @@
 
 					<div class="property-secund-js dl-form-elt form-stack ui-state-default ui-corner-top" title="#i18n('dataset.property.help')">
 						<label for="sourcePropertySecund">#i18n('dataset.property.label')</label>
-						<select id="sourcePropertySecund" name="sourcePropertySecund" required="required">
+						<select id="sourcePropertySecund" name="sourcePropertySecund">
 							<option value="#i18n('field.mandatory') &mdash; #i18n('field.example') : #i18n('dataset.property.example')" selected="selected" disabled="disabled"></option>
 							#foreach( $predicate in $predicates )
 							<option value="$predicate">$predicate</option>
@@ -488,7 +488,7 @@
 
 					<div class="property-third-js dl-form-elt form-stack ui-state-default ui-corner-top" title="#i18n('dataset.property.help')">
 						<label for="sourcePropertyThird">#i18n('dataset.property.label')</label>
-						<select id="sourcePropertyThird" name="sourcePropertyThird" required="required">
+						<select id="sourcePropertyThird" name="sourcePropertyThird">
 							<option value="#i18n('field.mandatory') &mdash; #i18n('field.example') : #i18n('dataset.property.example')" selected="selected" disabled="disabled"></option>
 							#foreach( $predicate in $predicates )
 							<option value="$predicate">$predicate</option>
@@ -866,7 +866,7 @@
 			<fieldset class="ui-widget-content ui-corner-all">
 				<div class="form-inline ui-state-default ui-corner-left" title="#i18n('file.title')">
 					<label for="configFile" title="#i18n('file.title')">#i18n('file.label')</label>
-					<input type="file" id="configFile" name="configFile" title="#i18n('file.title')" required="required"/>
+					<input type="file" id="configFile" name="configFile" title="#i18n('file.title')"/>
 				</div>
 
 				<div class="form-inline ui-state-default ui-corner-right" title="#i18n('identifier.title')">

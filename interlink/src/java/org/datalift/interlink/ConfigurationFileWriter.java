@@ -31,7 +31,7 @@ import org.w3c.dom.Element;
 /**
  * Helps writing Silk configuration files using DOM manipulation.
  * @author tcolas
- * @version 06082012
+ * @version 03102012
  */
 public final class ConfigurationFileWriter {
 	
@@ -416,10 +416,9 @@ public final class ConfigurationFileWriter {
      * @param endpointURL Where to do the update.
      * @return A DOM Element.
      */
-    private static Element getOutputsTag(Document doc, String endpointURL) {
+    private static Element getOutputsTag(Document doc, String endpointURL, String graphURI) {
     	Element outputs = doc.createElement("Outputs");
     	Element output = doc.createElement("Output");
-    	// "sparul" apparently isn't a typo. Weird.
     	output.setAttribute("type", "sparul");
   
     	Element param = doc.createElement("Param");
@@ -428,12 +427,20 @@ public final class ConfigurationFileWriter {
     	Element paramBis = doc.createElement("Param");
     	paramBis.setAttribute("name", "parameter");
     	paramBis.setAttribute("value", "update");
+    	Element paramTer = doc.createElement("Param");
+    	paramTer.setAttribute("name", "graphUri");
+    	paramTer.setAttribute("value", graphURI);
     	
     	output.appendChild(param);
     	output.appendChild(paramBis);
+    	output.appendChild(paramTer);
     	outputs.appendChild(output);
     	
     	return outputs;
+    }
+    
+    private static String baseURISub(String URI) {
+    	return URI.substring(0, Math.max(URI.lastIndexOf("/"), URI.lastIndexOf("#")) + 1);
     }
     
     /**
@@ -513,7 +520,9 @@ public final class ConfigurationFileWriter {
     		String weightThird,
     		String thresholdThird,
     		// Aggregation method.
-    		String aggregation) {
+    		String aggregation,
+    		// New graph URI
+    		String newGraphURI) {
     	File ret = null;
     	
    		try {
@@ -537,6 +546,35 @@ public final class ConfigurationFileWriter {
    			tmpPrefixes.put("eurostat", "http://ec.europa.eu/eurostat/ramon/ontologies/geographic.rdf#");
    			tmpPrefixes.put("geo", "http://www.telegraphis.net/ontology/geography/geography#");
    			tmpPrefixes.put("gn", "http://www.geonames.org/ontology#");
+   			
+   			String tmpBaseURI = baseURISub(targetPropertyFirst);
+   			tmpPrefixes.put("x", tmpBaseURI);
+   			targetPropertyFirst = targetPropertyFirst.replace(tmpBaseURI, "x:");
+   			if (!targetPropertySecund.equals("")) {
+	   			tmpBaseURI = baseURISub(targetPropertySecund);
+	   			tmpPrefixes.put("y", tmpBaseURI);
+	   			targetPropertySecund = targetPropertySecund.replace(tmpBaseURI, "y:");
+	   			if (!targetPropertyThird.equals("")) {
+		   			tmpBaseURI = baseURISub(targetPropertyThird);
+		   			tmpPrefixes.put("z", tmpBaseURI);
+		   			targetPropertyThird = targetPropertyThird.replace(tmpBaseURI, "z:");
+	   			}
+   			}
+   			
+   			tmpBaseURI = baseURISub(sourcePropertyFirst);
+   			tmpPrefixes.put("xx", tmpBaseURI);
+   			sourcePropertyFirst = sourcePropertyFirst.replace(tmpBaseURI, "xx:");
+   			if (!sourcePropertySecund.equals("")) {
+	   			tmpBaseURI = baseURISub(sourcePropertySecund);
+	   			tmpPrefixes.put("yy", tmpBaseURI);
+	   			sourcePropertySecund = sourcePropertySecund.replace(tmpBaseURI, "yy:");
+	   			if (!sourcePropertyThird.equals("")) {
+		   			tmpBaseURI = baseURISub(sourcePropertyThird);
+		   			tmpPrefixes.put("zz", tmpBaseURI);
+		   			sourcePropertyThird = sourcePropertyThird.replace(tmpBaseURI, "zz:");
+	   			}
+   			}
+   			
 
    			root.appendChild(getPrefixesTag(doc, tmpPrefixes));
    			
@@ -590,7 +628,7 @@ public final class ConfigurationFileWriter {
    	    	interlink.appendChild(linkageRule);
 
    	    	interlink.appendChild(getFilterTag(doc, DEFAULT_MAX_LINKS));
-   	    	interlink.appendChild(getOutputsTag(doc, INTERNAL_URL));
+   	    	interlink.appendChild(getOutputsTag(doc, INTERNAL_URL, newGraphURI));
    			
    			interlinks.appendChild(interlink);
    			root.appendChild(interlinks);

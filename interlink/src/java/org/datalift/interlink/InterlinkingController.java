@@ -38,7 +38,7 @@ import org.datalift.fwk.view.ViewFactory;
  * operations and values.
  * 
  * @author tcolas
- * @version 15082012
+ * @version 03102012
  */
 public abstract class InterlinkingController extends BaseModule implements ProjectModule {
 
@@ -118,8 +118,8 @@ public abstract class InterlinkingController extends BaseModule implements Proje
     }
     
     /**
-     * Tells the project manager to add a new button to projects with at least 
-     * two sources.
+     * Tells the project manager to add a new button to projects which can be
+     * used with Silk.
      * @param p Our current project.
      * @return The URI to our project's main page.
      */

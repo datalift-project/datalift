@@ -39,6 +39,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.LinkedList;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -46,8 +47,17 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.datalift.fwk.project.Project;
+import org.datalift.fwk.project.ProjectModule;
 import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.Source.SourceType;
+import org.datalift.fwk.project.SparqlSource;
+import org.datalift.fwk.project.TransformedRdfSource;
+import org.openrdf.query.MalformedQueryException;
+import org.openrdf.query.QueryLanguage;
+import org.openrdf.query.Update;
+import org.openrdf.query.UpdateExecutionException;
+import org.openrdf.repository.RepositoryConnection;
+import org.openrdf.repository.RepositoryException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -61,7 +71,7 @@ import de.fuberlin.wiwiss.silk.Silk;
  * This class handles Silk interlink constraints.
  *
  * @author tcolas
- * @version 30092012
+ * @version 03102012
  */
 public class SilkModel extends InterlinkingModel {
 	
@@ -98,6 +108,7 @@ public class SilkModel extends InterlinkingModel {
      * @return True if src is {@link TransformedRdfSource} or {@link SparqlSource}.
      */
     protected boolean isValidSource(Source src) {
+    	//TODO Lower it further more ?
     	return src.getType().equals(SourceType.TransformedRdfSource) 
         	|| src.getType().equals(SourceType.SparqlSource);
     }
@@ -292,9 +303,12 @@ public class SilkModel extends InterlinkingModel {
     	}
 
     	String interlinkId = sourceId + "-and-" + targetId;
+    	
+    	String newGraphURI = targetContext + "-silk";
     	 	
     	File ret = ConfigurationFileWriter.createConfigFile(interlinkId, sourceId, sourceAddress, sourceContext, sourceQuery, sourcePropertyFirst, sourceTransformationFirst, sourceRegexpTokenFirst, sourceStopWordsFirst, sourceSearchFirst, sourceReplaceFirst, sourcePropertySecund, sourceTransformationSecund, sourceRegexpTokenSecund, sourceStopWordsSecund, sourceSearchSecund, sourceReplaceSecund, sourcePropertyThird, sourceTransformationThird, sourceRegexpTokenThird, sourceStopWordsThird, sourceSearchThird, sourceReplaceThird, 
-    														targetId, targetAddress, targetContext, targetQuery, targetPropertyFirst, targetTransformationFirst, targetRegexpTokenFirst, targetStopWordsFirst, targetSearchFirst, targetReplaceFirst, targetPropertySecund, targetTransformationSecund, targetRegexpTokenSecund, targetStopWordsSecund, targetSearchSecund, targetReplaceSecund, targetPropertyThird, targetTransformationThird, targetRegexpTokenThird, targetStopWordsThird, targetSearchThird, targetReplaceThird, metricFirst, minFirst, maxFirst, unitFirst, curveFirst, weightFirst, thresholdFirst, metricSecund, minSecund, maxSecund, unitSecund, curveSecund, weightSecund, thresholdSecund, metricThird, minThird, maxThird, unitThird, curveThird, weightThird, thresholdThird, aggregation);
+    														targetId, targetAddress, targetContext, targetQuery, targetPropertyFirst, targetTransformationFirst, targetRegexpTokenFirst, targetStopWordsFirst, targetSearchFirst, targetReplaceFirst, targetPropertySecund, targetTransformationSecund, targetRegexpTokenSecund, targetStopWordsSecund, targetSearchSecund, targetReplaceSecund, targetPropertyThird, targetTransformationThird, targetRegexpTokenThird, targetStopWordsThird, targetSearchThird, targetReplaceThird, 
+    														metricFirst, minFirst, maxFirst, unitFirst, curveFirst, weightFirst, thresholdFirst, metricSecund, minSecund, maxSecund, unitSecund, curveSecund, weightSecund, thresholdSecund, metricThird, minThird, maxThird, unitThird, curveThird, weightThird, thresholdThird, aggregation, newGraphURI);
 		
     	
     	LOG.debug("Created new Silk config file.");
@@ -592,6 +606,7 @@ public class SilkModel extends InterlinkingModel {
     
     /**
      * Launches the Silk engine with a given configuration.
+     * @param proj current project;
      * @param config the Silk configuration file.
      * @param linkID the identifier of our interlink.
      * @param threads number of threads to allocate to Silk.
@@ -599,21 +614,40 @@ public class SilkModel extends InterlinkingModel {
      * @param validateFile tells if we have to check if the parameters are usable.
      * @return A list which contains the newly created triples.
      */
-    public final LinkedList<LinkedList<String>> launchSilk(File config, String linkID, int threads, boolean reload, boolean validateFile) {
+    public final LinkedList<LinkedList<String>> launchSilk(Project proj, String targetContext, File config, String linkID, int threads, boolean reload, boolean validateFile) {
     	LinkedList<LinkedList<String>> ret = new LinkedList<LinkedList<String>>();
-    	String resultPredicate = "<http://www.w3.org/2002/07/owl#sameAs>";
-    	String resultQuery = "SELECT DISTINCT ?" + SB + " ?" + OB + " WHERE { ?" + SB + " " + resultPredicate + " ?" + OB + "}";
+//    	String resultPredicate = "<http://www.w3.org/2002/07/owl#sameAs>";
+//    	String resultQuery = "SELECT DISTINCT ?" + SB + " ?" + OB + " WHERE { ?" + SB + " " + resultPredicate + " ?" + OB + "}";
     	if (!validateFile || getErrorMessages(config, linkID).isEmpty()) {
     		
     		LOG.info("Launching Silk on " + config.getAbsolutePath() + " - " + linkID);
 	    	
-	    	LinkedList<LinkedList<String>> before = pairSelectQuery(resultQuery, resultPredicate);
+			try {
+				String newSourceURI = "";
+				if (targetContext != null) {
+					newSourceURI = targetContext + "-silk";
+					Source parent = proj.getSource(targetContext);
+					addResultSource(proj, parent, parent.getTitle() + "-silk", new URI(newSourceURI));
+					
+					RepositoryConnection cnx = INTERNAL_REPO.newConnection();
+					// Copy all of the data to the new graph.
+					String updateQy = "INSERT {GRAPH <" + newSourceURI + "> {?s ?p ?o}} WHERE {GRAPH <" + targetContext + "> {?s ?p ?o}}";
+					Update up = cnx.prepareUpdate(QueryLanguage.SPARQL, updateQy);
+					up.execute();
+				}
+				else {
+					String tmpURI = proj.getSources().iterator().next().getUri();
+					newSourceURI = tmpURI.substring(0, tmpURI.lastIndexOf("/") + 1) + "custom-silk-result";
+					addResultSource(proj, proj.getSources().iterator().next(), "custom-silk-result", new URI(newSourceURI));
+				}
+			} 
+			catch (IOException e) { LOG.fatal("Silk Configuration file execution failed - " + e); } 
+			catch (URISyntaxException e) { LOG.fatal("Silk Configuration file execution failed - " + e); }
+			catch (UpdateExecutionException e) { LOG.fatal("Silk Configuration file execution failed - " + e); } 
+			catch (RepositoryException e) { LOG.fatal("Silk Configuration file execution failed - " + e); } 
+			catch (MalformedQueryException e) { LOG.fatal("Silk Configuration file execution failed - " + e); }
 	    	
 			Silk.executeFile(config, linkID, threads, reload);
-			
-	    	ret = pairSelectQuery(resultQuery, resultPredicate);
-			// We'll only display new sameAs links.
-	    	ret.removeAll(before);
     	}
     	else {
     		// Should never happen.
@@ -637,7 +671,7 @@ public class SilkModel extends InterlinkingModel {
      * @param validateFile tells if we have to check if the parameters are usable.
      * @return A list which contains the newly created triples.
      */
-    public final LinkedList<LinkedList<String>> launchSilk(File config, int threads, boolean reload, boolean validateFile) {
+    public final LinkedList<LinkedList<String>> launchSilk(Project proj, String targetContext, File config, int threads, boolean reload, boolean validateFile) {
     	// Here we'll extract the interlink identifier from the file.
     	String interlinkId = null;
     	try {
@@ -656,6 +690,6 @@ public class SilkModel extends InterlinkingModel {
 			LOG.fatal("Silk Configuration file DOM parsing failed - " + e);
 		}
     	
-    	return interlinkId != null ? launchSilk(config, interlinkId, threads, reload, validateFile) : null;
+    	return interlinkId != null ? launchSilk(proj, targetContext, config, interlinkId, threads, reload, validateFile) : null;
     }
 }

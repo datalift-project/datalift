@@ -65,7 +65,7 @@ import com.sun.jersey.multipart.FormDataParam;
  * TODO Add a way to set form fields via GET.
  *
  * @author tcolas
- * @version 30092012
+ * @version 03102012
  */
 @Path(SilkController.MODULE_NAME)
 public class SilkController extends InterlinkingController {
@@ -114,7 +114,7 @@ public class SilkController extends InterlinkingController {
 
         try {           
             // The project can be handled if it has at least two RDF sources.
-            if (model.hasMultipleRDFSources(p, 2)) {
+            if (model.hasMultipleRDFSources(p, 1)) {
             	// link URL, link label
                 uridesc = new UriDesc(this.getName() + "?project=" + p.getUri(), this.label); 
                 
@@ -319,7 +319,7 @@ public class SilkController extends InterlinkingController {
     		
     		if (Boolean.parseBoolean(runScript)) {    			
     			// Last false means that we don't have to validate all again.
-            	args.put("newtriples", model.launchSilk(configFile, SilkModel.DEFAULT_NB_THREADS, SilkModel.DEFAULT_RELOAD_CACHE, false));
+            	args.put("newtriples", model.launchSilk(proj, targetAddress ,configFile, SilkModel.DEFAULT_NB_THREADS, SilkModel.DEFAULT_RELOAD_CACHE, false));
             	view = "interlink-success.vm";
     		}
     		else {
@@ -368,7 +368,7 @@ public class SilkController extends InterlinkingController {
         LinkedList<String> errorMessages = model.getErrorMessages(configFile, linkSpecId);
         if (errorMessages.isEmpty()) {
         	// Last false means that we don't have to validate all again.
-        	args.put("newtriples", model.launchSilk(configFile, linkSpecId, SilkModel.DEFAULT_NB_THREADS, SilkModel.DEFAULT_RELOAD_CACHE, false));
+        	args.put("newtriples", model.launchSilk(proj, null, configFile, linkSpecId, SilkModel.DEFAULT_NB_THREADS, SilkModel.DEFAULT_RELOAD_CACHE, false));
         	view = "interlink-success.vm";
 	    }
 	    else {
