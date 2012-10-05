@@ -34,6 +34,7 @@
 package org.datalift.geoconverter;
 
 import java.io.File;
+import java.io.PrintStream;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -93,7 +94,7 @@ public class GmltoRdf extends BaseConverterModule
 
 	/** Default constructor. */
 	public GmltoRdf() {
-		super(MODULE_NAME, 900, SourceType.GmlSource);
+	    super(MODULE_NAME, 900, SourceType.GmlSource);
 	}
 
 	//-------------------------------------------------------------------------
@@ -127,7 +128,6 @@ public class GmltoRdf extends BaseConverterModule
             if (s == null) {
                 this.throwInvalidParamError("source", sourceId);
             }
-//            StdOutErrLog.tieSystemOutAndErrToLog();
 
             // Convert GML data and load generated RDF.
             File inGmlFile = new File(Configuration.getDefault().getPublicStorage(),
@@ -155,11 +155,16 @@ public class GmltoRdf extends BaseConverterModule
             log.debug("Geometry parser default configuration path: {}", cfgPath);
             // GeometryParser.setDefaultConfigPath(cfgPath);
             ConfigFinder.setPaths(Arrays.asList(path, cfgPath));
+            // Redirect GML converter messages from System.out/err to log.
+            StdOutErrLog redirect = StdOutErrLog.install();
+            // Run converter.
             log.debug("Generating {} from {}", rdfOutFile, inGmlFile);
-            GMLConverter converter = new GMLConverter(path,
+            GMLConverter converter = new GMLConverter(inGmlFile,
                                                 path, true, true, true, true);
             converter.run();
-            
+            // Restore System.out/err.
+            redirect.restore();
+            // Upload generated RDF file into internal repository.
             URI targetGraph = new URI(s.getUri() + "-rdf");
             RdfUtils.upload(rdfOutFile, Configuration.getDefault()
                                                    .getInternalRepository(),
@@ -179,20 +184,36 @@ public class GmltoRdf extends BaseConverterModule
 		return response;
 	}
 
-//public final static class StdOutErrLog {
-//
-//    public static void tieSystemOutAndErrToLog() {
-//        System.setOut(createLoggingProxy(System.out));
-//        System.setErr(createLoggingProxy(System.err));
-//    }
-//
-//    public static PrintStream createLoggingProxy(final PrintStream realPrintStream) {
-//        return new PrintStream(realPrintStream) {
-//            public void print(final String string) {
-//                realPrintStream.print(string);
-//                log.info(string);
-//            }
-//        };
-//    }
-//}
+    public final static class StdOutErrLog
+    {
+        private final PrintStream stdOut;
+        private final PrintStream stdErr;
+
+        private StdOutErrLog() {
+            this.stdOut = System.out;
+            this.stdErr = System.err;
+        }
+
+        public void restore() {
+            System.setOut(this.stdOut);
+            System.setErr(this.stdErr);
+        }
+
+        public static StdOutErrLog install() {
+            StdOutErrLog x = new StdOutErrLog();
+            System.setOut(createLoggingProxy(x.stdOut));
+            System.setErr(createLoggingProxy(x.stdErr));
+            return x;
+        }
+
+        public static PrintStream createLoggingProxy(
+                                            final PrintStream realPrintStream) {
+            return new PrintStream(realPrintStream) {
+                public void print(final String string) {
+                    realPrintStream.print(string);
+                    log.info(string);
+                }
+            };
+        }
+    }
 }
