@@ -321,7 +321,10 @@ public class GeometryParser {
     	String ft = sf.getFeatureType().getName().getLocalPart();
     	String idf = this.m_configs.get(ft).uidField();
     	if (!idf.isEmpty()) {
-			id = sf.getAttribute(idf).toString();
+			Object o = sf.getAttribute(idf);
+			if (o != null) {
+			    id = o.toString();
+			}
 		}
     	if (id == null) {
     		id = sf.getID();

@@ -1,7 +1,6 @@
 package org.datalift.geoconverter.usgs.gml.parsers;
 
 
-
 import java.io.BufferedOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -14,9 +13,7 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Set;
 
-
 import org.datalift.fwk.log.Logger;
-import org.datalift.geoconverter.usgs.gml2rdf.gui.ConfigurationEditor;
 import org.datalift.geoconverter.usgs.gml2rdf.gui.Filters;
 import org.datalift.geoconverter.usgs.rdf.util.Config;
 import org.datalift.geoconverter.usgs.rdf.util.ConfigFinder;
@@ -29,6 +26,7 @@ import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.vocabulary.RDF;
+
 
 /**
  * Class for parsing through GML files to retrieve the attributes contained in
@@ -203,6 +201,7 @@ Logger.getLogger().debug("Loading GML to RDF feature mapping: {}", iFile);
      * @param f the simple feature of the type the configuration is for
      * @throws Exception IO exception
      */
+/*
     private void addFeatureConfig(final SimpleFeature f)
     throws Exception {
     	String propType = f.getType().getName().getLocalPart();
@@ -244,7 +243,9 @@ Logger.getLogger().debug("Loading GML to RDF feature mapping: {}", iFile);
        	featureProps.loadFromFile(f2.getPath());
        	this.m_featureConfigs.put(propType, featureProps);
     }
-	/**
+*/
+
+    /**
      * searches the simple feature for the property containing the desired ID.
      * @param sf simple feature being processed
      * @return the ID representing the feature, gml:id if none found
@@ -254,7 +255,10 @@ Logger.getLogger().debug("Loading GML to RDF feature mapping: {}", iFile);
     	String ft = sf.getFeatureType().getName().getLocalPart();
     	String idf = this.m_featureConfigs.get(ft).uidField();
     	if (!idf.isEmpty()) {
-			id = sf.getAttribute(idf).toString();
+			Object o = sf.getAttribute(idf);
+			if (o != null) {
+			    id = o.toString();
+			}
 		}
     	if (id == null) {
     		id = sf.getID();
