@@ -59,7 +59,7 @@ import org.datalift.fwk.project.RdfFileSource;
  * TODO Add a way to set form fields via GET.
  *
  * @author tcolas
- * @version 15082012
+ * @version 07102012
  */
 @Path(StringToURIController.MODULE_NAME)
 public class StringToURIController extends InterlinkingController
