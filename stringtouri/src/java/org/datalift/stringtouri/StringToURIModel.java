@@ -60,7 +60,7 @@ import org.openrdf.repository.RepositoryException;
  * This class handles StringToURI's interconnection constraints.
  *
  * @author tcolas
- * @version 15082012
+ * @version 07102012
  */
 public class StringToURIModel extends InterlinkingModel
 {
@@ -198,15 +198,19 @@ public class StringToURIModel extends InterlinkingModel
     		try {
     			// If the data is going to be updated, we have to create a new Datalift source.
     			String finalTargetContext = update.equals("preview") ? targetContext : targetContext + "-stu";
+    			// If it already exists, we randomize it a little bit.
+    			String suffix = proj.getSource(finalTargetContext) != null ? "-" + Long.toHexString(Double.doubleToLongBits(Math.random())) : "";
+    			finalTargetContext += suffix;
     			if (!update.equals("preview")) {
-    				Source parent = proj.getSource(targetContext);
-    				addResultSource(proj, parent, parent.getTitle() + "-stu", new URI(finalTargetContext));
     				RepositoryConnection cnx = INTERNAL_REPO.newConnection();
     				
     				// Copy all of the data to the new graph.
-    				String updateQy = "INSERT {GRAPH <" + finalTargetContext + "> {?s ?p ?o}} WHERE {GRAPH <" + targetContext + "> {?s ?p ?o}}";
+    				String updateQy = "COPY <" + targetContext + "> TO <" + finalTargetContext + ">";
     				Update up = cnx.prepareUpdate(QueryLanguage.SPARQL, updateQy);
     				up.execute();
+    				
+    				Source parent = proj.getSource(targetContext);
+    				addResultSource(proj, parent, parent.getTitle() + "-stu" + suffix, new URI(finalTargetContext));
     			}
     			
 	    		// Launches a new StringToURI process.
