@@ -22,6 +22,7 @@
 			input = $("<input>")
 				.appendTo(wrapper)
 				.val(value)
+				// Necessary modifications for my module to work.
 				.attr("name", select.attr("name"))
 				.attr("id", select.attr("id"))
 				.attr("tabindex", select.attr("tabindex"))
@@ -118,8 +119,6 @@
 })(jQuery);
 
 $(function() {
-
-
 
 	$(".hidden-field-js").hide();
 
@@ -250,14 +249,17 @@ $(function() {
 		return ret;
 	}
 
+	/* Display all help fields */
 	$("#convert-help").click(function (event) {
 		$('.help-js').slideToggle(50);
 		event.preventDefault();
 	});
 
+	/* Display all example fields and populate inputs */
 	$("#convert-example").click(function (event) {
 		if(!$('.example-js').is(":visible")) {
 			$('input:text').each(function () {
+				// We save our placeholders and current value.
 				$(this).attr('data-placeholder', $(this).attr('placeholder'));
 				$(this).attr('placeholder', $(this).attr('data-example'));
 				$(this).attr('data-val', $(this).val());
@@ -275,7 +277,7 @@ $(function() {
 			});
 
 		}
-
+		
 		$('.example-js').slideToggle(50);
 		$('input:submit').attr('disabled', !$('input:submit').attr('disabled'));
 		event.preventDefault();

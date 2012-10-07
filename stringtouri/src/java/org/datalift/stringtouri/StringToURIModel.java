@@ -199,7 +199,7 @@ public class StringToURIModel extends InterlinkingModel
     			// If the data is going to be updated, we have to create a new Datalift source.
     			String finalTargetContext = update.equals("preview") ? targetContext : targetContext + "-stu";
     			// If it already exists, we randomize it a little bit.
-    			String suffix = proj.getSource(finalTargetContext) != null ? "-" + Long.toHexString(Double.doubleToLongBits(Math.random())) : "";
+    			String suffix = proj.getSource(finalTargetContext) != null && !update.equals("preview") ? "-" + Long.toHexString(Double.doubleToLongBits(Math.random())) : "";
     			finalTargetContext += suffix;
     			if (!update.equals("preview")) {
     				RepositoryConnection cnx = INTERNAL_REPO.newConnection();
