@@ -9,6 +9,7 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.lang.reflect.Type;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -32,10 +33,14 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.UriInfo;
-import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.Response.ResponseBuilder;
+
+import static javax.ws.rs.core.Response.Status.*;
+import static javax.ws.rs.core.HttpHeaders.*;
 
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
+import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.RDF;
 
 import com.google.gson.Gson;
@@ -47,9 +52,6 @@ import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 
-import static javax.ws.rs.core.Response.Status.*;
-import static javax.ws.rs.core.HttpHeaders.*;
-
 import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.ResourceResolver;
@@ -59,10 +61,10 @@ import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectManager;
 import org.datalift.fwk.project.ProjectModule;
 import org.datalift.fwk.project.Source;
+import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.rdf.RdfFormat;
-import org.datalift.fwk.rdf.RdfNamespace;
 import org.datalift.fwk.rdf.RdfUtils;
-import org.datalift.fwk.security.SecurityContext;
+import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.util.StringUtils;
 import org.datalift.fwk.util.io.FileUtils;
 import org.datalift.fwk.util.web.Charsets;
@@ -81,8 +83,8 @@ import org.datalift.sparql.query.ConstructQuery;
 import org.datalift.sparql.query.UpdateQuery;
 
 import static org.datalift.fwk.MediaTypes.*;
-import static org.datalift.fwk.project.Source.SourceType.*;
-import static org.datalift.fwk.util.StringUtils.*;
+import static org.datalift.fwk.project.Source.SourceType.TransformedRdfSource;
+import static org.datalift.fwk.util.StringUtils.isSet;
 
 
 @Path(OntologyMapper.MODULE_NAME)
@@ -99,8 +101,7 @@ public class OntologyMapper extends BaseModule implements ProjectModule
     /** Base name of the resource bundle for converter GUI. */
     private final static String GUI_RESOURCES_BUNDLE = "resources";
     /** The regex to split string concatenation expressions. */
-    private final static Pattern CONCAT_PATTERN =
-                                                Pattern.compile("\\s+\\+\\s+");
+    private final static Pattern CONCAT_PATTERN = Pattern.compile("\\+");
 
     //-------------------------------------------------------------------------
     // Class members
@@ -148,8 +149,8 @@ public class OntologyMapper extends BaseModule implements ProjectModule
     public UriDesc canHandle(Project p) {
         UriDesc projectPage = null;
         try {
-            if ((this.findSource(p, false) != null) &&
-                (! p.getOntologies().isEmpty())) {
+            if ((! p.getOntologies().isEmpty()) &&
+                (this.findSource(p, false) != null)) {
                 try {
                     String label = PreferredLocales.get()
                                 .getBundle(GUI_RESOURCES_BUNDLE, this)
@@ -186,14 +187,13 @@ public class OntologyMapper extends BaseModule implements ProjectModule
             // Display conversion configuration page.
             TemplateModel view = this.newView("mapper.vm", p);
             view.put("srcType", TransformedRdfSource);
-            view.put("login", SecurityContext.getUserPrincipal());
             response = Response.ok(view, TEXT_HTML_UTF8).build();
         }
         catch (IllegalArgumentException e) {
             TechnicalException error =
                             new TechnicalException("ws.invalid.param.error",
                                                    "project", projectId);
-            this.sendError(Status.BAD_REQUEST, error.getLocalizedMessage());
+            this.sendError(BAD_REQUEST, error.getLocalizedMessage());
         }
         return response;
     }
@@ -258,31 +258,92 @@ public class OntologyMapper extends BaseModule implements ProjectModule
     }
 
     @POST
+    @Consumes(APPLICATION_FORM_URLENCODED)
+    @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
+    public Response getExecuteMapping(
+                                @FormParam("project") java.net.URI project,
+                                @FormParam("sourceGraph") URIImpl sourceGraph,
+                                @FormParam("targetName") String targetName,
+                                @FormParam("targetGraph") URIImpl targetGraph,
+                                @FormParam("ontology") String ontologyJson,
+                                @FormParam("mapping") String mappingJson)
+                                                throws WebApplicationException {
+        Response response = null;
+        try {
+            boolean createSource = true;
+            if (targetGraph == null) {
+                createSource = false;
+                targetGraph = sourceGraph;
+            }
+            Gson gson = new Gson();
+            OntologyDesc o = gson.fromJson(ontologyJson, OntologyDesc.class);
+            MappingDesc  m = gson.fromJson(mappingJson, MappingDesc.class);
+            UpdateQuery query = new ConstructQuery();
+            URI ontologyNs = query.uri(m.types.get(0));
+            query.prefix(o.name, ontologyNs.getNamespace());
+            Resource node = query.variable(m.name);
+            this.mapNode(query, m, node, node, sourceGraph);
+
+            // Retrieve project and input source (to check they exist!).
+            String srcId = sourceGraph.toString();
+            Project p = null;
+            Source in = null;
+            try {
+                p = this.getProject(project);
+                in = (TransformedRdfSource)(p.getSource(srcId));
+            }
+            catch (Exception e) {
+                this.throwInvalidParamError("sourceGraph", srcId);
+            }
+            // Execute SPARQL Construct queries.
+            java.net.URI ctx = java.net.URI.create(targetGraph.toString());
+            Repository internal = Configuration.getDefault()
+                                               .getInternalRepository();
+            String construct = query.toString();
+            log.debug("Applying mapping from {} to {}, query:\n{}",
+                                                sourceGraph, ctx, construct);
+            RdfUtils.convert(internal, Arrays.asList(construct),
+                             internal, ctx, createSource);
+            Source out = in;
+            if (createSource) {
+                // Register new transformed RDF source.
+                out = this.addResultSource(p, in, targetName, targetGraph);
+            }
+            // Display project source tab, including the newly created source.
+            response = this.displayMappingResult(out, createSource).build();
+        }
+        catch (Exception e) {
+            // ???
+        }
+        return response;
+    }
+
+    @POST
     @Path("preview")
     @Consumes(APPLICATION_FORM_URLENCODED)
     @Produces(TEXT_PLAIN)
-    public String getSparqlPreview(@FormParam("sourceGraph") String sourceGraph,
-                                   @FormParam("targetName") String targetName,
-                                   @FormParam("targetGraph") String targetGraph,
-                                   @FormParam("ontology") String ontologyJson,
-                                   @FormParam("mapping") String mappingJson)
+    public String getSparqlPreview(
+                                @FormParam("sourceGraph") URIImpl sourceGraph,
+                                @FormParam("ontology") String ontologyJson,
+                                @FormParam("mapping") String mappingJson)
                                                 throws WebApplicationException {
-        log.info("Mapping: {}", mappingJson);
-        sourceGraph = RdfUtils.getBaseUri(sourceGraph);
-        if (isSet(targetGraph)) {
-            targetGraph = RdfUtils.getBaseUri(targetGraph);
+        String preview = "";
+        try {
+            Gson gson = new Gson();
+            OntologyDesc o = gson.fromJson(ontologyJson, OntologyDesc.class);
+            MappingDesc  m = gson.fromJson(mappingJson, MappingDesc.class);
+            UpdateQuery query = new ConstructQuery();
+            URI ontologyNs = query.uri(m.types.get(0));
+            query.prefix(o.name, ontologyNs.getNamespace());
+            Resource node = query.variable(m.name);
+            preview = this.mapNode(query, m, node, node, sourceGraph)
+                          .toString();
         }
-        Gson gson = new Gson();
-        OntologyDesc o = gson.fromJson(ontologyJson, OntologyDesc.class);
-        MappingDesc  m = gson.fromJson(mappingJson, MappingDesc.class);
-        UpdateQuery query = new ConstructQuery();
-        String targetNsUri = query.uri(m.types.get(0)).getNamespace();
-        query.prefix("src", sourceGraph)
-             .prefix(o.name, targetNsUri);
-        Resource node = query.variable(m.name);
-        String s = this.mapNode(query, m, node, node).toString();
-        log.info("Query: {}", s);
-        return s;
+        catch (Exception e) {
+            log.fatal(e.getMessage(), e);
+            // And return empty preview.
+        }
+        return preview;
     }
 
     /**
@@ -352,6 +413,28 @@ public class OntologyMapper extends BaseModule implements ProjectModule
         return src;
     }
 
+    /**
+     * Creates a new transformed RDF source and attach it to the
+     * specified project.
+     * @param  p        the owning project.
+     * @param  parent   the parent source object.
+     * @param  name     the new source name.
+     * @param  uri      the new source URI.
+     *
+     * @return the newly created transformed RDF source.
+     * @throws IOException if any error occurred creating the source.
+     */
+    private TransformedRdfSource addResultSource(Project p, Source parent,
+                                                   String name, URI uri)
+                                                            throws IOException {
+        java.net.URI id = java.net.URI.create(uri.toString());
+        TransformedRdfSource newSrc =
+                        this.projectManager.newTransformedRdfSource(p, id,
+                                                    name, null, id, parent);
+        this.projectManager.saveProject(p);
+        return newSrc;
+    }
+
     private String getRdfAcceptHeader() {
         StringBuilder buf = new StringBuilder();
         for (RdfFormat fmt : RdfFormat.values()) {
@@ -359,6 +442,9 @@ public class OntologyMapper extends BaseModule implements ProjectModule
             for (MediaType m : fmt.mimeTypes) {
                 if (first) {
                     // Preferred MIME type (q=1.0).
+                    if (buf.length() != 0) {
+                        buf.append(", ");
+                    }
                     buf.append(m);
                     first = false;
                 }
@@ -372,7 +458,7 @@ public class OntologyMapper extends BaseModule implements ProjectModule
     }
 
     private UpdateQuery mapNode(UpdateQuery query, MappingDesc m,
-                                Resource from, Resource node) {
+                                Resource from, Resource node, URI srcGraph) {
         Map<URI,String> mapping = new HashMap<URI,String>();
         if (m.types.isEmpty()) {
             // Simple property.
@@ -384,7 +470,9 @@ public class OntologyMapper extends BaseModule implements ProjectModule
             // RDF node.
             if (isSet(m.predicate)) {
                 Resource o = query.blankNode();
-                query.triple(node, query.uri(m.predicate), o);
+                URI u = query.uri(m.predicate);
+                query.prefixFor(u.getNamespace());
+                query.triple(node, u, o);
                 node = o;
             }
             // Else: No predicate linking node to parent? Assume root node.
@@ -400,11 +488,11 @@ public class OntologyMapper extends BaseModule implements ProjectModule
         }
         if (! mapping.isEmpty()) {
             // Mappings present (triples & where clauses) => Insert in query.
-            query.map(from, node, mapping);
+            query.map(srcGraph, from, node, mapping);
         }
         // Process child mappings.
         for (MappingDesc child : m.children) {
-            this.mapNode(query, child, from, node);
+            this.mapNode(query, child, from, node, srcGraph);
         }
         return query;
     }
@@ -412,32 +500,23 @@ public class OntologyMapper extends BaseModule implements ProjectModule
     private String mapFunctions(String expr, UpdateQuery query) {
         if (isSet(expr)) {
             if (CONCAT_PATTERN.matcher(expr).find()) {
+                boolean inQuotes = false;
                 StringBuilder buf = new StringBuilder(expr.length() + 8);
                 buf.append("CONCAT(");
                 for (String s : CONCAT_PATTERN.split(expr.trim())) {
-                    buf.append(this.resolvePrefixes(s, query)).append(',');
+                    for (int i=0,max=s.length(); i<max; i++) {
+                        if (s.charAt(i) == '"') inQuotes = (! inQuotes);
+                    }
+                    if (inQuotes) {
+                        buf.append(s).append('+');
+                    }
+                    else {
+                        buf.append(s.trim()).append(',');
+                    }
                 }
                 buf.setLength(buf.length() - 1);
                 expr = buf.append(')').toString();
             }
-            else {
-                expr = this.resolvePrefixes(expr, query);
-            }
-        }
-        return expr;
-    }
-
-    private String resolvePrefixes(String expr, UpdateQuery query) {
-        if ((isSet(expr)) && (expr.charAt(0) != '<')) {
-            int i = expr.indexOf(':');
-            if (i > 0) {
-                RdfNamespace ns = RdfNamespace.findByPrefix(expr.substring(0, i));
-                if (ns != null) {
-                    // Add prefix for matched well-known namespace.
-                    query.prefix(ns.prefix, ns.uri);
-                }
-            }
-            // Else: no known prefix matches.
         }
         return expr;
     }
@@ -453,18 +532,62 @@ public class OntologyMapper extends BaseModule implements ProjectModule
      *
      * @return a populated template model.
      */
-    protected final TemplateModel newView(String templateName, Object it) {
+    private TemplateModel newView(String templateName, Object it) {
         return ViewFactory.newView(
                                 "/" + this.getName() + '/' + templateName, it);
     }
 
-    private void throwInvalidParamError(String name, Object value) {
+    /**
+     * Notifies the user of successful processing, redirecting
+     * HTML clients (i.e. browsers) to the display of the content
+     * of the created or updated source.
+     * @param  src       the source the creation or update of which
+     *                   shall be reported.
+     * @param  created   whether the source was created.
+     *
+     * @return an partially-built response object redirecting the client
+     *         browser to the project source page. The HTTP status code
+     *         depends on whether the source was created.
+     * @throws TechnicalException if any error occurred.
+     */
+    private ResponseBuilder displayMappingResult(Source src, boolean created) {
+        ResponseBuilder response = null;
+        String targetUrl = src.getProject().getUri() + "#source";
+        if (created) {
+            response = Response.created(java.net.URI.create(src.getUri()))
+                               .entity(this.newView("redirect.vm", targetUrl))
+                               .type(TEXT_HTML_UTF8);
+        }
+        else {
+            response = Response.seeOther(java.net.URI.create(targetUrl));
+        }
+        return response;
+    }
+
+    /**
+     * Throws a {@link WebApplicationException} with a HTTP status set
+     * to 400 (Bad request) to signal an invalid or missing web service
+     * parameter.
+     * @param  name    the parameter name in the web service interface.
+     * @param  value   the invalid parameter value or <code>null</code>
+     *                 if the parameter was absent.
+     *
+     * @throws WebApplicationException always.
+     */
+    private void throwInvalidParamError(String name, Object value)
+                                                throws WebApplicationException {
         TechnicalException error = (value != null)?
                 new TechnicalException("ws.invalid.param.error", name, value):
                 new TechnicalException("ws.missing.param", name);
         this.sendError(BAD_REQUEST, error.getLocalizedMessage());
     }
 
+    /**
+     * Logs and map an internal processing error onto HTTP status codes.
+     * @param  e   the error to map.
+     *
+     * @throws WebApplicationException always.
+     */
     private void handleInternalError(Exception e)
                                                 throws WebApplicationException {
         TechnicalException error = null;
@@ -485,6 +608,10 @@ public class OntologyMapper extends BaseModule implements ProjectModule
         this.sendError(INTERNAL_SERVER_ERROR, error.getLocalizedMessage());
     }
 
+    //-------------------------------------------------------------------------
+    // Java representations of JSON request data
+    //-------------------------------------------------------------------------
+
     public final static class OntologyDesc
     {
         public String name;
@@ -499,6 +626,14 @@ public class OntologyMapper extends BaseModule implements ProjectModule
         public Collection<MappingDesc> children = new LinkedList<MappingDesc>();
     }
 
+    //-------------------------------------------------------------------------
+    // JSON result serialization handling nested classes
+    //-------------------------------------------------------------------------
+
+    /**
+     * A {@link StreamingOutput} implementation that serializes an
+     * {@link Ontology} object into JSON.
+     */
     private final static class OntologyJsonStreamingOutput
                                                     implements StreamingOutput
     {
@@ -508,6 +643,7 @@ public class OntologyMapper extends BaseModule implements ProjectModule
             this.ontology = ontology;
         }
 
+        /** {@inheritDoc} */
         @Override
         public void write(OutputStream output)
                                 throws IOException, WebApplicationException {
@@ -525,6 +661,9 @@ public class OntologyMapper extends BaseModule implements ProjectModule
         }
     }
 
+    /**
+     * A {@link JsonSerializer} to serialize {@link OwlObject}s.
+     */
     private final static class OwlSerializer implements JsonSerializer<OwlObject>
     {
         private boolean inOwl = false;
@@ -607,28 +746,18 @@ public class OntologyMapper extends BaseModule implements ProjectModule
         }
     }
 
-    private final static class UriSerializer
-                                implements JsonSerializer<org.openrdf.model.URI>
+    /**
+     * A {@link JsonSerializer} to serialize {@link URI}s.
+     */
+    private final static class UriSerializer implements JsonSerializer<URI>
     {
         public UriSerializer() {
             super();
         }
 
-        public JsonElement serialize(org.openrdf.model.URI src, Type typeOfSrc,
+        public JsonElement serialize(URI src, Type typeOfSrc,
                                      JsonSerializationContext context) {
             return new JsonPrimitive(src.stringValue());
         }
-    }
-
-    public static void main(String[] args) throws Exception {
-        OntologyMapper m = new OntologyMapper();
-        System.out.println(
-        m.getSparqlPreview("http://localhost:9091/datalift/project/kiosques/source/kiosques-ouverts-a-paris-csv-rdf-1-rdf-1",
-                           "A source",
-                           "http://localhost:9091/datalift/project/kiosques/source/kiosques-ouverts-a-paris-csv-rdf-1-rdf-1-onto",
-                           "{\"name\":\"vCard\",\"uri\":\"http://www.w3.org/2006/vcard/ns#\"}",
-                           // "{\"types\":[\"http://www.w3.org/2006/vcard/ns#VCard\"],\"children\":[{\"predicate\":\"http://www.w3.org/2006/vcard/ns#adr\",\"types\":[\"http://www.w3.org/2006/vcard/ns#Address\"],\"children\":[{\"predicate\":\"http://www.w3.org/2006/vcard/ns#street-address\",\"value\":\"adresse\"}]}]}"));
-                           "{\"types\":[\"http://www.w3.org/2006/vcard/ns#Address\"],\"children\":[{\"predicate\":\"http://www.w3.org/2006/vcard/ns#street-address\",\"value\":\"adresse\"}]}"));
-
     }
 }

@@ -9,8 +9,8 @@
 	<title>#i18n('stringtouri.title') - Datalift</title>
 	#css_links
 	## Temporary link for dev. purposes.
-	<link rel="stylesheet" type="text/css" href="http://localhost:1337/static/css/stringtouri-interface.css"/>
-	## <link rel="stylesheet" type="text/css" href="${moduleUri}/static/css/stringtouri-interface.css"/>
+	## <link rel="stylesheet" type="text/css" href="http://localhost:1337/static/css/stringtouri-interface.css"/>
+	<link rel="stylesheet" type="text/css" href="${moduleUri}/static/css/stringtouri-interface.css"/>
 </head>
 <body>
 	#banner
@@ -33,7 +33,7 @@
 
 				<div class="dataset-js form-stack ui-state-default ui-corner-top" title="#i18n('dataset.help.target')">
 					<label for="targetdataset">#i18n('dataset.label')</label>
-					<select id="targetdataset" name="targetdataset" tabindex="1">
+					<select id="targetdataset" name="targetdataset" data-example="#i18n('dataset.holder.target' ${it.uri})" tabindex="1">
 						<option value="#i18n('field.mandatory')" selected="selected" disabled="disabled"></option>
 						#foreach( $source in $sources )
 							<option value="$source">$source</option>
@@ -41,11 +41,12 @@
 					</select>
 					<p class="info"><span class="ui-icon ui-icon-help"></span>#i18n('dataset.info.target') &mdash; #i18n('field.mandatory')</p>
 					<p class="help hidden-field-js help-js">#i18n('dataset.help.target')</p>
+					<p class="example hidden-field-js example-js">#i18n('dataset.example.target')</p>
 				</div>
 
 				<div class="class-js form-stack ui-state-default" title="#i18n('class.help.target')">
 					<label for="targetclass">#i18n('class.label')</label>
-					<select id="targetclass" name="targetclass" tabindex="2">
+					<select id="targetclass" name="targetclass" data-example="#i18n('class.holder.target')" tabindex="2">
 						<option value="#i18n('field.none')" selected="selected" disabled="disabled"></option>
 						#foreach( $class in $classes )
 							<option value="$class">$class</option>
@@ -53,11 +54,12 @@
 					</select>
 					<p class="info"><span class="ui-icon ui-icon-help"></span>#i18n('class.info.target') &mdash; #i18n('field.optional')</p>
 					<p class="help hidden-field-js help-js">#i18n('class.help.target')</p>
+					<p class="example hidden-field-js example-js">#i18n('class.example.target')</p>
 				</div>
 
 				<div class="predicate-js form-stack ui-state-default ui-corner-bottom" title="#i18n('predicate.help.target')">
 					<label for="targetpredicate">#i18n('predicate.label')</label>
-					<select id="targetpredicate" name="targetpredicate" tabindex="3">
+					<select id="targetpredicate" name="targetpredicate" data-example="#i18n('predicate.holder.target')" tabindex="3">
 						<option value="#i18n('field.mandatory')" selected="selected" disabled="disabled"></option>
 						#foreach( $predicate in $predicates )
 							<option value="$predicate">$predicate</option>
@@ -65,6 +67,7 @@
 					</select>
 					<p class="info"><span class="ui-icon ui-icon-help"></span>#i18n('predicate.info.target') &mdash; #i18n('field.mandatory')</p>
 					<p class="help hidden-field-js help-js">#i18n('predicate.help.target')</p>
+					<p class="example hidden-field-js example-js">#i18n('predicate.example.target')</p>
 				</div>
 			</fieldset>
 
@@ -72,9 +75,9 @@
 			<fieldset class="source-js field-stack ui-widget-content ui-corner-all">
 				<legend>#i18n('reference.label')</legend>
 
-				<div class="dataset-js form-stack ui-state-default ui-corner-top" title="#i18n('dataset.help.target')">
+				<div class="dataset-js form-stack ui-state-default ui-corner-top" title="#i18n('dataset.help.source')">
 					<label for="sourcedataset">#i18n('dataset.label')</label>
-					<select id="sourcedataset" name="sourcedataset" tabindex="4">
+					<select id="sourcedataset" name="sourcedataset" data-example="#i18n('dataset.holder.source' ${it.uri})" tabindex="4">
 						<option value="#i18n('field.mandatory')" selected="selected" disabled="disabled"></option>
 						#foreach( $source in $sources )
 							<option value="$source">$source</option>
@@ -82,11 +85,12 @@
 					</select>
 					<p class="info"><span class="ui-icon ui-icon-help"></span>#i18n('dataset.info.source') &mdash; #i18n('field.mandatory')</p>
 					<p class="help hidden-field-js help-js">#i18n('dataset.help.source')</p>
+					<p class="example hidden-field-js example-js">#i18n('dataset.example.source')</p>
 				</div>
 
 				<div class="class-js form-stack ui-state-default" title="#i18n('class.help.source')">
 					<label for="sourceclass">#i18n('class.label')</label>
-					<select id="sourceclass" name="sourceclass" tabindex="5">
+					<select id="sourceclass" name="sourceclass" data-example="#i18n('class.holder.source')" tabindex="5">
 						<option value="#i18n('field.none')" selected="selected" disabled="disabled"></option>
 						#foreach( $class in $classes )
 							<option value="$class">$class</option>
@@ -94,11 +98,12 @@
 					</select>
 					<p class="info"><span class="ui-icon ui-icon-help"></span>#i18n('class.info.source') &mdash; #i18n('field.optional')</p>
 					<p class="help hidden-field-js help-js">#i18n('class.help.source')</p>
+					<p class="example hidden-field-js example-js">#i18n('class.example.source')</p>
 				</div>
 
 				<div class="predicate-js form-stack ui-state-default ui-corner-bottom" title="#i18n('predicate.help.source')">
 					<label for="sourcepredicate">#i18n('predicate.label')</label>
-					<select id="sourcepredicate" name="sourcepredicate" tabindex="6">
+					<select id="sourcepredicate" name="sourcepredicate" data-example="#i18n('predicate.holder.source')" tabindex="6">
 						<option value="#i18n('field.mandatory')" selected="selected" disabled="disabled"></option>
 						#foreach( $predicate in $predicates )
 							<option value="$predicate">$predicate</option>
@@ -106,31 +111,37 @@
 					</select>					
 					<p class="info"><span class="ui-icon ui-icon-help"></span>#i18n('predicate.info.source') &mdash; #i18n('field.mandatory')</p>
 					<p class="help hidden-field-js help-js">#i18n('predicate.help.source')</p>
+					<p class="example hidden-field-js example-js">#i18n('predicate.example.source')</p>
 				</div>
 			</fieldset>
 
 			<div class="clearfix"></div>
 
 			<div class="multiple-choices">
-				<h5 class="info">#i18n('convert.title') :</h5>
-				<input type="radio" id="convert-preview" name="update" value="preview" checked="checked" tabindex="10"/>
-				<label for="convert-preview" title="#i18n('preview.title')">#i18n('preview.label')</label>
-				<input type="radio" id="convert-overwrite" name="update" value="overwrite" tabindex="11"/>
-				<label for="convert-overwrite" title="#i18n('overwrite.title')">#i18n('overwrite.label')</label>
-				<input type="radio" id="convert-new" name="update" value="new" tabindex="12"/>
-				<label for="convert-new" title="#i18n('new.title')">#i18n('new.label')</label>
-			</div>
-
-			<div class="multiple-choices">
 				<input type="submit" id="convert-submit" value="#i18n('send.label')" tabindex="7"/>
 				<input type="checkbox" id="convert-help" class="ui-priority-secondary" tabindex="8"/>
 				<label for="convert-help" title="#i18n('help.title')">#i18n('help.label')</label>
-				<a href="${baseUri}/project/${it.title}" id="convert-cancel"  class="ui-priority-secondary" title="#i18n('cancel.title') #i18n('project.workspace.link')" tabindex="9">#i18n('cancel.label')</a>
+				<input type="checkbox" id="convert-example" class="ui-priority-secondary" tabindex="9"/>
+				<label for="convert-example" title="#i18n('example.title')">#i18n('example.label')</label>
+				<a href="${baseUri}/project/${it.title}" id="convert-cancel"  class="ui-priority-secondary" title="#i18n('cancel.title') #i18n('project.workspace.link')" tabindex="10">#i18n('cancel.label')</a>
+			</div>
+
+			<div class="multiple-choices">
+				<h5 class="info">#i18n('convert.title') :</h5>
+				<input type="radio" id="convert-preview" name="update" value="preview" checked="checked" tabindex="11"/>
+				<label for="convert-preview" title="#i18n('preview.title')">#i18n('preview.label')</label>
+				<input type="radio" id="convert-overwrite" name="update" value="overwrite" tabindex="12"/>
+				<label for="convert-overwrite" title="#i18n('overwrite.title')">#i18n('overwrite.label')</label>
+				<input type="radio" id="convert-new" name="update" value="new" tabindex="13"/>
+				<label for="convert-new" title="#i18n('new.title')">#i18n('new.label')</label>
 			</div>
 
 			<!-- Optionaly displayed help content. -->
 			<fieldset class="help-js hidden-field-js ui-widget-content ui-corner-all">
 				<p class="description">#i18n('stringtouri.description')</p>
+			</fieldset>
+			<fieldset class="example-js hidden-field-js ui-widget-content ui-corner-all">
+				<p class="description">#i18n('stringtouri.example')</p>
 			</fieldset>
 
 		</form>
@@ -139,6 +150,8 @@
 	#script_links
 	<script type="text/javascript">
 		var none = "#i18n('field.none')";
+		var mandatory = "#i18n('field.mandatory')";
+		var projectURI = "${it.uri}";
 		var confirmationMessage = "#i18n('update.confirm')";
 
 		/*
@@ -177,7 +190,7 @@
 
 	</script>
 	## Lien temporaire pour le développement.
-	<script type="text/javascript" src="http://localhost:1337/static/js/stringtouri-form.js"></script>
-	## <script language="javascript" src="${moduleUri}/static/js/stringtouri-form.js"></script>
+	## <script type="text/javascript" src="http://localhost:1337/static/js/stringtouri-form.js"></script>
+	<script language="javascript" src="${moduleUri}/static/js/stringtouri-form.js"></script>
 </body>
 </html>

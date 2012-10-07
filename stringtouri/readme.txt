@@ -1,13 +1,13 @@
 Title: StringToURI Readme
 Author: Thibaud Colas
-Date: 21/09/12
+Date: 07/10/12
 
 # StringToURI Readme #
 
 ## tl;dr ##
 
 This module is an interface for [StringToURI]("http://stringtouri.assembla.me/").  
-Version 1.0
+Version 1.1
 
 ## What is StringToURI ##
 
@@ -58,11 +58,11 @@ Those two datasets can be interlinked with StringToURI: PASSIM's transport servi
 StringToURI's parameters:
 
 - Datasets
--- To be modified: extrait-passim.rdf
--- To use as reference: insee-departements-2011.rdf
+-- To be modified: extrait-passim
+-- To use as reference: insee-departements-2011
 - Classes
 -- None on the PASSIM side
--- http://rdf.insee.fr/geo/Region
+-- http://rdf.insee.fr/geo/Departement
 - Predicates
 -- http://data.lirmm.fr/ontologies/passim#department
 -- http://rdf.insee.fr/geo/nom
@@ -75,6 +75,7 @@ StringToURI's parameters:
 - Filter predicates to keep only those of the chosen class
 - Form field precompletion via GET
 - Prefix management
+- Use localStorage to store field values
 
 ## External resources ##
 

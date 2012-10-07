@@ -435,9 +435,7 @@ public final class RdfUtils
      *                            triples into the source RDF store.
      * @param  namedGraph         the named graph to use as context
      *                            when persisting the generated triples
-     *                            or <code>null</code>. If the named
-     *                            graph exists, it will be cleared
-     *                            prior inserting the new triples.
+     *                            or <code>null</code>.
      * @param  clearTargetGraph   whether to clear the target name graph
      *                            prior inserting the new triples.
      *
@@ -469,9 +467,7 @@ public final class RdfUtils
      *                            triples into the source RDF store.
      * @param  namedGraph         the named graph to use as context
      *                            when persisting the generated triples
-     *                            or <code>null</code>. If the named
-     *                            graph exists, it will be cleared
-     *                            prior inserting the new triples.
+     *                            or <code>null</code>.
      * @param  baseUri            the (optional) base URI to resolve
      *                            relative URIs.
      * @param  clearTargetGraph   whether to clear the target name graph

@@ -35,33 +35,47 @@
 package org.datalift.fwk.i18n;
 
 
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import static org.datalift.fwk.util.StringUtils.isBlank;
 
 
 public abstract class BaseLocalizedItem implements LocalizedItem
 {
+    //-------------------------------------------------------------------------
+    // Instance members
+    //-------------------------------------------------------------------------
+
     /** The item labels. */
-    private final Map<String,String> labels = new HashMap<String,String>();
+    private final ConcurrentMap<String,Map<String,String>> labels =
+                            new ConcurrentHashMap<String,Map<String,String>>();
+
+    //-------------------------------------------------------------------------
+    // Constructors
+    //-------------------------------------------------------------------------
+
+    /**
+     * Creates a new LocalizedItem.
+     */
+    protected BaseLocalizedItem() {
+        super();
+    }
 
     /**
      * Creates a new LocalizedItem.
      * @param  labels   the item labels for the supported languages.
      */
-    public BaseLocalizedItem(Map<String,String> labels) {
-        if (labels != null) {
-            for (Map.Entry<String,String> e : labels.entrySet()) {
-                String label = e.getValue();
-                if (! isBlank(label)) {
-                    this.setLabel(e.getKey(), label);
-                }
-                // Else: ignore...
-            }
-        }
+    protected BaseLocalizedItem(Map<String,String> labels) {
+        super();
+        this.setLabels(null, labels);
     }
+
+    //-------------------------------------------------------------------------
+    // LocalizedItem contract support
+    //-------------------------------------------------------------------------
 
     /** {@inheritDoc} */
     @Override
@@ -80,13 +94,40 @@ public abstract class BaseLocalizedItem implements LocalizedItem
     /** {@inheritDoc} */
     @Override
     public String getLabel(Locale locale) {
-        return this.getLabel(locale.toString(), true);
+        if (locale == null) {
+            throw new IllegalArgumentException("locale");
+        }
+        return this.getLabel(locale.toString(), false);
     }
 
     /** {@inheritDoc} */
     @Override
     public String getLabel(String language) {
-        return this.getLabel(language, true);
+        return this.getLabel(language, false);
+    }
+
+    //-------------------------------------------------------------------------
+    // Specific implementation
+    //-------------------------------------------------------------------------
+
+    protected String getTypeLabel(String type) {
+        String label = null;
+        for (Locale l : PreferredLocales.get()) {
+            label = this.getLabel(type, l.toString(), false);
+            if (label != null) break;
+        }
+        return label;
+    }
+
+    protected String getTypeLabel(String type, Locale locale) {
+        if (locale == null) {
+            throw new IllegalArgumentException("locale");
+        }
+        return this.getLabel(type, locale.toString(), false);
+    }
+
+    protected String getTypeLabel(String type, String language) {
+        return this.getLabel(type, language, false);
     }
 
     /**
@@ -106,17 +147,46 @@ public abstract class BaseLocalizedItem implements LocalizedItem
      *         or <code>null</code>, depending on
      *         <code>acceptDesc</code>.
      */
-    private String getLabel(String language, boolean acceptDesc) {
+    protected String getLabel(String language, boolean acceptDesc) {
+        return this.getLabel(null, language, acceptDesc);
+    }
+
+    /**
+     * Returns the label of the specified type for the specified
+     * language or language and country.
+     * @param  type         the label type, <code>null</code> for the
+     *                      {@link #getLabel() default label}.
+     * @param  language     the language code or language and country
+     *                      codes, separated with an hyphen ('-') or an
+     *                      underscore ('_') character.
+     * @param  acceptDesc   whether the string representation of this
+     *                      object shall be returned if no label is
+     *                      defined for the specified language.
+     *
+     * @return the item label for the specified language if defined,
+     *         the default label otherwise or, if no default label has
+     *         been defined, the
+     *         {@link #toString() string representation} of this object
+     *         or <code>null</code>, depending on
+     *         <code>acceptDesc</code>.
+     */
+    protected String getLabel(String type, String language,
+                                           boolean acceptDesc) {
+        if (language == null) {
+            throw new IllegalArgumentException("language");
+        }
+        Map<String,String> typeLabels = this.getLabels(type);
+
         String v = null;
         String[] elts = language.split("-|_");
         if ((elts.length > 1) && (elts[1].length() != 0)) {
-            v = this.labels.get(elts[0] + '_' + elts[1].toUpperCase());
+            v = typeLabels.get(elts[0] + '_' + elts[1].toUpperCase());
         }
         if (v == null) {
-            v = this.labels.get(elts[0]);
+            v = typeLabels.get(elts[0]);
         }
         if (v == null) {
-            v = this.labels.get("");
+            v = typeLabels.get("");
         }
         if ((v == null) && (acceptDesc)) {
             v = this.toString();
@@ -124,23 +194,59 @@ public abstract class BaseLocalizedItem implements LocalizedItem
         return v;
     }
 
+    protected void setLabels(Map<String,String> labels) {
+        this.setLabels(null, labels);
+    }
+
+    protected void setLabels(String type, Map<String,String> labels) {
+        Map<String,String> typeLabels = this.getLabels(type);
+        typeLabels.clear();
+        if (labels != null) {
+            for (Map.Entry<String,String> e : labels.entrySet()) {
+                String label = e.getValue();
+                if (! isBlank(label)) {
+                    this.setLabel(type, e.getKey(), label);
+                }
+                // Else: ignore...
+            }
+        }
+    }
+
     /**
-     * Sets the item label for the specified language or language
-     * and country.
+     * Sets the label of the specified type for the specified
+     * language or language and country.
+     * @param  type       the label type, <code>null</code> for the
+     *                    {@link #getLabel() default label}.
      * @param  language   the language code or language and country
      *                    codes, separated with an hyphen ('-') or an
      *                    underscore ('_') character.
      * @param  label      the label for the specified language or
      *                    language and country.
      */
-    private void setLabel(String language, String label) {
+    private void setLabel(String type, String language, String label) {
         if (language == null) {
             language = "";
         }
+        Map<String,String> typedLabels = this.getLabels(type);
         String[] elts = language.split("-|_");
-        this.labels.put(elts[0], label);
+        typedLabels.put(elts[0], label);
         if ((elts.length > 1) && (elts[1].length() != 0)) {
-            this.labels.put(elts[0] + '_' + elts[1].toUpperCase(), label);
+            typedLabels.put(elts[0] + '_' + elts[1].toUpperCase(), label);
         }
+    }
+
+    private Map<String,String> getLabels(String type) {
+        if (type == null) {
+            type = "";
+        }
+        Map<String,String> typeLabels = this.labels.get(type);
+        if (typeLabels == null) {
+            typeLabels = new ConcurrentHashMap<String,String>();
+            if (this.labels.putIfAbsent(type, typeLabels) != null) {
+                // Concurrent addition of new label type.
+                typeLabels = this.labels.get(type);
+            }
+        }
+        return typeLabels;
     }
 }

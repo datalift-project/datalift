@@ -951,13 +951,9 @@ public abstract class UpdateQuery
                     }
                     if (v == null) {
                         // No match yet. => Assume URI.
-                        int i = s.indexOf(':');
-                        if (i != -1) {
-                            v = this.uri(s.substring(0, i), s.substring(i + 1));
-                        }
-                        else {
-                            v = this.uri("src", s);
-                        }
+                        URI u = this.uri(s);
+                        this.prefixFor(u.getNamespace());
+                        v = u;
                     }
                 }
             }

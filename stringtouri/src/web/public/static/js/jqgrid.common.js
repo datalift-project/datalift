@@ -70,18 +70,17 @@ function htmlTableTojQGrid(params) {
 			caption: $('#searchnav').html(),
 			rowNum: 10000,
 			height: 450,
-			width: 400,
 			search:{
 				caption: '#i18n("grid.search.value.label")'
 			},
 		});
 		
-		gridParams = { 
+		var gridParams = { 
 	 			datatype: "local", 
 	 			pager: $('#pagernav'), 
 	 			rowNum: 500,
 				rowList: [50,100,200,500,1000,2000],
-		}
+		};
 		if (params != null) {
 			gridParams = jsonConcat(params, gridParams);
 		}

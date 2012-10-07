@@ -48,7 +48,7 @@
         </div>
         <div class="nav-collapse collapse">
           <p class="navbar-text pull-right">
-            #i18n("login.label") <a href="#" class="navbar-link">$esc.html($login)</a>
+            #i18n("login.label") <a href="#" class="navbar-link">$esc.html(${securityCtx.userPrincipal})</a>
           </p>
           <ul class="nav">
             <li><a href="${baseUri}/sparql">#i18n("sparql.endpoint.link")</a></li>
@@ -152,7 +152,7 @@
           </div>
         </div><!-- /mapping-forms -->
 
-        <div class="span8 mapping-result">
+        <div class="span8 mapping-result" data-bind="visible: mappings().length != 0">
           <table class="table table-striped table-hover">
             <tbody data-bind="foreach: mappings">
               <tr data-bind="click: $root.selectMapping, css: { success: $data == $root.currentMapping() }">
@@ -161,11 +161,22 @@
               </tr>
             </tbody>
           </table>
-          <div data-bind="visible: preview">
+          <div class="controls">
+            <label class="checkbox"><input type="checkbox" data-bind="checked: displayPreview"> #i18n("display.preview.button")</label>
+          </div>
+          <div data-bind="visible: (displayPreview() && preview())">
             <h3>#i18n("preview.section.title")</h3>
             <pre data-bind="text: preview"></pre>
           </div>
-          <button type="button" class="btn btn-danger" data-bind="visible: queryComplete, click: execute"><i class="icon-play icon-white"></i> #i18n("convert.data.button")</button>
+          <form id="execute-mapping-form" class="active" action="${moduleUri}" method="post">
+            <input type="hidden" name="project" id="submit-project" value="$!{it.uri}"/>
+            <input type="hidden" name="sourceGraph" id="submit-srcGraph" value=""/>
+            <input type="hidden" name="ontology" id="submit-ontology" value=""/>
+            <input type="hidden" name="mapping" id="submit-mapping" value=""/>
+            <input type="hidden" name="targetName" id="submit-targetName" value=""/>
+            <input type="hidden" name="targetGraph" id="submit-targetGraph" value=""/>
+            <button type="submit" id="submit-button" class="btn btn-danger" data-bind="enable: queryComplete"><i class="icon-play icon-white"></i> #i18n("convert.data.button")</button>
+          </form>
         </div><!-- /mapping-result -->
       </div><!-- /row-fluid -->
     </div><!-- /row-fluid -->
@@ -184,11 +195,11 @@
     $(function() {
       var sources = [
 #foreach( $s in $it.sources )#if( $s.type == $srcType )
-        { uri:"$!{s.uri}", title:"$!{s.title}" }, #end
+        { uri:"$esc.javascript($!{s.targetGraph})", title:"$esc.javascript($!{s.title})" },#end
 #end ];
       var ontologies = [
 #foreach( $o in $it.ontologies )
-        { uri:"$!{o.source}", title:"$!{o.title}" },
+        { uri:"$esc.javascript($!{o.source})", title:"$esc.javascript($!{o.title})" },
 #end ];
       ko.applyBindings(new MappingViewModel("$!{baseUri}", "$!{it.uri}", sources, ontologies));
     });

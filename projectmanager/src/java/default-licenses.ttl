@@ -48,3 +48,9 @@ _:7 a datalift:License ;
     dcterms:license <http://opendatacommons.org/licenses/odbl/1.0/> ;
     rdfs:label "Open Data Commons Open Database License (ODbL)" .
 
+_:8 a datalift:License ;
+    dcterms:license <http://www.data.gouv.fr/Licence-Ouverte-Open-Licence> ;
+    rdfs:label
+        "Open Licence" ,
+        "Licence Ouverte"@fr .
+
