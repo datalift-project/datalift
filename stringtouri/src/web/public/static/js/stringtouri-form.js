@@ -26,6 +26,7 @@
 				.attr("id", select.attr("id"))
 				.attr("tabindex", select.attr("tabindex"))
 				.attr("placeholder", select.children(":first-child").val())
+				.attr("data-example", select.attr("data-example"))
 				.addClass("ui-state-default ui-combobox-input")
 				.autocomplete({
 					delay: 0,
@@ -122,7 +123,7 @@ $(function() {
 
 	$(".hidden-field-js").hide();
 
-	$("#convert-submit, #convert-help, #convert-cancel, input:radio").button();
+	$("#.multiple-choices a, .multiple-choices input").button();
 	$(".multiple-choices").buttonset();
 	$("select").combobox();
 
@@ -251,6 +252,32 @@ $(function() {
 
 	$("#convert-help").click(function (event) {
 		$('.help-js').slideToggle(50);
+		event.preventDefault();
+	});
+
+	$("#convert-example").click(function (event) {
+		if(!$('.example-js').is(":visible")) {
+			$('input:text').each(function () {
+				$(this).attr('data-placeholder', $(this).attr('placeholder'));
+				$(this).attr('placeholder', $(this).attr('data-example'));
+				$(this).attr('data-val', $(this).val());
+				$(this).val('');
+				$(this).attr('disabled',true);
+				successState($(this));
+			});
+		}
+		else {
+			$('input:text').each(function () {
+				$(this).attr('placeholder', $(this).attr('data-placeholder'));
+				$(this).val($(this).attr('data-val'));
+				$(this).attr('disabled',false);
+				defaultState($(this));
+			});
+
+		}
+
+		$('.example-js').slideToggle(50);
+		$('input:submit').attr('disabled', !$('input:submit').attr('disabled'));
 		event.preventDefault();
 	});
 

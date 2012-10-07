@@ -62,7 +62,7 @@ StringToURI's parameters:
 -- To use as reference: insee-departements-2011.rdf
 - Classes
 -- None on the PASSIM side
--- http://rdf.insee.fr/geo/Region
+-- http://rdf.insee.fr/geo/Departement
 - Predicates
 -- http://data.lirmm.fr/ontologies/passim#department
 -- http://rdf.insee.fr/geo/nom
