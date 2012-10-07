@@ -38,7 +38,7 @@ import org.datalift.fwk.view.ViewFactory;
  * operations and values.
  * 
  * @author tcolas
- * @version 15082012
+ * @version 07102012
  */
 public abstract class InterlinkingController extends BaseModule implements ProjectModule {
 
