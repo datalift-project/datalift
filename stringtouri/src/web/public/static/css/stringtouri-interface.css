@@ -67,7 +67,7 @@ label, .form-stack dt {
 	display:none;
 }
 
-.form-stack p.info, dd {
+.form-stack p.info, p.example, dd {
 	color:#666;
 	font-size:75%;
 	text-align:justify;
@@ -75,7 +75,7 @@ label, .form-stack dt {
 }
 
 div.multiple-choices {
-	display:block;
+	display:inline-block;
 	margin:20px;
 }
 
@@ -99,7 +99,7 @@ div.form-stack, dl {
  * StringToURI' pre-process page.
  */
 
-p.help {
+p.help, p.example {
 	background-color:#fff;
 	font-weight:normal;
 	height:60px;
@@ -177,6 +177,10 @@ p.help {
 .results {
 	width:auto;
 	padding:10px;
+}
+
+.results label, .results input, .results select {
+	display:inline-block;
 }
 
 /**
