@@ -15,6 +15,7 @@ import org.openrdf.model.Value;
 import org.openrdf.model.vocabulary.OWL;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.model.vocabulary.RDFS;
+import org.openrdf.model.vocabulary.XMLSchema;
 import org.openrdf.query.BindingSet;
 import org.openrdf.query.TupleQueryResult;
 import org.openrdf.query.resultio.QueryResultParseException;
@@ -170,9 +171,11 @@ public class OwlParser
             rs = null;
             // Extract properties.
             query = "PREFIX owl:  <" + OWL.NAMESPACE  + "> "   +
+                    "PREFIX rdf:  <" + RDF.NAMESPACE  + "> "   +
                     "PREFIX rdfs: <" + RDFS.NAMESPACE + "> "   +
                     "SELECT * WHERE {" +
-                    "  { ?uri a owl:ObjectProperty . }" +
+                    "  { ?uri a rdf:Property . }" +
+                    "  UNION { ?uri a owl:ObjectProperty . }" +
                     "  UNION { ?uri a owl:DatatypeProperty . }" +
                     "  UNION { ?uri a owl:AnnotationProperty . }" +
                     "  ?uri a ?type ." +
@@ -186,9 +189,11 @@ public class OwlParser
                 String uri = v(bs, "uri");
                 if (uri != null) {
                     OwlProperty p = properties.get(uri);
+                    String name = v(bs, "name");
+                    String desc = v(bs, "desc");
+                    OwlClass c = classes.get(v(bs, "domain"));
+                    Value range = bs.getValue("range");
                     if (p == null) {
-                        String name = v(bs, "name");
-                        String desc = v(bs, "desc");
                         Value type = bs.getValue("type");
                         if (OWL.OBJECTPROPERTY.equals(type)) {
                             p = new ObjectProperty(uri, name, desc);
@@ -196,18 +201,28 @@ public class OwlParser
                         else if (OWL.DATATYPEPROPERTY.equals(type)) {
                             p = new DatatypeProperty(uri, name, desc);
                         }
-                        else {
+                        else if (OWL.ANNOTATIONPROPERTY.equals(type)) {
                             p = new AnnotationProperty(uri, name, desc);
+                        }
+                        else {
+                            // RDF Property. => Check range.
+                            if ((range != null) &&
+                                (! range.stringValue().startsWith(
+                                                        XMLSchema.NAMESPACE))) {
+                                p = new ObjectProperty(uri, name, desc);
+                            }
+                        }
+                        if (p == null) {
+                            p = new DatatypeProperty(uri, name, desc);
                         }
                         properties.put(uri, p);
                     }
-                    OwlClass c = classes.get(v(bs, "domain"));
                     if (c != null) {
                         c.property(p);
                         p.domain(c);
                     }
-                    String type = v(bs, "range");
-                    if (type != null) {
+                    if (range != null) {
+                        String type = range.stringValue();
                         c = classes.get(type);
                         if (c != null) {
                             p.range(c);
