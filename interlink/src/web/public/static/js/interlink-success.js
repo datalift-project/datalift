@@ -10,9 +10,6 @@ $(document).ready(function() {
 
 	$("#goto_workspace").button();
 
-	htmlTableTojQGrid({
-		name: '#',
-		index: '#',
-		sorttype:'int'
-	});
+	htmlTableTojQGrid();
+	jQuery("#grid").jqGrid('setColProp', '#', { sorttype:'int' });
 });
