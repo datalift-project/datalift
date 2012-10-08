@@ -74,6 +74,11 @@ p.help {
 	margin-top:5px;
 }
 
+pre {
+	border: 1px dashed #ccc;
+	padding:5px;
+}
+
 h5.info {
 	display:inline-block;
 }
@@ -126,7 +131,7 @@ div.form-stack {
 }
 
 #file-form p.info {
-	margin: 2px 15px 0;
+	margin: 10px 15px;
 }
 
 #file-form div.form-inline  {

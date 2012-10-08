@@ -35,7 +35,7 @@ import org.openrdf.repository.RepositoryException;
  * operations and values.
  * 
  * @author tcolas
- * @version 03102012
+ * @version 07102012
  */
 public abstract class InterlinkingModel {
 	
@@ -48,6 +48,8 @@ public abstract class InterlinkingModel {
     
 	/** Binding for the default subject var in SPARQL. */
     protected static final String SB = "s";
+    /** Binding for another subject var in SPARQL. */
+    protected static final String SSB = "ss";
     /** Binding for the default predicate var in SPARQL. */
     protected static final String PB = "p";
     /** Binding for the default object var in SPARQL. */

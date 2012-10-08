@@ -65,7 +65,7 @@ import com.sun.jersey.multipart.FormDataParam;
  * TODO Add a way to set form fields via GET.
  *
  * @author tcolas
- * @version 03102012
+ * @version 07102012
  */
 @Path(SilkController.MODULE_NAME)
 public class SilkController extends InterlinkingController {

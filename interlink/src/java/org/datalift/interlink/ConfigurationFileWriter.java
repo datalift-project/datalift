@@ -31,7 +31,7 @@ import org.w3c.dom.Element;
 /**
  * Helps writing Silk configuration files using DOM manipulation.
  * @author tcolas
- * @version 03102012
+ * @version 07102012
  */
 public final class ConfigurationFileWriter {
 	
@@ -543,9 +543,6 @@ public final class ConfigurationFileWriter {
    			tmpPrefixes.put("owl", "http://www.w3.org/2002/07/owl#");
    			tmpPrefixes.put("dcterms", "http://purl.org/dc/terms/");
    			tmpPrefixes.put("insee", "http://rdf.insee.fr/geo/");
-   			tmpPrefixes.put("eurostat", "http://ec.europa.eu/eurostat/ramon/ontologies/geographic.rdf#");
-   			tmpPrefixes.put("geo", "http://www.telegraphis.net/ontology/geography/geography#");
-   			tmpPrefixes.put("gn", "http://www.geonames.org/ontology#");
    			
    			String tmpBaseURI = baseURISub(targetPropertyFirst);
    			tmpPrefixes.put("x", tmpBaseURI);
@@ -594,7 +591,7 @@ public final class ConfigurationFileWriter {
    			
    			//TODO Set it elsewhere ?
    			String sourceVariable = SilkModel.SB;
-   			String targetVariable = SilkModel.SB;
+   			String targetVariable = SilkModel.SSB;
    			
    	    	interlink.appendChild(getLinkTypeTag(doc, "owl:sameAs"));
    	    	interlink.appendChild(getSourceDatasetTag(doc, sourceId, sourceVariable, sourceQuery));

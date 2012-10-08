@@ -121,12 +121,12 @@
 $(function() {
 	$(".hidden-field-js").hide();
 
+	$(".address-js select, .property-first-js select, .property-secund-js select, .property-third-js select").combobox();
+	$(".measure-js .num-js select").combobox();
+
 	$("#file-submit, #form-submit, .cancel-button, #form-help").button();
 	$(".multiple-choices").buttonset();
 	$('.add-compare-js, .remove-compare-js').button();
-
-	$(".address-js select, .property-first-js select, .property-secund-js select, .property-third-js select").combobox();
-	$(".measure-js .num-js select").combobox();
 
 		/*
 	* Applies the ui-state-error style to the container of {@param field}.

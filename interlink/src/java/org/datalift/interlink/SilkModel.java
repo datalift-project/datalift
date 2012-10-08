@@ -71,7 +71,7 @@ import de.fuberlin.wiwiss.silk.Silk;
  * This class handles Silk interlink constraints.
  *
  * @author tcolas
- * @version 03102012
+ * @version 07102012
  */
 public class SilkModel extends InterlinkingModel {
 	
@@ -631,14 +631,9 @@ public class SilkModel extends InterlinkingModel {
 					
 					RepositoryConnection cnx = INTERNAL_REPO.newConnection();
 					// Copy all of the data to the new graph.
-					String updateQy = "INSERT {GRAPH <" + newSourceURI + "> {?s ?p ?o}} WHERE {GRAPH <" + targetContext + "> {?s ?p ?o}}";
+					String updateQy = "COPY <" + targetContext + "> TO <" + newSourceURI + ">";
 					Update up = cnx.prepareUpdate(QueryLanguage.SPARQL, updateQy);
 					up.execute();
-				}
-				else {
-					String tmpURI = proj.getSources().iterator().next().getUri();
-					newSourceURI = tmpURI.substring(0, tmpURI.lastIndexOf("/") + 1) + "custom-silk-result";
-					addResultSource(proj, proj.getSources().iterator().next(), "custom-silk-result", new URI(newSourceURI));
 				}
 			} 
 			catch (IOException e) { LOG.fatal("Silk Configuration file execution failed - " + e); } 
