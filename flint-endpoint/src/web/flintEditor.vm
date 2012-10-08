@@ -18,7 +18,7 @@
 </head>
 <body>
 #if( ${securityCtx.userAuthenticated} )
-	<a href="${baseUri}/project" id="goto_workspace" class="button ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only" style="position:absolute;top:15px;right:15px;">#i18n("project.workspace.link")</a>
+	<a href="${baseUri}/project" id="goto_workspace" class="button" style="position:absolute;top:15px;right:15px;">#i18n("project.workspace.link")</a>
 #end
 #banner
 	<div id="flint">
@@ -32,6 +32,7 @@
 	$(document)
 		.ready(
 				function() {
+					$("#goto_workspace").button();
 					var flintConfig = {
 						"interface" : {
 							"toolbar" : true,

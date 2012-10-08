@@ -8,6 +8,9 @@
 #css_links
 </head>
 <body>
+#if( ${securityCtx.userAuthenticated} )
+	<a href="${baseUri}/project" id="goto_workspace" class="button" style="position:absolute;top:15px;right:15px;">#i18n("project.workspace.link")</a>
+#end
 #banner
 #set( $columnWidth = 100 / $it.Columns.size() )
 	<div id="content" class="ui-widget-content dl-main-panel">
@@ -65,6 +68,7 @@
 					caption: "#i18n("grid.search.value.label")"
 				}
 			});
+			$("#goto_workspace").button();
 			tableToGrid("#queryresults", { datatype: "local" });
 
 			$("#queryresults").trigger("reloadGrid");
