@@ -1,13 +1,13 @@
 Title: Silk Interlink Readme 
 Author: Thibaud Colas 
-Date: 30/09/12 
+Date: 07/10/12
 
 # Silk Interconnection Readme #
 
 ## tl;dr ##
 
 This module is an interface for [Silk]("http://www4.wiwiss.fu-berlin.de/bizer/silk/").  
-Version 0.8
+Version 1.0
 
 ## What is Silk Interlink ##
 
@@ -16,11 +16,14 @@ When launching Silk, new interlinkings are created according to critera in the g
 
 ## Future development ##
 
-- Javascript client-side field validation.
-- Server-side AJAX validation.
-- Advanced documentation.
-- Prefix management.
-- Much more advanced tests.
+- Server-side form field validation with AJAX
+- Source filtering so that they can't be equal
+- Filter values to prevent errors
+- Form field precompletion via GET
+- Prefix management
+- Use localStorage to store field values
+- Use sliders / tickers to increment threshold and weight
+- Use input = number, input = range, placeholder with polyfills
 
 ## External resources ##
 

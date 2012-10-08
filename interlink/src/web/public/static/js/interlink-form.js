@@ -22,6 +22,7 @@
 			input = $("<input>")
 				.appendTo(wrapper)
 				.val(value)
+				// Necessary modifications for my module to work.
 				.attr("name", select.attr("name"))
 				.attr("id", select.attr("id"))
 				.attr("tabindex", select.attr("tabindex"))
