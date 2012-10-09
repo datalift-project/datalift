@@ -185,11 +185,12 @@ public class CsvDirectMapper extends BaseConverterModule
                     @FormParam("true_values") String trueValues,
                     @FormParam("date_format") String dateFormat,
                     @FormParam("key_column") @DefaultValue("-1") int keyColumn,
+                    @FormParam("dest_type") String targetType,
                     MultivaluedMap<String,String> params)
                                                 throws WebApplicationException {
         // Note: There a bug in Jersey that cause the MultivalueMap to be
-        // empty unless at least one @FormParm annotation is present.
-        // see: http://jersey.576304.n2.nabble.com/POST-parameters-not-injected-via-MultivaluedMap-td6434341.html
+        //       empty unless at least one @FormParm annotation is present.
+        // See: http://jersey.576304.n2.nabble.com/POST-parameters-not-injected-via-MultivaluedMap-td6434341.html
 
         Response response = null;
         try {
@@ -224,7 +225,7 @@ public class CsvDirectMapper extends BaseConverterModule
             }
             // Convert CSV data and load generated RDF triples.
             this.convert(in, Configuration.getDefault().getInternalRepository(),
-                             targetGraph, baseUri, desc);
+                             targetGraph, baseUri, targetType, desc);
             // Register new transformed RDF source.
             Source out = this.addResultSource(p, in, destTitle, targetGraph);
             // Display project source tab, including the newly created source.
@@ -242,6 +243,7 @@ public class CsvDirectMapper extends BaseConverterModule
 
     private void convert(CsvSource src, Repository target,
                                         URI targetGraph, URI baseUri,
+                                        String targetType,
                                         MappingDesc mapping) {
         final RepositoryConnection cnx = target.newConnection();
         org.openrdf.model.URI ctx = null;
@@ -257,6 +259,7 @@ public class CsvDirectMapper extends BaseConverterModule
                 ctx = valueFactory.createURI(targetGraph.toString());
                 cnx.clear(ctx);
             }
+            // Create URIs for objects and predicates.
             if (baseUri == null) {
                 baseUri = targetGraph;
             }
@@ -264,8 +267,19 @@ public class CsvDirectMapper extends BaseConverterModule
                             (baseUri != null)? baseUri.toString(): null, '/');
             String typeUri = RdfUtils.getBaseUri(
                             (baseUri != null)? baseUri.toString(): null, '#');
-            org.openrdf.model.URI rdfType = valueFactory.createURI(
-                                            typeUri, urlify(src.getTitle()));
+            // Create target RDF type.
+            if (! isSet(targetType)) {
+                targetType = urlify(src.getTitle());
+            }
+            org.openrdf.model.URI rdfType = null;
+            try {
+                // Assume target type is an absolute URI.
+                rdfType = valueFactory.createURI(targetType);
+            }
+            catch (Exception e) {
+                // Oops, targetType is a relative URI. => Append namespace URI.
+                rdfType = valueFactory.createURI(typeUri, targetType);
+            }
             // Build predicates URIs.
             int n = src.getColumnNames().size();
             org.openrdf.model.URI[] predicates = new org.openrdf.model.URI[n];
@@ -273,7 +287,7 @@ public class CsvDirectMapper extends BaseConverterModule
             for (String s : src.getColumnNames()) {
                 predicates[i++] = valueFactory.createURI(typeUri + urlify(s));
             }
-            // Load triples
+            // Load triples.
             long statementCount = 0L;
             long duration = 0L;
             int  batchSize = Env.getRdfBatchSize();
