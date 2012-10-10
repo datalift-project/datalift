@@ -77,9 +77,9 @@
 #end
 		</select></p>
 		<p><label class="control-label" for="title_row">#i18n("project.source.csv.title_row"): </label>
-		<input type="text" class="control-input" placeholder="1" id="title_row" name="title_row" title="#i18n("project.source.tooltip.title_row")" value="#if( $current && $current.hasTitleRow() == true )$!esc.html($current.titleRow)#end" /></p>
+		<input type="text" class="control-input" placeholder="#i18n("project.source.placeholder.title_row")" id="title_row" name="title_row" title="#i18n("project.source.tooltip.title_row")" value="#if( $current && $current.hasTitleRow() == true )$!esc.html($current.titleRow)#end" /></p>
 		<p><label class="control-label" for="first_row">#i18n("project.source.csv.first_row"): </label>
-		<input type="text"class="control-input" placeholder="2" id="first_row" name="first_row" title="#i18n("project.source.tooltip.first_row")" value="#if( $current && $current.firstDataRow > 0 )$!esc.html($current.firstDataRow)#end" /></p>
+		<input type="text"class="control-input" placeholder="#i18n("project.source.placeholder.first_row")" id="first_row" name="first_row" title="#i18n("project.source.tooltip.first_row")" value="#if( $current && $current.firstDataRow > 0 )$!esc.html($current.firstDataRow)#end" /></p>
 		<p><label class="control-label" for="last_row">#i18n("project.source.csv.last_row"): </label>
 		<input type="text" class="control-input" placeholder="#i18n("project.source.placeholder.last_row")" id="last_row" name="last_row" title="#i18n("project.source.tooltip.last_row")" value="#if( $current && $current.lastDataRow > 0 )$!esc.html($current.lastDataRow)#end" /></p>
 		<p><label class="control-label" for="quote">#i18n("project.source.csv.quote"): </label>
