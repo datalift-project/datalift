@@ -74,6 +74,10 @@ public interface ProjectModule extends Module
      */
     public enum HttpMethod { GET, POST, PUT, DELETE; }
 
+    //-------------------------------------------------------------------------
+    // UriDesc nested class
+    //-------------------------------------------------------------------------
+
     /**
      * A description of the access to a module page.
      */
