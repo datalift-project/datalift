@@ -33,7 +33,7 @@
   <property name="datalift.root" location="${basedir}/.."/>
 
   <property name="datalift.wrapper.modules"
-            value="sparql-endpoint,projectmanager,simple-convert"/>
+            value="flint-endpoint,projectmanager,simple-convert"/>
 
 
   <!-- ================ File and Directory Names ========================== -->
