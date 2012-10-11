@@ -759,10 +759,10 @@ public class Workspace extends BaseModule
             if (encoding != null) {
                 s.setEncoding(encoding.name());
             }
-            s.setSeparator(separator);
+            s.setTitleRow(titleRow);
             s.setFirstDataRow(firstRow);
             s.setLastDataRow(lastRow);
-            s.setTitleRow(titleRow);
+            s.setSeparator(separator);
             if (isSet(quote)) {
                 s.setQuote(quote);
             }
