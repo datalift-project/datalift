@@ -120,8 +120,8 @@
 		loadGridOntologies();
 
 		$(window).bind('resize', function() {
-				$("#selectable_sources").setGridWidth($("#tabs").width() - 30);
-				$("#selectable_ontologies").setGridWidth($("#tabs").width() - 30);			
+			$("#selectable_sources").setGridWidth($("#tabs").width() - 30);
+			$("#selectable_ontologies").setGridWidth($("#tabs").width() - 30);
 		}).trigger('resize');
 	});
 
@@ -262,7 +262,9 @@
 				{name:'dateSubmitted',index:'dateSubmitted', sorttype:"text",editable:true,editoptions:{size:50}},
 				{name:'operator',index:'operator', sorttype:"text",editable:true,editoptions:{size:50}} ],
 			caption: "",
-			rowNum:10, rowList:[10,20,30], pager: '#selectable_ontologies_toolbar',
+			rowNum: 10,
+			rowList: [10,20,30],
+			pager: '#selectable_ontologies_toolbar',
 			gridview: true,
 			height: 250
 		});
@@ -273,7 +275,7 @@
 			uri:"$!esc.html($curOnto.uri)",
 			title:"$!esc.html($curOnto.title)",
 			source:"$!esc.html($curOnto.source)",
-			dateSubmitted:"$!date.format("medium", $curOnto.dateSubmitted)",
+			dateSubmitted:"$!date.format('medium', $curOnto.dateSubmitted)",
 			operator:"$!esc.html($curOnto.operator)"
 		},
 #end
