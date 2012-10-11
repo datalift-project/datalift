@@ -691,6 +691,7 @@
 }
 
 #flint-results-area {
+    resize: vertical;
 	height: 200px;
 	background: white;
 	padding: 3px;
@@ -698,7 +699,7 @@
 }
 
 #flint-results-container {
-	
+    resize: none;
 }
 
 #flint-results {
