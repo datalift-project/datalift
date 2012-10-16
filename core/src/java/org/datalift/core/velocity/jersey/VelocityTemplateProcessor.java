@@ -45,7 +45,6 @@ import java.io.Writer;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Properties;
 import java.util.Map;
 import java.util.TreeMap;
@@ -78,6 +77,7 @@ import static org.apache.velocity.runtime.log.Log4JLogChute.*;
 
 import org.datalift.core.velocity.i18n.I18nDirective;
 import org.datalift.core.velocity.i18n.LoadDirective;
+import org.datalift.fwk.i18n.PreferredLocales;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.security.SecurityContext;
@@ -306,13 +306,9 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
             ctx.put(CTX_ESCAPE_TOOL, new EscapeTool());
             ctx.put(CTX_LINK_TOOL, new LinkTool());
             if (ctx.get(CTX_DATE_TOOL) == null) {
-                Map<String, Object> config = new HashMap<String, Object>();
-                List<Locale> l = this.httpContext.getRequest()
-                                                 .getAcceptableLanguages();
-                if ((l != null) && (! l.isEmpty())) {
-                    config.put(ToolContext.LOCALE_KEY, l.get(0));
-                }
                 DateTool dateTool = new DateTool();
+                Map<String, Object> config = new HashMap<String, Object>();
+                config.put(ToolContext.LOCALE_KEY, PreferredLocales.get().get(0));
                 dateTool.configure(config);
                 ctx.put(CTX_DATE_TOOL, dateTool);
             }
