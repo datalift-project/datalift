@@ -36,7 +36,6 @@ package org.datalift.core.project;
 
 
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -61,6 +60,7 @@ import org.datalift.fwk.project.CsvSource;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.Row;
 import org.datalift.fwk.util.CloseableIterator;
+import org.datalift.fwk.util.io.BomReader;
 
 import static org.datalift.fwk.util.StringUtils.*;
 
@@ -337,8 +337,8 @@ public class CsvSourceImpl extends BaseFileSource
     }
 
     private CSVReader newReader() throws IOException {
-        return new CSVReader(new InputStreamReader(this.getInputStream(),
-                                                   this.getEncoding()),
+        return new CSVReader(new BomReader(this.getInputStream(),
+                                           this.getEncoding()),
                              Separator.valueOf(this.separator).getValue(),
                              this.getQuoteCharacter());
     }
