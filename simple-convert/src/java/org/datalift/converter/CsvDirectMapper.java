@@ -112,6 +112,7 @@ public class CsvDirectMapper extends BaseConverterModule
         Float           ("float"),
         Boolean         ("boolean"),
         Date            ("date"),
+        URI             ("uri"),
         Automatic       ("auto"),
         Ignore          ("ignore");
 
@@ -119,6 +120,14 @@ public class CsvDirectMapper extends BaseConverterModule
 
         Mapping(String label) {
             this.label = label;
+        }
+
+        /**
+         * Returns the mapping label.
+         * @return the mapping label.
+         */
+        public String getLabel() {
+            return this.label;
         }
 
         /**
@@ -286,6 +295,14 @@ public class CsvDirectMapper extends BaseConverterModule
     // Specific implementation
     //-------------------------------------------------------------------------
 
+    /**
+     * Returns the available type mappings.
+     * @return the available type mappings as an array.
+     */
+    public Mapping[] getMappings() {
+        return Mapping.values();
+    }
+
     private void convert(CsvSource src, Repository target,
                                         URI targetGraph, URI baseUri,
                                         String targetType,
@@ -297,6 +314,7 @@ public class CsvDirectMapper extends BaseConverterModule
                             new UriCachingValueFactory(cnx.getValueFactory());
 
             long t0 = System.currentTimeMillis();
+            char quote = src.getQuoteCharacter();
             // Prevent transaction commit for each triple inserted.
             cnx.setAutoCommit(false);
             // Clear target named graph, if any.
@@ -349,9 +367,17 @@ public class CsvDirectMapper extends BaseConverterModule
                     Mapping m = mapping.getMapping(j);
                     Value value = null;
                     if (isSet(v)) {
+                        // Trim value.
+                        v = v.trim();
+                        // Handle special case of unmatched closing quote, left
+                        // over by CSV parser when followed by padding.
+                        if (v.indexOf(quote) == v.length() - 1) {
+                            v = v.substring(0, v.length() - 1);
+                        }
                         value = this.mapValue(v, valueFactory, m, mapping);                            
                         if (j == mapping.keyColumn) {
-                            subject = valueFactory.createURI(objUri + urlify(v)); // + "#_";
+                            subject = valueFactory.createURI(
+                                                objUri + urlify(v)); // + "#_";
                         }
                     }
                     else {
@@ -428,7 +454,6 @@ public class CsvDirectMapper extends BaseConverterModule
     private Value mapValue(String s, ValueFactory valueFactory,
                                        Mapping mapping, MappingDesc desc) {
         Value v = null;
-        s = s.trim();
         switch (mapping) {
             case Ignore:
                 break;
@@ -446,6 +471,9 @@ public class CsvDirectMapper extends BaseConverterModule
                 break;
             case Date:
                 v = this.mapDate(s, valueFactory, desc, false);
+                break;
+            case URI:
+                v = this.mapUri(s, valueFactory);
                 break;
             default:
                 // Automatic mapping on a per-cell basis.
@@ -482,7 +510,8 @@ public class CsvDirectMapper extends BaseConverterModule
      * @return a {@link Literal} holding the string value.
      */
     private Literal mapString(String s, ValueFactory valueFactory) {
-        return valueFactory.createLiteral(s);
+        return valueFactory.createLiteral(
+                                        RdfUtils.removeInvalidDataCharacter(s));
     }
 
     /**
@@ -569,6 +598,26 @@ public class CsvDirectMapper extends BaseConverterModule
         Literal v = null;
         try {
             v = valueFactory.createLiteral(desc.parseDate(s, tentative));
+        }
+        catch (Exception e) {
+            /* Ignore... */
+        }
+        return v;
+    }
+
+    /**
+     * Maps a URI.
+     * @param  s              the string to parse as a URI.
+     * @param  valueFactory   the {@link ValueFactory value factory} to
+     *                        use to allocate the URI.
+     *
+     * @return a {@link Literal} holding the extracted integer value.
+     */
+    private Value mapUri(String s, ValueFactory valueFactory) {
+        Value v = null;
+        try {
+            // Use java.net.URI to ensure no illegal character is present.
+            v = valueFactory.createURI(URI.create(s).toString());
         }
         catch (Exception e) {
             /* Ignore... */

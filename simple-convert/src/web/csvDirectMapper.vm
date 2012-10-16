@@ -101,13 +101,10 @@
 			var colName = 'col_' + i;
 			h.push('<p><label for="' + colName + '">#i18n("csv.map.column") "' + response[i] + '"#i18n("form.colon.prefix"):</label>');
 			h.push('<select name="' + colName + '" id="' + colName + '">');
-			h.push('<option value="string" selected="true">#i18n("csv.map.string")</option>');
-			h.push('<option value="ignore">#i18n("csv.map.ignore")</option>');
-			h.push('<option value="int">#i18n("csv.map.int")</option>');
-			h.push('<option value="float">#i18n("csv.map.float")</option>');
-			h.push('<option value="boolean">#i18n("csv.map.boolean")</option>');
-			h.push('<option value="date">#i18n("csv.map.date")</option>');
-			h.push('<option value="auto">#i18n("csv.map.autodetect")</option>');
+#foreach( $m in $!{converter.mappings} )
+#set( $label = "csv.map.${m.label}" )
+			h.push('<option value="${m.label}">#i18n($label)</option>');
+#end
 			h.push('</select></p>');
 			cols.append(h.join(''));
 			keyCol.append('<option value="' + i + '">#i18n("csv.map.column") "' + response[i] + '"</option>');
