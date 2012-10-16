@@ -45,7 +45,7 @@ import java.text.SimpleDateFormat;
  *
  * @author lbihanic
  */
-public class Iso8601DateFormat extends ThreadSafeDateFormat
+public final class Iso8601DateFormat extends ThreadSafeDateFormat
 {
     //-------------------------------------------------------------------------
     // Constants
