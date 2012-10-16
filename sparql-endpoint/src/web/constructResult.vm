@@ -56,7 +56,7 @@
 #end
 #set( $u = $!{item.object.toString()} )
 #if( ${u.startsWith("http://")} || ${u.startsWith("https://")} )
-						<td><a href="${baseUri}/sparql/describe?uri=$esc.url($u)&type=Object&default-graph=$!esc.url($repository)">$esc.html($u)</a></td>
+						<td><a href="${baseUri}/sparql/describe?uri=$esc.url($u)&default-graph=$!esc.url($repository)">$esc.html($u)</a></td>
 #else
 						<td>$esc.html($!{item.object})</td>
 #end

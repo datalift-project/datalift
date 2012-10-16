@@ -40,7 +40,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.net.URI;
-import java.net.URL;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -77,7 +76,6 @@ import static javax.ws.rs.core.Response.Status.*;
 
 import org.openrdf.model.Literal;
 import org.openrdf.model.Value;
-import org.openrdf.model.impl.URIImpl;
 import org.openrdf.query.BindingSet;
 import org.openrdf.query.QueryInterruptedException;
 import org.openrdf.query.TupleQueryResultHandlerBase;
@@ -152,8 +150,8 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     private final static String DETERMINE_TYPE_QUERY =
             "SELECT DISTINCT ?s ?p ?g WHERE {\n" +
             "  OPTIONAL { ?s ?p1 ?o1 . FILTER( ?s = ?u ) }\n" +
-            "  OPTIONAL { ?s1 ?p ?o2 . FILTER( ?p = ?u ) }\n" +
-            "  OPTIONAL { GRAPH ?g { ?s2 ?p2 ?o3 . FILTER( ?g = ?u ) } }\n" +
+            "  OPTIONAL { ?s2 ?p ?o2 . FILTER( ?p = ?u ) }\n" +
+            "  OPTIONAL { GRAPH ?g { ?s3 ?p3 ?o3 . FILTER( ?g = ?u ) } }\n" +
             "} LIMIT 1";
 
     /** The SPARQL query to extract predefined query data. */
@@ -333,8 +331,9 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         }
         ResponseBuilder response = null;
         try {
+            URI u = URI.create(uri);
             if (type == null) {
-                type = this.getDescribeTypeFromUri(uri, repository);
+                type = this.getDescribeTypeFromUri(u, repository);
             }
             if (type != null) {
                 // URI found in RDF store.
@@ -343,19 +342,18 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                                     (type == Graph)?  DESCRIBE_GRAPH_QUERY:
                                                       DESCRIBE_PREDICATE_QUERY;
                 synchronized (fmt) {
-                    query = fmt.format(new Object[] { uri });
+                    query = fmt.format(new Object[] { u });
                 }
                 Map<String,Object> viewData = new HashMap<String,Object>();
                 viewData.put("describe-type", type);
-                viewData.put("describe-uri",  uri);
+                viewData.put("describe-uri",  u);
                 response = this.doExecute(defGraphs, null, query, -1, max,
                                           false, format, jsonCallback, uriInfo,
                                           request, acceptHdr, viewData);
             }
             else {
                 try {
-                    URL u = new URL(uri);
-                    response = Response.seeOther(u.toURI());
+                    response = Response.seeOther(u);
                 }
                 catch (Exception e) {
                     this.sendError(NOT_FOUND, null);
@@ -822,13 +820,13 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         return desc;
     }
 
-    private DescribeType getDescribeTypeFromUri(final String uri,
+    private DescribeType getDescribeTypeFromUri(URI uri,
                                                 Repository repository) {
         DescribeType type = null;
         try {
             // Try to determine the URI type by performing a SPARQL query.
             Map<String,Object> bindings = new HashMap<String,Object>();
-            bindings.put("u", new URIImpl(uri));
+            bindings.put("u", uri);
             TupleQueryResultMapper<DescribeType> m =
                                 new BaseTupleQueryResultMapper<DescribeType>() {
                     private DescribeType nodeType = null;
