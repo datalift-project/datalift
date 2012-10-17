@@ -65,7 +65,6 @@ import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.rdf.RdfFormat;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
-import org.datalift.fwk.util.StringUtils;
 import org.datalift.fwk.util.io.FileUtils;
 import org.datalift.fwk.util.web.Charsets;
 import org.datalift.fwk.util.web.HttpDateFormat;
@@ -84,7 +83,7 @@ import org.datalift.sparql.query.UpdateQuery;
 
 import static org.datalift.fwk.MediaTypes.*;
 import static org.datalift.fwk.project.Source.SourceType.TransformedRdfSource;
-import static org.datalift.fwk.util.StringUtils.isSet;
+import static org.datalift.fwk.util.StringUtils.*;
 
 
 @Path(OntologyMapper.MODULE_NAME)
@@ -202,7 +201,7 @@ public class OntologyMapper extends BaseModule implements ProjectModule
     @Path("ontology")
     @Produces(APPLICATION_JSON)
     public Response parseOntology(@QueryParam("src") String src) {
-        if (! StringUtils.isSet(src)) {
+        if (! isSet(src)) {
             this.throwInvalidParamError("src", null);
         }
         Response response = null;
@@ -280,7 +279,7 @@ public class OntologyMapper extends BaseModule implements ProjectModule
             MappingDesc  m = gson.fromJson(mappingJson, MappingDesc.class);
             UpdateQuery query = new ConstructQuery();
             URI ontologyNs = query.uri(m.types.get(0));
-            query.prefix(o.name, ontologyNs.getNamespace());
+            query.prefix(urlify(o.name), ontologyNs.getNamespace());
             Resource node = query.variable(m.name);
             this.mapNode(query, m, node, node, sourceGraph);
 
@@ -334,7 +333,7 @@ public class OntologyMapper extends BaseModule implements ProjectModule
             MappingDesc  m = gson.fromJson(mappingJson, MappingDesc.class);
             UpdateQuery query = new ConstructQuery();
             URI ontologyNs = query.uri(m.types.get(0));
-            query.prefix(o.name, ontologyNs.getNamespace());
+            query.prefix(urlify(o.name), ontologyNs.getNamespace());
             Resource node = query.variable(m.name);
             preview = this.mapNode(query, m, node, node, sourceGraph)
                           .toString();
