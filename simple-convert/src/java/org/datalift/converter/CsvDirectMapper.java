@@ -371,7 +371,7 @@ public class CsvDirectMapper extends BaseConverterModule
                         v = v.trim();
                         // Handle special case of unmatched closing quote, left
                         // over by CSV parser when followed by padding.
-                        if (v.indexOf(quote) == v.length() - 1) {
+                        if ((v.indexOf(quote) == v.length() - 1) && (v.length() > 0)) {
                             v = v.substring(0, v.length() - 1);
                         }
                         value = this.mapValue(v, valueFactory, m, mapping);                            
