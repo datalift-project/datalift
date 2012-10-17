@@ -50,6 +50,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
+import static javax.ws.rs.core.HttpHeaders.ACCEPT;
+
 import org.datalift.fwk.MediaTypes;
 
 import static org.datalift.fwk.util.StringUtils.isBlank;
@@ -105,7 +107,7 @@ public class HttpSparqlEndpoint extends AbstractSparqlEndpoint
         cnx.setRequestMethod(request.getMethod());
         cnx.setConnectTimeout(2000);    // 2 sec.
         cnx.setReadTimeout(30000);      // 30 sec.
-        cnx.setRequestProperty("Accept", isBlank(format)? acceptHdr: format);
+        cnx.setRequestProperty(ACCEPT, isBlank(format)? acceptHdr: format);
         // Force server connection.
         cnx.connect();
         int status = cnx.getResponseCode();

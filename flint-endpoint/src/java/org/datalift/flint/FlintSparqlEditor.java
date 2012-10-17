@@ -42,6 +42,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Request;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import static javax.ws.rs.core.HttpHeaders.ACCEPT;
@@ -60,29 +61,57 @@ import org.datalift.sparql.SesameSparqlEndpoint;
 public class FlintSparqlEditor extends SesameSparqlEndpoint
 {
     //-------------------------------------------------------------------------
+    // Constants
+    //-------------------------------------------------------------------------
+
+    /** The name of the template for the endpoint welcome page. */
+    private final static String WELCOME_TEMPLATE = "flintEditor.vm";
+
+    //-------------------------------------------------------------------------
     // Constructors
     //-------------------------------------------------------------------------
 
     /** Default constructor. */
     public FlintSparqlEditor() {
-        super("/" + MODULE_NAME + "/flintEditor.vm");
+        super(WELCOME_TEMPLATE);
     }
 
     //-------------------------------------------------------------------------
     // Specific implementation
     //-------------------------------------------------------------------------
 
+    /**
+     * <i>[Resource method]</i> Returns a static resource associated to
+     * this module.
+     * @param  path        the path of the requested static resource.
+     * @param  uriInfo     the request URI data.
+     * @param  request     the JAX-RS Request object, for content
+     *                     negotiation.
+     * @param  acceptHdr   the HTTP Accept header, for content
+     *                     negotiation.
+     *
+     * @return a JAX-RS {@link Response} wrapping the input stream
+     *         on the requested resource content.
+     * @throws WebApplicationException if any error occurred while
+     *         accessing the requested resource.
+     */
     @GET
     @Path("editor/{path: .*$}")
-    public Object getStaticResource(@PathParam("path") String path,
-                                    @Context UriInfo uriInfo,
-                                    @Context Request request,
-                                    @HeaderParam(ACCEPT) String acceptHdr)
+    public Response getStaticResource(@PathParam("path") String path,
+                                      @Context UriInfo uriInfo,
+                                      @Context Request request,
+                                      @HeaderParam(ACCEPT) String acceptHdr)
                                                 throws WebApplicationException {
         log.trace("Reading static resource: {}", path);
         return Configuration.getDefault()
                             .getBean(ResourceResolver.class)
                             .resolveModuleResource(this.getName(),
                                                    uriInfo, request, acceptHdr);
+    }
+
+    @GET
+    @Path("legacy")
+    public Response getLegacyWelcomePage() {
+        return this.displayWelcomePage(DEFAULT_WELCOME_TEMPLATE).build();
     }
 }

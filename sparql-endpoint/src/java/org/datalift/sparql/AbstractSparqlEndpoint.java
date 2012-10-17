@@ -42,8 +42,10 @@ import java.io.InputStream;
 import java.net.URI;
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -63,6 +65,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
@@ -72,6 +75,7 @@ import javax.ws.rs.core.Variant;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 
+import static javax.ws.rs.core.HttpHeaders.*;
 import static javax.ws.rs.core.Response.Status.*;
 
 import org.openrdf.model.Literal;
@@ -125,6 +129,10 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                                             "sparql.predefined.queries.file";
     /** The default queries file, embedded in module JAR. */
     private final static String DEFAULT_QUERIES_FILE = "predefined-queries.ttl";
+
+    /** The name of the default template for the endpoint welcome page. */
+    protected final static String DEFAULT_WELCOME_TEMPLATE =
+                                                        "sparqlEndpoint.vm";
 
     private final static Pattern QUERY_START_PATTERN = Pattern.compile(
                     "SELECT|CONSTRUCT|ASK|DESCRIBE", Pattern.CASE_INSENSITIVE);
@@ -203,13 +211,14 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     /**
      * Creates a new SPARQL endpoint resource.
      * @param  name              the module name.
-     * @param  welcomeTemplate   the Velocity template to display as
+     * @param  welcomeTemplate   the name of the template, relative to
+     *                           the module path, to display as
      *                           welcome page.
      */
     protected AbstractSparqlEndpoint(String name, String welcomeTemplate) {
         super(name);
-        this.welcomeTemplate = (isSet(welcomeTemplate))? welcomeTemplate:
-                                       "/" + name + "/sparqlEndpoint.vm";
+        this.welcomeTemplate = (isSet(welcomeTemplate))?
+                                    welcomeTemplate: DEFAULT_WELCOME_TEMPLATE;
     }
 
     //-------------------------------------------------------------------------
@@ -423,7 +432,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                 @QueryParam("callback") String jsonCallback,
                 @Context UriInfo uriInfo,
                 @Context Request request,
-                @HeaderParam("Accept") String acceptHdr)
+                @HeaderParam(ACCEPT) String acceptHdr)
                                                 throws WebApplicationException {
         return this.dispatchQuery(defaultGraphUris, namedGraphUris, query,
                                   startOffset, endOffset, gridJson, format,
@@ -474,7 +483,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                 @FormParam("callback") String jsonCallback,
                 @Context UriInfo uriInfo,
                 @Context Request request,
-                @HeaderParam("Accept") String acceptHdr)
+                @HeaderParam(ACCEPT) String acceptHdr)
                                                 throws WebApplicationException {
         return this.getQuery(defaultGraphUris, namedGraphUris, query,
                              startOffset, endOffset, gridJson, format,
@@ -495,7 +504,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                 @QueryParam("callback") String jsonCallback,
                 @Context UriInfo uriInfo,
                 @Context Request request,
-                @HeaderParam("Accept") String acceptHdr)
+                @HeaderParam(ACCEPT) String acceptHdr)
                                                 throws WebApplicationException {
         List<String> defGraphUris = new LinkedList<String>();
         defGraphUris.add(repository);
@@ -522,7 +531,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                 @FormParam("callback") String jsonCallback,
                 @Context UriInfo uriInfo,
                 @Context Request request,
-                @HeaderParam("Accept") String acceptHdr)
+                @HeaderParam(ACCEPT) String acceptHdr)
                                                 throws WebApplicationException {
         return this.getStoreQuery(repository, defaultGraphUris, namedGraphUris, query,
                                   startOffset, endOffset, gridJson, format,
@@ -564,7 +573,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                             @QueryParam("max") @DefaultValue("-1") int max,
                             @Context UriInfo uriInfo,
                             @Context Request request,
-                            @HeaderParam("Accept") String acceptHdr)
+                            @HeaderParam(ACCEPT) String acceptHdr)
                                                 throws WebApplicationException {
         Repository repository = null;
         if (! isBlank(defaultGraph)) {
@@ -614,7 +623,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                             @FormParam("max") @DefaultValue("-1") int max,
                             @Context UriInfo uriInfo,
                             @Context Request request,
-                            @HeaderParam("Accept") String acceptHdr)
+                            @HeaderParam(ACCEPT) String acceptHdr)
                                                 throws WebApplicationException {
         return this.getDescribe(uri, type, defaultGraph, max,
                                 uriInfo, request, acceptHdr);
@@ -645,15 +654,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         }
         else {
             // No query. => Render HTML query input form.
-            // Get a list of available repositories for user.
-            boolean userAuthenticated = SecurityContext.isUserAuthenticated();
-            Collection<Repository> c = Configuration.getDefault()
-                                        .getRepositories(! userAuthenticated);
-            TemplateModel view = ViewFactory.newView(this.welcomeTemplate);
-            view.put("repositories", c);
-            view.put("queries", predefinedQueries);
-            view.put("namespaces", RdfNamespace.values());
-            response = Response.ok(view, TEXT_HTML_UTF8);
+            response = this.displayWelcomePage();
         }
         return response.build();
     }
@@ -742,6 +743,38 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         return responseType;
     }
 
+    protected final ResponseBuilder displayWelcomePage() {
+        return this.displayWelcomePage(this.welcomeTemplate);
+    }
+
+    // Render HTML query input form.
+    protected final ResponseBuilder displayWelcomePage(String template) {
+        if (! isSet(template)) {
+            throw new IllegalArgumentException("template");
+        }
+        // Get a list of available repositories for user.
+        boolean userAuthenticated = SecurityContext.isUserAuthenticated();
+        Collection<Repository> c = Configuration.getDefault()
+                                        .getRepositories(! userAuthenticated);
+        // Create and populate view template.
+        TemplateModel view = this.newView(template, null);
+        view.put("repositories", c);
+        view.put("queries", predefinedQueries);
+        view.put("namespaces", RdfNamespace.values());
+        ResponseBuilder response = Response.ok(view, TEXT_HTML_UTF8);
+        // Add cache directives.
+        CacheControl cc = new CacheControl();
+        cc.setMaxAge(7 * 24 * 3600);            // One week in seconds.
+        cc.setPrivate(userAuthenticated);       // Only public for anon.
+        cc.setNoTransform(false);
+        GregorianCalendar cal = new GregorianCalendar();
+        cal.add(Calendar.DAY_OF_YEAR, 7);       // One week in days.
+        response = response.header(VARY, AUTHORIZATION)
+                           .cacheControl(cc)
+                           .expires(cal.getTime());
+        return response;
+    }
+
     /**
      * Returns the list of predefined queries to offer the user on this
      * SPARQL endpoint.
@@ -752,6 +785,13 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         return this.predefinedQueries;
     }
 
+    /**
+     * Returns a new template model for web service response rendering.
+     * @param  templateName   the template name, relative to the module.
+     * @param  model          the (optional) model object.
+     *
+     * @return a new template view.
+     */
     protected final TemplateModel newView(String templateName, Object it) {
         return ViewFactory.newView(
                                 "/" + this.getName() + '/' + templateName, it);
