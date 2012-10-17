@@ -75,7 +75,7 @@ public class VelocityViewFactory extends ViewFactory
          * Creates a new template view object.
          * @param  templateName   the template name, absolute or
          *                        relative.
-         * @param  model          the model object.
+         * @param  model          the (optional) model object.
          */
         @SuppressWarnings("unchecked")
         public VelocityTemplateModel(String templateName, Object model) {

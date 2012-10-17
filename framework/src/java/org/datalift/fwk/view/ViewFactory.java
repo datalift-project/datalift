@@ -64,7 +64,7 @@ public abstract class ViewFactory
     /**
      * Returns a new template model for web service response rendering.
      * @param  templateName   the template name, absolute or relative.
-     * @param  model          the model object.
+     * @param  model          the (optional) model object.
      *
      * @return a new template view.
      */
@@ -79,7 +79,7 @@ public abstract class ViewFactory
      * Factory method concrete sub-classes shall implements to
      * instantiate {@link TemplateModel} implementations.
      * @param  templateName   the template name, absolute or relative.
-     * @param  model          the model object.
+     * @param  model          the (optional) model object.
      *
      * @return a template model implementation.
      */
