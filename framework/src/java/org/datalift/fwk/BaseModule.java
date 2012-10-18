@@ -36,9 +36,7 @@ package org.datalift.fwk;
 
 
 import java.util.Collection;
-import java.util.Map;
 
-import javax.ws.rs.Path;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
@@ -62,8 +60,6 @@ public abstract class BaseModule implements Module
 
     /** The module name. */
     private final String name;
-    /** Whether the module acts as a JAX_RS resource. */
-    private final boolean isResource;
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -80,27 +76,10 @@ public abstract class BaseModule implements Module
      *         <code>null</code>.
      */
     protected BaseModule(String name) {
-        this(name, false);
-    }
-
-    /**
-     * Creates a new module.
-     * @param  name         the module name.
-     * @param  isResource   whether this module acts as a JAX-RS
-     *                      resource.
-     *
-     * @throws IllegalArgumentException if <code>name</code> is
-     *         <code>null</code>.
-     *
-     * @deprecated Modules should expose REST resources using the
-     *             {@link Path @Path} JAX-RS annotation.
-     */
-    protected BaseModule(String name, boolean isResource) {
         if ((name == null) || (name.length() == 0)) {
             throw new IllegalArgumentException("name");
         }
         this.name = name;
-        this.isResource = isResource;
     }
 
     //-------------------------------------------------------------------------
@@ -115,16 +94,6 @@ public abstract class BaseModule implements Module
     @Override
     public final String getName() {
         return this.name;
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p>This implementation returns the <code>isResource</code>
-     * flag provided as constructor argument.</p>
-     */
-    @Override
-    public final boolean isResource() {
-        return this.isResource;
     }
 
     /** {@inheritDoc} */
@@ -143,16 +112,6 @@ public abstract class BaseModule implements Module
     @Override
     public void shutdown(Configuration configuration) {
         // NOP
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p>This implementation returns <code>null</code> (no
-     * sub-resources).</p>
-     */
-    @Override
-    public final Map<String,Class<?>> getResources() {
-        return null;
     }
 
     /**

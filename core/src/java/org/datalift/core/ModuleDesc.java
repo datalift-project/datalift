@@ -36,9 +36,6 @@ package org.datalift.core;
 
 
 import java.io.File;
-import java.util.Collections;
-import java.util.Map;
-import java.util.TreeMap;
 
 import org.datalift.fwk.Module;
 
@@ -59,10 +56,6 @@ import org.datalift.fwk.Module;
     public final String name;
     /** The module instance. */
     public final Module module;
-    /** The module sub-resources. */
-    public final Map<String,Class<?>> ressourceClasses;
-    /** Whether the module main class is itself a JAX-RS resource. */
-    public final boolean isResource;
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -79,7 +72,6 @@ import org.datalift.fwk.Module;
      * @throws IllegalArgumentException if either <code>module</code>
      *         of <code>classLoader</code> is <code>null</code>.
      */
-    @SuppressWarnings("deprecation")
     public ModuleDesc(Module module, ClassLoader classLoader, File root) {
         super(classLoader, root);
 
@@ -88,29 +80,11 @@ import org.datalift.fwk.Module;
         }
         this.module      = module;
         this.name        = module.getName();
-        Map<String,Class<?>> resources = new TreeMap<String,Class<?>>();
-        Map<String,Class<?>> r = module.getResources();
-        if (r != null) {
-            resources.putAll(r);
-        }
-        this.ressourceClasses = Collections.unmodifiableMap(resources);
-        this.isResource = module.isResource();
     }
 
     //-------------------------------------------------------------------------
     // ModuleDesc contract definition
     //-------------------------------------------------------------------------
-
-    /**
-     * Returns the resource associated to the specified path
-     * @param  path   the resource path.
-     *
-     * @return the resource associated to the specified path or
-     *         <code>null</code> if none matches.
-     */
-    public Class<?> get(String  path) {
-        return this.ressourceClasses.get( path);
-    }
 
     /** {@inheritDoc} */
     @Override

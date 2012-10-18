@@ -36,9 +36,6 @@ package org.datalift.fwk;
 
 
 import java.util.Collection;
-import java.util.Map;
-
-import javax.ws.rs.Path;
 
 
 /**
@@ -107,40 +104,6 @@ public interface Module extends LifeCycle
      * @return the module name as a URL component.
      */
     public String getName();
-
-    /**
-     * Returns the resource classes this module makes available.
-     * Modules that are JAX-RS root resources should return
-     * <code>null</code>.
-     * <p>
-     * Resource classes shall be JAX-RS resources and offer one of
-     * the following two constructors:</p>
-     * <ul>
-     *  <li>A public no-arg constructor</li>
-     *  <li>A public constructor taking the owning module instance
-     *      as argument</li>
-     * </ul>
-     * @return the resource classes as a map using the resource URL
-     *         path element as key or <code>null</code> if this module
-     *         has no sub-resources.
-     *
-     * @deprecated Modules should expose REST resources using the
-     *             {@link Path @Path} JAX-RS annotation.
-     */
-    public Map<String,Class<?>> getResources();
-
-    /**
-     * Returns whether this module is itself a JAX-RS root resource.
-     * Registering as a root resource enabled a module to process
-     * request targeting no resource. Modules that are JAX-RS root
-     * resources should always return <code>false</code>.
-     * @return <code>true</code> if this module is a JAX-RS resource,
-     *         <code>false</code> otherwise.
-     *
-     * @deprecated Modules should expose REST resources using the
-     *             {@link Path @Path} JAX-RS annotation.
-     */
-    public boolean isResource();
 
     /**
      * Returns whether the module is publicly accessible (i.e. without

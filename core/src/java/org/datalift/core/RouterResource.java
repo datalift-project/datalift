@@ -36,7 +36,6 @@ package org.datalift.core;
 
 
 import java.io.File;
-import java.lang.reflect.Constructor;
 import java.net.URI;
 import java.net.URL;
 import java.util.Date;
@@ -79,7 +78,6 @@ import org.datalift.core.log.LogContext;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.LifeCycle;
 import org.datalift.fwk.MediaTypes;
-import org.datalift.fwk.Module;
 import org.datalift.fwk.ResourceResolver;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.sparql.SparqlEndpoint;
@@ -348,126 +346,22 @@ public class RouterResource implements LifeCycle, ResourceResolver
     //-------------------------------------------------------------------------
 
     /**
-     * <i>[Resource method]</i> Forwards a web service call to the
-     * module specified in the request path.
-     * <p>
-     * If the module is unknown or is not itself a
-     * {@link Module#isResource() JAX-RS resource}, the methods
-     * tries to resolve the call against a public local file or a RDF
-     * resource in the public RDF store.</p>
-     * @param  module      the target module, from the request path.
+     * <i>[Resource method]</i> Attempts to handle an unmatched request
+     * by resolving the request path against files in public storage
+     * and the requested URI against subjects and named graphs present
+     * in the public RDF store.
+     * @param  path        the request path.
      * @param  uriInfo     the request URI data (injected).
      * @param  request     the JAX-RS request object (injected).
      * @param  acceptHdr   the HTTP "Accept" header value.
      *
-     * @return the module as a JAX-RS sub-resource to which forward the
-     *         request or a {@link Response service response} if the
-     *         request was resolved as a local file or RDF resource.
-     * @throws WebApplicationException complete with status code and
-     *         plain-text error message if any error occurred while
-     *         processing the service call or the request path can not
-     *         be resolved.
+     * @return a JAX-RS response if the request was resolved to a local
+     *         file or RDF resource, <code>null</code> otherwise.
+     * @throws WebApplicationException if any error occurred while
+     *         accessing the resolved resource.
      */
-    @Path("{module}")
-    public Object moduleForwarding(@PathParam("module") String module,
-                                   @Context UriInfo uriInfo,
-                                   @Context Request request,
-                                   @HeaderParam(ACCEPT) String acceptHdr)
-                                                throws WebApplicationException {
-        Object target = null;
-
-        ModuleDesc m = this.modules.get(module);
-        if ((m != null) && (m.isResource)) {
-            // Matching module found.
-            LogContext.setContexts(module, null);
-            target = m.module;
-            log.debug("Forwarding request on \"{}\" to module \"{}\"",
-                                                    uriInfo.getPath(), m.name);
-        }
-        else {
-            // Unknown module or direct module query not supported.
-            // => Try resolving URL as a file or an RDF resource.
-            Response response = this.resolveUnmappedResource(m, uriInfo,
-                                                            request, acceptHdr);
-            target = (response != null)? new ResponseWrapper(response): null;
-        }
-        return target;
-    }
-
-    /**
-     * <i>[Resource method]</i> Forwards a web service call to the
-     * module and resource specified in the request path, allocating
-     * the resource instance.
-     * <p>
-     * If either the module or the resource name is unknown, the methods
-     * tries to resolve the call against a public local file or a RDF
-     * resource in the public RDF store.</p>
-     * @param  module      the target module, from the request path.
-     * @param  resource    the target resource, from the request path.
-     * @param  uriInfo     the request URI data (injected).
-     * @param  request     the JAX-RS request object (injected).
-     * @param  acceptHdr   the HTTP "Accept" header value.
-     *
-     * @return a JAX-RS sub-resources to which forward the request or
-     *         a {@link Response service response} if the request was
-     *         resolved as a local file or RDF resource.
-     * @throws WebApplicationException complete with status code and
-     *         plain-text error message if any error occurred while
-     *         processing the service call or the request path can not
-     *         be resolved.
-     */
-    @Path("{module}/{resource}")
-    public Object resourceForwarding(@PathParam("module") String module,
-                                     @PathParam("resource") String resource,
-                                     @Context UriInfo uriInfo,
-                                     @Context Request request,
-                                     @HeaderParam(ACCEPT) String acceptHdr)
-                                                throws WebApplicationException {
-        Object target = null;
-
-        ModuleDesc m = this.modules.get(module);
-        if (m != null) {
-            Class<?> clazz = m.get(resource);
-            if (clazz != null) {
-                try {
-                    // Matching resource found.
-                    LogContext.setContexts(module, resource);
-                    // Look for a constructor with the module as argument.
-                    try {
-                        Constructor<?> c = clazz.getConstructor(
-                                                        m.module.getClass());
-                        target = c.newInstance(m.module);
-                    }
-                    catch (NoSuchMethodException e) {
-                        // Constructor not found. => Use default constructor.
-                        target = clazz.newInstance();
-                    }
-                    // Resource successfully created.
-                    log.debug("Forwarding request on \"{}\" to module \"{}\"",
-                                                    uriInfo.getPath(), m.name);
-                }
-                catch (Exception e) {
-                    log.error("Failed to create resource of type {}", e, clazz);
-                    this.sendError(INTERNAL_SERVER_ERROR, null);
-                }
-            }
-            // Else: unknown resource for module
-        }
-        // Else: unknown module.
-
-        if (target == null) {
-            // No matching module or resource found.
-            // => Try resolving URL as a file or an RDF resource.
-            Response response = this.resolveUnmappedResource(m, uriInfo,
-                                                            request, acceptHdr);
-            target = (response != null)? new ResponseWrapper(response): null;
-        }
-        return target;
-    }
-
-    @Path("{module}/{resource}/{path: .*$}")
-    public ResponseWrapper resourceForwarding(@PathParam("module") String module,
-                                     @PathParam("resource") String resource,
+    @Path("{path: .*$}")
+    public ResponseWrapper resourceForwarding(
                                      @PathParam("path") String path,
                                      @Context UriInfo uriInfo,
                                      @Context Request request,

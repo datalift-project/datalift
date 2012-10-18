@@ -51,9 +51,8 @@ public class SecurityCheckService extends BaseModule {
 	private Map<String, AccessPolicy> aps = new HashMap<String, AccessPolicy>();
 	private Map<CRUDType, Set<String>> apindex = new HashMap<CRUDType, Set<String>>();
 
-	@SuppressWarnings("deprecation")
 	public SecurityCheckService(){
-		super("s4ac-securityCheckService",true);
+		super("s4ac-securityCheckService");
 	}
 	
 	public void init() {
