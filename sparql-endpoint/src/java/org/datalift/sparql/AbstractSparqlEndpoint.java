@@ -151,15 +151,20 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
             new MessageFormat("CONSTRUCT '{' ?s ?p ?o . '}' WHERE '{'\n"
                               + "  ?s ?p ?o .\n"
                               + "  FILTER ( ?p = <{0}> )\n'}'");
+    private final static MessageFormat DESCRIBE_TYPE_QUERY =
+            new MessageFormat("CONSTRUCT '{' ?s a ?t . '}' WHERE '{'\n"
+                              + "  ?s a ?t .\n"
+                              + "  FILTER ( ?t = <{0}> )\n'}'");
     private final static MessageFormat DESCRIBE_GRAPH_QUERY =
             new MessageFormat("CONSTRUCT '{' ?s ?p ?o . '}' WHERE '{'\n"
                               + "  GRAPH <{0}> '{' ?s ?p ?o . '}'\n'}'");
 
     private final static String DETERMINE_TYPE_QUERY =
-            "SELECT DISTINCT ?s ?p ?g WHERE {\n" +
+            "SELECT DISTINCT ?s ?p ?g ?t WHERE {\n" +
             "  OPTIONAL { ?s ?p1 ?o1 . FILTER( ?s = ?u ) }\n" +
             "  OPTIONAL { ?s2 ?p ?o2 . FILTER( ?p = ?u ) }\n" +
-            "  OPTIONAL { GRAPH ?g { ?s3 ?p3 ?o3 . FILTER( ?g = ?u ) } }\n" +
+            "  OPTIONAL { ?s3 a  ?t  . FILTER( ?t = ?u ) }\n" +
+            "  OPTIONAL { GRAPH ?g { ?s4 ?p4 ?o4 . FILTER( ?g = ?u ) } }\n" +
             "} LIMIT 1";
 
     /** The SPARQL query to extract predefined query data. */
@@ -347,9 +352,10 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
             if (type != null) {
                 // URI found in RDF store.
                 String query = null;
-                MessageFormat fmt = (type == Object)? DESCRIBE_OBJECT_QUERY:
-                                    (type == Graph)?  DESCRIBE_GRAPH_QUERY:
-                                                      DESCRIBE_PREDICATE_QUERY;
+                MessageFormat fmt = (type == Object)?  DESCRIBE_OBJECT_QUERY:
+                                    (type == Graph)?   DESCRIBE_GRAPH_QUERY:
+                                    (type == RdfType)? DESCRIBE_TYPE_QUERY:
+                                                       DESCRIBE_PREDICATE_QUERY;
                 synchronized (fmt) {
                     query = fmt.format(new Object[] { u });
                 }
@@ -881,6 +887,9 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                             }
                             else if (b.hasBinding("g")) {
                                 nodeType = Graph;
+                            }
+                            else if (b.hasBinding("t")) {
+                                nodeType = RdfType;
                             }
                         }
                         // Else: Already set. => Ignore...

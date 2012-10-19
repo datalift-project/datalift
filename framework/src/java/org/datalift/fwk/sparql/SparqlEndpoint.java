@@ -96,7 +96,8 @@ public interface SparqlEndpoint
     public enum DescribeType {
         Object,
         Predicate,
-        Graph;
+        Graph,
+        RdfType;
 
         /**
          * Return the enumeration value corresponding to the specified
