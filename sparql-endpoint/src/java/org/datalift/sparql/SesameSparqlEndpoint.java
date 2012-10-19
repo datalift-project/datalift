@@ -126,7 +126,8 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
     public final static String MAX_QUERY_DURATION_PROPERTY =
                                                 "sparql.max.query.duration";
 
-    private final static List<Variant> SELECT_RESPONSE_TYPES = Arrays.asList(
+    /** The supported MIME types for SELECT query responses. */
+    public final static List<Variant> SELECT_RESPONSE_TYPES = Arrays.asList(
                     new Variant(APPLICATION_SPARQL_RESULT_XML_TYPE, null, null),
                     new Variant(APPLICATION_SPARQL_RESULT_JSON_TYPE, null, null),
                     new Variant(APPLICATION_JSON_TYPE, null, null),
@@ -137,7 +138,8 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                     new Variant(TEXT_CSV_TYPE, null, null),
                     new Variant(APPLICATION_CSV_TYPE, null, null),
                     new Variant(TEXT_COMMA_SEPARATED_VALUES_TYPE, null, null));
-    private final static List<Variant> CONSTRUCT_RESPONSE_TYPES = Arrays.asList(
+    /** The supported MIME types for CONSTRUCT and DESCRIBE query responses. */
+    public final static List<Variant> CONSTRUCT_RESPONSE_TYPES = Arrays.asList(
                     new Variant(APPLICATION_RDF_XML_TYPE, null, null),
                     new Variant(APPLICATION_SPARQL_RESULT_JSON_TYPE, null, null),
                     new Variant(APPLICATION_JSON_TYPE, null, null),
@@ -153,7 +155,8 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                     new Variant(APPLICATION_XHTML_XML_TYPE, null, null),
                     new Variant(APPLICATION_XML_TYPE, null, null),
                     new Variant(TEXT_XML_TYPE, null, null));
-    private final static List<Variant> ASK_RESPONSE_TYPES = Arrays.asList(
+    /** The supported MIME types for ASK query responses. */
+    public final static List<Variant> ASK_RESPONSE_TYPES = Arrays.asList(
                     new Variant(APPLICATION_SPARQL_RESULT_JSON_TYPE, null, null),
                     new Variant(APPLICATION_JSON_TYPE, null, null),
                     new Variant(TEXT_PLAIN_TYPE, null, null));
