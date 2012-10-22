@@ -83,8 +83,8 @@ import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.security.SecurityContext;
 import org.datalift.fwk.view.TemplateModel;
 
-import static org.datalift.fwk.util.StringUtils.join;
-import static org.datalift.fwk.util.web.Charsets.UTF_8;
+import static org.datalift.fwk.util.StringUtils.*;
+import static org.datalift.fwk.util.web.Charsets.*;
 
 
 /**
@@ -134,6 +134,9 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
                                         "velocity.templates.update.check";
     /** The default file extension for Velocity templates. */
     public final static String TEMPLATES_DEFAULT_EXTENSION = ".vm";
+    /** The default path for Velocity templates in webapp. */
+    public final static String TEMPLATES_WEBAPP_DEFAULT_PATH =
+                                                        "WEB-INF/templates";
 
     protected final static String LOADER_CLASS        = "class";
     protected final static String LOADER_DESC         = "description";
@@ -422,10 +425,12 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
             List<String> loaders = new LinkedList<String>();
             // Configure file template loader.
             List<String> fileSources = new LinkedList<String>();
+            // Add default template path for web application.
+            fileSources.add(getRealPath(ctx, TEMPLATES_WEBAPP_DEFAULT_PATH));
             // Check for configured template path is specified.
             String path = getRealPath(ctx,
                                     ctx.getInitParameter(TEMPLATES_BASE_PATH));
-            if (path != null) {
+            if (! isBlank(path)) {
                 fileSources.add(path);
             }
             // Add all registered template root paths.
@@ -490,9 +495,8 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
 
             // Configure template encoding, if specified.
             String encoding = ctx.getInitParameter(TEMPLATES_ENCODING);
-            if (encoding != null) {
-                config.setProperty(INPUT_ENCODING, encoding);
-            }
+            config.setProperty(INPUT_ENCODING,
+                                    isBlank(encoding)? UTF8_CHARSET: encoding);
             // Configure custom Directives for Velocity
             config.setProperty(USER_DIRECTIVES,
                                     LoadDirective.class.getName() + ',' +
