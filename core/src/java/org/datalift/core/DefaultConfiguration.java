@@ -43,15 +43,12 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.MissingResourceException;
 import java.util.Properties;
-import java.util.ServiceConfigurationError;
-import java.util.ServiceLoader;
 import java.util.TreeMap;
 
 import org.datalift.fwk.Configuration;
@@ -498,10 +495,11 @@ public class DefaultConfiguration extends Configuration
      * @throws TechnicalException if any error occurred initializing
      *         one of the repositories.
      */
-    protected void initRepositories(Collection<PackageDesc> packages) {
+    protected void initRepositories() {
         // Get default (core-provided) repository factories.
+        Bundle core = new Bundle(this.getClass().getClassLoader());
         Collection<RepositoryFactory> defaultFactories =
-                this.loadRepositoryFactories(this.getClass().getClassLoader());
+                                    core.loadServices(RepositoryFactory.class);
         if (defaultFactories.isEmpty()) {
             // Use Sesame repository factory as default.
             defaultFactories.add(new SesameRepositoryFactory());
@@ -515,16 +513,13 @@ public class DefaultConfiguration extends Configuration
         // ignoring default (core-provided) ones, retrieved through
         // classloader parentage.
         this.repositoryFactories.clear();
-        if ((packages != null) && (! packages.isEmpty())) {
-            for (PackageDesc p : packages) {
-                // Find non-default third-party repository factories.
-                for (RepositoryFactory f :
-                                this.loadRepositoryFactories(p.classLoader)) {
-                    if (! defaultClasses.contains(f.getClass())) {
-                        log.debug("Found repository connector {} from {}",
-                                        f.getClass().getSimpleName(), p.root);
-                        this.repositoryFactories.add(f);
-                    }
+        for (Bundle b : this.getBeans(Bundle.class)) {
+            // Find non-default third-party repository factories.
+            for (RepositoryFactory f : b.loadServices(RepositoryFactory.class)) {
+                if (! defaultClasses.contains(f.getClass())) {
+                    log.debug("Found repository connector {} from {}",
+                                            f.getClass().getSimpleName(), b);
+                    this.repositoryFactories.add(f);
                 }
             }
         }
@@ -553,38 +548,6 @@ public class DefaultConfiguration extends Configuration
             log.fatal(error.getMessage());
             throw error;
         }
-    }
-
-    /**
-     * Loads all available {@link RepositoryFactory} classes using the
-     * Java {@link ServiceLoader service provider} mechanism.
-     * @param  cl   the classloader to scan for factories.
-     *
-     * @return the available repository factories.
-     */
-    private Collection<RepositoryFactory> loadRepositoryFactories(
-                                                            ClassLoader cl) {
-        Collection<RepositoryFactory> factories =
-                                        new LinkedList<RepositoryFactory>();
-        // Make a fault-tolerant loading of available factories.
-        Iterator<RepositoryFactory> i =
-                    ServiceLoader.load(RepositoryFactory.class, cl).iterator();
-        boolean hasNext = true;
-        do {
-            try {
-                hasNext = i.hasNext();
-                if (hasNext) {
-                    factories.add(i.next());
-                }
-            }
-            catch (ServiceConfigurationError e) {
-                // Skip factory...
-                log.warn("Failed to load {}", e.getMessage());
-            }
-        }
-        while (hasNext);
-
-        return factories;
     }
 
     /**

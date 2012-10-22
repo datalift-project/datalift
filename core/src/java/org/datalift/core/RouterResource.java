@@ -45,7 +45,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.ServiceLoader;
 import java.util.TreeMap;
 
 import static java.util.GregorianCalendar.*;
@@ -78,6 +77,7 @@ import org.datalift.core.log.LogContext;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.LifeCycle;
 import org.datalift.fwk.MediaTypes;
+import org.datalift.fwk.Module;
 import org.datalift.fwk.ResourceResolver;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.sparql.SparqlEndpoint;
@@ -156,8 +156,7 @@ public class RouterResource implements LifeCycle, ResourceResolver
     private int[] businessDay = { 8, 20 };          // 8 A.M. to 8 P.M.
 
     /** Application modules. */
-    private final Map<String,ModuleDesc> modules =
-                                            new TreeMap<String,ModuleDesc>();
+    private final Map<String,Bundle> modules = new TreeMap<String,Bundle>();
     /** Resource resolvers. */
     private final List<UriPolicy> policies = new LinkedList<UriPolicy>();
     /** Predefined SPARQL queries for DataLift core module. */
@@ -174,17 +173,6 @@ public class RouterResource implements LifeCycle, ResourceResolver
                 return new DefaultUriHandler(uriInfo, request, acceptHdr);
             }
         };
-
-    //-------------------------------------------------------------------------
-    // Constructors
-    //-------------------------------------------------------------------------
-
-    public RouterResource(Map<String,ModuleDesc> modules) {
-        if (modules == null) {
-            throw new IllegalArgumentException("modules");
-        }
-        this.modules.putAll(modules);
-    }
 
     //-------------------------------------------------------------------------
     // LifeCycle contract support
@@ -245,17 +233,41 @@ public class RouterResource implements LifeCycle, ResourceResolver
     /** {@inheritDoc} */
     @Override
     public void postInit(Configuration configuration) {
-        // Loading URI policies for each module, ignoring errors.
+        // Get the list of published Datalift modules and their bundle.
+        this.modules.clear();
+        Map<ClassLoader,Bundle> bundles = new HashMap<ClassLoader,Bundle>();
+        for (Bundle b : configuration.getBeans(Bundle.class)) {
+            bundles.put(b.getClassLoader(), b);
+        }
+        for (Module m : configuration.getBeans(Module.class)) {
+            this.modules.put(m.getName(),
+                             bundles.get(m.getClass().getClassLoader()));
+        }
+        // Load available URI policies, ignoring errors.
         this.policies.clear();
-        for (ModuleDesc desc : this.modules.values()) {
-            try {
-                // Load & install module-specific URI policies, if any.
-                this.loadUriPolicies(desc.classLoader, desc.name);
+        for (Bundle b : configuration.getBeans(Bundle.class)) {
+            int count = 0;
+            // Load & install bundle-provided URI policies, if any.
+            for (UriPolicy p : b.loadServices(UriPolicy.class)) {
+                try {
+                    p.init(configuration);
+                    p.postInit(configuration);
+                    // Make policy available thru the Configuration object.
+                    configuration.registerBean(p);
+                    // Register policy.
+                    this.policies.add(p);
+                    count++;
+                }
+                catch (Exception e) {
+                    log.error("Failed to load URI policy {} for bundle {}", e,
+                                                    p.getClass().getName(), b);
+                    // Skip policy...
+                }
             }
-            catch (Exception e) {
-                log.error("URI policy loading failed for module {}: {}", e,
-                          desc.name, e.getMessage());
-                // Continue with next module.
+            if (count != 0) {
+                // Notify whether URI policies were installed.
+                log.info("Registered {} URI policy(ies) for bundle \"{}\"",
+                         Integer.valueOf(this.policies.size()), b);
             }
         }
 
@@ -337,7 +349,7 @@ public class RouterResource implements LifeCycle, ResourceResolver
                                           UriInfo uriInfo, Request request,
                                           String acceptHdr)
                                                 throws WebApplicationException {
-        return this.resolveUnmappedResource(this.modules.get(module),
+        return this.resolveUnmappedResource(module, this.modules.get(module),
                                             uriInfo, request, acceptHdr);
     }
 
@@ -367,7 +379,7 @@ public class RouterResource implements LifeCycle, ResourceResolver
                                      @Context Request request,
                                      @HeaderParam(ACCEPT) String acceptHdr)
                                                 throws WebApplicationException {
-        Response response = this.resolveUnmappedResource(null, uriInfo,
+        Response response = this.resolveUnmappedResource(null, null, uriInfo,
                                                          request, acceptHdr);
         return (response != null)? new ResponseWrapper(response): null;
     }
@@ -381,9 +393,10 @@ public class RouterResource implements LifeCycle, ResourceResolver
      * {@link Configuration#getLocalStorage() public local file storage}
      * or an RDF resource in the
      * {@link Configuration#getDataRepository() public data RDF store}.
-     * @param  module      the descriptor of the resolved module if the
-     *                     beginning of the request path matched the
-     *                     name of one of the configured modules,
+     * @param  module      the first element of the request path.
+     * @param  bundle      the target bundle if the first element of the
+     *                     request path matches the name of one of the
+     *                     registered Datalift modules,
      *                     <code>null</code> otherwise.
      * @param  uriInfo     the request URI data (injected).
      * @param  request     the JAX-RS request object (injected).
@@ -395,7 +408,8 @@ public class RouterResource implements LifeCycle, ResourceResolver
      * @throws WebApplicationException if the request path can not be
      *         resolved.
      */
-    private Response resolveUnmappedResource(ModuleDesc module,
+    private Response resolveUnmappedResource(String module,
+                                             Bundle bundle,
                                              UriInfo uriInfo,
                                              Request request,
                                              String acceptHdr)
@@ -411,22 +425,22 @@ public class RouterResource implements LifeCycle, ResourceResolver
         log.trace("Resolving unmapped resource: {}", path);
 
         try {
-            if (module != null) {
+            if (bundle != null) {
                 // Path prefix was resolved as a module name.
                 // => Try to resolve resource as a module static resource.
                 URL src = null;
-                String rsc = path.substring(module.name.length());
+                String rsc = path.substring(module.length());
                 if ((rsc.length() != 0) && (! "/".equals(rsc))) {
                     rsc = MODULE_PUBLIC_DIR + rsc;
-                    src = module.classLoader.getResource(rsc);
+                    src = bundle.getResource(rsc);
                 }
                 // Else: Empty path after module name. => Ignore.
 
                 if (src != null) {
                     // Module static resource found.
-                    // => Check whether data shall be returned.
-                    File f = (module.isJarPackage())? module.root:
-                                                      new File(src.getFile());
+                    // => Check whether up-to-date data shall be returned.
+                    File f = (bundle.isJar())? bundle.getBundleFile():
+                                               new File(src.getFile());
                     Date lastModified = new Date(f.lastModified());
                     ResponseBuilder b = request.evaluatePreconditions(
                                                                 lastModified);
@@ -553,49 +567,6 @@ public class RouterResource implements LifeCycle, ResourceResolver
     }
 
     /**
-     * Loads all available {@link UriPolicy} implementation
-     * classes for a given module (referenced by its class loader).
-     * @param  cl           the classloader to load the URI policies.
-     * @param  moduleName   the name of the owning module.
-     */
-    private void loadUriPolicies(ClassLoader cl, String moduleName) {
-        Configuration cfg = Configuration.getDefault();
-
-        // Make a fault-tolerant loading of module's URI policies.
-        Iterator<UriPolicy> i = ServiceLoader.load(UriPolicy.class, cl)
-                                             .iterator();
-        int count = 0;
-        boolean hasNext = true;
-        do {
-            try {
-                hasNext = i.hasNext();
-                if (hasNext) {
-                    UriPolicy p = i.next();
-                    p.init(cfg);
-                    // Make policy available thru the Configuration object.
-                    cfg.registerBean(p);
-                    p.postInit(cfg);
-                    // Register policy.
-                    this.policies.add(p);
-                    count++;
-                }
-            }
-            catch (Exception e) {
-                // Skip policy...
-                log.error("Failed to load URI policy for module {}: {}", e,
-                          moduleName, e.getMessage());
-            }
-        }
-        while (hasNext);
-
-        if (count != 0) {
-            // Notify whether URI policies were installed.
-            log.info("Registered {} URI policy(ies) for module \"{}\"",
-                     Integer.valueOf(this.policies.size()), moduleName);
-        }
-    }
-
-    /**
      * Helper method to build a JAX-RS web service error response
      * @param  status    the {@link Status HTTP status code}.
      * @param  message   an optional error message to return
@@ -619,9 +590,7 @@ public class RouterResource implements LifeCycle, ResourceResolver
     /** {@inheritDoc} */
     @Override
     public String toString() {
-        return this.getClass().getSimpleName()
-                        + " (" + this.modules.size()
-                        + " modules: " + this.modules.keySet() + ')';
+        return this.getClass().getSimpleName();
     }
 
     //-------------------------------------------------------------------------

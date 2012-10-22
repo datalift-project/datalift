@@ -37,25 +37,12 @@ package org.datalift.core;
 
 import java.io.File;
 import java.io.FileFilter;
-import java.io.FileInputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
-import java.util.ServiceConfigurationError;
-import java.util.ServiceLoader;
 import java.util.Set;
-import java.util.TreeMap;
-import java.util.jar.JarEntry;
-import java.util.jar.JarInputStream;
 
 import javax.ws.rs.Path;
 
@@ -70,7 +57,6 @@ import org.datalift.fwk.ResourceResolver;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.log.web.LogServletContextListener;
 import org.datalift.fwk.project.ProjectManager;
-import org.datalift.fwk.util.io.FileUtils;
 import org.datalift.fwk.view.ViewFactory;
 
 import static org.datalift.core.DefaultConfiguration.DATALIFT_HOME;
@@ -84,25 +70,6 @@ import static org.datalift.core.DefaultConfiguration.DATALIFT_HOME;
  */
 public class ApplicationLoader extends LogServletContextListener
 {
-    //-------------------------------------------------------------------------
-    // Constants
-    //-------------------------------------------------------------------------
-
-    /**
-     * The module sub-directory where to look for classes first. If
-     * no present, root-level JAR files will be searched.
-     */
-    public final static String MODULE_CLASSES_DIR = "classes";
-    /**
-     * The module sub-directory where to look for third-party JAR files.
-     * Regardless the presence of this directory, root-level JARs will
-     * be loaded.
-     */
-    public final static String MODULE_LIB_DIR     = "lib";
-
-    /** The name of the directory where to store temporary files. */
-    private final static String CACHE_DIRECTORY_NAME    = "module-data";
-
     //-------------------------------------------------------------------------
     // Class members
     //-------------------------------------------------------------------------
@@ -140,9 +107,6 @@ public class ApplicationLoader extends LogServletContextListener
 
     /** DataLift Core components. */
     private final Set<LifeCycle> components = new HashSet<LifeCycle>();
-    /** Application modules. */
-    private final Map<String,ModuleDesc> modules =
-                                            new TreeMap<String,ModuleDesc>();
     /** The singleton resources managed by this JAX-RS application. */
     private Set<Object> resources = null;
 
@@ -186,8 +150,7 @@ public class ApplicationLoader extends LogServletContextListener
         if (this.resources == null) {
             Set<Object> rsc = new HashSet<Object>();
             // Check modules for registration as JAX-RS root resources.
-            for (ModuleDesc desc : this.modules.values()) {
-                Module m = desc.module;
+            for (Module m : Configuration.getDefault().getBeans(Module.class)) {
                 if (m.getClass().isAnnotationPresent(Path.class)) {
                     // JAX-RS annotation @Path found on module class.
                     rsc.add(m);
@@ -254,12 +217,12 @@ public class ApplicationLoader extends LogServletContextListener
             DefaultConfiguration cfg = this.loadConfiguration(props);
             Configuration.setDefault(cfg);
             // Find available third-party modules.
-            Collection<PackageDesc> packages = this.findPackages(cfg);
+            this.registerBundles(cfg);
             // Initialize RDF store connections
             // (connectors may be provided as part of third-party modules).
-            cfg.initRepositories(packages);
+            cfg.initRepositories();
             // Load and initialize modules form third-party packages.
-            this.loadModules(packages);
+            this.loadModules(cfg);
             // Initialize and register default resources if no custom
             // implementations are provided by third-party packages.
             if (cfg.getBeans(ViewFactory.class).isEmpty()) {
@@ -269,7 +232,7 @@ public class ApplicationLoader extends LogServletContextListener
             if (cfg.getBeans(ResourceResolver.class).isEmpty()) {
                 // Add default resource resolver.
                 this.components.add(
-                    this.initResource(new RouterResource(this.modules), cfg));
+                    this.initResource(new RouterResource(), cfg));
             }
             if (cfg.getBeans(ProjectManager.class).isEmpty()) {
                 // Add default project manager.
@@ -341,12 +304,12 @@ public class ApplicationLoader extends LogServletContextListener
                 }
             }
             // Shutdown each module, ignoring errors.
-            for (ModuleDesc desc : this.modules.values()) {
-                Module m = desc.module;
-                Object[] prevCtx = LogContext.pushContexts(desc.name, "shutdown");
+            for (Module m : cfg.getBeans(Module.class)) {
+                String name = m.getName();
+                Object[] prevCtx = LogContext.pushContexts(name, "shutdown");
                 try {
                     m.shutdown(cfg);
-                    cfg.removeBean(desc.module, desc.name);                
+                    cfg.removeBean(m, name);                
                 }
                 catch (Exception e) {
                     log.error("Failed to properly shutdown module {}: {}", e,
@@ -412,20 +375,18 @@ public class ApplicationLoader extends LogServletContextListener
 
     private void postInitModules(Configuration configuration) {
         // Post-init each module, ignoring errors.
-        for (Iterator<ModuleDesc> i=this.modules.values().iterator();
-                                                                i.hasNext(); ) {
-            ModuleDesc desc = i.next();
-            Object[] prevCtx = LogContext.pushContexts(desc.name, "postInit");
+        for (Module m : configuration.getBeans(Module.class)) {
+            String name = m.getName();
+            Object[] prevCtx = LogContext.pushContexts(name, "postInit");
             try {
                 // Complete module initialization.
-                desc.module.postInit(configuration);
+                m.postInit(configuration);
             }
             catch (Exception e) {
                 log.error("Post-init failed for module {}: {}", e,
-                          desc.name, e.getMessage());
+                                                        name, e.getMessage());
                 // Disable module.
-                i.remove();
-                configuration.removeBean(desc.module, desc.name);
+                configuration.removeBean(m, name);
                 // Continue with next module.
             }
             finally {
@@ -434,10 +395,9 @@ public class ApplicationLoader extends LogServletContextListener
         }
     }
 
-    private Collection<PackageDesc> findPackages(Configuration cfg) {
-        Collection<PackageDesc> packages = new LinkedList<PackageDesc>();
-
-        // Load third-party module bundles.
+    private void registerBundles(Configuration cfg) {
+        ClassLoader cl = this.getClass().getClassLoader();
+        // Load third-party bundles.
         for (File modulesDir : cfg.getModulePaths()) {
             log.debug("Searching \"{}\" for modules...", modulesDir);
             List<File> l = Arrays.asList(modulesDir.listFiles(
@@ -450,51 +410,46 @@ public class ApplicationLoader extends LogServletContextListener
                     }));
             Collections.sort(l);
             for (File f : l) {
-                packages.add(new PackageDesc(new URLClassLoader(
-                                        this.getModulePaths(f),
-                                        this.getClass().getClassLoader()), f));
+                Bundle b = new Bundle(f, cl, cfg);
+                cfg.registerBean(b);
             }
         }
-        return packages;
     }
 
-    private void loadModules(Collection<PackageDesc> packages) {
-        this.modules.clear();
+    private void loadModules(Configuration cfg) {
         // Load modules embedded in web application first (if any).
-        this.loadModules(this.getClass().getClassLoader(), null);
+        this.loadModules(new Bundle(this.getClass().getClassLoader()), cfg);
         // Load third-party packages.
-        for (PackageDesc p : packages) {
-            File f = p.root;
+        for (Bundle b : cfg.getBeans(Bundle.class)) {
+            File f = b.getBundleFile();
+            Object[] prevCtx = LogContext.pushContexts(f.getName(), "init");
             try {
                 log.debug("Searching \"{}\" for modules...", f.getName());
-                this.loadModules(p.classLoader, f);
+                this.loadModules(b, cfg);
             }
             catch (Exception e) {
                 log.fatal("Failed to load modules from {}. Skipping...",
                           e, f.getName());
                 // Continue with next module.
             }
+            finally {
+                LogContext.pushContexts(prevCtx[0], prevCtx[1]);
+            }
         }
     }
 
     /**
      * Loads all {@link Module} implementation classes from the
-     * specified JAR file or directory, initializing and registering
-     * them as well as their Velocity templates.
-     * @param  cl   the classloader to load the module classes.
-     * @param  f    the module JAR file or directory.
+     * specified bundle, initializing and registering them
+     * as well as their Velocity templates.
+     * @param  b   the bundle to load the module classes from.
      */
-    private void loadModules(ClassLoader cl, File f) {
-        Configuration cfg = Configuration.getDefault();
-
-        Object[] prevCtx = null;
-        if (f != null) {
-            prevCtx = LogContext.pushContexts(f.getName(), "init");
-        }
-        try {
-            for (Module m : ServiceLoader.load(Module.class, cl)) {
-                String name = m.getName();
-                log.debug("Initializing module \"{}\"...", name);
+    private void loadModules(Bundle b, Configuration cfg) {
+        File f = b.getBundleFile();
+        for (Module m : b.loadServices(Module.class, false)) {
+            String name = m.getName();
+            log.debug("Initializing module \"{}\"...", name);
+            try {
                 // Initialize module.
                 m.init(cfg);
                 // Register module root (directory or JAR file) as
@@ -505,202 +460,14 @@ public class ApplicationLoader extends LogServletContextListener
                 // Make module available thru the Configuration object.
                 cfg.registerBean(m);
                 cfg.registerBean(name, m);
-                // Publish module REST resources.
-                ModuleDesc desc = new ModuleDesc(m, cl, f);
-                this.modules.put(name, desc);
                 // Notify module registration.
-                log.info("Registered module \"{}\" with URL path \"/{}\"",
-                                            m.getClass().getSimpleName(), name);
+                log.info("Registered module \"{}\" ({})",
+                                                name, m.getClass().getName());
+            }
+            catch (Exception e) {
+                throw new TechnicalException("module.load.error", e,
+                                                            b, e.getMessage());
             }
         }
-        catch (ServiceConfigurationError e) {
-            // Map ServiceConfigurationError to exception, as explained in
-            // the doc. of ServiceLoader.iterator() to "write robust code"!
-            throw new TechnicalException("module.load.error", e,
-                                         f.getName(), e.getMessage());
-        }
-        catch (Exception e) {
-            throw new TechnicalException("module.load.error", e,
-                                         f.getName(), e.getMessage());
-        }
-        finally {
-            if (prevCtx != null) {
-                LogContext.pushContexts(prevCtx[0], prevCtx[1]);
-            }
-        }
-    }
-
-    /**
-     * Analyzes a module structure to match the expected elements and
-     * returns the paths to be added to the module classpath.
-     * <p>
-     * Recognized elements include:</p>
-     * <ul>
-     *  <li>For JAR files: the JAR file itself.</li>
-     *  <li>For directories:
-     *   <dl>
-     *    <dt><code>/</code></dt>
-     *    <dd>The module root directory</dd>
-     *    <dt><code>/classes</code></dt>
-     *    <dd>The default directory for module classes</dd>
-     *    <dt><code>/*.jar</code></dt>
-     *    <dd>JAR files containing the module classes</dd>
-     *    <dt><code>/lib/**&#47;*.jar</code></dt>
-     *    <dd>All the JAR files in the <code>/lib</code> directory tree
-     *        (module classes and third-party libraries)</dd>
-     *   </dl></li>
-     * </ul>
-     * @param  path   the directory or JAR file for the module.
-     *
-     * @return the URLs of the paths to be added to the module
-     *         classpath.
-     */
-    private URL[] getModulePaths(File path) {
-        List<URL> urls = new LinkedList<URL>();
-
-        String srcName = path.getName();
-        if (path.isDirectory()) {
-            // Add module root directory.
-            urls.add(this.getFileUrl(path, srcName));
-            // Look for module classes as a directory tree.
-            File classesDir = new File(path, MODULE_CLASSES_DIR);
-            if (classesDir.isDirectory()) {
-                urls.add(this.getFileUrl(classesDir, srcName));
-            }
-            // Look for root-level JAR files.
-            for (File jar : path.listFiles(jarFilter)) {
-                urls.add(this.getFileUrl(jar, srcName));
-            }
-            // Look for module dependencies as library JAR files.
-            File libDir = new File(path, MODULE_LIB_DIR);
-            if (classesDir.isDirectory()) {
-                urls.addAll(this.findFiles(libDir, jarFilter, srcName));
-            }
-        }
-        else {
-            // JAR file. => Add the JAR file itself to the classpath.
-            urls.add(this.getFileUrl(path, srcName));
-            // Extract wrapped JARs and add them to classpath.
-            JarEntry e = null;
-            try {
-                File tempJarDir = new File(Configuration.getDefault().getTempStorage(),
-                                           CACHE_DIRECTORY_NAME + '/' + path.getName());
-                JarInputStream in = new JarInputStream(new FileInputStream(path));
-                boolean embeddedJarsFound = false;
-                while ((e = in.getNextJarEntry()) != null) {
-                    if (e.getName().endsWith(".jar")) {
-                        if (embeddedJarsFound == false) {
-                            log.debug("Extracting embedded libraries of {}",
-                                                                path.getName());
-                            embeddedJarsFound = true;
-                        }
-                        File f = new File(tempJarDir, e.getName());
-                        if (! tempJarDir.exists()) {
-                            tempJarDir.mkdirs();
-                        }
-                        long entryDate = e.getTime();
-                        if ((! f.exists()) || (f.lastModified() < entryDate)) {
-                            FileUtils.save(in, f, false);
-                            if (entryDate > 0) {
-                                f.setLastModified(entryDate);
-                            }
-                        }
-                        else {
-                            // Local cache is already up to date.
-                            log.debug("{}/{} is up-to-date.", path.getName(),
-                                                              f.getName());
-                        }
-                        urls.add(f.toURI().toURL());
-                    }
-                }
-            }
-            catch (Exception ex) {
-                log.warn("Failed to extract embedded JAR {} from {}", ex,
-                         e, path);
-            }
-        }
-        return urls.toArray(new URL[urls.size()]);
-    }
-
-    /**
-     * Scans a directory tree and returns the files matching the
-     * specified filter.
-     * @param  root     the root of directory tree.
-     * @param  filter   the file filter.
-     * @param  source   the source package name.
-     *
-     * @return the URLs of the matched files.
-     */
-    private Collection<URL> findFiles(File root,
-                                      FileFilter filter, String source) {
-        return this.findFiles(root, filter, source, new LinkedList<URL>());
-    }
-
-    /**
-     * Recursively scans a directory tree and returns the files
-     * matching the specified filter.
-     * @param  root      the root of directory tree.
-     * @param  filter    the file filter.
-     * @param  source    the source package name.
-     * @param  results   the collection to append the matched files to.
-     *
-     * @return the <code>results</code> collection updated with the
-     *         matched files.
-     */
-    private Collection<URL> findFiles(File root, FileFilter filter,
-                                      String source, Collection<URL> results) {
-        List<File> dirs = new LinkedList<File>();
-        // Scan first-level directory content.
-        for (File f : root.listFiles()) {
-            if (filter.accept(f)) {
-                results.add(this.getFileUrl(f, source));
-            }
-            else if ((f.isDirectory()) && (f.canRead())) {
-                // Child directory not handled by filter.
-                // => Mark for recursive scan.
-                dirs.add(f);
-            }
-            // Else: ignore...
-        }
-        // Recursively scan child directories.
-        for (File child : dirs) {
-            this.findFiles(child, filter, source, results);
-        }
-        return results;
-    }
-
-    /**
-     * Returns the URL of the specified file, compliant with the
-     * requirements of {@link URLClassLoader#URLClassLoader(URL[])}.
-     * @param  f        the file or directory to convert.
-     * @param  source   the source package name.
-     *
-     * @return the URL of the file.
-     * @throws TechnicalException if <code>f</code> if neither a
-     *         regular file nor a directory.
-     */
-    private URL getFileUrl(File f, String source) {
-        URL u = null;
-        try {
-            if (f.isFile()) {
-                u = f.toURI().toURL();
-            }
-            else if (f.isDirectory()) {
-                String uri = f.toURI().toString();
-                if (! uri.endsWith("/")) {
-                    uri += "/";
-                }
-                u = new URL(uri);
-            }
-            else {
-                throw new TechnicalException("invalid.file.type", f.getPath());
-            }
-        }
-        catch (MalformedURLException e) {
-            // Should never happen...
-            throw new UnsupportedOperationException(e.getMessage(), e);
-        }
-        log.trace("Added resource \"{}\" to package {} classpath", u, source);
-        return u;
     }
 }
