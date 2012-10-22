@@ -269,9 +269,6 @@
     <!-- Create module JAR file -->
     <jar jarfile="${jar.path}">
       <fileset dir="${classes.dir}"/>
-      <service type="org.datalift.fwk.Module">
-        <provider classname="org.datalift.handlers.DummyModule"/>
-      </service>
       <service type="org.datalift.fwk.util.UriPolicy">
         <provider classname="org.datalift.handlers.gml.GmlResourceHandler"/>
         <provider classname="org.datalift.handlers.json.JsonLdResourceHandler"/>
