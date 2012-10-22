@@ -363,15 +363,13 @@ public class CsvDirectMapper extends BaseConverterModule
                 // Scan columns to map values and build triples.
                 org.openrdf.model.URI subject = null;
                 for (int j=0, max=row.size(); j<max; j++) {
-                    String  v = row.get(j);
                     Mapping m = mapping.getMapping(j);
                     Value value = null;
-                    if (isSet(v)) {
-                        // Trim value.
-                        v = v.trim();
+                    String v = trimToNull(row.get(j));  // Trim value.
+                    if (v != null) {
                         // Handle special case of unmatched closing quote, left
                         // over by CSV parser when followed by padding.
-                        if ((v.indexOf(quote) == v.length() - 1) && (v.length() > 0)) {
+                        if (v.indexOf(quote) == v.length() - 1) {
                             v = v.substring(0, v.length() - 1);
                         }
                         value = this.mapValue(v, valueFactory, m, mapping);                            
