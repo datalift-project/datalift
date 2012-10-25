@@ -192,6 +192,11 @@
   <script src="${moduleUri}/static/js/mapper.js" language="javascript"></script>
 
   <script type="text/javascript">
+    var mapperErrorMessages = {
+      noRdfClassFound: "#i18n('no.rdf.class.found.error')",
+      readOnlogyFailed: "#i18n('ontology.retrieval.error')",
+    };
+
     $(function() {
       var sources = [
 #foreach( $s in $it.sources )#if( $s.type == $srcType )

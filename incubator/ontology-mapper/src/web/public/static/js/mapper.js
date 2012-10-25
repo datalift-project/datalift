@@ -385,8 +385,10 @@ function MappingViewModel(baseUri, projectUri, sources, ontologies) {
       self.availableProperties(null);
 
       if (self.selectedOntology()) {
-        var url = self.baseUri + "/ontology-mapper/ontology?src=" + self.selectedOntology().uri;
-        $.getJSON(url, function(data) {
+        $.ajax({
+          url: self.baseUri + "/ontology-mapper/ontology?src=" + self.selectedOntology().uri,
+          dataType: 'json',
+          success: function(data) {
             self.currentOntology(new OwlOntology(data.uri, data.name, data.desc,
                 $.map(data.classes,    function(elt, uri) { return new OwlClass(uri, elt); }),
                 $.map(data.properties, function(elt, uri) { return new OwlProperty(uri, elt); })));
@@ -395,7 +397,11 @@ function MappingViewModel(baseUri, projectUri, sources, ontologies) {
               types.sort();
               self.primaryTypes(types);
             }
-          });
+          },
+          error: function(jqXHR, textStatus, message) {
+            alert(mapperErrorMessages.readOnlogyFailed + ':\n' + jqXHR.status + ' (' + jqXHR.statusText + ') ' + jqXHR.responseText);
+          }
+        });
       }
     });
   self.selectedProperty.subscribe(function() {
@@ -414,8 +420,11 @@ function MappingViewModel(baseUri, projectUri, sources, ontologies) {
       }
     });
   self.selectedSource.subscribe(function() {
-      url = self.baseUri + "/sparql?default-graph-uri=internal&query=SELECT DISTINCT ?p WHERE { graph <" + self.selectedSource().uri + "> { ?s ?p ?o . }}&max=25";
-      $.get(url, function(data) {
+      var url = self.baseUri + "/sparql?default-graph-uri=internal&query=SELECT DISTINCT ?p WHERE { graph <" + self.selectedSource().uri + "> { ?s ?p ?o . }}&max=25";
+      $.ajax({
+        url: url,
+        dataType: 'json',
+        success: function(data) {
           var rdf = new RegExp("http://www.w3.org/1999/02/22-rdf-syntax-ns#");
           var rdfs= new RegExp("http://www.w3.org/2000/01/rdf-schema#");
           var owl = new RegExp("http://www.w3.org/2002/07/owl#");
@@ -443,7 +452,14 @@ function MappingViewModel(baseUri, projectUri, sources, ontologies) {
             }
             self.availableSrcProps.push(name);
           }
-        }, "json");
+          if (self.availableSrcProps.length == 0) {
+            alert(mapperErrorMessages.noRdfClassFound);
+          }
+        },
+        error: function(jqXHR, textStatus, message) {
+          alert(jqXHR.responseText);
+        }
+      });
     });
 
   self.addTypeMapping = function() {
