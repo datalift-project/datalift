@@ -84,6 +84,22 @@ public class RdfException extends Exception
     }
 
     //-------------------------------------------------------------------------
+    // Exception contract support
+    //-------------------------------------------------------------------------
+
+    @Override
+    public String getMessage() {
+        String msg = super.getMessage();
+        if ((msg != null) && (msg.length() == 0)) {
+            msg = null;
+        }
+        if ((this.query != null) && (this.query.length() != 0)) {
+            msg = (msg != null)? msg + ":\n" + this.query: this.query;
+        }
+        return msg;
+    }
+
+    //-------------------------------------------------------------------------
     // RdfException contract definition
     //-------------------------------------------------------------------------
 
