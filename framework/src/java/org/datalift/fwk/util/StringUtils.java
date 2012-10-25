@@ -81,7 +81,7 @@ public final class StringUtils
      * whitespace characters.
      * @param  s   the string to check, may be <code>null</code>.
      *
-     * @return <code>true</code> if the string is <code>null<code>,
+     * @return <code>true</code> if the string is <code>null</code>,
      *         empty ("") or contains only whitespace characters.
      */
     public static boolean isBlank(String s) {
