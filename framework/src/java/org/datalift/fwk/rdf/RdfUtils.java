@@ -250,8 +250,9 @@ public final class RdfUtils
                                                 namedGraph, mapper, baseUri);
         }
         catch (Exception e) {
-            throw new RdfException("Failed to upload RDF triples from "
-                                   + source.getPath(), e);
+            throw new RdfException(null, e,
+                            "Failed to upload RDF triples from " +
+                            source.getPath() + ": " + e.getLocalizedMessage());
         }
     }
 
@@ -320,7 +321,7 @@ public final class RdfUtils
             }
             catch (Exception e2) { /* Ignore... */ }
 
-            throw new RdfException(e.getMessage(), e);
+            throw new RdfException(e);
         }
         finally {
             // Commit pending data (including graph removal in case of error).
@@ -387,7 +388,7 @@ public final class RdfUtils
             }
             catch (Exception e2) { /* Ignore... */ }
 
-            throw new RdfException("Failed to upload RDF triples", e);
+            throw new RdfException(e);
         }
         finally {
             // Commit pending data (including graph removal in case of error).
@@ -521,7 +522,7 @@ public final class RdfUtils
             }
             catch (Exception e2) { /* Ignore... */ }
 
-            throw new RdfException((query != null)? query: e.getMessage(), e);
+            throw new RdfException(query, e);
         }
         finally {
             if (in != null) {
@@ -588,7 +589,7 @@ public final class RdfUtils
             query = null;       // No query in error.
         }
         catch (Exception e) {
-            throw new RdfException((query != null)? query: e.getMessage(), e);
+            throw new RdfException(query, e);
         }
         finally {
             if (in != null) {

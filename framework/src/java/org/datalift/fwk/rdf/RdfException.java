@@ -67,19 +67,39 @@ public class RdfException extends Exception
      * @param  cause   the cause.
      */
     public RdfException(Throwable cause) {
-        super(cause);
-        this.query = null;
+        this(null, cause);
     }
 
     /**
-     * Constructs a new exception with the specified cause but no
-     * detail message.  The detail message of this exception will
-     * be the detail message of the cause.
-     * @param  query   the query.
+     * Constructs a new exception for the specified RDF query with
+     * the specified detail message.
+     * @param  query     the RDF query being processed.
+     * @param  message   the detail message.
+     */
+    public RdfException(String query, String message) {
+        this(query, null, message);
+    }
+
+    /**
+     * Constructs a new exception for the specified RDF query with
+     * the specified cause but no detail message.  The detail message
+     * of this exception will be the detail message of the cause.
+     * @param  query   the RDF query being processed.
      * @param  cause   the cause.
      */
     public RdfException(String query, Throwable cause) {
-        super(cause);
+        this(null, cause, (cause==null)? null: cause.getLocalizedMessage());
+    }
+
+    /**
+     * Constructs a new exception for the specified RDF query with
+     * the specified cause and detail message.
+     * @param  query     the RDF query being processed.
+     * @param  cause     the cause.
+     * @param  message   the detail message.
+     */
+    public RdfException(String query, Throwable cause, String message) {
+        super(message, cause);
         this.query = query;
     }
 
