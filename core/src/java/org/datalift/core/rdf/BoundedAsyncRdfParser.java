@@ -53,6 +53,7 @@ import org.openrdf.rio.RDFParser;
 import org.openrdf.rio.helpers.RDFHandlerBase;
 
 import org.datalift.core.TechnicalException;
+import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.util.CloseableIterator;
 
@@ -80,8 +81,11 @@ public final class BoundedAsyncRdfParser
     // Class members
     //-------------------------------------------------------------------------
 
+    /** Worker threads for async. parsing of RDF data. */
     private final static ExecutorService threadPool =
                                             Executors.newCachedThreadPool();
+
+    private final static Logger log = Logger.getLogger();
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -156,7 +160,7 @@ public final class BoundedAsyncRdfParser
                         throw e;
                     }
                     catch (Exception e) {
-                        new TechnicalException(
+                        throw new TechnicalException(
                                         "rdf.parse.error", e, e.getMessage());
                     }
                     finally {
@@ -174,7 +178,7 @@ public final class BoundedAsyncRdfParser
                         statements.put(stmt);
                     }
                     catch (InterruptedException e) {
-                        new TechnicalException(null, e);
+                        throw new TechnicalException(null, e);
                     }
                 }
             });
@@ -203,6 +207,8 @@ public final class BoundedAsyncRdfParser
                 @Override
                 public void close() {
                     if (! f.isDone()) {
+                        // Let some time to the parse thread to terminate.
+                        Thread.yield();
                         // Abort RDF parse.
                         f.cancel(true);
                     }
@@ -211,9 +217,15 @@ public final class BoundedAsyncRdfParser
                         f.get();
                     }
                     catch (ExecutionException e) {
+                        log.warn("RDF parse failed", e);
                         throw (RuntimeException)(e.getCause());
                     }
-                    catch (Exception e) { /* Ignore... */ }
+                    catch (Exception e) {
+                        TechnicalException error = new TechnicalException(
+                                    "Unexpected error thrown by RDF parse", e);
+                        log.fatal(error.getLocalizedMessage(), e);
+                        throw error;
+                    }
                     finally {
                         // Make sure all resources are properly released.
                         try {
