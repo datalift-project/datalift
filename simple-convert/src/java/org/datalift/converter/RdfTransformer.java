@@ -36,6 +36,7 @@ package org.datalift.converter;
 
 
 import java.net.URI;
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.ws.rs.Consumes;
@@ -58,6 +59,7 @@ import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
 
 import static org.datalift.fwk.MediaTypes.*;
+import static org.datalift.fwk.util.StringUtils.isBlank;
 
 
 /**
@@ -111,6 +113,17 @@ public class RdfTransformer extends BaseConverterModule
         Repository internal = Configuration.getDefault()
                                            .getInternalRepository();
         try {
+            // Clean the query list to remove empty entries.
+            if (queries != null) {
+                List<String> l = new LinkedList<String>();
+                    for (String q : queries) {
+                    if (! isBlank(q)) {
+                        l.add(q);
+                    }
+                }
+                queries = l;
+            }
+            // Check that at least one query is present.
             if ((queries == null) || (queries.size() == 0)) {
                 this.throwInvalidParamError("queries", null);
             }
