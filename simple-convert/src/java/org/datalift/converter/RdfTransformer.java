@@ -127,13 +127,14 @@ public class RdfTransformer extends BaseConverterModule
             if ((queries == null) || (queries.size() == 0)) {
                 this.throwInvalidParamError("queries", null);
             }
-            // Retrieve project.
+            // Retrieve project and source.
             Project p = this.getProject(projectId);
-            // Execute SPARQL Construct queries.
-            RdfUtils.convert(internal, queries, internal, targetGraph, overwrite);
-            // Register new transformed RDF source.
             TransformedRdfSource in =
                                 (TransformedRdfSource)p.getSource(sourceId);
+            // Execute SPARQL Construct queries.
+            RdfUtils.convert(internal, queries, internal, targetGraph,
+                                       overwrite, URI.create(in.getUri()));
+            // Register new transformed RDF source.
             Source out = this.addResultSource(p, in, destTitle, targetGraph);
             // Display project source tab, including the newly created source.
             response = this.created(out).build();
