@@ -39,15 +39,12 @@ import java.io.File;
 import java.net.URI;
 import java.net.URL;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-
-import static java.util.GregorianCalendar.*;
 
 import javax.activation.MimetypesFileTypeMap;
 import javax.ws.rs.GET;
@@ -56,7 +53,6 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Request;
@@ -74,6 +70,7 @@ import org.openrdf.query.BindingSet;
 import org.openrdf.query.TupleQueryResultHandlerBase;
 
 import org.datalift.core.log.LogContext;
+import org.datalift.core.util.web.DefaultCacheConfiguration;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.LifeCycle;
 import org.datalift.fwk.MediaTypes;
@@ -85,6 +82,7 @@ import org.datalift.fwk.sparql.SparqlQueries;
 import org.datalift.fwk.sparql.SparqlEndpoint.DescribeType;
 import org.datalift.fwk.util.UriPolicy;
 import org.datalift.fwk.util.UriPolicy.ResourceHandler;
+import org.datalift.fwk.util.web.CacheConfiguration;
 
 import static org.datalift.fwk.util.StringUtils.*;
 
@@ -132,13 +130,6 @@ public class RouterResource implements LifeCycle, ResourceResolver
      */
     public final static String MODULE_PUBLIC_DIR  = "public";
 
-    /** The default cache duration for static & RDF resources. */
-    public final static String CACHE_DURATION_PROPERTY =
-                                                "datalift.cache.duration";
-    /** The business day opening hours. */
-    public final static String BUSINESS_DAY_PROPERTY =
-                                                "datalift.cache.businessDay";
-
     private final static String MODULE_NAME = "RouterResource";
 
     //-------------------------------------------------------------------------
@@ -151,10 +142,11 @@ public class RouterResource implements LifeCycle, ResourceResolver
     // Instance members
     //-------------------------------------------------------------------------
 
-    /** Cache management informations. */
-    private int cacheDuration = 2 * 3600;           // 2 hours in seconds
-    private int[] businessDay = { 8, 20 };          // 8 A.M. to 8 P.M.
-
+    /** Cache management configuration. */
+    private CacheConfiguration cacheConfig =
+                new DefaultCacheConfiguration(2 * 3600, // Cache for 2 hours
+                                              800,      // From 8:00 A.M.
+                                              1800);    // To 6:00 P.M.
     /** Application modules. */
     private final Map<String,Bundle> modules = new TreeMap<String,Bundle>();
     /** Resource resolvers. */
@@ -187,47 +179,9 @@ public class RouterResource implements LifeCycle, ResourceResolver
      */
     @Override
     public void init(Configuration configuration) {
-        // Cache: duration
-        String s = configuration.getProperty(CACHE_DURATION_PROPERTY);
-        if (! isBlank(s)) {
-            try {
-                this.cacheDuration = Integer.parseInt(s);
-            }
-            catch (Exception e) {
-                log.warn("Invalid cache duration: {}. Using default value: {}",
-                                        s, Integer.valueOf(this.cacheDuration));
-            }
-        }
-        // Cache: business day hours
-        s = configuration.getProperty(BUSINESS_DAY_PROPERTY);
-        if (! isBlank(s)) {
-            if ("-".equals(s.trim())) {
-                // Not business day hours specified.
-                this.businessDay[0] = 0;
-                this.businessDay[1] = 23;
-            }
-            else {
-                String[] v = s.split("\\s*-\\s*", -1);
-                try {
-                    int openingHour = Integer.parseInt(v[0]);
-                    int closingHour = Integer.parseInt(v[1]);
-                    if ((openingHour < 0) || (openingHour > 23) ||
-                        (closingHour < 0) || (closingHour > 23)) {
-                        throw new IllegalArgumentException(
-                                                        BUSINESS_DAY_PROPERTY);
-                    }
-                    this.businessDay = new int[] {
-                                        Math.min(openingHour, closingHour),
-                                        Math.max(openingHour, closingHour) };
-                }
-                catch (Exception e) {
-                    log.warn("Invalid business day hours: {}. "
-                             + "Using default value: {}", s,
-                             "" + this.businessDay[0] + '-'
-                                + this.businessDay[1]);
-                }
-            }
-        }
+        this.cacheConfig = new DefaultCacheConfiguration(configuration);
+        configuration.registerBean(CacheConfiguration.DEFAULT_CONFIG_NAME,
+                                   this.cacheConfig);
     }
 
     /** {@inheritDoc} */
@@ -451,8 +405,8 @@ public class RouterResource implements LifeCycle, ResourceResolver
                                   module, rsc, mt);
                         b = Response.ok(src.openStream(), mt);
                     }
-                    response = this.addCacheDirectives(b, lastModified)
-                                   .build();
+                    response = this.cacheConfig.addCacheDirectives(b,
+                                                        lastModified).build();
                 }
             }
             if (response == null) {
@@ -524,44 +478,8 @@ public class RouterResource implements LifeCycle, ResourceResolver
                 log.debug("Serving static resource: {} ({})", f, mt);
                 b = Response.ok(f, mt);
             }
-            response = this.addCacheDirectives(b, lastModified).build();
-        }
-        return response;
-    }
-
-    private ResponseBuilder addCacheDirectives(ResponseBuilder response,
-                                               Date lastModified) {
-        if (this.cacheDuration > 0) {
-            // Compute cache expiry date/time.
-            GregorianCalendar cal = new GregorianCalendar();
-            int h = cal.get(HOUR_OF_DAY);
-            if ((h <= this.businessDay[0]) || (h >= this.businessDay[1])) {
-                // No data updates occur between close and opening of business.
-                // => Set expiry date to opening of business hour, ignoring
-                //    minutes & seconds.
-                if (h >= this.businessDay[1]) {
-                    cal.add(DAY_OF_YEAR, 1);
-                }
-                cal.set(HOUR_OF_DAY, this.businessDay[0]);
-                response = response.expires(cal.getTime());
-            }
-            else {
-                // Else: cache entries for specified duration.
-                long expiry = System.currentTimeMillis()
-                                                + (this.cacheDuration * 1000L);
-                CacheControl cc = new CacheControl();
-                cc.setMaxAge(this.cacheDuration);
-                cc.setPrivate(false);
-                cc.setNoTransform(false);
-                response = response.cacheControl(cc)
-                                   .expires(new Date(expiry));
-            }
-        }
-        // Else: caching disabled.
-
-        // Set last modified date, if available.
-        if (lastModified != null) {
-            response = response.lastModified(lastModified);
+            response = this.cacheConfig.addCacheDirectives(b, lastModified)
+                           .build();
         }
         return response;
     }
@@ -697,7 +615,8 @@ public class RouterResource implements LifeCycle, ResourceResolver
                 }
                 // Else: Client already up-to-date.
 
-                response = addCacheDirectives(b, result.lastModified).build();
+                response = cacheConfig.addCacheDirectives(b,
+                                                result.lastModified).build();
             }
             return response;
         }
