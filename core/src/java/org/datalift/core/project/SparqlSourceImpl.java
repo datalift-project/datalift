@@ -50,6 +50,9 @@ import javax.persistence.Entity;
 import javax.ws.rs.HttpMethod;
 
 import org.openrdf.model.Statement;
+import org.openrdf.rio.ParserConfig;
+import org.openrdf.rio.RDFParser;
+import org.openrdf.rio.RDFParser.DatatypeHandling;
 
 import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.RdfsClass;
@@ -61,6 +64,7 @@ import org.datalift.core.rdf.BoundedAsyncRdfParser;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.SparqlSource;
+import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.util.Base64;
 import org.datalift.fwk.util.CloseableIterator;
 import org.datalift.fwk.util.Env;
@@ -211,9 +215,16 @@ public class SparqlSourceImpl extends CachingSourceImpl implements SparqlSource
     @Override
     public CloseableIterator<Statement> iterator() {
         try {
+            ParserConfig config = new ParserConfig(
+                                        false,      // Assume data are valid.
+                                        false,      // Report all errors.
+                                        false,      // Don't preserve BNode ids.
+                                        DatatypeHandling.VERIFY);
+            RDFParser parser = RdfUtils.newRdfParser(APPLICATION_RDF_XML);
+            parser.setParserConfig(config);
             return BoundedAsyncRdfParser.parse(this.getInputStream(),
-                                    APPLICATION_RDF_XML, this.getEndpointUrl(),
-                                    Env.getRdfBatchSize());
+                                               parser, this.getEndpointUrl(),
+                                               Env.getRdfBatchSize());
         }
         catch (IOException e) {
             throw new TechnicalException(e.getMessage(), e);
