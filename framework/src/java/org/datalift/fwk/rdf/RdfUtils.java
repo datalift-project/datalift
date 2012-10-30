@@ -38,6 +38,8 @@ package org.datalift.fwk.rdf;
 import java.io.File;
 import java.io.InputStream;
 import java.net.URI;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.ws.rs.core.MediaType;
@@ -46,8 +48,10 @@ import org.openrdf.model.Statement;
 import org.openrdf.query.GraphQuery;
 import org.openrdf.query.QueryLanguage;
 import org.openrdf.query.TupleQueryResultHandler;
+import org.openrdf.query.impl.DatasetImpl;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
+import org.openrdf.rio.ParseErrorListener;
 import org.openrdf.rio.RDFParser;
 
 import org.datalift.fwk.Configuration;
@@ -439,6 +443,9 @@ public final class RdfUtils
      *                            or <code>null</code>.
      * @param  clearTargetGraph   whether to clear the target name graph
      *                            prior inserting the new triples.
+     * @param  srcGraphUris       the URIs of the graphs the input data
+     *                            shall be extracted from, if the input
+     *                            dataset shall be restricted.
      *
      * @throws IllegalArgumentException if no source RDF store or
      *         CONSTRUCT query list are provided.
@@ -450,10 +457,11 @@ public final class RdfUtils
     public static void convert(Repository source,
                                List<String> constructQueries,
                                Repository target, URI namedGraph,
-                               boolean clearTargetGraph) throws RdfException {
+                               boolean clearTargetGraph,
+                               URI... srcGraphUris) throws RdfException {
         convert(source, constructQueries, target, namedGraph,
                             (namedGraph != null)? namedGraph.toString(): null,
-                            clearTargetGraph);
+                            clearTargetGraph, srcGraphUris);
     }
 
     /**
@@ -473,6 +481,9 @@ public final class RdfUtils
      *                            relative URIs.
      * @param  clearTargetGraph   whether to clear the target name graph
      *                            prior inserting the new triples.
+     * @param  srcGraphUris       the URIs of the graphs the input data
+     *                            shall be extracted from, if the input
+     *                            dataset shall be restricted.
      *
      * @throws IllegalArgumentException if no source RDF store or
      *         CONSTRUCT query list are provided.
@@ -482,8 +493,8 @@ public final class RdfUtils
     public static void convert(Repository source,
                                List<String> constructQueries,
                                Repository target, URI namedGraph,
-                               String baseUri, boolean clearTargetGraph)
-                                                        throws RdfException {
+                               String baseUri, boolean clearTargetGraph,
+                               URI... srcGraphUris) throws RdfException {
         if (source == null) {
             throw new IllegalArgumentException("source");
         }
@@ -504,11 +515,22 @@ public final class RdfUtils
             out = target.newConnection();
             // Clear target named graph, if requested.
             u = getGraphUri(namedGraph, out, clearTargetGraph);
+            // Construct the dataset the queries apply to.
+            DatasetImpl dataset = null;
+            if ((srcGraphUris != null) && (srcGraphUris.length != 0)) {
+                dataset = new DatasetImpl();
+                for (URI g : srcGraphUris) {
+                    dataset.addDefaultGraph(getUri(g, in));
+                }
+            }
             // Apply CONSTRUCT queries to generate and insert triples.
             for (String s : constructQueries) {
                 query = s;
                 GraphQuery q = in.prepareGraphQuery(QueryLanguage.SPARQL,
                                                     query, baseUri);
+                if (dataset != null) {
+                    q.setDataset(dataset);
+                }
                 out.add(q.evaluate(), u);
             }
             query = null;       // No query in error.
@@ -890,12 +912,17 @@ public final class RdfUtils
         org.openrdf.model.URI namedGraph = null;
         // Clear target named graph, if any.
         if (graphName != null) {
-            namedGraph = cnx.getValueFactory().createURI(graphName.toString());
+            namedGraph = getUri(graphName, cnx);
             if (clear) {
                 cnx.clear(namedGraph);
             }
         }
         return namedGraph;
+    }
+
+    private static org.openrdf.model.URI getUri(URI uri,
+                                                RepositoryConnection cnx) {
+        return cnx.getValueFactory().createURI(uri.toString());
     }
 
     /**
@@ -912,5 +939,121 @@ public final class RdfUtils
         // [#x10000-#x10FFFF]
         return (c >= 32 && c <= 55295) || (c >= 57344 && c <= 65533) ||
                (c >= 65536 && c <= 1114111) || c == 9 || c == 10 || c == 13;
+    }
+
+    /** The severity levels for RDF parse errors. */
+    public enum ErrorSeverity
+    {
+        Warning ("Warning"),
+        Error   ("Error"),
+        Fatal   ("Fatal error");
+        
+        public final String label;
+
+        private ErrorSeverity(String label) {
+            this.label = label;
+        }
+
+        @Override
+        public String toString() {
+            return this.label;
+        }
+    }
+
+    /**
+     * An object modeling an RDF parse error.
+     */
+    public final static class RdfParseError
+    {
+        /** The error severity. */
+        public final ErrorSeverity severity;
+        /** The line, in the input data, where the error was detected. */
+        public final int line;
+        /** The column, in the input data, where the error was detected. */
+        public final int column;
+        /** The error description, as reported by the RDF parser. */
+        public final String message;
+
+        /**
+         * Creates an new RDF parse error object.
+         * @param severity   the error severity.
+         * @param line       the line number.
+         * @param column     the column position.
+         * @param message    the error message.
+         */
+        public RdfParseError(ErrorSeverity severity,
+                             int line, int column, String message) {
+            this.severity = severity;
+            this.line     = line;
+            this.column   = column;
+            this.message  = message;
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public String toString() {
+            StringBuilder buf = new StringBuilder(40 + this.message.length());
+            buf.append(this.severity).append(": ");
+            if (this.line >= 0) {
+                buf.append("(")
+                   .append(this.line).append(", ")
+                   .append(this.column).append(") ");
+            }
+            return buf.append(this.message).append('\n').toString();
+        }
+    }
+
+    /**
+     * A {@link ParseErrorListener RDF parse listener} that collects
+     * all errors and warnings occurring during a RDF parse operation.
+     */
+    public final static class RdfErrorCollector implements ParseErrorListener
+    {
+        /** The errors encountered during the parse operation. */
+        private List<RdfParseError> errors = new LinkedList<RdfParseError>();
+
+        /** {@inheritDoc} */
+        @Override
+        public void warning(String msg, int lineNo, int colNo) {
+            this.addError(ErrorSeverity.Warning, lineNo, colNo, msg);
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public void error(String msg, int lineNo, int colNo) {
+            this.addError(ErrorSeverity.Error, lineNo, colNo, msg);
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public void fatalError(String msg, int lineNo, int colNo) {
+            this.addError(ErrorSeverity.Fatal, lineNo, colNo, msg);
+        }
+
+        /**
+         * Returns the errors and warnings collected so far.
+         * @return the errors and warnings collected by this listener.
+         */
+        public List<RdfParseError> getErrors() {
+            return Collections.unmodifiableList(this.errors);
+        }
+
+        /**
+         * Resets this listener, to be ready for the next parse.
+         */
+        public void reset() {
+            this.errors.clear();
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public String toString() {
+            return this.errors.toString();
+        }
+
+        private void addError(ErrorSeverity severity,
+                              int line, int column, String message) {
+            this.errors.add(new RdfParseError(severity, line, column, message));
+        }
     }
 }
