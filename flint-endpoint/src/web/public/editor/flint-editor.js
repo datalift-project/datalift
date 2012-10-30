@@ -1752,7 +1752,7 @@ function FlintEditor(container, imagesPath, config) {
 
 	function FlintCodeEditor(flint, editorMode) {
 
-		var initialQuery = "SELECT * WHERE {\n   ?s ?p ?o .\n}";
+		var initialQuery = "SELECT * WHERE {\n   ?s ?p ?o .\n} LIMIT 5000";
 		var cm;
 		var spaceForTabsCount = 0;
 		var tabOffset = 0;
