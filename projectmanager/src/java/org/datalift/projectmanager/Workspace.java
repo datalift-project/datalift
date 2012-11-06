@@ -597,6 +597,7 @@ public class Workspace extends BaseModule
                     @FormDataParam("source")
                                     FormDataContentDisposition fileDisposition,
                     @FormDataParam("file_url") String sourceUrl,
+                    @FormDataParam("file_name") String file_name,
                     @FormDataParam("charset") String charset,
                     @FormDataParam("separator") String separator,
                     @FormDataParam("title_row") @DefaultValue("0") int titleRow,
@@ -637,7 +638,7 @@ public class Workspace extends BaseModule
             }
         }
         else {
-            fileName = this.toFileName(fileDisposition.getFileName());
+            fileName = this.toFileName(file_name);
             if (isBlank(fileName)) {
                 this.throwInvalidParamError("source", null);
             }
@@ -720,6 +721,60 @@ public class Workspace extends BaseModule
             }
         }
         return response;
+    }
+    
+    @POST
+    @Path("checksourceuri")
+    public Response checkFileSource(
+    				@FormParam("project_uri") URI projectUri,
+    				@FormParam("source") String sourceName,
+    				@FormParam("file_url") String sourceUrl,
+                    @Context UriInfo uriInfo) throws WebApplicationException {
+    	Boolean isValid = true;
+    	Response response = null;
+    	URL fileUrl = null;
+    	String fileName = null;
+    	// Build object URIs from request path.
+        try {
+        	if (!isBlank(sourceUrl)) {
+        		fileUrl = new URL(sourceUrl);
+        		fileName = this.extractFileName(fileUrl, "csv") ;
+        	}
+        	else
+        		fileName = sourceName;
+			URI sourceUri = new URI(projectUri.getScheme(), null,
+					projectUri.getHost(), projectUri.getPort(),
+					this.getSourceId(projectUri.getPath(),fileName),
+					null, null);
+			Collection<Project> projects = this.projectManager.listProjects();
+			if (!projects.isEmpty()) {
+				Iterator<Project> itp = projects.iterator();
+				while(itp.hasNext() && isValid != false) {
+					Project p = itp.next();
+					log.info("iteration of projects \"{}\"", p.getDescription());
+					Collection<Source> sources = p.getSources();
+					if (!sources.isEmpty()) {
+						Iterator<Source> its = sources.iterator();
+						while(its.hasNext() && isValid != false) {
+							Source s = its.next();
+							log.info("\"{}\"", s.getUri());
+							log.info("\"{}\"", sourceUri.toString());
+							if (s.getUri().equals(sourceUri.toString())) {
+								log.info("URI already exists", sourceUri);
+								isValid = false;
+							}
+						}
+					}
+				}
+			}
+			if (isValid)
+				return Response.ok("true", APPLICATION_JSON_UTF8).build();
+			else
+				return Response.ok("false", APPLICATION_JSON_UTF8).build();
+		} catch (Exception e) {
+			this.handleInternalError(e, "Failed to create source URI", fileName);
+		}
+    	return response;
     }
 
     @POST
