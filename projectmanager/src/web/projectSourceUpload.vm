@@ -46,14 +46,16 @@
 	<form method="post" action="$target_csv" id="target_csv" enctype="multipart/form-data">
 #if( !$current )
 		<p><label class="control-label" for="file">#i18n("project.source.csv.upload") *: </label>
-		<input type="file" class="control-input" name="source" title="#i18n("project.source.tooltip.upload")" size="64" accept="*.csv"/><br />
-		<p><label class="control-label" for="file_url">#i18n("project.upload_source.file_url"): </label>
+		<input type="file" id="csv_src" class="control-input" name="source" title="#i18n("project.source.tooltip.upload")" size="64" accept="*.csv"/><br />
+		<p><label class="control-label" for="file_url">#i18n("project.upload_source.file_url") *: </label>
 		<input type="text" class="control-input" placeholder="http://..." id="file_url" name="file_url" title="#i18n("project.source.tooltip.url")" /></p>
+		<p><label class="control-label" for="file_name">#i18n("project.upload_source.name") *: </label>
+		<input type="text" id="csv_name" class="control-input" placeholder="#i18n("project.source.placeholder.file_name")" name="file_name" title="#i18n("project.upload_source.file_name")" /></p>
 #else
 		<input type="hidden" name="current_source" value="$current.uri"/>
 		<p>#i18n("project.source.csv.update"): <a href="$current.uri">$esc.html($current.title)</a>#if( $current.sourceUrl ) (#i18n('project.update_source.src_url'): <a href='${current.sourceUrl}'>$!esc.html($current.sourceUrl)</a>)#end</p>
 #end
-		<p><label class="control-label" for="description">#i18n("project.upload_source.description")*: </label>
+		<p><label class="control-label" for="description">#i18n("project.upload_source.description"): </label>
 		<input type="text" class="control-input" id="description" name="description" title ="#i18n("project.source.tooltip.description")" value="$!esc.html($current.description)" /></p>
 		<p><label class="control-label" for="charset">#i18n("project.upload_source.charset"): </label>
 		<select id="charset" name="charset" title="#i18n("project.source.tooltip.charset")">
@@ -95,14 +97,16 @@
 	<form method="post" action="$target_rdf" id="target_rdf" enctype="multipart/form-data">
 #if( !$current )
 		<p><label class="control-label" for="file">#i18n("project.upload_rdf")*: </label>
-		<input type="file" class="control-input" name="source" title="#i18n("project.source.tooltip.upload")" size="64"/><br />
-		<label class="control-label" for="file_url">#i18n("project.upload_source.file_url"): </label>
+		<input type="file" id="rdf_src" class="control-input" name="source" title="#i18n("project.source.tooltip.upload")" size="64"/><br />
+		<p><label class="control-label" for="file_url">#i18n("project.upload_source.file_url"): </label>
 		<input type="text" class="control-input" placeholder= "http://..." id="file_url" name="file_url" title="#i18n("project.source.tooltip.url")" /></p>
+		<p><label class="control-label" for="file_name">#i18n("project.upload_source.name") *: </label>
+		<input type="text" id="rdf_name" class="control-input" placeholder="#i18n("project.source.placeholder.file_name")" name="file_name" title="#i18n("project.upload_source.file_name")" /></p>
 #else
 		<input type="hidden" id="current_source" name="current_source" value="$current.uri"/>
 		<p>#i18n("project.update_rdf"): <a href="$current.uri">$esc.html($current.title)</a>#if( $current.sourceUrl ) (#i18n('project.update_source.src_url'): <a href='${current.sourceUrl}'>$!esc.html($current.sourceUrl)</a>)#end</p>
 #end
-		<p><label class="control-label" for="description">#i18n("project.upload_source.description")*: </label>
+		<p><label class="control-label" for="description">#i18n("project.upload_source.description"): </label>
 		<input type="text" class="control-input" id="description" name="description" title="#i18n("project.source.tooltip.description")" value="$!esc.html($current.description)"/></p>
 		<p><label class="control-label" for="mime_type">#i18n("project.upload_rdf_format")*: </label>
 		<select id="mime_type" name="mime_type" title="#i18n("project.source.tooltip.rdf_format")">
@@ -182,14 +186,16 @@
 	<form method="post" action="$target_xml" id="target_xml" enctype="multipart/form-data">
 #if( !$current )
 		<p><label class="control-label" for="file">#i18n("project.upload_xml")*: </label>
-		<input type="file" class="control-input" name="source" size="64"/><br />
-		<label class="control-label" for="file_url">#i18n("project.upload_source.file_url"): </label>
+		<input type="file" id="xml_src" class="control-input" name="source" title="#i18n("project.source.tooltip.upload")" size="64" accept="*.xml"/><br />	
+		<p><label class="control-label" for="file_url">#i18n("project.upload_source.file_url"): </label></p>
 		<input type="text" class="control-input" placeholder= "http://..." id="file_url" name="file_url"/></p>
+		<p><label class="control-label" for="file_name">#i18n("project.upload_source.name") *: </label>
+		<input type="text" id="xml_name" class="control-input" placeholder="#i18n("project.source.placeholder.file_name")" name="file_name" title="#i18n("project.upload_source.file_name")" /></p>
 #else
 		<input type="hidden" name="current_source" value="$current.uri"/>
 		<p>#i18n("project.update_xml"): <a href="$current.uri">$esc.html($current.title)</a>#if( $current.sourceUrl ) (#i18n('project.update_source.src_url'): <a href='${current.sourceUrl}'>$!esc.html($current.sourceUrl)</a>)#end</p>
 #end
-		<p><label class="control-label" for="description">#i18n("project.upload_source.description")*: </label>
+		<p><label class="control-label" for="description">#i18n("project.upload_source.description"): </label>
 		<input type="text" class="control-input" id="description" name="description" value="$!esc.html($current.description)"/></p>
 		<input type="submit" value="#i18n("$submit")"/>
 	</form>
@@ -247,20 +253,51 @@
 </head>
 <script type="text/javascript">
 	$(function() {
+		$('#csv_src').change(function () {
+			$('#csv_name').val('');
+			var tmp=$('#csv_src').val();
+			tmp = tmp.replace("C:\\fakepath\\","");
+			$('#csv_name').val(tmp);
+		});
+		$('#xml_src').change(function () {
+			$('#xml_name').val('');
+			var tmp=$('#xml_src').val();
+			tmp = tmp.replace("C:\\fakepath\\","");
+			$('#xml_name').val(tmp);
+		});
+		$('#rdf_src').change(function () {
+			$('#rdf_name').val('');
+			var tmp=$('#rdf_src').val();
+			tmp = tmp.replace("C:\\fakepath\\","");
+			$('#rdf_name').val(tmp);
+		});
 		$("#target_csv").validate(
 				{
 					ignoreTitle: true,
+					onsubmit: true,
+					onkeyup: false,
+   					onclick: false,
+   					onfocusout: false,
 					rules: {
 						source: {
-							required: 'input[name="file_url"]:blank',
+							required: 'input[name="file_url"]:blank'
 						},
 						file_url: {
 							required: 'input[name="source"]:blank',
 							url: true
 						},
-						description: {
-							minlength: 5,
-							required: true
+						file_name: {
+							required: true,
+							remote: {
+								type: 'post',
+								data: {'project_uri': '$esc.html("${it.uri}")', 
+										'source': function() {
+											var source=$('#csv_name').val();
+											return source;
+										} 
+									  },
+						        url: '../checksourceuri'
+							}
 						},
 						title_row: {
 							number: true
@@ -273,14 +310,16 @@
 						}
 				    },
 				    messages: {
-				        source: "#i18n("project.source.validation.file")",
+				        source: {
+				        	required: "#i18n("project.source.validation.file")"	
+				       	},
+				        file_name: {
+				        	required: "#i18n("project.source.validation.file_name")",
+				        	remote: "#i18n("project.source.validation.remote")"
+				        	},
 				        file_url: {
 				    		required: "#i18n("project.source.validation.link")",
 				    		url: "#i18n("project.source.validation.url")"
-				    	},
-				        description: {
-				            required: "#i18n("project.source.validation.description")",
-				            minlength: "#i18n("project.source.validation.minlength")"
 				    	},
 				    	title_row: {
 							number: "#i18n("project.source.validation.number")"
@@ -296,34 +335,53 @@
 		$("#target_rdf").validate(
 				{
 					ignoreTitle: true,
+					onsubmit: true,
+					onkeyup: false,
+   					onclick: false,
+   					onfocusout: false,
 					rules: {
 						source: {
-							required: 'input[name="file_url"]:blank',
+							required: 'input[name="file_url"]:blank'
 						},
 						file_url: {
 							required: 'input[name="source"]:blank',
 							url: true
 						},
-						description: {
-							minlength: 5,
-							required: true
-						}
+						file_name: {
+							required: true,
+							remote: {
+								type: 'post',
+								data: {'project_uri': '$esc.html("${it.uri}")', 
+										'source': function() {
+											var source=$('#rdf_name').val();
+											return source;
+										} 
+									  },
+						        url: '../checksourceuri'
+							}
+						},
 				    },
 				    messages: {
-				        source: "#i18n("project.source.validation.file")",
+				        source: {
+				        	required: "#i18n("project.source.validation.file")"
+				       	},
+					file_name: {
+				        	required: "#i18n("project.source.validation.file_name")",
+				        	remote: "#i18n("project.source.validation.remote")"
+				        	},
 				        file_url: {
 				    		required: "#i18n("project.source.validation.link")",
 				    		url: "#i18n("project.source.validation.url")"
-				    	},
-				        description: {
-				            required: "#i18n("project.source.validation.description")",
-				            minlength: "#i18n("project.source.validation.minlength")"
 				    	}
 				    }
 				});
 		$("#target_xml").validate(
 				{
 					ignoreTitle: true,
+					onsubmit: true,
+					onkeyup: false,
+   					onclick: false,
+   					onfocusout: false,
 					rules: {
 						source: {
 							required: 'input[name="file_url"]:blank',
@@ -332,20 +390,29 @@
 							required: 'input[name="source"]:blank',
 							url: true
 						},
-						description: {
-							minlength: 5,
-							required: true
-						}
+						file_name: {
+							required: true,
+							remote: {
+								type: 'post',
+								data: {'project_uri': '$esc.html("${it.uri}")', 
+										'source': function() {
+											var source=$('#xml_name').val();
+											return source;
+										} 
+									  },
+						        url: '../checksourceuri'
+							}
+						},
 				    },
 				    messages: {
 				        source: "#i18n("project.source.validation.file")",
+ 					file_name: {
+				        	required: "#i18n("project.source.validation.file_name")",
+				        	remote: "#i18n("project.source.validation.remote")"
+				        	},					
 				        file_url: {
 				    		required: "#i18n("project.source.validation.link")",
 				    		url: "#i18n("project.source.validation.url")"
-				    	},
-				        description: {
-				            required: "#i18n("project.source.validation.description")",
-				            minlength: "#i18n("project.source.validation.minlength")"
 				    	}
 				    }
 				});
