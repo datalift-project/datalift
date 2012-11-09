@@ -60,7 +60,9 @@ import org.datalift.fwk.util.StringUtils;
 import org.datalift.fwk.util.UriPolicy;
 
 import static org.datalift.fwk.MediaTypes.UTF8_ENCODED;
-import static org.datalift.handlers.HandlerConstants.CONSTRUCT_DEFAULT_RESPONSE_TYPES;
+import static org.datalift.fwk.rdf.RdfNamespace.OGC;
+
+import static org.datalift.handlers.HandlerConstants.*;
 
 
 /**
@@ -98,7 +100,7 @@ public class GmlResourceHandler implements UriPolicy
     private final static List<Variant> SUPPORTED_RESPONSE_TYPES;
 
     private final static String GML_AVAILABILITY_QUERY =
-            "PREFIX ogc: <http://www.opengis.net/rdf#>\n" +
+            "PREFIX ogc: <" + OGC.uri + ">\n" +
             "SELECT ?gml WHERE { { ?uri ogc:asGML ?gml . } UNION " +
                                 "{ ?uri ?p ?o . ?o ogc:asGML ?gml . } } LIMIT 1";
 

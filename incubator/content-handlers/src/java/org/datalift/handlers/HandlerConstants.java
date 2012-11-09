@@ -14,7 +14,7 @@ import static org.datalift.fwk.MediaTypes.*;
  *
  * @author lbihanic
  */
-public class HandlerConstants
+public final class HandlerConstants
 {
     /**
      * The MIME types for CONSTRUCT and DESCRIBE query responses handled

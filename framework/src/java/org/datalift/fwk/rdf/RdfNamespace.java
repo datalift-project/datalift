@@ -89,10 +89,13 @@ public enum RdfNamespace
                                 "Representing Content in RDF"),
     /** wgs84: &lt;http://www.w3.org/2003/01/geo/wgs84_pos#&gt; */
     WGS84       ("wgs84",       "http://www.w3.org/2003/01/geo/wgs84_pos#",
-                                "Geography"),
+                                "WGS84 Geo Positioning"),
     /** skos: &lt;http://www.w3.org/2004/02/skos/core#&gt; */
     SKOS        ("skos",        "http://www.w3.org/2004/02/skos/core#",
-                                "Simple Knowledge Organisation System");
+                                "Simple Knowledge Organisation System"),
+    /** ogc: &lt;http://www.opengis.net/rdf#&gt; */
+    OGC         ("ogc",         "http://www.opengis.net/rdf#",
+                                "OGC Data Types and Operators");
 
     //-------------------------------------------------------------------------
     // Instance members
