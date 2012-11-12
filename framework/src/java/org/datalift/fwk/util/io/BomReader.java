@@ -49,7 +49,7 @@ import org.datalift.fwk.util.Env;
  * An {@link InputStreamReader} implementation that detects the data
  * encoding from an potential Byte Order Mark (BOM) present at the
  * beginning of the data.
- * 
+ *
  * @author lbihanic
  */
 public class BomReader extends InputStreamReader
@@ -104,7 +104,7 @@ public class BomReader extends InputStreamReader
      * if no BOM is found.
      * @param  in            the {@link InputStream} to read data from.
      * @param  charsetName   the character set to use if no BOM is found.
-     * 
+     *
      * @throws UnsupportedEncodingException If the named charset is not
      *         supported.
      */
@@ -170,7 +170,7 @@ public class BomReader extends InputStreamReader
          */
         public BomInputStream(InputStream in) {
             super(in, Env.getFileBufferSize());
-            this.bom = this.extractBom(this); 
+            this.bom = this.extractBom(this);
         }
 
         /**
@@ -209,7 +209,7 @@ public class BomReader extends InputStreamReader
 
         /**
          * Return whether the first data read from a stream match the
-         * specified BOM. 
+         * specified BOM.
          * @param  b     the BOM to match.
          * @param  buf   the buffer holding the first data bytes read
          *               from the underlying input stream.

@@ -226,7 +226,7 @@ public class DefaultCacheConfiguration implements CacheConfiguration
 
         return businessDay;
     }
-    
+
     private static int parseHour(String spec) {
         if (spec.indexOf(':') == -1) {
             if (spec.length() <= 2) {

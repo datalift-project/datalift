@@ -98,6 +98,6 @@ public abstract class ViewFactory
      * @return a template model implementation.
      * @see    #createView(String, Object)
      */
-    abstract protected TemplateModel createView(String templateName, 
+    abstract protected TemplateModel createView(String templateName,
                                                 Object model);
 }

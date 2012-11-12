@@ -115,7 +115,7 @@ public final class StringUtils
         s = trim(s);
         return (s.length() == 0)? null: s;
     }
-    
+
     /**
      * Join collection elements to build a string.
      * @param  c     a collection.

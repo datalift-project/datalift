@@ -915,7 +915,7 @@ public abstract class UpdateQuery
                     // Function
                     String   f = m.group(1);
                     String[] p = m.group(2).split("\\s*,\\s*");
-    
+
                     Value[] args = new Value[p.length];
                     Map<URI,Variable> vars = new HashMap<URI,Variable>();
                     for (int i=0; i<p.length; i++) {

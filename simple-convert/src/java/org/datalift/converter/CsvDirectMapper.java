@@ -372,7 +372,7 @@ public class CsvDirectMapper extends BaseConverterModule
                         if (v.indexOf(quote) == v.length() - 1) {
                             v = v.substring(0, v.length() - 1);
                         }
-                        value = this.mapValue(v, valueFactory, m, mapping);                            
+                        value = this.mapValue(v, valueFactory, m, mapping);
                         if (j == mapping.keyColumn) {
                             subject = valueFactory.createURI(
                                                 objUri + urlify(v)); // + "#_";

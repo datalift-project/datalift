@@ -306,7 +306,7 @@ public final class SwapWriter extends Writer
     //-------------------------------------------------------------------------
     // Object contract support
     //-------------------------------------------------------------------------
-    
+
     /**
      * Returns a newly allocated string containing the character data
      * hold by this writer, assuming that the data has been retained
@@ -454,7 +454,7 @@ public final class SwapWriter extends Writer
                                                         (int)(this.size() * 2));
                 Writer osw = new OutputStreamWriter(buf, this.charset);
                 this.memoryWriter.writeTo(osw);
-    
+
                 is = new ByteArrayInputStream(buf.getBuffer(), 0, buf.size());
             }
             else {

@@ -224,7 +224,7 @@ public abstract class AbstractJsonWriter
                                            Integer.valueOf(type.value),
                                            this.defaultGraphUri };
             value = "<a href=\"" + this.urlPattern.format(args) + "\">"
-                                                            + value + "</a>";            
+                                                            + value + "</a>";
         }
         this.writeString(value);
     }

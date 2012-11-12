@@ -66,7 +66,7 @@ import static org.datalift.handlers.HandlerConstants.*;
 
 
 /**
- * A {@link UriPolicy} implementation that handles content 
+ * A {@link UriPolicy} implementation that handles content
  * for {@link #APPLICATION_GML_XML GML} if the requested RDF object
  * contains a <code>http://www.opengis.net/rdf#asGML</code> attribute
  * and serves this GML content.

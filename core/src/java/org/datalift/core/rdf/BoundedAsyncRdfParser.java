@@ -157,7 +157,7 @@ public final class BoundedAsyncRdfParser
         // Parse RDF data in a separate thread, queuing the read statements.
         final RdfErrorCollector errorListener = new RdfErrorCollector();
         final Future<Void> f = threadPool.submit(new Callable<Void>()
-            {            
+            {
                 @Override
                 public Void call() {
                     RuntimeException error = null;

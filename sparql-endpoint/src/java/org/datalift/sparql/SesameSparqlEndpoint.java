@@ -166,7 +166,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
               "\"results\":{ \"bindings\":[ { " +
                 "\"value\":{ \"type\":\"literal\", \"value\":\"%s\" } } ] } }";
     private final static String GRID_JSON_SINGLE_VALUE_FMT =
-            "{ \"head\":[ \"value\" ], " + 
+            "{ \"head\":[ \"value\" ], " +
               "\"rows\":[ { \"value\":\"%s\" } ] }";
 
     private final static String DESCRIBE_URL_PATTERN =
@@ -542,7 +542,6 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                                             this.baseUri + DESCRIBE_URL_PATTERN,
                                             this.repository.name, jsonCallback);
                         }
-                		
                     };
             }
             else {
@@ -691,9 +690,9 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
     {
         protected final Repository repository;
         protected final String query;
-        protected final	int startOffset;
+        protected final int startOffset;
         protected final int endOffset;
-        protected final String 	baseUri;
+        protected final String baseUri;
         protected final Dataset dataset;
 
         public SelectStreamingOutput(Repository repository, String query,

@@ -168,8 +168,7 @@ public interface SparqlEndpoint
                             List<String> namedGraphUris, String query,
                             UriInfo uriInfo, Request request, String acceptHdr)
                                                 throws WebApplicationException;
-    
-  
+
     /**
      * Enhanced entry point for executing a SPARQL query and sending
      * paginated results directly to the client.
@@ -268,7 +267,7 @@ public interface SparqlEndpoint
      *         the SPARQL query.
      * @throws SecurityException if the user is not allowed to
      *         perform the query.
-     * 
+     *
      * @see    #describe(String, DescribeType, Repository, UriInfo, Request, String)
      */
     public ResponseBuilder describe(String uri, DescribeType type,
@@ -338,7 +337,7 @@ public interface SparqlEndpoint
      *         perform the query.
      */
     public ResponseBuilder describe(String uri, DescribeType type,
-                                    Repository repository, int max, 
+                                    Repository repository, int max,
                                     String format, String jsonCallback,
                                     UriInfo uriInfo, Request request,
                                     String acceptHdr)

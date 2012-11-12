@@ -97,7 +97,7 @@ public interface CsvSource extends FileSource, CloseableIterable<Row<String>>
      *                    positive number (0, -1...) indicating that no
      *                    title row is present.
      */
-    public void	setTitleRow(int titleRow);
+    public void setTitleRow(int titleRow);
 
     /**
      * Returns the separator character.

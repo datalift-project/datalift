@@ -303,7 +303,7 @@ public class CsvSourceImpl extends BaseFileSource
                             titleRow[i] = this.getColumnName(i);
                         }
                     }
-                    // Check headings to ensure uniqueness.  
+                    // Check headings to ensure uniqueness.
                     Map<String,AtomicInteger> duplicatedColumns =
                                             new HashMap<String,AtomicInteger>();
                     for (int i=0, max=titleRow.length; i<max; i++) {
@@ -377,7 +377,7 @@ public class CsvSourceImpl extends BaseFileSource
         if (isSet(s)) {
             c = s.charAt(0);
             if (s.length() != 1) {
-                if (s.charAt(0) == '\\') {                
+                if (s.charAt(0) == '\\') {
                     s = s.toLowerCase();
                     int i = -1;
                     try {

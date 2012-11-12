@@ -64,7 +64,7 @@ public class BareBonesBrowserLaunch
                 // Assume Unix or Linux
                 String browser = null;
                 for (String b : BROWSERS) {
-                    String[] cmd = new String[] { "which", b }; 
+                    String[] cmd = new String[] { "which", b };
                     if (Runtime.getRuntime().exec(cmd)
                                             .getInputStream().read() != -1) {
                         browser = b;

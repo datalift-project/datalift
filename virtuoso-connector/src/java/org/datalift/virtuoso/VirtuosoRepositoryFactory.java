@@ -107,7 +107,7 @@ public final class VirtuosoRepositoryFactory extends RepositoryFactory
         //---------------------------------------------------------------------
         // Constructors
         //---------------------------------------------------------------------
-    
+
         /**
          * Build a new DataLift repository accessing a remote Virtuoso
          * repository over JDBC.
@@ -133,11 +133,11 @@ public final class VirtuosoRepositoryFactory extends RepositoryFactory
                                              endpointProp);
             }
         }
-    
+
         //---------------------------------------------------------------------
         // BaseRepository contract support
         //---------------------------------------------------------------------
-    
+
         /** {@inheritDoc} */
         @Override
         protected org.openrdf.repository.Repository
@@ -156,7 +156,7 @@ public final class VirtuosoRepositoryFactory extends RepositoryFactory
             catch (Exception e) {
                 throw new TechnicalException("repository.connect.error", e,
                                         this.name, this.url, e.getMessage());
-            }            
+            }
             return repository;
         }
     }

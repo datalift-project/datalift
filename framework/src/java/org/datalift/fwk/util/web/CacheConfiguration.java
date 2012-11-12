@@ -46,7 +46,7 @@ public interface CacheConfiguration
      * The name of Datalift default cache configuration in configuration.
      */
     public final String DEFAULT_CONFIG_NAME = "datalift.cache.configuration";
-    
+
     /**
      * Adds HTTP cache directive (CacheControl and Expires) to the
      * being-built JAX-RS response.

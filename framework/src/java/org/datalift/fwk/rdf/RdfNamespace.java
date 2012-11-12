@@ -141,7 +141,7 @@ public enum RdfNamespace
     public String toString() {
         return "PREFIX " + this.prefix + ": <" + this.uri + '>';
     }
-    
+
     //-------------------------------------------------------------------------
     // Specific implementation
     //-------------------------------------------------------------------------
@@ -187,7 +187,7 @@ public enum RdfNamespace
      * @return the namespace prefix.
      */
     public String getPrefix() {
-    	return this.prefix;
+        return this.prefix;
     }
 
     /**
@@ -195,7 +195,7 @@ public enum RdfNamespace
      * @return the namespace URI.
      */
     public String getUri() {
-    	return this.uri;
+        return this.uri;
     }
 
     /**
@@ -203,6 +203,6 @@ public enum RdfNamespace
      * @return the namespace description.
      */
     public String getLabel() {
-    	return this.label;
+        return this.label;
     }
 }

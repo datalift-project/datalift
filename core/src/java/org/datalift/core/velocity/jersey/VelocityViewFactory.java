@@ -51,7 +51,7 @@ import org.datalift.fwk.view.ViewFactory;
  * returns Jersey-compatible {@link TemplateModel}s, suitable for being
  * processed by the
  * {@link VelocityTemplateProcessor Velocity template processor}.
- * 
+ *
  * @author lbihanic
  */
 public class VelocityViewFactory extends ViewFactory

@@ -930,7 +930,7 @@ public final class RdfUtils
      * character data. The integer encoding also makes the
      * representation of supplementary Unicode characters possible.
      * @param  c   the character to check.
-     * 
+     *
      * @return <code>true</code> if the character is valid;
      *         <code>false</code> otherwise.
      */
@@ -947,7 +947,7 @@ public final class RdfUtils
         Warning ("Warning"),
         Error   ("Error"),
         Fatal   ("Fatal error");
-        
+
         public final String label;
 
         private ErrorSeverity(String label) {

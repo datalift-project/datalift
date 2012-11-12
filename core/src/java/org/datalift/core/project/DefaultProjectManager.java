@@ -311,7 +311,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
                                                     uri, project.getTitle());
         return src;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public ShpSource newShpSource(Project project, URI uri, String title,
@@ -320,7 +320,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
                                   String prjFilePath)
                                                             throws IOException {
         // Create new Shapefile source.
-    	ShpSourceImpl src = new ShpSourceImpl(uri.toString(), project);
+        ShpSourceImpl src = new ShpSourceImpl(uri.toString(), project);
         // Set source parameters.
         this.initSource(src, title, description);
         // Check and set Shape main file (SHP).
@@ -353,14 +353,14 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
                                                     uri, project.getTitle());
         return src;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public GmlSource newGmlSource(Project project, URI uri, String title,
                                   String description, String filePath)
                                                             throws IOException {
         // Create new GML source.
-    	GmlSourceImpl src = new GmlSourceImpl(uri.toString(), project);
+        GmlSourceImpl src = new GmlSourceImpl(uri.toString(), project);
         // Set source parameters.
         this.initSource(src, title, description);
         File f = this.getFileStorage(filePath);

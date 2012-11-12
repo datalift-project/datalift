@@ -260,7 +260,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         return this.executeQuery(null, null, query, -1, -1, false, null, null,
                                  uriInfo, request, acceptHdr);
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public ResponseBuilder executeQuery(List<String> defaultGraphUris,
@@ -330,7 +330,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     /** {@inheritDoc} */
     @Override
     public ResponseBuilder describe(String uri, DescribeType type,
-                                    Repository repository, int max, 
+                                    Repository repository, int max,
                                     String format, String jsonCallback,
                                     UriInfo uriInfo, Request request,
                                     String acceptHdr)
@@ -444,7 +444,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                                   startOffset, endOffset, gridJson, format,
                                   jsonCallback, uriInfo, request, acceptHdr);
     }
-    
+
     /**
      * <i>[Resource method]</i> Process a SPARQL query sent as an HTTP
      * POST request.
@@ -495,7 +495,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                              startOffset, endOffset, gridJson, format,
                              jsonCallback, uriInfo, request, acceptHdr);
     }
-    
+
     @GET
     @Path("{store}")
     public Response getStoreQuery(
@@ -521,12 +521,12 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                                   startOffset, endOffset, gridJson, format,
                                   jsonCallback, uriInfo, request, acceptHdr);
     }
-    
+
     @POST
     @Path("{store}")
     @Consumes(APPLICATION_FORM_URLENCODED)
     public final Response postStoreQuery(
-    			@PathParam("store") String repository,
+                @PathParam("store") String repository,
                 @FormParam("default-graph-uri") List<String> defaultGraphUris,
                 @FormParam("named-graph-uri") List<String> namedGraphUris,
                 @FormParam("query") String query,
@@ -641,7 +641,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
 
     private final Response dispatchQuery(List<String> defaultGraphUris,
                             List<String> namedGraphUris, String query,
-                            int startOffset, int endOffset, 
+                            int startOffset, int endOffset,
                             boolean gridJson, String format, String jsonCallback,
                             UriInfo uriInfo, Request request, String acceptHdr)
                                                 throws WebApplicationException {
@@ -1105,7 +1105,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
             // Higher priority comes first in list (i.e. lesser).
             int diff = (int)((o.priority - this.priority) * 100);
             // Same priority? first in list comes first!
-            return (diff != 0)? diff: this.order - o.order; 
+            return (diff != 0)? diff: this.order - o.order;
         }
 
         /** {@inheritDoc} */

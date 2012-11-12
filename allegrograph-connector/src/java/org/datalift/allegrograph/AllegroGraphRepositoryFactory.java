@@ -121,7 +121,7 @@ public class AllegroGraphRepositoryFactory extends RepositoryFactory
         //---------------------------------------------------------------------
         // Constructors
         //---------------------------------------------------------------------
-    
+
         /**
          * Build a new DataLift repository accessing a remote
          * AllegroGraph repository.
@@ -139,11 +139,11 @@ public class AllegroGraphRepositoryFactory extends RepositoryFactory
                                       Configuration configuration) {
             super(name, url, configuration);
         }
-    
+
         //---------------------------------------------------------------------
         // BaseRepository contract support
         //---------------------------------------------------------------------
-    
+
         /** {@inheritDoc} */
         @Override
         protected org.openrdf.repository.Repository
@@ -184,7 +184,7 @@ public class AllegroGraphRepositoryFactory extends RepositoryFactory
             catch (Exception e) {
                 throw new TechnicalException("repository.connect.error", e,
                                         this.name, this.url, e.getMessage());
-            }            
+            }
             return r;
         }
     }

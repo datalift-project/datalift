@@ -426,7 +426,7 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
          * {@link TechnicalException.
          * @param  e   an <code>SQLException</code>.
          *
-         * @throws TechnicalException always. 
+         * @throws TechnicalException always.
          */
         private void rethrow(SQLException e) {
             // Release resources.

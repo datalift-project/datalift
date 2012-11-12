@@ -78,7 +78,7 @@ import static org.datalift.fwk.MediaTypes.*;
 
 /**
  * A common superclass for converters, providing some utility methods.
- * 
+ *
  * @author lbihanic
  */
 public abstract class BaseConverterModule

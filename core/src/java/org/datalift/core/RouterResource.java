@@ -282,7 +282,7 @@ public class RouterResource implements LifeCycle, ResourceResolver
             if (handler != null) break;
         }
         if (handler == null) {
-            // URI not supported by any configured handler. => Use default. 
+            // URI not supported by any configured handler. => Use default.
             handler = this.defaultPolicy.canHandle(uriInfo, request, acceptHdr);
         }
         Response response = null;
@@ -337,7 +337,7 @@ public class RouterResource implements LifeCycle, ResourceResolver
                                                          request, acceptHdr);
         return (response != null)? new ResponseWrapper(response): null;
     }
- 
+
     //-------------------------------------------------------------------------
     // Specific implementation
     //-------------------------------------------------------------------------
@@ -582,7 +582,7 @@ public class RouterResource implements LifeCycle, ResourceResolver
                 return null;
             }
             Response response = null;
-            
+
             final URI uri = this.uriInfo.getRequestUri();
             // Check that the requested URI exists as subject in the
             // public data RDF store.

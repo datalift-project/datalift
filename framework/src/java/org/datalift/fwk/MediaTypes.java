@@ -103,7 +103,7 @@ public class MediaTypes extends MediaType
                             MediaType.valueOf(APPLICATION_SPARQL_RESULT_XML);
     /** "application/sparql-results+json" */
     public final static String APPLICATION_SPARQL_RESULT_JSON =
-                                            "application/sparql-results+json";    
+                                            "application/sparql-results+json";
     /** "application/sparql-results+json" */
     public final static MediaType APPLICATION_SPARQL_RESULT_JSON_TYPE =
                             MediaType.valueOf(APPLICATION_SPARQL_RESULT_JSON);
@@ -165,7 +165,7 @@ public class MediaTypes extends MediaType
 
     /**
      * Returns the {@link #CHARSET_PARAMETER character set} parameter
-     * for this media type or <code>null</code> if none was set. 
+     * for this media type or <code>null</code> if none was set.
      * @return the "<code>charset</code>" parameter.
      */
     public String getCharset() {

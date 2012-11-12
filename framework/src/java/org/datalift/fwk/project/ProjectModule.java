@@ -60,7 +60,7 @@ public interface ProjectModule extends Module
      *
      * @return the description of the module entry page applicable to
      *         the specified project or <code>null</code> if this
-     *         module can not handle the project in its current state. 
+     *         module can not handle the project in its current state.
      */
     public abstract UriDesc canHandle(Project p);
 

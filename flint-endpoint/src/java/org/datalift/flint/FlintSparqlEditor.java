@@ -54,7 +54,7 @@ import org.datalift.sparql.SesameSparqlEndpoint;
 
 /**
  * A class allowing the use of Flint SPARQL query editor.
- * 
+ *
  * @author adasilva
  */
 @Path(SesameSparqlEndpoint.MODULE_NAME)

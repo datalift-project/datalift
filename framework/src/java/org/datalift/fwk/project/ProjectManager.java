@@ -140,11 +140,11 @@ public interface ProjectManager
      * @throws IOException if any error occurred creating the source
      *         or accessing the specified file.
      */
-    public RdfFileSource newRdfSource(Project project, URI uri, String title, 
+    public RdfFileSource newRdfSource(Project project, URI uri, String title,
                                       String description, URI baseUri,
                                       String filePath, String mimeType)
                                                             throws IOException;
-    
+
     /**
      * Creates a new database source object.
      * @param  project         the owning project.
@@ -164,8 +164,8 @@ public interface ProjectManager
      *         or accessing the configured database.
      */
     public SqlSource newSqlSource(Project project, URI uri,
-                                  String title, String description, 
-                                  String srcUrl, String user, String password, 
+                                  String title, String description,
+                                  String srcUrl, String user, String password,
                                   String request, int cacheDuration)
                                                             throws IOException;
 
@@ -222,10 +222,10 @@ public interface ProjectManager
      *         or accessing the underlying data.
      */
     public TransformedRdfSource newTransformedRdfSource(Project project,
-                                URI uri, String title, String description, 
+                                URI uri, String title, String description,
                                 URI targetGraph, Source parent)
                                                             throws IOException;
-    
+
     /**
      * Creates a new Shapefile source object.
      * @param  project       the owning project.
@@ -248,7 +248,7 @@ public interface ProjectManager
                                   String shxFilePath, String dbfFilePath,
                                   String prjFilePath)
                                                             throws IOException;
-    
+
 
     /**
      * Creates a new GML source object.
@@ -265,7 +265,7 @@ public interface ProjectManager
     public GmlSource newGmlSource(Project project, URI uri, String title,
                                   String description, String filePath)
                                                             throws IOException;
-    
+
     /**
      * Deletes the specified source object and the associated resources
      * (local files, cached data...).

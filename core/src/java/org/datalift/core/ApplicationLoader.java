@@ -309,7 +309,7 @@ public class ApplicationLoader extends LogServletContextListener
                 Object[] prevCtx = LogContext.pushContexts(name, "shutdown");
                 try {
                     m.shutdown(cfg);
-                    cfg.removeBean(m, name);                
+                    cfg.removeBean(m, name);
                 }
                 catch (Exception e) {
                     log.error("Failed to properly shutdown module {}: {}", e,

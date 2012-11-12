@@ -107,7 +107,7 @@ public abstract class BaseModule implements Module
     public void postInit(Configuration configuration) {
         // NOP
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public void shutdown(Configuration configuration) {
