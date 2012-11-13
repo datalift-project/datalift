@@ -37,7 +37,6 @@ package org.datalift.handlers.gml;
 
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -56,13 +55,13 @@ import org.openrdf.query.TupleQueryResultHandlerBase;
 
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.rdf.Repository;
+import org.datalift.fwk.sparql.SparqlEndpoint;
+import org.datalift.fwk.sparql.SparqlEndpoint.QueryType;
 import org.datalift.fwk.util.StringUtils;
 import org.datalift.fwk.util.UriPolicy;
 
 import static org.datalift.fwk.MediaTypes.UTF8_ENCODED;
 import static org.datalift.fwk.rdf.RdfNamespace.OGC;
-
-import static org.datalift.handlers.HandlerConstants.*;
 
 
 /**
@@ -97,32 +96,33 @@ public class GmlResourceHandler implements UriPolicy
     public final static MediaType APPLICATION_VND_OGC_GML_TYPE =
                                     MediaType.valueOf(APPLICATION_VND_OGC_GML);
 
-    private final static List<Variant> SUPPORTED_RESPONSE_TYPES;
-
     private final static String GML_AVAILABILITY_QUERY =
             "PREFIX ogc: <" + OGC.uri + ">\n" +
             "SELECT ?gml WHERE { { ?uri ogc:asGML ?gml . } UNION " +
                                 "{ ?uri ?p ?o . ?o ogc:asGML ?gml . } } LIMIT 1";
 
     //-------------------------------------------------------------------------
-    // Class initializer
+    // Instance members
     //-------------------------------------------------------------------------
 
-    static {
-        List<Variant> l = new ArrayList<Variant>(
-                                CONSTRUCT_DEFAULT_RESPONSE_TYPES.size() + 2);
-        // GML MIME types.
-        l.addAll(Arrays.asList(
-                    new Variant(APPLICATION_GML_XML_TYPE, null, null),
-                    new Variant(APPLICATION_VND_OGC_GML_TYPE, null, null)));
-        // Response types served by the default SPARQL endpoint.
-        l.addAll(CONSTRUCT_DEFAULT_RESPONSE_TYPES);
-        SUPPORTED_RESPONSE_TYPES = Collections.unmodifiableList(l);
-    }
+    /** The supported response MIME types. */
+    private List<Variant> supportedResponseTypes = null;
 
     //-------------------------------------------------------------------------
     // UriPolicy contract support
     //-------------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    @Override public void postInit(Configuration configuration) {
+        List<Variant> defTypes =
+                        configuration.getBean(SparqlEndpoint.class)
+                                     .getResponseMimeTypes(QueryType.DESCRIBE);
+        List<Variant> l = new ArrayList<Variant>(defTypes.size() + 2);
+        l.add(new Variant(APPLICATION_GML_XML_TYPE, null, null));
+        l.add(new Variant(APPLICATION_VND_OGC_GML_TYPE, null, null));
+        l.addAll(defTypes);
+        this.supportedResponseTypes = Collections.unmodifiableList(l);
+    }
 
     /** {@inheritDoc} */
     @Override
@@ -130,7 +130,7 @@ public class GmlResourceHandler implements UriPolicy
                                      Request request, String acceptHdr) {
         ResourceHandler h = null;
         // 1. Check that GML is the preferred content type.
-        final Variant v = request.selectVariant(SUPPORTED_RESPONSE_TYPES);
+        final Variant v = request.selectVariant(this.supportedResponseTypes);
         if ((v != null) &&
             ((APPLICATION_GML_XML_TYPE.equals(v.getMediaType())) ||
              (APPLICATION_VND_OGC_GML_TYPE.equals(v.getMediaType())))) {
@@ -160,9 +160,11 @@ public class GmlResourceHandler implements UriPolicy
     /** {@inheritDoc} */
     @Override public void init(Configuration configuration)     { /* NOP */ }
     /** {@inheritDoc} */
-    @Override public void postInit(Configuration configuration) { /* NOP */ }
-    /** {@inheritDoc} */
     @Override public void shutdown(Configuration configuration) { /* NOP */ }
+
+    //-------------------------------------------------------------------------
+    // Specific implementation
+    //-------------------------------------------------------------------------
 
     /**
      * Extracts the GML data from the specified RDF resource.

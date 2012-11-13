@@ -62,9 +62,9 @@ import org.datalift.fwk.MediaTypes;
 import org.datalift.fwk.rdf.RdfException;
 import org.datalift.fwk.rdf.RdfNamespace;
 import org.datalift.fwk.rdf.Repository;
+import org.datalift.fwk.sparql.SparqlEndpoint;
+import org.datalift.fwk.sparql.SparqlEndpoint.QueryType;
 import org.datalift.fwk.util.UriPolicy;
-
-import static org.datalift.handlers.HandlerConstants.CONSTRUCT_DEFAULT_RESPONSE_TYPES;
 
 
 public class JsonLdResourceHandler implements UriPolicy
@@ -79,25 +79,27 @@ public class JsonLdResourceHandler implements UriPolicy
     public final static MediaType APPLICATION_JSON_LD_TYPE =
                                         MediaType.valueOf(APPLICATION_JSON_LD);
 
-    private final static List<Variant> SUPPORTED_RESPONSE_TYPES;
-
     //-------------------------------------------------------------------------
-    // Class initializer
+    // Instance members
     //-------------------------------------------------------------------------
 
-    static {
-        List<Variant> l = new ArrayList<Variant>(
-                                CONSTRUCT_DEFAULT_RESPONSE_TYPES.size() + 1);
-        // JSON-LD MIME types.
-        l.add(new Variant(APPLICATION_JSON_LD_TYPE, null, null));
-        // Response types served by the default SPARQL endpoint.
-        l.addAll(CONSTRUCT_DEFAULT_RESPONSE_TYPES);
-        SUPPORTED_RESPONSE_TYPES = Collections.unmodifiableList(l);
-    }
+    /** The supported response MIME types. */
+    private List<Variant> supportedResponseTypes = null;
 
     //-------------------------------------------------------------------------
     // UriPolicy contract support
     //-------------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    @Override public void postInit(Configuration configuration) {
+        List<Variant> defTypes =
+                        configuration.getBean(SparqlEndpoint.class)
+                                     .getResponseMimeTypes(QueryType.DESCRIBE);
+        List<Variant> l = new ArrayList<Variant>(defTypes.size() + 2);
+        l.add(new Variant(APPLICATION_JSON_LD_TYPE, null, null));
+        l.addAll(defTypes);
+        this.supportedResponseTypes = Collections.unmodifiableList(l);
+    }
 
     /** {@inheritDoc} */
     @Override
@@ -105,7 +107,7 @@ public class JsonLdResourceHandler implements UriPolicy
                                      Request request, String acceptHdr) {
         ResourceHandler h = null;
         // Check that JSON-LD is the preferred content type.
-        final Variant v = request.selectVariant(SUPPORTED_RESPONSE_TYPES);
+        final Variant v = request.selectVariant(this.supportedResponseTypes);
         if ((v != null) && (APPLICATION_JSON_LD_TYPE.equals(v.getMediaType()))) {
             h = new ResourceHandler() {
                     @Override
@@ -131,8 +133,6 @@ public class JsonLdResourceHandler implements UriPolicy
 
     /** {@inheritDoc} */
     @Override public void init(Configuration configuration)     { /* NOP */ }
-    /** {@inheritDoc} */
-    @Override public void postInit(Configuration configuration) { /* NOP */ }
     /** {@inheritDoc} */
     @Override public void shutdown(Configuration configuration) { /* NOP */ }
 
