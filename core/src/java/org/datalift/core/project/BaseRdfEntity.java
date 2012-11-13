@@ -133,6 +133,7 @@ public abstract class BaseRdfEntity implements SupportsRdfId
      * @return the ISO-8601 representation of the specified date.
      */
     protected final String toString(final Date date) {
-        return Iso8601DateFormat.DATETIME_UTC.format(date);
+        return (date != null)? Iso8601DateFormat.DATETIME_UTC.format(date):
+                               "null";
     }
 }
