@@ -40,6 +40,7 @@ import java.util.List;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.UriInfo;
+import javax.ws.rs.core.Variant;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
 import org.datalift.fwk.Configuration;
@@ -119,6 +120,14 @@ public interface SparqlEndpoint
             }
             return v;
         }
+    }
+
+    /** The type of SPARQL query. */
+    public enum QueryType {
+        SELECT,
+        CONSTRUCT,
+        ASK,
+        DESCRIBE
     }
 
     //-------------------------------------------------------------------------
@@ -342,4 +351,11 @@ public interface SparqlEndpoint
                                     UriInfo uriInfo, Request request,
                                     String acceptHdr)
                                                 throws WebApplicationException;
+
+    /**
+     * Returns the MIME types this SPARQL endpoint can serve for the
+     * specified query type.
+     * @return the list of served MIME types.
+     */
+    public List<Variant> getResponseMimeTypes(QueryType queryType);
 }

@@ -38,6 +38,7 @@ package org.datalift.sparql;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -127,7 +128,8 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                                                 "sparql.max.query.duration";
 
     /** The supported MIME types for SELECT query responses. */
-    public final static List<Variant> SELECT_RESPONSE_TYPES = Arrays.asList(
+    protected final static List<Variant> SELECT_RESPONSE_TYPES =
+            Collections.unmodifiableList(Arrays.asList(
                     new Variant(APPLICATION_SPARQL_RESULT_XML_TYPE, null, null),
                     new Variant(APPLICATION_SPARQL_RESULT_JSON_TYPE, null, null),
                     new Variant(APPLICATION_JSON_TYPE, null, null),
@@ -137,9 +139,10 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                     new Variant(TEXT_XML_TYPE, null, null),
                     new Variant(TEXT_CSV_TYPE, null, null),
                     new Variant(APPLICATION_CSV_TYPE, null, null),
-                    new Variant(TEXT_COMMA_SEPARATED_VALUES_TYPE, null, null));
+                    new Variant(TEXT_COMMA_SEPARATED_VALUES_TYPE, null, null)));
     /** The supported MIME types for CONSTRUCT and DESCRIBE query responses. */
-    public final static List<Variant> CONSTRUCT_RESPONSE_TYPES = Arrays.asList(
+    protected final static List<Variant> CONSTRUCT_RESPONSE_TYPES =
+            Collections.unmodifiableList(Arrays.asList(
                     new Variant(APPLICATION_RDF_XML_TYPE, null, null),
                     new Variant(APPLICATION_SPARQL_RESULT_JSON_TYPE, null, null),
                     new Variant(APPLICATION_JSON_TYPE, null, null),
@@ -154,12 +157,13 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                     new Variant(TEXT_HTML_TYPE, null, null),
                     new Variant(APPLICATION_XHTML_XML_TYPE, null, null),
                     new Variant(APPLICATION_XML_TYPE, null, null),
-                    new Variant(TEXT_XML_TYPE, null, null));
+                    new Variant(TEXT_XML_TYPE, null, null)));
     /** The supported MIME types for ASK query responses. */
-    public final static List<Variant> ASK_RESPONSE_TYPES = Arrays.asList(
+    protected final static List<Variant> ASK_RESPONSE_TYPES =
+            Collections.unmodifiableList(Arrays.asList(
                     new Variant(APPLICATION_SPARQL_RESULT_JSON_TYPE, null, null),
                     new Variant(APPLICATION_JSON_TYPE, null, null),
-                    new Variant(TEXT_PLAIN_TYPE, null, null));
+                    new Variant(TEXT_PLAIN_TYPE, null, null)));
 
     private final static String STD_JSON_SINGLE_VALUE_FMT =
             "{ \"head\":{ \"vars\":[ \"value\" ] }, " +
@@ -207,6 +211,27 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
     //-------------------------------------------------------------------------
     // AbstractSparqlEndpoint contract support
     //-------------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    @Override
+    public List<Variant> getResponseMimeTypes(QueryType queryType) {
+        List<Variant> types = null;
+        switch (queryType) {
+            case SELECT:
+                types = SELECT_RESPONSE_TYPES;
+                break;
+            case CONSTRUCT:
+            case DESCRIBE:
+                types = CONSTRUCT_RESPONSE_TYPES;
+                break;
+            case ASK:
+                types = ASK_RESPONSE_TYPES;
+                break;
+            default:
+                throw new IllegalArgumentException("queryType");
+        }
+        return types;
+    }
 
     /** {@inheritDoc} */
     @Override
