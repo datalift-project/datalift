@@ -117,6 +117,9 @@ public class RouterResource implements LifeCycle, ResourceResolver
     // Constants
     //-------------------------------------------------------------------------
 
+    /** The resource serving order: static (file) or RDF resources first. */
+    public final static String SERVE_RDF_RESOURCES_FIRST_PROPERTY =
+                                                "datalift.resources.rdf.first";
     /**
      * The module sub-directory where to look for classes first. If
      * no present, root-level JAR files will be searched.
@@ -147,6 +150,8 @@ public class RouterResource implements LifeCycle, ResourceResolver
                 new DefaultCacheConfiguration(2 * 3600, // Cache for 2 hours
                                               800,      // From 8:00 A.M.
                                               1800);    // To 6:00 P.M.
+    /** Whether to serve static resources (files) before RDF resources. */
+    private boolean serveStaticResourcesFirst = true;
     /** Application modules. */
     private final Map<String,Bundle> modules = new TreeMap<String,Bundle>();
     /** Resource resolvers. */
@@ -179,9 +184,14 @@ public class RouterResource implements LifeCycle, ResourceResolver
      */
     @Override
     public void init(Configuration configuration) {
+        // Read and install cache configuration.
         this.cacheConfig = new DefaultCacheConfiguration(configuration);
         configuration.registerBean(CacheConfiguration.DEFAULT_CONFIG_NAME,
                                    this.cacheConfig);
+        // Read resource serving order.
+        this.serveStaticResourcesFirst = (! Boolean.parseBoolean(
+                configuration.getProperty(SERVE_RDF_RESOURCES_FIRST_PROPERTY,
+                                          "true")));
     }
 
     /** {@inheritDoc} */
@@ -409,14 +419,19 @@ public class RouterResource implements LifeCycle, ResourceResolver
                                                         lastModified).build();
                 }
             }
-            if (response == null) {
+            if ((response == null) && (this.serveStaticResourcesFirst)) {
                 // Not a module static resource.
-                // => Try to match a file on local storage.
+                // => Try to match a file on public storage.
                 response = this.resolveStaticResource(path, request);
             }
             if (response == null) {
                 // Not a public file. => Check triple store for RDF resource.
                 response = resolveRdfResource(uriInfo, request, acceptHdr);
+            }
+            if ((response == null) && (! this.serveStaticResourcesFirst)) {
+                // Not an RDF resource.
+                // => Try to match a file on public storage.
+                response = this.resolveStaticResource(path, request);
             }
             // Else: Return null to notify that no match was found.
 
@@ -554,12 +569,29 @@ public class RouterResource implements LifeCycle, ResourceResolver
     // DefaultHandler inner class
     //-------------------------------------------------------------------------
 
+    /**
+     * The default {@link ResourceHandler} implementation.
+     * <p>
+     * This implementation serves the RDF resources and named graphs
+     * from Datalift public RDF store. It relies on the installed
+     * {@link SparqlEndpoint} implementation for providing the
+     * response content, as the result of a SPARQL DESCRIBE query, as
+     * well as negotiating the best matching representation.</p>
+     */
     private final class DefaultUriHandler implements ResourceHandler
     {
         private final UriInfo uriInfo;
         private final Request request;
         private final String acceptHdr;
 
+        /**
+         * Creates a new URI handler.
+         * @param  uriInfo     the request URI data.
+         * @param  request     the JAX-RS Request object, for content
+         *                     negotiation.
+         * @param  acceptHdr   the HTTP Accept header, for content
+         *                     negotiation.
+         */
         public DefaultUriHandler(UriInfo uriInfo,
                               Request request, String acceptHdr) {
             this.uriInfo   = uriInfo;
@@ -567,11 +599,23 @@ public class RouterResource implements LifeCycle, ResourceResolver
             this.acceptHdr = acceptHdr;
         }
 
+        /**
+         * {@inheritDoc}
+         * @return <code>null</code> always.
+         */
         @Override
         public URI resolve() throws WebApplicationException {
             return null;
         }
 
+        /**
+         * {@inheritDoc}
+         * <p>
+         * This implementation checks that the requested URI matches
+         * a RDF resource of named graph in the Datalift public
+         * RDF store and forwards the request as a DESCRIBE query to
+         * the SPARQL endpoint.</p>
+         */
         @Override
         public Response getRepresentation() throws WebApplicationException {
             // Retrieve platform SPARQL endpoint.

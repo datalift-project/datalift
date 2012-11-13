@@ -69,9 +69,9 @@ public class DefaultCacheConfiguration implements CacheConfiguration
 
     /** The default cache duration: 2 hours in seconds. */
     private final static int DEFAULT_CACHE_DURATION = 2 * 3600;
-    /** The default business day: updates may occur from 8 A.M. to 8 P.M. */
+    /** The default business day: updates may occur from 8 A.M. to 6 P.M. */
     private final static BusinessDay DEFAULT_BUSINESS_DAY =
-                                                    new BusinessDay(800, 2000);
+                                                    new BusinessDay(800, 1800);
 
     //-------------------------------------------------------------------------
     // Class members
