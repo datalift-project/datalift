@@ -91,6 +91,11 @@ public class DefaultCacheConfiguration implements CacheConfiguration
     // Constructors
     //-------------------------------------------------------------------------
 
+    public DefaultCacheConfiguration() {
+        this(DEFAULT_CACHE_DURATION,
+             DEFAULT_BUSINESS_DAY.open, DEFAULT_BUSINESS_DAY.close);
+    }
+
     public DefaultCacheConfiguration(Configuration configuration) {
         this(configuration.getProperty(CACHE_DURATION_PROPERTY),
              configuration.getProperty(BUSINESS_DAY_PROPERTY), true);

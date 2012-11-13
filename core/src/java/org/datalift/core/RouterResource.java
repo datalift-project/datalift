@@ -146,10 +146,7 @@ public class RouterResource implements LifeCycle, ResourceResolver
     //-------------------------------------------------------------------------
 
     /** Cache management configuration. */
-    private CacheConfiguration cacheConfig =
-                new DefaultCacheConfiguration(2 * 3600, // Cache for 2 hours
-                                              800,      // From 8:00 A.M.
-                                              1800);    // To 6:00 P.M.
+    private CacheConfiguration cacheConfig = new DefaultCacheConfiguration();
     /** Whether to serve static resources (files) before RDF resources. */
     private boolean serveStaticResourcesFirst = true;
     /** Application modules. */
