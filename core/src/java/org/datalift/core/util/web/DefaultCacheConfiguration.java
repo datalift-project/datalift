@@ -243,7 +243,10 @@ public class DefaultCacheConfiguration implements CacheConfiguration
             spec = spec.replace(":", "");
         }
         int hour = Integer.parseInt(spec);
-        if ((hour < 0) || (hour > 2400)) {
+        if (hour == 2400) {
+            hour = 2359;
+        }
+        if ((hour < 0) || ((hour / 100) > 23) || ((hour % 100) > 59)) {
             throw new IllegalArgumentException(BUSINESS_DAY_PROPERTY);
         }
         return hour;
@@ -263,12 +266,20 @@ public class DefaultCacheConfiguration implements CacheConfiguration
         public BusinessDay(int businessOpening, int businessClosing) {
             int start = this.checkTime(businessOpening, "businessOpening");
             int end   = this.checkTime(businessClosing, "businessClosing");
+            if (start == end) {
+                start = 0;
+                end   = 0;
+            }
             this.inverse = (start > end);
             this.open    = Math.min(start, end);
             this.close   = Math.max(start, end);
         }
 
         public boolean isInBusinessDay(Date time) {
+            if (this.open == this.close) {
+                // No business day.
+                return false;
+            }
             GregorianCalendar cal = new GregorianCalendar();
             if (time != null) {
                 cal.setTime(time);
@@ -285,23 +296,30 @@ public class DefaultCacheConfiguration implements CacheConfiguration
         public Date getNextBusinessDay() {
             GregorianCalendar cal = new GregorianCalendar();
             int h = (cal.get(HOUR_OF_DAY) * 100) + cal.get(MINUTE);
-            if ((h >= this.close) && (this.close > this.open)) {
+            if ((h > this.close) && (! this.inverse)) {
                 // Next day.
                 cal.add(DAY_OF_YEAR, 1);
             }
-            cal.set(HOUR_OF_DAY, this.open / 100);
-            cal.set(MINUTE,      this.open % 100);
+            if (this.open != this.close) {
+                cal.set(HOUR_OF_DAY, this.open / 100);
+                cal.set(MINUTE,      this.open % 100);
+            }
+            // Else: Keep in cache for 24 hours.
+
             return cal.getTime();
         }
 
         public String getOpeningTime() {
-            return String.format("%02d:%02d", Integer.valueOf(this.open / 100),
-                                              Integer.valueOf(this.open % 100));
+            return this.formatTime(this.open);
         }
 
         public String getClosingTime() {
-            return String.format("%02d:%02d", Integer.valueOf(this.close / 100),
-                                              Integer.valueOf(this.close % 100));
+            return this.formatTime(this.close);
+        }
+
+        private String formatTime(int time) {
+            return String.format("%02d:%02d", Integer.valueOf(time / 100),
+                                              Integer.valueOf(time % 100));
         }
 
         private int checkTime(int spec, String name) {
