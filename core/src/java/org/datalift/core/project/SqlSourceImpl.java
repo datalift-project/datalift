@@ -280,6 +280,14 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
         return "xml";           // Sun's WebRowSet stores ResultSets as XML.
     }
 
+    /** {@inheritDoc} */
+    @Override
+    protected StringBuilder toString(StringBuilder b) {
+        b.append(this.getConnectionUrl());
+        b.append(", \"").append(this.getQuery()).append('"');
+        return super.toString(b);
+    }
+
     //-------------------------------------------------------------------------
     // Specific implementation
     //-------------------------------------------------------------------------

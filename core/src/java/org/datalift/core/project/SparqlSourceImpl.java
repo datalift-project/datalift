@@ -343,6 +343,17 @@ public class SparqlSourceImpl extends CachingSourceImpl implements SparqlSource
         return "xml";           // Saving SPARQL results as RDF+XML.
     }
 
+    /** {@inheritDoc} */
+    @Override
+    protected StringBuilder toString(StringBuilder b) {
+        b.append(this.getEndpointUrl());
+        if (isSet(this.getDefaultGraphUri())) {
+            b.append(", ").append(this.getDefaultGraphUri());
+        }
+        b.append(", \"").append(this.getQuery()).append('"');
+        return super.toString(b);
+    }
+
     //-------------------------------------------------------------------------
     // Specific implementation
     //-------------------------------------------------------------------------
