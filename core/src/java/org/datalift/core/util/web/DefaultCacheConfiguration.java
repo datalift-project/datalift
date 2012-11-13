@@ -266,10 +266,6 @@ public class DefaultCacheConfiguration implements CacheConfiguration
         public BusinessDay(int businessOpening, int businessClosing) {
             int start = this.checkTime(businessOpening, "businessOpening");
             int end   = this.checkTime(businessClosing, "businessClosing");
-            if (start == end) {
-                start = 0;
-                end   = 0;
-            }
             this.inverse = (start > end);
             this.open    = Math.min(start, end);
             this.close   = Math.max(start, end);
@@ -277,8 +273,8 @@ public class DefaultCacheConfiguration implements CacheConfiguration
 
         public boolean isInBusinessDay(Date time) {
             if (this.open == this.close) {
-                // No business day.
-                return false;
+                // Business day spans the whole day.
+                return true;
             }
             GregorianCalendar cal = new GregorianCalendar();
             if (time != null) {
@@ -296,16 +292,12 @@ public class DefaultCacheConfiguration implements CacheConfiguration
         public Date getNextBusinessDay() {
             GregorianCalendar cal = new GregorianCalendar();
             int h = (cal.get(HOUR_OF_DAY) * 100) + cal.get(MINUTE);
-            if ((h > this.close) && (! this.inverse)) {
+            if ((h >= this.close) && (! this.inverse)) {
                 // Next day.
                 cal.add(DAY_OF_YEAR, 1);
             }
-            if (this.open != this.close) {
-                cal.set(HOUR_OF_DAY, this.open / 100);
-                cal.set(MINUTE,      this.open % 100);
-            }
-            // Else: Keep in cache for 24 hours.
-
+            cal.set(HOUR_OF_DAY, this.open / 100);
+            cal.set(MINUTE,      this.open % 100);
             return cal.getTime();
         }
 
