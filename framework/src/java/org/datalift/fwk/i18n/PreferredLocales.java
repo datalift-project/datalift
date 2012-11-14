@@ -281,7 +281,7 @@ public final class PreferredLocales extends AbstractList<Locale>
      */
     public static void reset() {
         log.trace("Preferred locales removed from current thread");
-        current.set(null);
+        current.remove();
     }
 
     private static void addLocale(Locale l, Collection<Locale> locales) {
