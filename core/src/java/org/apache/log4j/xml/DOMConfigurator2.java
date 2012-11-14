@@ -294,18 +294,13 @@ public class DOMConfigurator2 extends DOMConfigurator
     private final static int MIN_UPDATE_WATCHDOG = 60;  // 1 minute
 
     //-------------------------------------------------------------------------
-    // Class members definition
-    //-------------------------------------------------------------------------
-
-    /** Timer for configuration file watchdogs. */
-    private static Timer fileWatchdogTimer = null;
-
-    //-------------------------------------------------------------------------
     // Instance members definition
     //-------------------------------------------------------------------------
 
     /** User provider configuration properties, if any. */
     private Properties userProps = null;
+    /** Timer for configuration file watchdogs. */
+    private Timer fileWatchdogTimer = null;
     /** Active configuration file watchdogs for file update checks. */
     private final Collection fileWatchdogs = new LinkedList();
 
@@ -852,7 +847,7 @@ public class DOMConfigurator2 extends DOMConfigurator
     private synchronized void addFileWatchdog(File f, String configUri,
                                                       long period) {
         FileWatchdog watchdog = new FileWatchdog(f, configUri);
-        getTimer().schedule(watchdog, period, period);
+        this.getTimer().schedule(watchdog, period, period);
         this.fileWatchdogs.add(watchdog);
         LogLog.debug("Added file update watchdog for " + f);
     }
@@ -867,6 +862,8 @@ public class DOMConfigurator2 extends DOMConfigurator
             t.cancel();
             i.remove();
         }
+        // Terminate the timer thread.
+        this.getTimer().cancel();
     }
 
     /**
@@ -956,12 +953,12 @@ public class DOMConfigurator2 extends DOMConfigurator
         return qName;
     }
 
-    private static Timer getTimer() {
-        if (fileWatchdogTimer == null) {
-            fileWatchdogTimer = new Timer(
+    private Timer getTimer() {
+        if (this.fileWatchdogTimer == null) {
+            this.fileWatchdogTimer = new Timer(
                         "Log4J DOMConfigurator2 File Update Watchdog", true);
         }
-        return fileWatchdogTimer;
+        return this.fileWatchdogTimer;
     }
 
     //-------------------------------------------------------------------------
