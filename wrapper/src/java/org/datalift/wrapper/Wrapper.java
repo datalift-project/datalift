@@ -42,8 +42,11 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.mortbay.jetty.Connector;
 import org.mortbay.jetty.Server;
@@ -125,6 +128,7 @@ public final class Wrapper
     private final static String DATALIFT_PAGE = "/datalift/sparql";
 
     private final static String WAR_EXTENSION = ".war";
+    private final static String ROOT_WEB_APP_NAME = "root";
 
     private final static String JAVA_CURRENT_DIR_PROP  = "user.dir";
     private final static String JAVA_USER_HOMEDIR_PROP = "user.home";
@@ -246,32 +250,36 @@ public final class Wrapper
                                + "\": not a Datalift installation directory");
             System.exit(2);
         }
-        // Register web applications.
+        // Search for web applications, both as WARs and directories.
         FileFilter webappFilter = new FileFilter() {
                 public boolean accept(File f) {
                     return ((f.isDirectory()) ||
                             (f.isFile() && (f.getName().endsWith(WAR_EXTENSION))));
                 }
             };
-        List<File> webapps = new LinkedList<File>();
+        Map<String,File> webapps = new HashMap<String,File>();
         for (File f : webappDir.listFiles(webappFilter)) {
-            webapps.add(f);
+            webapps.put(getContextPath(f), f);
         }
         webappDir = new File(dataliftHome, WEBAPPS_DIR);
         if (webappDir.isDirectory()) {
             for (File f : webappDir.listFiles(webappFilter)) {
-                webapps.add(f);
+                webapps.put(getContextPath(f), f);
             }
         }
-        for (File webapp : webapps) {
-            WebAppContext ctx = new WebAppContext();
-            String path = webapp.getName();
-            int i = path.indexOf(WAR_EXTENSION);
-            if (i > 0) {
-                // Remove ending .war extension.
-                path = path.substring(0, i);
+        // Ensure correct deployment order: longest context path first.
+        Set<String> contexts = new TreeSet<String>(new Comparator<String>() {
+            @Override
+            public int compare(String s1, String s2) {
+                return s2.length() - s1.length();       // Longest path first.
             }
-            ctx.setContextPath("/" + path);
+        });
+        contexts.addAll(webapps.keySet());
+        // Register web applications.
+        for (String path : contexts) {
+            File webapp = webapps.get(path);
+            WebAppContext ctx = new WebAppContext();
+            ctx.setContextPath(path);
             ctx.setWar(webapp.getPath());
             if (! webapp.isDirectory()) {
                 ctx.setTempDirectory(new File(jettyWorkDir, path));
@@ -455,5 +463,18 @@ public final class Wrapper
     private static void reportPathCreationFailure(File path)
                                                             throws IOException {
         throw new IOException("Failed to create directory: " + path);
+    }
+
+    private static String getContextPath(File f) {
+        String path = f.getName();
+        int i = path.indexOf(WAR_EXTENSION);
+        if (i > 0) {
+            // Remove ending .war extension.
+            path = path.substring(0, i);
+        }
+        if (ROOT_WEB_APP_NAME.equals(path)) {
+            path = "";
+        }
+        return "/" + path;
     }
 }
