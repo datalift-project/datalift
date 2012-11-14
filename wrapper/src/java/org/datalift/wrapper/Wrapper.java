@@ -43,10 +43,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.TreeMap;
 
 import org.mortbay.jetty.Connector;
 import org.mortbay.jetty.Server;
@@ -250,14 +248,45 @@ public final class Wrapper
                                + "\": not a Datalift installation directory");
             System.exit(2);
         }
+        // Sort webapps, longest path first, as declaration order matters.
+        Map<String,File> webapps = new TreeMap<String,File>(
+                new Comparator<String>() {
+                    @Override
+                    public int compare(String s1, String s2) {
+                        // Order strings: longest path first.
+                        int n = this.count('/', s2) - this.count('/', s1);
+                        if (n == 0) {
+                            // Same path length. => Longest string first.
+                            n = s2.length() - s1.length();
+                        }
+                        if (n == 0) {
+                            // Same length. => Use alphabetical order.
+                            n = s1.compareTo(s2);
+                        }
+                        return n;
+                    }
+    
+                    private int count(char c, String s) {
+                        int count = 0;
+                        for (int i=0, max=s.length(); i<max; i++) {
+                            if (s.charAt(i) == c) count++;
+                        }
+                        return count;
+                    }
+                });
         // Search for web applications, both as WARs and directories.
         FileFilter webappFilter = new FileFilter() {
-                public boolean accept(File f) {
-                    return ((f.isDirectory()) ||
-                            (f.isFile() && (f.getName().endsWith(WAR_EXTENSION))));
-                }
-            };
-        Map<String,File> webapps = new HashMap<String,File>();
+                    @Override
+                    public boolean accept(File f) {
+                        if (f.isDirectory()) {
+                            return new File(f, "WEB-INF").isDirectory();
+                        }
+                        else {
+                            return (f.isFile() &&
+                                    f.getName().endsWith(WAR_EXTENSION));
+                        }
+                    }
+                };
         for (File f : webappDir.listFiles(webappFilter)) {
             webapps.put(getContextPath(f), f);
         }
@@ -267,17 +296,11 @@ public final class Wrapper
                 webapps.put(getContextPath(f), f);
             }
         }
-        // Ensure correct deployment order: longest context path first.
-        Set<String> contexts = new TreeSet<String>(new Comparator<String>() {
-            @Override
-            public int compare(String s1, String s2) {
-                return s2.length() - s1.length();       // Longest path first.
-            }
-        });
-        contexts.addAll(webapps.keySet());
         // Register web applications.
-        for (String path : contexts) {
-            File webapp = webapps.get(path);
+        for (Map.Entry<String,File> e : webapps.entrySet()) {
+            String path = e.getKey();
+            File webapp = e.getValue();
+
             WebAppContext ctx = new WebAppContext();
             ctx.setContextPath(path);
             ctx.setWar(webapp.getPath());
@@ -285,7 +308,8 @@ public final class Wrapper
                 ctx.setTempDirectory(new File(jettyWorkDir, path));
             }
             httpServer.addHandler(ctx);
-            System.out.println(webapp.getName() + " deployed as: " + path);
+            System.out.println("Deploying \"" + webapp.getName() +
+                               "\" with context path \"" + path + '"');
         }
         // Start server.
         httpServer.setStopAtShutdown(true);
