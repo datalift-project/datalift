@@ -168,9 +168,17 @@ public final class SesameRepositoryFactory extends RepositoryFactory
         @Override
         protected org.openrdf.repository.Repository
                             newNativeRepository(Configuration configuration) {
-            org.openrdf.repository.Repository repository = null;
+            HTTPRepository repository = null;
+
+            String username = trimToNull(configuration.getProperty(
+                                            this.name + REPOSITORY_USERNAME));
+            String password = trim(configuration.getProperty(
+                                            this.name + REPOSITORY_PASSWORD));
             try {
                 repository = new HTTPRepository(this.url);
+                if (username != null) {
+                    repository.setUsernameAndPassword(username, password);
+                }
                 repository.initialize();
                 if (isSet(this.name)) {
                     log.info("Sesame HTTP repository \"{}\" successfully connected at: {}",
