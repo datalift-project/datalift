@@ -549,6 +549,21 @@ public class DOMConfigurator2 extends DOMConfigurator
             LogLog.error("Could not parse Log4J configuration at "
                          + source.getSystemId(), e);
         }
+        finally {
+            // Force closing of source stream (if any) to avoid file desc. leak.
+            if (source.getByteStream() != null) {
+                try {
+                    source.getByteStream().close();
+                }
+                catch (Exception e) { /* Ignore... */ }
+            }
+            if (source.getCharacterStream() != null) {
+                try {
+                    source.getCharacterStream().close();
+                }
+                catch (Exception e) { /* Ignore... */ }
+            }
+        }
     }
 
     /**
