@@ -46,7 +46,7 @@ import java.util.Set;
 
 import javax.ws.rs.Path;
 
-import org.datalift.core.log.LogContext;
+import org.datalift.core.log.TimerContext;
 import org.datalift.core.project.DefaultProjectManager;
 import org.datalift.core.velocity.jersey.VelocityTemplateProcessor;
 import org.datalift.core.velocity.jersey.VelocityViewFactory;
@@ -60,6 +60,7 @@ import org.datalift.fwk.project.ProjectManager;
 import org.datalift.fwk.view.ViewFactory;
 
 import static org.datalift.core.DefaultConfiguration.DATALIFT_HOME;
+import static org.datalift.core.log.LogContext.*;
 
 
 /**
@@ -209,7 +210,8 @@ public class ApplicationLoader extends LogServletContextListener
      * @throws TechnicalException if any error occurred.
      */
     protected void initApplication(Properties props) {
-        LogContext.resetContexts("Core", "init");
+        Logger.setContext(Timer, new TimerContext());
+        Logger.setContext(Path, "Init");
         log = Logger.getLogger();
 
         try {
@@ -254,7 +256,7 @@ public class ApplicationLoader extends LogServletContextListener
             throw error;
         }
         finally {
-            LogContext.resetContexts();
+            Logger.clearContexts();
         }
     }
 
@@ -281,7 +283,8 @@ public class ApplicationLoader extends LogServletContextListener
      * @throws TechnicalException if any error occurred.
      */
     protected void shutdownApplication() {
-        LogContext.resetContexts("Core", "shutdown");
+        Logger.setContext(Timer, new TimerContext());
+        Logger.setContext(Path, "Shutdown");
         Logger log = Logger.getLogger();
 
         try {
@@ -306,7 +309,7 @@ public class ApplicationLoader extends LogServletContextListener
             // Shutdown each module, ignoring errors.
             for (Module m : cfg.getBeans(Module.class)) {
                 String name = m.getName();
-                Object[] prevCtx = LogContext.pushContexts(name, "shutdown");
+                Object prevCtx = Logger.setContext(Path, "Shutdown - " + name);
                 try {
                     m.shutdown(cfg);
                     cfg.removeBean(m, name);
@@ -317,7 +320,7 @@ public class ApplicationLoader extends LogServletContextListener
                     // Continue with next module.
                 }
                 finally {
-                    LogContext.pushContexts(prevCtx[0], prevCtx[1]);
+                    Logger.setContext(Path, prevCtx);
                 }
             }
             if (cfg instanceof DefaultConfiguration) {
@@ -326,7 +329,7 @@ public class ApplicationLoader extends LogServletContextListener
             log.info("DataLift shutdown complete");
         }
         finally {
-            LogContext.resetContexts();
+            Logger.clearContexts();
             super.shutdown();
         }
     }
@@ -377,7 +380,7 @@ public class ApplicationLoader extends LogServletContextListener
         // Post-init each module, ignoring errors.
         for (Module m : configuration.getBeans(Module.class)) {
             String name = m.getName();
-            Object[] prevCtx = LogContext.pushContexts(name, "postInit");
+            Object prevCtx = Logger.setContext(Path, "PostInit - " + name);
             try {
                 // Complete module initialization.
                 m.postInit(configuration);
@@ -390,7 +393,7 @@ public class ApplicationLoader extends LogServletContextListener
                 // Continue with next module.
             }
             finally {
-                LogContext.pushContexts(prevCtx[0], prevCtx[1]);
+                Logger.setContext(Path, prevCtx);
             }
         }
     }
@@ -422,7 +425,7 @@ public class ApplicationLoader extends LogServletContextListener
         // Load third-party packages.
         for (Bundle b : cfg.getBeans(Bundle.class)) {
             File f = b.getBundleFile();
-            Object[] prevCtx = LogContext.pushContexts(f.getName(), "init");
+            Object prevCtx = Logger.setContext(Path, "Init - " + f.getName());
             try {
                 log.debug("Searching \"{}\" for modules...", f.getName());
                 this.loadModules(b, cfg);
@@ -433,7 +436,7 @@ public class ApplicationLoader extends LogServletContextListener
                 // Continue with next module.
             }
             finally {
-                LogContext.pushContexts(prevCtx[0], prevCtx[1]);
+                Logger.setContext(Path, prevCtx);
             }
         }
     }

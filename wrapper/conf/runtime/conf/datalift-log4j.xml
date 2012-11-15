@@ -11,7 +11,7 @@
 
     <layout class="org.apache.log4j.PatternLayout">
       <param name="conversionPattern"
-             value="%d{ISO8601}|%-5p|%X{Timer}|%X{Module}|%c{1}|%m%n"/>
+             value="%d{ISO8601}|%-5p|%X{Timer}|%X{Path}|%c{1}|%m%n"/>
     </layout>
   </appender>
 

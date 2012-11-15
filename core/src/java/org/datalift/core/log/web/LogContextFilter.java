@@ -43,6 +43,7 @@ import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
 
 import org.datalift.core.log.LogContext;
 import org.datalift.core.log.TimerContext;
@@ -126,9 +127,11 @@ public class LogContextFilter implements Filter
         // Add timer context to trace request execution duration.
         Logger.setContext(LogContext.Timer, new TimerContext());
         // Add user context.
-        String loggedUser = SecurityContext.getUserPrincipal();
-        if (loggedUser != null) {
-            Logger.setContext(LogContext.User, loggedUser);
+        Logger.setContext(LogContext.User, new UserContext());
+        // Add request path context.
+        if (request instanceof HttpServletRequest) {
+            Logger.setContext(LogContext.Path,
+                              ((HttpServletRequest)request).getRequestURI());
         }
         // Check for forced debug traces.
         if (this.allowForceDebug) {
@@ -142,5 +145,23 @@ public class LogContextFilter implements Filter
         chain.doFilter(request, response);
         // Clean diagnostic contexts up.
         Logger.clearContexts();
+    }
+
+
+    //-------------------------------------------------------------------------
+    // UserContext nested class
+    //-------------------------------------------------------------------------
+
+    /**
+     * A {@link Logger#setContext(Object, Object) diagnostic context} to
+     * trace the currently logged user.
+     */
+    private static final class UserContext
+    {
+        @Override
+        public String toString() {
+            String loggedUser = SecurityContext.getUserPrincipal();
+            return (loggedUser != null)? loggedUser: "";
+        }
     }
 }

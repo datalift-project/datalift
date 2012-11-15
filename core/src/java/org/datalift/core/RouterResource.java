@@ -69,7 +69,6 @@ import org.openrdf.query.Binding;
 import org.openrdf.query.BindingSet;
 import org.openrdf.query.TupleQueryResultHandlerBase;
 
-import org.datalift.core.log.LogContext;
 import org.datalift.core.util.web.DefaultCacheConfiguration;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.LifeCycle;
@@ -132,8 +131,6 @@ public class RouterResource implements LifeCycle, ResourceResolver
      * resources.
      */
     public final static String MODULE_PUBLIC_DIR  = "public";
-
-    private final static String MODULE_NAME = "RouterResource";
 
     //-------------------------------------------------------------------------
     // Class members
@@ -382,7 +379,6 @@ public class RouterResource implements LifeCycle, ResourceResolver
         if (path.startsWith("/")) {
             path = path.substring(1);
         }
-        LogContext.setContexts(MODULE_NAME, path);
         log.trace("Resolving unmapped resource: {}", path);
 
         try {
