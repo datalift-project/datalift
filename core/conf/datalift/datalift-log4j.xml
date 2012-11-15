@@ -3,15 +3,20 @@
 <configuration xmlns="http://jakarta.apache.org/log4j/">
 
   <!-- ===== Appenders ===== -->
-  <!-- Default appender: log file -->
-  <appender name="defaultLog"
+  <!-- Default log file -->
+  <appender name="defaultFileLog"
             class="org.datalift.core.log.log4j.DailyRollingFileAppender">
     <param name="file" value="${datalift.home}/logs/datalift.log"/>
 
     <layout class="org.apache.log4j.PatternLayout">
       <param name="conversionPattern"
-             value="%d{ISO8601}|%-5p|%X{Timer}|%X{User}|%X{Module}|%X{Resource}|%c{1}|%m%n"/>
+             value="%d{ISO8601}|%-5p|%X{Timer}|%X{User}|%X{Path}|%c{1}|%m%n"/>
     </layout>
+  </appender>
+  <!-- Default appender: async. appender to default log file -->
+  <appender name="defaultLog" class="org.apache.log4j.AsyncAppender">
+    <param name="bufferSize" value="512"/>
+    <appender-ref ref="defaultFileLog"/>
   </appender>
 
   <!-- ===== Loggers ===== -->
