@@ -335,8 +335,12 @@ public abstract class Logger
      * @see    #removeContext(Object)
      */
     public static Object setContext(Object key, Object context) {
-        return LogService.getInstance()
-                         .setDiagnosticContext(key.toString(), context);
+        Object o = null;
+        if (key != null) {
+            o = LogService.getInstance()
+                          .setDiagnosticContext(key.toString(), context);
+        }
+        return o;
     }
 
     /**
@@ -347,8 +351,12 @@ public abstract class Logger
      *         if the context was not set.
      */
     public static Object removeContext(Object key) {
-        return LogService.getInstance()
-                         .removeDiagnosticContext(key.toString());
+        Object o = null;
+        if (key != null) {
+            o =  LogService.getInstance()
+                           .removeDiagnosticContext(key.toString());
+        }
+        return o;
     }
 
     /**
