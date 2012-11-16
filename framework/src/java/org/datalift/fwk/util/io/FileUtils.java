@@ -567,6 +567,7 @@ public final class FileUtils
         return get16(b, offset) | ((long)get16(b, offset+2) << 16);
     }
 
+
     //-------------------------------------------------------------------------
     // DownloadInfo nested class
     //-------------------------------------------------------------------------
@@ -582,7 +583,16 @@ public final class FileUtils
             this.mimeType = mediaType;
             this.expires = expires;
         }
+
+        @Override
+        public String toString() {
+            return "{ status: "   + this.httpStatus +
+                   ", mimeType: \"" + this.mimeType +
+                   "\", expires: "  + this.expires + " }";
+        }
     }
+
+
     //-------------------------------------------------------------------------
     // ByteCounterInputStream nested class
     //-------------------------------------------------------------------------
@@ -674,6 +684,7 @@ public final class FileUtils
             }
         }
     }
+
 
     //-------------------------------------------------------------------------
     // ZipWrapperInputStream nested class
