@@ -49,6 +49,8 @@ import java.net.URL;
 import javax.persistence.Entity;
 import javax.ws.rs.HttpMethod;
 
+import static javax.ws.rs.core.HttpHeaders.*;
+
 import org.openrdf.model.Statement;
 import org.openrdf.rio.ParserConfig;
 import org.openrdf.rio.RDFParser;
@@ -57,10 +59,9 @@ import org.openrdf.rio.RDFParser.DatatypeHandling;
 import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.RdfsClass;
 
-import static javax.ws.rs.core.HttpHeaders.*;
-
 import org.datalift.core.TechnicalException;
 import org.datalift.core.rdf.BoundedAsyncRdfParser;
+import org.datalift.fwk.MediaTypes;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.SparqlSource;
@@ -317,12 +318,11 @@ public class SparqlSourceImpl extends CachingSourceImpl implements SparqlSource
             int l = 0;
             Reader r = null;
             try {
-                String[] contentType = this.parseContentType(
-                                                        cnx.getContentType());
+                String cs = this.parseContentType(cnx.getContentType())
+                                .getCharset();
                 in = new BufferedInputStream(in, this.getBufferSize());
-                r = (contentType[1] == null)?
-                                    new InputStreamReader(in):
-                                    new InputStreamReader(in, contentType[1]);
+                r = (cs == null)? new InputStreamReader(in):
+                                  new InputStreamReader(in, cs);
                 l = r.read(buf);
             }
             catch (Exception e) { /* Ignore... */ }
@@ -376,17 +376,17 @@ public class SparqlSourceImpl extends CachingSourceImpl implements SparqlSource
         }
     }
 
-    private String[] parseContentType(String contentType) {
-        String[] elts = new String[2];
-
-        final String CHARSET_TAG = "charset=";
-        if ((contentType != null) && (contentType.length() != 0)) {
-            String[] s = contentType.split("\\s*;\\s*");
-            elts[0] = s[0];
-            if ((s.length > 1) && (s[1].startsWith(CHARSET_TAG))) {
-                elts[1] = s[1].substring(CHARSET_TAG.length());
-            }
-        }
-        return elts;
+    /**
+     * Parses the value of the Content-Type HTTP header to extract
+     * the content type (MIME type) and character encoding information.
+     * @param  contentType   the value of the HTTP Content-Type header.
+     *
+     * @return the content type and character encoding as an array of
+     *         strings.
+     */
+    private MediaTypes parseContentType(String contentType) {
+        return (isSet(contentType))?
+                    new MediaTypes(contentType):
+                    new MediaTypes(MediaTypes.APPLICATION_OCTET_STREAM_TYPE);
     }
 }
