@@ -171,25 +171,25 @@ public abstract class BaseSource extends BaseRdfEntity implements Source
 
     /** {@inheritDoc} */
     @Override
-    public final Date getCreationDate() {
+    public Date getCreationDate() {
         return this.copy(this.creationDate);
     }
 
     /** {@inheritDoc} */
     @Override
-    public final String getOperator() {
+    public String getOperator() {
         return this.operator;
     }
 
     /** {@inheritDoc} */
     @Override
-    public final SourceType getType() {
+    public SourceType getType() {
         return this.type;
     }
 
     /** {@inheritDoc} */
     @Override
-    public final Project getProject() {
+    public Project getProject() {
         return this.project;
     }
 
@@ -240,7 +240,7 @@ public abstract class BaseSource extends BaseRdfEntity implements Source
      * Sets the name of the operator that created this source.
      * @param  operator   the operator name.
      */
-    public final void setOperator(String operator) {
+    public void setOperator(String operator) {
         this.operator = operator;
     }
 
@@ -248,7 +248,7 @@ public abstract class BaseSource extends BaseRdfEntity implements Source
      * Sets the creation date of this source.
      * @param  date   the source creation date.
      */
-    public final void setCreationDate(final Date date) {
+    public void setCreationDate(final Date date) {
         this.creationDate = this.copy(date);
     }
 

@@ -132,7 +132,7 @@ public class CsvSourceImpl extends BaseFileSource
 
     /** {@inheritDoc} */
     @Override
-    public final String getEncoding() {
+    public String getEncoding() {
         String enc = super.getEncoding();
         return (isSet(enc))? enc: DEFAULT_ENCODING;
     }
@@ -258,7 +258,7 @@ public class CsvSourceImpl extends BaseFileSource
 
     /** {@inheritDoc} */
     @Override
-    public final CloseableIterator<Row<String>> iterator() {
+    public CloseableIterator<Row<String>> iterator() {
         this.initHeaders();
         try {
             return new RowIterator(this.newReader());

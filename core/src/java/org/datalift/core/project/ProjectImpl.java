@@ -298,7 +298,7 @@ public class ProjectImpl extends BaseRdfEntity implements Project
 
     /** {@inheritDoc} */
     @Override
-    protected final void setId(String id) {
+    protected void setId(String id) {
         this.uri = id;
     }
 
@@ -327,7 +327,7 @@ public class ProjectImpl extends BaseRdfEntity implements Project
      * Sets the name of the operator that initiated this project.
      * @param  o   the project owner.
      */
-    public final void setOwner(String o) {
+    public void setOwner(String o) {
         this.owner = o;
     }
 
@@ -335,7 +335,7 @@ public class ProjectImpl extends BaseRdfEntity implements Project
      * Sets the creation date of this project.
      * @param  date   the project creation date.
      */
-    public final void setCreationDate(Date date) {
+    public void setCreationDate(Date date) {
         this.dateCreated = this.copy(date);
     }
 }
