@@ -225,7 +225,7 @@ public class RouterResource implements LifeCycle, ResourceResolver
             if (count != 0) {
                 // Notify whether URI policies were installed.
                 log.info("Registered {} URI policy(ies) for bundle \"{}\"",
-                         Integer.valueOf(this.policies.size()), b);
+                         Integer.valueOf(count), b);
             }
         }
 
