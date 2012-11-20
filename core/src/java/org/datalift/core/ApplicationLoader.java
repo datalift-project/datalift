@@ -236,8 +236,11 @@ public class ApplicationLoader extends LogServletContextListener
                 this.components.add(
                     this.initResource(new RouterResource(), cfg));
             }
-            if (cfg.getBeans(ProjectManager.class).isEmpty()) {
-                // Add default project manager.
+            if ((cfg.getRepositoryUris().contains(
+                                        Configuration.INTERNAL_REPOSITORY)) &&
+                (cfg.getBeans(ProjectManager.class).isEmpty())) {
+                // Add default project manager (if an internal repository is
+                // available to store projects).
                 this.components.add(
                     this.initResource(new DefaultProjectManager(), cfg));
             }
