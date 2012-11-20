@@ -59,7 +59,10 @@
 				<p><br /></p>
 				<form method="post" action="${current.uri}?_method=DELETE" class="form_formated">
 					<a href="${current.uri}/modify" class="button">#i18n("modify")</a>
-					<input type="submit" value="#i18n("delete")"/>
+					<div style="display:none;">
+						<div id="dialog-confirm"><p>#i18n("source.dialog.dialog_box.source_text")</p></div>
+					</div>
+					<input type="submit" id="delete" value="#i18n("delete")"/>
 				</form>
 			</div>
 
@@ -100,6 +103,29 @@
 		$("#goto_sparql").button();
 		$("#tabs").tabs();
 
+		var currentForm;
+		$("#delete").click(function() {
+			$("#dialog-confirm").dialog({
+            			resizable: false,
+            			modal: true,
+            			autoOpen: false,
+				title: "#i18n('source.dialog.dialog_box.title')",
+            			buttons: {
+                			'#i18n("source.dialog.confirmation_button")': function() {
+                    				currentForm.submit();
+						$(this).dialog('close');
+                			},
+                			'#i18n("source.dialog.cancel_button")': function() {
+                 				$(this).dialog('close');
+      					}
+            			}
+        		});
+			currentForm = $(this).closest('form');
+			$("#dialog-confirm").text("#i18n("source.dialog.dialog_box.project_text")");
+			$("#dialog-confirm").dialog('open');
+			return false;
+		});
+		
 		if (typeof(currentProject) != 'undefined') {
 			makeFocus(currentProject);
 			if (window.location.hash == "")
@@ -120,9 +146,14 @@
 		loadGridOntologies();
 
 		$(window).bind('resize', function() {
-				$("#selectable_sources").setGridWidth($("#tabs").width() - 30);
-				$("#selectable_ontologies").setGridWidth($("#tabs").width() - 30);			
+			$("#selectable_sources").setGridWidth($("#tabs").width() - 30);
+			$("#selectable_ontologies").setGridWidth($("#tabs").width() - 30);
 		}).trigger('resize');
+
+		$(".delete").click(function(e) {
+			e.preventDefault();
+			alert("test click");
+		});
 	});
 
 	function makeFocus(projectUrl) {
@@ -238,9 +269,23 @@
 			onClickButton:function() {
 				var id = jQuery("#selectable_sources").getGridParam('selrow');
 				if (id) {
-					var ret = jQuery("#selectable_sources").getRowData(id);
-					window.location = currentProject + "/source/delete?uri=" + ret.uri;
-				}
+					$("#dialog-confirm").dialog({
+            					resizable: false,
+            					modal: true,
+            					autoOpen: true,
+						title: "#i18n('source.dialog.dialog_box.title')",
+            					buttons: {
+                					'#i18n("source.dialog.confirmation_button")': function() {
+                    						$(this).dialog('close');
+                    						var ret = jQuery("#selectable_sources").getRowData(id);
+								window.location = currentProject + "/source/delete?uri=" + ret.uri;
+                					},
+                					'#i18n("source.dialog.cancel_button")': function() {
+                    						$(this).dialog('close');
+                					}
+            					}
+        				});
+        			}
 				else {
 					alert('#i18n("project.msg.select_row")');
 				}
@@ -262,7 +307,9 @@
 				{name:'dateSubmitted',index:'dateSubmitted', sorttype:"text",editable:true,editoptions:{size:50}},
 				{name:'operator',index:'operator', sorttype:"text",editable:true,editoptions:{size:50}} ],
 			caption: "",
-			rowNum:10, rowList:[10,20,30], pager: '#selectable_ontologies_toolbar',
+			rowNum: 10,
+			rowList: [10,20,30],
+			pager: '#selectable_ontologies_toolbar',
 			gridview: true,
 			height: 250
 		});
@@ -273,7 +320,7 @@
 			uri:"$!esc.html($curOnto.uri)",
 			title:"$!esc.html($curOnto.title)",
 			source:"$!esc.html($curOnto.source)",
-			dateSubmitted:"$!date.format("medium", $curOnto.dateSubmitted)",
+			dateSubmitted:"$!date.format('medium', $curOnto.dateSubmitted)",
 			operator:"$!esc.html($curOnto.operator)"
 		},
 #end

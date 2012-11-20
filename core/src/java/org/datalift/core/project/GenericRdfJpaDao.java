@@ -127,11 +127,6 @@ public class GenericRdfJpaDao<T> implements RequestLifecycleListener
         return this.getAll(this.persistentClass, this.rdfType);
     }
 
-    /**
-     * 
-     * @param id
-     * @return
-     */
     public T find(URI id) {
         return this.find(this.persistentClass, id);
     }

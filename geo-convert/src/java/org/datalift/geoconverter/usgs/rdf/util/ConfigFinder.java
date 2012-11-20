@@ -27,10 +27,10 @@ public class ConfigFinder
             File f = new File(dir, name);
             if (f.exists() && f.canRead()) {
                 target = f;
-                log.debug("Found file: {}", f);
                 break;
             }
         }
+        log.debug("Found file: {}", target);
         return target;
     }
 

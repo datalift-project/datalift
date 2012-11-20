@@ -915,7 +915,7 @@ public abstract class UpdateQuery
                     // Function
                     String   f = m.group(1);
                     String[] p = m.group(2).split("\\s*,\\s*");
-    
+
                     Value[] args = new Value[p.length];
                     Map<URI,Variable> vars = new HashMap<URI,Variable>();
                     for (int i=0; i<p.length; i++) {
@@ -951,13 +951,9 @@ public abstract class UpdateQuery
                     }
                     if (v == null) {
                         // No match yet. => Assume URI.
-                        int i = s.indexOf(':');
-                        if (i != -1) {
-                            v = this.uri(s.substring(0, i), s.substring(i + 1));
-                        }
-                        else {
-                            v = this.uri("src", s);
-                        }
+                        URI u = this.uri(s);
+                        this.prefixFor(u.getNamespace());
+                        v = u;
                     }
                 }
             }

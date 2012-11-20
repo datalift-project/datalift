@@ -70,11 +70,11 @@ body {
 }
 
 #projects_panel {
-  width:10%;
+  width:15%;
   margin:0;
   margin-left:1%;
   margin-top:1%;
-  height:280px;
+  min-height:300px;
   float:left;
 text-align:center;
 }
@@ -91,11 +91,11 @@ text-align:center;
 }
 
 #workspace-main-panel {
-  height:450px;
+  min-height:450px;
   margin-right:10px;
   margin-top:10px;  
-  margin-left:13%;
-  width:85%;
+  margin-left:18%;
+  width:80%;
   overflow:hidden;
 }
 

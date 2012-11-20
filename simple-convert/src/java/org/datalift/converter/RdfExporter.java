@@ -102,7 +102,7 @@ public class RdfExporter extends BaseConverterModule
     //-------------------------------------------------------------------------
     // Web services
     //-------------------------------------------------------------------------
-    
+
     @GET
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
     public Response getIndexPage(@QueryParam("project") URI projectId) {

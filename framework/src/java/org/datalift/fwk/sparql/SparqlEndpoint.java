@@ -40,6 +40,7 @@ import java.util.List;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.UriInfo;
+import javax.ws.rs.core.Variant;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
 import org.datalift.fwk.Configuration;
@@ -96,7 +97,8 @@ public interface SparqlEndpoint
     public enum DescribeType {
         Object,
         Predicate,
-        Graph;
+        Graph,
+        RdfType;
 
         /**
          * Return the enumeration value corresponding to the specified
@@ -118,6 +120,14 @@ public interface SparqlEndpoint
             }
             return v;
         }
+    }
+
+    /** The type of SPARQL query. */
+    public enum QueryType {
+        SELECT,
+        CONSTRUCT,
+        ASK,
+        DESCRIBE
     }
 
     //-------------------------------------------------------------------------
@@ -167,8 +177,7 @@ public interface SparqlEndpoint
                             List<String> namedGraphUris, String query,
                             UriInfo uriInfo, Request request, String acceptHdr)
                                                 throws WebApplicationException;
-    
-  
+
     /**
      * Enhanced entry point for executing a SPARQL query and sending
      * paginated results directly to the client.
@@ -267,7 +276,7 @@ public interface SparqlEndpoint
      *         the SPARQL query.
      * @throws SecurityException if the user is not allowed to
      *         perform the query.
-     * 
+     *
      * @see    #describe(String, DescribeType, Repository, UriInfo, Request, String)
      */
     public ResponseBuilder describe(String uri, DescribeType type,
@@ -337,9 +346,16 @@ public interface SparqlEndpoint
      *         perform the query.
      */
     public ResponseBuilder describe(String uri, DescribeType type,
-                                    Repository repository, int max, 
+                                    Repository repository, int max,
                                     String format, String jsonCallback,
                                     UriInfo uriInfo, Request request,
                                     String acceptHdr)
                                                 throws WebApplicationException;
+
+    /**
+     * Returns the MIME types this SPARQL endpoint can serve for the
+     * specified query type.
+     * @return the list of served MIME types.
+     */
+    public List<Variant> getResponseMimeTypes(QueryType queryType);
 }

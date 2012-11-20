@@ -281,7 +281,7 @@ public final class PreferredLocales extends AbstractList<Locale>
      */
     public static void reset() {
         log.trace("Preferred locales removed from current thread");
-        current.set(null);
+        current.remove();
     }
 
     private static void addLocale(Locale l, Collection<Locale> locales) {
@@ -293,7 +293,7 @@ public final class PreferredLocales extends AbstractList<Locale>
         if (isSet(l.getVariant())) {
             locales.add(new Locale(language, country));
         }
-        // If a country is present, add a locale without it. 
+        // If a country is present, add a locale without it.
         if (isSet(country)) {
             locales.add(new Locale(language));
         }

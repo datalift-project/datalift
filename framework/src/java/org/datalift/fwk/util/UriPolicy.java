@@ -79,6 +79,10 @@ public interface UriPolicy extends LifeCycle
     public ResourceHandler canHandle(UriInfo uriInfo,
                                      Request request, String acceptHdr);
 
+    //-------------------------------------------------------------------------
+    // ResourceHandler interface
+    //-------------------------------------------------------------------------
+
     /**
      * An object to which DataLift delegates URI resolution and
      * representation construction of RDF resources.

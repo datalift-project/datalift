@@ -161,7 +161,7 @@ public abstract class BaseFileSource extends BaseSource
 
     /** {@inheritDoc} */
     @Override
-    public final String getFilePath() {
+    public String getFilePath() {
         return this.filePath;
     }
 

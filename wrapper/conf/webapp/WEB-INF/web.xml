@@ -19,18 +19,17 @@
     </listener-class>
   </listener>
 
- <context-param>
-    <param-name>velocity.templates.path</param-name>
-    <param-value>WEB-INF/templates</param-value>
-  </context-param>
-  <context-param>
+  <!-- Use default template encoding: UTF-8. -->
+  <!-- context-param>
     <param-name>velocity.templates.encoding</param-name>
     <param-value>UTF-8</param-value>
-  </context-param>
-  <context-param>
+  </context-param -->
+  <!-- Activate Velocity template cache (-1 = disabled, 0 = no check for
+       updates, N = check template files for update every N seconds). -->
+  <!-- context-param>
     <param-name>velocity.templates.update.check</param-name>
     <param-value>-1</param-value>
-  </context-param>
+  </context-param -->
 
   <!-- ===== Filter definitions & URL mappings ===== -->
 
@@ -187,7 +186,7 @@
     <!-- Prevent Jersey from serving static files -->
     <init-param>
       <param-name>com.sun.jersey.config.property.WebPageContentRegex</param-name>
-      <param-value>(/(images|css|js|wro|(WEB-INF/jsp))/.*)|(/(.[^/]*\.html))</param-value>
+      <param-value>/|(/(images|css|js|wro|(WEB-INF/jsp))/.*)|(/(.[^/]*\.html))</param-value>
     </init-param>
     <!-- Activation of automatic redirection for URLs ending with slash -->
     <init-param>
@@ -247,6 +246,10 @@
   <mime-mapping>
     <extension>nt</extension>
     <mime-type>application/n-triples</mime-type>
+  </mime-mapping>
+  <mime-mapping>
+    <extension>owl</extension>
+    <mime-type>application/rdf+xml</mime-type>
   </mime-mapping>
   <mime-mapping>
     <extension>rdf</extension>

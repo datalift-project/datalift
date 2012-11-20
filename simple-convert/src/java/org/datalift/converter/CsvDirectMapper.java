@@ -39,12 +39,13 @@ import java.net.URI;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.GregorianCalendar;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import static java.util.Calendar.*;
 
@@ -111,6 +112,7 @@ public class CsvDirectMapper extends BaseConverterModule
         Float           ("float"),
         Boolean         ("boolean"),
         Date            ("date"),
+        URI             ("uri"),
         Automatic       ("auto"),
         Ignore          ("ignore");
 
@@ -118,6 +120,14 @@ public class CsvDirectMapper extends BaseConverterModule
 
         Mapping(String label) {
             this.label = label;
+        }
+
+        /**
+         * Returns the mapping label.
+         * @return the mapping label.
+         */
+        public String getLabel() {
+            return this.label;
         }
 
         /**
@@ -149,6 +159,13 @@ public class CsvDirectMapper extends BaseConverterModule
     /** The name of this module in the DataLift configuration. */
     public final static String MODULE_NAME = "csvdirectmapper";
 
+    /**
+     * The regex pattern to match possible separators in numbers
+     * but the default decimal separators ('.').
+     */
+    private final static Pattern SEPARATORS_PATTERN =
+                                            Pattern.compile("[\\s\\u00a0,]+");
+
     //-------------------------------------------------------------------------
     // Class members
     //-------------------------------------------------------------------------
@@ -168,12 +185,49 @@ public class CsvDirectMapper extends BaseConverterModule
     // Web services
     //-------------------------------------------------------------------------
 
+    /**
+     * <i>[Resource method]</i> Displays the module welcome page.
+     * @param  projectId   the URI of the datalifting project.
+     *
+     * @return a JAX-RS response with the page template and parameters.
+     */
     @GET
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
     public Response getIndexPage(@QueryParam("project") URI projectId) {
         return this.newProjectView("csvDirectMapper.vm", projectId);
     }
 
+    /**
+     * <i>[Resource method]</i> Converts the data of the specified CSV
+     * source into RDF triples, loads them in the internal store and
+     * creates a new associated RDF source.
+     * @param  projectId     the URI of the datalifting project.
+     * @param  sourceId      the URI of the source to convert.
+     * @param  destTitle     the name of the RDF source to hold the
+     *                       converted data.
+     * @param  targetGraph   the URI of the named graph to hold the
+     *                       converted data, which will also be the URI
+     *                       of the created RDF source.
+     * @param  baseUri       the base URI to build the RDF identifiers
+     *                       from the CSV data.
+     * @param  trueValues    the list of values to be regarded as TRUE
+     *                       for the columns to convert to booleans.
+     * @param  dateFormat    the {@link DateFormat date format} to use
+     *                       when converting cells into dates.
+     * @param  keyColumn     the CSV column to use as identifier when
+     *                       creating RDF object. If not specified, the
+     *                       row number is used as identifier.
+     * @param  targetType    The URI (absolute or relative to the
+     *                       <code>baseUri</code>) of the RDF type to
+     *                       assign to the created RDF objects.
+     * @param  params        The form parameters, to extract the type
+     *                       mapping for each column.
+     *
+     * @return a JAX-RS response redirecting the user browser to the
+     *         created RDF source.
+     * @throws WebApplicationException if any error occurred during the
+     *         data conversion from CSV to RDF.
+     */
     @POST
     @Consumes(APPLICATION_FORM_URLENCODED)
     public Response mapCsvData(
@@ -185,11 +239,12 @@ public class CsvDirectMapper extends BaseConverterModule
                     @FormParam("true_values") String trueValues,
                     @FormParam("date_format") String dateFormat,
                     @FormParam("key_column") @DefaultValue("-1") int keyColumn,
+                    @FormParam("dest_type") String targetType,
                     MultivaluedMap<String,String> params)
                                                 throws WebApplicationException {
         // Note: There a bug in Jersey that cause the MultivalueMap to be
-        // empty unless at least one @FormParm annotation is present.
-        // see: http://jersey.576304.n2.nabble.com/POST-parameters-not-injected-via-MultivaluedMap-td6434341.html
+        //       empty unless at least one @FormParm annotation is present.
+        // See: http://jersey.576304.n2.nabble.com/POST-parameters-not-injected-via-MultivaluedMap-td6434341.html
 
         Response response = null;
         try {
@@ -224,7 +279,7 @@ public class CsvDirectMapper extends BaseConverterModule
             }
             // Convert CSV data and load generated RDF triples.
             this.convert(in, Configuration.getDefault().getInternalRepository(),
-                             targetGraph, baseUri, desc);
+                             targetGraph, baseUri, targetType, desc);
             // Register new transformed RDF source.
             Source out = this.addResultSource(p, in, destTitle, targetGraph);
             // Display project source tab, including the newly created source.
@@ -240,8 +295,17 @@ public class CsvDirectMapper extends BaseConverterModule
     // Specific implementation
     //-------------------------------------------------------------------------
 
+    /**
+     * Returns the available type mappings.
+     * @return the available type mappings as an array.
+     */
+    public Mapping[] getMappings() {
+        return Mapping.values();
+    }
+
     private void convert(CsvSource src, Repository target,
                                         URI targetGraph, URI baseUri,
+                                        String targetType,
                                         MappingDesc mapping) {
         final RepositoryConnection cnx = target.newConnection();
         org.openrdf.model.URI ctx = null;
@@ -250,6 +314,7 @@ public class CsvDirectMapper extends BaseConverterModule
                             new UriCachingValueFactory(cnx.getValueFactory());
 
             long t0 = System.currentTimeMillis();
+            char quote = src.getQuoteCharacter();
             // Prevent transaction commit for each triple inserted.
             cnx.setAutoCommit(false);
             // Clear target named graph, if any.
@@ -257,6 +322,7 @@ public class CsvDirectMapper extends BaseConverterModule
                 ctx = valueFactory.createURI(targetGraph.toString());
                 cnx.clear(ctx);
             }
+            // Create URIs for objects and predicates.
             if (baseUri == null) {
                 baseUri = targetGraph;
             }
@@ -264,8 +330,19 @@ public class CsvDirectMapper extends BaseConverterModule
                             (baseUri != null)? baseUri.toString(): null, '/');
             String typeUri = RdfUtils.getBaseUri(
                             (baseUri != null)? baseUri.toString(): null, '#');
-            org.openrdf.model.URI rdfType = valueFactory.createURI(
-                                            typeUri, urlify(src.getTitle()));
+            // Create target RDF type.
+            if (! isSet(targetType)) {
+                targetType = urlify(src.getTitle());
+            }
+            org.openrdf.model.URI rdfType = null;
+            try {
+                // Assume target type is an absolute URI.
+                rdfType = valueFactory.createURI(targetType);
+            }
+            catch (Exception e) {
+                // Oops, targetType is a relative URI. => Append namespace URI.
+                rdfType = valueFactory.createURI(typeUri, targetType);
+            }
             // Build predicates URIs.
             int n = src.getColumnNames().size();
             org.openrdf.model.URI[] predicates = new org.openrdf.model.URI[n];
@@ -273,7 +350,7 @@ public class CsvDirectMapper extends BaseConverterModule
             for (String s : src.getColumnNames()) {
                 predicates[i++] = valueFactory.createURI(typeUri + urlify(s));
             }
-            // Load triples
+            // Load triples.
             long statementCount = 0L;
             long duration = 0L;
             int  batchSize = Env.getRdfBatchSize();
@@ -286,17 +363,23 @@ public class CsvDirectMapper extends BaseConverterModule
                 // Scan columns to map values and build triples.
                 org.openrdf.model.URI subject = null;
                 for (int j=0, max=row.size(); j<max; j++) {
-                    String  v = row.get(j);
                     Mapping m = mapping.getMapping(j);
                     Value value = null;
-                    if (isSet(v)) {
-                        value = this.mapValue(v, valueFactory, m, mapping);                            
+                    String v = trimToNull(row.get(j));  // Trim value.
+                    if (v != null) {
+                        // Handle special case of unmatched closing quote, left
+                        // over by CSV parser when followed by padding.
+                        if (v.indexOf(quote) == v.length() - 1) {
+                            v = v.substring(0, v.length() - 1);
+                        }
+                        value = this.mapValue(v, valueFactory, m, mapping);
                         if (j == mapping.keyColumn) {
-                            subject = valueFactory.createURI(objUri + urlify(v)); // + "#_";
+                            subject = valueFactory.createURI(
+                                                objUri + urlify(v)); // + "#_";
                         }
                     }
                     else {
-                        // Skip row without identifier.
+                        // Skip rows without identifier.
                         if (j == mapping.keyColumn) skipRow = true;
                     }
                     if (value != null) {
@@ -369,7 +452,6 @@ public class CsvDirectMapper extends BaseConverterModule
     private Value mapValue(String s, ValueFactory valueFactory,
                                        Mapping mapping, MappingDesc desc) {
         Value v = null;
-        s = s.trim();
         switch (mapping) {
             case Ignore:
                 break;
@@ -387,6 +469,9 @@ public class CsvDirectMapper extends BaseConverterModule
                 break;
             case Date:
                 v = this.mapDate(s, valueFactory, desc, false);
+                break;
+            case URI:
+                v = this.mapUri(s, valueFactory);
                 break;
             default:
                 // Automatic mapping on a per-cell basis.
@@ -415,14 +500,31 @@ public class CsvDirectMapper extends BaseConverterModule
         return v;
     }
 
+    /**
+     * Converts a string into an RDF {@link Literal string literal}.
+     * @param  s              the string to map.
+     * @param  valueFactory   the {@link ValueFactory value factory} to
+     *                        use to allocate the literal.
+     * @return a {@link Literal} holding the string value.
+     */
     private Literal mapString(String s, ValueFactory valueFactory) {
-        return valueFactory.createLiteral(s);
+        return valueFactory.createLiteral(
+                                        RdfUtils.removeInvalidDataCharacter(s));
     }
 
+    /**
+     * Maps an integer value.
+     * @param  s              the string to parse as an integer value.
+     * @param  valueFactory   the {@link ValueFactory value factory} to
+     *                        use to allocate the integer literal.
+     *
+     * @return a {@link Literal} holding the extracted integer value.
+     */
     private Literal mapInt(String s, ValueFactory valueFactory) {
         Literal v = null;
         try {
-            v = valueFactory.createLiteral(Long.parseLong(s));
+            v = valueFactory.createLiteral(
+                                    Long.parseLong(this.trimNumSeparators(s)));
         }
         catch (Exception e) {
             /* Ignore... */
@@ -430,11 +532,30 @@ public class CsvDirectMapper extends BaseConverterModule
         return v;
     }
 
+    /**
+     * Maps a floating point value.
+     * @param  s              the string to parse as a floating point value.
+     * @param  valueFactory   the {@link ValueFactory value factory} to
+     *                        use to allocate the decimal literal.
+     *
+     * @return a {@link Literal} holding the extracted decimal value.
+     */
     private Literal mapFloat(String s, ValueFactory valueFactory) {
         Literal v = null;
         try {
-            v = valueFactory.createLiteral(
-                                    Double.parseDouble(s.replace(',', '.')));
+            // If the default decimal separator ('.') is absent, assume
+            // the user language uses ','.
+            if (s.indexOf('.') == -1) {
+                int n = s.indexOf(',');
+                if ((n != -1) && (n == s.lastIndexOf(','))) {
+                    s.replace(',', '.');
+                }
+                // Else: no comma or more than one. => Ignore.
+            }
+            // Trim all spaces, tabs and other separator characters.
+            s = this.trimNumSeparators(s);
+            // Parse decimal value as a double.
+            v = valueFactory.createLiteral(Double.parseDouble(s));
         }
         catch (Exception e) {
             /* Ignore... */
@@ -442,11 +563,34 @@ public class CsvDirectMapper extends BaseConverterModule
         return v;
     }
 
+    /**
+     * Maps a boolean value, matching the values for TRUE defined in the
+     * mapping descriptor.
+     * @param  s              the string to parse as a boolean.
+     * @param  valueFactory   the {@link ValueFactory value factory} to
+     *                        use to allocate the boolean literal.
+     * @param  desc           the value mappings specified by the user.
+     *
+     * @return a {@link Literal} holding the extracted boolean value.
+     */
     private Literal mapBoolean(String s, ValueFactory valueFactory,
                                          MappingDesc desc) {
         return valueFactory.createLiteral(desc.parseBoolean(s));
     }
 
+    /**
+     * Maps a date (time or date-time) value using the date format
+     * defined in the mapping descriptor.
+     * @param  s              the string to parse as a date.
+     * @param  valueFactory   the {@link ValueFactory value factory} to
+     *                        use to allocate the date literal.
+     * @param  desc           the value mappings specified by the user.
+     * @param  tentative      whether this call is just an attempt to
+     *                        check whether the value contains a date.
+     *
+     * @return a {@link Literal} holding the extracted date, time or
+     *         date-time value.
+     */
     private Literal mapDate(String s, ValueFactory valueFactory,
                                       MappingDesc desc, boolean tentative) {
         Literal v = null;
@@ -459,11 +603,53 @@ public class CsvDirectMapper extends BaseConverterModule
         return v;
     }
 
+    /**
+     * Maps a URI.
+     * @param  s              the string to parse as a URI.
+     * @param  valueFactory   the {@link ValueFactory value factory} to
+     *                        use to allocate the URI.
+     *
+     * @return a {@link Literal} holding the extracted integer value.
+     */
+    private Value mapUri(String s, ValueFactory valueFactory) {
+        Value v = null;
+        try {
+            // Use java.net.URI to ensure no illegal character is present.
+            v = valueFactory.createURI(URI.create(s).toString());
+        }
+        catch (Exception e) {
+            /* Ignore... */
+        }
+        return v;
+    }
+
+    /**
+     * Removes the separators from a string holding a numeric value.
+     * @param  s   the string to clean.
+     *
+     * @return the string, stripped of all separator characters.
+     */
+    private String trimNumSeparators(String s) {
+        return (s == null)? "": SEPARATORS_PATTERN.matcher(s).replaceAll("");
+    }
+
+    //-------------------------------------------------------------------------
+    // MappingDesc nested class
+    //-------------------------------------------------------------------------
+
+    /**
+     * A value object describing the parameters for mapping CSV data
+     * to RDF values.
+     */
     private final static class MappingDesc
     {
+        private final static Collection<String> DEFAULT_TRUE_VALUES =
+                                    Arrays.asList("true", "yes", "oui", "1");
+
         private final Mapping[] mappings;
         private final int keyColumn;
-        private final List<String> trueValues;
+        private final Collection<String> trueValues;
+        private final boolean booleanValuesDefined;
         private final DateFormat dateFormat;
         private final DatatypeFactory dateFactory;
 
@@ -476,8 +662,9 @@ public class CsvDirectMapper extends BaseConverterModule
             this.mappings = typeMappings;
             this.keyColumn = keyColumn;
             // Boolean TRUE values.
-            List<String> l = Collections.emptyList();
-            if (isSet(trueValues)) {
+            this.booleanValuesDefined = isSet(trueValues);
+            Collection<String> l = DEFAULT_TRUE_VALUES;
+            if (this.booleanValuesDefined) {
                 String[] v = trueValues.trim().split("\\s*,\\s*");
                 l = new ArrayList<String>(v.length);
                 for (String s : v) {
@@ -512,7 +699,8 @@ public class CsvDirectMapper extends BaseConverterModule
         }
 
         public boolean hasBooleanValues() {
-            return (! this.trueValues.isEmpty());
+            return ((this.booleanValuesDefined) &&
+                    (! this.trueValues.isEmpty()));
         }
 
         public boolean parseBoolean(String s) {

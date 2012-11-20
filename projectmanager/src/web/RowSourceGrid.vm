@@ -10,7 +10,8 @@
 <body>
 #banner
 #set( $maxEntries = 5000 )
-	<h3>#i18n("source.grid.desc") $!esc.html($it.title) ($maxEntries #i18n("source.grid.displayed_entries"))</h3>
+#set ( $rowCSV = 0 )
+	<h3 id="title_bar">#i18n("source.grid.desc") $!esc.html($it.title) ($maxEntries #i18n("source.grid.displayed_entries"))</h3>
 	<table id="grid">
 		<thead>
 			<tr>
@@ -26,6 +27,7 @@
 			<tr><td>$velocityCount</td>
   #foreach( $i in $row ) <td>$!esc.html($i)</td> #end
 			</tr>
+  #set ( $rowCSV = $rowCSV + 1)
 #end
 		</tbody>
 	</table>
@@ -39,11 +41,14 @@
 #end
 		</select>
 	</div>
-
 #script_links
 	<script language="javascript" src="${baseUri}/project/static/js/jqgrid.common.js"></script>
 	<script type="text/javascript">
 		$(function() {
+			var rowNumber = $rowCSV;
+			if (rowNumber < 5000) {
+				$("#title_bar").text("#i18n("source.grid.desc") $!esc.html($it.title) (" + rowNumber + " #i18n("source.grid.entries"))");
+			}
 			htmlTableTojQGrid();
 			jQuery("#grid").jqGrid('setColProp', '#i18n("source.grid.row.heading")', { sorttype:'int' });
 		});

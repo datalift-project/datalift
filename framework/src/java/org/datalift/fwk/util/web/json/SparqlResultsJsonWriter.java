@@ -68,7 +68,7 @@ public class SparqlResultsJsonWriter extends AbstractJsonWriter
                                     throws TupleQueryResultHandlerException {
         try {
             this.start(columnHeaders);
-            this.openBraces();            
+            this.openBraces();
             // Write header
             this.writeKey("head");
             this.openBraces();

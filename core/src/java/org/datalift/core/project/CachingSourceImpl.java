@@ -136,9 +136,29 @@ public abstract class CachingSourceImpl extends BaseSource
     }
 
     //-------------------------------------------------------------------------
-    // Specific implementation
+    // BaseSource contract support
     //-------------------------------------------------------------------------
 
+    /** {@inheritDoc} */
+    @Override
+    protected StringBuilder toString(StringBuilder b) {
+        b = super.toString(b);
+
+        long expiry = this.getCacheExpiry();
+        if (expiry > 0L) {
+            if (b.length() != 0) {
+                b.append(", ");
+            }
+            b.append(this.getCacheFile())
+             .append(" (-> ").append(this.toString(new Date(expiry)))
+             .append(')');
+        }
+        return b;
+    }
+
+    //-------------------------------------------------------------------------
+    // Specific implementation
+    //-------------------------------------------------------------------------
 
     /**
      * Returns the size of the cache input buffer for this source.

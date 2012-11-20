@@ -294,18 +294,14 @@ public class DOMConfigurator2 extends DOMConfigurator
     private final static int MIN_UPDATE_WATCHDOG = 60;  // 1 minute
 
     //-------------------------------------------------------------------------
-    // Class members definition
-    //-------------------------------------------------------------------------
-
-    /** Timer for configuration file watchdogs. */
-    private static Timer fileWatchdogTimer = null;
-
-    //-------------------------------------------------------------------------
     // Instance members definition
     //-------------------------------------------------------------------------
 
     /** User provider configuration properties, if any. */
     private Properties userProps = null;
+    /** Timer for configuration file watchdogs. */
+    private final Timer fileWatchdogTimer = new Timer(
+                        "Log4J DOMConfigurator2 File Update Watchdog", true);
     /** Active configuration file watchdogs for file update checks. */
     private final Collection fileWatchdogs = new LinkedList();
 
@@ -552,6 +548,21 @@ public class DOMConfigurator2 extends DOMConfigurator
             }
             LogLog.error("Could not parse Log4J configuration at "
                          + source.getSystemId(), e);
+        }
+        finally {
+            // Force closing of source stream (if any) to avoid file desc. leak.
+            if (source.getByteStream() != null) {
+                try {
+                    source.getByteStream().close();
+                }
+                catch (Exception e) { /* Ignore... */ }
+            }
+            if (source.getCharacterStream() != null) {
+                try {
+                    source.getCharacterStream().close();
+                }
+                catch (Exception e) { /* Ignore... */ }
+            }
         }
     }
 
@@ -851,10 +862,17 @@ public class DOMConfigurator2 extends DOMConfigurator
      */
     private synchronized void addFileWatchdog(File f, String configUri,
                                                       long period) {
-        FileWatchdog watchdog = new FileWatchdog(f, configUri);
-        getTimer().schedule(watchdog, period, period);
-        this.fileWatchdogs.add(watchdog);
-        LogLog.debug("Added file update watchdog for " + f);
+        try {
+            FileWatchdog watchdog = new FileWatchdog(f, configUri);
+            this.fileWatchdogTimer.schedule(watchdog, period, period);
+            this.fileWatchdogs.add(watchdog);
+            LogLog.debug("Added file update watchdog for " + f);
+        }
+        catch (Exception e) {
+            // Sometimes file watchdogs continue being added while the
+            // application is shutting down and the timer is cancelled.
+            // => Ignore...
+        }
     }
 
     /**
@@ -867,6 +885,8 @@ public class DOMConfigurator2 extends DOMConfigurator
             t.cancel();
             i.remove();
         }
+        // Terminate the timer thread.
+        this.fileWatchdogTimer.cancel();
     }
 
     /**
@@ -954,14 +974,6 @@ public class DOMConfigurator2 extends DOMConfigurator
             qName = getQName(node.getNamespaceURI(), node.getLocalName());
         }
         return qName;
-    }
-
-    private static Timer getTimer() {
-        if (fileWatchdogTimer == null) {
-            fileWatchdogTimer = new Timer(
-                        "Log4J DOMConfigurator2 File Update Watchdog", true);
-        }
-        return fileWatchdogTimer;
     }
 
     //-------------------------------------------------------------------------

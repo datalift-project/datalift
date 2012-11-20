@@ -36,7 +36,6 @@ package org.datalift.core.project;
 
 
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -61,6 +60,7 @@ import org.datalift.fwk.project.CsvSource;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.Row;
 import org.datalift.fwk.util.CloseableIterator;
+import org.datalift.fwk.util.io.BomReader;
 
 import static org.datalift.fwk.util.StringUtils.*;
 
@@ -132,7 +132,7 @@ public class CsvSourceImpl extends BaseFileSource
 
     /** {@inheritDoc} */
     @Override
-    public final String getEncoding() {
+    public String getEncoding() {
         String enc = super.getEncoding();
         return (isSet(enc))? enc: DEFAULT_ENCODING;
     }
@@ -258,7 +258,7 @@ public class CsvSourceImpl extends BaseFileSource
 
     /** {@inheritDoc} */
     @Override
-    public final CloseableIterator<Row<String>> iterator() {
+    public CloseableIterator<Row<String>> iterator() {
         this.initHeaders();
         try {
             return new RowIterator(this.newReader());
@@ -303,7 +303,7 @@ public class CsvSourceImpl extends BaseFileSource
                             titleRow[i] = this.getColumnName(i);
                         }
                     }
-                    // Check headings to ensure uniqueness.  
+                    // Check headings to ensure uniqueness.
                     Map<String,AtomicInteger> duplicatedColumns =
                                             new HashMap<String,AtomicInteger>();
                     for (int i=0, max=titleRow.length; i<max; i++) {
@@ -337,8 +337,8 @@ public class CsvSourceImpl extends BaseFileSource
     }
 
     private CSVReader newReader() throws IOException {
-        return new CSVReader(new InputStreamReader(this.getInputStream(),
-                                                   this.getEncoding()),
+        return new CSVReader(new BomReader(this.getInputStream(),
+                                           this.getEncoding()),
                              Separator.valueOf(this.separator).getValue(),
                              this.getQuoteCharacter());
     }
@@ -377,7 +377,7 @@ public class CsvSourceImpl extends BaseFileSource
         if (isSet(s)) {
             c = s.charAt(0);
             if (s.length() != 1) {
-                if (s.charAt(0) == '\\') {                
+                if (s.charAt(0) == '\\') {
                     s = s.toLowerCase();
                     int i = -1;
                     try {

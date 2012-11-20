@@ -62,9 +62,23 @@ public abstract class ViewFactory
     }
 
     /**
-     * Returns a new template model for web service response rendering.
+     * Returns a new template model for web service response rendering
+     * with an associated model object.
+     * <p>
+     * If <code>model</code> is a {@link Map}, it shall contain the
+     * whole object model and its <strong>content</strong> is copied
+     * into the object model (non-string keys are ignored). Otherwise
+     * the object is associated to the
+     * {@link TemplateModel#MODEL_KEY default model key}.<br />It is
+     * possible to associate a Map to the default model key by using
+     * the following two-step method:</p>
+     * <blockquote><pre>
+     *  Map map = ...
+     *  TemplateModel tm = ViewFactory.newView(templateName);
+     *  tm.put(map);
+     * </pre></blockquote>
      * @param  templateName   the template name, absolute or relative.
-     * @param  model          the model object.
+     * @param  model          the (optional) model object.
      *
      * @return a new template view.
      */
@@ -79,10 +93,11 @@ public abstract class ViewFactory
      * Factory method concrete sub-classes shall implements to
      * instantiate {@link TemplateModel} implementations.
      * @param  templateName   the template name, absolute or relative.
-     * @param  model          the model object.
+     * @param  model          the (optional) model object.
      *
      * @return a template model implementation.
+     * @see    #createView(String, Object)
      */
-    abstract protected TemplateModel createView(String templateName, 
+    abstract protected TemplateModel createView(String templateName,
                                                 Object model);
 }

@@ -86,30 +86,6 @@ import org.datalift.fwk.util.StringUtils;
 public class ProjectImpl extends BaseRdfEntity implements Project
 {
     //-------------------------------------------------------------------------
-    // Enumeration of project execution steps
-    //-------------------------------------------------------------------------
-
-/*
-    public enum Execution {
-        Selection       (VDPP.uri + "Selection"),
-        Publication     (VDPP.uri + "Publication"),
-        Interlinking    (VDPP.uri + "Interlinking"),
-        Conversion      (VDPP.uri + "Conversion");
-
-        public final URI uri;
-
-        Execution(String s) {
-            try {
-                this.uri = new URI(s);
-            }
-            catch (URISyntaxException e) {
-                throw new IllegalArgumentException(e);
-            }
-        }
-    }
-*/
-
-    //-------------------------------------------------------------------------
     // Instance members
     //-------------------------------------------------------------------------
 
@@ -132,8 +108,6 @@ public class ProjectImpl extends BaseRdfEntity implements Project
     private Date dateModified;
     @RdfProperty("dcterms:license")
     private URI license;
-    @RdfProperty("prv:Execution")
-    private URI execution;
 
     @RdfProperty("void:vocabulary")
     @OneToMany(fetch = FetchType.EAGER, cascade = { CascadeType.ALL })
@@ -143,10 +117,17 @@ public class ProjectImpl extends BaseRdfEntity implements Project
     // Constructors
     //-------------------------------------------------------------------------
 
+    /**
+     * Creates a new project.
+     */
     public ProjectImpl() {
         // NOP
     }
 
+    /**
+     * Creates a new project with the specified URI as identifier.
+     * @param  uri   the project identifier.
+     */
     public ProjectImpl(String uri) {
         this.uri = uri;
     }
@@ -311,25 +292,13 @@ public class ProjectImpl extends BaseRdfEntity implements Project
         return ontology;
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public URI getExecution() {
-        return this.execution;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public void setExecution(URI execution) {
-        this.execution = execution;
-    }
-
     //-------------------------------------------------------------------------
     // BaseRdfEntity contract support
     //-------------------------------------------------------------------------
 
     /** {@inheritDoc} */
     @Override
-    protected final void setId(String id) {
+    protected void setId(String id) {
         this.uri = id;
     }
 
@@ -358,7 +327,7 @@ public class ProjectImpl extends BaseRdfEntity implements Project
      * Sets the name of the operator that initiated this project.
      * @param  o   the project owner.
      */
-    public final void setOwner(String o) {
+    public void setOwner(String o) {
         this.owner = o;
     }
 
@@ -366,7 +335,7 @@ public class ProjectImpl extends BaseRdfEntity implements Project
      * Sets the creation date of this project.
      * @param  date   the project creation date.
      */
-    public final void setCreationDate(Date date) {
+    public void setCreationDate(Date date) {
         this.dateCreated = this.copy(date);
     }
 }

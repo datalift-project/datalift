@@ -353,7 +353,7 @@ public abstract class TechnicalException extends RuntimeException
      *
      * @param  key       the name of the message format to retrieve.
      * @param  locales   the user's preferred locales from which
-     *                   retreiving the message format.
+     *                   retrieving the message format.
      *
      * @return the message format associated to the key, the key
      *         itself (if no corresponding resource was found) or

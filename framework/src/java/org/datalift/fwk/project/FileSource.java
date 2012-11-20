@@ -54,7 +54,7 @@ public interface FileSource extends Source
 
     /**
      * Sets the data type of the source content.
-     * @param  mimeType   type of data this source contains. 
+     * @param  mimeType   type of data this source contains.
      */
     public void setMimeType(String mimeType);
 
@@ -69,7 +69,7 @@ public interface FileSource extends Source
 
     /**
      * Sets the character encoding of the source content.
-     * @param  encoding   character set of the source content. 
+     * @param  encoding   character set of the source content.
      */
     public void setEncoding(String encoding);
 

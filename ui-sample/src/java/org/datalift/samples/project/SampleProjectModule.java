@@ -108,7 +108,7 @@ public class SampleProjectModule extends BaseModule implements ProjectModule
     //-------------------------------------------------------------------------
     // Web services
     //-------------------------------------------------------------------------
-    
+
     @GET
     @Produces(MediaType.TEXT_PLAIN)
     public String doGet() {

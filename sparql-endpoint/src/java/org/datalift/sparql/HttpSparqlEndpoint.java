@@ -41,6 +41,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.HttpURLConnection;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -48,10 +50,14 @@ import javax.ws.rs.Path;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
+import javax.ws.rs.core.Variant;
 import javax.ws.rs.core.Response.ResponseBuilder;
+
+import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 
 import org.datalift.fwk.MediaTypes;
 
+import static org.datalift.fwk.MediaTypes.*;
 import static org.datalift.fwk.util.StringUtils.isBlank;
 
 
@@ -65,8 +71,67 @@ import static org.datalift.fwk.util.StringUtils.isBlank;
 public class HttpSparqlEndpoint extends AbstractSparqlEndpoint
 {
     //-------------------------------------------------------------------------
+    // Constants
+    //-------------------------------------------------------------------------
+
+    /**
+     * The supported MIME types for SELECT query responses. As the list
+     * of types actually supported by the remote endpoint is unknown,
+     * this list is restricted to the most common types.
+     */
+    protected final static List<Variant> SELECT_RESPONSE_TYPES =
+            Collections.unmodifiableList(Arrays.asList(
+                    new Variant(APPLICATION_SPARQL_RESULT_XML_TYPE, null, null),
+                    new Variant(APPLICATION_XML_TYPE, null, null),
+                    new Variant(TEXT_XML_TYPE, null, null)));
+    /**
+     * The supported MIME types for CONSTRUCT and DESCRIBE query
+     * responses. As the list of types actually supported by the remote
+     * endpoint is unknown, this list is restricted to the most common
+     * types.
+     */
+    protected final static List<Variant> CONSTRUCT_RESPONSE_TYPES =
+            Collections.unmodifiableList(Arrays.asList(
+                    new Variant(APPLICATION_RDF_XML_TYPE, null, null),
+                    new Variant(TEXT_TURTLE_TYPE, null, null),
+                    new Variant(APPLICATION_TURTLE_TYPE, null, null),
+                    new Variant(TEXT_N3_TYPE, null, null),
+                    new Variant(TEXT_RDF_N3_TYPE, null, null),
+                    new Variant(APPLICATION_N3_TYPE, null, null),
+                    new Variant(APPLICATION_NTRIPLES_TYPE, null, null),
+                    new Variant(APPLICATION_XML_TYPE, null, null)));
+    /** The supported MIME types for ASK query responses. As the list
+     * of types actually supported by the remote endpoint is unknown,
+     * this list is restricted to the most common types.
+     */
+    protected final static List<Variant> ASK_RESPONSE_TYPES =
+            Collections.unmodifiableList(Arrays.asList(
+                    new Variant(TEXT_PLAIN_TYPE, null, null)));
+
+    //-------------------------------------------------------------------------
     // AbstractSparqlEndpoint contract support
     //-------------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    @Override
+    public List<Variant> getResponseMimeTypes(QueryType queryType) {
+        List<Variant> types = null;
+        switch (queryType) {
+            case SELECT:
+                types = SELECT_RESPONSE_TYPES;
+                break;
+            case CONSTRUCT:
+            case DESCRIBE:
+                types = CONSTRUCT_RESPONSE_TYPES;
+                break;
+            case ASK:
+                types = ASK_RESPONSE_TYPES;
+                break;
+            default:
+                throw new IllegalArgumentException("queryType");
+        }
+        return types;
+    }
 
     /** {@inheritDoc} */
     @Override
@@ -105,7 +170,7 @@ public class HttpSparqlEndpoint extends AbstractSparqlEndpoint
         cnx.setRequestMethod(request.getMethod());
         cnx.setConnectTimeout(2000);    // 2 sec.
         cnx.setReadTimeout(30000);      // 30 sec.
-        cnx.setRequestProperty("Accept", isBlank(format)? acceptHdr: format);
+        cnx.setRequestProperty(ACCEPT, isBlank(format)? acceptHdr: format);
         // Force server connection.
         cnx.connect();
         int status = cnx.getResponseCode();

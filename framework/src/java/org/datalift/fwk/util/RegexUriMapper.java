@@ -84,7 +84,7 @@ public class RegexUriMapper implements UriMapper
         URI mapped = in;
         if (in != null) {
             try {
-            	Matcher m = this.extractor.matcher(in.toString());
+                Matcher m = this.extractor.matcher(in.toString());
                 mapped = new URI(m.replaceAll(this.replacement));
             }
             catch (URISyntaxException e) {

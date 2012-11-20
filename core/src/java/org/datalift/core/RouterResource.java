@@ -36,20 +36,15 @@ package org.datalift.core;
 
 
 import java.io.File;
-import java.lang.reflect.Constructor;
 import java.net.URI;
 import java.net.URL;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.ServiceLoader;
 import java.util.TreeMap;
-
-import static java.util.GregorianCalendar.*;
 
 import javax.activation.MimetypesFileTypeMap;
 import javax.ws.rs.GET;
@@ -58,7 +53,6 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Request;
@@ -75,7 +69,7 @@ import org.openrdf.query.Binding;
 import org.openrdf.query.BindingSet;
 import org.openrdf.query.TupleQueryResultHandlerBase;
 
-import org.datalift.core.log.LogContext;
+import org.datalift.core.util.web.DefaultCacheConfiguration;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.LifeCycle;
 import org.datalift.fwk.MediaTypes;
@@ -87,6 +81,7 @@ import org.datalift.fwk.sparql.SparqlQueries;
 import org.datalift.fwk.sparql.SparqlEndpoint.DescribeType;
 import org.datalift.fwk.util.UriPolicy;
 import org.datalift.fwk.util.UriPolicy.ResourceHandler;
+import org.datalift.fwk.util.web.CacheConfiguration;
 
 import static org.datalift.fwk.util.StringUtils.*;
 
@@ -121,6 +116,9 @@ public class RouterResource implements LifeCycle, ResourceResolver
     // Constants
     //-------------------------------------------------------------------------
 
+    /** The resource serving order: static (file) or RDF resources first. */
+    public final static String SERVE_RDF_RESOURCES_FIRST_PROPERTY =
+                                                "datalift.resources.rdf.first";
     /**
      * The module sub-directory where to look for classes first. If
      * no present, root-level JAR files will be searched.
@@ -134,15 +132,6 @@ public class RouterResource implements LifeCycle, ResourceResolver
      */
     public final static String MODULE_PUBLIC_DIR  = "public";
 
-    /** The default cache duration for static & RDF resources. */
-    public final static String CACHE_DURATION_PROPERTY =
-                                                "datalift.cache.duration";
-    /** The business day opening hours. */
-    public final static String BUSINESS_DAY_PROPERTY =
-                                                "datalift.cache.businessDay";
-
-    private final static String MODULE_NAME = "RouterResource";
-
     //-------------------------------------------------------------------------
     // Class members
     //-------------------------------------------------------------------------
@@ -153,13 +142,12 @@ public class RouterResource implements LifeCycle, ResourceResolver
     // Instance members
     //-------------------------------------------------------------------------
 
-    /** Cache management informations. */
-    private int cacheDuration = 2 * 3600;           // 2 hours in seconds
-    private int[] businessDay = { 8, 20 };          // 8 A.M. to 8 P.M.
-
+    /** Cache management configuration. */
+    private CacheConfiguration cacheConfig = new DefaultCacheConfiguration();
+    /** Whether to serve static resources (files) before RDF resources. */
+    private boolean serveStaticResourcesFirst = true;
     /** Application modules. */
-    private final Map<String,ModuleDesc> modules =
-                                            new TreeMap<String,ModuleDesc>();
+    private final Map<String,Bundle> modules = new TreeMap<String,Bundle>();
     /** Resource resolvers. */
     private final List<UriPolicy> policies = new LinkedList<UriPolicy>();
     /** Predefined SPARQL queries for DataLift core module. */
@@ -178,17 +166,6 @@ public class RouterResource implements LifeCycle, ResourceResolver
         };
 
     //-------------------------------------------------------------------------
-    // Constructors
-    //-------------------------------------------------------------------------
-
-    public RouterResource(Map<String,ModuleDesc> modules) {
-        if (modules == null) {
-            throw new IllegalArgumentException("modules");
-        }
-        this.modules.putAll(modules);
-    }
-
-    //-------------------------------------------------------------------------
     // LifeCycle contract support
     //-------------------------------------------------------------------------
 
@@ -201,63 +178,54 @@ public class RouterResource implements LifeCycle, ResourceResolver
      */
     @Override
     public void init(Configuration configuration) {
-        // Cache: duration
-        String s = configuration.getProperty(CACHE_DURATION_PROPERTY);
-        if (! isBlank(s)) {
-            try {
-                this.cacheDuration = Integer.parseInt(s);
-            }
-            catch (Exception e) {
-                log.warn("Invalid cache duration: {}. Using default value: {}",
-                                        s, Integer.valueOf(this.cacheDuration));
-            }
-        }
-        // Cache: business day hours
-        s = configuration.getProperty(BUSINESS_DAY_PROPERTY);
-        if (! isBlank(s)) {
-            if ("-".equals(s.trim())) {
-                // Not business day hours specified.
-                this.businessDay[0] = 0;
-                this.businessDay[1] = 23;
-            }
-            else {
-                String[] v = s.split("\\s*-\\s*", -1);
-                try {
-                    int openingHour = Integer.parseInt(v[0]);
-                    int closingHour = Integer.parseInt(v[1]);
-                    if ((openingHour < 0) || (openingHour > 23) ||
-                        (closingHour < 0) || (closingHour > 23)) {
-                        throw new IllegalArgumentException(
-                                                        BUSINESS_DAY_PROPERTY);
-                    }
-                    this.businessDay = new int[] {
-                                        Math.min(openingHour, closingHour),
-                                        Math.max(openingHour, closingHour) };
-                }
-                catch (Exception e) {
-                    log.warn("Invalid business day hours: {}. "
-                             + "Using default value: {}", s,
-                             "" + this.businessDay[0] + '-'
-                                + this.businessDay[1]);
-                }
-            }
-        }
+        // Read and install cache configuration.
+        this.cacheConfig = new DefaultCacheConfiguration(configuration);
+        configuration.registerBean(CacheConfiguration.DEFAULT_CONFIG_NAME,
+                                   this.cacheConfig);
+        // Read resource serving order.
+        this.serveStaticResourcesFirst = (! Boolean.parseBoolean(
+                configuration.getProperty(SERVE_RDF_RESOURCES_FIRST_PROPERTY,
+                                          "true")));
     }
 
     /** {@inheritDoc} */
     @Override
     public void postInit(Configuration configuration) {
-        // Loading URI policies for each module, ignoring errors.
+        // Get the list of published Datalift modules and their bundle.
+        this.modules.clear();
+        Map<ClassLoader,Bundle> bundles = new HashMap<ClassLoader,Bundle>();
+        for (Bundle b : configuration.getBeans(Bundle.class)) {
+            bundles.put(b.getClassLoader(), b);
+        }
+        for (Module m : configuration.getBeans(Module.class)) {
+            this.modules.put(m.getName(),
+                             bundles.get(m.getClass().getClassLoader()));
+        }
+        // Load available URI policies, ignoring errors.
         this.policies.clear();
-        for (ModuleDesc desc : this.modules.values()) {
-            try {
-                // Load & install module-specific URI policies, if any.
-                this.loadUriPolicies(desc.classLoader, desc.name);
+        for (Bundle b : configuration.getBeans(Bundle.class)) {
+            int count = 0;
+            // Load & install bundle-provided URI policies, if any.
+            for (UriPolicy p : b.loadServices(UriPolicy.class)) {
+                try {
+                    p.init(configuration);
+                    p.postInit(configuration);
+                    // Make policy available thru the Configuration object.
+                    configuration.registerBean(p);
+                    // Register policy.
+                    this.policies.add(p);
+                    count++;
+                }
+                catch (Exception e) {
+                    log.error("Failed to load URI policy {} for bundle {}", e,
+                                                    p.getClass().getName(), b);
+                    // Skip policy...
+                }
             }
-            catch (Exception e) {
-                log.error("URI policy loading failed for module {}: {}", e,
-                          desc.name, e.getMessage());
-                // Continue with next module.
+            if (count != 0) {
+                // Notify whether URI policies were installed.
+                log.info("Registered {} URI policy(ies) for bundle \"{}\"",
+                         Integer.valueOf(count), b);
             }
         }
 
@@ -318,7 +286,7 @@ public class RouterResource implements LifeCycle, ResourceResolver
             if (handler != null) break;
         }
         if (handler == null) {
-            // URI not supported by any configured handler. => Use default. 
+            // URI not supported by any configured handler. => Use default.
             handler = this.defaultPolicy.canHandle(uriInfo, request, acceptHdr);
         }
         Response response = null;
@@ -339,7 +307,7 @@ public class RouterResource implements LifeCycle, ResourceResolver
                                           UriInfo uriInfo, Request request,
                                           String acceptHdr)
                                                 throws WebApplicationException {
-        return this.resolveUnmappedResource(this.modules.get(module),
+        return this.resolveUnmappedResource(module, this.modules.get(module),
                                             uriInfo, request, acceptHdr);
     }
 
@@ -348,136 +316,32 @@ public class RouterResource implements LifeCycle, ResourceResolver
     //-------------------------------------------------------------------------
 
     /**
-     * <i>[Resource method]</i> Forwards a web service call to the
-     * module specified in the request path.
-     * <p>
-     * If the module is unknown or is not itself a
-     * {@link Module#isResource() JAX-RS resource}, the methods
-     * tries to resolve the call against a public local file or a RDF
-     * resource in the public RDF store.</p>
-     * @param  module      the target module, from the request path.
+     * <i>[Resource method]</i> Attempts to handle an unmatched request
+     * by resolving the request path against files in public storage
+     * and the requested URI against subjects and named graphs present
+     * in the public RDF store.
+     * @param  path        the request path.
      * @param  uriInfo     the request URI data (injected).
      * @param  request     the JAX-RS request object (injected).
      * @param  acceptHdr   the HTTP "Accept" header value.
      *
-     * @return the module as a JAX-RS sub-resource to which forward the
-     *         request or a {@link Response service response} if the
-     *         request was resolved as a local file or RDF resource.
-     * @throws WebApplicationException complete with status code and
-     *         plain-text error message if any error occurred while
-     *         processing the service call or the request path can not
-     *         be resolved.
+     * @return a JAX-RS response if the request was resolved to a local
+     *         file or RDF resource, <code>null</code> otherwise.
+     * @throws WebApplicationException if any error occurred while
+     *         accessing the resolved resource.
      */
-    @Path("{module}")
-    public Object moduleForwarding(@PathParam("module") String module,
-                                   @Context UriInfo uriInfo,
-                                   @Context Request request,
-                                   @HeaderParam(ACCEPT) String acceptHdr)
-                                                throws WebApplicationException {
-        Object target = null;
-
-        ModuleDesc m = this.modules.get(module);
-        if ((m != null) && (m.isResource)) {
-            // Matching module found.
-            LogContext.setContexts(module, null);
-            target = m.module;
-            log.debug("Forwarding request on \"{}\" to module \"{}\"",
-                                                    uriInfo.getPath(), m.name);
-        }
-        else {
-            // Unknown module or direct module query not supported.
-            // => Try resolving URL as a file or an RDF resource.
-            Response response = this.resolveUnmappedResource(m, uriInfo,
-                                                            request, acceptHdr);
-            target = (response != null)? new ResponseWrapper(response): null;
-        }
-        return target;
-    }
-
-    /**
-     * <i>[Resource method]</i> Forwards a web service call to the
-     * module and resource specified in the request path, allocating
-     * the resource instance.
-     * <p>
-     * If either the module or the resource name is unknown, the methods
-     * tries to resolve the call against a public local file or a RDF
-     * resource in the public RDF store.</p>
-     * @param  module      the target module, from the request path.
-     * @param  resource    the target resource, from the request path.
-     * @param  uriInfo     the request URI data (injected).
-     * @param  request     the JAX-RS request object (injected).
-     * @param  acceptHdr   the HTTP "Accept" header value.
-     *
-     * @return a JAX-RS sub-resources to which forward the request or
-     *         a {@link Response service response} if the request was
-     *         resolved as a local file or RDF resource.
-     * @throws WebApplicationException complete with status code and
-     *         plain-text error message if any error occurred while
-     *         processing the service call or the request path can not
-     *         be resolved.
-     */
-    @Path("{module}/{resource}")
-    public Object resourceForwarding(@PathParam("module") String module,
-                                     @PathParam("resource") String resource,
-                                     @Context UriInfo uriInfo,
-                                     @Context Request request,
-                                     @HeaderParam(ACCEPT) String acceptHdr)
-                                                throws WebApplicationException {
-        Object target = null;
-
-        ModuleDesc m = this.modules.get(module);
-        if (m != null) {
-            Class<?> clazz = m.get(resource);
-            if (clazz != null) {
-                try {
-                    // Matching resource found.
-                    LogContext.setContexts(module, resource);
-                    // Look for a constructor with the module as argument.
-                    try {
-                        Constructor<?> c = clazz.getConstructor(
-                                                        m.module.getClass());
-                        target = c.newInstance(m.module);
-                    }
-                    catch (NoSuchMethodException e) {
-                        // Constructor not found. => Use default constructor.
-                        target = clazz.newInstance();
-                    }
-                    // Resource successfully created.
-                    log.debug("Forwarding request on \"{}\" to module \"{}\"",
-                                                    uriInfo.getPath(), m.name);
-                }
-                catch (Exception e) {
-                    log.error("Failed to create resource of type {}", e, clazz);
-                    this.sendError(INTERNAL_SERVER_ERROR, null);
-                }
-            }
-            // Else: unknown resource for module
-        }
-        // Else: unknown module.
-
-        if (target == null) {
-            // No matching module or resource found.
-            // => Try resolving URL as a file or an RDF resource.
-            Response response = this.resolveUnmappedResource(m, uriInfo,
-                                                            request, acceptHdr);
-            target = (response != null)? new ResponseWrapper(response): null;
-        }
-        return target;
-    }
-
-    @Path("{module}/{resource}/{path: .*$}")
-    public ResponseWrapper resourceForwarding(@PathParam("module") String module,
-                                     @PathParam("resource") String resource,
+    @Path("{path: .*$}")
+    public ResponseWrapper resourceForwarding(
                                      @PathParam("path") String path,
                                      @Context UriInfo uriInfo,
                                      @Context Request request,
                                      @HeaderParam(ACCEPT) String acceptHdr)
                                                 throws WebApplicationException {
-        Response response = this.resolveUnmappedResource(null, uriInfo,
+        Response response = this.resolveUnmappedResource(null, null, uriInfo,
                                                          request, acceptHdr);
         return (response != null)? new ResponseWrapper(response): null;
     }
- 
+
     //-------------------------------------------------------------------------
     // Specific implementation
     //-------------------------------------------------------------------------
@@ -487,9 +351,10 @@ public class RouterResource implements LifeCycle, ResourceResolver
      * {@link Configuration#getLocalStorage() public local file storage}
      * or an RDF resource in the
      * {@link Configuration#getDataRepository() public data RDF store}.
-     * @param  module      the descriptor of the resolved module if the
-     *                     beginning of the request path matched the
-     *                     name of one of the configured modules,
+     * @param  module      the first element of the request path.
+     * @param  bundle      the target bundle if the first element of the
+     *                     request path matches the name of one of the
+     *                     registered Datalift modules,
      *                     <code>null</code> otherwise.
      * @param  uriInfo     the request URI data (injected).
      * @param  request     the JAX-RS request object (injected).
@@ -501,7 +366,8 @@ public class RouterResource implements LifeCycle, ResourceResolver
      * @throws WebApplicationException if the request path can not be
      *         resolved.
      */
-    private Response resolveUnmappedResource(ModuleDesc module,
+    private Response resolveUnmappedResource(String module,
+                                             Bundle bundle,
                                              UriInfo uriInfo,
                                              Request request,
                                              String acceptHdr)
@@ -513,26 +379,25 @@ public class RouterResource implements LifeCycle, ResourceResolver
         if (path.startsWith("/")) {
             path = path.substring(1);
         }
-        LogContext.setContexts(MODULE_NAME, path);
         log.trace("Resolving unmapped resource: {}", path);
 
         try {
-            if (module != null) {
+            if (bundle != null) {
                 // Path prefix was resolved as a module name.
                 // => Try to resolve resource as a module static resource.
                 URL src = null;
-                String rsc = path.substring(module.name.length());
+                String rsc = path.substring(module.length());
                 if ((rsc.length() != 0) && (! "/".equals(rsc))) {
                     rsc = MODULE_PUBLIC_DIR + rsc;
-                    src = module.classLoader.getResource(rsc);
+                    src = bundle.getResource(rsc);
                 }
                 // Else: Empty path after module name. => Ignore.
 
                 if (src != null) {
                     // Module static resource found.
-                    // => Check whether data shall be returned.
-                    File f = (module.isJarPackage())? module.root:
-                                                      new File(src.getFile());
+                    // => Check whether up-to-date data shall be returned.
+                    File f = (bundle.isJar())? bundle.getBundleFile():
+                                               new File(src.getFile());
                     Date lastModified = new Date(f.lastModified());
                     ResponseBuilder b = request.evaluatePreconditions(
                                                                 lastModified);
@@ -543,18 +408,23 @@ public class RouterResource implements LifeCycle, ResourceResolver
                                   module, rsc, mt);
                         b = Response.ok(src.openStream(), mt);
                     }
-                    response = this.addCacheDirectives(b, lastModified)
-                                   .build();
+                    response = this.cacheConfig.addCacheDirectives(b,
+                                                        lastModified).build();
                 }
             }
-            if (response == null) {
+            if ((response == null) && (this.serveStaticResourcesFirst)) {
                 // Not a module static resource.
-                // => Try to match a file on local storage.
+                // => Try to match a file on public storage.
                 response = this.resolveStaticResource(path, request);
             }
             if (response == null) {
                 // Not a public file. => Check triple store for RDF resource.
                 response = resolveRdfResource(uriInfo, request, acceptHdr);
+            }
+            if ((response == null) && (! this.serveStaticResourcesFirst)) {
+                // Not an RDF resource.
+                // => Try to match a file on public storage.
+                response = this.resolveStaticResource(path, request);
             }
             // Else: Return null to notify that no match was found.
 
@@ -616,89 +486,10 @@ public class RouterResource implements LifeCycle, ResourceResolver
                 log.debug("Serving static resource: {} ({})", f, mt);
                 b = Response.ok(f, mt);
             }
-            response = this.addCacheDirectives(b, lastModified).build();
+            response = this.cacheConfig.addCacheDirectives(b, lastModified)
+                           .build();
         }
         return response;
-    }
-
-    private ResponseBuilder addCacheDirectives(ResponseBuilder response,
-                                               Date lastModified) {
-        if (this.cacheDuration > 0) {
-            // Compute cache expiry date/time.
-            GregorianCalendar cal = new GregorianCalendar();
-            int h = cal.get(HOUR_OF_DAY);
-            if ((h <= this.businessDay[0]) || (h >= this.businessDay[1])) {
-                // No data updates occur between close and opening of business.
-                // => Set expiry date to opening of business hour, ignoring
-                //    minutes & seconds.
-                if (h >= this.businessDay[1]) {
-                    cal.add(DAY_OF_YEAR, 1);
-                }
-                cal.set(HOUR_OF_DAY, this.businessDay[0]);
-                response = response.expires(cal.getTime());
-            }
-            else {
-                // Else: cache entries for specified duration.
-                long expiry = System.currentTimeMillis()
-                                                + (this.cacheDuration * 1000L);
-                CacheControl cc = new CacheControl();
-                cc.setMaxAge(this.cacheDuration);
-                cc.setPrivate(false);
-                cc.setNoTransform(false);
-                response = response.cacheControl(cc)
-                                   .expires(new Date(expiry));
-            }
-        }
-        // Else: caching disabled.
-
-        // Set last modified date, if available.
-        if (lastModified != null) {
-            response = response.lastModified(lastModified);
-        }
-        return response;
-    }
-
-    /**
-     * Loads all available {@link UriPolicy} implementation
-     * classes for a given module (referenced by its class loader).
-     * @param  cl           the classloader to load the URI policies.
-     * @param  moduleName   the name of the owning module.
-     */
-    private void loadUriPolicies(ClassLoader cl, String moduleName) {
-        Configuration cfg = Configuration.getDefault();
-
-        // Make a fault-tolerant loading of module's URI policies.
-        Iterator<UriPolicy> i = ServiceLoader.load(UriPolicy.class, cl)
-                                             .iterator();
-        int count = 0;
-        boolean hasNext = true;
-        do {
-            try {
-                hasNext = i.hasNext();
-                if (hasNext) {
-                    UriPolicy p = i.next();
-                    p.init(cfg);
-                    // Make policy available thru the Configuration object.
-                    cfg.registerBean(p);
-                    p.postInit(cfg);
-                    // Register policy.
-                    this.policies.add(p);
-                    count++;
-                }
-            }
-            catch (Exception e) {
-                // Skip policy...
-                log.error("Failed to load URI policy for module {}: {}", e,
-                          moduleName, e.getMessage());
-            }
-        }
-        while (hasNext);
-
-        if (count != 0) {
-            // Notify whether URI policies were installed.
-            log.info("Registered {} URI policy(ies) for module \"{}\"",
-                     Integer.valueOf(this.policies.size()), moduleName);
-        }
     }
 
     /**
@@ -725,9 +516,7 @@ public class RouterResource implements LifeCycle, ResourceResolver
     /** {@inheritDoc} */
     @Override
     public String toString() {
-        return this.getClass().getSimpleName()
-                        + " (" + this.modules.size()
-                        + " modules: " + this.modules.keySet() + ')';
+        return this.getClass().getSimpleName();
     }
 
     //-------------------------------------------------------------------------
@@ -773,12 +562,29 @@ public class RouterResource implements LifeCycle, ResourceResolver
     // DefaultHandler inner class
     //-------------------------------------------------------------------------
 
+    /**
+     * The default {@link ResourceHandler} implementation.
+     * <p>
+     * This implementation serves the RDF resources and named graphs
+     * from Datalift public RDF store. It relies on the installed
+     * {@link SparqlEndpoint} implementation for providing the
+     * response content, as the result of a SPARQL DESCRIBE query, as
+     * well as negotiating the best matching representation.</p>
+     */
     private final class DefaultUriHandler implements ResourceHandler
     {
         private final UriInfo uriInfo;
         private final Request request;
         private final String acceptHdr;
 
+        /**
+         * Creates a new URI handler.
+         * @param  uriInfo     the request URI data.
+         * @param  request     the JAX-RS Request object, for content
+         *                     negotiation.
+         * @param  acceptHdr   the HTTP Accept header, for content
+         *                     negotiation.
+         */
         public DefaultUriHandler(UriInfo uriInfo,
                               Request request, String acceptHdr) {
             this.uriInfo   = uriInfo;
@@ -786,11 +592,23 @@ public class RouterResource implements LifeCycle, ResourceResolver
             this.acceptHdr = acceptHdr;
         }
 
+        /**
+         * {@inheritDoc}
+         * @return <code>null</code> always.
+         */
         @Override
         public URI resolve() throws WebApplicationException {
             return null;
         }
 
+        /**
+         * {@inheritDoc}
+         * <p>
+         * This implementation checks that the requested URI matches
+         * a RDF resource of named graph in the Datalift public
+         * RDF store and forwards the request as a DESCRIBE query to
+         * the SPARQL endpoint.</p>
+         */
         @Override
         public Response getRepresentation() throws WebApplicationException {
             // Retrieve platform SPARQL endpoint.
@@ -801,7 +619,7 @@ public class RouterResource implements LifeCycle, ResourceResolver
                 return null;
             }
             Response response = null;
-            
+
             final URI uri = this.uriInfo.getRequestUri();
             // Check that the requested URI exists as subject in the
             // public data RDF store.
@@ -834,7 +652,8 @@ public class RouterResource implements LifeCycle, ResourceResolver
                 }
                 // Else: Client already up-to-date.
 
-                response = addCacheDirectives(b, result.lastModified).build();
+                response = cacheConfig.addCacheDirectives(b,
+                                                result.lastModified).build();
             }
             return response;
         }

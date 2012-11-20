@@ -172,7 +172,7 @@ public class TransformedRdfSourceImpl extends BaseSource
                             throw new TechnicalException("rdf.store.access.error", e);
                         }
                     }
-    
+
                     @Override
                     public Statement next() {
                         try {
@@ -183,7 +183,7 @@ public class TransformedRdfSourceImpl extends BaseSource
                             throw new TechnicalException("rdf.store.access.error", e);
                         }
                     }
-    
+
                     @Override
                     public void remove() {
                         this.close();

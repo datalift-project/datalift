@@ -127,11 +127,11 @@ public class OntologyImpl extends BaseRdfEntity implements Ontology
     // Specific implementation
     //-------------------------------------------------------------------------
 
-    public final void setDateSubmitted(Date dateSubmitted) {
+    public void setDateSubmitted(Date dateSubmitted) {
         this.dateSubmitted = dateSubmitted;
     }
 
-    public final void setOperator(String operator) {
+    public void setOperator(String operator) {
         this.operator = operator;
     }
 }

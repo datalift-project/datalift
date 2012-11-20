@@ -98,7 +98,7 @@ public class SimpleCache<K,V>
      *                   indicates unlimited size.
      */
     public SimpleCache(int maxSize) {
-        this(maxSize, -1);        
+        this(maxSize, -1);
     }
 
     /**
@@ -148,7 +148,7 @@ public class SimpleCache<K,V>
      * @param  key   key whose presence in this cache is to be tested.
      *
      * @return <code>true</code> if this cache contains a mapping for
-     *         the specified key 
+     *         the specified key.
      */
     public boolean containsKey(K key) {
         this.get(key);                  // Get entry to remove it if expired.

@@ -103,7 +103,6 @@
 
   <property name="src.home"             location="${basedir}/src/java"/>
   <property name="web.home"             location="${basedir}/src/web"/>
-  <property name="rsc.home"             location="${basedir}/src/resources"/>
 
   <property name="lib.home"             location="${basedir}/lib"/>
   <property name="run.lib.home"         location="${lib.home}/runtime"/>
@@ -277,7 +276,6 @@
     <copy todir="${classes.dir}" includeEmptyDirs="false"
                                  preservelastmodified="true">
       <fileset dir="${web.home}" excludes="**/.*"/>
-      <fileset dir="${rsc.home}" excludes="**/.*"/>
     </copy>
     <!-- Copy runtime JARs to embed in distribution -->
     <copy todir="${classes.dir}" flatten="true">

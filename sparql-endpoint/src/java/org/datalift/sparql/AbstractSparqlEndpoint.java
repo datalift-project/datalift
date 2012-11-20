@@ -40,11 +40,12 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.net.URI;
-import java.net.URL;
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -54,13 +55,17 @@ import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
@@ -70,13 +75,11 @@ import javax.ws.rs.core.Variant;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 
+import static javax.ws.rs.core.HttpHeaders.*;
 import static javax.ws.rs.core.Response.Status.*;
 
 import org.openrdf.model.Literal;
 import org.openrdf.model.Value;
-import org.openrdf.model.impl.URIImpl;
-import org.openrdf.model.vocabulary.RDF;
-import org.openrdf.model.vocabulary.RDFS;
 import org.openrdf.query.BindingSet;
 import org.openrdf.query.QueryInterruptedException;
 import org.openrdf.query.TupleQueryResultHandlerBase;
@@ -96,7 +99,9 @@ import org.datalift.fwk.util.StringUtils;
 import org.datalift.fwk.view.TemplateModel;
 import org.datalift.fwk.view.ViewFactory;
 
+import static org.datalift.fwk.MediaTypes.*;
 import static org.datalift.fwk.util.StringUtils.*;
+import static org.datalift.fwk.rdf.RdfNamespace.*;
 import static org.datalift.fwk.sparql.SparqlEndpoint.DescribeType.*;
 
 
@@ -125,6 +130,10 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     /** The default queries file, embedded in module JAR. */
     private final static String DEFAULT_QUERIES_FILE = "predefined-queries.ttl";
 
+    /** The name of the default template for the endpoint welcome page. */
+    protected final static String DEFAULT_WELCOME_TEMPLATE =
+                                                        "sparqlEndpoint.vm";
+
     private final static Pattern QUERY_START_PATTERN = Pattern.compile(
                     "SELECT|CONSTRUCT|ASK|DESCRIBE", Pattern.CASE_INSENSITIVE);
     private final static int MAX_QUERY_DESC = 128;
@@ -142,25 +151,32 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
             new MessageFormat("CONSTRUCT '{' ?s ?p ?o . '}' WHERE '{'\n"
                               + "  ?s ?p ?o .\n"
                               + "  FILTER ( ?p = <{0}> )\n'}'");
+    private final static MessageFormat DESCRIBE_TYPE_QUERY =
+            new MessageFormat("CONSTRUCT '{' ?s a ?t . '}' WHERE '{'\n"
+                              + "  ?s a ?t .\n"
+                              + "  FILTER ( ?t = <{0}> )\n'}'");
     private final static MessageFormat DESCRIBE_GRAPH_QUERY =
             new MessageFormat("CONSTRUCT '{' ?s ?p ?o . '}' WHERE '{'\n"
                               + "  GRAPH <{0}> '{' ?s ?p ?o . '}'\n'}'");
 
     private final static String DETERMINE_TYPE_QUERY =
-            "SELECT DISTINCT ?s ?p ?g WHERE {\n" +
+            "SELECT DISTINCT ?s ?p ?g ?t WHERE {\n" +
             "  OPTIONAL { ?s ?p1 ?o1 . FILTER( ?s = ?u ) }\n" +
-            "  OPTIONAL { ?s1 ?p ?o2 . FILTER( ?p = ?u ) }\n" +
-            "  OPTIONAL { GRAPH ?g { ?s2 ?p2 ?o3 . FILTER( ?g = ?u ) } }\n" +
+            "  OPTIONAL { ?s2 ?p ?o2 . FILTER( ?p = ?u ) }\n" +
+            "  OPTIONAL { ?s3 a  ?t  . FILTER( ?t = ?u ) }\n" +
+            "  OPTIONAL { GRAPH ?g { ?s4 ?p4 ?o4 . FILTER( ?g = ?u ) } }\n" +
             "} LIMIT 1";
 
     /** The SPARQL query to extract predefined query data. */
     private final static String LOAD_PREDEFINED_QUERIES_QUERY =
-                    "PREFIX rdf: <" + RDF.NAMESPACE + ">\n" +
-                    "PREFIX rdfs: <" + RDFS.NAMESPACE + ">\n" +
-                    "PREFIX datalift: <" + RdfNamespace.DataLift.uri + ">\n" +
-                    "SELECT ?s ?label ?query WHERE { " +
+                    "PREFIX rdf: <" + RDF.uri + ">\n" +
+                    "PREFIX rdfs: <" + RDFS.uri + ">\n" +
+                    "PREFIX dcterms: <" + DC_Terms.uri + ">\n" +
+                    "PREFIX datalift: <" + DataLift.uri + ">\n" +
+                    "SELECT ?s ?label ?query ?description WHERE { " +
                         "?s a datalift:SparqlQuery ; " +
                         "   rdfs:label ?label ; rdf:value ?query . " +
+                        "OPTIONAL { ?s dcterms:description ?description . } " +
                     "} ORDER BY ?s";
 
     //-------------------------------------------------------------------------
@@ -200,13 +216,14 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     /**
      * Creates a new SPARQL endpoint resource.
      * @param  name              the module name.
-     * @param  welcomeTemplate   the Velocity template to display as
+     * @param  welcomeTemplate   the name of the template, relative to
+     *                           the module path, to display as
      *                           welcome page.
      */
     protected AbstractSparqlEndpoint(String name, String welcomeTemplate) {
         super(name);
-        this.welcomeTemplate = (isSet(welcomeTemplate))? welcomeTemplate:
-                                       "/" + name + "/sparqlEndpoint.vm";
+        this.welcomeTemplate = (isSet(welcomeTemplate))?
+                                    welcomeTemplate: DEFAULT_WELCOME_TEMPLATE;
     }
 
     //-------------------------------------------------------------------------
@@ -243,7 +260,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         return this.executeQuery(null, null, query, -1, -1, false, null, null,
                                  uriInfo, request, acceptHdr);
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public ResponseBuilder executeQuery(List<String> defaultGraphUris,
@@ -278,7 +295,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         ResponseBuilder response = null;
         try {
             if ((! isBlank(jsonCallback)) && (isBlank(format))) {
-                format = MediaType.APPLICATION_JSON;
+                format = APPLICATION_JSON;
             }
             response = this.doExecute(defaultGraphUris, namedGraphUris, query,
                                       startOffset, endOffset, gridJson,
@@ -313,7 +330,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     /** {@inheritDoc} */
     @Override
     public ResponseBuilder describe(String uri, DescribeType type,
-                                    Repository repository, int max, 
+                                    Repository repository, int max,
                                     String format, String jsonCallback,
                                     UriInfo uriInfo, Request request,
                                     String acceptHdr)
@@ -328,29 +345,30 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         }
         ResponseBuilder response = null;
         try {
+            URI u = URI.create(uri);
             if (type == null) {
-                type = this.getDescribeTypeFromUri(uri, repository);
+                type = this.getDescribeTypeFromUri(u, repository);
             }
             if (type != null) {
                 // URI found in RDF store.
                 String query = null;
-                MessageFormat fmt = (type == Object)? DESCRIBE_OBJECT_QUERY:
-                                    (type == Graph)?  DESCRIBE_GRAPH_QUERY:
-                                                      DESCRIBE_PREDICATE_QUERY;
+                MessageFormat fmt = (type == Object)?  DESCRIBE_OBJECT_QUERY:
+                                    (type == Graph)?   DESCRIBE_GRAPH_QUERY:
+                                    (type == RdfType)? DESCRIBE_TYPE_QUERY:
+                                                       DESCRIBE_PREDICATE_QUERY;
                 synchronized (fmt) {
-                    query = fmt.format(new Object[] { uri });
+                    query = fmt.format(new Object[] { u });
                 }
                 Map<String,Object> viewData = new HashMap<String,Object>();
                 viewData.put("describe-type", type);
-                viewData.put("describe-uri",  uri);
+                viewData.put("describe-uri",  u);
                 response = this.doExecute(defGraphs, null, query, -1, max,
                                           false, format, jsonCallback, uriInfo,
                                           request, acceptHdr, viewData);
             }
             else {
                 try {
-                    URL u = new URL(uri);
-                    response = Response.seeOther(u.toURI());
+                    response = Response.seeOther(u);
                 }
                 catch (Exception e) {
                     this.sendError(NOT_FOUND, null);
@@ -420,13 +438,13 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                 @QueryParam("callback") String jsonCallback,
                 @Context UriInfo uriInfo,
                 @Context Request request,
-                @HeaderParam("Accept") String acceptHdr)
+                @HeaderParam(ACCEPT) String acceptHdr)
                                                 throws WebApplicationException {
         return this.dispatchQuery(defaultGraphUris, namedGraphUris, query,
                                   startOffset, endOffset, gridJson, format,
                                   jsonCallback, uriInfo, request, acceptHdr);
     }
-    
+
     /**
      * <i>[Resource method]</i> Process a SPARQL query sent as an HTTP
      * POST request.
@@ -459,7 +477,29 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
      *         to execute the specified query.
      */
     @POST
+    @Consumes(APPLICATION_FORM_URLENCODED)
     public final Response postQuery(
+                @FormParam("default-graph-uri") List<String> defaultGraphUris,
+                @FormParam("named-graph-uri") List<String> namedGraphUris,
+                @FormParam("query") String query,
+                @FormParam("min") @DefaultValue("-1") int startOffset,
+                @FormParam("max") @DefaultValue("-1") int endOffset,
+                @FormParam("grid") @DefaultValue("false") boolean gridJson,
+                @FormParam("format") String format,
+                @FormParam("callback") String jsonCallback,
+                @Context UriInfo uriInfo,
+                @Context Request request,
+                @HeaderParam(ACCEPT) String acceptHdr)
+                                                throws WebApplicationException {
+        return this.getQuery(defaultGraphUris, namedGraphUris, query,
+                             startOffset, endOffset, gridJson, format,
+                             jsonCallback, uriInfo, request, acceptHdr);
+    }
+
+    @GET
+    @Path("{store}")
+    public Response getStoreQuery(
+                @PathParam("store") String repository,
                 @QueryParam("default-graph-uri") List<String> defaultGraphUris,
                 @QueryParam("named-graph-uri") List<String> namedGraphUris,
                 @QueryParam("query") String query,
@@ -470,12 +510,40 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                 @QueryParam("callback") String jsonCallback,
                 @Context UriInfo uriInfo,
                 @Context Request request,
-                @HeaderParam("Accept") String acceptHdr)
+                @HeaderParam(ACCEPT) String acceptHdr)
                                                 throws WebApplicationException {
-        return this.dispatchQuery(defaultGraphUris, namedGraphUris, query,
+        List<String> defGraphUris = new LinkedList<String>();
+        defGraphUris.add(repository);
+        if (defaultGraphUris != null) {
+            defGraphUris.addAll(defaultGraphUris);
+        }
+        return this.dispatchQuery(defGraphUris, namedGraphUris, query,
                                   startOffset, endOffset, gridJson, format,
                                   jsonCallback, uriInfo, request, acceptHdr);
     }
+
+    @POST
+    @Path("{store}")
+    @Consumes(APPLICATION_FORM_URLENCODED)
+    public final Response postStoreQuery(
+                @PathParam("store") String repository,
+                @FormParam("default-graph-uri") List<String> defaultGraphUris,
+                @FormParam("named-graph-uri") List<String> namedGraphUris,
+                @FormParam("query") String query,
+                @FormParam("min") @DefaultValue("-1") int startOffset,
+                @FormParam("max") @DefaultValue("-1") int endOffset,
+                @FormParam("grid") @DefaultValue("false") boolean gridJson,
+                @FormParam("format") String format,
+                @FormParam("callback") String jsonCallback,
+                @Context UriInfo uriInfo,
+                @Context Request request,
+                @HeaderParam(ACCEPT) String acceptHdr)
+                                                throws WebApplicationException {
+        return this.getStoreQuery(repository, defaultGraphUris, namedGraphUris, query,
+                                  startOffset, endOffset, gridJson, format,
+                                  jsonCallback, uriInfo, request, acceptHdr);
+    }
+
 
     /**
      * <i>[Resource method]</i> Returns the description of the specified
@@ -511,7 +579,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                             @QueryParam("max") @DefaultValue("-1") int max,
                             @Context UriInfo uriInfo,
                             @Context Request request,
-                            @HeaderParam("Accept") String acceptHdr)
+                            @HeaderParam(ACCEPT) String acceptHdr)
                                                 throws WebApplicationException {
         Repository repository = null;
         if (! isBlank(defaultGraph)) {
@@ -553,14 +621,15 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
      */
     @POST
     @Path("describe")
+    @Consumes(APPLICATION_FORM_URLENCODED)
     public final Response postDescribe(
-                            @QueryParam("uri") String uri,
-                            @QueryParam("type") String type,
-                            @QueryParam("default-graph") String defaultGraph,
-                            @QueryParam("max") @DefaultValue("-1") int max,
+                            @FormParam("uri") String uri,
+                            @FormParam("type") String type,
+                            @FormParam("default-graph") String defaultGraph,
+                            @FormParam("max") @DefaultValue("-1") int max,
                             @Context UriInfo uriInfo,
                             @Context Request request,
-                            @HeaderParam("Accept") String acceptHdr)
+                            @HeaderParam(ACCEPT) String acceptHdr)
                                                 throws WebApplicationException {
         return this.getDescribe(uri, type, defaultGraph, max,
                                 uriInfo, request, acceptHdr);
@@ -572,7 +641,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
 
     private final Response dispatchQuery(List<String> defaultGraphUris,
                             List<String> namedGraphUris, String query,
-                            int startOffset, int endOffset, 
+                            int startOffset, int endOffset,
                             boolean gridJson, String format, String jsonCallback,
                             UriInfo uriInfo, Request request, String acceptHdr)
                                                 throws WebApplicationException {
@@ -591,14 +660,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         }
         else {
             // No query. => Render HTML query input form.
-            // Get a list of available repositories for user.
-            boolean userAuthenticated = SecurityContext.isUserAuthenticated();
-            Collection<Repository> c = Configuration.getDefault()
-                                        .getRepositories(! userAuthenticated);
-            TemplateModel view = ViewFactory.newView(this.welcomeTemplate);
-            view.put("repositories", c);
-            view.put("queries", predefinedQueries);
-            response = Response.ok(view, MediaType.TEXT_HTML);
+            response = this.displayWelcomePage();
         }
         return response.build();
     }
@@ -687,6 +749,38 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         return responseType;
     }
 
+    protected final ResponseBuilder displayWelcomePage() {
+        return this.displayWelcomePage(this.welcomeTemplate);
+    }
+
+    // Render HTML query input form.
+    protected final ResponseBuilder displayWelcomePage(String template) {
+        if (! isSet(template)) {
+            throw new IllegalArgumentException("template");
+        }
+        // Get a list of available repositories for user.
+        boolean userAuthenticated = SecurityContext.isUserAuthenticated();
+        Collection<Repository> c = Configuration.getDefault()
+                                        .getRepositories(! userAuthenticated);
+        // Create and populate view template.
+        TemplateModel view = this.newView(template, null);
+        view.put("repositories", c);
+        view.put("queries", predefinedQueries);
+        view.put("namespaces", RdfNamespace.values());
+        ResponseBuilder response = Response.ok(view, TEXT_HTML_UTF8);
+        // Add cache directives.
+        CacheControl cc = new CacheControl();
+        cc.setMaxAge(7 * 24 * 3600);            // One week in seconds.
+        cc.setPrivate(userAuthenticated);       // Only public for anon.
+        cc.setNoTransform(false);
+        GregorianCalendar cal = new GregorianCalendar();
+        cal.add(Calendar.DAY_OF_YEAR, 7);       // One week in days.
+        response = response.header(VARY, AUTHORIZATION)
+                           .cacheControl(cc)
+                           .expires(cal.getTime());
+        return response;
+    }
+
     /**
      * Returns the list of predefined queries to offer the user on this
      * SPARQL endpoint.
@@ -697,6 +791,13 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         return this.predefinedQueries;
     }
 
+    /**
+     * Returns a new template model for web service response rendering.
+     * @param  templateName   the template name, relative to the module.
+     * @param  model          the (optional) model object.
+     *
+     * @return a new template view.
+     */
     protected final TemplateModel newView(String templateName, Object it) {
         return ViewFactory.newView(
                                 "/" + this.getName() + '/' + templateName, it);
@@ -765,13 +866,13 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         return desc;
     }
 
-    private DescribeType getDescribeTypeFromUri(final String uri,
+    private DescribeType getDescribeTypeFromUri(URI uri,
                                                 Repository repository) {
         DescribeType type = null;
         try {
             // Try to determine the URI type by performing a SPARQL query.
             Map<String,Object> bindings = new HashMap<String,Object>();
-            bindings.put("u", new URIImpl(uri));
+            bindings.put("u", uri);
             TupleQueryResultMapper<DescribeType> m =
                                 new BaseTupleQueryResultMapper<DescribeType>() {
                     private DescribeType nodeType = null;
@@ -786,6 +887,9 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                             }
                             else if (b.hasBinding("g")) {
                                 nodeType = Graph;
+                            }
+                            else if (b.hasBinding("t")) {
+                                nodeType = RdfType;
                             }
                         }
                         // Else: Already set. => Ignore...
@@ -849,6 +953,8 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                     private String query;
                     private Map<String,String> labels =
                                                 new HashMap<String,String>();
+                    private Map<String,String> descriptions =
+                                                new HashMap<String,String>();
                     @Override
                     public void handleSolution(BindingSet b) {
                         Value id = b.getValue("s");
@@ -863,6 +969,10 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                         if (v != null) {
                             this.labels.put(v.getLanguage(), v.getLabel());
                         }
+                        v  = (Literal)(b.getValue("description"));
+                        if (v != null) {
+                            this.descriptions.put(v.getLanguage(), v.getLabel());
+                        }
                     }
 
                     @Override
@@ -874,7 +984,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                         if ((isSet(this.query)) && (! this.labels.isEmpty())) {
                             // Create and register new query.
                             PredefinedQuery q = new PredefinedQuery(
-                                                    this.query, this.labels);
+                                    this.query, this.labels, this.descriptions);
                             queries.add(q);
                             log.trace("Registered predefined SPARQL query \"{}\": {}",
                                       q.getLabel(), q.query);
@@ -995,7 +1105,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
             // Higher priority comes first in list (i.e. lesser).
             int diff = (int)((o.priority - this.priority) * 100);
             // Same priority? first in list comes first!
-            return (diff != 0)? diff: this.order - o.order; 
+            return (diff != 0)? diff: this.order - o.order;
         }
 
         /** {@inheritDoc} */
@@ -1030,20 +1140,32 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
 
     public final static class PredefinedQuery extends BaseLocalizedItem
     {
+        private final static String DESCRIPTION_LABEL = "description";
         public final String query;
 
-        public PredefinedQuery(String query, Map<String,String> labels) {
+        public PredefinedQuery(String query, Map<String,String> labels,
+                                             Map<String,String> descriptions) {
             super(labels);
             if (isBlank(query)) {
                 throw new IllegalArgumentException("query");
             }
             this.query = query;
+            this.setLabels(DESCRIPTION_LABEL, descriptions);
         }
 
         /** {@inheritDoc} */
         @Override
         public String toString() {
             return this.query;
+        }
+
+        /**
+         * Returns the description of this query in the user's preferred
+         * locale.
+         * @return the description of this query.
+         */
+        public String getDescription() {
+            return this.getTypeLabel(DESCRIPTION_LABEL);
         }
     }
 }

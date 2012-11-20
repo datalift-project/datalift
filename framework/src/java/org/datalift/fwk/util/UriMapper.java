@@ -40,7 +40,7 @@ import java.net.URI;
 
 /**
  * A generic interface for translating URIs.
- * 
+ *
  * @author lbihanic
  */
 public interface UriMapper

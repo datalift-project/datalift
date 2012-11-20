@@ -184,7 +184,7 @@ public class GridJsonWriter extends AbstractJsonWriter
                                                   ResourceType.Predicate);
             this.writeComma();
             this.writeKeyValue(CONSTRUCT_VARS[2], stmt.getObject(),
-                                                  ResourceType.Object);
+                                                  ResourceType.Unknown);
             this.endSolution();         // end solution
         }
         catch (IOException e) {

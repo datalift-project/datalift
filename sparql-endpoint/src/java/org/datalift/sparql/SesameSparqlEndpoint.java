@@ -38,6 +38,7 @@ package org.datalift.sparql;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -126,7 +127,9 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
     public final static String MAX_QUERY_DURATION_PROPERTY =
                                                 "sparql.max.query.duration";
 
-    private final static List<Variant> SELECT_RESPONSE_TYPES = Arrays.asList(
+    /** The supported MIME types for SELECT query responses. */
+    protected final static List<Variant> SELECT_RESPONSE_TYPES =
+            Collections.unmodifiableList(Arrays.asList(
                     new Variant(APPLICATION_SPARQL_RESULT_XML_TYPE, null, null),
                     new Variant(APPLICATION_SPARQL_RESULT_JSON_TYPE, null, null),
                     new Variant(APPLICATION_JSON_TYPE, null, null),
@@ -136,8 +139,10 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                     new Variant(TEXT_XML_TYPE, null, null),
                     new Variant(TEXT_CSV_TYPE, null, null),
                     new Variant(APPLICATION_CSV_TYPE, null, null),
-                    new Variant(TEXT_COMMA_SEPARATED_VALUES_TYPE, null, null));
-    private final static List<Variant> CONSTRUCT_RESPONSE_TYPES = Arrays.asList(
+                    new Variant(TEXT_COMMA_SEPARATED_VALUES_TYPE, null, null)));
+    /** The supported MIME types for CONSTRUCT and DESCRIBE query responses. */
+    protected final static List<Variant> CONSTRUCT_RESPONSE_TYPES =
+            Collections.unmodifiableList(Arrays.asList(
                     new Variant(APPLICATION_RDF_XML_TYPE, null, null),
                     new Variant(APPLICATION_SPARQL_RESULT_JSON_TYPE, null, null),
                     new Variant(APPLICATION_JSON_TYPE, null, null),
@@ -152,18 +157,20 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                     new Variant(TEXT_HTML_TYPE, null, null),
                     new Variant(APPLICATION_XHTML_XML_TYPE, null, null),
                     new Variant(APPLICATION_XML_TYPE, null, null),
-                    new Variant(TEXT_XML_TYPE, null, null));
-    private final static List<Variant> ASK_RESPONSE_TYPES = Arrays.asList(
+                    new Variant(TEXT_XML_TYPE, null, null)));
+    /** The supported MIME types for ASK query responses. */
+    protected final static List<Variant> ASK_RESPONSE_TYPES =
+            Collections.unmodifiableList(Arrays.asList(
                     new Variant(APPLICATION_SPARQL_RESULT_JSON_TYPE, null, null),
                     new Variant(APPLICATION_JSON_TYPE, null, null),
-                    new Variant(TEXT_PLAIN_TYPE, null, null));
+                    new Variant(TEXT_PLAIN_TYPE, null, null)));
 
     private final static String STD_JSON_SINGLE_VALUE_FMT =
             "{ \"head\":{ \"vars\":[ \"value\" ] }, " +
               "\"results\":{ \"bindings\":[ { " +
                 "\"value\":{ \"type\":\"literal\", \"value\":\"%s\" } } ] } }";
     private final static String GRID_JSON_SINGLE_VALUE_FMT =
-            "{ \"head\":[ \"value\" ], " + 
+            "{ \"head\":[ \"value\" ], " +
               "\"rows\":[ { \"value\":\"%s\" } ] }";
 
     private final static String DESCRIBE_URL_PATTERN =
@@ -174,8 +181,57 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
             ResourceType.Graph.value     + "<}&default-graph={2}";
 
     //-------------------------------------------------------------------------
+    // Constructors
+    //-------------------------------------------------------------------------
+
+    /** Default constructor. */
+    public SesameSparqlEndpoint() {
+        this(null);
+    }
+
+    /**
+     * Creates a new SPARQL endpoint resource.
+     * @param  welcomeTemplate   the Velocity template to display as
+     *                           welcome page.
+     */
+    protected SesameSparqlEndpoint(String welcomeTemplate) {
+        this(MODULE_NAME, welcomeTemplate);
+    }
+
+    /**
+     * Creates a new SPARQL endpoint resource.
+     * @param  name              the module name.
+     * @param  welcomeTemplate   the Velocity template to display as
+     *                           welcome page.
+     */
+    protected SesameSparqlEndpoint(String name, String welcomeTemplate) {
+        super(name, welcomeTemplate);
+    }
+
+    //-------------------------------------------------------------------------
     // AbstractSparqlEndpoint contract support
     //-------------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    @Override
+    public List<Variant> getResponseMimeTypes(QueryType queryType) {
+        List<Variant> types = null;
+        switch (queryType) {
+            case SELECT:
+                types = SELECT_RESPONSE_TYPES;
+                break;
+            case CONSTRUCT:
+            case DESCRIBE:
+                types = CONSTRUCT_RESPONSE_TYPES;
+                break;
+            case ASK:
+                types = ASK_RESPONSE_TYPES;
+                break;
+            default:
+                throw new IllegalArgumentException("queryType");
+        }
+        return types;
+    }
 
     /** {@inheritDoc} */
     @Override
@@ -511,7 +567,6 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                                             this.baseUri + DESCRIBE_URL_PATTERN,
                                             this.repository.name, jsonCallback);
                         }
-                		
                     };
             }
             else {
@@ -660,9 +715,9 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
     {
         protected final Repository repository;
         protected final String query;
-        protected final	int startOffset;
+        protected final int startOffset;
         protected final int endOffset;
-        protected final String 	baseUri;
+        protected final String baseUri;
         protected final Dataset dataset;
 
         public SelectStreamingOutput(Repository repository, String query,

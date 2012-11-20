@@ -158,7 +158,7 @@ public abstract class Configuration
      *
      * @return the repository identified by <code>uri</code> in the
      *         configuration.
-     * @throws IllegalArgumentException if no repository named
+     * @throws MissingResourceException if no repository named
      *         <code>uri</code> was configured.
      */
     abstract public Repository getRepository(String uri);

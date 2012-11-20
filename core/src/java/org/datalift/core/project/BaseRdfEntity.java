@@ -46,7 +46,12 @@ import org.datalift.fwk.util.Iso8601DateFormat;
 
 
 /**
- * An abstract superclass for all Java objects to be persisted as RDF.
+ * An abstract superclass for all Java objects to be persisted in RDF.
+ * <p>
+ * <strong>Warning</strong>: No implementation class or method shall
+ * be marked <code>final</code> as Empire RDF JPA provider relies on
+ * runtime-generated proxies to manipulate objects. Final methods
+ * can not be overridden; hence leading to unexpected behaviors.</p>
  *
  * @author lbihanic
  */
@@ -133,6 +138,7 @@ public abstract class BaseRdfEntity implements SupportsRdfId
      * @return the ISO-8601 representation of the specified date.
      */
     protected final String toString(final Date date) {
-        return Iso8601DateFormat.DATETIME_UTC.format(date);
+        return (date != null)? Iso8601DateFormat.DATETIME_UTC.format(date):
+                               "null";
     }
 }

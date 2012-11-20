@@ -42,8 +42,9 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.Comparator;
+import java.util.Map;
+import java.util.TreeMap;
 
 import org.mortbay.jetty.Connector;
 import org.mortbay.jetty.Server;
@@ -71,6 +72,10 @@ import static org.datalift.wrapper.OsType.*;
  */
 public final class Wrapper
 {
+    //-------------------------------------------------------------------------
+    // Constants
+    //-------------------------------------------------------------------------
+
     /** The default HTTP port for the DataLift standalone server. */
     public final static int DEFAULT_HTTP_PORT = 9091;
     /**
@@ -125,10 +130,50 @@ public final class Wrapper
     private final static String DATALIFT_PAGE = "/datalift/sparql";
 
     private final static String WAR_EXTENSION = ".war";
+    private final static String ROOT_WEB_APP_NAME = "root";
 
     private final static String JAVA_CURRENT_DIR_PROP  = "user.dir";
     private final static String JAVA_USER_HOMEDIR_PROP = "user.home";
     private final static String JAVA_TEMP_DIR_PROP = "java.io.tmpdir";
+
+    private final static Comparator<String> CONTEXT_PATH_COMPARATOR =
+            new Comparator<String>() {
+                @Override
+                public int compare(String s1, String s2) {
+                    // Order strings: longest path first.
+                    int n = this.count('/', s2) - this.count('/', s1);
+                    if (n == 0) {
+                        // Same path length. => Longest string first.
+                        n = s2.length() - s1.length();
+                    }
+                    if (n == 0) {
+                        // Same length. => Use alphabetical order.
+                        n = s1.compareTo(s2);
+                    }
+                    return n;
+                }
+
+                private int count(char c, String s) {
+                    int count = 0;
+                    for (int i=0, max=s.length(); i<max; i++) {
+                        if (s.charAt(i) == c) count++;
+                    }
+                    return count;
+                }
+            };
+
+    private final static FileFilter WEB_APP_FILE_FILTER =
+            new FileFilter() {
+                @Override
+                public boolean accept(File f) {
+                    return ((f.isDirectory()) ||
+                            (f.isFile() && f.getName().endsWith(WAR_EXTENSION)));
+                }
+            };
+
+    //-------------------------------------------------------------------------
+    // Main method
+    //-------------------------------------------------------------------------
 
     /**
      * The wrapper main method to run Datalift from the command line.
@@ -246,38 +291,29 @@ public final class Wrapper
                                + "\": not a Datalift installation directory");
             System.exit(2);
         }
-        // Register web applications.
-        FileFilter webappFilter = new FileFilter() {
-                public boolean accept(File f) {
-                    return ((f.isDirectory()) ||
-                            (f.isFile() && (f.getName().endsWith(WAR_EXTENSION))));
-                }
-            };
-        List<File> webapps = new LinkedList<File>();
-        for (File f : webappDir.listFiles(webappFilter)) {
-            webapps.add(f);
-        }
+        // Sort webapps, longest path first, as declaration order matters.
+        Map<String,File> webapps = new TreeMap<String,File>(
+                                                    CONTEXT_PATH_COMPARATOR);
+        // Search for web applications, both as WARs and directories.
+        findWebApps(webappDir, webapps);
         webappDir = new File(dataliftHome, WEBAPPS_DIR);
         if (webappDir.isDirectory()) {
-            for (File f : webappDir.listFiles(webappFilter)) {
-                webapps.add(f);
-            }
+            findWebApps(webappDir, webapps);
         }
-        for (File webapp : webapps) {
+        // Register web applications.
+        for (Map.Entry<String,File> e : webapps.entrySet()) {
+            String path = e.getKey();
+            File webapp = e.getValue();
+
             WebAppContext ctx = new WebAppContext();
-            String path = webapp.getName();
-            int i = path.indexOf(WAR_EXTENSION);
-            if (i > 0) {
-                // Remove ending .war extension.
-                path = path.substring(0, i);
-            }
-            ctx.setContextPath("/" + path);
+            ctx.setContextPath(path);
             ctx.setWar(webapp.getPath());
             if (! webapp.isDirectory()) {
                 ctx.setTempDirectory(new File(jettyWorkDir, path));
             }
             httpServer.addHandler(ctx);
-            System.out.println(webapp.getName() + " deployed as: " + path);
+            System.out.println("Deploying \"" + webapp.getName() +
+                               "\" with context path \"" + path + '"');
         }
         // Start server.
         httpServer.setStopAtShutdown(true);
@@ -455,5 +491,35 @@ public final class Wrapper
     private static void reportPathCreationFailure(File path)
                                                             throws IOException {
         throw new IOException("Failed to create directory: " + path);
+    }
+
+    private static void findWebApps(File dir, Map<String,File> webapps) {
+        findWebApps(dir, webapps, dir);
+    }
+
+    private static void findWebApps(File dir, Map<String,File> webapps,
+                                    File root) {
+        for (File f : dir.listFiles(WEB_APP_FILE_FILTER)) {
+            if ((f.isDirectory()) && (! new File(f, "WEB-INF").isDirectory())) {
+                // Directory found but no WEB-INF sub-directory is present.
+                // => Search it for web apps recursively.
+                findWebApps(f, webapps, root);
+            }
+            webapps.put(getContextPath(f, root), f);
+        }
+    }
+
+    private static String getContextPath(File f, File root) {
+        String path = f.getAbsolutePath().substring(
+                                        root.getAbsolutePath().length() + 1);
+        int i = path.indexOf(WAR_EXTENSION);
+        if (i > 0) {
+            // Remove ending .war extension.
+            path = path.substring(0, i);
+        }
+        if (ROOT_WEB_APP_NAME.equals(path)) {
+            path = "";
+        }
+        return "/" + path;
     }
 }

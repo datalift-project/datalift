@@ -1,5 +1,6 @@
 package org.datalift.s4ac.sparql;
 
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -14,16 +15,13 @@ import javax.ws.rs.core.UriInfo;
 import org.datalift.fwk.Configuration;
 import org.datalift.s4ac.resources.SecuredSparqlQuery;
 import org.datalift.s4ac.services.SecurityCheckService;
-import org.datalift.sparql.AbstractSparqlEndpoint;
 import org.datalift.sparql.SesameSparqlEndpoint;
 
 
-
-@Path("/" + AbstractSparqlEndpoint.MODULE_NAME)
-public class S4acSparqlEndpoint extends SesameSparqlEndpoint {
-	
-	private SecurityCheckService scs;
-	
+@Path(SesameSparqlEndpoint.MODULE_NAME)
+public class S4acSparqlEndpoint extends SesameSparqlEndpoint
+{
+    private SecurityCheckService scs;
 
     /** {@inheritDoc} */
     @Override
@@ -37,11 +35,10 @@ public class S4acSparqlEndpoint extends SesameSparqlEndpoint {
         return false;
     }
 
-
     //-------------------------------------------------------------------------
     // AbstractSparqlEndpoint contract support
     //-------------------------------------------------------------------------
-    
+
     /** {@inheritDoc} */
     @Override
     protected ResponseBuilder doExecute(List<String> defaultGraphUris,
@@ -59,26 +56,32 @@ public class S4acSparqlEndpoint extends SesameSparqlEndpoint {
             this.scs.init();
         }
        
-        Set<String> targetNamedGraphs = this.scs.getAccessibleGraphs(namedGraphUris); 
-        String newQuery;
-        if (targetNamedGraphs.size() == 0) {
-        	log.debug("User cannot access... ");
-        	//FIXME ...not so good......
-        	newQuery = query + " Limit 0";
-        } else {
-        	SecuredSparqlQuery sqry = new SecuredSparqlQuery(query, targetNamedGraphs);
-            log.debug("Secured Query : " + sqry);	
-            newQuery = sqry.getQrycontent();
+        if (this.scs.getAps().size() > 0) {
+            Set<String> targetNamedGraphs = this.scs.getAccessibleGraphs(namedGraphUris); 
+            String newQuery;
+            if (targetNamedGraphs.size() == 0) {
+            	log.debug("User cannot access... ");
+            	//FIXME ...not so good......
+            	newQuery = query + " Limit 0";
+            } else {
+            	SecuredSparqlQuery sqry = new SecuredSparqlQuery(query, targetNamedGraphs);
+                log.debug("Secured Query : " + sqry);	
+                newQuery = sqry.getQrycontent();
+            }
+            log.debug("newQuery : " + newQuery);
+            List<String> targetNamedGraphsList = new ArrayList<String>(targetNamedGraphs);
+                    
+            
+            return super.doExecute(defaultGraphUris, targetNamedGraphsList, 
+            		newQuery, startOffset, endOffset, gridJson,
+                                   format, jsonCallback, uriInfo, request,
+                                   acceptHdr, viewData);
         }
-        log.debug("newQuery : " + newQuery);
-        List<String> targetNamedGraphsList = new ArrayList<String>(targetNamedGraphs);
-                
-        
-        return super.doExecute(defaultGraphUris, targetNamedGraphsList, 
-        		newQuery, startOffset, endOffset, gridJson,
-                               format, jsonCallback, uriInfo, request,
-                               acceptHdr, viewData);
-
+        else {
+        	log.info("Not secured query execution: SPARQL endpoint not protected (no AP)");
+        	return super.doExecute(defaultGraphUris, namedGraphUris, query, startOffset,
+                    endOffset, gridJson,format, jsonCallback,uriInfo, request,
+                    acceptHdr,viewData);
+        }
     }
 }
-

@@ -188,7 +188,7 @@ public final class ShiroSecurityFilter extends IniShiroFilter
                         int n = this.count('/', s2) - this.count('/', s1);
                         if (n == 0) {
                             // Same path length. => Longest string first.
-                            n = s2.length() - s1.length(); 
+                            n = s2.length() - s1.length();
                         }
                         if (n == 0) {
                             // Same length. => Use alphabetical order.

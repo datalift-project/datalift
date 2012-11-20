@@ -1,0 +1,24 @@
+label.valid {
+  width: 24px;
+  height: 24px;
+  display: inline-block;
+  text-indent: -9999px;
+}
+
+label.error {
+  float:right;
+  font-weight: bold;
+  color: red;
+  padding: 0px;
+  margin-right: 35px;
+}
+
+label.control-label{
+  width:280px;
+  display:block;
+  float:left;
+}
+
+input.control-input{
+  width:50em;
+}

@@ -27,6 +27,7 @@
 #end
 	<title>#i18n($title) - #i18n("workspace.title") - DataLift</title>
 #css_links
+	<link rel="stylesheet" type="text/css" href="${baseUri}/project/static/css/validation.css"/>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 </head>
 <body>
@@ -42,20 +43,22 @@
 	<h3><a href="#">CSV</a></h3>
 	<div>
 #if( (!$current) || ($current.getType() == $field.CsvSource) )
-	<form method="post" action="$target_csv" enctype="multipart/form-data" class="form_formated">
+	<form method="post" action="$target_csv" id="target_csv" enctype="multipart/form-data">
 #if( !$current )
-		<p><label for="file">#i18n("project.source.csv.upload"): </label>
-		<input type="file" name="source" size="64"/><br />
-		<label for="file_url">#i18n("project.upload_source.file_url"): </label>
-		<input type="text" id="file_url" name="file_url"/></p>
+		<p><label class="control-label" for="file">#i18n("project.source.csv.upload") *: </label>
+		<input type="file" id="csv_src" class="control-input" name="source" title="#i18n("project.source.tooltip.upload")" size="64" accept="*.csv"/><br />
+		<p><label class="control-label" for="file_url">#i18n("project.upload_source.file_url") *: </label>
+		<input type="text" class="control-input" placeholder="http://..." id="file_url" name="file_url" title="#i18n("project.source.tooltip.url")" /></p>
+		<p><label class="control-label" for="file_name">#i18n("project.upload_source.name") *: </label>
+		<input type="text" id="csv_name" class="control-input" placeholder="#i18n("project.source.placeholder.file_name")" name="file_name" title="#i18n("project.upload_source.file_name")" /></p>
 #else
 		<input type="hidden" name="current_source" value="$current.uri"/>
 		<p>#i18n("project.source.csv.update"): <a href="$current.uri">$esc.html($current.title)</a>#if( $current.sourceUrl ) (#i18n('project.update_source.src_url'): <a href='${current.sourceUrl}'>$!esc.html($current.sourceUrl)</a>)#end</p>
 #end
-		<p><label for="description">#i18n("project.upload_source.description"): </label>
-		<input type="text" id="description" name="description" value="$!esc.html($current.description)"/></p>
-		<p><label for="charset">#i18n("project.upload_source.charset"): </label>
-		<select id="charset" name="charset">
+		<p><label class="control-label" for="description">#i18n("project.upload_source.description"): </label>
+		<input type="text" class="control-input" id="description" name="description" title ="#i18n("project.source.tooltip.description")" value="$!esc.html($current.description)" /></p>
+		<p><label class="control-label" for="charset">#i18n("project.upload_source.charset"): </label>
+		<select id="charset" name="charset" title="#i18n("project.source.tooltip.charset")">
 #foreach( $s in $charsets )
 #if( ($foreach.count == 1 && !$current) || $s.equals($current.encoding) )
 			<option value="$s" selected="true">$esc.html($s)</option>
@@ -64,8 +67,8 @@
 #end
 #end
 		</select></p>
-		<p><label for="separator">#i18n("project.source.csv.separator"): </label>
-		<select id="separator" name="separator">
+		<p><label class="control-label" for="separator">#i18n("project.source.csv.separator")*: </label>
+		<select id="separator" name="separator" title="#i18n("project.source.tooltip.separator")">
 #foreach( $s in $sep )
 #set( $label = "csv.source.${s.name()}.separator" )
 #if( ($foreach.count == 1 && !$current) || $current.getSeparator().equals($s.toString()) )
@@ -75,14 +78,14 @@
 #end
 #end
 		</select></p>
-		<p><label for="title_row">#i18n("project.source.csv.title_row"): </label>
-		<input type="text" id="title_row" name="title_row" value="#if( $current && $current.hasTitleRow() == true )$!esc.html($current.titleRow)#end" /></p>
-		<p><label for="first_row">#i18n("project.source.csv.first_row"): </label>
-		<input type="text" id="first_row" name="first_row" value="#if( $current && $current.firstDataRow > 0 )$!esc.html($current.firstDataRow)#end" /></p>
-		<p><label for="last_row">#i18n("project.source.csv.last_row"): </label>
-		<input type="text" id="last_row" name="last_row" value="#if( $current && $current.lastDataRow > 0 )$!esc.html($current.lastDataRow)#end" /></p>
-		<p><label for="quote">#i18n("project.source.csv.quote"): </label>
-		<input type="text" id="quote" name="quote" title="#i18n('project.source.csv.quote.help')" value='$!esc.html($current.quote)'/></p>
+		<p><label class="control-label" for="title_row">#i18n("project.source.csv.title_row"): </label>
+		<input type="text" class="control-input" placeholder="#i18n("project.source.placeholder.title_row")" id="title_row" name="title_row" title="#i18n("project.source.tooltip.title_row")" value="#if( $current && $current.hasTitleRow() == true )$!esc.html($current.titleRow)#end" /></p>
+		<p><label class="control-label" for="first_row">#i18n("project.source.csv.first_row"): </label>
+		<input type="text"class="control-input" placeholder="#i18n("project.source.placeholder.first_row")" id="first_row" name="first_row" title="#i18n("project.source.tooltip.first_row")" value="#if( $current && $current.firstDataRow > 0 )$!esc.html($current.firstDataRow)#end" /></p>
+		<p><label class="control-label" for="last_row">#i18n("project.source.csv.last_row"): </label>
+		<input type="text" class="control-input" placeholder="#i18n("project.source.placeholder.last_row")" id="last_row" name="last_row" title="#i18n("project.source.tooltip.last_row")" value="#if( $current && $current.lastDataRow > 0 )$!esc.html($current.lastDataRow)#end" /></p>
+		<p><label class="control-label" for="quote">#i18n("project.source.csv.quote"): </label>
+		<input type="text" class="control-input" id="quote" placeholder='"' name="quote" title="#i18n('project.source.csv.quote.help')" value='$!esc.html($current.quote)'/></p>
 		<input type="submit" value="#i18n("$submit")"/>
 	</form>
 #end
@@ -91,26 +94,28 @@
 	<h3><a href="#">RDF</a></h3>
 	<div>
 #if( (!$current) || ($current.getType() == $field.RdfFileSource) )
-	<form method="post" action="$target_rdf" enctype="multipart/form-data" class="form_formated">
+	<form method="post" action="$target_rdf" id="target_rdf" enctype="multipart/form-data">
 #if( !$current )
-		<p><label for="file">#i18n("project.upload_rdf"): </label>
-		<input type="file" name="source" size="64"/><br />
-		<label for="file_url">#i18n("project.upload_source.file_url"): </label>
-		<input type="text" id="file_url" name="file_url"/></p>
+		<p><label class="control-label" for="file">#i18n("project.upload_rdf")*: </label>
+		<input type="file" id="rdf_src" class="control-input" name="source" title="#i18n("project.source.tooltip.upload")" size="64"/><br />
+		<p><label class="control-label" for="file_url">#i18n("project.upload_source.file_url"): </label>
+		<input type="text" class="control-input" placeholder= "http://..." id="file_url" name="file_url" title="#i18n("project.source.tooltip.url")" /></p>
+		<p><label class="control-label" for="file_name">#i18n("project.upload_source.name") *: </label>
+		<input type="text" id="rdf_name" class="control-input" placeholder="#i18n("project.source.placeholder.file_name")" name="file_name" title="#i18n("project.upload_source.file_name")" /></p>
 #else
 		<input type="hidden" id="current_source" name="current_source" value="$current.uri"/>
 		<p>#i18n("project.update_rdf"): <a href="$current.uri">$esc.html($current.title)</a>#if( $current.sourceUrl ) (#i18n('project.update_source.src_url'): <a href='${current.sourceUrl}'>$!esc.html($current.sourceUrl)</a>)#end</p>
 #end
-		<p><label for="description">#i18n("project.upload_source.description"): </label>
-		<input type="text" id="description" name="description" value="$!esc.html($current.description)"/></p>
-		<p><label for="mime_type">#i18n("project.upload_rdf_format"): </label>
-		<select id="mime_type" name="mime_type">
+		<p><label class="control-label" for="description">#i18n("project.upload_source.description"): </label>
+		<input type="text" class="control-input" id="description" name="description" title="#i18n("project.source.tooltip.description")" value="$!esc.html($current.description)"/></p>
+		<p><label class="control-label" for="mime_type">#i18n("project.upload_rdf_format")*: </label>
+		<select id="mime_type" name="mime_type" title="#i18n("project.source.tooltip.rdf_format")">
 #foreach( $f in $rdfFormats )
 			<option id="${f.fileExtension}" value="${f.mimeType}"#if( $current.mimeType.equals($f.mimeType.toString()) ) selected="true"#end>$esc.html($f.name)</option>
 #end
 		</select></p>
-		<p><label for="base_uri">#i18n("project.upload_source.base_uri"): </label>
-		<input type="text" id="base_uri" name="base_uri" value="$!esc.html($current.baseUri)"/></p>
+		<p><label class="control-label" for="base_uri">#i18n("project.upload_source.base_uri"): </label>
+		<input type="text" class="control-input" placeholder="http://data.mydomain.com/" id="base_uri" name="base_uri" title="#i18n("project.source.tooltip.base_uri")" value="$!esc.html($current.baseUri)"/></p>
 		<input type="submit" value="#i18n("$submit")"/>
 	</form>
 #end
@@ -178,18 +183,20 @@
 	<h3><a href="#">XML</a></h3>
 	<div>
 #if( (!$current) || ($current.getType() == $field.XmlSource) )
-	<form method="post" action="$target_xml" enctype="multipart/form-data" class="form_formated">
+	<form method="post" action="$target_xml" id="target_xml" enctype="multipart/form-data">
 #if( !$current )
-		<p><label for="file">#i18n("project.upload_xml"): </label>
-		<input type="file" name="source" size="64"/><br />
-		<label for="file_url">#i18n("project.upload_source.file_url"): </label>
-		<input type="text" id="file_url" name="file_url"/></p>
+		<p><label class="control-label" for="file">#i18n("project.upload_xml")*: </label>
+		<input type="file" id="xml_src" class="control-input" name="source" title="#i18n("project.source.tooltip.upload")" size="64" accept="*.xml"/><br />	
+		<p><label class="control-label" for="file_url">#i18n("project.upload_source.file_url"): </label></p>
+		<input type="text" class="control-input" placeholder= "http://..." id="file_url" name="file_url"/></p>
+		<p><label class="control-label" for="file_name">#i18n("project.upload_source.name") *: </label>
+		<input type="text" id="xml_name" class="control-input" placeholder="#i18n("project.source.placeholder.file_name")" name="file_name" title="#i18n("project.upload_source.file_name")" /></p>
 #else
 		<input type="hidden" name="current_source" value="$current.uri"/>
 		<p>#i18n("project.update_xml"): <a href="$current.uri">$esc.html($current.title)</a>#if( $current.sourceUrl ) (#i18n('project.update_source.src_url'): <a href='${current.sourceUrl}'>$!esc.html($current.sourceUrl)</a>)#end</p>
 #end
-		<p><label for="description">#i18n("project.upload_source.description"): </label>
-		<input type="text" id="description" name="description" value="$!esc.html($current.description)"/></p>
+		<p><label class="control-label" for="description">#i18n("project.upload_source.description"): </label>
+		<input type="text" class="control-input" id="description" name="description" value="$!esc.html($current.description)"/></p>
 		<input type="submit" value="#i18n("$submit")"/>
 	</form>
 #end
@@ -242,8 +249,173 @@
 #footer
 
 #script_links
+<script language="javascript" src="${baseUri}/project/static/js/jquery.validate.js"></script>
+</head>
 <script type="text/javascript">
 	$(function() {
+		$('#csv_src').change(function () {
+			$('#csv_name').val('');
+			var tmp=$('#csv_src').val();
+			tmp = tmp.replace("C:\\fakepath\\","");
+			$('#csv_name').val(tmp);
+		});
+		$('#xml_src').change(function () {
+			$('#xml_name').val('');
+			var tmp=$('#xml_src').val();
+			tmp = tmp.replace("C:\\fakepath\\","");
+			$('#xml_name').val(tmp);
+		});
+		$('#rdf_src').change(function () {
+			$('#rdf_name').val('');
+			var tmp=$('#rdf_src').val();
+			tmp = tmp.replace("C:\\fakepath\\","");
+			$('#rdf_name').val(tmp);
+		});
+		$("#target_csv").validate(
+				{
+					ignoreTitle: true,
+					onsubmit: true,
+					onkeyup: false,
+   					onclick: false,
+   					onfocusout: false,
+					rules: {
+						source: {
+							required: 'input[name="file_url"]:blank'
+						},
+						file_url: {
+							required: 'input[name="source"]:blank',
+							url: true
+						},
+						file_name: {
+							required: true,
+							remote: {
+								type: 'post',
+								data: {'project_uri': '$esc.html("${it.uri}")', 
+										'source': function() {
+											var source=$('#csv_name').val();
+											return source;
+										} 
+									  },
+						        url: '../checksourceuri'
+							}
+						},
+						title_row: {
+							number: true
+						},
+						first_row: {
+							number: true
+						},
+						last_row: {
+							number: true
+						}
+				    },
+				    messages: {
+				        source: {
+				        	required: "#i18n("project.source.validation.file")"	
+				       	},
+				        file_name: {
+				        	required: "#i18n("project.source.validation.file_name")",
+				        	remote: "#i18n("project.source.validation.remote")"
+				        	},
+				        file_url: {
+				    		required: "#i18n("project.source.validation.link")",
+				    		url: "#i18n("project.source.validation.url")"
+				    	},
+				    	title_row: {
+							number: "#i18n("project.source.validation.number")"
+						},
+						first_row: {
+							number: "#i18n("project.source.validation.number")"
+						},
+						last_row: {
+							number: "#i18n("project.source.validation.number")"
+						}
+				    }
+				});
+		$("#target_rdf").validate(
+				{
+					ignoreTitle: true,
+					onsubmit: true,
+					onkeyup: false,
+   					onclick: false,
+   					onfocusout: false,
+					rules: {
+						source: {
+							required: 'input[name="file_url"]:blank'
+						},
+						file_url: {
+							required: 'input[name="source"]:blank',
+							url: true
+						},
+						file_name: {
+							required: true,
+							remote: {
+								type: 'post',
+								data: {'project_uri': '$esc.html("${it.uri}")', 
+										'source': function() {
+											var source=$('#rdf_name').val();
+											return source;
+										} 
+									  },
+						        url: '../checksourceuri'
+							}
+						},
+				    },
+				    messages: {
+				        source: {
+				        	required: "#i18n("project.source.validation.file")"
+				       	},
+					file_name: {
+				        	required: "#i18n("project.source.validation.file_name")",
+				        	remote: "#i18n("project.source.validation.remote")"
+				        	},
+				        file_url: {
+				    		required: "#i18n("project.source.validation.link")",
+				    		url: "#i18n("project.source.validation.url")"
+				    	}
+				    }
+				});
+		$("#target_xml").validate(
+				{
+					ignoreTitle: true,
+					onsubmit: true,
+					onkeyup: false,
+   					onclick: false,
+   					onfocusout: false,
+					rules: {
+						source: {
+							required: 'input[name="file_url"]:blank',
+						},
+						file_url: {
+							required: 'input[name="source"]:blank',
+							url: true
+						},
+						file_name: {
+							required: true,
+							remote: {
+								type: 'post',
+								data: {'project_uri': '$esc.html("${it.uri}")', 
+										'source': function() {
+											var source=$('#xml_name').val();
+											return source;
+										} 
+									  },
+						        url: '../checksourceuri'
+							}
+						},
+				    },
+				    messages: {
+				        source: "#i18n("project.source.validation.file")",
+ 					file_name: {
+				        	required: "#i18n("project.source.validation.file_name")",
+				        	remote: "#i18n("project.source.validation.remote")"
+				        	},					
+				        file_url: {
+				    		required: "#i18n("project.source.validation.link")",
+				    		url: "#i18n("project.source.validation.url")"
+				    	}
+				    }
+				});
 		$("input:submit").button();
 		$("#accordion").accordion({
 			autoHeight: false,
@@ -255,7 +427,6 @@
 			active: false
 #end
 		});
-
 		/* Selection of the right panel */
 #if( $current )
 		var select_panel = 0;

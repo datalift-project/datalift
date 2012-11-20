@@ -41,12 +41,12 @@ import org.datalift.fwk.log.Logger;
 /**
  * An object counting the number of seconds since its creation.
  * Instances of this class are intended to be used as
- * {@link Logger#setContext(Object, Object) diagnostic contexts}
+ * {@link Logger#setContext(Object, Object) diagnostic context}
  * to trace request execution time.
  *
  * @author lbihanic
  */
-public class TimerContext
+public final class TimerContext
 {
     //-------------------------------------------------------------------------
     // Instance members

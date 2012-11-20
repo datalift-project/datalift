@@ -138,6 +138,15 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
             log.debug("Initialized Empire persistence provider");
         }
         catch (RuntimeException e) {
+            // Shutdown JPA persistence provider.
+            if (this.emf != null) {
+                try {
+                    this.emf.close();
+                }
+                catch (Exception x) { /* Ignore... */ }
+                this.emf = null;
+            }
+            this.projectDao = null;
             log.fatal("Failed to initialize Empire persistence provider", e);
             throw e;
         }
@@ -148,10 +157,13 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     public void shutdown(Configuration configuration) {
         // Shutdown JPA persistence provider.
         if (this.emf != null) {
-            this.emf.close();
+            try {
+                this.emf.close();
+            } catch (Exception e) { /* Ignore... */ }
             this.emf = null;
             log.debug("Empire persistence provider shut down");
         }
+        this.projectDao = null;
     }
 
     //-------------------------------------------------------------------------
@@ -161,6 +173,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     /** {@inheritDoc} */
     @Override
     public Project findProject(URI uri) {
+        this.checkAvailable();
         return this.projectDao.find(uri);
     }
 
@@ -168,6 +181,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     @Override
     @SuppressWarnings("unchecked")
     public Collection<Project> listProjects() {
+        this.checkAvailable();
         return (Collection<Project>)(this.projectDao.getAll());
     }
 
@@ -175,8 +189,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     @Override
     public CsvSource newCsvSource(Project project, URI uri, String title,
                                   String description, String filePath,
-                                  char separator)
-                                                            throws IOException {
+                                  char separator) throws IOException {
         // Create new CSV source.
         CsvSourceImpl src = new CsvSourceImpl(uri.toString(), project);
         // Set source parameters.
@@ -311,7 +324,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
                                                     uri, project.getTitle());
         return src;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public ShpSource newShpSource(Project project, URI uri, String title,
@@ -320,7 +333,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
                                   String prjFilePath)
                                                             throws IOException {
         // Create new Shapefile source.
-    	ShpSourceImpl src = new ShpSourceImpl(uri.toString(), project);
+        ShpSourceImpl src = new ShpSourceImpl(uri.toString(), project);
         // Set source parameters.
         this.initSource(src, title, description);
         // Check and set Shape main file (SHP).
@@ -353,14 +366,14 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
                                                     uri, project.getTitle());
         return src;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public GmlSource newGmlSource(Project project, URI uri, String title,
                                   String description, String filePath)
                                                             throws IOException {
         // Create new GML source.
-    	GmlSourceImpl src = new GmlSourceImpl(uri.toString(), project);
+        GmlSourceImpl src = new GmlSourceImpl(uri.toString(), project);
         // Set source parameters.
         this.initSource(src, title, description);
         File f = this.getFileStorage(filePath);
@@ -384,6 +397,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     /** {@inheritDoc} */
     @Override
     public void delete(Source source, boolean deleteResources) {
+        this.checkAvailable();
         if (source == null) {
             throw new IllegalArgumentException("source");
         }
@@ -422,6 +436,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     /** {@inheritDoc} */
     @Override
     public void deleteOntology(Project project, Ontology ontology) {
+        this.checkAvailable();
         if (project == null) {
             throw new IllegalArgumentException("project");
         }
@@ -473,6 +488,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     /** {@inheritDoc} */
     @Override
     public void deleteProject(Project p) {
+        this.checkAvailable();
         // Delete server-side resources attached to sources.
         for (Source s : p.getSources()) {
             s.delete();
@@ -485,6 +501,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     /** {@inheritDoc} */
     @Override
     public void saveProject(Project p) {
+        this.checkAvailable();
         if (p == null) {
             throw new IllegalArgumentException("p");
         }
@@ -636,5 +653,11 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         src.setDescription(description);
         src.setCreationDate(new Date());
         src.setOperator(SecurityContext.getUserPrincipal());
+    }
+
+    private void checkAvailable() {
+        if (this.emf == null) {
+            throw new IllegalStateException("Not available");
+        }
     }
 }

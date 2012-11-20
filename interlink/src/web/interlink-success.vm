@@ -1,0 +1,72 @@
+#load_core_resources
+#load("interlink/resources")
+##
+#set( $moduleUri = "$baseUri/interlink")
+##
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<title>#i18n('interlink.title') - Datalift</title>
+	#css_links
+	## Temporary dev. link.
+	## <link rel="stylesheet" type="text/css" href="http://localhost:1337/static/css/interlink-interface.css"/>
+	<link rel="stylesheet" type="text/css" href="${moduleUri}/static/css/interlink-interface.css"/>
+</head>
+<body>
+	<a href="${baseUri}/project/${it.title}" id="goto_workspace" class="ui-priority-primary" style="position:absolute;top:15px;right:15px;" title="#i18n('cancel.title')#i18n('project.workspace.link')">#i18n('project.workspace.link')</a>
+	#banner
+	<div class="ui-widget-content" id="workspace">
+		<h3 class="ui-widget-header dl-widget-header">#i18n('project.label' ${it.title}) &mdash; #i18n('interlink.title')</h3>
+		<div class="dl-panel success-display">
+			<div class="results">
+				<h4>#i18n('result.title') #i18n('interlink.title')</h4>
+				<table id="grid" class="results-grid">
+					<thead>
+						<tr>
+							<th>#i18n("source.grid.row.heading")</th>
+							<th class="dl-grid-header-column">#i18n("rdf.voc.subject")</th>
+							<th class="dl-grid-header-column">#i18n("rdf.voc.predicate")</th>
+							<th class="dl-grid-header-column">#i18n("rdf.voc.object")</th>
+						</tr>
+					</thead>
+					<tbody>
+						## For each new triple, we'll display its S, P, O.
+						#foreach( $triple in $newtriples )
+							#if( $foreach.count > $maxEntries ) 
+								#break 
+							#end
+							## Line number may be useful.
+							<tr><td>$velocityCount</td>
+						  	#foreach( $elt in $triple ) 
+						  		<td title="$!esc.html($elt)">$!esc.html($elt)</td> 
+						  	#end
+							</tr>
+						#end
+					</tbody>
+				</table>
+				<div id="pagernav" class="results-grid"></div>
+				<div id="searchnav" class="results-grid" style="display:none">
+					<label for="gridsearch">#i18n("grid.search.value.label")</label>
+					<input type="search" id="gridsearch" placeholder="#i18n("grid.search.value.placeholder")" results="0" class="gridsearch"/>
+					<label for="searchColumn">#i18n("grid.search.column.label")</label>
+					<select id="searchColumn">
+						<option value="all">#i18n("grid.search.column.option.all")</option>
+						## Same values as in the table's header.
+						<option>#i18n("rdf.voc.subject")</option>
+						<option>#i18n("rdf.voc.predicate")</option>
+						<option>#i18n("rdf.voc.object")</option>
+					</select>
+				</div>
+			</div>
+		</div>
+	</div>
+	#footer
+	#script_links
+	<script type="text/javascript">
+	</script>
+	<script language="javascript" src="${moduleUri}/static/js/jqgrid.common.js"></script>
+	## Temporary dev. link.
+	##<script type="text/javascript" src="http://localhost:1337/static/js/interlink-success.js"></script>
+	<script language="javascript" src="${moduleUri}/static/js/interlink-success.js"></script>
+</body>
+</html>

@@ -11,15 +11,16 @@
 
     <layout class="org.apache.log4j.PatternLayout">
       <param name="conversionPattern"
-             value="%d{ISO8601}|%-5p|%X{Timer}|%X{Module}|%c{1}|%m%n"/>
+             value="%d{ISO8601}|%-5p|%X{Timer}|%X{Path}|%c{1}|%m%n"/>
     </layout>
   </appender>
 
   <!-- ===== Loggers ===== -->
-  <!-- DataLift framework classes -->
+  <!-- DataLift framework and modules -->
   <logger name="org.datalift">
     <level value="info"/>
   </logger>
+
   <!-- Jersey & JAX-RS -->
   <logger name="javax.ws.rs">
     <level value="info"/>
@@ -28,17 +29,17 @@
     <level value="warn"/>
   </logger>
   <!-- Apache Velocity template engine (and view processor) -->
-  <logger name="org.datalift.core.velocity.jersey">
-    <level value="info"/>
-  </logger>
   <logger name="org.apache.velocity">
     <level value="warn"/>
   </logger>
+  <logger name="org.datalift.core.velocity.jersey">
+    <level value="info"/>
+  </logger>
   <!-- Apache Shiro security framework (and integration classes) -->
-  <logger name="org.datalift.core.security">
+  <logger name="org.apache.shiro">
     <level value="warn"/>
   </logger>
-  <logger name="org.apache.shiro">
+  <logger name="org.datalift.core.security">
     <level value="warn"/>
   </logger>
   <!-- Empire RDF JPA provider -->

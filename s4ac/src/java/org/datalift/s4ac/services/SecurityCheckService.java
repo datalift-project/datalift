@@ -51,15 +51,16 @@ public class SecurityCheckService extends BaseModule {
 	private Map<String, AccessPolicy> aps = new HashMap<String, AccessPolicy>();
 	private Map<CRUDType, Set<String>> apindex = new HashMap<CRUDType, Set<String>>();
 
-	@SuppressWarnings("deprecation")
 	public SecurityCheckService(){
-		super("s4ac-securityCheckService",true);
+		super("s4ac-securityCheckService");
 	}
 	
 	public void init() {
 		try {
 			this.liftedRepository = Configuration.getDefault().getDataRepository();
-			this.securedRepository = Configuration.getDefault().newRepository("secured", null, false);
+    		this.securedRepository = Configuration.getDefault().getRepository("secured");
+    		
+//    		this.securedRepository = Configuration.getDefault().newRepository("secured", null, false);
 		} catch (Exception e) {
 			log.fatal("Unable to get repositories", e);
 			throw new RuntimeException(e);
@@ -124,10 +125,8 @@ public class SecurityCheckService extends BaseModule {
              log.fatal("Failed to get Access Policies");
              throw new RuntimeException(e);
           }
-    	
-    	
 	}
-	
+
 	public Map<String, AccessPolicy> getAps() {
 		return aps;
 	}
@@ -184,7 +183,6 @@ public class SecurityCheckService extends BaseModule {
         log.debug("RESULT ASK : "+String.valueOf(res));		
         
         return res;
-        
 	}
 
 	public Set<String> getAccessibleGraphs(List<String> namedGraphUris) {
@@ -215,7 +213,7 @@ public class SecurityCheckService extends BaseModule {
 		} else 
 			return ng;
 	}
-		
+
 	private Set<String> getAllGraphsFromLifted() {
 		Set<String> all = new HashSet<String>();
 		try {
@@ -243,10 +241,8 @@ public class SecurityCheckService extends BaseModule {
              log.fatal("Failed to get graphs from lifted");
              throw new RuntimeException(e);
           }
-		
 		return all;
 	}
-	
 	
 	private Set<String> getProtectedNamedGraphs() {		
 		Set<String> graphs = new HashSet<String>();
@@ -261,8 +257,6 @@ public class SecurityCheckService extends BaseModule {
 		return graphs;
 	}
 	
-	
-
 /*
 	public Set<String> checkByPrivilege(SecuredSparqlQuery sqry, String sessid) throws RepositoryException, MalformedQueryException, QueryEvaluationException  {
 		
@@ -306,6 +300,4 @@ public class SecurityCheckService extends BaseModule {
 		return graphs;
 	}
 */
-	
-
 }

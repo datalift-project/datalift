@@ -33,7 +33,7 @@
   <property name="datalift.root" location="${basedir}/.."/>
 
   <property name="datalift.wrapper.modules"
-            value="sparql-endpoint,projectmanager,simple-convert"/>
+            value="flint-endpoint,projectmanager,simple-convert"/>
 
 
   <!-- ================ File and Directory Names ========================== -->
@@ -92,6 +92,8 @@
   <property name="datalift.war.name"    value="datalift.war"/>
   <property name="datalift.war.path"
             location="${core.home}/dist/${datalift.war.name}"/>
+  <property name="datalift.deploy.path"
+            location="${gen.dist.dir}/webapps/${datalift.war.name}"/>
 
 
   <!-- ================ Compilation Control Options ======================= -->
@@ -249,14 +251,14 @@
       <fileset dir="${runtime.conf}"/>
     </copy>
     <!-- Copy DataLift main web application -->
-    <copy file="${datalift.war.path}" todir="${gen.dist.dir}/webapps"/>
+    <copy file="${datalift.war.path}" tofile="${datalift.deploy.path}"/>
     <!-- Patch DataLift webapp to install standalon app. security config. -->
     <!-- Force file copy to force JAR update: updated files must be newer
          than the ones they replace in JAR file. -->
     <copy todir="${tmp.build.dir}">
       <fileset dir="${webapp.conf}"/>
     </copy>
-    <jar jarfile="${gen.dist.dir}/webapps/${datalift.war.name}" update="true">
+    <jar jarfile="${datalift.deploy.path}" update="true">
       <fileset dir="${tmp.build.dir}"/>
     </jar>
     <delete dir="${tmp.build.dir}" quiet="true"/>

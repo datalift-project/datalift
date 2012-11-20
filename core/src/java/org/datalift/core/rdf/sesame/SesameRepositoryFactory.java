@@ -141,7 +141,7 @@ public final class SesameRepositoryFactory extends RepositoryFactory
         //---------------------------------------------------------------------
         // Constructors
         //---------------------------------------------------------------------
-    
+
         /**
          * Build a new DataLift repository accessing a remote Sesame
          * repository over HTTP.
@@ -159,18 +159,26 @@ public final class SesameRepositoryFactory extends RepositoryFactory
                                                  Configuration configuration) {
             super(name, url, configuration);
         }
-    
+
         //---------------------------------------------------------------------
         // BaseRepository contract support
         //---------------------------------------------------------------------
-    
+
         /** {@inheritDoc} */
         @Override
         protected org.openrdf.repository.Repository
                             newNativeRepository(Configuration configuration) {
-            org.openrdf.repository.Repository repository = null;
+            HTTPRepository repository = null;
+
+            String username = trimToNull(configuration.getProperty(
+                                            this.name + REPOSITORY_USERNAME));
+            String password = trim(configuration.getProperty(
+                                            this.name + REPOSITORY_PASSWORD));
             try {
                 repository = new HTTPRepository(this.url);
+                if (username != null) {
+                    repository.setUsernameAndPassword(username, password);
+                }
                 repository.initialize();
                 if (isSet(this.name)) {
                     log.info("Sesame HTTP repository \"{}\" successfully connected at: {}",
@@ -202,7 +210,7 @@ public final class SesameRepositoryFactory extends RepositoryFactory
         //---------------------------------------------------------------------
         // Constructors
         //---------------------------------------------------------------------
-    
+
         /**
          * Build a new DataLift repository accessing a local,
          * JVM-embedded Sesame repository.
@@ -220,11 +228,11 @@ public final class SesameRepositoryFactory extends RepositoryFactory
                                                  Configuration configuration) {
             super(name, url, configuration);
         }
-    
+
         //---------------------------------------------------------------------
         // BaseRepository contract support
         //---------------------------------------------------------------------
-    
+
         /** {@inheritDoc} */
         @Override
         protected org.openrdf.repository.Repository

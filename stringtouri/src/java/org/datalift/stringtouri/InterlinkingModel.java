@@ -33,7 +33,7 @@ import org.openrdf.repository.RepositoryException;
  * operations and values.
  * 
  * @author tcolas
- * @version 15082012
+ * @version 07102012
  */
 public abstract class InterlinkingModel {
 	

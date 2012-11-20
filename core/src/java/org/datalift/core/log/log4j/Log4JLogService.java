@@ -83,7 +83,7 @@ public final class Log4JLogService extends LogService
     public final static PromotedLevel PROMOTED_TRACE =
                                 new PromotedLevel(Level.TRACE_INT, "TRACE");
 
-    private final static String LOG4J_INIT_OVERRIDE_KEY = 
+    private final static String LOG4J_INIT_OVERRIDE_KEY =
                                                  "log4j.defaultInitOverride";
     private final static String PROMOTE_DEBUG_MDC =
                         Log4JLogService.class.getName() + ".promoteDebugTrace";
@@ -190,7 +190,7 @@ public final class Log4JLogService extends LogService
             // installed => Use it...
         }
         this.loggerRepository = (Hierarchy)(LogManager.getLoggerRepository());
-        
+
         // Capture all java.util.logging requests and redirect them to Log4J.
         JulToLog4jHandler.install(this.loggerRepository);
     }

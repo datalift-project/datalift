@@ -60,7 +60,7 @@ public interface ProjectModule extends Module
      *
      * @return the description of the module entry page applicable to
      *         the specified project or <code>null</code> if this
-     *         module can not handle the project in its current state. 
+     *         module can not handle the project in its current state.
      */
     public abstract UriDesc canHandle(Project p);
 
@@ -73,6 +73,10 @@ public interface ProjectModule extends Module
      * browsers.</p>
      */
     public enum HttpMethod { GET, POST, PUT, DELETE; }
+
+    //-------------------------------------------------------------------------
+    // UriDesc nested class
+    //-------------------------------------------------------------------------
 
     /**
      * A description of the access to a module page.
