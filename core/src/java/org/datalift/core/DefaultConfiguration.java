@@ -234,7 +234,7 @@ public class DefaultConfiguration extends Configuration
     /** {@inheritDoc} */
     @Override
     public Collection<String> getRepositoryUris() {
-        return this.repositories.keySet();
+        return Collections.unmodifiableCollection(this.repositories.keySet());
     }
 
     /** {@inheritDoc} */
@@ -245,7 +245,8 @@ public class DefaultConfiguration extends Configuration
         }
         Repository r = this.repositories.get(uri);
         if (r == null) {
-            throw new IllegalArgumentException("No such repository: " + uri);
+            throw new MissingResourceException("No such repository: " + uri,
+                                            Configuration.class.getName(), uri);
         }
         return r;
     }
@@ -344,7 +345,8 @@ public class DefaultConfiguration extends Configuration
         }
         Object o = this.beansByName.get(key);
         if (o == null) {
-            throw new MissingResourceException(key, null, key);
+            throw new MissingResourceException("No such bean: " + key,
+                                            Configuration.class.getName(), key);
         }
         log.trace("Retrieved bean {} for key \"{}\"", o, key);
         return o;
@@ -366,7 +368,8 @@ public class DefaultConfiguration extends Configuration
         }
         if (bean == null) {
             String name = clazz.getName();
-            throw new MissingResourceException(name, null, name);
+            throw new MissingResourceException("No bean found for type " + name,
+                                        Configuration.class.getName(), name);
         }
         log.trace("Retrieved bean {} for class {}", bean, clazz);
         return bean;
@@ -393,7 +396,9 @@ public class DefaultConfiguration extends Configuration
         }
         // Else: no bean found. => Return an empty list.
 
-        log.trace("Retrieved beans {} for class {}", beans, clazz);
+        if (! beans.isEmpty()) {
+            log.trace("Retrieved beans {} for class {}", beans, clazz);
+        }
         return beans;
     }
 
@@ -544,7 +549,7 @@ public class DefaultConfiguration extends Configuration
         // Check that a default repository is defined in configuration.
         if (this.repositories.get(DEFAULT_REPOSITORY) == null) {
             TechnicalException error = new TechnicalException(
-                                                "repository.missing.default");
+                                                "repository.default.missing");
             log.fatal(error.getMessage());
             throw error;
         }
