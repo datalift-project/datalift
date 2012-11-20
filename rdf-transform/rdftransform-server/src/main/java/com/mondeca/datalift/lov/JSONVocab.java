@@ -1,8 +1,6 @@
 package com.mondeca.datalift.lov;
 
 import java.io.File;
-import java.io.PrintWriter;
-import java.net.URLEncoder;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -20,8 +18,6 @@ import org.openrdf.repository.sail.SailRepository;
 import org.openrdf.sail.inferencer.fc.DirectTypeHierarchyInferencer;
 import org.openrdf.sail.memory.MemoryStore;
 
-import com.mondeca.datalift.rdf2rdf.LabelFetcher;
-import com.mondeca.sesame.toolkit.handler.SimplePrintHandler;
 import com.mondeca.sesame.toolkit.query.DelegatingSelectSPARQLHelper;
 import com.mondeca.sesame.toolkit.query.SesameSPARQLExecuter;
 import com.mondeca.sesame.toolkit.query.builder.StringSPARQLQueryBuilder;
