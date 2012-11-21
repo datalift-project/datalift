@@ -615,7 +615,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
      *
      * @return the base URI for evaluating a SPARQL query.
      */
-    private String getQueryBaseUri(UriInfo uriInfo) {
+    protected final String getQueryBaseUri(UriInfo uriInfo) {
         String baseUri = Configuration.getDefault()
                                       .getProperty(BASE_URI_PROPERTY);
         return (baseUri != null)? baseUri: uriInfo.getBaseUri().toString();
