@@ -52,6 +52,7 @@ import org.openrdf.rio.RDFParser;
 import org.openrdf.rio.RDFWriter;
 import org.openrdf.rio.Rio;
 
+import org.datalift.fwk.MediaTypes;
 import org.datalift.fwk.rdf.rio.rdfxml.RDFXMLParser;
 import org.datalift.fwk.util.StringUtils;
 
@@ -121,7 +122,7 @@ public enum RdfFormat
     static {
         for (RdfFormat r : values()) {
             for (MediaType t : r.mimeTypes) {
-                mime2TypeMap.put(t.toString(), r);
+                mime2TypeMap.put(MediaTypes.toString(t), r);
             }
         }
     }
@@ -297,7 +298,7 @@ public enum RdfFormat
         if (mimeType == null) {
             throw new IllegalArgumentException("mimeType");
         }
-        return find(mimeType.toString());
+        return find(MediaTypes.toString(mimeType));
     }
 
     /**
@@ -325,7 +326,7 @@ public enum RdfFormat
         if (mimeType == null) {
             throw new IllegalArgumentException("mimeType");
         }
-        return get(mimeType.toString());
+        return get(MediaTypes.toString(mimeType));
     }
 
     /**
@@ -351,6 +352,6 @@ public enum RdfFormat
     /** {@inheritDoc} */
     @Override
     public String toString() {
-        return this.getMimeType().toString();
+        return MediaTypes.toString(this.getMimeType());
     }
 }

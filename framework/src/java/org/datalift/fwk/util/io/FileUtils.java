@@ -61,15 +61,16 @@ import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 
 import javax.ws.rs.HttpMethod;
+import javax.ws.rs.core.MediaType;
 
 import org.itadaki.bzip2.BZip2InputStream;
 
 import org.datalift.fwk.MediaTypes;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.util.Env;
-import org.datalift.fwk.util.StringUtils;
 import org.datalift.fwk.util.web.HttpDateFormat;
 
+import static org.datalift.fwk.util.StringUtils.isSet;
 import static org.datalift.fwk.util.web.Charsets.UTF_8;
 
 
@@ -287,7 +288,7 @@ public final class FileUtils
                 int l = 0;
                 Reader r = null;
                 try {
-                    String cs = info.mimeType.getCharset();
+                    String cs = MediaTypes.getCharset(info.mimeType);
                     InputStream in = ((HttpURLConnection)cnx).getErrorStream();
                     r = (cs == null)? new InputStreamReader(in):
                                       new InputStreamReader(in, cs);
@@ -488,10 +489,9 @@ public final class FileUtils
      * @return the content type and character encoding as an array of
      *         strings.
      */
-    private static MediaTypes parseContentType(String contentType) {
-        return (StringUtils.isSet(contentType))?
-                    new MediaTypes(contentType):
-                    new MediaTypes(MediaTypes.APPLICATION_OCTET_STREAM_TYPE);
+    private static MediaType parseContentType(String contentType) {
+        return MediaType.valueOf((isSet(contentType))?
+                            contentType: MediaTypes.APPLICATION_OCTET_STREAM);
     }
 
     /**
@@ -575,10 +575,10 @@ public final class FileUtils
     public final static class DownloadInfo
     {
         public final int httpStatus;
-        public final MediaTypes mimeType;
+        public final MediaType mimeType;
         public final long expires;
 
-        public DownloadInfo(int status, MediaTypes mediaType, long expires) {
+        public DownloadInfo(int status, MediaType mediaType, long expires) {
             this.httpStatus = status;
             this.mimeType = mediaType;
             this.expires = expires;
@@ -587,7 +587,7 @@ public final class FileUtils
         @Override
         public String toString() {
             return "{ status: "   + this.httpStatus +
-                   ", mimeType: \"" + this.mimeType +
+                   ", mimeType: \"" + MediaTypes.toString(this.mimeType) +
                    "\", expires: "  + this.expires + " }";
         }
     }

@@ -228,7 +228,7 @@ public class OntologyMapper extends BaseModule implements ProjectModule
                 FileUtils.DownloadInfo info = FileUtils.save(u, null, headers, f);
                 f.setLastModified((info.expires > 0L)? info.expires: now);
                 // Extract RDF format from MIME type to force file suffix.
-                RdfFormat fmt = RdfFormat.find(info.mimeType.toString(false));
+                RdfFormat fmt = RdfFormat.find(info.mimeType);
                 if (fmt == null) {
                     throw new TechnicalException("invalid.remote.mime.type",
                                                  info.mimeType);

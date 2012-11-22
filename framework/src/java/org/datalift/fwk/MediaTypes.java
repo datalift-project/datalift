@@ -35,6 +35,9 @@
 package org.datalift.fwk;
 
 
+import java.util.Arrays;
+import java.util.Collection;
+
 import javax.ws.rs.core.MediaType;
 
 import org.datalift.fwk.util.web.Charsets;
@@ -48,6 +51,10 @@ import org.datalift.fwk.util.web.Charsets;
  */
 public class MediaTypes extends MediaType
 {
+    //-------------------------------------------------------------------------
+    // Constants
+    //-------------------------------------------------------------------------
+
     /** "application/rdf+xml" */
     public final static String APPLICATION_RDF_XML = "application/rdf+xml";
     /** "application/rdf+xml" */
@@ -155,25 +162,54 @@ public class MediaTypes extends MediaType
     public final static String APPLICATION_JSON_UTF8 =
                                             APPLICATION_JSON + UTF8_ENCODED;
 
-    public MediaTypes(String mimeType) {
-        this(MediaType.valueOf(mimeType));
-    }
+    private final static Collection<String> RDF_TYPES =
+            Arrays.asList(APPLICATION_RDF_XML,
+                          TEXT_TURTLE, APPLICATION_TURTLE,
+                          TEXT_N3, TEXT_RDF_N3, APPLICATION_N3,
+                          APPLICATION_NTRIPLES, APPLICATION_TRIG,
+                          APPLICATION_TRIX);
 
-    public MediaTypes(MediaType m) {
-        super(m.getType(), m.getSubtype(), m.getParameters());
-    }
+    //-------------------------------------------------------------------------
+    // Helpers methods
+    //-------------------------------------------------------------------------
 
     /**
      * Returns the {@link #CHARSET_PARAMETER character set} parameter
-     * for this media type or <code>null</code> if none was set.
+     * for the specified media type or <code>null</code> if none was set.
      * @return the "<code>charset</code>" parameter.
      */
-    public String getCharset() {
-        return this.getParameters().get(CHARSET_PARAMETER);
+    public static String getCharset(MediaType type) {
+        return type.getParameters().get(CHARSET_PARAMETER);
     }
 
-    public String toString(boolean includeParameters) {
-        return (includeParameters)? super.toString():
-                                    this.getType() + '/' + this.getSubtype();
+    /**
+     * Returns the string representation of a media type, without
+     * the additional parameters.
+     * @return the short string representation of the type.
+     */
+    public static String toString(MediaType type) {
+        return toString(type, false);
+    }
+
+    /**
+     * Returns the string representation of a media type.
+     * @param  includeParameters   whether to include the type
+     *                             parameters (charset, language...).
+     * @return the string representation of the type.
+     */
+    public static String toString(MediaType type, boolean includeParameters) {
+        return (includeParameters)? type.toString():
+                                    type.getType() + '/' + type.getSubtype();
+    }
+
+    /**
+     * Returns whether the specified MIME type is an RDF data type.
+     * @param  type   the MIME type.
+     * @return <code>true</code> if the specified MIME type is an
+     *         RDF data type; <code>false</code> otherwise.
+     */
+    public static boolean isRdf(MediaType type) {
+        return (type != null)? RDF_TYPES.contains(
+                            type.getType() + '/' + type.getSubtype()): false;
     }
 }
