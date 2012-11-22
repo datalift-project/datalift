@@ -144,8 +144,6 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
     protected final static List<Variant> CONSTRUCT_RESPONSE_TYPES =
             Collections.unmodifiableList(Arrays.asList(
                     new Variant(APPLICATION_RDF_XML_TYPE, null, null),
-                    new Variant(APPLICATION_SPARQL_RESULT_JSON_TYPE, null, null),
-                    new Variant(APPLICATION_JSON_TYPE, null, null),
                     new Variant(TEXT_TURTLE_TYPE, null, null),
                     new Variant(APPLICATION_TURTLE_TYPE, null, null),
                     new Variant(TEXT_N3_TYPE, null, null),
@@ -154,6 +152,8 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                     new Variant(APPLICATION_NTRIPLES_TYPE, null, null),
                     new Variant(APPLICATION_TRIG_TYPE, null, null),
                     new Variant(APPLICATION_TRIX_TYPE, null, null),
+                    new Variant(APPLICATION_SPARQL_RESULT_JSON_TYPE, null, null),
+                    new Variant(APPLICATION_JSON_TYPE, null, null),
                     new Variant(TEXT_HTML_TYPE, null, null),
                     new Variant(APPLICATION_XHTML_XML_TYPE, null, null),
                     new Variant(APPLICATION_XML_TYPE, null, null),
