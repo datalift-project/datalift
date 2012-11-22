@@ -54,6 +54,7 @@ import org.openrdf.query.TupleQueryResultHandler;
 import org.openrdf.query.TupleQueryResultHandlerBase;
 
 import org.datalift.fwk.Configuration;
+import org.datalift.fwk.MediaTypes;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.sparql.SparqlEndpoint;
 import org.datalift.fwk.sparql.SparqlEndpoint.QueryType;
@@ -114,13 +115,22 @@ public class GmlResourceHandler implements UriPolicy
 
     /** {@inheritDoc} */
     @Override public void postInit(Configuration configuration) {
+        // Gather default response types from SPARQL endpoint.
         List<Variant> defTypes =
                         configuration.getBean(SparqlEndpoint.class)
                                      .getResponseMimeTypes(QueryType.DESCRIBE);
+        // Build response type selection list, inserting the GML types
+        // after the RDF types (which must have priority).
         List<Variant> l = new ArrayList<Variant>(defTypes.size() + 2);
-        l.add(new Variant(APPLICATION_GML_XML_TYPE, null, null));
-        l.add(new Variant(APPLICATION_VND_OGC_GML_TYPE, null, null));
-        l.addAll(defTypes);
+        boolean inRdfTypes = true;
+        for (Variant  v : defTypes) {
+            if ((inRdfTypes) && (! MediaTypes.isRdf(v.getMediaType()))) {
+                l.add(new Variant(APPLICATION_GML_XML_TYPE, null, null));
+                l.add(new Variant(APPLICATION_VND_OGC_GML_TYPE, null, null));
+                inRdfTypes = false;
+            }
+            l.add(v);
+        }
         this.supportedResponseTypes = Collections.unmodifiableList(l);
     }
 
