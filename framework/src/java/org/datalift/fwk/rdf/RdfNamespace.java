@@ -97,7 +97,7 @@ public enum RdfNamespace
     OGC         ("ogc",         "http://www.opengis.net/rdf#",
                                 "OGC Data Types and Operators"),
     /** s4ac: &lt;http://ns.inria.fr/s4ac/v2#&gt; */
-    S4AC        ("s4ac",        "http://ns.inria.fr/s4ac/v2#",
+    S4AC        ("s4ac",        "http://ns.inria.fr/s4ac/v2/",
                                 "Social Semantic SPARQL Security for Access Control");
 
     //-------------------------------------------------------------------------
