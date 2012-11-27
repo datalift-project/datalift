@@ -50,7 +50,7 @@
 				<div id="predef-queries">
 					<label>#i18n("sparql.predef.queries"): </label>
 #foreach( $q in $queries )
-					<button query="$!esc.html($q)">$esc.html($q.label)</button> 
+					<button title="$!esc.html($q.description)" query="$!esc.html($q)">$esc.html($q.label)</button> 
 #end
 				</div>
 #end
