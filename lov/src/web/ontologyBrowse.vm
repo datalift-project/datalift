@@ -1,0 +1,150 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>test</title>
+<link rel="stylesheet" type="text/css" href="http://localhost:8080/datalift/css/jquery/demo_table_jui.css" />
+<link rel="stylesheet" type="text/css" href="http://localhost:8080/datalift/css/jquery/jquery-ui-1.8.16.custom.css" />
+
+
+	
+<script type="text/javascript" language="javascript" src="http://localhost:8080/datalift/js/jquery.js"></script>
+<script type="text/javascript" language="javascript" src="http://localhost:8080/datalift/js/jquery.dataTables.js"></script>
+<!--<script type="text/javascript" language="javascript" src="js/ColReorder.js"></script> -->
+
+<script>
+
+$(document).ready(function() {
+    /* Add a click handler to the rows - this could be used as a callback */
+       $('#lovtable tr').click( function() {
+           if ( $(this).hasClass('row_selected') )
+               $(this).removeClass('row_selected');
+
+           else
+               $(this).addClass('row_selected');
+			checkbox();
+       } );
+
+       /* Init the table */
+    var oTable = $('#lovtable').dataTable({
+    							"iDisplayLength": 25,
+    							"sPaginationType": "full_numbers",
+    							"aoColumnDefs": [
+										            { "bSortable": false, "aTargets": [ 0, 3, 4 ] },
+	       								 			{ "sWidth": "100px", "aTargets": [ 1 ]  },
+	       								 			{ "sWidth": "200px", "aTargets": [ 2 ]  }
+       								  ],
+    							"bJQueryUI": true,
+    							"oLanguage": {
+								            "oPaginate": {
+								                "sFirst": "First page",
+								                "sLast": "Last page",
+								                "sNext": "Next page",
+								                "sPrevious": "Previous toto",
+								                "sInfo": "Got a total of _TOTAL_ entries to show (_START_ to _END_)"
+								            }
+        }
+
+				});
+
+} );
+
+function fnGetSelected()
+{
+    var aReturn = "";
+    var aTrs = $('#lovtable').dataTable().fnGetNodes();
+
+    for ( var i=0 ; i<aTrs.length ; i++ )
+    {
+        if ( $(aTrs[i]).hasClass('row_selected') )        {
+        var aData = $('#lovtable').dataTable().fnGetData(aTrs[i]);
+        aReturn += aData[1] + ",";
+        }
+    }
+   return aReturn;
+}
+
+function checkbox() {
+var aTrs = $('#lovtable').dataTable().fnGetNodes();
+
+    for ( var i=0 ; i<aTrs.length ; i++ )
+    {
+    var identifiant = "cb"+ i;
+        if ( $(aTrs[i]).hasClass('row_selected') )
+        {
+
+            document.getElementById(identifiant).checked = true;
+        } else {
+
+            document.getElementById(identifiant).checked = false;
+        }
+    }
+}
+
+
+function sendForm() {
+var tablePrefix = fnGetSelected();
+document.getElementById('prefixlist').value = tablePrefix;
+document.forms["lovtable"].submit();
+}
+
+function refresh() {
+document.forms["lovtable"].action = "";
+document.forms["lovtable"].submit();
+}
+
+
+
+</script>
+
+#css_links
+</head>
+<body>
+#banner
+  <div id="content" class="ui-widget-content dl-main-panel">
+    <h3 class="ui-widget-header dl-widget-header">#i18n("$title")</h3>
+	
+  </div>
+<div id="content" class="ui-widget-content dl-main-panel">
+    <h3 class="ui-widget-header dl-widget-header">Lov Table</h3>
+
+	<form id="LovCatalogue" method="post" action="http://localhost:8080/datalift/lov/project/test1/ontologyBrowseUpload">
+
+
+
+	<table id="lovtable">
+		<thead>
+			<tr>
+				<th></th>
+				<th>Prefix</th>
+				<th>Nom</th>
+				<th>Url</th>
+				<th>Description</th>
+			</tr>
+		</thead>
+		<tbody>
+
+		#foreach( $ont in $it )
+			<tr>
+				<td><input type="checkbox" id="cb0" /></td>
+				<td>$ont.prefix</td>
+				<td>$ont.name</td>
+				<td>$ont.url</td>
+				<td>$ont.description</td>
+				
+			</tr>
+		#end	
+
+		</tbody>
+	</table>
+
+
+<input type="hidden" id="prefixlist" name="prefixlist" value="" />
+
+</form>
+
+
+<a href="javascript:sendForm();" class="ui-button ui-state-default ui-corner-all ui-button-text-only submitbt">Submit</a> <a href="javascript:refresh();" class="ui-button ui-state-default ui-corner-all ui-button-text-only submitbt">Refresh</a>
+
+</body>
+</html>
