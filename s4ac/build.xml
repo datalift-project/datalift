@@ -68,8 +68,6 @@
   <property name="core.home" location="${datalift.root}/core"/>
   <property file="${core.home}/build.properties"/>
 
-  <property name="sparql.home" location="${datalift.root}/sparql-endpoint"/>
-
 
   <!-- ================ File and Directory Names ========================== -->
 
@@ -222,12 +220,7 @@
   <target name="prepare" depends="init">
     <!-- Create build directories as needed -->
     <mkdir dir="${build.home}"/>
-    <!-- Create compilation target directory -->
     <mkdir dir="${classes.dir}"/>
-    <!-- Create distribution target directory to store default
-         SPARQL endpoint JAR file, needed at compile time and
-         patched with subclasses when generating distribution. -->
-    <mkdir dir="${dist.home}"/>
   </target>
 
 
@@ -240,16 +233,7 @@
     unpacked directory hierarchy under "/WEB-INF/classes".
    -->
 
-  <target name="compile-sparql" depends="prepare"
-                            description="Compiles the default SPARQL endpoint">
-    <delete file="${jar.path}"/>
-    <subant target="dist">
-      <filelist dir="${sparql.home}" files="build.xml"/>
-      <property name="jar.path" location="${jar.path}"/>
-    </subant>
-  </target>
-
-  <target name="compile" depends="compile-sparql"
+  <target name="compile" depends="prepare"
                          description="Compiles Java sources">
     <!-- Compile Java classes as necessary -->
     <javac srcdir="${src.home}"
@@ -307,7 +291,7 @@
     <jar jarfile="${jar.path}" update="true">
       <fileset dir="${classes.dir}"/>
       <service type="org.datalift.fwk.Module">
-        <provider classname="org.datalift.s4ac.sparql.S4acSparqlEndpoint"/>
+        <provider classname="org.datalift.s4ac.services.S4acAccessController"/>
       </service>
     </jar>
   </target>
@@ -340,8 +324,6 @@
     <echo message="   - build.home          = ${build.home}"/>
     <echo message="   - dist.home           = ${dist.home}"/>
     <echo message="   - user.home           = ${user.home}"/>
-    <echo message=""/>
-    <echo message="   - sparql.dir          = ${sparql.dir}"/>
     <echo message=""/>
 
   </target>

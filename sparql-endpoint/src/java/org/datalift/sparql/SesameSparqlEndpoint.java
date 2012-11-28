@@ -38,6 +38,7 @@ package org.datalift.sparql;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -91,6 +92,8 @@ import static org.openrdf.query.QueryLanguage.SPARQL;
 
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.rdf.Repository;
+import org.datalift.fwk.sparql.AccessController;
+import org.datalift.fwk.sparql.AccessController.ControlledQuery;
 import org.datalift.fwk.util.CloseableIterator;
 import org.datalift.fwk.util.web.json.GridJsonWriter;
 import org.datalift.fwk.util.web.json.JsonRdfHandler;
@@ -181,6 +184,12 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
             ResourceType.Graph.value     + "<}&default-graph={2}";
 
     //-------------------------------------------------------------------------
+    // Instance members
+    //-------------------------------------------------------------------------
+
+    private AccessController accessController = null;
+
+    //-------------------------------------------------------------------------
     // Constructors
     //-------------------------------------------------------------------------
 
@@ -206,6 +215,22 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
      */
     protected SesameSparqlEndpoint(String name, String welcomeTemplate) {
         super(name, welcomeTemplate);
+    }
+
+    //-------------------------------------------------------------------------
+    // Module contract support
+    //-------------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    @Override
+    public void postInit(Configuration configuration) {
+        super.postInit(configuration);
+        Collection<AccessController> acs =
+                                configuration.getBeans(AccessController.class);
+        if (! acs.isEmpty()) {
+            this.accessController = acs.iterator().next();
+        }
+        // Else: no access control.
     }
 
     //-------------------------------------------------------------------------
@@ -262,8 +287,18 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                                 new LinkedList<String>(defaultGraphUris): null;
         // Extract target RDF repository.
         Repository repo = this.getTargetRepository(defGraphUris);
+
+        // Enforce access control policies, if any.
+        if (this.accessController != null) {
+            ControlledQuery q = this.accessController.checkQuery(
+                                query, repo, defaultGraphUris, namedGraphUris);
+            defaultGraphUris = q.defaultGraphUris;
+            namedGraphUris   = q.namedGraphUris;
+            query            = q.query;
+        }
         // Build query dataset from specified graphs, if any.
         Dataset dataset = this.buildDataset(defGraphUris, namedGraphUris);
+
         // Prepare HTML view parameters.
         Map<String,Object> model = new HashMap<String,Object>();
         model.put("default-graph-uri", defaultGraphUris);

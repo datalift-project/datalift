@@ -2,8 +2,8 @@
 <rdf:RDF
 	xmlns:dcterms="http://purl.org/dc/terms/"
 	xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
-	xmlns:prissma="http://ns.inria.fr/prissma/v2#"
-	xmlns:s4ac="http://ns.inria.fr/s4ac/v2#"
+	xmlns:prissma="http://ns.inria.fr/prissma/v2/"
+	xmlns:s4ac="http://ns.inria.fr/s4ac/v2/"
 	xmlns:sioc="http://rdfs.org/sioc/ns#"
 	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 	xmlns:xsd="http://www.w3.org/2001/XMLSchema#">
