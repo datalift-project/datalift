@@ -91,13 +91,13 @@ public class S4acAccessController extends BaseModule
     public final static String SECURITY_REPOSITORY_URI  =
                                         "sparql.security.repository";
     /** A list of files to load access control policies from. */
-    public final static String SECURITY_REPOSITORY_FILE = ".repository.files";
+    public final static String POLICY_FILES = "sparql.security.policy.files";
     /** The base URI for building user context URIs. */
     public final static String USER_CONTEXT_PROPERTY    =
                                         "sparql.security.user.context";
     /** The RDF store to execute access control ASK queries against. */
     public final static String USER_REPOSITORY_PROPERTY =
-                                        "sparql.security.user.repository.url";
+                                        "sparql.security.user.repository.uri";
     /** the default base URI for user contexts. */
     public final static String DEFAULT_USER_CONTEXT     =
                                         "http://example.com/context/";
@@ -184,8 +184,7 @@ public class S4acAccessController extends BaseModule
                 this.securityRepository = configuration.newRepository(
                                             securityRepositoryUri, null, false);
                 // Populate repository from configuration file, if set.
-                String policyFiles = configuration.getProperty(
-                            securityRepositoryUri + SECURITY_REPOSITORY_FILE);
+                String policyFiles = configuration.getProperty(POLICY_FILES);
                 if (! isBlank(policyFiles)) {
                     for (String f : policyFiles.split("\\s*,\\s*")) {
                         log.debug("Loading policy file {}...", f);
