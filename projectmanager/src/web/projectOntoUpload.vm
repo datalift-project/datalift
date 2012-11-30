@@ -38,7 +38,7 @@
       </div>
     </div>
     <div>
-	<form action="${it.uri}/ontologyBrowse">
+	<form action="${baseUri}/lovbrowser/${projectId}/ontologyBrowse">
     		<input type="submit" value="Browse Ontology Catalogue" />
 	</form>
     </div>
