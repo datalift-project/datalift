@@ -37,6 +37,11 @@
 	</div>
       </div>
     </div>
+    <div>
+	<form action="${baseUri}/lovbrowser/${projectId}/ontologyBrowse">
+    		<input type="submit" value="Browse Ontology Catalogue" />
+	</form>
+    </div>
   </div>
 #footer
 

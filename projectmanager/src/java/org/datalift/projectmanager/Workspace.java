@@ -1826,8 +1826,11 @@ public class Workspace extends BaseModule
         try {
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
             Project p = this.loadProject(projectUri);
+            
+            TemplateModel view = this.newView("projectOntoUpload.vm", p);
+            view.put("projectId", projectId);
 
-            response = Response.ok(this.newView("projectOntoUpload.vm", p),
+            response = Response.ok(view,
                                    TEXT_HTML)
                                .build();
         }
