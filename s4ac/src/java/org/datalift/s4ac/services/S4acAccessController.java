@@ -98,9 +98,11 @@ public class S4acAccessController extends BaseModule
     /** The RDF store to execute access control ASK queries against. */
     public final static String USER_REPOSITORY_PROPERTY =
                                         "sparql.security.user.repository.uri";
-    /** the default base URI for user contexts. */
+    /** The default base URI for user contexts. */
     public final static String DEFAULT_USER_CONTEXT     =
                                         "http://example.com/context/";
+    /** The URI of the security repository when none is specified. */
+    public final static String ANON_SECURITY_REPOSITORY_URI = "$security";
 
     private final static String ACCESS_POLICIES_QUERY =
             "PREFIX s4ac: <" + S4AC.uri + ">\n" +
@@ -135,8 +137,8 @@ public class S4acAccessController extends BaseModule
                                 new ConcurrentHashMap<String,PublicGraphs>();
 
     private Repository securityRepository;
+    private Repository userRepository;
     private String userContext;
-    private String userRepositoryUri;
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -160,11 +162,6 @@ public class S4acAccessController extends BaseModule
             this.securedRepositories.addAll(
                             Arrays.asList(securedRepNames.split("\\s*,\\s*")));
         }
-        if (this.securedRepositories.isEmpty()) {
-            log.warn("{} configuration parameter not set. " +
-                     "Access control policies not applicable to any RDF store.",
-                     SECURED_REPOSITORIES);
-        }
         // Retrieve the user context base URI.
         this.userContext = RdfUtils.getBaseUri(
                             configuration.getProperty(USER_CONTEXT_PROPERTY));
@@ -175,37 +172,55 @@ public class S4acAccessController extends BaseModule
                          this.userContext);
             }
         }
-        // Load access control restrictions from security RDF store.
-        String securityRepositoryUri = configuration.getProperty(
+        // Connect to or initialize security repository.
+        try {
+            // Get the policy files to populate the security repository from.
+            String policyFiles = configuration.getProperty(POLICY_FILES);
+            // Load access control restrictions from security RDF store.
+            String securityRepositoryUri = configuration.getProperty(
                                                     SECURITY_REPOSITORY_URI);
-        if (securityRepositoryUri != null) {
-            try {
-                // Connect or initialize repository.
+            if (securityRepositoryUri != null) {
+                // Security repository configured in configuration.
                 this.securityRepository = configuration.newRepository(
                                             securityRepositoryUri, null, false);
-                // Populate repository from configuration file, if set.
-                String policyFiles = configuration.getProperty(POLICY_FILES);
-                if (! isBlank(policyFiles)) {
-                    for (String f : policyFiles.split("\\s*,\\s*")) {
-                        log.debug("Loading policy file {}...", f);
-                        RdfUtils.upload(new File(f),
-                                        this.securityRepository, null);
-                    }
+            }
+            else if (! isBlank(policyFiles)) {
+                // Create an in-memory repository.
+                this.securityRepository = configuration.newRepository(
+                            ANON_SECURITY_REPOSITORY_URI, "sail:///", false);
+            }
+            // Else: No security repository!
+
+            // Load access control policies in security repository.
+            if ((this.securityRepository != null) && (! isBlank(policyFiles))) {
+                for (String f : policyFiles.split("\\s*,\\s*")) {
+                    log.debug("Loading policy file {}...", f);
+                    RdfUtils.upload(new File(f), this.securityRepository, null);
                 }
             }
-            catch (Exception e) {
-                throw new TechnicalException("security.repository.acces.error",
-                                             e, securityRepositoryUri);
-            }
+        }
+        catch (Exception e) {
+            throw new TechnicalException("security.repository.acces.error", e);
+        }
+
+        if (this.securityRepository != null) {
             // Get the name of the repository against which resolving
             // access control policy ASK queries.
-            this.userRepositoryUri = configuration.getProperty(
+            String userRepositoryUri = configuration.getProperty(
                                                     USER_REPOSITORY_PROPERTY);
-            if (this.userRepositoryUri != null) {
-                log.info("Resolving access policy ASK queries against RDF store \"{}\"",
-                         this.userRepositoryUri);
+            if (userRepositoryUri != null) {
+                if (userRepositoryUri.equals(this.securityRepository.name)) {
+                    this.userRepository = this.securityRepository;
+                    log.info("Resolving access policy ASK queries against security RDF store.");
+                }
+                else {
+                    this.userRepository = configuration.getRepository(
+                                                            userRepositoryUri);
+                    log.info("Resolving access policy ASK queries against RDF store \"{}\"",
+                             this.userRepository.name);
+                }
             }
-
+            // Extract access control policies.
             RepositoryConnection cnx = null;
             try {
                 this.policies.clear();
@@ -252,10 +267,20 @@ public class S4acAccessController extends BaseModule
                          Integer.valueOf(this.policies.size()),
                          this.securedRepositories);
             }
+            // Check that there's at least one repository under access control.
+            if (this.securedRepositories.isEmpty()) {
+                log.warn("{} configuration parameter not set. " +
+                     "Access control policies not applicable to any RDF store.",
+                     SECURED_REPOSITORIES);
+            }
             // Register all protected named graphs.
             for (AccessPolicy ap : this.policies.values()){
                 this.protectedGraphs.addAll(ap.getGraphs());
             }
+        }
+        else {
+            // No security repository.
+            log.warn("S4AC deactivated: no security repository defined in configuration.");
         }
     }
 
@@ -318,11 +343,7 @@ public class S4acAccessController extends BaseModule
     }
 
     private Repository getPolicyEvaluationRepository(Repository target) {
-        String u = this.userRepositoryUri;
-        return (u == null)? target:
-               (u.equals(this.securityRepository.name))?
-                                   this.securityRepository:
-                                   Configuration.getDefault().getRepository(u);
+        return (this.userRepository != null)? this.userRepository: target;
     }
 
     private Set<String> evaluatePolicies(String user, Repository r) {
