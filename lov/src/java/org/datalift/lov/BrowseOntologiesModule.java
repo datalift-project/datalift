@@ -217,8 +217,12 @@ public class BrowseOntologiesModule extends BaseModule {
 				
 				URL url = urlIt.next();
 				String t = titleIt.next();
-				// Add ontology to project.
-				p.addOntology(this.projectManager.newOntology(p, url.toURI(), t));
+				
+				// If it does not already exist
+				if(p.getOntology(t) == null) {
+					// Add ontology to project.
+					p.addOntology(this.projectManager.newOntology(p, url.toURI(), t));
+				}
 			}
 			
 			// Persist new ontologies.
