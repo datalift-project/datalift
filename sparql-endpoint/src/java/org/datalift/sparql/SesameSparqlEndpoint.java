@@ -283,21 +283,27 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                              Status.BAD_REQUEST);
         }
         // Make defaultGraphUri list mutable.
-        List<String> defGraphUris = (defaultGraphUris != null) ?
-                                new LinkedList<String>(defaultGraphUris): null;
+        if (defaultGraphUris != null) {
+            defaultGraphUris = new LinkedList<String>(defaultGraphUris);
+        }
         // Extract target RDF repository.
-        Repository repo = this.getTargetRepository(defGraphUris);
+        Repository repo = this.getTargetRepository(defaultGraphUris);
 
         // Enforce access control policies, if any.
         if (this.accessController != null) {
             ControlledQuery q = this.accessController.checkQuery(
                                 query, repo, defaultGraphUris, namedGraphUris);
-            defaultGraphUris = q.defaultGraphUris;
-            namedGraphUris   = q.namedGraphUris;
-            query            = q.query;
+            // Get modified query, enriched with restrictions.
+            query = q.query;
+            // Override accessed graphs, except for ASK queries for which a
+            // Sesame bug leads to "false" results whenever a DataSet is set.
+            if (! "ASK".equals(q.queryType)) {
+                defaultGraphUris = q.defaultGraphUris;
+                namedGraphUris   = q.namedGraphUris;
+            }
         }
         // Build query dataset from specified graphs, if any.
-        Dataset dataset = this.buildDataset(defGraphUris, namedGraphUris);
+        Dataset dataset = this.buildDataset(defaultGraphUris, namedGraphUris);
 
         // Prepare HTML view parameters.
         Map<String,Object> model = new HashMap<String,Object>();
