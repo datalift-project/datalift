@@ -363,7 +363,6 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
     private final class RowIterator implements CloseableIterator<Row<Object>>
     {
         private final ResultSet rs;
-        private int rowCount = 0;
         private boolean closed = false;
 
         public RowIterator(ResultSet rs) {
@@ -392,7 +391,6 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
             Row<Object> row = null;
             try {
                 this.rs.next();
-                this.rowCount++;
                 row = new ResultSetRow(this.rs, columns);
             }
             catch (SQLException e) {
