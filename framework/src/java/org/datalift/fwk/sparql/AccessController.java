@@ -96,6 +96,8 @@ public interface AccessController
          * control restrictions.
          */
         public final String query;
+        /** The query type: ASK, CONSTRUCT, DESCRIBE, SELECT, UPDATE... */
+        public final String queryType;
         /**
          * The URIs of the default graphs on which evaluating the query,
          * potentially modified to enforce access control restrictions.
@@ -122,7 +124,7 @@ public interface AccessController
          * @param  accessibleGraphs   The named graphs accessible to
          *                            the user.
          */
-        public ControlledQuery(String query,
+        public ControlledQuery(String query, String type,
                                List<String> defaultGraphUris,
                                List<String> namedGraphUris,
                                Collection<String> accessibleGraphs) {
@@ -130,6 +132,7 @@ public interface AccessController
                 throw new IllegalArgumentException("query");
             }
             this.query = query;
+            this.queryType = type;
             this.defaultGraphUris = (defaultGraphUris != null)?
                                 defaultGraphUris: new LinkedList<String>();
             this.namedGraphUris   = (namedGraphUris != null)?

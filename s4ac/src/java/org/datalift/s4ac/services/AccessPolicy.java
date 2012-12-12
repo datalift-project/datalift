@@ -36,8 +36,8 @@ public class AccessPolicy
         return Collections.unmodifiableSet(this.graphs);
     }
 
-    public Set<CRUDType> getPrivileges() {
-        return Collections.unmodifiableSet(this.privileges);
+    public boolean hasPrivileges(CRUDType type) {
+        return this.privileges.contains(type);
     }
 
     public Set<String> getAsks() {

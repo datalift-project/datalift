@@ -45,6 +45,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.query.BindingSet;
@@ -63,10 +65,12 @@ import org.datalift.fwk.security.SecurityContext;
 import org.datalift.fwk.sparql.AccessController;
 import org.datalift.s4ac.TechnicalException;
 import org.datalift.s4ac.utils.CRUDType;
+import org.datalift.s4ac.utils.QueryType;
 
 import static org.datalift.fwk.rdf.RdfNamespace.S4AC;
 import static org.datalift.fwk.util.StringUtils.*;
 import static org.datalift.s4ac.services.ACSType.*;
+import static org.datalift.s4ac.utils.QueryType.*;
 
 
 /**
@@ -118,6 +122,11 @@ public class S4acAccessController extends BaseModule
                        "?acstype = <" + DISJUNCTIVE + ">) }";
     private final static String ALL_GRAPHS_QUERY =
             "SELECT DISTINCT ?g WHERE { GRAPH ?g { ?s ?p ?o. }}";
+
+    private final static Pattern QUERY_TYPE_PATTERN = Pattern.compile(
+            "(^|\\s)(" + ASK.name() + '|' + CONSTRUCT.name() + '|' +
+                         DESCRIBE.name() + '|' + SELECT.name() + ")\\s",
+            Pattern.CASE_INSENSITIVE);
 
     //-------------------------------------------------------------------------
     // Class members
@@ -301,12 +310,14 @@ public class S4acAccessController extends BaseModule
                                       List<String> namedGraphUris)
                                                     throws SecurityException {
         Set<String> graphs = null;
+        // Parse query to extract query type.
+        QueryType type = this.getQueryType(query);
 
         if (this.isSecured(repository)) {
             // Get accessible graphs for the currently logged user.
             String user = SecurityContext.getUserPrincipal();
             if (user != null) {
-                graphs = this.evaluatePolicies(user,
+                graphs = this.evaluatePolicies(user, type,
                                 this.getPolicyEvaluationRepository(repository));
             }
             // Public graphs, i.e. the ones upon which there are no access
@@ -334,19 +345,20 @@ public class S4acAccessController extends BaseModule
                 filteredNamedGraphs.retainAll(graphs);
             }
             namedGraphUris = new LinkedList<String>(filteredNamedGraphs);
-            query = this.restrictQuery(query, filteredNamedGraphs);
+            query = this.restrictQuery(query, filteredNamedGraphs, type);
         }
         // Else: not a secured RDF store.
 
-        return new ControlledQuery(query, defaultGraphUris,
-                                          namedGraphUris, graphs);
+        return new ControlledQuery(query, type.name(),
+                                   defaultGraphUris, namedGraphUris, graphs);
     }
 
     private Repository getPolicyEvaluationRepository(Repository target) {
         return (this.userRepository != null)? this.userRepository: target;
     }
 
-    private Set<String> evaluatePolicies(String user, Repository r) {
+    private Set<String> evaluatePolicies(String user,
+                                         QueryType type, Repository r) {
         Set<String> graphs = new HashSet<String>();
 
         RepositoryConnection cnx = null;
@@ -354,6 +366,9 @@ public class S4acAccessController extends BaseModule
             cnx = r.newConnection();
 
             for (AccessPolicy ap : this.policies.values()) {
+                // Check that query CRUD type is allowed.
+                if (! ap.hasPrivileges(type.crudType)) continue;
+                // Resolve accessible graphs.
                 try {
                     boolean isOk = true;
                     if (ap.getAcstype() == ACSType.CONJUNCTIVE) {
@@ -413,7 +428,8 @@ public class S4acAccessController extends BaseModule
         return matches;
     }
 
-    private String restrictQuery(String query, Set<String> graphs) {
+    private String restrictQuery(String query,
+                                 Set<String> graphs, QueryType type) {
         StringBuilder from = new StringBuilder(256);
         if (graphs != null) {
             for (String g : graphs){
@@ -422,19 +438,45 @@ public class S4acAccessController extends BaseModule
             from.append('\n');
         }
         if (from.length() != 0) {
-            String start = "", where = "";
-            int idx = query.lastIndexOf("WHERE");
+            // Search for first WHERE clause.
+            int idx1 = query.indexOf("WHERE");
+            int idx2 = query.indexOf("where");
+            int idx  = (idx1 == -1)? idx2:
+                       (idx2 == -1)? idx1: Math.min(idx1, idx2);
             if (idx == -1) {
-                idx = query.lastIndexOf("where");
+                // No WHERE clause found.
+                if ((type == ASK) || (type == SELECT)) {
+                    idx = query.indexOf('{');
+                }
+                else if (type == CONSTRUCT) {
+                    // Look for second '{', the first marking
+                    // the triples to construct.
+                    idx = query.indexOf('{', Math.max(query.indexOf('{'), 0) + 1);
+                }
+                // Else: DESCRIBE.
+
+                if (idx == -1) {
+                    idx = query.length();       // Append at end.
+                }
             }
             if (idx != -1) {
-                start = query.substring(0, idx);
-                where = query.substring(idx);
-
-                query = start + from + where;
+                query = query.substring(0, idx) + from + query.substring(idx);
             }
         }
         return query;
+    }
+
+    private QueryType getQueryType(String query) {
+        QueryType type = null;
+        Matcher m = QUERY_TYPE_PATTERN.matcher(query);
+        if (m.find()) {
+            String t = m.group(2).toUpperCase();
+            type = (CONSTRUCT.name().equals(t))? CONSTRUCT:
+                   (ASK.name().equals(t))?       ASK:
+                   (DESCRIBE.name().equals(t))?  DESCRIBE:
+                   (SELECT.name().equals(t))?    SELECT: UNKNOWN;
+        }
+        return type;
     }
 
     private Set<String> getPublicGraphs(Repository r) {
