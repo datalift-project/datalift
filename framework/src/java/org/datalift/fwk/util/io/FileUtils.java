@@ -57,7 +57,6 @@ import java.nio.channels.FileChannel;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
-import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 
 import javax.ws.rs.HttpMethod;
@@ -150,50 +149,74 @@ public final class FileUtils
             throw new IllegalArgumentException(
                                 new FileNotFoundException(String.valueOf(f)));
         }
-        if (bufferSize <= 0) {
-            throw new IllegalArgumentException("bufferSize");
-        }
         InputStream in = null;
         try {
-            // Get a buffered input stream on file data.
             in = Channels.newInputStream(
                                     new RandomAccessFile(f, "r").getChannel());
             if (log.isDebugEnabled()) {
                 in = new ByteCounterInputStream(in, f);
             }
-            in = new BufferedInputStream(in, bufferSize);
-            // Read file magic number, if any.
-            byte[] buf = new byte[4];
-            in.mark(32);
-            in.read(buf);
-            // Reset current position to start of file.
-            in.reset();
-            // Try to match known compressed file formats.
-            if (get32(buf, 0) == ZipInputStream.LOCSIG) {
-                // Zip-compressed data.
-                try {
-                    in = new ZipWrapperInputStream(new ZipFile(f));
-                    log.trace("File \"{}\" identified as ZIP-compressed", f);
-                }
-                catch (Exception e) { /* Ignore... */ }
-            }
-            else if (get16(buf, 0) == GZIPInputStream.GZIP_MAGIC) {
-                // GZip-compressed data.
-                in = new GZIPInputStream(in, bufferSize);
-                log.trace("File \"{}\" identified as GZIP-compressed", f);
-            }
-            else if ((buf[0] == BZ2_HEADERS[0]) &&
-                     (buf[1] == BZ2_HEADERS[1]) && (buf[2] == BZ2_HEADERS[2])) {
-                // BZip2-compressed data.
-                in = new BZip2InputStream(in, false);
-                log.trace("File \"{}\" identified as BZip2-compressed", f);
-            }
-            // Else: regular file!
+            log.trace("Creating input stream for \"{}\"", f);
+            in = getInputStream(in, bufferSize);
         }
         catch (IOException e) {
             close(in);
             throw e;
         }
+        return in;
+    }
+
+    /**
+     * Returned a buffered input stream reading data for the specified
+     * file with the specified buffer size.
+     * @param  in           the raw input stream to wrap.
+     * @param  bufferSize   the buffer size.
+     *
+     * @return a buffered input stream.
+     * @throws IOException   if the file does not exist, is not
+     *                        read-accessible or if any I/O error
+     *                        occurred while extracting a compressed
+     *                        file encoding type (ZIP, GZIP or BZip2).
+     */
+    public static InputStream getInputStream(InputStream in, int bufferSize)
+                                                            throws IOException {
+        if (in == null) {
+            throw new IllegalArgumentException("in");
+        }
+        if (bufferSize <= 0) {
+            throw new IllegalArgumentException("bufferSize");
+        }
+        // Get a buffered input stream on file data.
+        in = new BufferedInputStream(in, bufferSize);
+        // Read file magic number, if any.
+        byte[] buf = new byte[4];
+        in.mark(32);
+        in.read(buf);
+        // Reset current position to start of file.
+        in.reset();
+        // Try to match known compressed file formats.
+        if (get32(buf, 0) == ZipInputStream.LOCSIG) {
+            // Zip-compressed data.
+            try {
+                in = new ZipInputStream(in);
+                ((ZipInputStream)in).getNextEntry();
+                log.trace("File content identified as ZIP-compressed");
+            }
+            catch (Exception e) { /* Ignore... */ }
+        }
+        else if (get16(buf, 0) == GZIPInputStream.GZIP_MAGIC) {
+            // GZip-compressed data.
+            in = new GZIPInputStream(in, bufferSize);
+            log.trace("File content identified as GZIP-compressed");
+        }
+        else if ((buf[0] == BZ2_HEADERS[0]) &&
+                 (buf[1] == BZ2_HEADERS[1]) && (buf[2] == BZ2_HEADERS[2])) {
+            // BZip2-compressed data.
+            in = new BZip2InputStream(in, false);
+            log.trace("File content identified as BZip2-compressed");
+        }
+        // Else: regular file!
+
         return in;
     }
 
@@ -433,17 +456,19 @@ public final class FileUtils
                 }
             }
             else {
-                FileChannel in  = null;
-                FileChannel out = null;
+                FileInputStream  in  = null;
+                FileOutputStream out = null;
                 try {
-                    in  = new FileInputStream(from).getChannel();
-                    out = new FileOutputStream(to).getChannel();
+                    in  = new FileInputStream(from);
+                    out = new FileOutputStream(to);
+                    FileChannel chIn  = in.getChannel();
+                    FileChannel chOut = out.getChannel();
 
                     long start = 0L;
-                    long end   = in.size();
+                    long end   = chIn.size();
                     while (end != 0L) {
                         long l = Math.min(end, chunkSize);
-                        l = in.transferTo(start, l, out);
+                        l = chIn.transferTo(start, l, chOut);
                         if (l == 0L) {
                             // Should at least copy one byte!
                             throw new IOException(
@@ -452,7 +477,9 @@ public final class FileUtils
                         start += l;
                         end   -= l;
                     }
-                    out.force(true);  // Sync data on disk.
+                    chOut.force(true);  // Sync data on disk.
+                    chOut.close();
+                    out.flush();
                     out.close();
                     out = null;
                     copyFailed = false;
@@ -475,6 +502,24 @@ public final class FileUtils
                           from, to, Double.valueOf(delay / 1000.0));
             }
         }
+    }
+
+    /**
+     * Deletes a file or directory, recursively.
+     * @param  f         the file or directory to delete.
+     * @param  recurse   whether to recursively delete the directory
+     *                   content. Ignored if <code>f</code> is a file.
+     */
+    public static void delete(File f, boolean recurse) {
+        if ((f != null) && (f.exists())) {
+            if (f.isDirectory() && recurse) {
+                for (File x : f.listFiles()) {
+                    delete(x, true);
+                }
+            }
+            f.delete();
+        }
+        // Else: ignore...
     }
 
     //-------------------------------------------------------------------------
@@ -682,31 +727,6 @@ public final class FileUtils
                 this.lastLog = (this.readBytes / this.logThreshold)
                                                         * this.logThreshold;
             }
-        }
-    }
-
-
-    //-------------------------------------------------------------------------
-    // ZipWrapperInputStream nested class
-    //-------------------------------------------------------------------------
-
-    /**
-     * An {@link InputStream} {@link FilterInputStream decorator} that
-     * extracts the first entry of a ZIP archive.
-     */
-    private final static class ZipWrapperInputStream extends FilterInputStream
-    {
-        private final ZipFile zipFile;
-
-        public ZipWrapperInputStream(ZipFile f) throws IOException {
-            super(f.getInputStream(f.entries().nextElement()));
-            this.zipFile = f;
-        }
-
-        @Override
-        public void close() throws IOException {
-            super.close();
-            this.zipFile.close();
         }
     }
 }

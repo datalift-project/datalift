@@ -430,21 +430,23 @@ public final class Wrapper
         // Else: neither a directory nor a regular file. => Ignore...
     }
 
-    private static void copyFile(File in, File out) throws IOException {
-        if ((in == null) || (! in.canRead())) {
+    private static void copyFile(File from, File to) throws IOException {
+        if ((from == null) || (! from.canRead())) {
             throw new IllegalArgumentException("in");
         }
-        if (out == null) {
+        if (to == null) {
             throw new IllegalArgumentException("out");
         }
         final long chunkSize = 64 * 1024;       // 64 KB
         boolean copyFailed   = false;
 
-        FileChannel chIn  = null;
-        FileChannel chOut = null;
+        FileInputStream  in  = null;
+        FileOutputStream out = null;
         try {
-            chIn  = new FileInputStream(in).getChannel();
-            chOut = new FileOutputStream(out).getChannel();
+            in  = new FileInputStream(from);
+            out = new FileOutputStream(to);
+            FileChannel chIn  = in.getChannel();
+            FileChannel chOut = out.getChannel();
 
             long start = 0L;
             long end   = chIn.size();
@@ -461,16 +463,22 @@ public final class Wrapper
             }
             chOut.force(true);  // Sync. data to disk.
             chOut.close();      // Errors on close report data write error.
+            out.flush();
+            out.close();
+            out = null;
         }
         catch (IOException e) {
             copyFailed = true;
             throw e;
         }
         finally {
-            if (chIn != null) {
-                try { chIn.close(); } catch (Exception e) { /* Ignore... */ }
+            if (in != null) {
+                try { in.close(); } catch (Exception e) { /* Ignore... */ }
             }
-            if (copyFailed) { out.delete(); }
+            if (out != null) {
+                try { out.close(); } catch (Exception e) { /* Ignore... */ }
+            }
+            if (copyFailed) { to.delete(); }
         }
     }
 
