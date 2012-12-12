@@ -9,6 +9,11 @@
 </head>
 <body>
 #banner
+	<div style="position:absolute;top:15px;right:15px;">
+		<a href="${baseUri}/sparql" id="goto_sparql" class="button">#i18n("sparql.endpoint.link")</a>
+		<a href="${baseUri}/project" id="goto_workspace" class="button">#i18n("project.workspace.link")</a>
+	</div>
+
 #set( $maxEntries = 5000 )
 	<h3>#i18n("source.grid.desc") $!esc.html($it.title) ($maxEntries #i18n("source.grid.displayed_entries"))</h3>
 	<table id="grid">
@@ -45,6 +50,9 @@
 <script language="javascript" src="${baseUri}/project/static/js/jqgrid.common.js"></script>
 <script type="text/javascript">
 		$(function() {
+			$("#goto_sparql").button();
+			$("#goto_workspace").button();
+
 			htmlTableTojQGrid();
 		});
 </script>
