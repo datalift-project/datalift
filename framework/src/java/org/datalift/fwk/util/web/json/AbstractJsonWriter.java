@@ -201,13 +201,13 @@ public abstract class AbstractJsonWriter
         }
         else if (value instanceof Literal) {
             Literal l = (Literal)value;
-            if ((value != null) && (l.getDatatype() != null) &&
+            if ((l.getDatatype() != null) &&
                 (NATIVE_TYPES_PATTERN.matcher(l.getDatatype().getLocalName())
                                      .matches())) {
                 this.writer.write(l.getLabel());
             }
             else {
-                this.writeValue(l.stringValue(), type);
+                this.writeValue(l.toString(), type);
             }
         }
         else {
