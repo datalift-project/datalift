@@ -356,7 +356,9 @@ public class BrowseOntologiesModule extends BaseModule {
 		query.append(" WHERE { ");
 		query.append(" ?vocabURI <http://purl.org/vocab/vann/preferredNamespacePrefix> ?vocabPrefix.");
 		query.append(" ?vocabURI <http://purl.org/dc/terms/title> ?vocabTitle.");
+		query.append(" OPTIONAL {");
 		query.append(" ?vocabURI <http://purl.org/dc/terms/description> ?vocabDescr.");
+		query.append(" }");
 		query.append(" }");
 		query.append(" ORDER BY ?vocabPrefix ");
 
@@ -371,7 +373,13 @@ public class BrowseOntologiesModule extends BaseModule {
 			ontologyDesc.setUrl(set.getValue(bindingFields.get(0)).toString());
 			ontologyDesc.setPrefix(formatLiteral(set.getValue(bindingFields.get(1)).toString()));
 			ontologyDesc.setName(set.getValue(bindingFields.get(2)).toString());
-			ontologyDesc.setDescription(set.getValue(bindingFields.get(3)).toString());
+			
+			// Description might not exist (foaf for instance)
+			if(set.getValue(bindingFields.get(3)) != null)
+				ontologyDesc.setDescription(set.getValue(bindingFields.get(3)).toString());
+			else
+				ontologyDesc.setDescription("");
+			
 			cache.add(ontologyDesc);
 
 		}
@@ -402,15 +410,20 @@ public class BrowseOntologiesModule extends BaseModule {
 		try {
 
 			StringBuilder sparqlQuery = new StringBuilder();
+			sparqlQuery.append("PREFIX dcterms:<http://purl.org/dc/terms/>");
+			sparqlQuery.append("PREFIX voaf:<http://purl.org/vocommons/voaf#>");
+			sparqlQuery.append("PREFIX vann:<http://purl.org/vocab/vann/>");
 			sparqlQuery.append("CONSTRUCT { ");
-			sparqlQuery.append(" ?vocabURI <http://purl.org/vocab/vann/preferredNamespacePrefix> ?vocabPrefix. ");
-			sparqlQuery.append(" ?vocabURI <http://purl.org/dc/terms/title> ?vocabTitle. ");
-			sparqlQuery.append(" ?vocabURI <http://purl.org/dc/terms/description> ?vocabDescr. }");
+			sparqlQuery.append(" ?vocabURI vann:preferredNamespacePrefix ?vocabPrefix. ");
+			sparqlQuery.append(" ?vocabURI dcterms:title ?vocabTitle. ");
+			sparqlQuery.append(" ?vocabURI dcterms:description ?vocabDescr. }");
 			sparqlQuery.append(" WHERE {	");
-			sparqlQuery.append(" ?vocabURI a <http://purl.org/vocommons/voaf#Vocabulary>. ");
-			sparqlQuery.append(" ?vocabURI <http://purl.org/vocab/vann/preferredNamespacePrefix> ?vocabPrefix. ");
-			sparqlQuery.append(" ?vocabURI <http://purl.org/dc/terms/title> ?vocabTitle. ");
-			sparqlQuery.append(" ?vocabURI <http://purl.org/dc/terms/description> ?vocabDescr.");
+			sparqlQuery.append(" ?vocabURI a voaf:Vocabulary. ");
+			sparqlQuery.append(" ?vocabURI vann:preferredNamespacePrefix ?vocabPrefix. ");
+			sparqlQuery.append(" ?vocabURI dcterms:title ?vocabTitle. ");
+			sparqlQuery.append(" OPTIONAL {");
+			sparqlQuery.append(" ?vocabURI dcterms:description ?vocabDescr.");
+			sparqlQuery.append(" } ");
 			sparqlQuery.append(" } ");
 
 			log.info("Querying the sparql end point...");
