@@ -47,7 +47,7 @@
 	</table>
 
 
-<form id="LovCatalogue" method="post" action="${baseUri}/lovbrowser/test/ontologyBrowseUpload">
+<form id="LovCatalogue" method="post" action="${baseUri}/lovbrowser/${projectId}/ontologyBrowseUpload">
 	<input type="submit" value="submit" />
 </form>
 
