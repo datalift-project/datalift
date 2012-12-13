@@ -35,6 +35,8 @@ import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectManager;
 import org.datalift.fwk.util.StringUtils;
+import org.datalift.fwk.view.TemplateModel;
+import org.datalift.fwk.view.ViewFactory;
 import org.datalift.lov.exception.LovModuleException;
 import org.openrdf.model.Statement;
 import org.openrdf.query.BindingSet;
@@ -72,6 +74,9 @@ public class BrowseOntologiesModule extends BaseModule {
 
 	private final static String LOV_CONTEXT = "http://lov.okfn.org/endpoint/lov";
 	private final static String LOV_CONTEXT_SPARQL = "<" + LOV_CONTEXT + ">";
+	
+    /** The path prefix for HTML page Velocity templates. */
+    private final static String TEMPLATE_PATH = "/" + MODULE_NAME  + '/';
 
 	//-------------------------------------------------------------------------
 	// Instance members
@@ -169,9 +174,11 @@ public class BrowseOntologiesModule extends BaseModule {
 			if (cache != null && cache.size() > 0) {
 
 				log.debug("Cache of LOV catalog already exists");
-				response = Response.ok()
-						.entity(this.newViewable("/ontologyBrowse.vm", cache))
-						.type(TEXT_HTML).build();
+				
+				TemplateModel view = this.newView("/ontologyBrowse.vm", cache);
+				view.put("projectId", id);
+				
+				response = Response.ok(view, TEXT_HTML).build();
 			}
 			else {
 				//TODO else -> an error page?
@@ -313,7 +320,21 @@ public class BrowseOntologiesModule extends BaseModule {
 	protected final Viewable newViewable(String templateName, Object it) {
 		return new Viewable("/" + this.getName() + templateName, it);
 	}
-
+	
+	/**
+     * Return a viewable for the specified template, populated with the
+     * specified model object.
+     * <p>
+     * The template name shall be relative to the module, the module
+     * name is automatically prepended.</p>
+     * @param  templateName   the relative template name.
+     * @param  it             the model object to pass on to the view.
+     *
+     * @return a populated viewable.
+     */
+    protected final TemplateModel newView(String templateName, Object it) {
+        return ViewFactory.newView(TEMPLATE_PATH + templateName, it);
+    }
 
 	/**
 	 * Caches a copy of the LOV catalog from the internal store
