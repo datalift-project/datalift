@@ -210,8 +210,8 @@ public class Bundle
             catch (ServiceConfigurationError e) {
                 if (faultTolerant) {
                     // Absorb error and skip this implementation...
-                    log.warn("Failed to load implementation of {}: {}, from {}",
-                             e, service.getName(), e.getMessage(), this);
+                    log.warn("Failed to load implementation of {} from {}: {}",
+                             e, service.getName(), this, e.getMessage());
                 }
                 else {
                     // Map ServiceConfigurationError to exception, as explained
