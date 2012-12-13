@@ -43,13 +43,8 @@ import javax.persistence.Entity;
 import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.RdfsClass;
 
-import org.datalift.core.TechnicalException;
-import org.datalift.fwk.Configuration;
 import org.datalift.fwk.project.ShpSource;
 import org.datalift.fwk.project.Project;
-import org.datalift.fwk.util.io.FileUtils;
-
-import static org.datalift.fwk.util.StringUtils.isSet;
 
 
 /**
@@ -112,15 +107,12 @@ public class ShpSourceImpl extends BaseFileSource
     public void delete() {
         super.delete();
 
-        if (this.shxFile != null) {
-            this.shxFile.delete();
-        }
-        if (this.dbfFile != null) {
-            this.dbfFile.delete();
-        }
-        if (this.prjFile != null) {
-            this.prjFile.delete();
-        }
+        this.delete(this.shxFilePath);
+        this.shxFile = null;
+        this.delete(this.dbfFilePath);
+        this.dbfFile = null;
+        this.delete(this.prjFilePath);
+        this.prjFile = null;
     }
 
     //-------------------------------------------------------------------------
@@ -161,27 +153,21 @@ public class ShpSourceImpl extends BaseFileSource
     @Override
     public InputStream getIndexFileInputStream() throws IOException {
         this.init();
-        return (this.shxFile != null)?
-                FileUtils.getInputStream(this.shxFile, this.getBufferSize()):
-                null;
+        return this.getInputStream(this.shxFile);
     }
 
     /** {@inheritDoc} */
     @Override
     public InputStream getAttributeFileInputStream() throws IOException {
         this.init();
-        return (this.dbfFile != null)?
-                FileUtils.getInputStream(this.dbfFile, this.getBufferSize()):
-                null;
+        return this.getInputStream(this.dbfFile);
     }
 
     /** {@inheritDoc} */
     @Override
     public InputStream getProjectionFileInputStream() throws IOException {
         this.init();
-        return (this.prjFile != null)?
-                FileUtils.getInputStream(this.prjFile, this.getBufferSize()):
-                null;
+        return this.getInputStream(this.prjFile);
     }
 
     //-------------------------------------------------------------------------
@@ -193,20 +179,9 @@ public class ShpSourceImpl extends BaseFileSource
         super.init();
 
         if (this.prjFile == null) {
-            File docRoot = Configuration.getDefault().getPublicStorage();
-            if ((docRoot == null) || (! docRoot.isDirectory())) {
-                throw new TechnicalException("public.storage.not.directory",
-                                             docRoot);
-            }
-            if (isSet(this.shxFilePath)) {
-                this.shxFile = new File(docRoot, this.shxFilePath);
-            }
-            if (isSet(this.dbfFilePath)) {
-                this.dbfFile = new File(docRoot, this.dbfFilePath);
-            }
-            if (isSet(this.prjFilePath)) {
-                this.prjFile = new File(docRoot, this.prjFilePath);
-            }
+            this.shxFile = this.getFile(this.shxFilePath);
+            this.dbfFile = this.getFile(this.dbfFilePath);
+            this.prjFile = this.getFile(this.prjFilePath);
         }
         // Else: Already initialized.
     }

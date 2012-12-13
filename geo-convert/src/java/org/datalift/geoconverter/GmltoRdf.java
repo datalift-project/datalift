@@ -34,6 +34,8 @@
 package org.datalift.geoconverter;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
 import java.net.URI;
 import java.util.Arrays;
@@ -47,11 +49,15 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 
 import org.datalift.fwk.Configuration;
+import org.datalift.fwk.FileStore;
 import org.datalift.fwk.log.Logger;
+import org.datalift.fwk.project.FileSource;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectModule;
 import org.datalift.fwk.project.GmlSource;
@@ -73,116 +79,138 @@ import org.datalift.geoconverter.usgs.rdf.util.GMLConverter;
 @Path(GmltoRdf.MODULE_NAME)
 public class GmltoRdf extends BaseConverterModule
 {
-	//-------------------------------------------------------------------------
-	// Constants
-	//-------------------------------------------------------------------------
-	
-	/** The name of this module in the DataLift configuration. */
-	public final static String MODULE_NAME = "gmltordf";
+    //-------------------------------------------------------------------------
+    // Constants
+    //-------------------------------------------------------------------------
 
-	private final static String DEFAULT_MAPPING = "DEPARTEMENT_wgs84.conf";
+    /** The name of this module in the DataLift configuration. */
+    public final static String MODULE_NAME = "gmltordf";
 
-	//-------------------------------------------------------------------------
-	// Class members
-	//-------------------------------------------------------------------------
+    private final static String DEFAULT_MAPPING = "DEPARTEMENT_wgs84.conf";
 
-	private final static Logger log = Logger.getLogger();
+    //-------------------------------------------------------------------------
+    // Class members
+    //-------------------------------------------------------------------------
 
-	//-------------------------------------------------------------------------
-	// Constructors
-	//-------------------------------------------------------------------------
+    private final static Logger log = Logger.getLogger();
 
-	/** Default constructor. */
-	public GmltoRdf() {
-	    super(MODULE_NAME, 900, SourceType.GmlSource);
-	}
+    //-------------------------------------------------------------------------
+    // Constructors
+    //-------------------------------------------------------------------------
 
-	//-------------------------------------------------------------------------
-	// Web services
-	//-------------------------------------------------------------------------
+    /** Default constructor. */
+    public GmltoRdf() {
+        super(MODULE_NAME, 900, SourceType.GmlSource);
+    }
 
-	@GET
-	public Response getIndexPage(@QueryParam("project") URI projectId) {
-		// Retrieve project.
-		Project p = this.getProject(projectId);
-		// Display conversion configuration page.
-		Map<String, Object> args = new HashMap<String, Object>();
-		args.put("it", p);
-		args.put("converter", this);
-		return Response.ok(this.newViewable("/gmltoRdf.vm", args))
-				.build();
-	}
+    //-------------------------------------------------------------------------
+    // Web services
+    //-------------------------------------------------------------------------
 
-	@POST
-	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-	public Response convertGmlData(
-			@FormParam("project") URI projectId,
-			@FormParam("source") URI sourceId)
-					throws WebApplicationException {
-		Response response = null;
-		try {
-			// Retrieve project.
-			Project p = this.getProject(projectId);
-			// Retrieve source.
-			GmlSource s = (GmlSource)(p.getSource(sourceId));
+    @GET
+    public Response getIndexPage(@QueryParam("project") URI projectId) {
+        // Retrieve project.
+        Project p = this.getProject(projectId);
+        // Display conversion configuration page.
+        Map<String, Object> args = new HashMap<String, Object>();
+        args.put("it", p);
+        args.put("converter", this);
+        return Response.ok(this.newViewable("/gmltoRdf.vm", args))
+                       .build();
+    }
+
+    @POST
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    public Response convertGmlData(@FormParam("project") URI projectId,
+                                   @FormParam("source") URI sourceId,
+                                   @Context UriInfo uriInfo)
+                                                throws WebApplicationException {
+        Response response = null;
+        try {
+            // Retrieve project.
+            Project p = this.getProject(projectId);
+            // Retrieve source.
+            GmlSource s = (GmlSource)(p.getSource(sourceId));
             if (s == null) {
                 this.throwInvalidParamError("source", sourceId);
             }
-
-            // Convert GML data and load generated RDF.
-            File inGmlFile = new File(Configuration.getDefault().getPublicStorage(),
-                                      s.getFilePath());
-            File path = inGmlFile.getParentFile();
-            String fileName = inGmlFile.getName();
-            fileName = fileName.substring(0, fileName.lastIndexOf('.'));
-            File mappingConf = new File(path, fileName + ".conf");
-            if (! mappingConf.exists()) {
+            // Create working directory.
+            File inGmlFile = new File(s.getFilePath());
+            File relPath   = inGmlFile.getParentFile();
+            File tmpDir = this.createWorkingDirectory(s);
+            // Copy source GML file to working directory.
+            inGmlFile = this.getLocalCopy(s.getFilePath(),
+                                          s.getInputStream(), tmpDir);
+            // Check for provided mapping configuration file.
+            String rootName = inGmlFile.getName();
+            rootName = rootName.substring(0, rootName.lastIndexOf('.'));
+            String confFileName = rootName + ".conf";
+            File mappingConf = new File(tmpDir, confFileName);
+            FileStore fs = s.getFileStore();
+            String mappingSrc = new File(relPath, confFileName).getPath();
+            if (fs.exists(mappingSrc)) {
+                fs.read(mappingSrc, mappingConf);
+            }
+            else {
                 log.debug("Generating GML to RDF mapping configuration file: {}", mappingConf);
                 FileUtils.save(this.getClass().getClassLoader()
                                    .getResourceAsStream(DEFAULT_MAPPING), mappingConf);
             }
-            File rdfOutFile = new File(path, fileName + ".rdf");
+            File rdfOutFile = new File(tmpDir, rootName + ".rdf");
             if (rdfOutFile.exists()) {
-                log.debug("Deleting existing RDF file: {}", rdfOutFile);
                 rdfOutFile.delete();
             }
-
             // Make sure the Geometry parser looks for its default
             // configuration files in Datalift configuration directory.
-            String dataliftHome = Configuration.getDefault().getProperty(
-                                                                "datalift.home");
-            File cfgPath = new File(dataliftHome, "conf/geo");
-            log.debug("Geometry parser default configuration path: {}", cfgPath);
+            File cfgPath = new File(Configuration.getDefault().getProperty(
+                                                "datalift.home"), "conf/geo");
+            log.debug("Geometry parser default config. path: {}", cfgPath);
             // GeometryParser.setDefaultConfigPath(cfgPath);
-            ConfigFinder.setPaths(Arrays.asList(path, cfgPath));
+            ConfigFinder.setPaths(Arrays.asList(tmpDir, cfgPath));
             // Redirect GML converter messages from System.out/err to log.
             StdOutErrLog redirect = StdOutErrLog.install();
             // Run converter.
             log.debug("Generating {} from {}", rdfOutFile, inGmlFile);
             GMLConverter converter = new GMLConverter(inGmlFile,
-                                                path, true, true, true, true);
+                                                tmpDir, true, true, true, true);
             converter.run();
             // Restore System.out/err.
             redirect.restore();
             // Upload generated RDF file into internal repository.
             URI targetGraph = new URI(s.getUri() + "-rdf");
             RdfUtils.upload(rdfOutFile, Configuration.getDefault()
-                                                   .getInternalRepository(),
+                                                     .getInternalRepository(),
                             targetGraph, null);
             // Register new transformed RDF source.
             Source out = this.addResultSource(p, s,
                                 "RDF mapping of " + s.getTitle(), targetGraph);
             // Display project source tab, including the newly created source.
             response = this.created(out).build();
+            // Delete working directory.
+            FileUtils.delete(tmpDir, true);
 
             log.info("RDF data successfully loaded into \"{}\"", targetGraph);
+        }
+        catch (Exception e) {
+            this.handleInternalError(e);
+        }
+        return response;
+    }
 
-		}
-		catch (Exception e) {
-			this.handleInternalError(e);
-		}
-		return response;
-	}
+    private File createWorkingDirectory(FileSource s) {
+        String relPath = new File(s.getFilePath()).getParent();
+        File tmpDir = new File(Configuration.getDefault().getTempStorage(),
+                               relPath);
+        tmpDir.mkdirs();
+        return tmpDir;
+    }
+
+    private File getLocalCopy(String path, InputStream in, File localDir)
+                                                            throws IOException {
+        File f = new File(localDir, new File(path).getName());
+        FileUtils.save(in, f);
+        return f;
+    }
 
     public final static class StdOutErrLog
     {

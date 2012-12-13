@@ -32,67 +32,53 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 
-package org.datalift.fwk.project;
+package org.datalift.fwk;
 
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.datalift.fwk.FileStore;
 
-
-/**
- * A file-based source object.
- *
- * @author hdevos
- */
-public interface FileSource extends Source
+abstract public class FileStore
 {
-    /**
-     * Returns the declared type of data this source contains.
-     * @return the declared MIME type for the source content.
-     */
-    public String getMimeType();
+    abstract public boolean isLocal();
+    abstract public File getFile(String path);
 
-    /**
-     * Sets the data type of the source content.
-     * @param  mimeType   type of data this source contains.
-     */
-    public void setMimeType(String mimeType);
+    public boolean exists(String path) {
+        return this.exists(this.getFile(path));
+    }
+    abstract public boolean exists(File file);
 
-    /**
-     * Returns the declared character encoding of data this source
-     * contains.
-     * @return the declared character set for the source content or
-     *         <code>null</code> if not applicable (e.g binary data,
-     *         self-describing data (XML), etc.).
-     */
-    public String getEncoding();
+    public InputStream getInputStream(String path) throws IOException {
+        return this.getInputStream(this.getFile(path));
+    }
+    abstract public InputStream getInputStream(File file) throws IOException;
 
-    /**
-     * Sets the character encoding of the source content.
-     * @param  encoding   character set of the source content.
-     */
-    public void setEncoding(String encoding);
+    public void save(File from, String targetPath) throws IOException {
+        this.save(from, this.getFile(targetPath));
+    }
+    public void save(File from, File to) throws IOException {
+        InputStream in = this.getInputStream(from);
+        try {
+            this.save(in, to);
+        }
+        finally {
+            try { in.close(); } catch (Exception e) { /* Ignore... */ }
+        }
+    }
+    public void save(InputStream from, String targetPath) throws IOException {
+        this.save(from, this.getFile(targetPath));
+    }
+    abstract public void save(InputStream from, File to) throws IOException;
 
-    /**
-     * Returns the path (relative to the DataLift public storage
-     * directory) of the file containing the source data.
-     * @return the data file relative path.
-     */
-    public String getFilePath();
+    public void read(String path, File to) throws IOException {
+        this.read(this.getFile(path), to);
+    }
+    abstract public void read(File from, File to) throws IOException;
 
-    /**
-     * Returns an input stream for reading the source content.
-     * @return an input stream
-     * @throws IOException if any error occurred accessing the source
-     *         data file.
-     */
-    public InputStream getInputStream() throws IOException;
-
-    /**
-     * Returns the {@link FileStore} used to persist source content.
-     * @return the file store.
-     */
-    public FileStore getFileStore();
+    public boolean delete(String path) {
+        return this.delete(this.getFile(path));
+    }
+    abstract public boolean delete(File file);
 }

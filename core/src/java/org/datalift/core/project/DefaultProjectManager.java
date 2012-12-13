@@ -61,6 +61,7 @@ import javassist.ClassClassPath;
 import javassist.ClassPool;
 
 import org.datalift.fwk.Configuration;
+import org.datalift.fwk.FileStore;
 import org.datalift.fwk.LifeCycle;
 import org.datalift.fwk.MediaTypes;
 import org.datalift.fwk.log.Logger;
@@ -595,13 +596,17 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
 
     /**
      * Returns the {@link File} object associated to the specified
-     * path in the DataLift public storage.
+     * path in DataLift public file store.
      * @param  path   the file path.
      *
      * @return the File object in the DataLift public storage.
      */
     private File getFileStorage(String path) {
-        return new File(Configuration.getDefault().getPublicStorage(), path);
+        FileStore fs = Configuration.getDefault().getPublicStorage();
+        if (fs == null) {
+            fs = Configuration.getDefault().getPrivateStorage();
+        }
+        return fs.getFile(path);
     }
 
     /**

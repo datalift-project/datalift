@@ -45,12 +45,14 @@ import com.clarkparsia.empire.annotation.RdfProperty;
 
 import org.datalift.core.TechnicalException;
 import org.datalift.fwk.Configuration;
+import org.datalift.fwk.FileStore;
 import org.datalift.fwk.project.FileSource;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.util.StringUtils;
 import org.datalift.fwk.util.io.FileUtils;
 
 import static org.datalift.fwk.util.Env.*;
+import static org.datalift.fwk.util.StringUtils.isSet;
 
 
 /**
@@ -121,14 +123,8 @@ public abstract class BaseFileSource extends BaseSource
     public void delete() {
         super.delete();
 
-        try {
-            this.init();
-        }
-        catch (Exception e) { /* Ignore initialization failures... */ }
-
-        if (this.storage != null) {
-            this.storage.delete();
-        }
+        this.delete(this.filePath);
+        this.storage = null;
     }
 
     //-------------------------------------------------------------------------
@@ -169,23 +165,14 @@ public abstract class BaseFileSource extends BaseSource
     @Override
     public InputStream getInputStream() throws IOException {
         this.init();
-        return FileUtils.getInputStream(this.storage, this.getBufferSize());
+        return this.getInputStream(this.storage);
     }
 
-    protected void init() {
-        if (this.storage == null) {
-            File docRoot = Configuration.getDefault().getPublicStorage();
-            if ((docRoot == null) || (! docRoot.isDirectory())) {
-                throw new TechnicalException("public.storage.not.directory",
-                                             docRoot);
-            }
-            File f = new File(docRoot, this.filePath);
-            if (! (f.isFile() && f.canRead())) {
-                throw new TechnicalException("file.not.found", this.filePath);
-            }
-            this.storage = f;
-        }
-        // Else: Already initialized.
+    /** {@inheritDoc} */
+    @Override
+    public final FileStore getFileStore() {
+        FileStore fs = Configuration.getDefault().getPublicStorage();
+        return (fs != null)? fs: Configuration.getDefault().getPrivateStorage();
     }
 
     //-------------------------------------------------------------------------
@@ -229,5 +216,49 @@ public abstract class BaseFileSource extends BaseSource
     public void setBufferSize(int size) {
         this.bufferSize = (size < MIN_FILE_BUFFER_SIZE)?
                                                 MIN_FILE_BUFFER_SIZE: size;
+    }
+
+    /**
+     * Initializes this source.
+     */
+    protected void init() {
+        if (this.storage == null) {
+            this.storage = this.getFile(this.filePath);
+        }
+        // Else: Already initialized.
+    }
+
+    protected File getFile(String path) {
+        File f = null;
+        if (isSet(path)) {
+            try {
+                f = this.getFileStore().getFile(path);
+            }
+            catch (Exception e) {
+                // Let f be null.
+            }
+            if ((f == null) || (! (f.isFile() && f.canRead()))) {
+                throw new TechnicalException("file.not.found", path);
+            }
+        }
+        return f;
+    }
+
+    protected InputStream getInputStream(File f) throws IOException {
+        InputStream is = null;
+        if (f != null) {
+            is =  FileUtils.getInputStream(
+                                        this.getFileStore().getInputStream(f),
+                                        this.getBufferSize());
+        }
+        return is;
+    }
+
+    protected boolean delete(String path) {
+        boolean deleted = false;
+        if (isSet(path)) {
+            deleted = this.getFileStore().delete(path);
+        }
+        return deleted;
     }
 }

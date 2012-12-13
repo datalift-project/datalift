@@ -52,8 +52,10 @@ import java.util.Properties;
 import java.util.TreeMap;
 
 import org.datalift.fwk.Configuration;
+import org.datalift.fwk.FileStore;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.rdf.Repository;
+import org.datalift.fwk.util.io.LocalFileStoreFactory;
 
 import org.datalift.core.rdf.RepositoryFactory;
 import org.datalift.core.rdf.sesame.SesameRepositoryFactory;
@@ -128,10 +130,10 @@ public class DefaultConfiguration extends Configuration
                 // Preserve repository configuration declaration order.
                 new LinkedHashMap<String,Repository>();
     /** The private (i.e. accessible to server modules only) file storage. */
-    private final File privateStorage;
-    /** The public (i.e. remotely accessible) file storage. */
-    private final File publicStorage;
-    /** The temporary file storage. */
+    private final FileStore privateStorage;
+    /** The public (i.e. remotely accessible) file store. */
+    private final FileStore publicStorage;
+    /** The temporary file store. */
     private final File tempStorage;
     /** The module directory. */
     private final Collection<File> modulePaths = new LinkedList<File>();
@@ -158,8 +160,8 @@ public class DefaultConfiguration extends Configuration
         this.props          = this.loadConfiguration(props);
         this.modulePaths.clear();
         this.modulePaths.addAll(this.initLocalPaths(MODULES_PATH, false, false));
-        this.privateStorage = this.initLocalPath(PRIVATE_STORAGE_PATH, true, true);
-        this.publicStorage  = this.initLocalPath(PUBLIC_STORAGE_PATH, false, true);
+        this.privateStorage = this.initFileStore(PRIVATE_STORAGE_PATH, true, true);
+        this.publicStorage  = this.initFileStore(PUBLIC_STORAGE_PATH, false, true);
 
         // Check configuration to warn against potential problems.
         if (this.modulePaths.isEmpty()) {
@@ -174,10 +176,10 @@ public class DefaultConfiguration extends Configuration
                      "No file can be made remotely available.");
         }
         else {
-            log.info("Public storage directory: {}", this.publicStorage);
+            log.info("Public file store: {}", this.publicStorage);
         }
         if (this.privateStorage != null) {
-            log.info("Private storage directory: {}", this.privateStorage);
+            log.info("Private file store: {}", this.privateStorage);
         }
 
         File tmpStorage = this.initLocalPath(TEMP_STORAGE_PATH, false, true);
@@ -305,13 +307,13 @@ public class DefaultConfiguration extends Configuration
 
     /** {@inheritDoc} */
     @Override
-    public File getPublicStorage() {
+    public FileStore getPublicStorage() {
         return this.publicStorage;
     }
 
     /** {@inheritDoc} */
     @Override
-    public File getPrivateStorage() {
+    public FileStore getPrivateStorage() {
         return this.privateStorage;
     }
 
@@ -569,6 +571,13 @@ public class DefaultConfiguration extends Configuration
                                            boolean create) {
         return this.checkLocalPath(this.getConfigurationEntry(key, required),
                                    required, create);
+    }
+
+    private FileStore initFileStore(String key, boolean required,
+                                                boolean create) {
+        File f = this.checkLocalPath(this.getConfigurationEntry(key, required),
+                                     required, create);
+        return new LocalFileStoreFactory().getFileStore(f.getAbsolutePath(), this);
     }
 
     private Collection<File> initLocalPaths(String key, boolean required,

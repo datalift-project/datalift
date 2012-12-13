@@ -32,67 +32,33 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 
-package org.datalift.fwk.project;
+package org.datalift.fwk.util.io;
 
-
-import java.io.IOException;
-import java.io.InputStream;
-
+import org.datalift.fwk.Configuration;
 import org.datalift.fwk.FileStore;
 
 
 /**
- * A file-based source object.
+ * 
  *
- * @author hdevos
+ * @author lbihanic
  */
-public interface FileSource extends Source
+public abstract class FileStoreFactory
 {
-    /**
-     * Returns the declared type of data this source contains.
-     * @return the declared MIME type for the source content.
-     */
-    public String getMimeType();
+    //-------------------------------------------------------------------------
+    // Constructors
+    //-------------------------------------------------------------------------
 
     /**
-     * Sets the data type of the source content.
-     * @param  mimeType   type of data this source contains.
+     * Creates a new file store factory instance.
      */
-    public void setMimeType(String mimeType);
+    protected FileStoreFactory() {
+        // NOP
+    }
 
-    /**
-     * Returns the declared character encoding of data this source
-     * contains.
-     * @return the declared character set for the source content or
-     *         <code>null</code> if not applicable (e.g binary data,
-     *         self-describing data (XML), etc.).
-     */
-    public String getEncoding();
+    //-------------------------------------------------------------------------
+    // RepositoryFactory contract definition
+    //-------------------------------------------------------------------------
 
-    /**
-     * Sets the character encoding of the source content.
-     * @param  encoding   character set of the source content.
-     */
-    public void setEncoding(String encoding);
-
-    /**
-     * Returns the path (relative to the DataLift public storage
-     * directory) of the file containing the source data.
-     * @return the data file relative path.
-     */
-    public String getFilePath();
-
-    /**
-     * Returns an input stream for reading the source content.
-     * @return an input stream
-     * @throws IOException if any error occurred accessing the source
-     *         data file.
-     */
-    public InputStream getInputStream() throws IOException;
-
-    /**
-     * Returns the {@link FileStore} used to persist source content.
-     * @return the file store.
-     */
-    public FileStore getFileStore();
+    abstract public FileStore getFileStore(String path, Configuration cfg);
 }
