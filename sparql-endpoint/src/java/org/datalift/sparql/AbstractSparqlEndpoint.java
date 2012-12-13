@@ -940,7 +940,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
             }
             else {
                 // No query definition file specified. => Use default.
-                log.debug("No queries file specified, using default");
+                log.info("No predefined queries file specified, using default");
                 path = DEFAULT_QUERIES_FILE;
                 in = this.getClass().getClassLoader().getResourceAsStream(path);
             }
