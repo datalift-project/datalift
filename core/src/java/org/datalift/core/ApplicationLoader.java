@@ -220,9 +220,9 @@ public class ApplicationLoader extends LogServletContextListener
             Configuration.setDefault(cfg);
             // Find available third-party modules.
             this.registerBundles(cfg);
-            // Initialize RDF store connections
+            // Initialize file stores and RDF store connections
             // (connectors may be provided as part of third-party modules).
-            cfg.initRepositories();
+            cfg.init();
             // Load and initialize modules form third-party packages.
             this.loadModules(cfg);
             // Initialize and register default resources if no custom

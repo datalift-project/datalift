@@ -55,6 +55,7 @@ import org.datalift.fwk.Configuration;
 import org.datalift.fwk.FileStore;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.rdf.Repository;
+import org.datalift.fwk.util.io.FileStoreFactory;
 import org.datalift.fwk.util.io.LocalFileStoreFactory;
 
 import org.datalift.core.rdf.RepositoryFactory;
@@ -125,14 +126,19 @@ public class DefaultConfiguration extends Configuration
                 // Use an ordered collection to consider the default (core)
                 // factories only when all third-party factories have failed.
                 new LinkedList<RepositoryFactory>();
+    /** The available file store factories. */
+    private Collection<FileStoreFactory> fileStoreFactories =
+                // Use an ordered collection to consider the default (core)
+                // factories only when all third-party factories have failed.
+                new LinkedList<FileStoreFactory>();
     /** The configured repositories. */
     private final Map<String,Repository> repositories =
                 // Preserve repository configuration declaration order.
                 new LinkedHashMap<String,Repository>();
     /** The private (i.e. accessible to server modules only) file storage. */
-    private final FileStore privateStorage;
+    private FileStore privateStorage;
     /** The public (i.e. remotely accessible) file store. */
-    private final FileStore publicStorage;
+    private FileStore publicStorage;
     /** The temporary file store. */
     private final File tempStorage;
     /** The module directory. */
@@ -157,12 +163,9 @@ public class DefaultConfiguration extends Configuration
      *         parsing the configuration data.
      */
     public DefaultConfiguration(Properties props) {
-        this.props          = this.loadConfiguration(props);
+        this.props = this.loadConfiguration(props);
         this.modulePaths.clear();
         this.modulePaths.addAll(this.initLocalPaths(MODULES_PATH, false, false));
-        this.privateStorage = this.initFileStore(PRIVATE_STORAGE_PATH, true, true);
-        this.publicStorage  = this.initFileStore(PUBLIC_STORAGE_PATH, false, true);
-
         // Check configuration to warn against potential problems.
         if (this.modulePaths.isEmpty()) {
             log.warn("No module directory defined. " +
@@ -170,16 +173,6 @@ public class DefaultConfiguration extends Configuration
         }
         else {
             log.info("Module directories: {}", this.modulePaths);
-        }
-        if (this.publicStorage == null) {
-            log.warn("No public file store defined. " +
-                     "No file can be made remotely available.");
-        }
-        else {
-            log.info("Public file store: {}", this.publicStorage);
-        }
-        if (this.privateStorage != null) {
-            log.info("Private file store: {}", this.privateStorage);
         }
 
         File tmpStorage = this.initLocalPath(TEMP_STORAGE_PATH, false, true);
@@ -498,11 +491,33 @@ public class DefaultConfiguration extends Configuration
     }
 
     /**
+     * Initializes this configuration.
+     */
+    /* package */ void init() {
+        // Initialize the file storages.
+        this.privateStorage = this.initFileStore(PRIVATE_STORAGE_PATH, true);
+        this.publicStorage  = this.initFileStore(PUBLIC_STORAGE_PATH, false);
+        // Check configuration to warn against potential problems.
+        if (this.publicStorage == null) {
+            log.warn("No public file store defined. " +
+                     "No file can be made remotely available.");
+        }
+        else {
+            log.info("Public file store: {}", this.publicStorage);
+        }
+        if (this.privateStorage != null) {
+            log.info("Private file store: {}", this.privateStorage);
+        }
+        // Initialize the RDF stores.
+        this.initRepositories();
+    }
+
+    /**
      * Reads the configuration for the RDF stores and initializes them.
      * @throws TechnicalException if any error occurred initializing
      *         one of the repositories.
      */
-    protected void initRepositories() {
+    private void initRepositories() {
         // Get default (core-provided) repository factories.
         Bundle core = new Bundle(this.getClass().getClassLoader());
         Collection<RepositoryFactory> defaultFactories =
@@ -573,11 +588,38 @@ public class DefaultConfiguration extends Configuration
                                    required, create);
     }
 
-    private FileStore initFileStore(String key, boolean required,
-                                                boolean create) {
-        File f = this.checkLocalPath(this.getConfigurationEntry(key, required),
-                                     required, create);
-        return new LocalFileStoreFactory().getFileStore(f.getAbsolutePath(), this);
+    private FileStore initFileStore(String key, boolean required) {
+        if (this.fileStoreFactories.isEmpty()) {
+            // Load available repository factories from third-party packages.
+            for (Bundle b : this.getBeans(Bundle.class)) {
+                for (FileStoreFactory f :
+                                    b.loadServices(FileStoreFactory.class)) {
+                    this.fileStoreFactories.add(f);
+                }
+            }
+            // Add local file store factory as default.
+            this.fileStoreFactories.add(new LocalFileStoreFactory());
+        }
+        FileStore fs = null;
+        String uri = this.getConfigurationEntry(key, required);
+        if (! isBlank(uri)) {
+            for (FileStoreFactory f : this.fileStoreFactories) {
+                try {
+                    fs = f.getFileStore(uri, this);
+                    if (fs != null) {
+                        break;
+                    }
+                }
+                catch (Exception e) { /* Ignore... */ }
+            }
+            if (fs == null) {
+                TechnicalException error = new TechnicalException(
+                                        "no.matching.file.store", key, uri);
+                log.fatal(error.getLocalizedMessage());
+                throw error;
+            }
+        }
+        return fs;
     }
 
     private Collection<File> initLocalPaths(String key, boolean required,
