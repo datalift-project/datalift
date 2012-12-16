@@ -43,6 +43,7 @@ import java.io.InputStream;
 
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.FileStore;
+import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.util.io.FileUtils;
 
 import static org.datalift.fwk.util.StringUtils.isBlank;
@@ -57,9 +58,16 @@ import static org.datalift.fwk.util.StringUtils.isBlank;
 public class LocalFileStoreFactory extends FileStoreFactory
 {
     //-------------------------------------------------------------------------
+    // Class members
+    //-------------------------------------------------------------------------
+
+    private final static Logger log = Logger.getLogger();
+
+    //-------------------------------------------------------------------------
     // FileStoreFactory contract support
     //-------------------------------------------------------------------------
 
+    /** {@inheritDoc} */
     @Override
     public FileStore getFileStore(String path, Configuration cfg) {
         FileStore fs = null;
@@ -68,7 +76,10 @@ public class LocalFileStoreFactory extends FileStoreFactory
             try {
                 fs = new LocalFileStore(new File(path));
             }
-            catch (IOException e) { /* Ignore... */ }
+            catch (IOException e) {
+                log.warn("Local file store initialization failed for {}", e,
+                         path);
+            }
         }
         return fs;
     }
@@ -158,6 +169,9 @@ public class LocalFileStoreFactory extends FileStoreFactory
         /** {@inheritDoc} */
         @Override
         public void save(InputStream from, File to) throws IOException {
+            if (from == null) {
+                throw new IllegalArgumentException("from");
+            }
             this.ensureManagedFile(to);
             FileUtils.save(from, to);
         }
@@ -165,7 +179,6 @@ public class LocalFileStoreFactory extends FileStoreFactory
         /** {@inheritDoc} */
         @Override
         public void read(File from, File to) throws IOException {
-            this.ensureManagedFile(from);
             FileUtils.save(this.getInputStream(from), to, true);
         }
 
