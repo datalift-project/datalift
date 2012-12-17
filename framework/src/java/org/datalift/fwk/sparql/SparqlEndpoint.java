@@ -98,7 +98,8 @@ public interface SparqlEndpoint
         Object,
         Predicate,
         Graph,
-        RdfType;
+        RdfType,
+        Value;
 
         /**
          * Return the enumeration value corresponding to the specified

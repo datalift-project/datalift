@@ -160,11 +160,12 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                               + "  GRAPH <{0}> '{' ?s ?p ?o . '}'\n'}'");
 
     private final static String DETERMINE_TYPE_QUERY =
-            "SELECT DISTINCT ?s ?p ?g ?t WHERE {\n" +
+            "SELECT DISTINCT ?s ?p ?g ?t ?o WHERE {\n" +
             "  OPTIONAL { ?s ?p1 ?o1 . FILTER( ?s = ?u ) }\n" +
             "  OPTIONAL { ?s2 ?p ?o2 . FILTER( ?p = ?u ) }\n" +
             "  OPTIONAL { ?s3 a  ?t  . FILTER( ?t = ?u ) }\n" +
             "  OPTIONAL { GRAPH ?g { ?s4 ?p4 ?o4 . FILTER( ?g = ?u ) } }\n" +
+            "  OPTIONAL { ?s5 ?p5 ?o . FILTER( ?o = ?u ) }\n" +
             "} LIMIT 1";
 
     /** The SPARQL query to extract predefined query data. */
@@ -346,11 +347,22 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         ResponseBuilder response = null;
         try {
             URI u = URI.create(uri);
-            if (type == null) {
+            if ((type == null) || (type == Value)) {
+                // Force revalidation of values to prevent redirecting user
+                // to a malevolent site in case of forged URI in request.
                 type = this.getDescribeTypeFromUri(u, repository);
             }
-            if (type != null) {
-                // URI found in RDF store.
+            if (type == Value) {
+                // Requested URI found in RDF store but only as a value.
+                String scheme = u.getScheme();
+                if (("http".equals(scheme)) || ("https".equals(scheme))) {
+                    // Redirect to target URI.
+                    response = Response.seeOther(u);
+                }
+                // Else: No handling of non HTTP URIs. => Send a 404 status.
+            }
+            else if (type != null) {
+                // URI found in RDF store as a subject, predicate or graph.
                 String query = null;
                 MessageFormat fmt = (type == Object)?  DESCRIBE_OBJECT_QUERY:
                                     (type == Graph)?   DESCRIBE_GRAPH_QUERY:
@@ -366,13 +378,8 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                                           false, format, jsonCallback, uriInfo,
                                           request, acceptHdr, viewData);
             }
-            else {
-                try {
-                    response = Response.seeOther(u);
-                }
-                catch (Exception e) {
-                    this.sendError(NOT_FOUND, null);
-                }
+            if (response == null) {
+                this.sendError(NOT_FOUND, null);
             }
         }
         catch (Exception e) {
@@ -890,6 +897,9 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                             }
                             else if (b.hasBinding("t")) {
                                 nodeType = RdfType;
+                            }
+                            else if (b.hasBinding("o")) {
+                                nodeType = Value;
                             }
                         }
                         // Else: Already set. => Ignore...
