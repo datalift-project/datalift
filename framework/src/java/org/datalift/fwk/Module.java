@@ -41,22 +41,10 @@ import java.util.Collection;
 /**
  * Base interface for DataLift application modules.
  * <p>
- * Modules can be either JAX-RS root resources on simple Java classes
- * (legacy).<br />
- * In the first case (the module class is annotated with JAX-RS
- * {@link javax.ws.rs.Path @Path}), an instance of the class is created
- * and {@link LifeCycle initialized} to be handed over to the underlying
- * JAX-RS implementation. In the latter case, an instance of the class
- * is created and queried for the resources it wish to expose:
- * {@link #isResource() itself} and/or
- * {@link #getResources() sub-resources}.
- * <p>
- * JAX-RS root resource modules have access to all the JAX-RS features
- * for defining resource paths. Non JAX-RS root resource modules are
- * required to provide paths with at least 2 levels:
- * <code>&lt;module&gt;/&lt;resource&gt;</code>; sub-resources can
- * make use of JAX-RS {@link javax.ws.rs.Path @Path}-annotated methods
- * but the main module class can't.
+ * Modules are JAX-RS root resources, the class shall be annotated with
+ * the JAX-RS {@link javax.ws.rs.Path @Path} annotation. A single
+ * instance of the class is created and {@link LifeCycle initialized}
+ * to be handed over to the underlying JAX-RS implementation.</p>
  * <p>
  * Modules can be packaged as a JAR file or a directory (a deployment
  * unit) and are loaded using the

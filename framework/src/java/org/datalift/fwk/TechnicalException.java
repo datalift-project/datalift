@@ -177,7 +177,7 @@ public abstract class TechnicalException extends RuntimeException
      * it from the message code and arguments if need be.
      * <p>
      * This default implementation invokes
-     * {@link #getMessage(PreferredLocales))} with the user's preferred
+     * {@link #getMessage(PreferredLocales)} with the user's preferred
      * locales.</p>
      * @return the detail message.
      */
@@ -253,9 +253,9 @@ public abstract class TechnicalException extends RuntimeException
     /**
      * Formats the exception detail message.
      *
-     * @param  locale   the locale for which the message shall be
-     *                  formatted.  If no locale is specified, the
-     *                  default system one will be used.
+     * @param  format   the format for the detailed message, compliant
+     *                  with the grammar defined by
+     *                  {@link MessageFormat}.
      *
      * @return a formatted detail message.
      */

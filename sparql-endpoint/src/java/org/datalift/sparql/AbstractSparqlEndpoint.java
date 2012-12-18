@@ -801,7 +801,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     /**
      * Returns a new template model for web service response rendering.
      * @param  templateName   the template name, relative to the module.
-     * @param  model          the (optional) model object.
+     * @param  it             the (optional) model object.
      *
      * @return a new template view.
      */
