@@ -35,6 +35,7 @@
 package org.datalift.s4ac.services;
 
 import java.io.File;
+import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -104,7 +105,7 @@ public class S4acAccessController extends BaseModule
                                         "sparql.security.user.repository.uri";
     /** The default base URI for user contexts. */
     public final static String DEFAULT_USER_CONTEXT     =
-                                        "http://example.com/context/";
+                                        "http://example.com/context/{0}";
     /** The URI of the security repository when none is specified. */
     public final static String ANON_SECURITY_REPOSITORY_URI = "$security";
 
@@ -147,7 +148,7 @@ public class S4acAccessController extends BaseModule
 
     private Repository securityRepository;
     private Repository userRepository;
-    private String userContext;
+    private MessageFormat userContext;
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -172,15 +173,16 @@ public class S4acAccessController extends BaseModule
                             Arrays.asList(securedRepNames.split("\\s*,\\s*")));
         }
         // Retrieve the user context base URI.
-        this.userContext = RdfUtils.getBaseUri(
+        String ctx = RdfUtils.getBaseUri(
                             configuration.getProperty(USER_CONTEXT_PROPERTY));
-        if (isBlank(this.userContext)) {
-            this.userContext = DEFAULT_USER_CONTEXT;
+        if (isBlank(ctx)) {
+            ctx = DEFAULT_USER_CONTEXT;
             if (! this.securedRepositories.isEmpty()) {
                 log.warn("User context base URI not set. Using default: <{}>",
-                         this.userContext);
+                         ctx);
             }
         }
+        this.userContext = new MessageFormat(ctx);
         // Connect to or initialize security repository.
         try {
             // Get the policy files to populate the security repository from.
@@ -417,7 +419,8 @@ public class S4acAccessController extends BaseModule
         try {
             BooleanQuery q = cnx.prepareBooleanQuery(SPARQL, query);
             if (isSet(user)) {
-                q.setBinding("context", new URIImpl(this.userContext + user));
+                q.setBinding("context",
+                             new URIImpl(this.userContext.format(user)));
             }
             matches = q.evaluate();
             log.trace("{} -> {}", query, Boolean.valueOf(matches));
