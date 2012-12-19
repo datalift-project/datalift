@@ -280,7 +280,7 @@
       <fileset dir="${web.home}" excludes="**/.*"/>
     </copy>
     <!-- Copy runtime JARs to embed in distribution -->
-    <copy todir="${classes.dir}" flatten="true">
+    <copy todir="${classes.dir}" flatten="true" preservelastmodified="true">
       <fileset dir="${run.lib.home}">
         <include name="**/*.jar"/>
       </fileset>
