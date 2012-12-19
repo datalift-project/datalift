@@ -417,12 +417,21 @@ public class S4acAccessController extends BaseModule
         boolean matches = false;
         try {
             BooleanQuery q = cnx.prepareBooleanQuery(SPARQL, query);
+            String ctx = null;
             if (isSet(user)) {
-                q.setBinding("context", new URIImpl(
-                        this.userContext.format(new Object[] { user })));
+                ctx = this.userContext.format(new Object[] { user });
+                q.setBinding("context", new URIImpl(ctx));
             }
             matches = q.evaluate();
-            log.trace("{} -> {}", query, Boolean.valueOf(matches));
+            if (log.isTraceEnabled()) {
+                if (ctx!= null) {
+                    log.trace("{} (context: <{}>) -> {}",
+                              query, ctx, Boolean.valueOf(matches));
+                }
+                else {
+                    log.trace("{} -> {}", query, Boolean.valueOf(matches));
+                }
+            }
         }
         catch (Exception e) {
             throw new TechnicalException(query, e);
