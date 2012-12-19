@@ -173,8 +173,7 @@ public class S4acAccessController extends BaseModule
                             Arrays.asList(securedRepNames.split("\\s*,\\s*")));
         }
         // Retrieve the user context base URI.
-        String ctx = RdfUtils.getBaseUri(
-                            configuration.getProperty(USER_CONTEXT_PROPERTY));
+        String ctx = configuration.getProperty(USER_CONTEXT_PROPERTY);
         if (isBlank(ctx)) {
             ctx = DEFAULT_USER_CONTEXT;
             if (! this.securedRepositories.isEmpty()) {
