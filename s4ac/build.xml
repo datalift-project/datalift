@@ -159,9 +159,6 @@
     <fileset dir="${fwk.dist.home}">
       <include name="**/*.jar"/>
     </fileset>
-    <fileset dir="${dist.home}">
-      <include name="**/*.jar"/>
-    </fileset>
   </path>
 
   <path id="compile.classpath">
@@ -273,6 +270,8 @@
                                  preservelastmodified="true">
       <fileset dir="${web.home}" excludes="**/.*"/>
     </copy>
+    <!-- Create build directories as needed -->
+    <mkdir dir="${dist.home}"/>
   </target>
 
   <!--
