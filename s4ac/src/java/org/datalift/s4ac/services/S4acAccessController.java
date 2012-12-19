@@ -419,8 +419,8 @@ public class S4acAccessController extends BaseModule
         try {
             BooleanQuery q = cnx.prepareBooleanQuery(SPARQL, query);
             if (isSet(user)) {
-                q.setBinding("context",
-                             new URIImpl(this.userContext.format(user)));
+                q.setBinding("context", new URIImpl(
+                        this.userContext.format(new Object[] { user })));
             }
             matches = q.evaluate();
             log.trace("{} -> {}", query, Boolean.valueOf(matches));
