@@ -764,7 +764,7 @@ public class Workspace extends BaseModule
     public Response modifyCsvSource(
                     @PathParam("id") String projectId,
                     @FormDataParam("current_source") URI sourceUri,
-                    @FormDataParam("description") String description,
+					@FormDataParam("description") String description,
                     @FormDataParam("charset") String charset,
                     @FormDataParam("separator") String separator,
                     @FormDataParam("title_row") @DefaultValue("0") int titleRow,
@@ -799,7 +799,7 @@ public class Workspace extends BaseModule
             s.setFirstDataRow(firstRow);
             s.setLastDataRow(lastRow);
             s.setSeparator(separator);
-            if (isSet(quote)) {
+			if (isSet(quote)) {
                 s.setQuote(quote);
             }
             // Save updated source.
@@ -820,6 +820,7 @@ public class Workspace extends BaseModule
     @Consumes(MULTIPART_FORM_DATA)
     public Response uploadRdfSource(
                             @PathParam("id") String projectId,
+							@FormDataParam("file_name") String file_name,
                             @FormDataParam("description") String description,
                             @FormDataParam("base_uri") URI baseUri,
                             @FormDataParam("source") InputStream fileData,
@@ -853,7 +854,7 @@ public class Workspace extends BaseModule
             }
         }
         else {
-            fileName = this.toFileName(fileDisposition.getFileName());
+            fileName = this.toFileName(file_name);
             if (isBlank(fileName)) {
                 this.throwInvalidParamError("source", null);
             }
@@ -1196,7 +1197,8 @@ public class Workspace extends BaseModule
     @Consumes(MULTIPART_FORM_DATA)
     public Response uploadXmlSource(
                             @PathParam("id") String projectId,
-                            @FormDataParam("description") String description,
+                            @FormDataParam("file_name") String file_name, 
+							@FormDataParam("description") String description,
                             @FormDataParam("source") InputStream fileData,
                             @FormDataParam("source")
                                     FormDataContentDisposition fileDisposition,
@@ -1224,7 +1226,7 @@ public class Workspace extends BaseModule
             }
         }
         else {
-            fileName = this.toFileName(fileDisposition.getFileName());
+            fileName = this.toFileName(file_name);
             if (isBlank(fileName)) {
                 this.throwInvalidParamError("source", null);
             }
@@ -1298,7 +1300,7 @@ public class Workspace extends BaseModule
     public Response modifyXmlSource(
                             @PathParam("id") String projectId,
                             @FormDataParam("current_source") URI sourceUri,
-                            @FormDataParam("description") String description,
+							@FormDataParam("description") String description,
                             @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
         Response response = null;
