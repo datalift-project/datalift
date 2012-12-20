@@ -118,7 +118,7 @@ public class RdfFileSourceImpl extends BaseFileSource
     public CloseableIterator<Statement> iterator() {
         try {
             ParserConfig config = new ParserConfig(
-                                        false,      // Assume data are valid.
+                                        true,       // Assume data are valid.
                                         false,      // Report all errors.
                                         false,      // Don't preserve BNode ids.
                                         DatatypeHandling.VERIFY);
