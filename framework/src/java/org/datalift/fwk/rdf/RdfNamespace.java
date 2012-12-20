@@ -98,7 +98,13 @@ public enum RdfNamespace
                                 "OGC Data Types and Operators"),
     /** s4ac: &lt;http://ns.inria.fr/s4ac/v2#&gt; */
     S4AC        ("s4ac",        "http://ns.inria.fr/s4ac/v2#",
-                                "Social Semantic SPARQL Security for Access Control");
+                                "Social Semantic SPARQL Security for Access Control"),
+    /** prov: &lt;http://www.w3.org/ns/prov#&gt; */
+    PROV        ("prov",        "http://www.w3.org/ns/prov#",
+                                "W3C PROV (provenance) Ontology"),
+    /** ldp: &lt;http://www.w3.org/ns/ldp#&gt; */
+    LDP         ("ldp",         "http://www.w3.org/ns/ldp#",
+                                "Linked Data Platform");
 
     //-------------------------------------------------------------------------
     // Instance members
