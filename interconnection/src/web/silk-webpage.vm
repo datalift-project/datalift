@@ -14,6 +14,9 @@
 	
 <form name="input" action="${baseUri}/silk/run-silk?project=$esc.url($it.uri)" method="post" enctype="multipart/form-data">
 
+	<fieldset>
+    <legend>If you want to interlink directly with a SILK script:</legend>
+
 		<p><label for="configFile">#i18n("configFile"):</label>
 		<input type="file" name="configFile" id="configFile" value=""/></p>
 
@@ -28,6 +31,26 @@
 
 		<p><label for="reload" class="hidden">#i18n("reload"):</label>
 		<input type="text" name="reload" id="reload" value=""/></p>
+
+    </fieldset>
+    
+<input type="submit" value="Run!" />
+</form>    
+
+    <br />
+		
+<form name="input" action="${baseUri}/silk/run-edoal?project=$esc.url($it.uri)" method="post" enctype="multipart/form-data">
+    
+    <fieldset>
+    <legend>If you want to interlink with ontology alignment:</legend>
+    
+    	<p>Upload an ontology alignment file written in EDOAL: <label for="configFile">#i18n("configFile"):</label>
+		<input type="file" name="configFile" id="configFile" value=""/></p>
+
+		<p>With which data source do you want to interlink?(SPARQL endpoint)<label for="targetdataset" class="hidden">#i18n("targetdataset"):</label>
+		<input type="text" name="targetdataset" id="targetdataset" value=""/></p>
+
+    </fieldset>
 
 <input type="submit" value="Run!" />
 </form>
