@@ -12,7 +12,7 @@ In order to run interconnection module in datalift, the following steps should b
 
 i) upload the SILK script file: eg. "script.xml" in the example folder; and fill the linkSPecId, number of Threadshold and reload or not(true or false). For example, in our case, they are "region", 1 and true respectively. Finally, press button "Run!" 
 ii) or you also can create the SILK script. Finally, press button "Run!"  
-iii) upload an ontology alignment file written in EDOAL, eg. "insee_nuts.xml" in the example folder. In this case, you should put the ontologies of two datasets in the folder of tomcat, eg. "onto1_file.rdf" and "onto2_file.rdf" in the example folder. After that, specify the target data set address, in our example, it is datalift's sparql endpoint, which is "http://localhost:8080/datalift/sparql". Finally, press button "Run!" 
+iii) upload an ontology alignment file written in EDOAL, eg. "insee_nuts.xml" in the example folder. In this case, you should put the ontologies of two datasets in the folder of tomcat and named as "onto1_file.rdf" and "onto2_file.rdf" like in the example folder. After that, specify the target data set address, in our example, it is datalift's sparql endpoint, which is "http://localhost:8080/datalift/sparql". Finally, press button "Run!" 
 
 6. if a page shows "OK~~" comes, go to http://localhost:8080/datalift/sparql and query by
 SELECT * WHERE {
