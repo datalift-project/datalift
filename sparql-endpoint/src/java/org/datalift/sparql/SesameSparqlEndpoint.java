@@ -725,7 +725,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                     public void handleStatement(Statement st)
                                                 throws RDFHandlerException {
                         this.count++;
-                        if ((endOffset != -1) && (this.count >= endOffset)) {
+                        if ((endOffset != -1) && (this.count > endOffset)) {
                             // Last request result reached. => Abort!
                             this.endRDF();
                             throw new RDFHandlerException(
@@ -805,7 +805,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                     public void handleSolution(BindingSet b)
                                     throws TupleQueryResultHandlerException {
                         this.count++;
-                        if ((endOffset != -1) && (this.count >= endOffset)) {
+                        if ((endOffset != -1) && (this.count > endOffset)) {
                             // Last request result reached. => Abort!
                             this.endQueryResult();
                             throw new TupleQueryResultHandlerException(
