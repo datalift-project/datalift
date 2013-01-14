@@ -241,7 +241,14 @@ public final class SesameRepositoryFactory extends RepositoryFactory
             try {
                 String path = this.url;
                 if (path.startsWith(SAIL_URL_SCHEME)) {
+                    // Remove Sail scheme.
                     path = path.substring(SAIL_URL_SCHEME.length());
+                    // Remove optional heading slash characters.
+                    int i = 0;
+                    while (path.charAt(i) == '/') i++;
+                    if (i != 0) {
+                        path = path.substring(i);
+                    }
                 }
                 boolean hasFileBackend = path.startsWith(FILE_URL_SCHEME);
                 repository = new SailRepository((hasFileBackend)?
