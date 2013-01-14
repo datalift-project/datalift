@@ -75,6 +75,7 @@ import javax.ws.rs.core.Variant;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 
+import static javax.servlet.http.HttpServletResponse.SC_REQUEST_TIMEOUT;
 import static javax.ws.rs.core.HttpHeaders.*;
 import static javax.ws.rs.core.Response.Status.*;
 
@@ -835,10 +836,11 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         }
         else if (e.getCause() instanceof QueryInterruptedException) {
             // Query processing was interrupted as it was taking too much time.
-            // => Return HTTP status 413 (Request Entity Too Large).
+            // => Return HTTP status 408 (Request Timeout).
             TechnicalException error = new TechnicalException(
                                         "query.max.duration.exceeded", query);
-            this.sendError(413, error.getLocalizedMessage());
+            // No constant for 408 provided by Jersey. => Using Servlet API.
+            this.sendError(SC_REQUEST_TIMEOUT, error.getLocalizedMessage());
         }
         else if (e.getCause() instanceof QueryDoneException) {
             // End of requested range (start/end offset) successfully reached.
