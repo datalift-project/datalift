@@ -23,7 +23,7 @@
 		<p><label for="reload" class="hidden">#i18n("reload"):</label>
 		<input type="text" name="reload" id="reload" value=""/></p>
 
-<input type="submit" value="Run SILK !" />
+<input type="submit" value="Run!" />
 </form>
 
 </body>
