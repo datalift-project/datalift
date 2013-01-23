@@ -244,8 +244,8 @@ public final class SesameRepositoryFactory extends RepositoryFactory
                     // Remove Sail scheme.
                     path = path.substring(SAIL_URL_SCHEME.length());
                     // Remove optional heading slash characters.
-                    int i = 0;
-                    while (path.charAt(i) == '/') i++;
+                    int i = 0, max = path.length();
+                    while ((i < max) && (path.charAt(i) == '/')) i++;
                     if (i != 0) {
                         path = path.substring(i);
                     }
