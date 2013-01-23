@@ -1008,7 +1008,9 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                 });
         }
         catch (Exception e) {
-            throw new TechnicalException("queries.load.failed", e, path);
+            TechnicalException error =
+                        new TechnicalException("queries.load.failed", e, path);
+            log.error(error.getLocalizedMessage(), e);
         }
         finally {
             if (in != null) {
