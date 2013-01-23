@@ -169,7 +169,7 @@ public class GridJsonWriter extends AbstractJsonWriter
     @Override
     public void handleNamespace(String prefix, String uri)
                                                     throws RDFHandlerException {
-        // Ignore namespace prefixes.
+        this.setPrefix(prefix, uri);
     }
 
     /** {@inheritDoc} */
