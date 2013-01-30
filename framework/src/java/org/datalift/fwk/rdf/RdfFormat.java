@@ -46,11 +46,14 @@ import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
 
+import org.ccil.cowan.tagsoup.Parser;
 import org.openrdf.model.ValueFactory;
 import org.openrdf.rio.RDFFormat;
 import org.openrdf.rio.RDFParser;
 import org.openrdf.rio.RDFWriter;
 import org.openrdf.rio.Rio;
+import org.semarglproject.sesame.rdf.rdfa.RDFaFormat;
+import org.semarglproject.sesame.rdf.rdfa.SesameRDFaParser;
 
 import org.datalift.fwk.MediaTypes;
 import org.datalift.fwk.rdf.rio.rdfxml.RDFXMLParser;
@@ -76,6 +79,7 @@ public enum RdfFormat
                  APPLICATION_RDF_XML_TYPE, APPLICATION_XML_TYPE) {
             @Override
             public RDFParser newParser(ValueFactory valueFactory) {
+                // Use Datalift's RDF/XML parser with SAX streaming support.
                 return (valueFactory == null)? new RDFXMLParser():
                                                new RDFXMLParser(valueFactory);
             }
@@ -92,7 +96,22 @@ public enum RdfFormat
     /** "application/trix" */
     TRIG        ("TriG", RDFFormat.TRIG, "trig", APPLICATION_TRIG_TYPE),
     /** "application/x-trig" */
-    TRIX        ("TriX", RDFFormat.TRIX, "trix", APPLICATION_TRIX_TYPE);
+    TRIX        ("TriX", RDFFormat.TRIX, "trix", APPLICATION_TRIX_TYPE),
+    /** RDFa (text/html) */
+    RDFA        ("RDFa", RDFaFormat.RDFA,
+                 new String[] { "html", "htm", "xhtml" },
+                 APPLICATION_XHTML_XML_TYPE, TEXT_HTML_TYPE) {
+            @Override
+            public RDFParser newParser(ValueFactory valueFactory) {
+                // Use TagSoup for crappy-HTML tolerant parsing of web pages.
+                SesameRDFaParser parser = new SesameRDFaParser(new Parser());
+                parser.setVocabExpansionEnabled(true);
+                if (valueFactory != null) {
+                    parser.setValueFactory(valueFactory);
+                }
+                return parser;
+            }
+        };
 
     //-------------------------------------------------------------------------
     // Class members

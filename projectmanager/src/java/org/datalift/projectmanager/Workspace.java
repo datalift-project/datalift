@@ -86,6 +86,7 @@ import org.openrdf.model.Value;
 import org.openrdf.model.vocabulary.RDFS;
 import org.openrdf.query.BindingSet;
 import org.openrdf.query.TupleQueryResultHandlerBase;
+import org.openrdf.repository.RepositoryConnection;
 import org.xml.sax.InputSource;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
@@ -299,6 +300,8 @@ public class Workspace extends BaseModule
                                                        description, license);
             // Persist project to RDF store.
             this.projectManager.saveProject(p);
+            // Register a namespace prefix for the project.
+            this.registerNamespacePrefix(title, projectId.toString());
             // Notify user of successful creation, redirecting HTML clients
             // (browsers) to the project page.
             response = this.created(p, null, null).build();
@@ -437,6 +440,8 @@ public class Workspace extends BaseModule
         try {
             uri = this.newProjectId(uriInfo.getBaseUri(), id);
             this.projectManager.deleteProject(this.loadProject(uri));
+            // Remove project namespace prefix, if any.
+            this.removeNamespacePrefix(id, uri.toString());
             // Notify user of successful deletion, redirecting HTML clients
             // (browsers) to the project page.
             URI targetUri = uriInfo.getBaseUriBuilder()
@@ -820,9 +825,9 @@ public class Workspace extends BaseModule
     @Consumes(MULTIPART_FORM_DATA)
     public Response uploadRdfSource(
                             @PathParam("id") String projectId,
-							@FormDataParam("file_name") String file_name,
+                            @FormDataParam("file_name") String file_name,
                             @FormDataParam("description") String description,
-                            @FormDataParam("base_uri") URI baseUri,
+                            @FormDataParam("base_uri") String baseUri,
                             @FormDataParam("source") InputStream fileData,
                             @FormDataParam("source")
                                     FormDataContentDisposition fileDisposition,
@@ -832,6 +837,15 @@ public class Workspace extends BaseModule
                                                 throws WebApplicationException {
         if (fileData == null) {
             this.throwInvalidParamError("source", null);
+        }
+        URI rdfBaseUri = null;
+        if (!isBlank(baseUri)) {
+            try {
+                rdfBaseUri = URI.create(baseUri);
+            }
+            catch (Exception e) {
+                throwInvalidParamError("base_uri", e);
+            }
         }
         Response response = null;
 
@@ -845,6 +859,9 @@ public class Workspace extends BaseModule
                 fileName = this.extractFileName(fileUrl, "rdf");
                 // Reset input stream to force downloading data from URL.
                 fileData = null;
+                if (rdfBaseUri == null) {
+                    rdfBaseUri = URI.create(sourceUrl);
+                }
             }
             catch (Exception e) {
                 // Conversion of source base URI to URL failed.
@@ -880,7 +897,7 @@ public class Workspace extends BaseModule
                                          format.getMimeTypes(), false);
             // Initialize new source.
             RdfFileSource src = this.projectManager.newRdfSource(p, sourceUri,
-                                    fileName, description, baseUri, filePath,
+                                    fileName, description, rdfBaseUri, filePath,
                                     format.getMimeType().toString());
             if (fileUrl != null) {
                 src.setSourceUrl(fileUrl.toString());
@@ -896,7 +913,8 @@ public class Workspace extends BaseModule
                 }
             }
             catch (Exception e) {
-                throw new IOException("Invalid or empty source data", e);
+                throw new IOException("Invalid or empty source data: " +
+                                                    e.getLocalizedMessage(), e);
             }
             finally {
                 i.close();
@@ -947,7 +965,8 @@ public class Workspace extends BaseModule
             RdfFileSource s = this.loadSource(p, sourceUri, RdfFileSource.class);
             // Update source data.
             s.setDescription(description);
-            s.setSourceUrl(baseUri.toString());
+            String v = baseUri.toString();
+            s.setSourceUrl(isBlank(v)? null: v);
 
             MediaType mappedType = null;
             try {
@@ -2391,6 +2410,44 @@ public class Workspace extends BaseModule
     private final FileStore getFileStore(Configuration cfg) {
         FileStore fs = cfg.getPublicStorage();
         return (fs != null)? fs: cfg.getPrivateStorage();
+    }
+
+    private void registerNamespacePrefix(String prefix, String uri) {
+        RepositoryConnection cnx = null;
+        try {
+            cnx = Configuration.getDefault().getInternalRepository()
+                                            .newConnection();
+            prefix = urlify(prefix);
+            if (cnx.getNamespace(prefix) == null) {
+                cnx.setNamespace(prefix, uri);
+            }
+        }
+        catch (Exception e) {
+            // Trace error but continue...
+            log.warn("Failed to declare namespace prefix \"{}\" for <{}>",
+                     e, prefix, uri);
+        }
+        finally {
+            try { cnx.close(); } catch (Exception e) { /* Ignore... */ }
+        }
+    }
+
+    private void removeNamespacePrefix(String prefix, String nsUri) {
+        RepositoryConnection cnx = null;
+        try {
+            cnx = Configuration.getDefault().getInternalRepository()
+                                            .newConnection();
+            prefix = urlify(prefix);
+            String currentNs = cnx.getNamespace(prefix);
+            if ((currentNs != null) &&
+                ((isBlank(nsUri)) || (currentNs.equals(nsUri)))) {
+                cnx.removeNamespace(prefix);
+            }
+        }
+        catch (Exception e) { /* Ignore... */ }
+        finally {
+            try { cnx.close(); } catch (Exception e) { /* Ignore... */ }
+        }
     }
 
     private void throwInvalidParamError(String name, Object value) {
