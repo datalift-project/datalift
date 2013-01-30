@@ -47,7 +47,7 @@
 			<div class="dl-form-elt" style="width: 100%;">
 				<p />
 				<label for="query">#i18n("sparql.query.light"): </label><br />
-				<textarea id="query" name="query" style="width:100%; min-height:100px;"></textarea></p>
+				<textarea id="query" name="query" spellcheck="false" style="width:100%; min-height:100px;"></textarea></p>
 #if( !${queries.isEmpty()} )
 				<div id="predef-queries">
 					<label>#i18n("sparql.predef.queries"): </label>
