@@ -99,7 +99,7 @@ public enum RdfFormat
     TRIX        ("TriX", RDFFormat.TRIX, "trix", APPLICATION_TRIX_TYPE),
     /** RDFa (text/html) */
     RDFA        ("RDFa", RDFaFormat.RDFA,
-                 new String[] { "html", "htm", "xhtml" },
+                 new String[] { "html", "xhtml", "htm" },
                  APPLICATION_XHTML_XML_TYPE, TEXT_HTML_TYPE) {
             @Override
             public RDFParser newParser(ValueFactory valueFactory) {
