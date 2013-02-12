@@ -90,6 +90,7 @@ import org.datalift.fwk.Configuration;
 import org.datalift.fwk.i18n.BaseLocalizedItem;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.rdf.BaseTupleQueryResultMapper;
+import org.datalift.fwk.rdf.ElementType;
 import org.datalift.fwk.rdf.RdfNamespace;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
@@ -103,7 +104,7 @@ import org.datalift.fwk.view.ViewFactory;
 import static org.datalift.fwk.MediaTypes.*;
 import static org.datalift.fwk.util.StringUtils.*;
 import static org.datalift.fwk.rdf.RdfNamespace.*;
-import static org.datalift.fwk.sparql.SparqlEndpoint.DescribeType.*;
+import static org.datalift.fwk.rdf.ElementType.*;
 
 
 /**
@@ -312,7 +313,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
 
     /** {@inheritDoc} */
     @Override
-    public ResponseBuilder describe(String uri, DescribeType type,
+    public ResponseBuilder describe(String uri, ElementType type,
                                     UriInfo uriInfo, Request request,
                                     String acceptHdr)
                                                 throws WebApplicationException {
@@ -321,7 +322,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
 
     /** {@inheritDoc} */
     @Override
-    public ResponseBuilder describe(String uri, DescribeType type,
+    public ResponseBuilder describe(String uri, ElementType type,
                                     Repository repository, UriInfo uriInfo,
                                     Request request, String acceptHdr)
                                                 throws WebApplicationException {
@@ -331,7 +332,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
 
     /** {@inheritDoc} */
     @Override
-    public ResponseBuilder describe(String uri, DescribeType type,
+    public ResponseBuilder describe(String uri, ElementType type,
                                     Repository repository, int max,
                                     String format, String jsonCallback,
                                     UriInfo uriInfo, Request request,
@@ -365,10 +366,10 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
             else if (type != null) {
                 // URI found in RDF store as a subject, predicate or graph.
                 String query = null;
-                MessageFormat fmt = (type == Object)?  DESCRIBE_OBJECT_QUERY:
-                                    (type == Graph)?   DESCRIBE_GRAPH_QUERY:
-                                    (type == RdfType)? DESCRIBE_TYPE_QUERY:
-                                                       DESCRIBE_PREDICATE_QUERY;
+                MessageFormat fmt = (type == Resource)? DESCRIBE_OBJECT_QUERY:
+                                    (type == Graph)?    DESCRIBE_GRAPH_QUERY:
+                                    (type == RdfType)?  DESCRIBE_TYPE_QUERY:
+                                                        DESCRIBE_PREDICATE_QUERY;
                 synchronized (fmt) {
                     query = fmt.format(new Object[] { u });
                 }
@@ -596,7 +597,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
             l.add(defaultGraph);
             repository = this.getTargetRepository(l);
         }
-        return this.describe(uri, DescribeType.fromString(type),
+        return this.describe(uri, ElementType.fromString(type),
                              repository, max, null, null,
                              uriInfo, request, acceptHdr)
                    .build();
@@ -875,21 +876,21 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         return desc;
     }
 
-    private DescribeType getDescribeTypeFromUri(URI uri,
+    private ElementType getDescribeTypeFromUri(URI uri,
                                                 Repository repository) {
-        DescribeType type = null;
+        ElementType type = null;
         try {
             // Try to determine the URI type by performing a SPARQL query.
             Map<String,Object> bindings = new HashMap<String,Object>();
             bindings.put("u", uri);
-            TupleQueryResultMapper<DescribeType> m =
-                                new BaseTupleQueryResultMapper<DescribeType>() {
-                    private DescribeType nodeType = null;
+            TupleQueryResultMapper<ElementType> m =
+                                new BaseTupleQueryResultMapper<ElementType>() {
+                    private ElementType nodeType = null;
                     @Override
                     public void handleSolution(BindingSet b) {
                         if (nodeType == null) {
                             if (b.hasBinding("s")) {
-                                nodeType = Object;
+                                nodeType = Resource;
                             }
                             else if (b.hasBinding("p")) {
                                 nodeType = Predicate;
@@ -907,7 +908,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                         // Else: Already set. => Ignore...
                     }
                     @Override
-                    public DescribeType getResult() {
+                    public ElementType getResult() {
                         return nodeType;
                     }
                 };

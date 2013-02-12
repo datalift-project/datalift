@@ -119,11 +119,11 @@ import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.project.XmlSource;
 import org.datalift.fwk.project.CsvSource.Separator;
 import org.datalift.fwk.project.ProjectModule.UriDesc;
+import org.datalift.fwk.rdf.ElementType;
 import org.datalift.fwk.rdf.RdfFormat;
 import org.datalift.fwk.rdf.RdfNamespace;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.sparql.SparqlEndpoint;
-import org.datalift.fwk.sparql.SparqlEndpoint.DescribeType;
 import org.datalift.fwk.util.CloseableIterator;
 import org.datalift.fwk.util.io.FileUtils;
 import org.datalift.fwk.util.web.Charsets;
@@ -1660,7 +1660,7 @@ public class Workspace extends BaseModule
                 // Forward source description request to the SPARQL endpoint.
                 Configuration cfg = Configuration.getDefault();
                 response = cfg.getBean(SparqlEndpoint.class)
-                              .describe(src.getUri(), DescribeType.Graph,
+                              .describe(src.getUri(), ElementType.Graph,
                                         cfg.getInternalRepository(),
                                         5000, null, null,
                                         uriInfo, request, acceptHdr);
@@ -1804,7 +1804,7 @@ public class Workspace extends BaseModule
             // Forward source description request to the SPARQL endpoint.
             Configuration cfg = Configuration.getDefault();
             response = cfg.getBean(SparqlEndpoint.class)
-                          .describe(u.toString(), DescribeType.Graph,
+                          .describe(u.toString(), ElementType.Graph,
                                     cfg.getInternalRepository(),
                                     uriInfo, request, acceptHdr).build();
         }

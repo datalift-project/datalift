@@ -79,9 +79,9 @@ import org.datalift.fwk.MediaTypes;
 import org.datalift.fwk.Module;
 import org.datalift.fwk.ResourceResolver;
 import org.datalift.fwk.log.Logger;
+import org.datalift.fwk.rdf.ElementType;
 import org.datalift.fwk.sparql.SparqlEndpoint;
 import org.datalift.fwk.sparql.SparqlQueries;
-import org.datalift.fwk.sparql.SparqlEndpoint.DescribeType;
 import org.datalift.fwk.util.UriPolicy;
 import org.datalift.fwk.util.UriPolicy.ResourceHandler;
 import org.datalift.fwk.util.web.CacheConfiguration;
@@ -675,8 +675,8 @@ public class RouterResource implements LifeCycle, ResourceResolver
 
     private static final class ExistsQueryResultHandler
                                         extends TupleQueryResultHandlerBase {
-        public DescribeType type = null;
-        public Date         lastModified = null;
+        public ElementType type = null;
+        public Date        lastModified = null;
 
         public ExistsQueryResultHandler() {
             super();
@@ -687,8 +687,8 @@ public class RouterResource implements LifeCycle, ResourceResolver
         public void handleSolution(BindingSet b) {
             if (this.type == null) {
                 // Store information for the first matched entry.
-                this.type = (b.getBinding("s") != null)? DescribeType.Object:
-                            (b.getBinding("g") != null)? DescribeType.Graph: null;
+                this.type = (b.getBinding("s") != null)? ElementType.Resource:
+                            (b.getBinding("g") != null)? ElementType.Graph: null;
                 if (this.type == null) {
                     this.lastModified = this.getDate(b, "lastModified");
                 }

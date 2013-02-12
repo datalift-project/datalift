@@ -91,6 +91,7 @@ import org.openrdf.rio.turtle.TurtleWriter;
 import static org.openrdf.query.QueryLanguage.SPARQL;
 
 import org.datalift.fwk.Configuration;
+import org.datalift.fwk.rdf.ElementType;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.sparql.AccessController;
 import org.datalift.fwk.sparql.AccessController.ControlledQuery;
@@ -178,9 +179,9 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
 
     private final static String DESCRIBE_URL_PATTERN =
         "sparql/describe?uri={0}{1,choice," +
-            ResourceType.Object.value    + "#&type=" + DescribeType.Object    + "|" +
-            ResourceType.Predicate.value + "#&type=" + DescribeType.Predicate + "|" +
-            ResourceType.Graph.value     + "#&type=" + DescribeType.Graph     + "|" +
+            ResourceType.Object.value    + "#&type=" + ElementType.Resource  + "|" +
+            ResourceType.Predicate.value + "#&type=" + ElementType.Predicate + "|" +
+            ResourceType.Graph.value     + "#&type=" + ElementType.Graph     + "|" +
             ResourceType.Graph.value     + "<}&default-graph={2}";
 
     //-------------------------------------------------------------------------
