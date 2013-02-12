@@ -125,6 +125,7 @@ import org.datalift.fwk.rdf.RdfNamespace;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.sparql.SparqlEndpoint;
 import org.datalift.fwk.util.CloseableIterator;
+import org.datalift.fwk.util.UriBuilder;
 import org.datalift.fwk.util.io.FileUtils;
 import org.datalift.fwk.util.web.Charsets;
 import org.datalift.fwk.view.TemplateModel;
@@ -2191,10 +2192,12 @@ public class Workspace extends BaseModule
     }
 
     private URI newProjectId(URI baseUri, String name) {
+        final UriBuilder uriBuilder = Configuration.getDefault()
+                                                   .getBean(UriBuilder.class);
         URI u = null;
         try {
-            u = new URL(baseUri.toURL(),
-                           REL_PROJECT_PATH + urlify(name)).toURI();
+            u = new URL(baseUri.toURL(), REL_PROJECT_PATH +
+                        uriBuilder.urlify(name, ElementType.Resource)).toURI();
         }
         catch (Exception e) {
             this.throwInvalidParamError("id", name);
@@ -2220,7 +2223,10 @@ public class Workspace extends BaseModule
     }
 
     private String getSourceId(String projectUri, String sourceName) {
-        return projectUri + SOURCE_PATH + urlify(sourceName);
+        final UriBuilder uriBuilder = Configuration.getDefault()
+                                                   .getBean(UriBuilder.class);
+        return projectUri + SOURCE_PATH
+                          + uriBuilder.urlify(sourceName, ElementType.Resource);
     }
 
     private String extractFileName(URL url, String suffix) {

@@ -45,6 +45,7 @@ import java.util.Properties;
 import java.util.Set;
 
 import javax.ws.rs.Path;
+import javax.ws.rs.core.UriBuilder;
 
 import org.datalift.core.log.TimerContext;
 import org.datalift.core.project.DefaultProjectManager;
@@ -57,6 +58,7 @@ import org.datalift.fwk.ResourceResolver;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.log.web.LogServletContextListener;
 import org.datalift.fwk.project.ProjectManager;
+import org.datalift.fwk.util.DefaultUriBuilder;
 import org.datalift.fwk.view.ViewFactory;
 
 import static org.datalift.core.DefaultConfiguration.DATALIFT_HOME;
@@ -230,6 +232,10 @@ public class ApplicationLoader extends LogServletContextListener
             if (cfg.getBeans(ViewFactory.class).isEmpty()) {
                 // Add default view factory.
                 cfg.registerBean(new VelocityViewFactory());
+            }
+            if (cfg.getBeans(UriBuilder.class).isEmpty()) {
+                // Add default URI building policy.
+                cfg.registerBean(new DefaultUriBuilder());
             }
             if (cfg.getBeans(ResourceResolver.class).isEmpty()) {
                 // Add default resource resolver.

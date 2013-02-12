@@ -74,7 +74,9 @@ import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.util.Env;
+import org.datalift.fwk.util.UriBuilder;
 
+import static org.datalift.fwk.rdf.ElementType.*;
 import static org.datalift.fwk.util.StringUtils.*;
 import static org.datalift.fwk.MediaTypes.*;
 
@@ -217,6 +219,8 @@ public class SqlDirectMapper extends BaseConverterModule
         if (isBlank(keyColumn)) {
             keyColumn = null;
         }
+        final UriBuilder uriBuilder = Configuration.getDefault()
+                                                   .getBean(UriBuilder.class);
         final RepositoryConnection cnx = target.newConnection();
         try {
             final ValueFactory valueFactory = cnx.getValueFactory();
@@ -234,15 +238,16 @@ public class SqlDirectMapper extends BaseConverterModule
                     (targetGraph != null)? targetGraph.toString(): null, '/');
             String typeUri = RdfUtils.getBaseUri(
                     (targetGraph != null)? targetGraph.toString(): null, '#');
-            org.openrdf.model.URI rdfType = valueFactory.createURI(
-                                            typeUri, urlify(src.getTitle()));
+            org.openrdf.model.URI rdfType = valueFactory.createURI(typeUri,
+                                    uriBuilder.urlify(src.getTitle(), RdfType));
             // Build predicates URIs.
             int max = src.getColumnNames().size();
             org.openrdf.model.URI[] predicates = new org.openrdf.model.URI[max];
             int i = 0;
             for (String s : src.getColumnNames()) {
                 if (! s.equals(keyColumn)) {
-                    predicates[i] = valueFactory.createURI(typeUri + urlify(s));
+                    predicates[i] = valueFactory.createURI(typeUri +
+                                            uriBuilder.urlify(s, Predicate));
                 }
                 i++;
             }

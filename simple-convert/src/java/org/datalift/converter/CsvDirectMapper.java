@@ -83,7 +83,9 @@ import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.rdf.UriCachingValueFactory;
 import org.datalift.fwk.util.Env;
+import org.datalift.fwk.util.UriBuilder;
 
+import static org.datalift.fwk.rdf.ElementType.*;
 import static org.datalift.fwk.util.StringUtils.*;
 import static org.datalift.fwk.MediaTypes.*;
 
@@ -307,6 +309,8 @@ public class CsvDirectMapper extends BaseConverterModule
                                         URI targetGraph, URI baseUri,
                                         String targetType,
                                         MappingDesc mapping) {
+        final UriBuilder uriBuilder = Configuration.getDefault()
+                                                   .getBean(UriBuilder.class);
         final RepositoryConnection cnx = target.newConnection();
         org.openrdf.model.URI ctx = null;
         try {
@@ -332,7 +336,7 @@ public class CsvDirectMapper extends BaseConverterModule
                             (baseUri != null)? baseUri.toString(): null, '#');
             // Create target RDF type.
             if (! isSet(targetType)) {
-                targetType = urlify(src.getTitle());
+                targetType = uriBuilder.urlify(src.getTitle(), RdfType);
             }
             org.openrdf.model.URI rdfType = null;
             try {
@@ -348,7 +352,8 @@ public class CsvDirectMapper extends BaseConverterModule
             org.openrdf.model.URI[] predicates = new org.openrdf.model.URI[n];
             int i = 0;
             for (String s : src.getColumnNames()) {
-                predicates[i++] = valueFactory.createURI(typeUri + urlify(s));
+                predicates[i++] = valueFactory.createURI(
+                                    typeUri + uriBuilder.urlify(s, Predicate));
             }
             // Load triples.
             long statementCount = 0L;
@@ -374,8 +379,8 @@ public class CsvDirectMapper extends BaseConverterModule
                         }
                         value = this.mapValue(v, valueFactory, m, mapping);
                         if (j == mapping.keyColumn) {
-                            subject = valueFactory.createURI(
-                                                objUri + urlify(v)); // + "#_";
+                            subject = valueFactory.createURI(objUri +
+                                            uriBuilder.urlify(v, Resource)); // + "#_";
                         }
                     }
                     else {
