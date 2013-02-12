@@ -238,10 +238,6 @@ public final class StringUtils
         u = u.toLowerCase();
         // Convert punctuation characters and spaces into a single space.
         u = u.replaceAll("[\\s\\p{Punct}§]+", " ").trim();
-        // Cut if requested.
-        if (maxLength > 0) {
-            u = u.substring(0, Math.min(u.length(), maxLength)).trim();
-        }
         // Replace spaces with hyphens and clean up the remaining mess!
         t.setLength(0);
         for (int i=0, max=u.length(); i<max; i++) {
@@ -263,6 +259,80 @@ public final class StringUtils
         // Check there's something left with all those characters removed!
         if (u.length() == 0) {
             throw new IllegalArgumentException(s);
+        }
+        // Truncate if requested.
+        else if ((maxLength > 0) && (u.length() > maxLength)) {
+            u = u.substring(0, maxLength);
+        }
+        return u;
+    }
+
+    /**
+     * Concert the specified string to camel cases (starting with a
+     * lowercase character), removing or replacing characters that may
+     * prevent it to be used as a path element in a URL.
+     * @param  s   the string to convert.
+     *
+     * @return a string suitable for being included in a URL.
+     * @throws IllegalArgumentException if <code>s</code> is
+     *         <code>null</code> or no valid URL can be extracted.
+     */
+    public static String toCamelCase(String s) {
+        return toCamelCase(s, false, -1);
+    }
+
+    /**
+     * Concert the specified string to camel cases, removing or
+     * replacing characters that may prevent it to be used as a
+     * path element in a URL.
+     * @param  s                    the string to convert.
+     * @param  startWithUpperCase   whether the converted string
+     *                              shall start with an uppercase
+     *                              character.
+     *
+     * @return a string suitable for being included in a URL.
+     * @throws IllegalArgumentException if <code>s</code> is
+     *         <code>null</code> or no valid URL can be extracted.
+     */
+    public static String toCamelCase(String s, boolean startWithUpperCase) {
+        return toCamelCase(s, startWithUpperCase, -1);
+    }
+
+    /**
+     * Concert the specified string to camel cases, removing or
+     * replacing characters that may prevent it to be used as a
+     * path element in a URL, truncating it if need be.
+     * @param  s                    the string to convert.
+     * @param  startWithUpperCase   whether the converted string
+     *                              shall start with an uppercase
+     *                              character.
+     * @param  maxLength            the maximum length allowed for
+     *                              the converted string.
+     *
+     * @return a string suitable for being included in a URL.
+     * @throws IllegalArgumentException if <code>s</code> is
+     *         <code>null</code> or no valid URL can be extracted.
+     */
+    public static String toCamelCase(String s, boolean startWithUpperCase,
+                                               int maxLength) {
+        s = urlify(s);
+
+        StringBuilder t = new StringBuilder(s.length());
+        boolean toUp = startWithUpperCase;
+        for (int i=0, max=s.length(); i<max; i++) {
+            char c = s.charAt(i);
+            if (c == '-') {
+                toUp = true;
+            }
+            else {
+                t.append((toUp)? Character.toUpperCase(c): c);
+                toUp = false;
+            }
+        }
+        String u = t.toString();
+        // Truncate if requested.
+        if ((maxLength > 0) && (u.length() > maxLength)) {
+            u = u.substring(0, maxLength);
         }
         return u;
     }
