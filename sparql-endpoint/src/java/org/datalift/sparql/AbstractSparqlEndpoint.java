@@ -366,10 +366,10 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
             else if (type != null) {
                 // URI found in RDF store as a subject, predicate or graph.
                 String query = null;
-                MessageFormat fmt = (type == Resource)? DESCRIBE_OBJECT_QUERY:
-                                    (type == Graph)?    DESCRIBE_GRAPH_QUERY:
-                                    (type == RdfType)?  DESCRIBE_TYPE_QUERY:
-                                                        DESCRIBE_PREDICATE_QUERY;
+                MessageFormat fmt = (type == Predicate)? DESCRIBE_PREDICATE_QUERY:
+                                    (type == Graph)?     DESCRIBE_GRAPH_QUERY:
+                                    (type == RdfType)?   DESCRIBE_TYPE_QUERY:
+                                                         DESCRIBE_OBJECT_QUERY;
                 synchronized (fmt) {
                     query = fmt.format(new Object[] { u });
                 }
