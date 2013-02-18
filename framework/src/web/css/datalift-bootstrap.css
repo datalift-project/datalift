@@ -1,0 +1,103 @@
+#datalift-header-button
+{
+}
+
+.navbar-inner.datalift-header
+{
+	min-height: 20px;
+}
+
+.navbar-static-top
+{
+   margin-left: 0px;
+   margin-right: 0px;
+}
+
+#datalift-left-menu-ul li.active i 
+{
+   background-image: url("img/glyphicons-halflings.png");
+}
+.datalift-header-minilogo img
+{
+	width: 100px;
+}
+
+.datalift-menu-iconographie
+{
+	width: 24px; 
+	margin-right: 5px;
+}
+
+body.datalift-phone #datalift-left-menu .datalift-menu-iconographie
+{
+	display: block;
+	margin:auto;
+}
+body.datalift-tablet
+{
+
+}
+body.datalift-tablet #datalift-left-menu i, body.datalift-phone #datalift-left-menu i 
+{
+	display:none;
+}
+
+#datalift-center-content
+{
+	float: left;
+	width: auto;
+	padding-top: 30px;
+}
+
+#datalift-left-menu
+{
+	float: left;
+	width: auto;
+}
+
+#datalift-header-project
+{
+	text-align:center;
+	padding-top: 15px;
+	margin-top: 40px;
+}
+
+body.datalift-phone #datalift-header-project
+ {
+	margin-top:0;
+ }
+
+#datalift-header input.datalift-header-searchinput
+{
+	margin-bottom: 0;
+}
+ body.datalift-phone img.datalift-logo
+ {
+	float: left;
+    width: auto;
+	margin-bottom: 0;
+}
+body.datalift-phone .datalift-header-searchinput-p
+{
+	margin-bottom: 0;
+}
+body.datalift-phone img.datalift-logo
+{
+	width: 40px;
+	height: 50px;
+}
+.valign-child
+{
+    display: table-cell;
+    vertical-align: middle;
+}
+
+.valign-parent
+{
+	display: table;
+}
+
+div.brand span.datalift-version
+{
+		font-size: 0.5em;
+}

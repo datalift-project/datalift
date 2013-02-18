@@ -54,7 +54,7 @@ body {
   vertical-align:middle;
 }
 
-#datalift-logo {
+.datalift-logo, #datalift-logo {
   width:80px;
   height:100px;
   display:inline-block;
@@ -70,13 +70,15 @@ body {
 }
 
 #projects_panel {
-  width:15%;
+  /*width:15%; bt */
   margin:0;
-  margin-left:1%;
-  margin-top:1%;
+  /* margin-left:1%; bt*/
+  /*margin-top:1%; bt */
   min-height:300px;
-  float:left;
-text-align:center;
+  margin-top: 10px; /* bt */
+  margin-left: 10px; /* bt */
+  /*float:left; bt*/
+  text-align:center;
 }
 
 #project_scroll {
@@ -94,8 +96,8 @@ text-align:center;
   min-height:450px;
   margin-right:10px;
   margin-top:10px;  
-  margin-left:18%;
-  width:80%;
+  /*margin-left:18%; bt*/
+  /*width:80%; bt*/
   overflow:hidden;
 }
 
