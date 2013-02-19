@@ -58,7 +58,7 @@ import java.util.regex.Pattern;
  *
  * @author lbihanic
  */
-@SuppressWarnings("unchecked")
+@SuppressWarnings({"unchecked", "rawtypes"})
 public class LocaleComparable<T> implements Comparable<LocaleComparable<T>>
 {
     //-------------------------------------------------------------------------

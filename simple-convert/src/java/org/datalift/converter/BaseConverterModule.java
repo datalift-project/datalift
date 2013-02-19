@@ -67,9 +67,9 @@ import org.datalift.fwk.project.ProjectModule;
 import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.project.Source.SourceType;
+import org.datalift.fwk.rdf.ElementType;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.sparql.SparqlEndpoint;
-import org.datalift.fwk.sparql.SparqlEndpoint.DescribeType;
 import org.datalift.fwk.view.TemplateModel;
 import org.datalift.fwk.view.ViewFactory;
 
@@ -378,7 +378,7 @@ public abstract class BaseConverterModule
         }
         SparqlEndpoint endpoint = Configuration.getDefault()
                                                .getBean(SparqlEndpoint.class);
-        return endpoint.describe(namedGraph.toString(), DescribeType.Graph,
+        return endpoint.describe(namedGraph.toString(), ElementType.Graph,
                                  repository, 5000, TEXT_HTML, null,
                                  uriInfo, request, acceptHdr).build();
     }

@@ -12,10 +12,14 @@
 #css_links
 </head>
 <body>
-#if( ${securityCtx.userAuthenticated} )
-	<a href="${baseUri}/project" id="goto_workspace" class="button" style="position:absolute;top:15px;right:15px;">#i18n("project.workspace.link")</a>
-#end
 #banner
+	<div style="position:absolute;top:15px;right:15px;">
+		<a href="${baseUri}/sparql" id="goto_sparql" class="button">#i18n("sparql.endpoint.link")</a>
+#if( ${securityCtx.userAuthenticated} )
+		<a href="${baseUri}/project" id="goto_workspace" class="button">#i18n("project.workspace.link")</a>
+	</div>
+#end
+
 #set($columnWidth = 100 / $it.columns.size())
 	<div id="content" class="ui-widget-content dl-main-panel">
 #if( $describe-uri )
@@ -79,76 +83,16 @@
 #footer
 
 #script_links
+	<script language="javascript" src="${baseUri}/project/static/js/jqgrid.common.js"></script>
 	<script type="text/javascript">
-		var gridData = new Array();
-		var searchData = new Array();
-
 		$(document).ready(function(){
-			jQuery.extend(jQuery.jgrid.defaults, {
-				pager: $('#pagernav'),
-				caption: $('#searchnav').html(),
-				rowNum: 500,
-				rowList:[50,100,200,500,1000,2000],
-				height: 450,
-				search:{
-					caption: "#i18n("grid.search.value.label")"
-				}
-			});
+			jQuery.extend(jQuery.jgrid.defaults, getBasicTableParameters());
+			$("#goto_sparql").button();
 			$("#goto_workspace").button();
 			tableToGrid("#queryresults", { datatype: "local" });
-
-			$("#queryresults").trigger("reloadGrid");
-			$("#results").show();
-			$("#queryresults").setGridWidth($("#results").width());
-
-			gridData = $("#queryresults").getRowData();
-			// Function called when modifying search text
-			$("#gridsearch").keyup(function () {
-				gridSearch($(this).val().toLowerCase());
-			});
-			// Function called when modifying search Column
-			$("#searchColumn").change(function() {
-				gridSearch($("#gridsearch").val().toLowerCase());
-			});
+			enableTable($("#queryresults"));
+			jQuery("#queryresults").trigger("reloadGrid");
 		});
-
-		function gridSearch(searchString) {
-			searchData = [];
-			if ($("#searchColumn").val() == "all") {
-				searchAllColumns(searchString);
-			}
-			else {
-				searchOneColumn(searchString, $("#searchColumn").val());
-			}
-			$("#queryresults").jqGrid('clearGridData', true);
-			$("#queryresults").jqGrid('setGridParam',{data:searchData}).trigger("reloadGrid");
-		}
-
-		function searchAllColumns(searchString) {
-			var c = 0;
-			for (var i = 0; i < gridData.length; i++) {
-				var found = false;
-				for (property in gridData[0]) {
-					var toCmp = eval("gridData[i]." + property);
-					if (!found && toCmp.toLowerCase().indexOf(searchString) != -1) {
-						searchData[c] = gridData[i];
-						c++;
-						found = true;
-					}
-				}
-			}
-		}
-
-		function searchOneColumn(searchString, searchColumn) {
-			var c = 0;
-			for (var i = 0; i < gridData.length; i++) {
-				var toCmp = eval("gridData[i]." + searchColumn);
-				if (toCmp.toLowerCase().indexOf(searchString) != -1) {
-					searchData[c] = gridData[i];
-					c++;
-				}
-			}
-		}
 	</script>
 </body>
 </html>

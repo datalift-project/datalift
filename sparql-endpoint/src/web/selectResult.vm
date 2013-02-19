@@ -8,10 +8,14 @@
 #css_links
 </head>
 <body>
-#if( ${securityCtx.userAuthenticated} )
-	<a href="${baseUri}/project" id="goto_workspace" class="button" style="position:absolute;top:15px;right:15px;">#i18n("project.workspace.link")</a>
-#end
 #banner
+	<div style="position:absolute;top:15px;right:15px;">
+		<a href="${baseUri}/sparql" id="goto_sparql" class="button">#i18n("sparql.endpoint.link")</a>
+#if( ${securityCtx.userAuthenticated} )
+		<a href="${baseUri}/project" id="goto_workspace" class="button">#i18n("project.workspace.link")</a>
+	</div>
+#end
+
 #set( $columnWidth = 100 / $it.Columns.size() )
 	<div id="content" class="ui-widget-content dl-main-panel">
 		<h3 class="ui-widget-header dl-widget-header">#i18n("sparql.query.full") #if( $min > 0 )#if( $max > 0 )#i18n("results.interval",${min},${max})#else#i18n("results.last",${min})#end#else#if( $max > 0)#i18n("results.first",${max})#end#end</h3>
@@ -68,6 +72,7 @@
 					caption: "#i18n("grid.search.value.label")"
 				}
 			});
+			$("#goto_sparql").button();
 			$("#goto_workspace").button();
 			tableToGrid("#queryresults", { datatype: "local" });
 

@@ -55,7 +55,8 @@ public interface Source
     public enum SourceType {
         RdfFileSource,
         CsvSource,
-        SqlSource,
+        SqlQuerySource,
+        SqlDatabaseSource,
         TransformedRdfSource,
         SparqlSource,
         XmlSource,

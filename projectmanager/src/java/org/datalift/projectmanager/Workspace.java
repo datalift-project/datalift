@@ -46,12 +46,12 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -75,6 +75,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.xml.parsers.SAXParserFactory;
@@ -87,16 +88,22 @@ import org.openrdf.model.Value;
 import org.openrdf.model.vocabulary.RDFS;
 import org.openrdf.query.BindingSet;
 import org.openrdf.query.TupleQueryResultHandlerBase;
+import org.openrdf.repository.RepositoryConnection;
 import org.xml.sax.InputSource;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.FormDataParam;
 
 import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
+import org.datalift.fwk.FileStore;
 import org.datalift.fwk.ResourceResolver;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.CachingSource;
@@ -105,8 +112,11 @@ import org.datalift.fwk.project.DuplicateObjectKeyException;
 import org.datalift.fwk.project.FileSource;
 import org.datalift.fwk.project.GmlSource;
 import org.datalift.fwk.project.RdfSource;
+import org.datalift.fwk.project.Row;
 import org.datalift.fwk.project.ShpSource;
 import org.datalift.fwk.project.SparqlSource;
+import org.datalift.fwk.project.SqlDatabaseSource;
+import org.datalift.fwk.project.SqlQuerySource;
 import org.datalift.fwk.project.SqlSource;
 import org.datalift.fwk.project.Ontology;
 import org.datalift.fwk.project.Project;
@@ -118,12 +128,13 @@ import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.project.XmlSource;
 import org.datalift.fwk.project.CsvSource.Separator;
 import org.datalift.fwk.project.ProjectModule.UriDesc;
+import org.datalift.fwk.rdf.ElementType;
 import org.datalift.fwk.rdf.RdfFormat;
 import org.datalift.fwk.rdf.RdfNamespace;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.sparql.SparqlEndpoint;
-import org.datalift.fwk.sparql.SparqlEndpoint.DescribeType;
 import org.datalift.fwk.util.CloseableIterator;
+import org.datalift.fwk.util.UriBuilder;
 import org.datalift.fwk.util.io.FileUtils;
 import org.datalift.fwk.util.web.Charsets;
 import org.datalift.fwk.view.TemplateModel;
@@ -235,6 +246,10 @@ public class Workspace extends BaseModule
     /** {@inheritDoc} */
     @Override
     public void init(Configuration configuration) {
+        // Check file store availability.
+        if (this.getFileStore(configuration) == null) {
+            throw new TechnicalException("No file store available.");
+        }
         // Load licenses.
         this.loadLicenses(configuration);
     }
@@ -295,6 +310,8 @@ public class Workspace extends BaseModule
                                                        description, license);
             // Persist project to RDF store.
             this.projectManager.saveProject(p);
+            // Register a namespace prefix for the project.
+            this.registerNamespacePrefix(title, projectId.toString());
             // Notify user of successful creation, redirecting HTML clients
             // (browsers) to the project page.
             response = this.created(p, null, null).build();
@@ -382,7 +399,6 @@ public class Workspace extends BaseModule
                     @FormParam("license") URI license,
                     @Context UriInfo uriInfo) throws WebApplicationException {
         Response response = null;
-
         try {
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
             Project p = this.loadProject(projectUri);
@@ -433,6 +449,8 @@ public class Workspace extends BaseModule
         try {
             uri = this.newProjectId(uriInfo.getBaseUri(), id);
             this.projectManager.deleteProject(this.loadProject(uri));
+            // Remove project namespace prefix, if any.
+            this.removeNamespacePrefix(id, uri.toString());
             // Notify user of successful deletion, redirecting HTML clients
             // (browsers) to the project page.
             URI targetUri = uriInfo.getBaseUriBuilder()
@@ -659,8 +677,7 @@ public class Workspace extends BaseModule
             Project p = this.loadProject(projectUri);
             // Save new source data to public project storage.
             String filePath = this.getProjectFilePath(projectId, fileName);
-            localFile = this.getFileStorage(filePath);
-            this.getFileData(fileData, fileUrl, localFile, uriInfo,
+            localFile = this.getFileData(fileData, fileUrl, filePath, uriInfo,
                              Arrays.asList(TEXT_CSV_TYPE, APPLICATION_CSV_TYPE,
                                            TEXT_COMMA_SEPARATED_VALUES_TYPE,
                                            TEXT_PLAIN_TYPE), true);
@@ -707,7 +724,7 @@ public class Workspace extends BaseModule
         catch (IOException e) {
             deleteFiles = true;
             String src = (fileData != null)? fileName:
-                        (fileUrl != null)? fileUrl.toString(): "file_url";
+                         (fileUrl != null)? fileUrl.toString(): "file_url";
             log.fatal("Failed to save source data from {}", e, src);
             this.throwInvalidParamError(src, e.getLocalizedMessage());
         }
@@ -718,7 +735,7 @@ public class Workspace extends BaseModule
         }
         finally {
             if ((deleteFiles) && (localFile != null)) {
-                localFile.delete();
+                this.deleteFileStorage(localFile);
             }
         }
         return response;
@@ -729,53 +746,30 @@ public class Workspace extends BaseModule
     public Response checkFileSource(
                     @FormParam("project_uri") URI projectUri,
                     @FormParam("source") String sourceName,
-                    @FormParam("file_url") String sourceUrl,
-                    @Context UriInfo uriInfo) throws WebApplicationException {
-        boolean isValid = true;
-        Response response = null;
-        URL fileUrl = null;
-        String fileName = null;
-        // Build object URIs from request path.
+                    @FormParam("file_url") String sourceUrl)
+                                                throws WebApplicationException {
+        boolean isValid = false;
         try {
-            if (!isBlank(sourceUrl)) {
-                fileUrl = new URL(sourceUrl);
-                fileName = this.extractFileName(fileUrl, "csv") ;
+            String fileName = sourceName;
+            if (! isBlank(sourceUrl)) {
+                fileName = this.extractFileName(new URL(sourceUrl), null) ;
             }
-            else
-                fileName = sourceName;
+            // Build object URIs from request path.
             URI sourceUri = new URI(projectUri.getScheme(), null,
                     projectUri.getHost(), projectUri.getPort(),
-                    this.getSourceId(projectUri.getPath(),fileName),
+                    this.getSourceId(projectUri.getPath(), fileName),
                     null, null);
-            Collection<Project> projects = this.projectManager.listProjects();
-            if (!projects.isEmpty()) {
-                Iterator<Project> itp = projects.iterator();
-                while(itp.hasNext() && isValid != false) {
-                    Project p = itp.next();
-                    log.info("iteration of projects \"{}\"", p.getDescription());
-                    Collection<Source> sources = p.getSources();
-                    if (!sources.isEmpty()) {
-                        Iterator<Source> its = sources.iterator();
-                        while(its.hasNext() && isValid != false) {
-                            Source s = its.next();
-                            log.info("\"{}\"", s.getUri());
-                            log.info("\"{}\"", sourceUri.toString());
-                            if (s.getUri().equals(sourceUri.toString())) {
-                                log.info("URI already exists", sourceUri);
-                                isValid = false;
-                            }
-                        }
-                    }
-                }
-            }
-            if (isValid)
-                return Response.ok("true", APPLICATION_JSON_UTF8).build();
-            else
-                return Response.ok("false", APPLICATION_JSON_UTF8).build();
-        } catch (Exception e) {
-            this.handleInternalError(e, "Failed to create source URI", fileName);
+            // Check that no resource with the specified URI already exists.
+            Map<String,Object> bindings = new HashMap<String,Object>();
+            bindings.put("uri", sourceUri);
+            isValid = (Configuration.getDefault().getInternalRepository()
+                                    .ask("ASK { ?uri ?p ?o . }", bindings) == false);
         }
-        return response;
+        catch (Exception e) {
+            // WTF?
+        }
+        return Response.ok(Boolean.toString(isValid), APPLICATION_JSON_UTF8)
+                       .build();
     }
 
     @POST
@@ -784,7 +778,7 @@ public class Workspace extends BaseModule
     public Response modifyCsvSource(
                     @PathParam("id") String projectId,
                     @FormDataParam("current_source") URI sourceUri,
-                    @FormDataParam("description") String description,
+					@FormDataParam("description") String description,
                     @FormDataParam("charset") String charset,
                     @FormDataParam("separator") String separator,
                     @FormDataParam("title_row") @DefaultValue("0") int titleRow,
@@ -819,7 +813,7 @@ public class Workspace extends BaseModule
             s.setFirstDataRow(firstRow);
             s.setLastDataRow(lastRow);
             s.setSeparator(separator);
-            if (isSet(quote)) {
+			if (isSet(quote)) {
                 s.setQuote(quote);
             }
             // Save updated source.
@@ -840,8 +834,9 @@ public class Workspace extends BaseModule
     @Consumes(MULTIPART_FORM_DATA)
     public Response uploadRdfSource(
                             @PathParam("id") String projectId,
+                            @FormDataParam("file_name") String file_name,
                             @FormDataParam("description") String description,
-                            @FormDataParam("base_uri") URI baseUri,
+                            @FormDataParam("base_uri") String baseUri,
                             @FormDataParam("source") InputStream fileData,
                             @FormDataParam("source")
                                     FormDataContentDisposition fileDisposition,
@@ -851,6 +846,15 @@ public class Workspace extends BaseModule
                                                 throws WebApplicationException {
         if (fileData == null) {
             this.throwInvalidParamError("source", null);
+        }
+        URI rdfBaseUri = null;
+        if (!isBlank(baseUri)) {
+            try {
+                rdfBaseUri = URI.create(baseUri);
+            }
+            catch (Exception e) {
+                throwInvalidParamError("base_uri", e);
+            }
         }
         Response response = null;
 
@@ -864,6 +868,9 @@ public class Workspace extends BaseModule
                 fileName = this.extractFileName(fileUrl, "rdf");
                 // Reset input stream to force downloading data from URL.
                 fileData = null;
+                if (rdfBaseUri == null) {
+                    rdfBaseUri = URI.create(sourceUrl);
+                }
             }
             catch (Exception e) {
                 // Conversion of source base URI to URL failed.
@@ -873,7 +880,7 @@ public class Workspace extends BaseModule
             }
         }
         else {
-            fileName = this.toFileName(fileDisposition.getFileName());
+            fileName = this.toFileName(file_name);
             if (isBlank(fileName)) {
                 this.throwInvalidParamError("source", null);
             }
@@ -895,12 +902,11 @@ public class Workspace extends BaseModule
             Project p = this.loadProject(projectUri);
             // Save new source data to public project storage.
             String filePath = this.getProjectFilePath(projectId, fileName);
-            localFile = this.getFileStorage(filePath);
-            this.getFileData(fileData, fileUrl, localFile, uriInfo,
-                                                format.getMimeTypes(), false);
+            localFile = this.getFileData(fileData, fileUrl, filePath, uriInfo,
+                                         format.getMimeTypes(), false);
             // Initialize new source.
             RdfFileSource src = this.projectManager.newRdfSource(p, sourceUri,
-                                    fileName, description, baseUri, filePath,
+                                    fileName, description, rdfBaseUri, filePath,
                                     format.getMimeType().toString());
             if (fileUrl != null) {
                 src.setSourceUrl(fileUrl.toString());
@@ -916,7 +922,8 @@ public class Workspace extends BaseModule
                 }
             }
             catch (Exception e) {
-                throw new IOException("Invalid or empty source data", e);
+                throw new IOException("Invalid or empty source data: " +
+                                                    e.getLocalizedMessage(), e);
             }
             finally {
                 i.close();
@@ -943,7 +950,7 @@ public class Workspace extends BaseModule
         }
         finally {
             if ((deleteFiles) && (localFile != null)) {
-                localFile.delete();
+                this.deleteFileStorage(localFile);
             }
         }
         return response;
@@ -967,7 +974,8 @@ public class Workspace extends BaseModule
             RdfFileSource s = this.loadSource(p, sourceUri, RdfFileSource.class);
             // Update source data.
             s.setDescription(description);
-            s.setSourceUrl(baseUri.toString());
+            String v = baseUri.toString();
+            s.setSourceUrl(isBlank(v)? null: v);
 
             MediaType mappedType = null;
             try {
@@ -1016,14 +1024,19 @@ public class Workspace extends BaseModule
             // Retrieve project.
             Project p = this.loadProject(projectUri);
             // Initialize new source.
-            SqlSource src = this.projectManager.newSqlSource(p,
-                                        sourceUri, title, description,
-                                        cnxUrl, user, password,
-                                        sqlQuery, cacheDuration);
-            // Start iterating on source content to validate database
-            // connection parameters and query.
-            CloseableIterator<?> i = src.iterator();
-            i.close();
+            if(isBlank(sqlQuery)){
+            	this.projectManager.newSqlSource(p, sourceUri, title,
+            			description, cnxUrl, user, password);
+            }else{
+            	SqlQuerySource src = this.projectManager.newSqlQuerySource(p,
+                        sourceUri, title, description,
+                        cnxUrl, user, password,
+                        sqlQuery, cacheDuration);
+            	// Start iterating on source content to validate database
+            	// connection parameters and query.
+            	CloseableIterator<?> i = src.iterator();
+            	i.close();
+            }
             // Persist new source.
             this.projectManager.saveProject(p);
             // Notify user of successful creation, redirecting HTML clients
@@ -1072,11 +1085,14 @@ public class Workspace extends BaseModule
                 s.setUser(user);
                 s.setPassword(password);
             }
-            if ((s.getQuery() == null) || (! s.getQuery().equals(sqlQuery))) {
-                s.setQuery(sqlQuery);
-            }
-            if (s instanceof CachingSource) {
-                ((CachingSource)s).setCacheDuration(cacheDuration);
+            if(s instanceof SqlQuerySource){
+            	SqlQuerySource querySource = (SqlQuerySource)s;
+            	if ((querySource.getQuery() == null) || (! querySource.getQuery().equals(sqlQuery))) {
+                    querySource.setQuery(sqlQuery);
+                }
+                if (s instanceof CachingSource) {
+                    ((CachingSource)s).setCacheDuration(cacheDuration);
+                }
             }
             // Save updated source.
             this.projectManager.saveProject(p);
@@ -1217,7 +1233,8 @@ public class Workspace extends BaseModule
     @Consumes(MULTIPART_FORM_DATA)
     public Response uploadXmlSource(
                             @PathParam("id") String projectId,
-                            @FormDataParam("description") String description,
+                            @FormDataParam("file_name") String file_name, 
+							@FormDataParam("description") String description,
                             @FormDataParam("source") InputStream fileData,
                             @FormDataParam("source")
                                     FormDataContentDisposition fileDisposition,
@@ -1245,7 +1262,7 @@ public class Workspace extends BaseModule
             }
         }
         else {
-            fileName = this.toFileName(fileDisposition.getFileName());
+            fileName = this.toFileName(file_name);
             if (isBlank(fileName)) {
                 this.throwInvalidParamError("source", null);
             }
@@ -1265,8 +1282,7 @@ public class Workspace extends BaseModule
             Project p = this.loadProject(projectUri);
             // Save new source data to public project storage.
             String filePath = this.getProjectFilePath(projectId, fileName);
-            localFile = this.getFileStorage(filePath);
-            this.getFileData(fileData, fileUrl, localFile, uriInfo,
+            localFile = this.getFileData(fileData, fileUrl, filePath, uriInfo,
                      Arrays.asList(APPLICATION_XML_TYPE, TEXT_XML_TYPE), false);
             // Initialize new source.
             XmlSource src = this.projectManager.newXmlSource(p, sourceUri,
@@ -1308,7 +1324,7 @@ public class Workspace extends BaseModule
         }
         finally {
             if ((deleteFiles) && (localFile != null)) {
-                localFile.delete();
+                this.deleteFileStorage(localFile);
             }
         }
         return response;
@@ -1320,7 +1336,7 @@ public class Workspace extends BaseModule
     public Response modifyXmlSource(
                             @PathParam("id") String projectId,
                             @FormDataParam("current_source") URI sourceUri,
-                            @FormDataParam("description") String description,
+							@FormDataParam("description") String description,
                             @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
         Response response = null;
@@ -1397,9 +1413,8 @@ public class Workspace extends BaseModule
                     // Save new source data to public project storage.
                     paths[i] = this.getProjectFilePath(projectId,
                                                        fileNames[i]);
-                    localFiles[i] = this.getFileStorage(paths[i]);
-                    this.getFileData(fileData[i], null, localFiles[i],
-                                     uriInfo, (MediaType)null);
+                    localFiles[i] = this.getFileData(fileData[i], null,
+                                            paths[i], uriInfo, (MediaType)null);
                 }
             }
             catch (IOException e) {
@@ -1431,7 +1446,7 @@ public class Workspace extends BaseModule
             if (deleteFiles) {
                 for (File f : localFiles) {
                     if (f != null) {
-                        f.delete();
+                        this.deleteFileStorage(f);
                     }
                 }
             }
@@ -1525,10 +1540,10 @@ public class Workspace extends BaseModule
             // Save new source data to public project storage.
             String filePath1 = this.getProjectFilePath(projectId, fileName1);
             String filePath2 = this.getProjectFilePath(projectId, fileName2);
-            localFile1 = this.getFileStorage(filePath1);
-            localFile2 = this.getFileStorage(filePath2);
-            this.getFileData(fileData1, fileUrl1, localFile1, uriInfo, GML_TYPE);
-            this.getFileData(fileData2, fileUrl2, localFile2, uriInfo, APPLICATION_XML_TYPE);
+            localFile1 = this.getFileData(fileData1, fileUrl1, filePath1,
+                                          uriInfo, GML_TYPE);
+            localFile2 = this.getFileData(fileData2, fileUrl2, filePath2,
+                                          uriInfo, APPLICATION_XML_TYPE);
             // Initialize new source.
             this.projectManager.newGmlSource(p, sourceUri1, fileName1, description, filePath1);
             // Persist new source.
@@ -1540,10 +1555,10 @@ public class Workspace extends BaseModule
         }
         catch (IOException e) {
             if (localFile1 != null) {
-                localFile1.delete();
+                this.deleteFileStorage(localFile1);
             }
             if (localFile2 != null) {
-                localFile2.delete();
+                this.deleteFileStorage(localFile2);
             }
             String src1 = (fileData1 != null)? fileName1: (fileUrl1 != null)? fileUrl1.toString(): "file_url1";
             log.fatal("Failed to save source data from {}", e, src1);
@@ -1554,12 +1569,12 @@ public class Workspace extends BaseModule
         }
         catch (Exception e) {
             if (localFile1 != null) {
-                localFile1.delete();
+                this.deleteFileStorage(localFile1);
             }
             this.handleInternalError(e,
                     "Failed to create GML source for {}", fileName1);
             if (localFile2 != null) {
-                localFile2.delete();
+                this.deleteFileStorage(localFile2);
             }
             this.handleInternalError(e,
                     "Failed to create XSD source for {}", fileName2);
@@ -1662,7 +1677,7 @@ public class Workspace extends BaseModule
                 // Forward source description request to the SPARQL endpoint.
                 Configuration cfg = Configuration.getDefault();
                 response = cfg.getBean(SparqlEndpoint.class)
-                              .describe(src.getUri(), DescribeType.Graph,
+                              .describe(src.getUri(), ElementType.Graph,
                                         cfg.getInternalRepository(),
                                         5000, null, null,
                                         uriInfo, request, acceptHdr);
@@ -1675,11 +1690,14 @@ public class Workspace extends BaseModule
                 }
                 // Return the HTML template matching the source type.
                 String template = null;
-                if ((src instanceof CsvSource) || (src instanceof SqlSource)) {
+                if ((src instanceof CsvSource) || (src instanceof SqlQuerySource)) {
                     template = "RowSourceGrid.vm";
                 }
                 else if (src instanceof RdfSource) {
                     template = "RdfSourceGrid.vm";
+                }
+                else if(src instanceof SqlDatabaseSource){
+                	template = "DatabaseSourceGrid.vm";
                 }
                 else {
                     throw new TechnicalException("unknown.source.type",
@@ -1693,7 +1711,59 @@ public class Workspace extends BaseModule
         }
         return response.build();
     }
-
+    
+    @GET
+    @Path("{id}/source/{srcid}&t={table}&max={maxRow}")
+    @Produces({ APPLICATION_JSON_UTF8 })
+    public Response displayDbTableContent(@PathParam("id") String projectId,
+    									  @PathParam("srcid") String srcId,
+    									  @PathParam("table") String table,
+    									  @PathParam("maxRow") int maxRow,
+    									  @Context UriInfo uriInfo)
+    											throws WebApplicationException{
+    	Response response = null;
+        try {
+            // Search for requested source in project.
+            Project p = this.loadProject(uriInfo, projectId);
+            Source src = p.getSource(this.getSourceId(p.getUri(), srcId));
+            if (src == null) {
+                // Not found.
+                this.sendError(NOT_FOUND, null);
+            } else {
+            	if(src.getType() == SourceType.SqlDatabaseSource){
+            		SqlDatabaseSource dbSource  = (SqlDatabaseSource) src;
+            		if(dbSource.getTableNames().contains(table)){
+            			CloseableIterator<Row<Object>> tableIterator = dbSource.getTableIterator(table); 
+            			JsonArray rowList = new JsonArray();
+            			int i = 0;
+            			while(tableIterator.hasNext() && i<maxRow){
+            				Row<Object> row = tableIterator.next();
+                			JsonObject mapRow = new JsonObject();
+            				for(String key: row.keys()){
+            					mapRow.addProperty(key, row.getString(key));
+            				}
+            				rowList.add(mapRow);
+            				i++;
+            			}
+            			ResponseBuilder bResp = Response.ok();
+            			bResp.entity(rowList.toString())
+            				.type(APPLICATION_JSON_UTF8);
+            			response = bResp.build();
+            		}else{
+            			this.sendError(NOT_FOUND, "Table not found");
+            		}
+            	}else{
+            		this.sendError(NOT_ACCEPTABLE, "The source is not a database");
+            	}
+            }
+        }catch (Exception e) {
+        	this.handleInternalError(e,
+        			"Failed to retrieve table {} from source {}",table, srcId);
+        }
+        return response;
+    }
+    									 
+    
     @GET
     @Path("{id}/source/{srcid}/{prop}")
     @Produces({ APPLICATION_JSON_UTF8 })
@@ -1740,6 +1810,9 @@ public class Workspace extends BaseModule
         return response;
     }
 
+    
+    
+    
     @GET
     @Path("{id}/source/delete")
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
@@ -1806,7 +1879,7 @@ public class Workspace extends BaseModule
             // Forward source description request to the SPARQL endpoint.
             Configuration cfg = Configuration.getDefault();
             response = cfg.getBean(SparqlEndpoint.class)
-                          .describe(u.toString(), DescribeType.Graph,
+                          .describe(u.toString(), ElementType.Graph,
                                     cfg.getInternalRepository(),
                                     uriInfo, request, acceptHdr).build();
         }
@@ -1826,8 +1899,11 @@ public class Workspace extends BaseModule
         try {
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
             Project p = this.loadProject(projectUri);
+            
+            TemplateModel view = this.newView("projectOntoUpload.vm", p);
+            view.put("projectId", projectId);
 
-            response = Response.ok(this.newView("projectOntoUpload.vm", p),
+            response = Response.ok(view,
                                    TEXT_HTML)
                                .build();
         }
@@ -1993,7 +2069,7 @@ public class Workspace extends BaseModule
 
     private ResponseBuilder displayIndexPage(ResponseBuilder response,
                                              Project p) {
-        // Populate view with project list.
+    	// Populate view with project list.
         Collection<Project> projects = this.projectManager.listProjects();
         TemplateModel view = this.newView("workspace.vm", projects);
         // If no project is selected but only one is available, select it.
@@ -2190,10 +2266,12 @@ public class Workspace extends BaseModule
     }
 
     private URI newProjectId(URI baseUri, String name) {
+        final UriBuilder uriBuilder = Configuration.getDefault()
+                                                   .getBean(UriBuilder.class);
         URI u = null;
         try {
-            u = new URL(baseUri.toURL(),
-                           REL_PROJECT_PATH + urlify(name)).toURI();
+            u = new URL(baseUri.toURL(), REL_PROJECT_PATH +
+                        uriBuilder.urlify(name, ElementType.Resource)).toURI();
         }
         catch (Exception e) {
             this.throwInvalidParamError("id", name);
@@ -2201,14 +2279,8 @@ public class Workspace extends BaseModule
         return u;
     }
 
-    private File getFileStorage(String path) throws IOException {
-        File f = new File(Configuration.getDefault().getPublicStorage(), path);
-        if (! f.isFile()) {
-            if (! f.createNewFile()) {
-                throw new TechnicalException("file.create.error", f);
-            }
-        }
-        return f;
+    private void deleteFileStorage(File file) {
+        this.getFileStore().delete(file);
     }
 
     private String getProjectFilePath(String projectId, String fileName) {
@@ -2225,7 +2297,10 @@ public class Workspace extends BaseModule
     }
 
     private String getSourceId(String projectUri, String sourceName) {
-        return projectUri + SOURCE_PATH + urlify(sourceName);
+        final UriBuilder uriBuilder = Configuration.getDefault()
+                                                   .getBean(UriBuilder.class);
+        return projectUri + SOURCE_PATH
+                          + uriBuilder.urlify(sourceName, ElementType.Resource);
     }
 
     private String extractFileName(URL url, String suffix) {
@@ -2242,20 +2317,6 @@ public class Workspace extends BaseModule
         }
         log.debug("{} -> {}", url, fileName);
         return fileName;
-    }
-
-    private String isLocalFile(URL fileUrl, UriInfo uriInfo) {
-        String localPath = null;
-
-        String path = fileUrl.toString();
-        String appUrl = uriInfo.getBaseUri().toString();
-        if (path.startsWith(appUrl)) {
-            localPath = path.substring(appUrl.length());
-            if (localPath.charAt(0) == '/') {
-                localPath = localPath.substring(1);
-            }
-        }
-        return localPath;
     }
 
     /**
@@ -2326,40 +2387,45 @@ public class Workspace extends BaseModule
     }
 
     /**
-     * Reads the data of the file to upload and stored them in the
-     * specified local file.
+     * Reads the data of the stream or source URL to upload and stores
+     * them at the specified path in the
+     * {@link Configuration#getPublicStorage() public file store}.
      * @param  in          the input stream in the case the file is
      *                     directly uploaded from the user's browser or
      *                     <code>null</code> if the data shall be
      *                     downloaded from a remote server.
      * @param  u           the URL to download the file from, ignored
      *                     if an input stream is specified.
-     * @param  destFile    the local file to store data into.
+     * @param  destPath    the path of the file to store data into,
+     *                     relative to the public file store.
      * @param  uriInfo     the requested URI, to optimize download by
      *                     detecting filenames pointing to local URLs.
      * @param  mimeType    the requested MIME type when downloading
      *                     data from a remote server.
      *
+     * @return the file in the public file store.
      * @throws IOException if any error occurred reading or downloading
      *                     the file data.
      */
-    private void getFileData(InputStream in, URL u, File destFile,
+    private File getFileData(InputStream in, URL u, String destPath,
                              UriInfo uriInfo, MediaType mimeType)
                                                         throws IOException {
-        this.getFileData(in, u, destFile, uriInfo,
+        return this.getFileData(in, u, destPath, uriInfo,
                      (mimeType != null)? Arrays.asList(mimeType): null, false);
     }
 
     /**
-     * Reads the data of the file to upload and stored them in the
-     * specified local file.
+     * Reads the data of the stream or source URL to upload and stores
+     * them at the specified path in the
+     * {@link Configuration#getPublicStorage() public file store}.
      * @param  in          the input stream in the case the file is
      *                     directly uploaded from the user's browser or
      *                     <code>null</code> if the data shall be
      *                     downloaded from a remote server.
      * @param  u           the URL to download the file from, ignored
      *                     if an input stream is specified.
-     * @param  destFile    the local file to store data into.
+     * @param  destPath    the path of the file to store data into,
+     *                     relative to the public file store.
      * @param  uriInfo     the requested URI, to optimize download by
      *                     detecting filenames pointing to local URLs.
      * @param  mimeTypes   the accepted MIME types when downloading
@@ -2368,59 +2434,99 @@ public class Workspace extends BaseModule
      *                     being fallback types in case the server
      *                     cannot provide the expected type (q=0.5).
      *
+     * @return the file in the public file store.
      * @throws IOException if any error occurred reading or downloading
      *                     the file data.
      */
-    private void getFileData(InputStream in, URL u, File destFile,
+    private File getFileData(InputStream in, URL u, String destPath,
                              UriInfo uriInfo, Collection<MediaType> mimeTypes,
                              boolean allowAny) throws IOException {
+        Configuration cfg = Configuration.getDefault();
+        FileStore fs = this.getFileStore();
+        File destFile = fs.getFile(destPath);
         if (in != null) {
-            FileUtils.save(in, destFile);
+            fs.save(in, destFile);
         }
         else {
-            // No data input stream provided. => Check for local file.
-            File f = null;
+            // No data input stream provided.
+            // => Download data from URL into a (temporary) local file.
+            File tmpFile = (fs.isLocal())? destFile:
+                                    new File(cfg.getTempStorage(), destPath);
+            // Build HTTP request headers.
+            Map<String,String> headers = null;
+            if ((mimeTypes != null) && (! mimeTypes.isEmpty())) {
+                // Set HTTP Accept header.
+                StringBuilder buf = new StringBuilder();
+                for (MediaType m : mimeTypes) {
+                    if (buf.length() == 0) {
+                        buf.append(m);      // Preferred MIME type (q=1.0).
+                    }
+                    else {                  // Secondary MIME types.
+                        buf.append(", ").append(m).append("; q=0.5");
+                    }
+                }
+                if (allowAny) {
+                    buf.append(", ").append(WILDCARD).append("; q=0.1");
+                }
+                headers = new HashMap<String,String>();
+                headers.put(ACCEPT, buf.toString());
+                log.debug("Downloading source data from \"{}\" to \"{}\","
+                          + " using MIME types \"{}\"", u, tmpFile, buf);
+            }
+            FileUtils.save(u, null, headers, tmpFile);
+            // Check for non-local file store.
+            if (tmpFile != destFile) {
+                // Copy data from local temp. file to remote file storage.
+                fs.save(tmpFile, destFile);
+            }
+        }
+        return destFile;
+    }
 
-            String localPath = this.isLocalFile(u, uriInfo);
-            if (localPath != null) {
-                f = this.getFileStorage(localPath);
+    private final FileStore getFileStore() {
+        return this.getFileStore(Configuration.getDefault());
+    }
+
+    private final FileStore getFileStore(Configuration cfg) {
+        FileStore fs = cfg.getPublicStorage();
+        return (fs != null)? fs: cfg.getPrivateStorage();
+    }
+
+    private void registerNamespacePrefix(String prefix, String uri) {
+        RepositoryConnection cnx = null;
+        try {
+            cnx = Configuration.getDefault().getInternalRepository()
+                                            .newConnection();
+            prefix = urlify(prefix);
+            if (cnx.getNamespace(prefix) == null) {
+                cnx.setNamespace(prefix, uri);
             }
-            if ((f != null) && (f.isFile()) && (f.canRead())) {
-                // File has already been uploaded.
-                if (! f.equals(destFile)) {
-                    // Make a local copy to prevent data deletion.
-                    log.debug("Copying source data from \"{}\" to \"{}\"",
-                              f, destFile);
-                    FileUtils.copy(f, destFile, false);
-                }
-                // Else: already where it shall be!
+        }
+        catch (Exception e) {
+            // Trace error but continue...
+            log.warn("Failed to declare namespace prefix \"{}\" for <{}>",
+                     e, prefix, uri);
+        }
+        finally {
+            try { cnx.close(); } catch (Exception e) { /* Ignore... */ }
+        }
+    }
+
+    private void removeNamespacePrefix(String prefix, String nsUri) {
+        RepositoryConnection cnx = null;
+        try {
+            cnx = Configuration.getDefault().getInternalRepository()
+                                            .newConnection();
+            prefix = urlify(prefix);
+            String currentNs = cnx.getNamespace(prefix);
+            if ((currentNs != null) &&
+                ((isBlank(nsUri)) || (currentNs.equals(nsUri)))) {
+                cnx.removeNamespace(prefix);
             }
-            else {
-                // Not a local file. => Download data from the provided URL.
-                Map<String,String> headers = null;
-                if ((mimeTypes != null) && (! mimeTypes.isEmpty())) {
-                    // Set HTTP Accept header.
-                    StringBuilder buf = new StringBuilder();
-                    for (MediaType m : mimeTypes) {
-                        if (buf.length() == 0) {
-                            // Preferred MIME type (q=1.0).
-                            buf.append(m);
-                        }
-                        else {
-                            // Secondary MIME types.
-                            buf.append(", ").append(m).append("; q=0.5");
-                        }
-                    }
-                    if (allowAny) {
-                        buf.append(", ").append(WILDCARD).append("; q=0.1");
-                    }
-                    headers = new HashMap<String,String>();
-                    headers.put(ACCEPT, buf.toString());
-                    log.debug("Downloading source data from \"{}\" to \"{}\","
-                              + " using MIME types \"{}\"", u, destFile, buf);
-                }
-                FileUtils.save(u, null, headers, destFile);
-            }
+        }
+        catch (Exception e) { /* Ignore... */ }
+        finally {
+            try { cnx.close(); } catch (Exception e) { /* Ignore... */ }
         }
     }
 

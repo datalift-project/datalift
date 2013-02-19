@@ -59,18 +59,18 @@ import org.datalift.core.TechnicalException;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.Row;
-import org.datalift.fwk.project.SqlSource;
+import org.datalift.fwk.project.SqlQuerySource;
 import org.datalift.fwk.util.CloseableIterator;
 
 
 /**
- * Default implementation of the {@link SqlSource} interface.
+ * Default implementation of the {@link SqlQuerySource} interface.
  *
  * @author hdevos
  */
 @Entity
-@RdfsClass("datalift:dbSource")
-public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
+@RdfsClass("datalift:sqlSource")
+public class SqlQuerySourceImpl extends CachingSourceImpl implements SqlQuerySource
 {
     //-------------------------------------------------------------------------
     // Constants
@@ -106,8 +106,8 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
     /**
      * Creates a new SQL source.
      */
-    public SqlSourceImpl() {
-        super(SourceType.SqlSource);
+    public SqlQuerySourceImpl() {
+        super(SourceType.SqlQuerySource);
     }
 
     /**
@@ -121,8 +121,8 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
      * @throws IllegalArgumentException if either <code>uri</code> or
      *         <code>project</code> is <code>null</code>.
      */
-    public SqlSourceImpl(String uri, Project project) {
-        super(SourceType.SqlSource, uri, project);
+    public SqlQuerySourceImpl(String uri, Project project) {
+        super(SourceType.SqlQuerySource, uri, project);
     }
 
     //-------------------------------------------------------------------------
@@ -363,7 +363,6 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
     private final class RowIterator implements CloseableIterator<Row<Object>>
     {
         private final ResultSet rs;
-        private int rowCount = 0;
         private boolean closed = false;
 
         public RowIterator(ResultSet rs) {
@@ -392,7 +391,6 @@ public class SqlSourceImpl extends CachingSourceImpl implements SqlSource
             Row<Object> row = null;
             try {
                 this.rs.next();
-                this.rowCount++;
                 row = new ResultSetRow(this.rs, columns);
             }
             catch (SQLException e) {

@@ -9,44 +9,78 @@
 </head>
 <body>
 #banner
-#set( $maxEntries = 5000 )
-	<h3>#i18n("source.grid.desc") $!esc.html($it.title) ($maxEntries #i18n("source.grid.displayed_entries"))</h3>
-	<table id="grid">
-		<thead>
-			<tr>
-				<th class="dl-grid-header-column">#i18n("sparql.subject")</th>
-				<th class="dl-grid-header-column">#i18n("sparql.predicate")</th>
-				<th class="dl-grid-header-column">#i18n("sparql.object")</th>
-			</tr>
-		</thead>
-		<tbody>
-#foreach( $item in $it )
-  #if( $foreach.count > $maxEntries ) #break #end
-			<tr>
-				<td>$!esc.html($item.subject)</td>
-				<td>$!esc.html($item.predicate)</td>
-				<td>$!esc.html($item.object)</td>
-			</tr>
-#end
-		</tbody>
-	</table>
-	<div id="pagernav"></div>
-	<div id="searchnav" style="display:none">
-		#i18n("grid.search.value.label") <input type="search" id="gridsearch" placeholder="#i18n("grid.search.value.placeholder")" results="0" class="gridsearch" />
-		#i18n("grid.search.column.label") <select id="searchColumn">
-			<option value="all">#i18n("grid.search.column.option.all")</option>
-			<option>#i18n("sparql.subject")</option>
-			<option>#i18n("sparql.predicate")</option>
-			<option>#i18n("sparql.object")</option>
-		</select>
+	<div style="position:absolute;top:15px;right:15px;">
+		<a href="${baseUri}/sparql" id="goto_sparql" class="button">#i18n("sparql.endpoint.link")</a>
+		<a href="${baseUri}/project" id="goto_workspace" class="button">#i18n("project.workspace.link")</a>
 	</div>
-
+	<div id="content" class="ui-widget-content dl-main-panel">
+		<h3 id = "title_bar" class="ui-widget-header dl-widget-header"></h3>
+		<div id="results" class="dl-result-panel">
+			<table id="grid">
+			</table>
+			<div id="pagernav"></div>
+			<div id="searchnav" style="display:none">
+				#i18n("grid.search.value.label") <input type="search" id="gridsearch" placeholder="#i18n("grid.search.value.placeholder")" results="0" class="gridsearch" />
+				#i18n("grid.search.column.label") <select id="searchColumn">
+					<option value="all">#i18n("grid.search.column.option.all")</option>
+					<option>#i18n("sparql.subject")</option>
+					<option>#i18n("sparql.predicate")</option>
+					<option>#i18n("sparql.object")</option>
+				</select>
+			</div>
+		</div>
+	</div>
+#footer
 #script_links
 <script language="javascript" src="${baseUri}/project/static/js/jqgrid.common.js"></script>
 <script type="text/javascript">
 		$(function() {
-			htmlTableTojQGrid();
-		});
+			$("#goto_sparql").button();
+			$("#goto_workspace").button();
+
+#set( $tripleList = [] )	
+#set( $maxEntries = 5000 )
+#set($quote = '\"')
+#foreach( $triple in $it )
+  #if( $foreach.count > $maxEntries ) 
+  	#break 
+  #end
+  #set($subject = "$quote#i18n('sparql.subject')$quote:$quote$triple.subject$quote")
+  #set($predicate = "$quote#i18n('sparql.predicate')$quote:$quote$triple.predicate$quote")
+  #set($object = "$quote#i18n('sparql.object')$quote:$quote$esc.html($triple.object)$quote")
+  #set($jsonTriple = "{$subject,$predicate,$object}")
+  #set($success = $tripleList.add($jsonTriple))
+#end
+	//Prepare the title
+	var tableContent = $.parseJSON("$tripleList");
+	var columns = ["#i18n('sparql.subject')", "#i18n('sparql.predicate')", "#i18n('sparql.object')"];
+	var basicGridParam = getBasicTableParameters();
+	var rdfGridParams = {
+		colNames: columns,
+		data: tableContent,
+		datatype: "local",
+		colModel: [{name: "#i18n('sparql.subject')", formatter: 'link', formatoptions: {target: ''}},
+					{name: "#i18n('sparql.predicate')", formatter: 'link', formatoptions: {target: ''}},
+					{name: "#i18n('sparql.object')", formatter: optionalLinkFormatter}]
+	}
+
+	var gridParam = jQuery.extend(rdfGridParams,basicGridParam);
+	//Fill the table	
+	$("#grid").jqGrid(gridParam);
+
+	//Show source name
+	var rowNumber = tableContent.length;
+	var sourceDescr = "#i18n("source.grid.desc") $!esc.html($it.title) ";
+	if (rowNumber < $maxEntries) {
+		sourceDescr = sourceDescr.concat("(" + rowNumber + " #i18n("source.grid.entries"))");
+	}else{ 
+		sourceDescr = sourceDescr.concat("($maxEntries #i18n("source.grid.displayed_entries"))");
+	}
+	$("#title_bar").text(sourceDescr);
+	enableTable($("#grid"));
+});
+
+
 </script>
 </body>
 </html>

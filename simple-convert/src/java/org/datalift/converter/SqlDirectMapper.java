@@ -69,12 +69,14 @@ import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectModule;
 import org.datalift.fwk.project.Row;
 import org.datalift.fwk.project.Source;
-import org.datalift.fwk.project.SqlSource;
 import org.datalift.fwk.project.Source.SourceType;
+import org.datalift.fwk.project.SqlQuerySource;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.util.Env;
+import org.datalift.fwk.util.UriBuilder;
 
+import static org.datalift.fwk.rdf.ElementType.*;
 import static org.datalift.fwk.util.StringUtils.*;
 import static org.datalift.fwk.MediaTypes.*;
 
@@ -119,7 +121,7 @@ public class SqlDirectMapper extends BaseConverterModule
 
     /** Default constructor. */
     public SqlDirectMapper() {
-        super(MODULE_NAME, 100, SourceType.SqlSource);
+        super(MODULE_NAME, 100, SourceType.SqlQuerySource);
     }
 
     //-------------------------------------------------------------------------
@@ -144,7 +146,7 @@ public class SqlDirectMapper extends BaseConverterModule
             // Retrieve project.
             Project p = this.getProject(projectId);
             // Load input source.
-            SqlSource in = (SqlSource)p.getSource(sourceId);
+            SqlQuerySource in = (SqlQuerySource)p.getSource(sourceId);
             // Check data freshness HTTP headers (If-Modified-Since & ETags)
             CachingSource cs = null;
             Date lastModified = null;
@@ -192,7 +194,7 @@ public class SqlDirectMapper extends BaseConverterModule
             // Retrieve project.
             Project p = this.getProject(projectId);
             // Load input source.
-            SqlSource in = (SqlSource)p.getSource(sourceId);
+            SqlQuerySource in = (SqlQuerySource)p.getSource(sourceId);
             // Convert CSV data and load generated RDF triples.
             Repository internal = Configuration.getDefault()
                                                .getInternalRepository();
@@ -212,11 +214,13 @@ public class SqlDirectMapper extends BaseConverterModule
     // Specific implementation
     //-------------------------------------------------------------------------
 
-    private void convert(SqlSource src, String keyColumn,
+    private void convert(SqlQuerySource src, String keyColumn,
                                         Repository target, URI targetGraph) {
         if (isBlank(keyColumn)) {
             keyColumn = null;
         }
+        final UriBuilder uriBuilder = Configuration.getDefault()
+                                                   .getBean(UriBuilder.class);
         final RepositoryConnection cnx = target.newConnection();
         try {
             final ValueFactory valueFactory = cnx.getValueFactory();
@@ -234,15 +238,16 @@ public class SqlDirectMapper extends BaseConverterModule
                     (targetGraph != null)? targetGraph.toString(): null, '/');
             String typeUri = RdfUtils.getBaseUri(
                     (targetGraph != null)? targetGraph.toString(): null, '#');
-            org.openrdf.model.URI rdfType = valueFactory.createURI(
-                                            typeUri, urlify(src.getTitle()));
+            org.openrdf.model.URI rdfType = valueFactory.createURI(typeUri,
+                                    uriBuilder.urlify(src.getTitle(), RdfType));
             // Build predicates URIs.
             int max = src.getColumnNames().size();
             org.openrdf.model.URI[] predicates = new org.openrdf.model.URI[max];
             int i = 0;
             for (String s : src.getColumnNames()) {
                 if (! s.equals(keyColumn)) {
-                    predicates[i] = valueFactory.createURI(typeUri + urlify(s));
+                    predicates[i] = valueFactory.createURI(typeUri +
+                                            uriBuilder.urlify(s, Predicate));
                 }
                 i++;
             }

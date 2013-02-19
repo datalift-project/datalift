@@ -36,6 +36,8 @@ package org.datalift.core;
 
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
 import java.util.Date;
@@ -71,14 +73,15 @@ import org.openrdf.query.TupleQueryResultHandlerBase;
 
 import org.datalift.core.util.web.DefaultCacheConfiguration;
 import org.datalift.fwk.Configuration;
+import org.datalift.fwk.FileStore;
 import org.datalift.fwk.LifeCycle;
 import org.datalift.fwk.MediaTypes;
 import org.datalift.fwk.Module;
 import org.datalift.fwk.ResourceResolver;
 import org.datalift.fwk.log.Logger;
+import org.datalift.fwk.rdf.ElementType;
 import org.datalift.fwk.sparql.SparqlEndpoint;
 import org.datalift.fwk.sparql.SparqlQueries;
-import org.datalift.fwk.sparql.SparqlEndpoint.DescribeType;
 import org.datalift.fwk.util.UriPolicy;
 import org.datalift.fwk.util.UriPolicy.ResourceHandler;
 import org.datalift.fwk.util.web.CacheConfiguration;
@@ -263,8 +266,11 @@ public class RouterResource implements LifeCycle, ResourceResolver
     @Override
     public Response resolveStaticResource(String path, Request request)
                                                 throws WebApplicationException {
-        return this.resolveStaticResource(
-                Configuration.getDefault().getPublicStorage(), path, request);
+        FileStore fs = Configuration.getDefault().getPublicStorage();
+        if (fs == null) {
+            this.sendError(NOT_FOUND, null);
+        }
+        return this.resolveStaticResource(fs, path, request);
     }
 
     /** {@inheritDoc} */
@@ -456,27 +462,20 @@ public class RouterResource implements LifeCycle, ResourceResolver
      * @throws WebApplicationException if the resolved request path
      *         points outside of the specified document root directory.
      */
-    private Response resolveStaticResource(File root, String path,
+    private Response resolveStaticResource(FileStore store, String path,
                                            Request request)
                                                 throws WebApplicationException {
-        if (root == null) {
-            throw new IllegalArgumentException("root");
+        if (store == null) {
+            throw new IllegalArgumentException("store");
         }
         if (! isSet(path)) {
             throw new IllegalArgumentException("path");
         }
         Response response = null;
 
-        File f = new File(root, path);
+        File f = store.getFile(path);
         if ((f != null) && (f.isFile()) && (f.canRead())) {
             // Path resolved as an existing file.
-            // => Check path validity.
-            if (! f.getAbsolutePath().startsWith(root.getAbsolutePath())) {
-                // Oops! Forged path that point outside public file store.
-                log.warn("Attempt to access file {} outside storage: {}",
-                         f, root);
-                this.sendError(FORBIDDEN, null);
-            }
             // Check whether data shall be returned.
             Date lastModified = new Date(f.lastModified());
             ResponseBuilder b = request.evaluatePreconditions(lastModified);
@@ -484,7 +483,18 @@ public class RouterResource implements LifeCycle, ResourceResolver
                 // Get MIME type from file extension.
                 String mt = new MimetypesFileTypeMap().getContentType(f);
                 log.debug("Serving static resource: {} ({})", f, mt);
-                b = Response.ok(f, mt);
+                try {
+                    b = Response.ok(store.getInputStream(f), mt);
+                }
+                catch (FileNotFoundException e) {
+                    this.sendError(NOT_FOUND, null);
+                }
+                catch (IOException e) {
+                    TechnicalException error = new TechnicalException(
+                                        "ws.internal.error", e, e.getMessage());
+                    log.error(error.getMessage(), e);
+                    this.sendError(INTERNAL_SERVER_ERROR, error.getMessage());
+                }
             }
             response = this.cacheConfig.addCacheDirectives(b, lastModified)
                            .build();
@@ -665,8 +675,8 @@ public class RouterResource implements LifeCycle, ResourceResolver
 
     private static final class ExistsQueryResultHandler
                                         extends TupleQueryResultHandlerBase {
-        public DescribeType type = null;
-        public Date         lastModified = null;
+        public ElementType type = null;
+        public Date        lastModified = null;
 
         public ExistsQueryResultHandler() {
             super();
@@ -677,8 +687,8 @@ public class RouterResource implements LifeCycle, ResourceResolver
         public void handleSolution(BindingSet b) {
             if (this.type == null) {
                 // Store information for the first matched entry.
-                this.type = (b.getBinding("s") != null)? DescribeType.Object:
-                            (b.getBinding("g") != null)? DescribeType.Graph: null;
+                this.type = (b.getBinding("s") != null)? ElementType.Resource:
+                            (b.getBinding("g") != null)? ElementType.Graph: null;
                 if (this.type == null) {
                     this.lastModified = this.getDate(b, "lastModified");
                 }
