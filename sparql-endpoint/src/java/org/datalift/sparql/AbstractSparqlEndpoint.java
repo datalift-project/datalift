@@ -75,6 +75,7 @@ import javax.ws.rs.core.Variant;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 
+import static javax.servlet.http.HttpServletResponse.SC_REQUEST_TIMEOUT;
 import static javax.ws.rs.core.HttpHeaders.*;
 import static javax.ws.rs.core.Response.Status.*;
 
@@ -89,6 +90,7 @@ import org.datalift.fwk.Configuration;
 import org.datalift.fwk.i18n.BaseLocalizedItem;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.rdf.BaseTupleQueryResultMapper;
+import org.datalift.fwk.rdf.ElementType;
 import org.datalift.fwk.rdf.RdfNamespace;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
@@ -102,7 +104,7 @@ import org.datalift.fwk.view.ViewFactory;
 import static org.datalift.fwk.MediaTypes.*;
 import static org.datalift.fwk.util.StringUtils.*;
 import static org.datalift.fwk.rdf.RdfNamespace.*;
-import static org.datalift.fwk.sparql.SparqlEndpoint.DescribeType.*;
+import static org.datalift.fwk.rdf.ElementType.*;
 
 
 /**
@@ -160,11 +162,12 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                               + "  GRAPH <{0}> '{' ?s ?p ?o . '}'\n'}'");
 
     private final static String DETERMINE_TYPE_QUERY =
-            "SELECT DISTINCT ?s ?p ?g ?t WHERE {\n" +
+            "SELECT DISTINCT ?s ?p ?g ?t ?o WHERE {\n" +
             "  OPTIONAL { ?s ?p1 ?o1 . FILTER( ?s = ?u ) }\n" +
             "  OPTIONAL { ?s2 ?p ?o2 . FILTER( ?p = ?u ) }\n" +
             "  OPTIONAL { ?s3 a  ?t  . FILTER( ?t = ?u ) }\n" +
             "  OPTIONAL { GRAPH ?g { ?s4 ?p4 ?o4 . FILTER( ?g = ?u ) } }\n" +
+            "  OPTIONAL { ?s5 ?p5 ?o . FILTER( ?o = ?u ) }\n" +
             "} LIMIT 1";
 
     /** The SPARQL query to extract predefined query data. */
@@ -310,7 +313,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
 
     /** {@inheritDoc} */
     @Override
-    public ResponseBuilder describe(String uri, DescribeType type,
+    public ResponseBuilder describe(String uri, ElementType type,
                                     UriInfo uriInfo, Request request,
                                     String acceptHdr)
                                                 throws WebApplicationException {
@@ -319,7 +322,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
 
     /** {@inheritDoc} */
     @Override
-    public ResponseBuilder describe(String uri, DescribeType type,
+    public ResponseBuilder describe(String uri, ElementType type,
                                     Repository repository, UriInfo uriInfo,
                                     Request request, String acceptHdr)
                                                 throws WebApplicationException {
@@ -329,7 +332,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
 
     /** {@inheritDoc} */
     @Override
-    public ResponseBuilder describe(String uri, DescribeType type,
+    public ResponseBuilder describe(String uri, ElementType type,
                                     Repository repository, int max,
                                     String format, String jsonCallback,
                                     UriInfo uriInfo, Request request,
@@ -346,16 +349,27 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         ResponseBuilder response = null;
         try {
             URI u = URI.create(uri);
-            if (type == null) {
+            if ((type == null) || (type == Value)) {
+                // Force revalidation of values to prevent redirecting user
+                // to a malevolent site in case of forged URI in request.
                 type = this.getDescribeTypeFromUri(u, repository);
             }
-            if (type != null) {
-                // URI found in RDF store.
+            if (type == Value) {
+                // Requested URI found in RDF store but only as a value.
+                String scheme = u.getScheme();
+                if (("http".equals(scheme)) || ("https".equals(scheme))) {
+                    // Redirect to target URI.
+                    response = Response.seeOther(u);
+                }
+                // Else: No handling of non HTTP URIs. => Send a 404 status.
+            }
+            else if (type != null) {
+                // URI found in RDF store as a subject, predicate or graph.
                 String query = null;
-                MessageFormat fmt = (type == Object)?  DESCRIBE_OBJECT_QUERY:
-                                    (type == Graph)?   DESCRIBE_GRAPH_QUERY:
-                                    (type == RdfType)? DESCRIBE_TYPE_QUERY:
-                                                       DESCRIBE_PREDICATE_QUERY;
+                MessageFormat fmt = (type == Resource)? DESCRIBE_OBJECT_QUERY:
+                                    (type == Graph)?    DESCRIBE_GRAPH_QUERY:
+                                    (type == RdfType)?  DESCRIBE_TYPE_QUERY:
+                                                        DESCRIBE_PREDICATE_QUERY;
                 synchronized (fmt) {
                     query = fmt.format(new Object[] { u });
                 }
@@ -366,13 +380,8 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                                           false, format, jsonCallback, uriInfo,
                                           request, acceptHdr, viewData);
             }
-            else {
-                try {
-                    response = Response.seeOther(u);
-                }
-                catch (Exception e) {
-                    this.sendError(NOT_FOUND, null);
-                }
+            if (response == null) {
+                this.sendError(NOT_FOUND, null);
             }
         }
         catch (Exception e) {
@@ -588,7 +597,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
             l.add(defaultGraph);
             repository = this.getTargetRepository(l);
         }
-        return this.describe(uri, DescribeType.fromString(type),
+        return this.describe(uri, ElementType.fromString(type),
                              repository, max, null, null,
                              uriInfo, request, acceptHdr)
                    .build();
@@ -794,7 +803,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     /**
      * Returns a new template model for web service response rendering.
      * @param  templateName   the template name, relative to the module.
-     * @param  model          the (optional) model object.
+     * @param  it             the (optional) model object.
      *
      * @return a new template view.
      */
@@ -828,10 +837,11 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         }
         else if (e.getCause() instanceof QueryInterruptedException) {
             // Query processing was interrupted as it was taking too much time.
-            // => Return HTTP status 413 (Request Entity Too Large).
+            // => Return HTTP status 408 (Request Timeout).
             TechnicalException error = new TechnicalException(
                                         "query.max.duration.exceeded", query);
-            this.sendError(413, error.getLocalizedMessage());
+            // No constant for 408 provided by Jersey. => Using Servlet API.
+            this.sendError(SC_REQUEST_TIMEOUT, error.getLocalizedMessage());
         }
         else if (e.getCause() instanceof QueryDoneException) {
             // End of requested range (start/end offset) successfully reached.
@@ -866,21 +876,21 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         return desc;
     }
 
-    private DescribeType getDescribeTypeFromUri(URI uri,
+    private ElementType getDescribeTypeFromUri(URI uri,
                                                 Repository repository) {
-        DescribeType type = null;
+        ElementType type = null;
         try {
             // Try to determine the URI type by performing a SPARQL query.
             Map<String,Object> bindings = new HashMap<String,Object>();
             bindings.put("u", uri);
-            TupleQueryResultMapper<DescribeType> m =
-                                new BaseTupleQueryResultMapper<DescribeType>() {
-                    private DescribeType nodeType = null;
+            TupleQueryResultMapper<ElementType> m =
+                                new BaseTupleQueryResultMapper<ElementType>() {
+                    private ElementType nodeType = null;
                     @Override
                     public void handleSolution(BindingSet b) {
                         if (nodeType == null) {
                             if (b.hasBinding("s")) {
-                                nodeType = Object;
+                                nodeType = Resource;
                             }
                             else if (b.hasBinding("p")) {
                                 nodeType = Predicate;
@@ -891,11 +901,14 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                             else if (b.hasBinding("t")) {
                                 nodeType = RdfType;
                             }
+                            else if (b.hasBinding("o")) {
+                                nodeType = Value;
+                            }
                         }
                         // Else: Already set. => Ignore...
                     }
                     @Override
-                    public DescribeType getResult() {
+                    public ElementType getResult() {
                         return nodeType;
                     }
                 };
@@ -940,7 +953,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
             }
             else {
                 // No query definition file specified. => Use default.
-                log.debug("No queries file specified, using default");
+                log.info("No predefined queries file specified, using default");
                 path = DEFAULT_QUERIES_FILE;
                 in = this.getClass().getClassLoader().getResourceAsStream(path);
             }
@@ -996,7 +1009,9 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                 });
         }
         catch (Exception e) {
-            throw new TechnicalException("queries.load.failed", e, path);
+            TechnicalException error =
+                        new TechnicalException("queries.load.failed", e, path);
+            log.error(error.getLocalizedMessage(), e);
         }
         finally {
             if (in != null) {

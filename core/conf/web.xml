@@ -179,8 +179,11 @@
   <!-- Allow cross-domain accesses on SPARQL endpoint -->
   <filter-mapping>
     <filter-name>CORS</filter-name>
-    <url-pattern>/sparql</url-pattern>
+    <url-pattern>/sparql/*</url-pattern>
   </filter-mapping>
+  <!-- To allow more cross-domain accesses, for example on published resources,
+       add filter-mappings for the CORS filter with the different URL patterns.
+   -->
 
   <!-- Jersey (JAS-RS framework) entry point configuration -->
   <!-- Note: Using Jersey as a filter is required as:

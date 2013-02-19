@@ -44,8 +44,8 @@ import javax.ws.rs.core.Variant;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
 import org.datalift.fwk.Configuration;
+import org.datalift.fwk.rdf.ElementType;
 import org.datalift.fwk.rdf.Repository;
-import org.datalift.fwk.util.StringUtils;
 
 
 /**
@@ -90,39 +90,7 @@ public interface SparqlEndpoint
     // Constants
     //-------------------------------------------------------------------------
 
-    /**
-     * The type of object to
-     * {@link SparqlEndpoint#describe(String,DescribeType,UriInfo,Request,String) describe}.
-     */
-    public enum DescribeType {
-        Object,
-        Predicate,
-        Graph,
-        RdfType;
-
-        /**
-         * Return the enumeration value corresponding to the specified
-         * string, ignoring case.
-         * @param  s   the description type, as a string.
-         *
-         * @return the description type value or <code>null</code> if
-         *         the specified string was not recognized.
-         */
-        public static DescribeType fromString(String s) {
-            DescribeType v = null;
-            if (StringUtils.isSet(s)) {
-                for (DescribeType t : values()) {
-                    if (t.name().equalsIgnoreCase(s)) {
-                        v = t;
-                        break;
-                    }
-                }
-            }
-            return v;
-        }
-    }
-
-    /** The type of SPARQL query. */
+    /** The type of SPARQL query. SPARQL Update queries are not supported. */
     public enum QueryType {
         SELECT,
         CONSTRUCT,
@@ -279,7 +247,7 @@ public interface SparqlEndpoint
      *
      * @see    #describe(String, DescribeType, Repository, UriInfo, Request, String)
      */
-    public ResponseBuilder describe(String uri, DescribeType type,
+    public ResponseBuilder describe(String uri, ElementType type,
                             UriInfo uriInfo, Request request, String acceptHdr)
                                                 throws WebApplicationException;
 
@@ -309,7 +277,7 @@ public interface SparqlEndpoint
      * @throws SecurityException if the user is not allowed to
      *         perform the query.
      */
-    public ResponseBuilder describe(String uri, DescribeType type,
+    public ResponseBuilder describe(String uri, ElementType type,
                                     Repository repository, UriInfo uriInfo,
                                     Request request, String acceptHdr)
                                                 throws WebApplicationException;
@@ -345,7 +313,7 @@ public interface SparqlEndpoint
      * @throws SecurityException if the user is not allowed to
      *         perform the query.
      */
-    public ResponseBuilder describe(String uri, DescribeType type,
+    public ResponseBuilder describe(String uri, ElementType type,
                                     Repository repository, int max,
                                     String format, String jsonCallback,
                                     UriInfo uriInfo, Request request,

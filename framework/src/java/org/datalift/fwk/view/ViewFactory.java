@@ -65,10 +65,10 @@ public abstract class ViewFactory
      * Returns a new template model for web service response rendering
      * with an associated model object.
      * <p>
-     * If <code>model</code> is a {@link Map}, it shall contain the
-     * whole object model and its <strong>content</strong> is copied
-     * into the object model (non-string keys are ignored). Otherwise
-     * the object is associated to the
+     * If <code>model</code> is a {@link java.util.Map}, it shall
+     * contain the whole object model and its <strong>content</strong>
+     * is copied into the object model (non-string keys are ignored).
+     * Otherwise the object is associated to the
      * {@link TemplateModel#MODEL_KEY default model key}.<br />It is
      * possible to associate a Map to the default model key by using
      * the following two-step method:</p>

@@ -47,11 +47,33 @@ import org.datalift.fwk.util.StringUtils;
 @RunWith(JUnit4.class)
 public class StringUtilsTest
 {
-    // @Test
+    private final static String I18N_SAMPLE =
+                        "¿ Iñtërnâtiônàlîzætiøn\u00a0: ç'Æßt \"dùr\" (éê) ?";
+    private final static String TRUNCATE_SAMPLE =
+                        "aBc dEf gHi jKl mNo pQr sTu vWx yZ";
+
+    @Test
     public void testUrlifyOk() throws Exception {
-        String in = "¿ Iñtërnâtiônàlîzætiøn\u00a0: ç'Æßt \"dùr\" (éê) ?";
-        String out = StringUtils.urlify(in);
+        String out = StringUtils.urlify(I18N_SAMPLE);
         assertEquals("internationalizaetion-c-aesst-dur-ee", out);
+    }
+
+    @Test
+    public void testUrlifyTruncate() throws Exception {
+        String out = StringUtils.urlify(TRUNCATE_SAMPLE, 10);
+        assertEquals("abc-def-gh", out);
+    }
+
+    @Test
+    public void testCamelCaseOk() throws Exception {
+        String out = StringUtils.toCamelCase(I18N_SAMPLE);
+        assertEquals("internationalizaetionCAesstDurEe", out);
+    }
+
+    @Test
+    public void testCamelCaseTruncate() throws Exception {
+        String out = StringUtils.toCamelCase(TRUNCATE_SAMPLE, true, 10);
+        assertEquals("AbcDefGhiJ", out);
     }
 
     @Test(expected=IllegalArgumentException.class)

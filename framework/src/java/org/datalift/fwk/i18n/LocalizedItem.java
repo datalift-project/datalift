@@ -74,4 +74,11 @@ public interface LocalizedItem
      *         {@link #toString() string representation} of this object.
      */
     public String getLabel(String language);
+
+    /**
+     * Returns a string representation of this object.
+     * @return a string representation of this object.
+     */
+    public String toString();
 }
+

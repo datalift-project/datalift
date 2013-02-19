@@ -38,6 +38,8 @@ package org.datalift.fwk.project;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.datalift.fwk.FileStore;
+
 
 /**
  * A file-based source object.
@@ -87,4 +89,10 @@ public interface FileSource extends Source
      *         data file.
      */
     public InputStream getInputStream() throws IOException;
+
+    /**
+     * Returns the {@link FileStore} used to persist source content.
+     * @return the file store.
+     */
+    public FileStore getFileStore();
 }

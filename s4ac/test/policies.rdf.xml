@@ -10,7 +10,7 @@
 
 <s4ac:AccessPolicy rdf:about="http://example/accesspolicies/fake_1">
 	<s4ac:appliesTo rdf:resource="http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/instances/dataFromRatingSite1/Graph-reviews" />
-	<s4ac:hasAccessPrivilege rdf:resource="http://ns.inria.fr/s4ac/v2/Read" />
+	<s4ac:hasAccessPrivilege rdf:resource="http://ns.inria.fr/s4ac/v2#Read" />
 	<s4ac:hasAccessConditionSet rdf:resource="http://example/acsets/fake_1" />
 </s4ac:AccessPolicy>
 
@@ -23,7 +23,7 @@
 	<dcterms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#datetime">2011-09-21T14:49:32.424+0200</dcterms:created>
 	<sioc:has_creator rdf:resource="http://ns.inria.fr/isicil/id/spreanaccount/claire.prendleloup" />
 	<s4ac:hasQueryAsk><![CDATA[
-	PREFIX prissma: <http://ns.inria.fr/prissma/v2/> 
+	PREFIX prissma: <http://ns.inria.fr/prissma/v2#> 
 	PREFIX foaf: <http://xmlns.com/foaf/0.1/>
 	ASK {?context a prissma:Context. ?context prissma:user ?u. ?u foaf:knows <http://ns.inria.fr/fabien.gandon#me>.}]]></s4ac:hasQueryAsk>
 	</s4ac:AccessCondition>
@@ -31,7 +31,7 @@
 
 <s4ac:AccessPolicy rdf:about="http://example/accesspolicies/fake_uid3">
 	<s4ac:appliesTo rdf:resource="http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/instances/dataFromVendor1/Graph-2005-11-01" />
-	<s4ac:hasAccessPrivilege rdf:resource="http://ns.inria.fr/s4ac/v2/Read" />
+	<s4ac:hasAccessPrivilege rdf:resource="http://ns.inria.fr/s4ac/v2#Read" />
 	<s4ac:hasAccessConditionSet rdf:resource="http://example/acsets/fake_uid3" />
 </s4ac:AccessPolicy>
 
@@ -44,7 +44,7 @@
 	<dcterms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#datetime">2011-09-21T14:49:32.424+0200</dcterms:created>
 	<sioc:has_creator rdf:resource="http://ns.inria.fr/isicil/id/spreanaccount/claire.prendleloup" />
 	<s4ac:hasQueryAsk><![CDATA[
-	PREFIX prissma: <http://ns.inria.fr/prissma/v2/> 
+	PREFIX prissma: <http://ns.inria.fr/prissma/v2#> 
 	PREFIX foaf: <http://xmlns.com/foaf/0.1/>
 	ASK {?context a prissma:Context. ?context prissma:user ?u. ?u foaf:knows <http://ns.inria.fr/luca.costabello#me>.}]]></s4ac:hasQueryAsk>
 	</s4ac:AccessCondition>
@@ -52,7 +52,7 @@
 
 <s4ac:AccessPolicy rdf:about="http://example/accesspolicies/fake_2">
 	<s4ac:appliesTo rdf:resource="http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/instances/dataFromRatingSite2/Graph-reviews" />
-	<s4ac:hasAccessPrivilege rdf:resource="http://ns.inria.fr/s4ac/v2/Read" />
+	<s4ac:hasAccessPrivilege rdf:resource="http://ns.inria.fr/s4ac/v2#Read" />
 	<s4ac:hasAccessConditionSet rdf:resource="http://example/acsets/fake_2" />
 </s4ac:AccessPolicy>
 
@@ -65,7 +65,7 @@
 	<dcterms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#datetime">2011-09-21T14:49:32.424+0200</dcterms:created>
 	<sioc:has_creator rdf:resource="http://ns.inria.fr/isicil/id/spreanaccount/claire.prendleloup" />
 	<s4ac:hasQueryAsk><![CDATA[
-	PREFIX prissma: <http://ns.inria.fr/prissma/v2/>
+	PREFIX prissma: <http://ns.inria.fr/prissma/v2#>
 		PREFIX foaf: <http://xmlns.com/foaf/0.1/>
 		
 		ASK 
@@ -80,7 +80,7 @@
 
 <s4ac:AccessPolicy rdf:about="http://example/accesspolicies/fake_3">
 	<s4ac:appliesTo rdf:resource="http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/instances/dataFromRatingSite2/Graph-reviews" />
-	<s4ac:hasAccessPrivilege rdf:resource="http://ns.inria.fr/s4ac/v2/Read" />
+	<s4ac:hasAccessPrivilege rdf:resource="http://ns.inria.fr/s4ac/v2#Read" />
 	<s4ac:hasAccessConditionSet rdf:resource="http://example/acsets/fake_3" />
 </s4ac:AccessPolicy>
 
@@ -93,7 +93,7 @@
 	<dcterms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#datetime">2011-09-21T14:49:32.424+0200</dcterms:created>
 	<sioc:has_creator rdf:resource="http://ns.inria.fr/isicil/id/spreanaccount/claire.prendleloup" />
 	<s4ac:hasQueryAsk><![CDATA[
-	PREFIX prissma: <http://ns.inria.fr/prissma/v2/>
+	PREFIX prissma: <http://ns.inria.fr/prissma/v2#>
 	PREFIX soft: <http://www.w3.org/2007/uwa/context/software.owl#>
 	PREFIX dcn: <http://www.w3.org/2007/uwa/context/deliverycontext.owl#>
 	PREFIX common: <http://www.w3.org/2007/uwa/context/common.owl#>
@@ -109,7 +109,7 @@
 
 <s4ac:AccessPolicy rdf:about="http://example/accesspolicies/fake_4">
 	<s4ac:appliesTo rdf:resource="http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/instances/dataFromRatingSite2/Graph-reviews" />
-	<s4ac:hasAccessPrivilege rdf:resource="http://ns.inria.fr/s4ac/v2/Read" />
+	<s4ac:hasAccessPrivilege rdf:resource="http://ns.inria.fr/s4ac/v2#Read" />
 	<s4ac:hasAccessConditionSet rdf:resource="http://example/acsets/fake_4" />
 </s4ac:AccessPolicy>
 
@@ -122,7 +122,7 @@
 	<dcterms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#datetime">2011-09-21T14:49:32.424+0200</dcterms:created>
 	<sioc:has_creator rdf:resource="http://ns.inria.fr/isicil/id/spreanaccount/claire.prendleloup" />
 	<s4ac:hasQueryAsk><![CDATA[
-	PREFIX prissma: <http://ns.inria.fr/prissma/v2/>
+	PREFIX prissma: <http://ns.inria.fr/prissma/v2#>
 	PREFIX soft: <http://www.w3.org/2007/uwa/context/software.owl#>
 	PREFIX dcn: <http://www.w3.org/2007/uwa/context/deliverycontext.owl#>
 	PREFIX common: <http://www.w3.org/2007/uwa/context/common.owl#>
@@ -138,7 +138,7 @@
 
 <s4ac:AccessPolicy rdf:about="http://example/accesspolicies/fake_5">
 	<s4ac:appliesTo rdf:resource="http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/instances/dataFromRatingSite2/Graph-reviews" />
-	<s4ac:hasAccessPrivilege rdf:resource="http://ns.inria.fr/s4ac/v2/Read" />
+	<s4ac:hasAccessPrivilege rdf:resource="http://ns.inria.fr/s4ac/v2#Read" />
 	<s4ac:hasAccessConditionSet rdf:resource="http://example/acsets/fake_5" />
 </s4ac:AccessPolicy>
 
@@ -151,7 +151,7 @@
 	<dcterms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#datetime">2011-09-21T14:49:32.424+0200</dcterms:created>
 	<sioc:has_creator rdf:resource="http://ns.inria.fr/isicil/id/spreanaccount/claire.prendleloup" />
 	<s4ac:hasQueryAsk><![CDATA[
-	PREFIX prissma: <http://ns.inria.fr/prissma/v2/>
+	PREFIX prissma: <http://ns.inria.fr/prissma/v2#>
 		PREFIX foaf: <http://xmlns.com/foaf/0.1/>
 		
 		ASK 
@@ -166,7 +166,7 @@
 
 <s4ac:AccessPolicy rdf:about="http://example/accesspolicies/fake_6">
 	<s4ac:appliesTo rdf:resource="http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/instances/dataFromRatingSite2/Graph-reviews" />
-	<s4ac:hasAccessPrivilege rdf:resource="http://ns.inria.fr/s4ac/v2/Read" />
+	<s4ac:hasAccessPrivilege rdf:resource="http://ns.inria.fr/s4ac/v2#Read" />
 	<s4ac:hasAccessConditionSet rdf:resource="http://example/acsets/fake_6" />
 </s4ac:AccessPolicy>
 
@@ -179,14 +179,14 @@
 	<dcterms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#datetime">2011-09-21T14:49:32.424+0200</dcterms:created>
 	<sioc:has_creator rdf:resource="http://ns.inria.fr/isicil/id/spreanaccount/claire.prendleloup" />
 	<s4ac:hasQueryAsk><![CDATA[
-	PREFIX prissma: <http://ns.inria.fr/prissma/v2/> 
+	PREFIX prissma: <http://ns.inria.fr/prissma/v2#> 
 	PREFIX foaf: <http://xmlns.com/foaf/0.1/>
 	ASK {?context a prissma:Context. ?context prissma:user ?u. ?u foaf:knows <http://ns.inria.fr/fabien.gandon#me>.}]]></s4ac:hasQueryAsk>
 	</s4ac:AccessCondition>
 
 <s4ac:AccessPolicy rdf:about="http://example/accesspolicies/fake_7">
 	<s4ac:appliesTo rdf:resource="http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/instances/dataFromRatingSite2/Graph-reviews" />
-	<s4ac:hasAccessPrivilege rdf:resource="http://ns.inria.fr/s4ac/v2/Read" />
+	<s4ac:hasAccessPrivilege rdf:resource="http://ns.inria.fr/s4ac/v2#Read" />
 	<s4ac:hasAccessConditionSet rdf:resource="http://example/acsets/fake_7" />
 </s4ac:AccessPolicy>
 
@@ -199,7 +199,7 @@
 	<dcterms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#datetime">2011-09-21T14:49:32.424+0200</dcterms:created>
 	<sioc:has_creator rdf:resource="http://ns.inria.fr/isicil/id/spreanaccount/claire.prendleloup" />
 	<s4ac:hasQueryAsk><![CDATA[
-	PREFIX prissma: <http://ns.inria.fr/prissma/v2/> 
+	PREFIX prissma: <http://ns.inria.fr/prissma/v2#> 
 	ASK { 
 		?context a prissma:Context.
 		?context prissma:environment ?env.
@@ -211,7 +211,7 @@
 
 <s4ac:AccessPolicy rdf:about="http://example/accesspolicies/fake_8">
 	<s4ac:appliesTo rdf:resource="http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/instances/dataFromRatingSite2/Graph-reviews" />
-	<s4ac:hasAccessPrivilege rdf:resource="http://ns.inria.fr/s4ac/v2/Read" />
+	<s4ac:hasAccessPrivilege rdf:resource="http://ns.inria.fr/s4ac/v2#Read" />
 	<s4ac:hasAccessConditionSet rdf:resource="http://example/acsets/fake_8" />
 </s4ac:AccessPolicy>
 
@@ -224,7 +224,7 @@
 	<dcterms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#datetime">2011-09-21T14:49:32.424+0200</dcterms:created>
 	<sioc:has_creator rdf:resource="http://ns.inria.fr/isicil/id/spreanaccount/claire.prendleloup" />
 	<s4ac:hasQueryAsk><![CDATA[
-	PREFIX prissma: <http://ns.inria.fr/prissma/v2/> 
+	PREFIX prissma: <http://ns.inria.fr/prissma/v2#> 
 	ASK { 
 		?context a prissma:Context.
 		?context prissma:environment ?env.
@@ -236,7 +236,7 @@
 
 <s4ac:AccessPolicy rdf:about="http://example/accesspolicies/fake_9">
 	<s4ac:appliesTo rdf:resource="http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/instances/dataFromRatingSite2/Graph-reviews" />
-	<s4ac:hasAccessPrivilege rdf:resource="http://ns.inria.fr/s4ac/v2/Read" />
+	<s4ac:hasAccessPrivilege rdf:resource="http://ns.inria.fr/s4ac/v2#Read" />
 	<s4ac:hasAccessConditionSet rdf:resource="http://example/acsets/fake_9" />
 </s4ac:AccessPolicy>
 
@@ -249,7 +249,7 @@
 	<dcterms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#datetime">2011-09-21T14:49:32.424+0200</dcterms:created>
 	<sioc:has_creator rdf:resource="http://ns.inria.fr/isicil/id/spreanaccount/claire.prendleloup" />
 	<s4ac:hasQueryAsk><![CDATA[
-PREFIX prissma: <http://ns.inria.fr/prissma/v2/>
+PREFIX prissma: <http://ns.inria.fr/prissma/v2#>
 			ASK 
 			{ ?context a prissma:Context.
 			  ?context prissma:environment ?env.
@@ -259,7 +259,7 @@ PREFIX prissma: <http://ns.inria.fr/prissma/v2/>
 
 <s4ac:AccessPolicy rdf:about="http://example/accesspolicies/fake_10">
 	<s4ac:appliesTo rdf:resource="http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/instances/dataFromRatingSite2/Graph-reviews" />
-	<s4ac:hasAccessPrivilege rdf:resource="http://ns.inria.fr/s4ac/v2/Read" />
+	<s4ac:hasAccessPrivilege rdf:resource="http://ns.inria.fr/s4ac/v2#Read" />
 	<s4ac:hasAccessConditionSet rdf:resource="http://example/acsets/fake_10" />
 </s4ac:AccessPolicy>
 
@@ -272,7 +272,7 @@ PREFIX prissma: <http://ns.inria.fr/prissma/v2/>
 	<dcterms:created rdf:datatype="http://www.w3.org/2001/XMLSchema#datetime">2011-09-21T14:49:32.424+0200</dcterms:created>
 	<sioc:has_creator rdf:resource="http://ns.inria.fr/isicil/id/spreanaccount/claire.prendleloup" />
 	<s4ac:hasQueryAsk><![CDATA[
-	PREFIX prissma: <http://ns.inria.fr/prissma/v2/> 
+	PREFIX prissma: <http://ns.inria.fr/prissma/v2#> 
 	ASK { 
 		?context a prissma:Context.
 		?context prissma:environment ?env.

@@ -109,6 +109,11 @@
   <property name="silk.version"         value="2.5.3"/>
   <property name="silk.jar"
             location="${run.lib.home}/silk-${silk.version}/silk.jar"/>
+	
+  <property name="edoal.version"         value="9.18"/>
+  <property name="procalign.jar" location="${run.lib.home}/edoal-${edoal.version}/procalign.jar"/>
+  <property name="align.jar" location="${run.lib.home}/edoal-${edoal.version}/align.jar"/>
+  <property name="ontowrap.jar" location="${run.lib.home}/edoal-${edoal.version}/ontowrap.jar"/>
 
   <property name="fwk.web.home"         location="${fwk.home}/src/web"/>
   <property name="fwk.lib.home"         location="${fwk.home}/lib"/>
@@ -247,7 +252,7 @@
           destdir="${classes.dir}"
             debug="${compile.debug}"
       deprecation="${compile.deprecation}"
-         optimize="${compile.optimize}">
+         optimize="${compile.optimize}" includeantruntime="on">
       <classpath refid="compile.classpath"/>
     </javac>
     <!-- Copy application resources -->
@@ -275,6 +280,14 @@
   </target>
 
   <target name="prepare-dist" depends="prepare">
+    <!-- Copy runtime JARs to embed in distribution -->
+    <copy todir="${classes.dir}" flatten="true">
+      <fileset dir="${run.lib.home}">
+        <include name="**/*.jar"/>
+      </fileset>
+    </copy>
+    <!-- Create build directories as needed -->
+    <mkdir dir="${dist.home}"/>
     <!-- Copy web application page templates and resources -->
     <copy todir="${classes.dir}" includeEmptyDirs="false"
                                  preservelastmodified="true">
@@ -296,17 +309,14 @@
 
   <target name="dist" depends="compile,prepare-dist,resource-copy"
                       description="Create binary distribution">
-    <!-- Create module JAR file -->
-    <copy file="${silk.jar}" tofile="${jar.path}"/>
-    <jar jarfile="${jar.path}" update="true">
+    <jar jarfile="${jar.path}">
       <fileset dir="${classes.dir}"/>
       <service type="org.datalift.fwk.Module">
         <provider classname="org.datalift.samples.project.HandleProjectModule"/>
       </service>
     </jar>
   </target>
-
-
+	
   <!-- ================ Helper Targets ==================================== -->
 
   <!--

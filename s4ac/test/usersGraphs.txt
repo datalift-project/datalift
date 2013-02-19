@@ -1,6 +1,6 @@
 ======Context graph of User1========
 
-@prefix prissma: <http://ns.inria.fr/prissma/v2/> .
+@prefix prissma: <http://ns.inria.fr/prissma/v2#> .
 @prefix hard: <http://www.w3.org/2007/uwa/context/hardware.owl#> .
 @prefix dcn: <http://www.w3.org/2007/uwa/context/deliverycontext.owl#> .
 @prefix foaf: <http://xmlns.com/foaf/0.1/> .
@@ -40,7 +40,7 @@ ex:env ao:activity <http://dbpedia.org/resource/Shopping>.
 
 
 ======Context graph of User2========
-@prefix prissma: <http://ns.inria.fr/prissma/v2/> .
+@prefix prissma: <http://ns.inria.fr/prissma/v2#> .
 @prefix hard: <http://www.w3.org/2007/uwa/context/hardware.owl#> .
 @prefix dcn: <http://www.w3.org/2007/uwa/context/deliverycontext.owl#> .
 @prefix foaf: <http://xmlns.com/foaf/0.1/> .
@@ -74,7 +74,7 @@ ex:env prissma:motion "yes".
 
 ======Context graph of User3========
 
-@prefix prissma: <http://ns.inria.fr/prissma/v2/> .
+@prefix prissma: <http://ns.inria.fr/prissma/v2#> .
 @prefix hard: <http://www.w3.org/2007/uwa/context/hardware.owl#> .
 @prefix dcn: <http://www.w3.org/2007/uwa/context/deliverycontext.owl#> .
 @prefix foaf: <http://xmlns.com/foaf/0.1/> .

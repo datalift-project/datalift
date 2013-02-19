@@ -47,7 +47,7 @@ import java.util.TimeZone;
 
 
 /**
- * A {@Link SimpleDateFormat date format} that can be shared among
+ * A {@link SimpleDateFormat date format} that can be shared among
  * threads.
  *
  * @author lbihanic

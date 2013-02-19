@@ -48,6 +48,7 @@ import java.net.URL;
 
 import javax.persistence.Entity;
 import javax.ws.rs.HttpMethod;
+import javax.ws.rs.core.MediaType;
 
 import static javax.ws.rs.core.HttpHeaders.*;
 
@@ -61,7 +62,6 @@ import com.clarkparsia.empire.annotation.RdfsClass;
 
 import org.datalift.core.TechnicalException;
 import org.datalift.core.rdf.BoundedAsyncRdfParser;
-import org.datalift.fwk.MediaTypes;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.SparqlSource;
@@ -217,7 +217,7 @@ public class SparqlSourceImpl extends CachingSourceImpl implements SparqlSource
     public CloseableIterator<Statement> iterator() {
         try {
             ParserConfig config = new ParserConfig(
-                                        false,      // Assume data are valid.
+                                        true,       // Assume data are valid.
                                         false,      // Report all errors.
                                         false,      // Don't preserve BNode ids.
                                         DatatypeHandling.VERIFY);
@@ -318,8 +318,8 @@ public class SparqlSourceImpl extends CachingSourceImpl implements SparqlSource
             int l = 0;
             Reader r = null;
             try {
-                String cs = this.parseContentType(cnx.getContentType())
-                                .getCharset();
+                String cs = getCharset(this.parseContentType(
+                                                        cnx.getContentType()));
                 in = new BufferedInputStream(in, this.getBufferSize());
                 r = (cs == null)? new InputStreamReader(in):
                                   new InputStreamReader(in, cs);
@@ -384,9 +384,8 @@ public class SparqlSourceImpl extends CachingSourceImpl implements SparqlSource
      * @return the content type and character encoding as an array of
      *         strings.
      */
-    private MediaTypes parseContentType(String contentType) {
-        return (isSet(contentType))?
-                    new MediaTypes(contentType):
-                    new MediaTypes(MediaTypes.APPLICATION_OCTET_STREAM_TYPE);
+    private MediaType parseContentType(String contentType) {
+        return MediaType.valueOf(
+                    isSet(contentType)? contentType: APPLICATION_OCTET_STREAM);
     }
 }

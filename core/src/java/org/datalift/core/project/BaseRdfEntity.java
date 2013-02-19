@@ -85,8 +85,8 @@ public abstract class BaseRdfEntity implements SupportsRdfId
     }
 
     /** {@inheritDoc} */
-    @Override @SuppressWarnings("unchecked")
-    public void setRdfId(RdfKey id) {
+    @Override
+    public void setRdfId(@SuppressWarnings("rawtypes") RdfKey id) {
         this.rdfId.setRdfId(id);
         this.setId(String.valueOf(id));
     }

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- 
+  RDF ontology for describing Ramon geographic (countries, NUTS, LAU) classes and properties
+-->
+
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+         xmlns:owl="http://www.w3.org/2002/07/owl#"
+         xml:base="http://ec.europa.eu/eurostat/ramon/ontologies/geographic.rdf#"
+>
+
+	<owl:Ontology rdf:about="http://ec.europa.eu/eurostat/ramon/ontologies/geographic.rdf#">
+	  <rdfs:label>Geographic schema v. 0.6</rdfs:label>
+	</owl:Ontology>
+
+	<!-- Begin: Class Declaration -->
+
+	<rdfs:Class rdf:ID="Region">
+	  <rdfs:label>Geographical region</rdfs:label>
+	</rdfs:Class>
+
+	<rdfs:Class rdf:ID="Country">
+	  <rdfs:label>Country code (Eurostat)</rdfs:label>
+	  <rdfs:comment>Member States of the European Union (EU) and other countries have been assigned a two-letter country code, always written in capital letters, and often used as an abbreviation in statistical analyses, tables, graphs or maps.</rdfs:comment>
+	  <rdfs:subClassOf rdf:resource="#Region"/>
+	</rdfs:Class>
+
+	<rdfs:Class rdf:ID="NUTSRegion">
+	  <rdfs:label>NUTS Region</rdfs:label>
+	  <rdfs:subClassOf rdf:resource="#Region"/>
+	</rdfs:Class>
+
+	<rdfs:Class rdf:ID="LAURegion">
+	  <rdfs:label>LAU Region</rdfs:label>
+	  <rdfs:subClassOf rdf:resource="#Region"/>
+	</rdfs:Class>
+
+	<!-- Begin: Property Declarations -->
+
+	<rdf:Property rdf:ID="code">
+	  <rdfs:label>Country code</rdfs:label>
+	  <rdfs:domain rdf:resource="#Country"/>
+	</rdf:Property>
+
+	<rdf:Property rdf:ID="regionCode">
+	  <rdfs:label>Region code</rdfs:label>
+          <rdfs:comment>NUTS or LAU code</rdfs:comment>
+	  <rdfs:domain rdf:resource="#Region"/>
+	</rdf:Property>
+
+	<rdf:Property rdf:ID="inScheme">
+	  <rdfs:label>In scheme</rdfs:label>
+	</rdf:Property>
+
+	<rdf:Property rdf:ID="edition">
+	  <rdfs:label>Edition</rdfs:label>
+	</rdf:Property>
+
+	<rdf:Property rdf:ID="level">
+	  <rdfs:label>Level</rdfs:label>
+	  <rdfs:domain rdf:resource="#Region"/>
+	</rdf:Property>
+
+	<rdf:Property rdf:ID="hasParentRegion">
+	  <rdfs:label>Has parent region</rdfs:label>
+	  <rdfs:domain rdf:resource="#Region"/>
+	  <rdfs:range rdf:resource="#Region"/>
+          <owl:inverseOf rdf:resource="#hasSubRegion"/>
+	</rdf:Property>
+
+	<rdf:Property rdf:ID="hasSubRegion">
+	  <rdfs:label>Has subregion</rdfs:label>
+	  <rdfs:domain rdf:resource="#Region"/>
+	  <rdfs:range rdf:resource="#Region"/>
+	</rdf:Property>
+
+	<rdf:Property rdf:ID="name">
+	  <rdfs:label>Name</rdfs:label>
+	  <rdfs:domain rdf:resource="#Region"/>
+	</rdf:Property>
+
+	<rdf:Property rdf:ID="protocolOrder">
+	  <rdfs:label>Protocol order</rdfs:label>
+	</rdf:Property>
+
+</rdf:RDF>

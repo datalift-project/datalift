@@ -43,12 +43,15 @@ import java.io.Writer;
 import java.net.URLEncoder;
 import java.text.ChoiceFormat;
 import java.text.MessageFormat;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.openrdf.model.BNode;
 import org.openrdf.model.Literal;
+import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 
 import info.aduna.io.IndentingWriter;
@@ -99,6 +102,7 @@ public abstract class AbstractJsonWriter
     private final MessageFormat urlPattern;
     private final String defaultGraphUri;
     private final String jsonCallback;
+    private final Map<String,String> nsPrefixes = new HashMap<String,String>();
 
     private boolean firstTupleWritten;
     protected List<String> columnHeaders;
@@ -155,6 +159,7 @@ public abstract class AbstractJsonWriter
             this.writer.write(this.jsonCallback);
             this.writer.write('(');
         }
+        this.nsPrefixes.clear();
     }
 
     protected void end() throws IOException {
@@ -162,6 +167,10 @@ public abstract class AbstractJsonWriter
             this.writer.write(')');
         }
         this.writer.flush();
+    }
+
+    protected void setPrefix(String prefix, String nsUri) {
+        this.nsPrefixes.put(nsUri, prefix);
     }
 
     protected void startSolution() throws IOException {
@@ -201,21 +210,38 @@ public abstract class AbstractJsonWriter
         }
         else if (value instanceof Literal) {
             Literal l = (Literal)value;
-            if ((value != null) && (l.getDatatype() != null) &&
+            if ((l.getDatatype() != null) &&
                 (NATIVE_TYPES_PATTERN.matcher(l.getDatatype().getLocalName())
                                      .matches())) {
                 this.writer.write(l.getLabel());
             }
             else {
-                this.writeValue(l.stringValue(), type);
+                this.writeValue(l.toString(), type);
             }
+        }
+        else if (value instanceof URI) {
+            this.writeValue((URI)value, type);
         }
         else {
             this.writeValue((value != null)? value.stringValue(): "", type);
         }
     }
 
+    protected void writeValue(URI u, ResourceType type) throws IOException {
+        String label = null;
+        String prefix = this.nsPrefixes.get(u.getNamespace());
+        if (prefix != null) {
+            label = prefix + ':' + u.getLocalName();
+        }
+        this.writeValue(u.stringValue(), label, type);
+    }
+
     protected void writeValue(String value, ResourceType type)
+                                                            throws IOException {
+        this.writeValue(value, null, type);
+    }
+
+    protected void writeValue(String value, String label, ResourceType type)
                                                             throws IOException {
         if ((type != null) && (this.urlPattern != null) &&
             ((type != ResourceType.Unknown) ||
@@ -224,7 +250,7 @@ public abstract class AbstractJsonWriter
                                            Integer.valueOf(type.value),
                                            this.defaultGraphUri };
             value = "<a href=\"" + this.urlPattern.format(args) + "\">"
-                                                            + value + "</a>";
+                                 + ((label != null)? label: value) + "</a>";
         }
         this.writeString(value);
     }

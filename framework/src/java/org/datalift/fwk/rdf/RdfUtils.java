@@ -72,13 +72,13 @@ import static org.datalift.fwk.util.StringUtils.isBlank;
  * <ul>
  *  <li>Determine the type of RDF data (RDF/XML, Turtle, N3...) a file
  *  contains from its extension:
- *  {@link #guessRdfTypeFromExtension(File)}</li>
+ *  {@link #guessRdfTypeFromExtension(String)}</li>
  *  <li>Get an RDF parser: {@link #newRdfParser(MediaType)}</li>
  *  <li>Parse RDF files and load the resulting triples into an RDF
  *   store: {@link #upload(File, Repository, URI)}</li>
  *  <li>Apply a set of SPARQL CONTRUCT queries to build a new set of
  *   RDF triples and save them into an RDF store:
- *   {@link #convert(Repository, List, Repository, URI, boolean)}</li>
+ *   {@link #convert(Repository, List, Repository, URI, boolean, URI...)}</li>
  * </ul>
  *
  * @author lbihanic
@@ -420,7 +420,7 @@ public final class RdfUtils
      * @throws RdfException if any error occurred accessing the RDF
      *         stores or executing the CONSTRUCT queries.
      *
-     * @see    #convert(Repository, List, Repository, URI, String, boolean)
+     * @see    #convert(Repository, List, Repository, URI, String, boolean, URI...)
      */
     public static void convert(Repository source, List<String> constructQueries,
                                Repository target, boolean clearTargetGraph)
@@ -452,7 +452,7 @@ public final class RdfUtils
      * @throws RdfException if any error occurred accessing the RDF
      *         stores or executing the CONSTRUCT queries.
      *
-     * @see    #convert(Repository, List, Repository, URI, String, boolean)
+     * @see    #convert(Repository, List, Repository, URI, String, boolean, URI...)
      */
     public static void convert(Repository source,
                                List<String> constructQueries,

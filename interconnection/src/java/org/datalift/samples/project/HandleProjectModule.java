@@ -8,13 +8,21 @@
 package org.datalift.samples.project;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectStreamException;
+import java.io.OutputStreamWriter;
 import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,11 +43,16 @@ import org.datalift.fwk.MediaTypes;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.rdf.Repository;
+import org.semanticweb.owl.align.Alignment;
+import org.semanticweb.owl.align.AlignmentException;
+import org.semanticweb.owl.align.AlignmentVisitor;
 
 import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.FormDataParam;
 
 import de.fuberlin.wiwiss.silk.Silk;
+import fr.inrialpes.exmo.align.impl.renderer.EDOALRendererVisitor;
+import fr.inrialpes.exmo.align.parser.AlignmentParser;
 
 @Path("/" + HandleProjectModule.MODULE_NAME)
 public class HandleProjectModule extends BaseInterconnectionModule
@@ -437,6 +450,150 @@ public class HandleProjectModule extends BaseInterconnectionModule
 	                                                .type(MediaType.TEXT_PLAIN).build());
 	                        }
         	        Silk.executeFile(configFile, linkSpecId, numThreads, reload);
+        	        configFile.deleteOnExit();
+	                } 
+					
+		} finally {}      
+		} finally {}
+		
+        return Response.ok(this.newViewable("/ok.vm", args)).build();
+        
+    }
+    
+    @POST
+    @Path("run-edoal")
+    @Consumes(MediaTypes.MULTIPART_FORM_DATA)
+    @Produces(MediaTypes.TEXT_HTML)
+    public Response doRun_edoal(@QueryParam("project") java.net.URI projectId,
+                        @FormDataParam("configFile") InputStream data,
+                        @FormDataParam("configFile") FormDataContentDisposition disposition,
+                        @FormDataParam("targetdataset") String targetdataset)
+                                        throws ObjectStreamException
+    {    	   	   	
+        // Retrieve project.
+        Project p4 = this.getProject(projectId);		
+        // Display conversion configuration page.  	
+    	Map<String, Object> args = new HashMap<String, Object>();
+        args.put("it", p4);
+        args.put("linking", this);
+    	
+        String filename = disposition.getFileName();
+        try {
+			FileOutputStream fos = null;
+	        BufferedInputStream bis = null;
+	        int BUFFER_SIZE = 1024;
+	        byte[] buf = new byte[BUFFER_SIZE];
+	        int size = 0;
+	        bis = new BufferedInputStream(data);
+	        try {
+	        	    File configFile = null;
+					try {
+						configFile = File.createTempFile("configFile",".xml");
+						fos = new FileOutputStream(configFile);
+					} catch (IOException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					} finally {
+	                
+	                try {
+	                        while ( (size = bis.read(buf)) != -1)
+	                        	 fos.write(buf, 0, size);	                              	                        
+	                             fos.close();
+	                             bis.close();
+	                        } catch (IOException e) {
+	                        	 // Includes FileNotFoundException
+	                             log.fatal("File upload error for {}", e, configFile);
+	                             throw new WebApplicationException(
+	                                       Response.status(Status.INTERNAL_SERVER_ERROR)
+	                                                .entity(e.getMessage())
+	                                                .type(MediaType.TEXT_PLAIN).build());
+	                        }
+	                if (data!=null)
+	                {
+	                	//create SILK script
+	                	AlignmentParser aparser = new AlignmentParser(0);
+	                	Alignment alignment = null;
+	                	URI file = configFile.toURI();
+	        			try {
+							alignment = aparser.parse(file);
+							PrintWriter writer = null;
+							try {
+								writer = new PrintWriter(
+										 new BufferedWriter(
+								         new OutputStreamWriter( System.out, "UTF-8" )), true);
+							} catch (UnsupportedEncodingException e) {
+								// TODO Auto-generated catch block
+								System.out.println("cannot initialize a writer");
+							}
+		        			AlignmentVisitor renderer = new EDOALRendererVisitor(writer);
+		                    alignment.render(renderer);
+		                    writer.flush();
+		                    writer.close();
+		                    File onto1=new File(System.getProperty("user.dir")+"\\onto1_file.xml");
+		                    onto1.deleteOnExit();
+		                    File onto2=new File(System.getProperty("user.dir")+"\\onto2_file.xml");
+		                    onto2.deleteOnExit();
+		                    //Run SILK script
+		                    File fspec = new File(System.getProperty("user.dir")+"\\SILKscript.xml");		                    
+		                    
+		                    //replace the sparql endpoint of target data set:
+		                    BufferedReader br = null;  
+		                    BufferedWriter bw = null; 
+		                    String line = null;  
+		                    StringBuffer buff = new StringBuffer();  		                     
+		                    try {  
+		                        // create input stream buffer
+		                        br = new BufferedReader(new FileReader(fspec));		                        
+		                        int i=0;
+		                        // read each line, and put into the buffer
+		                        while ((line = br.readLine()) != null) {  
+		                            // revise the content
+		                            if (line.contains("http://localhost:8080/datalift/sparql")) {
+		                            	i++;
+		                            	if (i==2)		                            		
+		                            		buff.append("<Param name=\"endpointURI\" value=\""+targetdataset+"\"/>");
+		                            	else buff.append(line);
+		                            }   
+		                            // if it don't need to be revised, copy as the same
+		                            else {  
+		                                buff.append(line);
+		                            }  
+		                         buff.append(System.getProperty("line.separator")); 			                     
+		                        }  
+		                    } catch (Exception e) {  
+		                        e.printStackTrace();  
+		                    } finally {  
+		                        // close the buffer
+		                        if (br != null) {  
+		                            try {  
+		                                br.close(); 
+		                            } catch (IOException e) {  
+		                                br = null; 
+		                            }  
+		                        }  
+		                    } 
+		                    try {  
+		                        bw = new BufferedWriter(new FileWriter(fspec));  
+		                        bw.write(buff.toString());  
+		                    } catch (Exception e) {  
+		                        e.printStackTrace();  
+		                    } finally {  
+		                        if (bw != null) {  
+		                            try {  
+		                                bw.close();  
+		                            } catch (IOException e) {  
+		                                bw = null;  
+		                            }  
+		                        }  
+		                    }
+		                    
+		                    Silk.executeFile(fspec, null, 1, true);
+		                    
+						} catch (AlignmentException e) {
+							// TODO Auto-generated catch block
+							System.out.println("cannot create EDOAL file");
+						}	        			
+	                }
         	        configFile.deleteOnExit();
 	                } 
 					

@@ -34,6 +34,11 @@
         <string>$JAVAROOT/jetty-6.1.26.jar</string>
         <string>$JAVAROOT/jetty-util-6.1.26.jar</string>
         <string>$JAVAROOT/servlet-api-2.5-20081211.jar</string>
+        <string>$JAVAROOT/jsp-2.1-jetty-6.1.26.jar</string>
+        <string>$JAVAROOT/jsp-api-2.1-glassfish-2.1.v20091210.jar</string>
+        <string>$JAVAROOT/jsp-2.1-glassfish-2.1.v20091210.jar</string>
+        <string>$JAVAROOT/eclipse-jdt-core-3.1.1.jar</string>
+        <string>$JAVAROOT/ant-1.6.5.jar</string>
         <string>$JAVAROOT/jargs-1.0.jar</string>
         <string>$JAVAROOT/datalift-wrapper.jar</string>
       </array>

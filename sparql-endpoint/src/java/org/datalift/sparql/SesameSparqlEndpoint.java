@@ -38,6 +38,7 @@ package org.datalift.sparql;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -90,7 +91,10 @@ import org.openrdf.rio.turtle.TurtleWriter;
 import static org.openrdf.query.QueryLanguage.SPARQL;
 
 import org.datalift.fwk.Configuration;
+import org.datalift.fwk.rdf.ElementType;
 import org.datalift.fwk.rdf.Repository;
+import org.datalift.fwk.sparql.AccessController;
+import org.datalift.fwk.sparql.AccessController.ControlledQuery;
 import org.datalift.fwk.util.CloseableIterator;
 import org.datalift.fwk.util.web.json.GridJsonWriter;
 import org.datalift.fwk.util.web.json.JsonRdfHandler;
@@ -144,8 +148,6 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
     protected final static List<Variant> CONSTRUCT_RESPONSE_TYPES =
             Collections.unmodifiableList(Arrays.asList(
                     new Variant(APPLICATION_RDF_XML_TYPE, null, null),
-                    new Variant(APPLICATION_SPARQL_RESULT_JSON_TYPE, null, null),
-                    new Variant(APPLICATION_JSON_TYPE, null, null),
                     new Variant(TEXT_TURTLE_TYPE, null, null),
                     new Variant(APPLICATION_TURTLE_TYPE, null, null),
                     new Variant(TEXT_N3_TYPE, null, null),
@@ -154,6 +156,8 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                     new Variant(APPLICATION_NTRIPLES_TYPE, null, null),
                     new Variant(APPLICATION_TRIG_TYPE, null, null),
                     new Variant(APPLICATION_TRIX_TYPE, null, null),
+                    new Variant(APPLICATION_SPARQL_RESULT_JSON_TYPE, null, null),
+                    new Variant(APPLICATION_JSON_TYPE, null, null),
                     new Variant(TEXT_HTML_TYPE, null, null),
                     new Variant(APPLICATION_XHTML_XML_TYPE, null, null),
                     new Variant(APPLICATION_XML_TYPE, null, null),
@@ -175,10 +179,16 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
 
     private final static String DESCRIBE_URL_PATTERN =
         "sparql/describe?uri={0}{1,choice," +
-            ResourceType.Object.value    + "#&type=" + DescribeType.Object    + "|" +
-            ResourceType.Predicate.value + "#&type=" + DescribeType.Predicate + "|" +
-            ResourceType.Graph.value     + "#&type=" + DescribeType.Graph     + "|" +
+            ResourceType.Object.value    + "#&type=" + ElementType.Resource  + "|" +
+            ResourceType.Predicate.value + "#&type=" + ElementType.Predicate + "|" +
+            ResourceType.Graph.value     + "#&type=" + ElementType.Graph     + "|" +
             ResourceType.Graph.value     + "<}&default-graph={2}";
+
+    //-------------------------------------------------------------------------
+    // Instance members
+    //-------------------------------------------------------------------------
+
+    private AccessController accessController = null;
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -206,6 +216,22 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
      */
     protected SesameSparqlEndpoint(String name, String welcomeTemplate) {
         super(name, welcomeTemplate);
+    }
+
+    //-------------------------------------------------------------------------
+    // Module contract support
+    //-------------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    @Override
+    public void postInit(Configuration configuration) {
+        super.postInit(configuration);
+        Collection<AccessController> acs =
+                                configuration.getBeans(AccessController.class);
+        if (! acs.isEmpty()) {
+            this.accessController = acs.iterator().next();
+        }
+        // Else: no access control.
     }
 
     //-------------------------------------------------------------------------
@@ -258,12 +284,28 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                              Status.BAD_REQUEST);
         }
         // Make defaultGraphUri list mutable.
-        List<String> defGraphUris = (defaultGraphUris != null) ?
-                                new LinkedList<String>(defaultGraphUris): null;
+        if (defaultGraphUris != null) {
+            defaultGraphUris = new LinkedList<String>(defaultGraphUris);
+        }
         // Extract target RDF repository.
-        Repository repo = this.getTargetRepository(defGraphUris);
+        Repository repo = this.getTargetRepository(defaultGraphUris);
+
+        // Enforce access control policies, if any.
+        if (this.accessController != null) {
+            ControlledQuery q = this.accessController.checkQuery(
+                                query, repo, defaultGraphUris, namedGraphUris);
+            // Get modified query, enriched with restrictions.
+            query = q.query;
+            // Override accessed graphs, except for ASK queries for which a
+            // Sesame bug leads to "false" results whenever a DataSet is set.
+            if (! "ASK".equals(q.queryType)) {
+                defaultGraphUris = q.defaultGraphUris;
+                namedGraphUris   = q.namedGraphUris;
+            }
+        }
         // Build query dataset from specified graphs, if any.
-        Dataset dataset = this.buildDataset(defGraphUris, namedGraphUris);
+        Dataset dataset = this.buildDataset(defaultGraphUris, namedGraphUris);
+
         // Prepare HTML view parameters.
         Map<String,Object> model = new HashMap<String,Object>();
         model.put("default-graph-uri", defaultGraphUris);
@@ -615,7 +657,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
      *
      * @return the base URI for evaluating a SPARQL query.
      */
-    private String getQueryBaseUri(UriInfo uriInfo) {
+    protected final String getQueryBaseUri(UriInfo uriInfo) {
         String baseUri = Configuration.getDefault()
                                       .getProperty(BASE_URI_PROPERTY);
         return (baseUri != null)? baseUri: uriInfo.getBaseUri().toString();
@@ -684,7 +726,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                     public void handleStatement(Statement st)
                                                 throws RDFHandlerException {
                         this.count++;
-                        if ((endOffset != -1) && (this.count >= endOffset)) {
+                        if ((endOffset != -1) && (this.count > endOffset)) {
                             // Last request result reached. => Abort!
                             this.endRDF();
                             throw new RDFHandlerException(
@@ -764,7 +806,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                     public void handleSolution(BindingSet b)
                                     throws TupleQueryResultHandlerException {
                         this.count++;
-                        if ((endOffset != -1) && (this.count >= endOffset)) {
+                        if ((endOffset != -1) && (this.count > endOffset)) {
                             // Last request result reached. => Abort!
                             this.endQueryResult();
                             throw new TupleQueryResultHandlerException(

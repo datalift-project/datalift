@@ -43,7 +43,7 @@ import org.datalift.fwk.project.Project;
 
 
 /**
- * Default implementation of the {@link ShpSource} interface.
+ * Default implementation of the {@link GmlSource} interface.
  *
  * @author Fayçal Hamdi
  */

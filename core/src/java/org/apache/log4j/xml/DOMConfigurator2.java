@@ -214,7 +214,7 @@ import org.apache.log4j.spi.ThrowableRendererSupport;
  *
  * @author lbihanic
  */
-@SuppressWarnings("unchecked")                  // Log4J is 1.4 compatible
+@SuppressWarnings({"unchecked", "rawtypes"})    // Log4J is 1.4 compatible
 public class DOMConfigurator2 extends DOMConfigurator
 {
     //-------------------------------------------------------------------------

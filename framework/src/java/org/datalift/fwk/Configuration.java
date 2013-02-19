@@ -243,18 +243,18 @@ public abstract class Configuration
      *  <li><code>&lt;rel path&gt;</code> is the file path relative
      *      to the public storage root directory.</li>
      * </ul>
-     * @return the path of the public file storage or <code>null</code>
+     * @return the public file store or <code>null</code>
      *         if no such storage is defined.
      */
-    abstract public File getPublicStorage();
+    abstract public FileStore getPublicStorage();
 
     /**
      * Returns the path of the private file storage. This storage shall
      * be used to save the data files of DataLift components that are
      * not remotely accessed.
-     * @return the path of the private file storage.
+     * @return the private file store.
      */
-    abstract public File getPrivateStorage();
+    abstract public FileStore getPrivateStorage();
 
     /**
      * Returns the path of the temporary file storage. This storage shall

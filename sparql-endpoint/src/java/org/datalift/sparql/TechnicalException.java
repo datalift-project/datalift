@@ -65,7 +65,7 @@ public class TechnicalException extends org.datalift.fwk.TechnicalException
      * be the detail message of the cause.
      * @param  cause   the cause.
      */
-    protected TechnicalException(Throwable cause) {
+    public TechnicalException(Throwable cause) {
         super(cause);
     }
 
