@@ -620,9 +620,12 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     private EntityManagerFactory createEntityManagerFactory(
                                                         Repository repository) {
         // Build Empire configuration.
-        EmpireConfiguration empireCfg = new EmpireConfiguration();
+        Map<String,String> props = new HashMap<String,String>();
+        Map<String,Map<String,String>> unitCfg =
+                                    new HashMap<String, Map<String, String>>();
+        // Set Empire global options.
+        props.put("STRICT_MODE", Boolean.FALSE.toString());     // Lax mode.
         // Register persistent classes in Empire configuration.
-        Map<String,String> props = empireCfg.getGlobalConfig();
         String classList = join(this.classes, ",").replace("class ", "");
         props.put(CustomAnnotationProvider.ANNOTATED_CLASSES_PROP, classList);
         // Register the path of each persistent class to Javassist bytecode
@@ -635,6 +638,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         log.debug("Registered persistent classes: {}", classList);
         // Register custom annotation provider to retrieve the list of
         // persistent classes from Empire configuration rather than from a file.
+        EmpireConfiguration empireCfg = new EmpireConfiguration(props, unitCfg);
         empireCfg.setAnnotationProvider(CustomAnnotationProvider.class);
         // Initialize Empire.
         Empire.init(empireCfg, new OpenRdfEmpireModule());
