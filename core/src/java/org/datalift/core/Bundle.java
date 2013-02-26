@@ -196,34 +196,44 @@ public class Bundle
                                           boolean faultTolerant)
                                                   throws TechnicalException {
         Collection<S> services = new LinkedList<S>();
-        // Make a fault-tolerant loading of available implementations.
-        Iterator<S> i = ServiceLoader.load(service, this.classLoader)
-                                     .iterator();
-        boolean hasNext = true;
-        do {
-            try {
-                hasNext = i.hasNext();
-                if (hasNext) {
-                    services.add(i.next());
-                }
-            }
-            catch (ServiceConfigurationError e) {
-                if (faultTolerant) {
-                    // Absorb error and skip this implementation...
-                    log.warn("Failed to load implementation of {} from {}: {}",
-                             e, service.getName(), this, e.getMessage());
-                }
-                else {
-                    // Map ServiceConfigurationError to exception, as explained
-                    // in the doc. of ServiceLoader.iterator() on how to
-                    // "write robust code"!
-                    throw new TechnicalException("service.load.error", e,
-                                    service.getName(), e.getMessage(), this);
-                }
-            }
-        }
-        while (hasNext);
 
+        ClassLoader ctxClassLoader = Thread.currentThread()
+                                           .getContextClassLoader();
+        try {
+            // Set context classloader to module classloader.
+            Thread.currentThread().setContextClassLoader(this.getClassLoader());
+            // Make a fault-tolerant loading of available implementations.
+            Iterator<S> i = ServiceLoader.load(service, this.classLoader)
+                                         .iterator();
+            boolean hasNext = true;
+            do {
+                try {
+                    hasNext = i.hasNext();
+                    if (hasNext) {
+                        services.add(i.next());
+                    }
+                }
+                catch (ServiceConfigurationError e) {
+                    if (faultTolerant) {
+                        // Absorb error and skip this implementation...
+                        log.warn("Failed to load implementation of {} from {}: {}",
+                                 e, service.getName(), this, e.getMessage());
+                    }
+                    else {
+                        // Map ServiceConfigurationError to exception, as
+                        // explained in the doc. of ServiceLoader.iterator()
+                        // on how to "write robust code"!
+                        throw new TechnicalException("service.load.error", e,
+                                    service.getName(), e.getMessage(), this);
+                    }
+                }
+            }
+            while (hasNext);
+        }
+        finally {
+            // Restore context classloader.
+            Thread.currentThread().setContextClassLoader(ctxClassLoader);
+        }
         return services;
     }
 
