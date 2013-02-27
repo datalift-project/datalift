@@ -512,6 +512,9 @@ public abstract class UpdateQuery
      *         <code>null</code> if none was defined.
      */
     public String prefixFor(String ns) {
+        if (ns.endsWith(":")) {
+            return ns.substring(0, ns.length() - 1);
+        }
         String prefix = this.ns2Prefix.get(ns);
         if (prefix == null) {
             prefix = tentativePrefixes.get(ns);
@@ -534,7 +537,13 @@ public abstract class UpdateQuery
      * @return a URI object.
      */
     public URI uri(String uri) {
-        return this.uri(null, uri);
+        String prefix = null;
+        int n = uri.indexOf(':');
+        if (n != -1) {
+            prefix = uri.substring(0, n);
+            uri = uri.substring(n + 1);
+        }
+        return this.uri(prefix, uri);
     }
 
     /**
@@ -821,7 +830,9 @@ public abstract class UpdateQuery
             }
             else {
                 String nsUri  = u.getNamespace();
-                String prefix = this.ns2Prefix.get(nsUri);
+                String prefix = (nsUri.endsWith(":"))?
+                                        nsUri.substring(0, nsUri.length() - 1):
+                                        this.ns2Prefix.get(nsUri);
                 s = (prefix != null)? prefix + ':' + u.getLocalName():
                                       "<" + v.toString() + '>';
             }
