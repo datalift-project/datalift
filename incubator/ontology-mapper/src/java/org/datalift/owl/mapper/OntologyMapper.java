@@ -3,6 +3,7 @@ package org.datalift.owl.mapper;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -211,8 +212,23 @@ public class OntologyMapper extends BaseModule implements ProjectModule
             if (path.charAt(0) == '/') {
                 path = path.substring(1);
             }
+            // Build canonical file path.
             File f = new File(Configuration.getDefault().getTempStorage(),
                               MODULE_NAME + '/' + path);
+            // Check if ontology data have already been downloaded.
+            if (! f.exists()) {
+                // Look for prev. downloaded file (with RDF extension added).
+                final String prefix = f.getName() + '.';
+                File[] l = f.getParentFile().listFiles(new FilenameFilter() {
+                    @Override
+                    public boolean accept(File dir, String name) {
+                        return name.startsWith(prefix);
+                    }
+                });
+                if (l.length > 0) {
+                    f = l[0];   // Assume first found file is the expected one!
+                }
+            }
             long now = System.currentTimeMillis();
             if ((! f.exists()) || (f.lastModified() < now)) {
                 // Compute HTTP Accept header.
@@ -225,24 +241,30 @@ public class OntologyMapper extends BaseModule implements ProjectModule
                 // Make sure parent directories exist.
                 f.getParentFile().mkdirs();
                 // Retrieve file from source URL.
-                FileUtils.DownloadInfo info = FileUtils.save(u, null, headers, f);
-                f.setLastModified((info.expires > 0L)? info.expires: now);
-                // Extract RDF format from MIME type to force file suffix.
-                RdfFormat fmt = RdfFormat.find(info.mimeType);
-                if (fmt == null) {
-                    throw new TechnicalException("invalid.remote.mime.type",
-                                                 info.mimeType);
+                FileUtils.DownloadInfo info =
+                                        FileUtils.save(u, null, headers, f);
+                // Cache data as long as possible, 2 hours otherwise.
+                f.setLastModified((info.expires > 0L)?
+                                        info.expires: now + (2 * 3600 * 1000L));
+                if (((info.httpStatus / 100) * 100) == OK.getStatusCode()) {
+                    // Extract RDF format from MIME type to force file suffix.
+                    RdfFormat fmt = RdfFormat.find(info.mimeType);
+                    if (fmt == null) {
+                        throw new TechnicalException("invalid.remote.mime.type",
+                                                     info.mimeType);
+                    }
+                    // Ensure file extension is present to allow RDF syntax
+                    // detection in future cache accesses.
+                    String ext = "." + fmt.getFileExtension();
+                    if (! f.getName().endsWith(ext)) {
+                        File newFile = new File(f.getCanonicalPath() + ext);
+                        f.renameTo(newFile);
+                        f = newFile;
+                    }
+                    // Mark file as to be deleted upon JVM termination.
+                    f.deleteOnExit();
                 }
-                // Ensure file extension is present to allow RDF syntax
-                // detection in future cache accesses.
-                String ext = "." + fmt.getFileExtension();
-                if (! f.getName().endsWith(ext)) {
-                    File newFile = new File(f.getCanonicalPath() + ext);
-                    f.renameTo(newFile);
-                    f = newFile;
-                }
-                // Mark file as to be deleted upon JVM termination.
-                f.deleteOnExit();
+                // Else: Not modified...
             }
             // Parse ontology.
             Ontology o = new OwlParser().parse(f, src);
