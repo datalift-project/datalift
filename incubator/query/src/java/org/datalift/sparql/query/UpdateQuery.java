@@ -537,13 +537,7 @@ public abstract class UpdateQuery
      * @return a URI object.
      */
     public URI uri(String uri) {
-        String prefix = null;
-        int n = uri.indexOf(':');
-        if (n != -1) {
-            prefix = uri.substring(0, n);
-            uri = uri.substring(n + 1);
-        }
-        return this.uri(prefix, uri);
+        return this.uri(null, uri);
     }
 
     /**
@@ -830,9 +824,15 @@ public abstract class UpdateQuery
             }
             else {
                 String nsUri  = u.getNamespace();
-                String prefix = (nsUri.endsWith(":"))?
-                                        nsUri.substring(0, nsUri.length() - 1):
-                                        this.ns2Prefix.get(nsUri);
+                String prefix = this.ns2Prefix.get(nsUri);
+                if ((prefix == null) && (nsUri.endsWith(":"))) {
+                    // Check for prefixed URI.
+                    String p = nsUri.substring(0, nsUri.length() - 1);
+                    if (this.prefix2Ns.get(p) != null) {
+                        prefix = p;
+                    }
+                    // Else: Unknown prefix.
+                }
                 s = (prefix != null)? prefix + ':' + u.getLocalName():
                                       "<" + v.toString() + '>';
             }
