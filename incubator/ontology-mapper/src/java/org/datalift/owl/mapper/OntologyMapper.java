@@ -215,6 +215,8 @@ public class OntologyMapper extends BaseModule implements ProjectModule
             // Build canonical file path.
             File f = new File(Configuration.getDefault().getTempStorage(),
                               MODULE_NAME + '/' + path);
+            // Make sure parent directories exist.
+            f.getParentFile().mkdirs();
             // Check if ontology data have already been downloaded.
             if (! f.exists()) {
                 // Look for prev. downloaded file (with RDF extension added).
@@ -225,7 +227,7 @@ public class OntologyMapper extends BaseModule implements ProjectModule
                         return name.startsWith(prefix);
                     }
                 });
-                if (l.length > 0) {
+                if ((l != null) && (l.length > 0)) {
                     f = l[0];   // Assume first found file is the expected one!
                 }
             }
@@ -238,16 +240,15 @@ public class OntologyMapper extends BaseModule implements ProjectModule
                     headers.put(IF_MODIFIED_SINCE,
                                 HttpDateFormat.formatDate(f.lastModified()));
                 }
-                // Make sure parent directories exist.
-                f.getParentFile().mkdirs();
                 // Retrieve file from source URL.
                 FileUtils.DownloadInfo info =
                                         FileUtils.save(u, null, headers, f);
                 // Cache data as long as possible, 2 hours otherwise.
                 f.setLastModified((info.expires > 0L)?
                                         info.expires: now + (2 * 3600 * 1000L));
-                if (((info.httpStatus / 100) * 100) == OK.getStatusCode()) {
-                    // Extract RDF format from MIME type to force file suffix.
+                if (info.httpStatus == 0) {
+                    // New file has been downloaded.
+                    // => Extract RDF format from MIME type to set file suffix.
                     RdfFormat fmt = RdfFormat.find(info.mimeType);
                     if (fmt == null) {
                         throw new TechnicalException("invalid.remote.mime.type",
