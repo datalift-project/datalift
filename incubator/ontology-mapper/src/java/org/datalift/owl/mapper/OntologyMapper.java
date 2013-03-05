@@ -283,19 +283,35 @@ public class OntologyMapper extends BaseModule implements ProjectModule
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
     public Response getExecuteMapping(
                                 @FormParam("project") java.net.URI project,
-                                @FormParam("sourceGraph") URIImpl sourceGraph,
+                                @FormParam("sourceGraph") String srcGraph,
                                 @FormParam("targetName") String targetName,
-                                @FormParam("targetGraph") URIImpl targetGraph,
+                                @FormParam("targetGraph") String tgtGraph,
                                 @FormParam("ontology") String ontologyJson,
                                 @FormParam("mapping") String mappingJson)
                                                 throws WebApplicationException {
+        URI sourceGraph = null;
+        try {
+            sourceGraph = new URIImpl(srcGraph);
+        }
+        catch (Exception e) {
+            this.throwInvalidParamError("sourceGraph", srcGraph);
+        }
+        URI targetGraph = sourceGraph;
+        boolean createSource = false;
+        if (! isBlank(tgtGraph)) {
+            if (isBlank(targetName)) {
+                this.throwInvalidParamError("targetName", null);
+            }
+            try {
+                targetGraph = new URIImpl(tgtGraph);
+                createSource = true;
+            }
+            catch (Exception e) {
+                this.throwInvalidParamError("targetGraph", srcGraph);
+            }
+        }
         Response response = null;
         try {
-            boolean createSource = true;
-            if (targetGraph == null) {
-                createSource = false;
-                targetGraph = sourceGraph;
-            }
             Gson gson = new Gson();
             OntologyDesc o = gson.fromJson(ontologyJson, OntologyDesc.class);
             MappingDesc  m = gson.fromJson(mappingJson, MappingDesc.class);
@@ -334,7 +350,8 @@ public class OntologyMapper extends BaseModule implements ProjectModule
             response = this.displayMappingResult(out, createSource).build();
         }
         catch (Exception e) {
-            // ???
+            log.fatal("Mapping processing failed: {}", e, e.getMessage());
+            this.handleInternalError(e);
         }
         return response;
     }
@@ -344,10 +361,17 @@ public class OntologyMapper extends BaseModule implements ProjectModule
     @Consumes(APPLICATION_FORM_URLENCODED)
     @Produces(TEXT_PLAIN)
     public String getSparqlPreview(
-                                @FormParam("sourceGraph") URIImpl sourceGraph,
+                                @FormParam("sourceGraph") String srcGraph,
                                 @FormParam("ontology") String ontologyJson,
                                 @FormParam("mapping") String mappingJson)
                                                 throws WebApplicationException {
+        URI sourceGraph = null;
+        try {
+            sourceGraph = new URIImpl(srcGraph);
+        }
+        catch (Exception e) {
+            this.throwInvalidParamError("sourceGraph", srcGraph);
+        }
         String preview = "";
         try {
             Gson gson = new Gson();
@@ -446,7 +470,7 @@ public class OntologyMapper extends BaseModule implements ProjectModule
      * @throws IOException if any error occurred creating the source.
      */
     private TransformedRdfSource addResultSource(Project p, Source parent,
-                                                   String name, URI uri)
+                                                 String name, URI uri)
                                                             throws IOException {
         java.net.URI id = java.net.URI.create(uri.toString());
         TransformedRdfSource newSrc =
