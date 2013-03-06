@@ -318,7 +318,7 @@ public class RDFTransformService extends BaseModule implements ProjectModule {
 	@Produces(MediaTypes.APPLICATION_JSON)
 	public Response getOntologyElements(@QueryParam("callback") String callback, @QueryParam("source") String sourceURI) {
 		org.datalift.fwk.rdf.Repository internal = Configuration.getDefault().getInternalRepository();
-		Repository repository = internal.getNativeRepository();			
+		Repository repository = internal.getNativeRepository();
 
 		System.out.println("Getting ontology elements on source "+sourceURI);
 		
