@@ -8,6 +8,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -77,6 +79,8 @@ public class BrowseOntologiesModule extends BaseModule {
 	
     /** The path prefix for HTML page Velocity templates. */
     private final static String TEMPLATE_PATH = "/" + MODULE_NAME  + '/';
+    
+    private final static int DAYS_TO_UPDATE = 7;
 
 	//-------------------------------------------------------------------------
 	// Instance members
@@ -87,6 +91,7 @@ public class BrowseOntologiesModule extends BaseModule {
 	/** Project Manager bean. */
 	private ProjectManager projectManager = null;
 
+	private Date nextLovUpdate = null;
 	private List<Statement> statements = null;
 	private Set<OntologyDesc> cache = null;
 	private boolean cacheExists = false;
@@ -97,6 +102,15 @@ public class BrowseOntologiesModule extends BaseModule {
 
 	public BrowseOntologiesModule(){
 		super(MODULE_NAME);
+		
+		if(nextLovUpdate == null) {
+			nextLovUpdate = new Date();
+			Calendar cal = Calendar.getInstance();
+			cal.setTime(nextLovUpdate);
+			cal.add(Calendar.DATE, DAYS_TO_UPDATE);
+			nextLovUpdate = cal.getTime();
+		}
+		
 	}
 
 	//-------------------------------------------------------------------------
@@ -145,13 +159,41 @@ public class BrowseOntologiesModule extends BaseModule {
 
 		log.info("Entering ontologyBrowse()");
 		Response response = null;
+		boolean dataChanged = false;
 
 		URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
 		Project proj = this.projectManager.findProject(projectUri);
 
 		try {
-
-			loadLOVCatalogue();
+			
+			// Checking if data needs an update
+			Date now = new Date();
+			if(now.after(nextLovUpdate)) {
+				log.info("LOV data are too old. Updating LOV catalogue.");
+				loadLOVCatalogue();
+				dataChanged = true;
+				Calendar cal = Calendar.getInstance();
+				cal.setTime(now);
+				cal.add(Calendar.DATE, DAYS_TO_UPDATE);
+				nextLovUpdate = cal.getTime();
+				log.info("Next LOV update : {}.", nextLovUpdate);
+			}
+			else {
+				// Checking if data exists in repository
+				long repositorySize = 0;
+				URI lovContextURI = new URI(LOV_CONTEXT);
+				RepositoryConnection internalRepositoryConnection = this.configuration.getInternalRepository().newConnection();
+				org.openrdf.model.URI ctx = null;
+				ctx = internalRepositoryConnection.getValueFactory().createURI(lovContextURI.toString());
+				repositorySize = internalRepositoryConnection.size(ctx);
+				log.info("Repository size for LOV context : {}.", repositorySize);
+				if(repositorySize <= 0) {
+					log.info("No LOV data found. Loading LOV catalogue.");
+					loadLOVCatalogue();
+					dataChanged = true;
+				}
+			}
+			
 
 		} catch (Exception e1) {
 
@@ -174,6 +216,9 @@ public class BrowseOntologiesModule extends BaseModule {
 			if (cache != null && cache.size() > 0) {
 
 				log.debug("Cache of LOV catalog already exists");
+				
+				if(dataChanged)
+					cacheLov();
 				
 				TemplateModel view = this.newView("/ontologyBrowse.vm", cache);
 				view.put("projectId", id);
