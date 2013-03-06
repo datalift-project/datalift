@@ -119,7 +119,7 @@ public class LovModule extends BaseModule implements ProjectModule {
 				
 				@Override
 				public void run() {
-					log.info("LovModule - downloading file from http://lov.okfn.org/dataset/lov/agg/lov_aggregator.rdf");
+					log.info("Downloading file from http://lov.okfn.org/dataset/lov/agg/lov_aggregator.rdf");
 					try {
 						
 						long startTime = System.currentTimeMillis();
@@ -150,13 +150,13 @@ public class LovModule extends BaseModule implements ProjectModule {
 						long estimatedTime = ((System.currentTimeMillis() - startTime) / 1000);
 						
 						
-						log.info("LovModule - file downloaded in about " + estimatedTime + " s.");
+						log.info("File downloaded in about " + estimatedTime + " s.");
 						
 						// on peut charger le lov
 						loadDataIntoRepository();
 
 					} catch (IOException e) {
-						log.error("LovModule - download error.");
+						log.error("Download error.");
 						e.printStackTrace();
 					}
 					
