@@ -2,24 +2,18 @@ In order to run interconnection module in datalift, the following steps should b
 
 1. create a project
 
-2. go to "Sources" to upload two RDF data sets
+2. go to "Sources" to add two RDF data sets that you are going to interlink, eg. insee's data set "regions-2010.rdf" and eurostat's data set "nuts2008_complete.rdf" in the example folder of the interconnection module
 
-3. go back to "Description", press button "RDF source file loading", loading the RDF data sets that you upload at 2nd step
+3. go back to "Description", press button "RDF source file loading" to load the RDF data sets that you've added at the 2nd step
 
-4. go back to "Description", press button "Data publishing to public RDF store", publishing the RDF data sets that you load at 3nd step
+4. go back to "Description", press button "Data publishing to public RDF store" to publish the RDF data sets that you've loaded at the 3rd step 
 
 5. go back to "Description", press button "Interconnection", then you have three choices to generate links:
 
-i) upload the SILK script file: eg. "script.xml" in the example folder; and fill the linkSPecId, number of Threadshold and reload or not(true or false). For example, in our case, they are "region", 1 and true respectively. Finally, press button "Run!" 
-ii) or you also can create the SILK script. Finally, press button "Run!"  
-iii) upload an ontology alignment file written in EDOAL, eg. "insee_nuts.xml" in the example folder. In this case, you should put the ontologies of two datasets in the folder of tomcat and named as "onto1_file.rdf" and "onto2_file.rdf" like in the example folder. After that, specify the target data set address, in our example, it is datalift's sparql endpoint, which is "http://localhost:8080/datalift/sparql". Finally, press button "Run!" 
+i) upload the SILK script file, eg. "script.xml" for insee and eurostat data sets in the example folder of the interconnection module and press button "Run" 
 
-6. if a page shows "OK~~" comes, go to http://localhost:8080/datalift/sparql and query by
-SELECT * WHERE {
-  ?s <http://www.w3.org/2002/07/owl#sameAs> ?o .
-}
-the link result comes.
+ii) or you also can create a SILK script and press button "Run"  
 
-PAY ATTENTION: 
-i. download sesame 2.6.4, put openrdf-sesame.war and openrdf-workbench.war into tomcat/webapps
-ii. we put two RDF data sets and two SILK script files in the folder datalift/interconnection/example for users to test, one script is for git version, another script is for single user version
+iii) upload an ontology alignment file written in EDOAL, eg. "insee_nuts.xml" for insee and eurostat ontologies in the example folder. In this case, you should load, import and publish the ontologies of two data sets before uploading the EDOAL file. For example, the files of insee and eurostat data sets' ontologies "onto1_file.rdf" and "onto2_file.rdf" in the example folder. After that, specify the source and target data set addresses, in our example, it is datalift's sparql endpoint, which is "http://localhost:8080/datalift/sparql". Finally, press button "Run" 
+
+6. if a page showing "OK~~ Data linking completes! " comes, go to http://localhost:8080/datalift/sparql and press the button "Links", then you can check whether there is links produced.

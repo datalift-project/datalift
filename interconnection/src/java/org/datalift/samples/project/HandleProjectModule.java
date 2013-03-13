@@ -8,6 +8,7 @@
 package org.datalift.samples.project;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -25,6 +26,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
@@ -51,6 +53,7 @@ import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.FormDataParam;
 
 import de.fuberlin.wiwiss.silk.Silk;
+import fr.inrialpes.exmo.align.impl.renderer.CopyOfSilkRendererVisitor;
 import fr.inrialpes.exmo.align.impl.renderer.EDOALRendererVisitor;
 import fr.inrialpes.exmo.align.parser.AlignmentParser;
 
@@ -394,9 +397,8 @@ public class HandleProjectModule extends BaseInterconnectionModule
     	Map<String, Object> args = new HashMap<String, Object>();
         args.put("it", p3);
         args.put("linking", this);  
-    	return Response.ok(this.newViewable("/silk-webpage_2.vm", args))
-                .build();
-        
+    	return Response.ok(this.newViewable("/silk-webpage.vm", args))
+                .build();        
     }
  
     @POST
@@ -404,11 +406,8 @@ public class HandleProjectModule extends BaseInterconnectionModule
     @Consumes(MediaTypes.MULTIPART_FORM_DATA)
     @Produces(MediaTypes.TEXT_HTML)
     public Response doRun(@QueryParam("project") java.net.URI projectId,
-                        @FormDataParam("configFile") InputStream data,
-                        @FormDataParam("configFile") FormDataContentDisposition disposition,
-                        @FormDataParam("linkSpecId") String linkSpecId,
-                        @FormDataParam("numThreads") int numThreads,
-                        @FormDataParam("reload") boolean reload)
+                        @FormDataParam("silkScript") InputStream data,
+                        @FormDataParam("silkScript") FormDataContentDisposition disposition)
                                         throws ObjectStreamException
     {    	   	
         // Retrieve project.
@@ -418,6 +417,8 @@ public class HandleProjectModule extends BaseInterconnectionModule
         args.put("it", p4);
         args.put("linking", this);
     	
+        File configFile = null;
+		//link the data sets                
         String filename = disposition.getFileName();
         try {
 			FileOutputStream fos = null;
@@ -427,35 +428,35 @@ public class HandleProjectModule extends BaseInterconnectionModule
 	        int size = 0;
 	        bis = new BufferedInputStream(data);
 	        try {
-	        	    File configFile = null;
+	        	    File silkScript = null;
 					try {
-						configFile = File.createTempFile("configFile",".xml");
-						fos = new FileOutputStream(configFile);
+						silkScript = File.createTempFile("silkScript",".xml");
+						fos = new FileOutputStream(silkScript);
 					} catch (IOException e1) {
 						// TODO Auto-generated catch block
 						e1.printStackTrace();
 					} finally {
 	                
 	                try {
-	                                while ( (size = bis.read(buf)) != -1)
-	                                    fos.write(buf, 0, size);
-	                                fos.close();
-	                                bis.close();
+	                        while ( (size = bis.read(buf)) != -1)
+	                            fos.write(buf, 0, size);
+	                        fos.close();
+	                        bis.close();
 	                        } catch (IOException e) {
 	                        	 // Includes FileNotFoundException
-	                             log.fatal("File upload error for {}", e, configFile);
+	                             log.fatal("File upload error for {}", e, silkScript);
 	                             throw new WebApplicationException(
 	                                       Response.status(Status.INTERNAL_SERVER_ERROR)
 	                                                .entity(e.getMessage())
 	                                                .type(MediaType.TEXT_PLAIN).build());
 	                        }
-        	        Silk.executeFile(configFile, linkSpecId, numThreads, reload);
-        	        configFile.deleteOnExit();
+        	        Silk.executeFile(silkScript, null, 1, true);
+        	        silkScript.delete();
 	                } 
 					
 		} finally {}      
-		} finally {}
-		
+		} finally {}        
+        
         return Response.ok(this.newViewable("/ok.vm", args)).build();
         
     }
@@ -465,11 +466,12 @@ public class HandleProjectModule extends BaseInterconnectionModule
     @Consumes(MediaTypes.MULTIPART_FORM_DATA)
     @Produces(MediaTypes.TEXT_HTML)
     public Response doRun_edoal(@QueryParam("project") java.net.URI projectId,
-                        @FormDataParam("configFile") InputStream data,
-                        @FormDataParam("configFile") FormDataContentDisposition disposition,
+                        @FormDataParam("EDOALFile") InputStream data,
+                        @FormDataParam("EDOALFile") FormDataContentDisposition disposition,
+                        @FormDataParam("sourcedataset") String sourcedataset,
                         @FormDataParam("targetdataset") String targetdataset)
                                         throws ObjectStreamException
-    {    	   	   	
+    {    	   	   
         // Retrieve project.
         Project p4 = this.getProject(projectId);		
         // Display conversion configuration page.  	
@@ -514,6 +516,14 @@ public class HandleProjectModule extends BaseInterconnectionModule
 	                	AlignmentParser aparser = new AlignmentParser(0);
 	                	Alignment alignment = null;
 	                	URI file = configFile.toURI();
+	                	
+	                	//create Hashtable for init
+	                	Properties params = new Properties();
+	                	if (!sourcedataset.equals(""))
+	                		params.setProperty( "source", sourcedataset);
+	                	if (!targetdataset.equals(""))
+	                		params.setProperty( "target", targetdataset);
+	                	
 	        			try {
 							alignment = aparser.parse(file);
 							PrintWriter writer = null;
@@ -524,18 +534,22 @@ public class HandleProjectModule extends BaseInterconnectionModule
 							} catch (UnsupportedEncodingException e) {
 								// TODO Auto-generated catch block
 								System.out.println("cannot initialize a writer");
+							}							
+							
+							CopyOfSilkRendererVisitor renderer = new CopyOfSilkRendererVisitor(writer);
+
+		        			try {		        	
+		        				renderer.run(params, "SILKscript.xml", file.toString());
+							} catch (Exception e1) {
+								// TODO Auto-generated catch block
+								e1.printStackTrace();
 							}
-		        			AlignmentVisitor renderer = new EDOALRendererVisitor(writer);
-		                    alignment.render(renderer);
 		                    writer.flush();
 		                    writer.close();
-		                    File onto1=new File(System.getProperty("user.dir")+"\\onto1_file.xml");
-		                    onto1.deleteOnExit();
-		                    File onto2=new File(System.getProperty("user.dir")+"\\onto2_file.xml");
-		                    onto2.deleteOnExit();
+
 		                    //Run SILK script
 		                    File fspec = new File(System.getProperty("user.dir")+"\\SILKscript.xml");		                    
-		                    
+                  
 		                    //replace the sparql endpoint of target data set:
 		                    BufferedReader br = null;  
 		                    BufferedWriter bw = null; 
@@ -544,22 +558,35 @@ public class HandleProjectModule extends BaseInterconnectionModule
 		                    try {  
 		                        // create input stream buffer
 		                        br = new BufferedReader(new FileReader(fspec));		                        
-		                        int i=0;
-		                        // read each line, and put into the buffer
+		                        // read each line, and put into the buffer	                        
 		                        while ((line = br.readLine()) != null) {  
 		                            // revise the content
-		                            if (line.contains("http://localhost:8080/datalift/sparql")) {
-		                            	i++;
-		                            	if (i==2)		                            		
-		                            		buff.append("<Param name=\"endpointURI\" value=\""+targetdataset+"\"/>");
-		                            	else buff.append(line);
-		                            }   
+		                        	if (line.contains("<Outputs>")) {   
+		                        			line = br.readLine();
+		                            		buff.append("			<Outputs>");
+	                                    	buff.append(System.getProperty("line.separator"));
+		                                    line = br.readLine();
+			                            	buff.append("				<Output type=\"sparul\">");
+		                                    buff.append(System.getProperty("line.separator"));
+		                                    line = br.readLine();
+			                            	buff.append("					<Param name=\"uri\" value=\"http://localhost:8080/openrdf-sesame/repositories/lifted/statements\"/>");
+			                            	buff.append(System.getProperty("line.separator"));
+		                                    line = br.readLine();
+			                            	buff.append("					<Param name=\"parameter\" value=\"update\"/>");
+			                            	buff.append(System.getProperty("line.separator"));
+			                            	line = br.readLine();
+		                                    buff.append("				</Output>");
+		                                    buff.append(System.getProperty("line.separator"));
+		                                    line = br.readLine();
+		                                    line = br.readLine();
+		                                    line = br.readLine();
+		                        		}		                        	
 		                            // if it don't need to be revised, copy as the same
 		                            else {  
 		                                buff.append(line);
-		                            }  
-		                         buff.append(System.getProperty("line.separator")); 			                     
-		                        }  
+		                                buff.append(System.getProperty("line.separator"));
+		                            }		                            
+		                        }
 		                    } catch (Exception e) {  
 		                        e.printStackTrace();  
 		                    } finally {  
@@ -595,8 +622,7 @@ public class HandleProjectModule extends BaseInterconnectionModule
 						}	        			
 	                }
         	        configFile.deleteOnExit();
-	                } 
-					
+	                } 					
 		} finally {}      
 		} finally {}
 		
@@ -607,10 +633,7 @@ public class HandleProjectModule extends BaseInterconnectionModule
     @POST
     @Path("run-silk_2")
     @Produces(MediaTypes.TEXT_HTML)
-    public Response doRun(@QueryParam("project") java.net.URI projectId,
-                        @FormParam("linkSpecId") String linkSpecId,
-                        @FormParam("numThreads") int numThreads,
-                        @FormParam("reload") boolean reload)
+    public Response doRun(@QueryParam("project") java.net.URI projectId)
                         		throws ObjectStreamException
     {    	
         // Retrieve project.
@@ -623,7 +646,11 @@ public class HandleProjectModule extends BaseInterconnectionModule
 		//link the data sets
         if (place!=null)
     	    configFile = new File(place);
-    	Silk.executeFile(configFile, linkSpecId, numThreads, reload);
+        if (configFile.length()>100)
+        {
+        	Silk.executeFile(configFile, null, 1, true); 
+        	configFile.delete();
+        }    		
         
     	return Response.ok(this.newViewable("/ok.vm", args)).build();
     }
