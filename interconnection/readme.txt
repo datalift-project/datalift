@@ -10,10 +10,10 @@ In order to run interconnection module in datalift, the following steps should b
 
 5. go back to "Description", press button "Interconnection", then you have three choices to generate links:
 
-i) upload the SILK script file, eg. "script.xml" for insee and eurostat data sets in the example folder of the interconnection module and press button "Run" 
+i) upload the SILK script file, eg. "script.xml" for insee and eurostat data sets in the example folder of the interconnection module and press button "Run" (if you are using wrapper version of datalift, please load the file "script_forWrapper.xml" to link)
 
 ii) or you also can create a SILK script and press button "Run"  
 
-iii) upload an ontology alignment file written in EDOAL, eg. "insee_nuts.xml" for insee and eurostat ontologies in the example folder. In this case, you should load, import and publish the ontologies of two data sets before uploading the EDOAL file. For example, the files of insee and eurostat data sets' ontologies "onto1_file.rdf" and "onto2_file.rdf" in the example folder. After that, specify the source and target data set addresses, in our example, it is datalift's sparql endpoint, which is "http://localhost:8080/datalift/sparql". Finally, press button "Run" 
+iii) upload an ontology alignment file written in EDOAL, eg. "insee_nuts.xml" for insee and eurostat ontologies in the example folder. In this case, you should load, import and publish the ontologies of two data sets before uploading the EDOAL file. For example, the files of insee and eurostat data sets' ontologies "onto1_file.rdf" and "onto2_file.rdf" in the example folder. After that, specify the source and target data set addresses, in our example, it is datalift's sparql endpoint, which is "http://localhost:8080/datalift/sparql" (if you are using wrapper version of datalift, please type "http://localhost:9091/datalift/sparql" instead). Finally, press button "Run" 
 
 6. if a page showing "OK~~ Data linking completes! " comes, go to http://localhost:8080/datalift/sparql and press the button "Links", then you can check whether there is links produced.
