@@ -4,7 +4,7 @@ In order to run interconnection module in datalift, the following steps should b
 
 2. go to "Sources" to add two RDF data sets that you are going to interlink, eg. insee's data set "regions-2010.rdf" and eurostat's data set "nuts2008_complete.rdf" in the example folder of the interconnection module
 
-3. go back to "Description", press button "RDF source file loading" to load the RDF data sets that you've added at the 2nd step
+3. go back to "Description", press button "Import of RDF source(file or SPARQL)" to load the RDF data sets that you've added at the 2nd step
 
 4. go back to "Description", press button "Data publishing to public RDF store" to publish the RDF data sets that you've loaded at the 3rd step 
 
