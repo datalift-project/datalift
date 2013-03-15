@@ -21,7 +21,7 @@
   <align:method>manual</align:method>
   <onto1>
     <Ontology rdf:about="http://rdf.insee.fr/geo/">
-      <location>http://rdf.insee.fr/geo/ontologie-geo-2006.rdf</location>
+      <location>http://localhost:8080/datalift/sparql</location>
       <formalism>
         <Formalism align:name="OWL1.0" align:uri="http://www.w3.org/2002/07/owl#"/>
       </formalism>
@@ -29,7 +29,7 @@
   </onto1>
   <onto2>
     <Ontology rdf:about="http://ec.europa.eu/eurostat/ramon/ontologies/geographic.rdf#">
-      <location>http://ec.europa.eu/eurostat/ramon/ontologies/geographic.rdf#</location>
+      <location>http://localhost:8080/datalift/sparql</location>
       <formalism>
         <Formalism align:name="OWL1.0" align:uri="http://www.w3.org/2002/07/owl#"/>
       </formalism>
@@ -50,37 +50,14 @@
   <map>
     <Cell>
       <entity1>  
+        <edoal:Relation rdf:about="&insee;subdivision"/>
+      </entity1>
+      <entity2>      	
         <edoal:Relation>
           <edoal:inverse>
-            <edoal:Relation rdf:about="&insee;subdivision"/>
-	  </edoal:inverse>
+            <edoal:Relation rdf:about="&eurostat;hasParentRegion"/>
+          </edoal:inverse>
         </edoal:Relation>
-      </entity1>
-      <entity2>
-        <edoal:Relation rdf:about="&eurostat;hasParentRegion"/>
-      </entity2>
-      <relation>equivalence</relation>
-      <measure>1.0</measure>
-    </Cell>
-  </map>
-  <map>
-    <Cell>
-      <entity1>
-        <edoal:Class rdf:about="&insee;Departement"/>
-      </entity1>
-      <entity2>
-        <edoal:Class>
-          <edoal:and rdf:parseType="Collection">
-            <edoal:Class rdf:about="&eurostat;NUTSRegion"/>
-            <edoal:AttributeValueRestriction>
-              <edoal:onAttribute>
-                <edoal:Property rdf:about="&eurostat;level"/>
-              </edoal:onAttribute>
-              <edoal:comparator rdf:resource="&edoal;equals"/>
-              <edoal:value><edoal:Literal edoal:type="&xsd;int" edoal:string="3"/></edoal:value>
-           </edoal:AttributeValueRestriction>
-          </edoal:and>
-        </edoal:Class>
       </entity2>
       <relation>equivalence</relation>
       <measure>1.0</measure>
@@ -100,7 +77,30 @@
                 <edoal:Property rdf:about="&eurostat;level"/>
               </edoal:onAttribute>
               <edoal:comparator rdf:resource="&edoal;equals"/>
-              <edoal:value><edoal:Literal edoal:type="&xsd;int" edoal:string="2"/></edoal:value>
+              <edoal:value>2</edoal:value>
+           </edoal:AttributeValueRestriction>
+          </edoal:and>
+        </edoal:Class>
+      </entity2>
+      <relation>equivalence</relation>
+      <measure>1.0</measure>
+    </Cell>
+  </map>
+  <map>
+    <Cell>
+      <entity1>
+        <edoal:Class rdf:about="&insee;Departement"/>
+      </entity1>
+      <entity2>
+        <edoal:Class>
+          <edoal:and rdf:parseType="Collection">
+            <edoal:Class rdf:about="&eurostat;NUTSRegion"/>
+            <edoal:AttributeValueRestriction>
+              <edoal:onAttribute>
+                <edoal:Property rdf:about="&eurostat;level"/>
+              </edoal:onAttribute>
+              <edoal:comparator rdf:resource="&edoal;equals"/>
+              <edoal:value>3</edoal:value>
            </edoal:AttributeValueRestriction>
           </edoal:and>
         </edoal:Class>
@@ -123,7 +123,7 @@
                 <edoal:Property rdf:about="&eurostat;level"/>
               </edoal:onAttribute>
               <edoal:comparator rdf:resource="&edoal;equals"/>
-              <edoal:value><edoal:Literal edoal:type="&xsd;int" edoal:string="4"/></edoal:value>
+              <edoal:value>4</edoal:value>
            </edoal:AttributeValueRestriction>
           </edoal:and>
         </edoal:Class>

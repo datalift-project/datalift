@@ -144,9 +144,8 @@ public interface ProjectManager
                                       String description, URI baseUri,
                                       String filePath, String mimeType)
                                                             throws IOException;
-
     /**
-     * Creates a new database source object.
+     * Creates a new database's resultset source object.
      * @param  project         the owning project.
      * @param  uri             the source URI.
      * @param  title           the source label.
@@ -158,6 +157,28 @@ public interface ProjectManager
      * @param  request         SQL query to extract data.
      * @param  cacheDuration   duration of local data cache.
      *
+     * @return a new SQL query source, associated to the specified
+     *         project.
+     * @throws IOException if any error occurred creating the source
+     *         or accessing the configured database.
+     */
+    public SqlQuerySource newSqlQuerySource(Project project, URI uri,
+                                  String title, String description,
+                                  String srcUrl, String user, String password,
+                                  String request, int cacheDuration)
+                                                            throws IOException;
+
+    /**
+     * Creates a new database source object.
+     * @param  project         the owning project.
+     * @param  uri             the source URI.
+     * @param  title           the source label.
+     * @param  description     the description of the source content or
+     *                         intent.
+     * @param  srcUrl          the connection string of the database.
+     * @param  user            username for connection.
+     * @param  password        password for connection.
+     *
      * @return a new SQL database source, associated to the specified
      *         project.
      * @throws IOException if any error occurred creating the source
@@ -165,9 +186,9 @@ public interface ProjectManager
      */
     public SqlSource newSqlSource(Project project, URI uri,
                                   String title, String description,
-                                  String srcUrl, String user, String password,
-                                  String request, int cacheDuration)
+                                  String srcUrl, String user, String password)
                                                             throws IOException;
+
 
     /**
      * Creates a new SPARQL source object.

@@ -69,8 +69,8 @@ import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectModule;
 import org.datalift.fwk.project.Row;
 import org.datalift.fwk.project.Source;
-import org.datalift.fwk.project.SqlSource;
 import org.datalift.fwk.project.Source.SourceType;
+import org.datalift.fwk.project.SqlQuerySource;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.util.Env;
@@ -121,7 +121,7 @@ public class SqlDirectMapper extends BaseConverterModule
 
     /** Default constructor. */
     public SqlDirectMapper() {
-        super(MODULE_NAME, 100, SourceType.SqlSource);
+        super(MODULE_NAME, 100, SourceType.SqlQuerySource);
     }
 
     //-------------------------------------------------------------------------
@@ -146,7 +146,7 @@ public class SqlDirectMapper extends BaseConverterModule
             // Retrieve project.
             Project p = this.getProject(projectId);
             // Load input source.
-            SqlSource in = (SqlSource)p.getSource(sourceId);
+            SqlQuerySource in = (SqlQuerySource)p.getSource(sourceId);
             // Check data freshness HTTP headers (If-Modified-Since & ETags)
             CachingSource cs = null;
             Date lastModified = null;
@@ -194,7 +194,7 @@ public class SqlDirectMapper extends BaseConverterModule
             // Retrieve project.
             Project p = this.getProject(projectId);
             // Load input source.
-            SqlSource in = (SqlSource)p.getSource(sourceId);
+            SqlQuerySource in = (SqlQuerySource)p.getSource(sourceId);
             // Convert CSV data and load generated RDF triples.
             Repository internal = Configuration.getDefault()
                                                .getInternalRepository();
@@ -214,7 +214,7 @@ public class SqlDirectMapper extends BaseConverterModule
     // Specific implementation
     //-------------------------------------------------------------------------
 
-    private void convert(SqlSource src, String keyColumn,
+    private void convert(SqlQuerySource src, String keyColumn,
                                         Repository target, URI targetGraph) {
         if (isBlank(keyColumn)) {
             keyColumn = null;

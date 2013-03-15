@@ -15,26 +15,29 @@
 <form name="input" action="${baseUri}/silk/run-silk?project=$esc.url($it.uri)" method="post" enctype="multipart/form-data">
 
 	<fieldset>
-    <legend>If you want to interlink directly with a SILK script:</legend>
+    <legend>Interlink with a SILK script:</legend>
 
-		<p><label for="configFile">#i18n("configFile"):</label>
-		<input type="file" name="configFile" id="configFile" value=""/></p>
-
-		<p>Or you can create a SILK script by clicking here:
-		<a href="${baseUri}/silk/build-silkscript?project=$esc.url($it.uri)" id="configFile" color=blue class="button" style="">#i18n("Build a SILK Script")</a></p>
-
-		<p><label for="linkSpecId" class="hidden">#i18n("linkSpecId"):</label>
-		<input type="text" name="linkSpecId" id="linkSpecId" value=""/></p>
-
-		<p><label for="numThreads">#i18n("numThreads"):</label>
-		<input type="text" name="numThreads" id="numThreads" value=""/></p>
-
-		<p><label for="reload" class="hidden">#i18n("reload"):</label>
-		<input type="text" name="reload" id="reload" value=""/></p>
+		<p>Upload a SILK script:
+		<input type="file" name="silkScript" id="silkScript" value=""/></p>
 
     </fieldset>
     
-<input type="submit" value="Run!" />
+<input type="submit" value="Run" />
+</form>    
+
+    <br />
+    
+<form name="input" action="${baseUri}/silk/run-silk_2?project=$esc.url($it.uri)" method="post" enctype="multipart/form-data">
+
+	<fieldset>
+    <legend>Interlink with a SILK script:</legend>
+
+		<p>
+		<a href="${baseUri}/silk/build-silkscript?project=$esc.url($it.uri)" id="silkScript" color=blue class="button" style="">#i18n("Create a SILK script")</a></p>
+
+    </fieldset>
+    
+<input type="submit" value="#i18n("Run")" />
 </form>    
 
     <br />
@@ -42,17 +45,20 @@
 <form name="input" action="${baseUri}/silk/run-edoal?project=$esc.url($it.uri)" method="post" enctype="multipart/form-data">
     
     <fieldset>
-    <legend>If you want to interlink with ontology alignment:</legend>
+    <legend>Interlink with an EDOAL file:</legend>
     
-    	<p>Upload an ontology alignment file written in EDOAL: <label for="configFile">#i18n("configFile"):</label>
-		<input type="file" name="configFile" id="configFile" value=""/></p>
+    	<p>Ontology alignment file written in EDOAL:
+		<input type="file" name="EDOALFile" id="EDOALFile" value=""/></p>
 
-		<p>With which data source do you want to interlink?(SPARQL endpoint)<label for="targetdataset" class="hidden">#i18n("targetdataset"):</label>
+		<p>Source data set (SPARQL endpoint address):
+		<input type="text" name="sourcedataset" id="sourcedataset" value=""/></p>
+
+		<p>Target data set (SPARQL endpoint address):
 		<input type="text" name="targetdataset" id="targetdataset" value=""/></p>
 
     </fieldset>
 
-<input type="submit" value="Run!" />
+<input type="submit" value="Run" />
 </form>
 
 </body>

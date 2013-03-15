@@ -6,6 +6,7 @@
 #load_core_resources
 	<title>$!esc.html($it.title) - #i18n("source.grid.title") - DataLift</title>
 #css_links
+
 </head>
 <body>
 #banner
@@ -13,52 +14,77 @@
 		<a href="${baseUri}/sparql" id="goto_sparql" class="button">#i18n("sparql.endpoint.link")</a>
 		<a href="${baseUri}/project" id="goto_workspace" class="button">#i18n("project.workspace.link")</a>
 	</div>
-
-#set( $maxEntries = 5000 )
-#set ( $rowCSV = 0 )
-	<h3 id="title_bar">#i18n("source.grid.desc") $!esc.html($it.title) ($maxEntries #i18n("source.grid.displayed_entries"))</h3>
-	<table id="grid">
-		<thead>
-			<tr>
-				<th>#i18n("source.grid.row.heading")</th>
-#foreach( $i in $it.getColumnNames() )
-				<th class="dl-grid-header-column">$esc.html($i)</th>
-#end
-			</tr>
-		</thead>
-		<tbody>
-#foreach( $row in $it )
-  #if( $foreach.count > $maxEntries ) #break #end
-			<tr><td>$velocityCount</td>
-  #foreach( $i in $row ) <td>$!esc.html($i)</td> #end
-			</tr>
-  #set ( $rowCSV = $rowCSV + 1)
-#end
-		</tbody>
-	</table>
-	<div id="pagernav"></div>
-	<div id="searchnav" style="display:none">
-		#i18n("grid.search.value.label") <input type="search" id="gridsearch" placeholder="#i18n("grid.search.value.placeholder")" results="0" class="gridsearch"/>
-		#i18n("grid.search.column.label") <select id="searchColumn">
-			<option value="all">#i18n("grid.search.column.option.all")</option>
-#foreach( $i in $it.getColumnNames() )
-			<option>$esc.html($i)</option>
-#end
-		</select>
+	<div id="content" class="ui-widget-content dl-main-panel">
+		<h3 id="title_bar" class = "ui-widget-header dl-widget-header"></h3>
+		<div id="results" class="dl-result-panel">
+			<table id="grid">
+			</table>
+			<div id="pagernav"></div>
+			
+			<div id="searchnav" style="display:none">
+				#i18n("grid.search.value.label") <input type="search" id="gridsearch" placeholder="#i18n("grid.search.value.placeholder")" results="0" class="gridsearch"/>
+				#i18n("grid.search.column.label") <select id="searchColumn">
+					<option value="all">#i18n("grid.search.column.option.all")</option>
+		#foreach( $i in $it.getColumnNames() )
+					<option>$esc.html($i)</option>
+		#end
+				</select>
+			</div>
+		</div>
 	</div>
+#footer
 #script_links
 	<script language="javascript" src="${baseUri}/project/static/js/jqgrid.common.js"></script>
 	<script type="text/javascript">
 		$(function() {
 			$("#goto_sparql").button();
 			$("#goto_workspace").button();
+			//Load table content
+#set( $maxEntries = 5000 )
+#set( $columns = $it.getColumnNames())
+#set( $rowList = [] )	
+	
+##Array to contain the row map
+	
+#foreach( $row in $it )
+	#if( $rowList.size() > $maxEntries )
+		#break
+	#end
+	#set ($i = 0)  			
+	#set($strRow = "{")
+	#set($separator = ", ")
+  	#foreach( $value in $row )
+  		#if($value)
+  			#set($col = $columns.get($i))
+  			#set($duple ="${esc.q}$esc.javascript($col)${esc.q}:${esc.q}$esc.javascript($value)${esc.q}$separator")
+  			#set($strRow = "$strRow$duple")
+  		#end
+  		#set($i = $i +1)
+ 	#end
+  	#set($separatorIndex = $strRow.length() - $separator.length() )
+  	##Remove the useless last separator
+  	#set($strRow = $strRow.substring(0,$separatorIndex))
+  	##Close the element
+  	#set($strRow = "$esc.javascript($strRow) }")
+  	#set( $success = $rowList.add($strRow) )
+#end
+			var tableContent = $.parseJSON("$rowList"); 
 
-			var rowNumber = $rowCSV;
-			if (rowNumber < 5000) {
-				$("#title_bar").text("#i18n("source.grid.desc") $!esc.html($it.title) (" + rowNumber + " #i18n("source.grid.entries"))");
+			//Load table Template containg the rows
+			var columns = stringToArray("$it.getColumnNames()") ;
+			var gridParam = getTableParameters(columns,tableContent);
+			//Fill the table	
+			$("#grid").jqGrid(gridParam);
+
+			var rowNumber = tableContent.length;
+			var sourceDescr = "#i18n("source.grid.desc") $!esc.html($it.title) ";
+			if (rowNumber < $maxEntries) {
+				sourceDescr = sourceDescr.concat("(" + rowNumber + " #i18n("source.grid.entries"))");
+			}else{ 
+				sourceDescr = sourceDescr.concat("($maxEntries #i18n("source.grid.displayed_entries"))");
 			}
-			htmlTableTojQGrid();
-			jQuery("#grid").jqGrid('setColProp', '#i18n("source.grid.row.heading")', { sorttype:'int' });
+			$("#title_bar").text(sourceDescr);
+			enableTable($("#grid"));
 		});
 	</script>
 </body>

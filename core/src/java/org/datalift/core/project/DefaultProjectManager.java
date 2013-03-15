@@ -67,6 +67,7 @@ import org.datalift.fwk.MediaTypes;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.CsvSource;
 import org.datalift.fwk.project.SparqlSource;
+import org.datalift.fwk.project.SqlQuerySource;
 import org.datalift.fwk.project.SqlSource;
 import org.datalift.fwk.project.Ontology;
 import org.datalift.fwk.project.Project;
@@ -243,13 +244,13 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
 
     /** {@inheritDoc} */
     @Override
-    public SqlSource newSqlSource(Project project, URI uri,
+    public SqlQuerySource newSqlQuerySource(Project project, URI uri,
                                   String title, String description,
                                   String srcUrl, String user, String password,
                                   String request, int cacheDuration)
                                                             throws IOException {
         // Create new CSV source.
-        SqlSourceImpl src = new SqlSourceImpl(uri.toString(), project);
+        SqlQuerySourceImpl src = new SqlQuerySourceImpl(uri.toString(), project);
         // Set source parameters.
         this.initSource(src, title, description);
         src.setConnectionUrl(srcUrl);
@@ -264,6 +265,26 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         return src;
     }
 
+    /** {@inheritDoc} */
+    @Override
+    public SqlSource newSqlSource(Project project, URI uri,
+            					String title, String description,
+            					String srcUrl, String user, String password)
+            							throws IOException{
+        // Create new SQL Database source.
+        SqlDatabaseSourceImpl src = new SqlDatabaseSourceImpl(uri.toString(), project);
+        // Set source parameters.
+        this.initSource(src, title, description);
+        src.setConnectionUrl(srcUrl);
+        src.setUser(user);
+        src.setPassword(password);
+        // Add source to project.
+        project.add(src);
+        log.debug("New Database source <{}> added to project \"{}\"",
+                                                    uri, project.getTitle());
+    	return src;
+    }
+    
     /** {@inheritDoc} */
     @Override
     public SparqlSource newSparqlSource(Project project, URI uri, String title,
@@ -588,7 +609,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         classes.addAll(Arrays.asList(
                     ProjectImpl.class, OntologyImpl.class,
                     CsvSourceImpl.class, RdfFileSourceImpl.class,
-                    SqlSourceImpl.class, SparqlSourceImpl.class,
+                    SqlQuerySourceImpl.class, SqlDatabaseSourceImpl.class, SparqlSourceImpl.class,
                     XmlSourceImpl.class,
                     TransformedRdfSourceImpl.class, ShpSourceImpl.class, GmlSourceImpl.class));
         return classes;
@@ -669,4 +690,6 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
             throw new IllegalStateException("Not available");
         }
     }
+
+
 }

@@ -46,6 +46,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
@@ -74,6 +75,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.xml.parsers.SAXParserFactory;
@@ -92,6 +94,10 @@ import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.FormDataParam;
 
@@ -106,8 +112,11 @@ import org.datalift.fwk.project.DuplicateObjectKeyException;
 import org.datalift.fwk.project.FileSource;
 import org.datalift.fwk.project.GmlSource;
 import org.datalift.fwk.project.RdfSource;
+import org.datalift.fwk.project.Row;
 import org.datalift.fwk.project.ShpSource;
 import org.datalift.fwk.project.SparqlSource;
+import org.datalift.fwk.project.SqlDatabaseSource;
+import org.datalift.fwk.project.SqlQuerySource;
 import org.datalift.fwk.project.SqlSource;
 import org.datalift.fwk.project.Ontology;
 import org.datalift.fwk.project.Project;
@@ -390,7 +399,6 @@ public class Workspace extends BaseModule
                     @FormParam("license") URI license,
                     @Context UriInfo uriInfo) throws WebApplicationException {
         Response response = null;
-
         try {
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
             Project p = this.loadProject(projectUri);
@@ -1016,14 +1024,19 @@ public class Workspace extends BaseModule
             // Retrieve project.
             Project p = this.loadProject(projectUri);
             // Initialize new source.
-            SqlSource src = this.projectManager.newSqlSource(p,
-                                        sourceUri, title, description,
-                                        cnxUrl, user, password,
-                                        sqlQuery, cacheDuration);
-            // Start iterating on source content to validate database
-            // connection parameters and query.
-            CloseableIterator<?> i = src.iterator();
-            i.close();
+            if(isBlank(sqlQuery)){
+            	this.projectManager.newSqlSource(p, sourceUri, title,
+            			description, cnxUrl, user, password);
+            }else{
+            	SqlQuerySource src = this.projectManager.newSqlQuerySource(p,
+                        sourceUri, title, description,
+                        cnxUrl, user, password,
+                        sqlQuery, cacheDuration);
+            	// Start iterating on source content to validate database
+            	// connection parameters and query.
+            	CloseableIterator<?> i = src.iterator();
+            	i.close();
+            }
             // Persist new source.
             this.projectManager.saveProject(p);
             // Notify user of successful creation, redirecting HTML clients
@@ -1072,11 +1085,14 @@ public class Workspace extends BaseModule
                 s.setUser(user);
                 s.setPassword(password);
             }
-            if ((s.getQuery() == null) || (! s.getQuery().equals(sqlQuery))) {
-                s.setQuery(sqlQuery);
-            }
-            if (s instanceof CachingSource) {
-                ((CachingSource)s).setCacheDuration(cacheDuration);
+            if(s instanceof SqlQuerySource){
+            	SqlQuerySource querySource = (SqlQuerySource)s;
+            	if ((querySource.getQuery() == null) || (! querySource.getQuery().equals(sqlQuery))) {
+                    querySource.setQuery(sqlQuery);
+                }
+                if (s instanceof CachingSource) {
+                    ((CachingSource)s).setCacheDuration(cacheDuration);
+                }
             }
             // Save updated source.
             this.projectManager.saveProject(p);
@@ -1674,11 +1690,14 @@ public class Workspace extends BaseModule
                 }
                 // Return the HTML template matching the source type.
                 String template = null;
-                if ((src instanceof CsvSource) || (src instanceof SqlSource)) {
+                if ((src instanceof CsvSource) || (src instanceof SqlQuerySource)) {
                     template = "RowSourceGrid.vm";
                 }
                 else if (src instanceof RdfSource) {
                     template = "RdfSourceGrid.vm";
+                }
+                else if(src instanceof SqlDatabaseSource){
+                	template = "DatabaseSourceGrid.vm";
                 }
                 else {
                     throw new TechnicalException("unknown.source.type",
@@ -1692,7 +1711,59 @@ public class Workspace extends BaseModule
         }
         return response.build();
     }
-
+    
+    @GET
+    @Path("{id}/source/{srcid}&t={table}&max={maxRow}")
+    @Produces({ APPLICATION_JSON_UTF8 })
+    public Response displayDbTableContent(@PathParam("id") String projectId,
+    									  @PathParam("srcid") String srcId,
+    									  @PathParam("table") String table,
+    									  @PathParam("maxRow") int maxRow,
+    									  @Context UriInfo uriInfo)
+    											throws WebApplicationException{
+    	Response response = null;
+        try {
+            // Search for requested source in project.
+            Project p = this.loadProject(uriInfo, projectId);
+            Source src = p.getSource(this.getSourceId(p.getUri(), srcId));
+            if (src == null) {
+                // Not found.
+                this.sendError(NOT_FOUND, null);
+            } else {
+            	if(src.getType() == SourceType.SqlDatabaseSource){
+            		SqlDatabaseSource dbSource  = (SqlDatabaseSource) src;
+            		if(dbSource.getTableNames().contains(table)){
+            			CloseableIterator<Row<Object>> tableIterator = dbSource.getTableIterator(table); 
+            			JsonArray rowList = new JsonArray();
+            			int i = 0;
+            			while(tableIterator.hasNext() && i<maxRow){
+            				Row<Object> row = tableIterator.next();
+                			JsonObject mapRow = new JsonObject();
+            				for(String key: row.keys()){
+            					mapRow.addProperty(key, row.getString(key));
+            				}
+            				rowList.add(mapRow);
+            				i++;
+            			}
+            			ResponseBuilder bResp = Response.ok();
+            			bResp.entity(rowList.toString())
+            				.type(APPLICATION_JSON_UTF8);
+            			response = bResp.build();
+            		}else{
+            			this.sendError(NOT_FOUND, "Table not found");
+            		}
+            	}else{
+            		this.sendError(NOT_ACCEPTABLE, "The source is not a database");
+            	}
+            }
+        }catch (Exception e) {
+        	this.handleInternalError(e,
+        			"Failed to retrieve table {} from source {}",table, srcId);
+        }
+        return response;
+    }
+    									 
+    
     @GET
     @Path("{id}/source/{srcid}/{prop}")
     @Produces({ APPLICATION_JSON_UTF8 })
@@ -1739,6 +1810,9 @@ public class Workspace extends BaseModule
         return response;
     }
 
+    
+    
+    
     @GET
     @Path("{id}/source/delete")
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
@@ -1995,7 +2069,7 @@ public class Workspace extends BaseModule
 
     private ResponseBuilder displayIndexPage(ResponseBuilder response,
                                              Project p) {
-        // Populate view with project list.
+    	// Populate view with project list.
         Collection<Project> projects = this.projectManager.listProjects();
         TemplateModel view = this.newView("workspace.vm", projects);
         // If no project is selected but only one is available, select it.

@@ -24,7 +24,7 @@
 				#set( $count = $count + 1 )
 			#end
 		#end
-			<option uri="${curSrc.uri}" name="${curSrc.title}" count="$count">$esc.html($curSrc.title)</option>
+			<option value="${curSrc.uri}" name="${curSrc.title}" count="$count">$esc.html($curSrc.title)</option>
 	#end
 #end
 		</select></p>
@@ -49,14 +49,14 @@
 		$("#source").change(function(){
 			$("#source option:selected").each(function () {
 				$("#dest_title").attr("value", $(this).attr('name') + " - (RDF #" + $(this).attr("count") + ")");
-				$("#dest_graph_uri").attr("value", $(this).attr("uri") + "-rdf-" + $(this).attr("count"));
+				$("#dest_graph_uri").attr("value", $(this).attr("value") + "-rdf-" + $(this).attr("count"));
 
 				jQuery.ajax({
 					beforeSend: function(req) {
 						req.setRequestHeader("Accept", "application/json");
 					},
 					type: "GET",
-					url: "${baseUri}/sqldirectmapper/columns?project=${it.uri}&source=" + $(this).attr("uri"),
+					url: "${baseUri}/sqldirectmapper/columns?project=${it.uri}&source=" + $(this).attr("value"),
 					dataType: "json",
 					success: successfulQuery,
 					error: errorQueryPost

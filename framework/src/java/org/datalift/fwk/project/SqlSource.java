@@ -35,19 +35,12 @@
 package org.datalift.fwk.project;
 
 
-import java.sql.SQLException;
-import java.util.List;
-
-import org.datalift.fwk.util.CloseableIterable;
-
-
 /**
- * A source object reading data from a SQL database by executing a
- * user-provided JDBC query.
+ * The most generic implementation of a source object reading data from a SQL database
  *
  * @author hdevos
  */
-public interface SqlSource extends Source, CloseableIterable<Row<Object>>
+public interface SqlSource extends Source
 {
     /**
      * List of supported databases and their JDBC driver class.
@@ -77,22 +70,5 @@ public interface SqlSource extends Source, CloseableIterable<Row<Object>>
     public String getPassword();
     public void setPassword(String password);
 
-    public String getQuery();
-    public void setQuery(String query);
-
-    /**
-     * Returns the number of data columns returned by the SQL query.
-     * @return the number of data columns.
-     * @throws SQLException if any error occurred accessing the
-     *         database.
-     */
-    public int getColumnCount() throws SQLException;
-
-    /**
-     * Returns the names of data columns returned by the SQL query.
-     * @return the names of data columns.
-     * @throws SQLException if any error occurred accessing the
-     *         database.
-     */
-    public List<String> getColumnNames() throws SQLException;
+  
 }
