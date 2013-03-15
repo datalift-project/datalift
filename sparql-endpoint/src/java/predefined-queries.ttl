@@ -6,10 +6,10 @@
 _:1 a datalift:SparqlQuery ;
     rdfs:label
         "All entries" ,
-        "Toutes les entrées"@fr ;
+        "Toutes les entrÃ©es"@fr ;
     dcterms:description
         "Lists all entries (subject, predicates and objects) from the repository" ,
-        "Retourne toutes les entrées (sujets, prédicats et objets) du dépôt"@fr ;
+        "Retourne toutes les entrÃ©es (sujets, prÃ©dicats et objets) du dÃ©pÃ´t"@fr ;
     rdf:value
         "SELECT * WHERE {\n  ?s ?p ?o .\n}\n" .
 
@@ -19,7 +19,7 @@ _:2 a datalift:SparqlQuery ;
         "Sujets"@fr ;
     dcterms:description
         "Lists all subjects in the repository" ,
-        "Retourne la liste des sujets du dépôt"@fr ;
+        "Retourne la liste des sujets du dÃ©pÃ´t"@fr ;
     rdf:value
         "SELECT DISTINCT ?s WHERE {\n  ?s ?p ?o .\n}\n" .
 
@@ -28,7 +28,7 @@ _:3 a datalift:SparqlQuery ;
         "Types" ;
     dcterms:description
         "Lists the RDF types present in the repository" ,
-        "Retourne la liste des types RDF connus dans le dépôt"@fr ;
+        "Retourne la liste des types RDF connus dans le dÃ©pÃ´t"@fr ;
     rdf:value
         "SELECT DISTINCT ?type WHERE {\n  ?s a ?type .\n}\n" .
 
@@ -38,7 +38,16 @@ _:4 a datalift:SparqlQuery ;
         "Contextes"@fr ;
     dcterms:description
         "Lists the contexts (a.k.a named graphs) present in the repository" ,
-        "Retourne la liste des contextes (graphes nommés) définis dans le dépôt"@fr ;
+        "Retourne la liste des contextes (graphes nommÃ©s) dÃ©finis dans le dÃ©pÃ´t"@fr ;
     rdf:value
         "SELECT DISTINCT ?graph WHERE {\n  GRAPH ?graph {\n    ?s ?p ?o .\n  }\n}\n" .
 
+_:5 a datalift:SparqlQuery ;
+    rdfs:label
+        "Links" ,
+        "Toutes les liens"@fr ;
+    dcterms:description
+        "Lists all links from the repository" ,
+        "Retourne toutes les liens (sujets, prÃ©dicats et objets) du dÃ©pÃ´t"@fr ;
+    rdf:value
+        "SELECT * WHERE {\n  ?s <http://www.w3.org/2002/07/owl#sameAs> ?o .\n}\n" .
