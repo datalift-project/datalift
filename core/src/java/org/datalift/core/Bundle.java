@@ -147,7 +147,8 @@ public class Bundle
             cfg = Configuration.getDefault();
         }
         this.root        = f;
-        this.classLoader = new URLClassLoader(extractFiles(f, cfg), parent);
+        this.classLoader = URLClassLoader.newInstance(extractFiles(f, cfg),
+                                                      parent);
     }
 
     //-------------------------------------------------------------------------
