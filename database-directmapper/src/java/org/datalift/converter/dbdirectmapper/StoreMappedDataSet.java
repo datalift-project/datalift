@@ -2,7 +2,6 @@ package org.datalift.converter.dbdirectmapper;
 
 import net.antidot.semantic.rdf.model.impl.sesame.SesameDataSet;
 
-import org.datalift.core.TechnicalException;
 import org.datalift.fwk.rdf.Repository;
 
 import org.openrdf.model.Resource;

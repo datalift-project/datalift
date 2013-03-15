@@ -19,7 +19,6 @@ import net.antidot.semantic.rdf.rdb2rdf.dm.core.DirectMapper;
 import net.antidot.sql.model.core.DriverType;
 import net.antidot.sql.model.core.SQLConnector;
 
-import org.datalift.core.TechnicalException;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.Source;
