@@ -10,8 +10,7 @@
     <dcterms:title>Hierarchical list of the Nomenclature of territorial units for statistics - NUTS and the Statistical regions of Europe - 2008 edition</dcterms:title>
     <dcterms:date>2008-01-01</dcterms:date>
     <dcterms:source>European Commission - http://epp.eurostat.ec.europa.eu/portal/page/portal/nuts_nomenclature/introduction</dcterms:source>
-    <dcterms:subject>europa, eu, ramon, regions, nomenclature, territorial, units, statistics,
-     classification, statistical regions, nomenclature server, international statistical classifications</dcterms:subject>
+    <dcterms:subject>europa, eu, ramon, regions, nomenclature, territorial, units, statistics, classification, statistical regions, nomenclature server, international statistical classifications</dcterms:subject>
     <cc:morePermissions rdf:resource="http://ec.europa.eu/geninfo/copyright_en.htm"/>
     <cc:license rdf:resource="http://creativecommons.org/licenses/by/3.0/lu/"/>
     <dcterms:valid>2008-01-01/2011-12-31</dcterms:valid>

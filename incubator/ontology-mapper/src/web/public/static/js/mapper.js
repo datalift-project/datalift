@@ -490,11 +490,13 @@ function MappingViewModel(baseUri, projectUri, sources, ontologies) {
 
   self.addPropertyMapping = function() {
     var p = self.selectedProperty();
+    var v = self.propertyValue();
     var c = null;
     if (p.type == 'ObjectProperty') {
       c = self.selectedPrimaryType();
+      v = null;
     }
-    var m = new MappingDesc(self.currentMapping(), c, p, self.propertyValue());
+    var m = new MappingDesc(self.currentMapping(), c, p, v);
     if (self.currentMapping()) {
       var i = self.mappings.indexOf(self.currentMapping());
       if (i < self.mappings().length - 1) {

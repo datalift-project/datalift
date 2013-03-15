@@ -3,6 +3,7 @@ package org.datalift.owl.mapper;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -211,8 +212,25 @@ public class OntologyMapper extends BaseModule implements ProjectModule
             if (path.charAt(0) == '/') {
                 path = path.substring(1);
             }
+            // Build canonical file path.
             File f = new File(Configuration.getDefault().getTempStorage(),
                               MODULE_NAME + '/' + path);
+            // Make sure parent directories exist.
+            f.getParentFile().mkdirs();
+            // Check if ontology data have already been downloaded.
+            if (! f.exists()) {
+                // Look for prev. downloaded file (with RDF extension added).
+                final String prefix = f.getName() + '.';
+                File[] l = f.getParentFile().listFiles(new FilenameFilter() {
+                    @Override
+                    public boolean accept(File dir, String name) {
+                        return name.startsWith(prefix);
+                    }
+                });
+                if ((l != null) && (l.length > 0)) {
+                    f = l[0];   // Assume first found file is the expected one!
+                }
+            }
             long now = System.currentTimeMillis();
             if ((! f.exists()) || (f.lastModified() < now)) {
                 // Compute HTTP Accept header.
@@ -222,27 +240,32 @@ public class OntologyMapper extends BaseModule implements ProjectModule
                     headers.put(IF_MODIFIED_SINCE,
                                 HttpDateFormat.formatDate(f.lastModified()));
                 }
-                // Make sure parent directories exist.
-                f.getParentFile().mkdirs();
                 // Retrieve file from source URL.
-                FileUtils.DownloadInfo info = FileUtils.save(u, null, headers, f);
-                f.setLastModified((info.expires > 0L)? info.expires: now);
-                // Extract RDF format from MIME type to force file suffix.
-                RdfFormat fmt = RdfFormat.find(info.mimeType);
-                if (fmt == null) {
-                    throw new TechnicalException("invalid.remote.mime.type",
-                                                 info.mimeType);
+                FileUtils.DownloadInfo info =
+                                        FileUtils.save(u, null, headers, f);
+                // Cache data as long as possible, 2 hours otherwise.
+                f.setLastModified((info.expires > 0L)?
+                                        info.expires: now + (2 * 3600 * 1000L));
+                if (info.httpStatus == 0) {
+                    // New file has been downloaded.
+                    // => Extract RDF format from MIME type to set file suffix.
+                    RdfFormat fmt = RdfFormat.find(info.mimeType);
+                    if (fmt == null) {
+                        throw new TechnicalException("invalid.remote.mime.type",
+                                                     info.mimeType);
+                    }
+                    // Ensure file extension is present to allow RDF syntax
+                    // detection in future cache accesses.
+                    String ext = "." + fmt.getFileExtension();
+                    if (! f.getName().endsWith(ext)) {
+                        File newFile = new File(f.getCanonicalPath() + ext);
+                        f.renameTo(newFile);
+                        f = newFile;
+                    }
+                    // Mark file as to be deleted upon JVM termination.
+                    f.deleteOnExit();
                 }
-                // Ensure file extension is present to allow RDF syntax
-                // detection in future cache accesses.
-                String ext = "." + fmt.getFileExtension();
-                if (! f.getName().endsWith(ext)) {
-                    File newFile = new File(f.getCanonicalPath() + ext);
-                    f.renameTo(newFile);
-                    f = newFile;
-                }
-                // Mark file as to be deleted upon JVM termination.
-                f.deleteOnExit();
+                // Else: Not modified...
             }
             // Parse ontology.
             Ontology o = new OwlParser().parse(f, src);
@@ -261,19 +284,35 @@ public class OntologyMapper extends BaseModule implements ProjectModule
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
     public Response getExecuteMapping(
                                 @FormParam("project") java.net.URI project,
-                                @FormParam("sourceGraph") URIImpl sourceGraph,
+                                @FormParam("sourceGraph") String srcGraph,
                                 @FormParam("targetName") String targetName,
-                                @FormParam("targetGraph") URIImpl targetGraph,
+                                @FormParam("targetGraph") String tgtGraph,
                                 @FormParam("ontology") String ontologyJson,
                                 @FormParam("mapping") String mappingJson)
                                                 throws WebApplicationException {
+        URI sourceGraph = null;
+        try {
+            sourceGraph = new URIImpl(srcGraph);
+        }
+        catch (Exception e) {
+            this.throwInvalidParamError("sourceGraph", srcGraph);
+        }
+        URI targetGraph = sourceGraph;
+        boolean createSource = false;
+        if (! isBlank(tgtGraph)) {
+            if (isBlank(targetName)) {
+                this.throwInvalidParamError("targetName", null);
+            }
+            try {
+                targetGraph = new URIImpl(tgtGraph);
+                createSource = true;
+            }
+            catch (Exception e) {
+                this.throwInvalidParamError("targetGraph", srcGraph);
+            }
+        }
         Response response = null;
         try {
-            boolean createSource = true;
-            if (targetGraph == null) {
-                createSource = false;
-                targetGraph = sourceGraph;
-            }
             Gson gson = new Gson();
             OntologyDesc o = gson.fromJson(ontologyJson, OntologyDesc.class);
             MappingDesc  m = gson.fromJson(mappingJson, MappingDesc.class);
@@ -312,7 +351,8 @@ public class OntologyMapper extends BaseModule implements ProjectModule
             response = this.displayMappingResult(out, createSource).build();
         }
         catch (Exception e) {
-            // ???
+            log.fatal("Mapping processing failed: {}", e, e.getMessage());
+            this.handleInternalError(e);
         }
         return response;
     }
@@ -322,10 +362,17 @@ public class OntologyMapper extends BaseModule implements ProjectModule
     @Consumes(APPLICATION_FORM_URLENCODED)
     @Produces(TEXT_PLAIN)
     public String getSparqlPreview(
-                                @FormParam("sourceGraph") URIImpl sourceGraph,
+                                @FormParam("sourceGraph") String srcGraph,
                                 @FormParam("ontology") String ontologyJson,
                                 @FormParam("mapping") String mappingJson)
                                                 throws WebApplicationException {
+        URI sourceGraph = null;
+        try {
+            sourceGraph = new URIImpl(srcGraph);
+        }
+        catch (Exception e) {
+            this.throwInvalidParamError("sourceGraph", srcGraph);
+        }
         String preview = "";
         try {
             Gson gson = new Gson();
@@ -424,7 +471,7 @@ public class OntologyMapper extends BaseModule implements ProjectModule
      * @throws IOException if any error occurred creating the source.
      */
     private TransformedRdfSource addResultSource(Project p, Source parent,
-                                                   String name, URI uri)
+                                                 String name, URI uri)
                                                             throws IOException {
         java.net.URI id = java.net.URI.create(uri.toString());
         TransformedRdfSource newSrc =

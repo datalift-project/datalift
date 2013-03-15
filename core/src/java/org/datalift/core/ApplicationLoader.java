@@ -386,11 +386,16 @@ public class ApplicationLoader extends LogServletContextListener
     }
 
     private void postInitModules(Configuration configuration) {
+        ClassLoader ctxClassLoader = Thread.currentThread()
+                                           .getContextClassLoader();
         // Post-init each module, ignoring errors.
         for (Module m : configuration.getBeans(Module.class)) {
             String name = m.getName();
             Object prevCtx = Logger.setContext(Path, "PostInit - " + name);
             try {
+                // Set context classloader to module classloader.
+                Thread.currentThread().setContextClassLoader(
+                                                m.getClass().getClassLoader());
                 // Complete module initialization.
                 m.postInit(configuration);
             }
@@ -402,6 +407,8 @@ public class ApplicationLoader extends LogServletContextListener
                 // Continue with next module.
             }
             finally {
+                // Restore context classloader.
+                Thread.currentThread().setContextClassLoader(ctxClassLoader);
                 Logger.setContext(Path, prevCtx);
             }
         }
@@ -457,11 +464,15 @@ public class ApplicationLoader extends LogServletContextListener
      * @param  b   the bundle to load the module classes from.
      */
     private void loadModules(Bundle b, Configuration cfg) {
+        ClassLoader ctxClassLoader = Thread.currentThread()
+                                           .getContextClassLoader();
         File f = b.getBundleFile();
         for (Module m : b.loadServices(Module.class, false)) {
             String name = m.getName();
             log.debug("Initializing module \"{}\"...", name);
             try {
+                // Set context classloader to module classloader.
+                Thread.currentThread().setContextClassLoader(b.getClassLoader());
                 // Initialize module.
                 m.init(cfg);
                 // Register module root (directory or JAR file) as
@@ -479,6 +490,10 @@ public class ApplicationLoader extends LogServletContextListener
             catch (Exception e) {
                 throw new TechnicalException("module.load.error", e,
                                                             b, e.getMessage());
+            }
+            finally {
+                // Restore context classloader.
+                Thread.currentThread().setContextClassLoader(ctxClassLoader);
             }
         }
     }

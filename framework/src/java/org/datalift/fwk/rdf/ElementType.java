@@ -54,9 +54,7 @@ public enum ElementType
     /** RDF type/class */
     RdfType,
     /** RDF value, typically a literal. */
-    Value,
-    /** Blank node */
-    BlankNode;
+    Value;
 
     /**
      * Return the enumeration value corresponding to the specified

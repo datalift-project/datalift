@@ -512,6 +512,9 @@ public abstract class UpdateQuery
      *         <code>null</code> if none was defined.
      */
     public String prefixFor(String ns) {
+        if (ns.endsWith(":")) {
+            return ns.substring(0, ns.length() - 1);
+        }
         String prefix = this.ns2Prefix.get(ns);
         if (prefix == null) {
             prefix = tentativePrefixes.get(ns);
@@ -822,6 +825,14 @@ public abstract class UpdateQuery
             else {
                 String nsUri  = u.getNamespace();
                 String prefix = this.ns2Prefix.get(nsUri);
+                if ((prefix == null) && (nsUri.endsWith(":"))) {
+                    // Check for prefixed URI.
+                    String p = nsUri.substring(0, nsUri.length() - 1);
+                    if (this.prefix2Ns.get(p) != null) {
+                        prefix = p;
+                    }
+                    // Else: Unknown prefix.
+                }
                 s = (prefix != null)? prefix + ':' + u.getLocalName():
                                       "<" + v.toString() + '>';
             }
