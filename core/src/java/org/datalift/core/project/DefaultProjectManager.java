@@ -67,6 +67,7 @@ import org.datalift.fwk.MediaTypes;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.CsvSource;
 import org.datalift.fwk.project.SparqlSource;
+import org.datalift.fwk.project.SqlDatabaseSource;
 import org.datalift.fwk.project.SqlQuerySource;
 import org.datalift.fwk.project.SqlSource;
 import org.datalift.fwk.project.Ontology;
@@ -267,7 +268,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
 
     /** {@inheritDoc} */
     @Override
-    public SqlSource newSqlSource(Project project, URI uri,
+    public SqlDatabaseSource newSqlDatabaseSource(Project project, URI uri,
             					String title, String description,
             					String srcUrl, String user, String password)
             							throws IOException{

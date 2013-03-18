@@ -156,28 +156,23 @@ public class SqlDatabaseSourceImpl extends BaseSource implements SqlDatabaseSour
 		}
     }
     
-    private void setTableNames(){
-    	initJdbcDriver();
-    	try{
-			Connection sqlCon=DriverManager.getConnection(this.getConnectionUrl(),this.getUser(), 
-					this.getPassword());
-			Statement stmt=sqlCon.createStatement();
-			ResultSet tableStmt=stmt.executeQuery("SHOW TABLES;");
-			tableList = new ArrayList<String>();
-			while(tableStmt.next()){
-				tableList.add(tableStmt.getString(1));
-			}
-		} catch (SQLException e) {
-			throw new TechnicalException("tables.retrieval.failed", e);
-		}
-
-    }
-
     /** {@inheritDoc} */
 	@Override
 	public List<String> getTableNames() throws SQLException{
 		if(tableList == null){
-			setTableNames();
+			initJdbcDriver();
+//	    	try{
+				Connection sqlCon=DriverManager.getConnection(this.getConnectionUrl(),this.getUser(), 
+						this.getPassword());
+				Statement stmt=sqlCon.createStatement();
+				ResultSet tableStmt=stmt.executeQuery("SHOW TABLES;");
+				tableList = new ArrayList<String>();
+				while(tableStmt.next()){
+					tableList.add(tableStmt.getString(1));
+				}
+		/*	} catch (SQLException e) {
+				throw new TechnicalException("tables.retrieval.failed", e);
+			}*/
 		}
 		return tableList;
 	}
@@ -187,9 +182,6 @@ public class SqlDatabaseSourceImpl extends BaseSource implements SqlDatabaseSour
 	public CloseableIterator<Row<Object>> getTableIterator(String tableName) {
 		if(tableName == null){
 			throw new IllegalArgumentException();
-		}
-		if(tableList == null){
-			setTableNames();
 		}
 		if(tableList.contains(tableName)){
 			// Now I will create the query object that will be used to get the iterator. 
@@ -246,10 +238,13 @@ public class SqlDatabaseSourceImpl extends BaseSource implements SqlDatabaseSour
 	/** {@inheritDoc} */
 	@Override
 	public int getTableCount() {
-		if(tableList == null){
-			setTableNames();
+		try {
+			getTableNames();
+			return tableList.size();
+		} catch (SQLException e) {
+			throw new TechnicalException("tables.retrieval.failed", e);
 		}
-		return tableList.size();
+		
 	}
 }
 	

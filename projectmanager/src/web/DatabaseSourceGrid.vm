@@ -54,7 +54,6 @@
 			tableList.change();
 		});
 
-#set( $maxEntries = 5000 )
 		function loadTableResponse(response){
 			var selectedTable =$("#tableList option:selected").text(); 
 			for (table in response){
@@ -75,7 +74,7 @@
 						tableColModel[i].name = colList[i];
 					}
 				var gridParams = {
-					url: "$it.uri" + "&t=" + selectedTable + "&max=" + "$maxEntries",
+					url: "$it.uri" + "/" + selectedTable,
 					datatype: "json",
 					colNames: colList,
 					colModel : tableColModel,
@@ -86,6 +85,9 @@
 	                    page: function () { return 1; },
 	                    total: function () { return 1; },
 	                    records: function (obj) { return obj.length; }
+	                },
+	                postData: {
+	                	max : 5000
 	                },
 				}
 				var dbGridParams = jQuery.extend(getBasicTableParameters(), gridParams);

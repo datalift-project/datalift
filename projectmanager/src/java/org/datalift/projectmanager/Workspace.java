@@ -46,7 +46,6 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
@@ -75,7 +74,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.xml.parsers.SAXParserFactory;
@@ -94,9 +92,7 @@ import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.FormDataParam;
@@ -1025,8 +1021,9 @@ public class Workspace extends BaseModule
             Project p = this.loadProject(projectUri);
             // Initialize new source.
             if(isBlank(sqlQuery)){
-            	this.projectManager.newSqlSource(p, sourceUri, title,
+            	SqlDatabaseSource src = this.projectManager.newSqlDatabaseSource(p, sourceUri, title,
             			description, cnxUrl, user, password);
+            	src.getTableNames();
             }else{
             	SqlQuerySource src = this.projectManager.newSqlQuerySource(p,
                         sourceUri, title, description,
@@ -1711,58 +1708,7 @@ public class Workspace extends BaseModule
         }
         return response.build();
     }
-    
-    @GET
-    @Path("{id}/source/{srcid}&t={table}&max={maxRow}")
-    @Produces({ APPLICATION_JSON_UTF8 })
-    public Response displayDbTableContent(@PathParam("id") String projectId,
-    									  @PathParam("srcid") String srcId,
-    									  @PathParam("table") String table,
-    									  @PathParam("maxRow") int maxRow,
-    									  @Context UriInfo uriInfo)
-    											throws WebApplicationException{
-    	Response response = null;
-        try {
-            // Search for requested source in project.
-            Project p = this.loadProject(uriInfo, projectId);
-            Source src = p.getSource(this.getSourceId(p.getUri(), srcId));
-            if (src == null) {
-                // Not found.
-                this.sendError(NOT_FOUND, null);
-            } else {
-            	if(src.getType() == SourceType.SqlDatabaseSource){
-            		SqlDatabaseSource dbSource  = (SqlDatabaseSource) src;
-            		if(dbSource.getTableNames().contains(table)){
-            			CloseableIterator<Row<Object>> tableIterator = dbSource.getTableIterator(table); 
-            			JsonArray rowList = new JsonArray();
-            			int i = 0;
-            			while(tableIterator.hasNext() && i<maxRow){
-            				Row<Object> row = tableIterator.next();
-                			JsonObject mapRow = new JsonObject();
-            				for(String key: row.keys()){
-            					mapRow.addProperty(key, row.getString(key));
-            				}
-            				rowList.add(mapRow);
-            				i++;
-            			}
-            			ResponseBuilder bResp = Response.ok();
-            			bResp.entity(rowList.toString())
-            				.type(APPLICATION_JSON_UTF8);
-            			response = bResp.build();
-            		}else{
-            			this.sendError(NOT_FOUND, "Table not found");
-            		}
-            	}else{
-            		this.sendError(NOT_ACCEPTABLE, "The source is not a database");
-            	}
-            }
-        }catch (Exception e) {
-        	this.handleInternalError(e,
-        			"Failed to retrieve table {} from source {}",table, srcId);
-        }
-        return response;
-    }
-    									 
+ 
     
     @GET
     @Path("{id}/source/{srcid}/{prop}")
@@ -1770,6 +1716,8 @@ public class Workspace extends BaseModule
     public Response displayProperty(@PathParam("id") String projectId,
                                     @PathParam("srcid") String srcId,
                                     @PathParam("prop") String prop,
+                                    @QueryParam("min") @DefaultValue("0") int startOffset,
+                                    @QueryParam("max") @DefaultValue("-1") int endOffset,
                                     @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
         Response response = null;
@@ -1782,21 +1730,51 @@ public class Workspace extends BaseModule
                 this.sendError(NOT_FOUND, null);
             }
             else {
-                Object value = null;
+            	Object value = null;
                 boolean resolved = false;
-                BeanInfo bean = Introspector.getBeanInfo(src.getClass());
-                for (PropertyDescriptor desc : bean.getPropertyDescriptors()) {
-                    if (prop.equalsIgnoreCase(desc.getName())) {
-                        resolved = true;
-                        value = desc.getReadMethod().invoke(src);
-                        break;
-                    }
-                }
+	            BeanInfo bean = Introspector.getBeanInfo(src.getClass());
+	            for (PropertyDescriptor desc : bean.getPropertyDescriptors()) {
+	            	if (prop.equalsIgnoreCase(desc.getName())) {
+	            		resolved = true;
+	                    value = desc.getReadMethod().invoke(src);
+	                    break;
+	                }
+	            }
+	            if(!resolved && src instanceof SqlDatabaseSource){
+	            	//if the source is a database then a table content is required:
+	            	SqlDatabaseSource dbSource  = (SqlDatabaseSource) src;
+	            	if(dbSource.getTableNames().contains(prop)){
+	            		CloseableIterator<Row<Object>> tableIterator = dbSource.getTableIterator(prop); 
+	            		JsonArray rowList = new JsonArray();
+	            		int i = 0;
+	            		int maxRows = endOffset - startOffset;
+	            		while(tableIterator.hasNext()){
+	           				Row<Object> row = tableIterator.next();
+	              			JsonObject mapRow = new JsonObject();
+	           				for(String key: row.keys()){
+	            				mapRow.addProperty(key, row.getString(key));
+	           				}
+	           				rowList.add(mapRow);
+	           				i++;
+	           				if(maxRows>0 && i>maxRows){
+	           					break;
+	           				}
+	           			}
+	           			resolved = true;
+	           			value = rowList;
+	           		}else{
+	           			this.sendError(NOT_FOUND, "Table not found");
+	           		}
+	            }
                 if (resolved) {
                     ResponseBuilder b = Response.ok();
                     if (value != null) {
-                        b.entity(new Gson().toJson(value))
-                         .type(APPLICATION_JSON_UTF8);
+                    	if(value instanceof JsonArray){
+                    		b.entity(value.toString());
+                    	}else{
+	                        b.entity(new Gson().toJson(value));
+                    	}
+                    	b.type(APPLICATION_JSON_UTF8);
                     }
                     response = b.build();
                 }

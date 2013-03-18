@@ -184,7 +184,7 @@ public interface ProjectManager
      * @throws IOException if any error occurred creating the source
      *         or accessing the configured database.
      */
-    public SqlSource newSqlSource(Project project, URI uri,
+    public SqlDatabaseSource newSqlDatabaseSource(Project project, URI uri,
                                   String title, String description,
                                   String srcUrl, String user, String password)
                                                             throws IOException;

@@ -41,42 +41,39 @@
 			$("#goto_workspace").button();
 			//Load table content
 #set( $maxEntries = 5000 )
-#set( $columns = $it.getColumnNames())
-#set( $rowList = [] )	
+#set( $columns = $it.getColumnNames())	
 	
 ##Array to contain the row map
-	
+	var jsonTableContent = [
+#set($rowCounter = 0)
 #foreach( $row in $it )
-	#if( $rowList.size() > $maxEntries )
+	#if( $foreach.count > $maxEntries )
 		#break
 	#end
-	#set ($i = 0)  			
-	#set($strRow = "{")
-	#set($separator = ", ")
+	#if( $foreach.count > 1 )
+		,
+	#end
+ 	{
+ 	#set( $i = 0)
   	#foreach( $value in $row )
   		#if($value)
+  		  	#if($i!=0)
+  				,
+  			#end
   			#set($col = $columns.get($i))
-  			#set($duple ="${esc.q}$esc.javascript($col)${esc.q}:${esc.q}$esc.javascript($value)${esc.q}$separator")
-  			#set($strRow = "$strRow$duple")
+  			${esc.q}$esc.javascript($col)${esc.q}:${esc.q}$esc.javascript($value)${esc.q}
+  			#set($i = $i + 1 )
   		#end
-  		#set($i = $i +1)
  	#end
-  	#set($separatorIndex = $strRow.length() - $separator.length() )
-  	##Remove the useless last separator
-  	#set($strRow = $strRow.substring(0,$separatorIndex))
-  	##Close the element
-  	#set($strRow = "$esc.javascript($strRow) }")
-  	#set( $success = $rowList.add($strRow) )
+ 	}
 #end
-			var tableContent = $.parseJSON("$rowList"); 
-
-			//Load table Template containg the rows
+	];
 			var columns = stringToArray("$it.getColumnNames()") ;
-			var gridParam = getTableParameters(columns,tableContent);
+			var gridParam = getTableParameters(columns,jsonTableContent);
 			//Fill the table	
 			$("#grid").jqGrid(gridParam);
 
-			var rowNumber = tableContent.length;
+			var rowNumber = jsonTableContent.length;
 			var sourceDescr = "#i18n("source.grid.desc") $!esc.html($it.title) ";
 			if (rowNumber < $maxEntries) {
 				sourceDescr = sourceDescr.concat("(" + rowNumber + " #i18n("source.grid.entries"))");

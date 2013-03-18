@@ -38,21 +38,23 @@
 			$("#goto_sparql").button();
 			$("#goto_workspace").button();
 
-#set( $tripleList = [] )	
+
 #set( $maxEntries = 5000 )
-#set($quote = '\"')
+	var tableContent = [
 #foreach( $triple in $it )
   #if( $foreach.count > $maxEntries ) 
   	#break 
   #end
-  #set($subject = "$quote#i18n('sparql.subject')$quote:$quote$triple.subject$quote")
-  #set($predicate = "$quote#i18n('sparql.predicate')$quote:$quote$triple.predicate$quote")
-  #set($object = "$quote#i18n('sparql.object')$quote:$quote$esc.html($triple.object)$quote")
-  #set($jsonTriple = "{$subject,$predicate,$object}")
-  #set($success = $tripleList.add($jsonTriple))
+  #if( $foreach.count > 1 )
+	,
+  #end
+  #set($subject = "${esc.q}#i18n('sparql.subject')${esc.q}:${esc.q}$triple.subject${esc.q}")
+  #set($predicate = "${esc.q}#i18n('sparql.predicate')${esc.q}:${esc.q}$triple.predicate${esc.q}")
+  #set($object = "${esc.q}#i18n('sparql.object')${esc.q}:${esc.q}$esc.html($triple.object)${esc.q}")
+  {$subject,$predicate,$object}
 #end
+	];
 	//Prepare the title
-	var tableContent = $.parseJSON("$tripleList");
 	var columns = ["#i18n('sparql.subject')", "#i18n('sparql.predicate')", "#i18n('sparql.object')"];
 	var basicGridParam = getBasicTableParameters();
 	var rdfGridParams = {
