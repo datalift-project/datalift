@@ -102,6 +102,9 @@ public class OntologyMapper extends BaseModule implements ProjectModule
     private final static String GUI_RESOURCES_BUNDLE = "resources";
     /** The regex to split string concatenation expressions. */
     private final static Pattern CONCAT_PATTERN = Pattern.compile("\\+");
+ 
+    /** One month (30 days actually), in seconds. */
+    private final static long MONTH_IN_SECONDS = 30 * 24* 3600L;
 
     //-------------------------------------------------------------------------
     // Class members
@@ -243,9 +246,9 @@ public class OntologyMapper extends BaseModule implements ProjectModule
                 // Retrieve file from source URL.
                 FileUtils.DownloadInfo info =
                                         FileUtils.save(u, null, headers, f);
-                // Cache data as long as possible, 2 hours otherwise.
-                f.setLastModified((info.expires > 0L)?
-                                        info.expires: now + (2 * 3600 * 1000L));
+                // Cache data as long as allowed, 1 month otherwise.
+                f.setLastModified((info.expires > 0L)? info.expires:
+                                            now + (MONTH_IN_SECONDS * 1000L));
                 if (info.httpStatus == 0) {
                     // New file has been downloaded.
                     // => Extract RDF format from MIME type to set file suffix.
