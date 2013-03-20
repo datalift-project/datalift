@@ -373,14 +373,14 @@ public class S4acAccessController extends BaseModule
                 try {
                     boolean isOk = true;
                     if (ap.getAcstype() == ACSType.CONJUNCTIVE) {
-                        // set conjonctif, tous les asks doivent etre valides
+                        // Conjunctive set: all ASKs must be valid.
                         for (String askQuery : ap.getAsks()) {
                             isOk = isOk && this.ask(cnx, askQuery, user);
                             if (isOk == false) break;
                         }
                     }
                     else if (ap.getAcstype() == ACSType.DISJUNCTIVE) {
-                        // set disjonjonctif, au moins un ask doit etre valide
+                        // Disjunctive set: at least one ASK shall be valid.
                         isOk = false;
                         for (String askQuery : ap.getAsks()) {
                             if (this.ask(cnx, askQuery, user)) {
@@ -417,20 +417,14 @@ public class S4acAccessController extends BaseModule
         boolean matches = false;
         try {
             BooleanQuery q = cnx.prepareBooleanQuery(SPARQL, query);
-            String ctx = null;
             if (isSet(user)) {
-                ctx = this.userContext.format(new Object[] { user });
-                q.setBinding("context", new URIImpl(ctx));
+                q.setBinding(USER_CONTEXT_VARIABLE, new URIImpl(
+                            this.userContext.format(new Object[] { user })));
             }
             matches = q.evaluate();
             if (log.isTraceEnabled()) {
-                if (ctx!= null) {
-                    log.trace("{} (context: <{}>) -> {}",
-                              query, ctx, Boolean.valueOf(matches));
-                }
-                else {
-                    log.trace("{} -> {}", query, Boolean.valueOf(matches));
-                }
+                log.trace("{} ({}) -> {}", query, q.getBindings(),
+                                           Boolean.valueOf(matches));
             }
         }
         catch (Exception e) {
