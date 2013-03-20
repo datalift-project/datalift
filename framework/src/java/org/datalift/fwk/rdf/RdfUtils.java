@@ -310,9 +310,13 @@ public final class RdfUtils
             parser.setRDFHandler(appender);
             parser.parse(source, baseUri);
 
-            log.debug("Inserted {} RDF triples into <{}> in {} seconds",
-                      Long.valueOf(appender.getStatementCount()), namedGraph,
-                      Double.valueOf(appender.getDuration() / 1000.0));
+            if (log.isDebugEnabled()) {
+                log.debug("Inserted {} RDF triples into {} in {} seconds",
+                          Long.valueOf(appender.getStatementCount()),
+                          (namedGraph != null)? "<" + namedGraph + '>':
+                                                "default graph",
+                          Double.valueOf(appender.getDuration() / 1000.0));
+            }
         }
         catch (Exception e) {
             try {
