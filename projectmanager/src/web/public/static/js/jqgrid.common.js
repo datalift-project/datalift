@@ -10,7 +10,7 @@ function getBasicTableParameters(){
 		ignoreCase: true,
 		gridview: true,
 		autowidth: true,
-		shrinkToFit: false,
+		shrinkToFit: true,
 		height: '450'
 	};
 }
