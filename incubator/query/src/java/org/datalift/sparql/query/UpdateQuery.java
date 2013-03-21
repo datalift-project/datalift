@@ -80,6 +80,14 @@ import static org.datalift.fwk.util.StringUtils.*;
 public abstract class UpdateQuery
 {
     //-------------------------------------------------------------------------
+    // Constants
+    //-------------------------------------------------------------------------
+
+    /** Regular expr. for detecting SPARQL functions in expressions. */
+    private final static Pattern SPARQL_FUNCTIONS =
+                                        Pattern.compile("(\\w+?)\\((.*?)\\)");
+
+    //-------------------------------------------------------------------------
     // Class members
     //-------------------------------------------------------------------------
 
@@ -909,9 +917,6 @@ public abstract class UpdateQuery
         return this;
     }
 
-    private final static Pattern fctPattern =
-                                        Pattern.compile("(\\w+?)\\((.*?)\\)");
-
     protected Value mapValue(String s) {
         Value v = null;
         if (! isBlank(s)) {
@@ -921,7 +926,7 @@ public abstract class UpdateQuery
                 v = this.literal(s.substring(1, s.length() - 1));
             }
             else {
-                Matcher m = fctPattern.matcher(s);
+                Matcher m = SPARQL_FUNCTIONS.matcher(s);
                 if (m.matches()) {
                     // Function
                     String   f = m.group(1);

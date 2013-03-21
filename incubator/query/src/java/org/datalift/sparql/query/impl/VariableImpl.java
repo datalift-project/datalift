@@ -37,13 +37,44 @@ package org.datalift.sparql.query.impl;
 
 import static org.datalift.fwk.util.StringUtils.isSet;
 
+import java.util.regex.Pattern;
+
 import org.datalift.sparql.query.Variable;
 
 
+/**
+ * Default implementation for SPARQL query variable.
+ *
+ * @author lbihanic
+ */
 public final class VariableImpl implements Variable
 {
+    //-------------------------------------------------------------------------
+    // Constants
+    //-------------------------------------------------------------------------
+
+    /** Regular expr. for matching punctuation, control and blank characters. */
+    private final static Pattern NON_BASE_CHARS =
+                    Pattern.compile("[\\p{Punct}\\p{Space}\\p{Cntrl}]+");
+
+    //-------------------------------------------------------------------------
+    // Instance members
+    //-------------------------------------------------------------------------
+
+    /** The SPARQL variable name, without the '?' prefix. */
     public final String name;
 
+    //-------------------------------------------------------------------------
+    // Constructors
+    //-------------------------------------------------------------------------
+
+    /**
+     * Creates a new variable with the specified name.
+     * @param  name   the variable name, with or without the '?' prefix.
+     *
+     * @throws IllegalArgumentException if <code>name</code> is
+     *         <code>null</code> or empty.
+     */
     public VariableImpl(String name) {
         if (! isSet(name)) {
             throw new IllegalArgumentException("name");
@@ -51,24 +82,36 @@ public final class VariableImpl implements Variable
         if (name.charAt(0) == '?') {
             name = name.substring(1);
         }
-        this.name = name;
+        this.name = NON_BASE_CHARS.matcher(name).replaceAll("_");
     }
 
+    //-------------------------------------------------------------------------
+    // Variable contract support
+    //-------------------------------------------------------------------------
+
+    /** {@inheritDoc} */
     @Override
     public String stringValue()  {
         return "?" + this.name;
     }
 
+    //-------------------------------------------------------------------------
+    // Object contract support
+    //-------------------------------------------------------------------------
+
+    /** {@inheritDoc} */
     @Override
     public String toString() {
         return this.stringValue();
     }
 
+    /** {@inheritDoc} */
     @Override
     public int hashCode() {
         return this.stringValue().hashCode();
     }
 
+    /** {@inheritDoc} */
     @Override
     public boolean equals(Object o) {
         return (o instanceof VariableImpl)?

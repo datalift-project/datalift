@@ -38,6 +38,11 @@ package org.datalift.sparql.query;
 import org.openrdf.model.Resource;
 
 
+/**
+ * A variable in a SPARQL query.
+ *
+ * @author lbihanic
+ */
 public interface Variable extends Resource
 {
     // Just another type of Resource.
