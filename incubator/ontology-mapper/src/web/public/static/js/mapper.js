@@ -95,9 +95,9 @@ function OwlOntology(uri, name, desc, classes, properties) {
     var count = 0;
     for (var k in classes) {
       var c = classes[k];
-      var l = results.length;
       var i = self.leafClasses(c.subclasses, union, results);
-      if ((i == 0) && (c.union == union)) {
+      // if ((i == 0) && (c.union == union)) {
+      if (c.union == union) {
         results[c.uri] = c;
         i++;
       }
