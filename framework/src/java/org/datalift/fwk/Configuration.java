@@ -207,8 +207,11 @@ public abstract class Configuration
      * @param  publish   whether to publish the newly created repository.
      *
      * @return a new repository.
-     * @throws TechnicalException if any error occurred reading the
-     *         repository configuration, creating it or connecting it.
+     * @throws TechnicalException if any error occurred creating or
+     *         connecting to the repository.
+     * @throws IllegalArgumentException if any mandatory argument is
+     *         missing and can not be retrieved from the configuration
+     *         from the specified <code>uri</code>.
      */
     abstract public Repository newRepository(String uri, String url,
                                                          boolean publish);
