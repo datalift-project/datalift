@@ -191,8 +191,17 @@ public class S4acAccessController extends BaseModule
                                                     SECURITY_REPOSITORY_URI);
             if (securityRepositoryUri != null) {
                 // Security repository configured in configuration.
-                this.securityRepository = configuration.newRepository(
+                try {
+                    // Assume the URI is the name of a configured repository.
+                    this.securityRepository = configuration.newRepository(
                                             securityRepositoryUri, null, false);
+                }
+                catch (IllegalArgumentException e) {
+                    // Repository name not declared in configuration.
+                    // => Retry assuming the URI is a connection string.
+                    this.securityRepository = configuration.newRepository(
+                                            null, securityRepositoryUri, false);
+                }
             }
             else if (! isBlank(policyFiles)) {
                 // Create an in-memory repository.
