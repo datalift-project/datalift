@@ -280,7 +280,10 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                                                   .parseQuery(query, baseUri);
         }
         catch (MalformedQueryException e) {
-            this.handleError(query, "Syntax error: " + e.getMessage(),
+            TechnicalException error =
+                            new TechnicalException("query.syntax.error",
+                                                   e.getLocalizedMessage());
+            this.handleError(query, error.getLocalizedMessage(),
                              Status.BAD_REQUEST);
         }
         // Make defaultGraphUri list mutable.
@@ -304,8 +307,17 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
             }
         }
         // Build query dataset from specified graphs, if any.
-        Dataset dataset = this.buildDataset(defaultGraphUris, namedGraphUris);
-
+        Dataset dataset = null;
+        try {
+            dataset = this.buildDataset(defaultGraphUris, namedGraphUris);
+        }
+        catch (IllegalArgumentException e) {
+            // One of the graph URIs is invalid.
+            TechnicalException error = new TechnicalException(
+                            "query.invalid.graph.uri", e.getLocalizedMessage());
+            this.handleError(query, error.getLocalizedMessage(),
+                             Status.BAD_REQUEST);
+        }
         // Prepare HTML view parameters.
         Map<String,Object> model = new HashMap<String,Object>();
         model.put("default-graph-uri", defaultGraphUris);
