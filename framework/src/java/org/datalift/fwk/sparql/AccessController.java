@@ -72,9 +72,9 @@ public interface AccessController
      * @param  query              the SPARQL query.
      * @param  repository         the target RDF store.
      * @param  defaultGraphUris   the URIs of the default graphs on which
-     *                            evaluating the query.
+     *                            evaluating the query, if any.
      * @param  namedGraphUris     the URIs of the named graphs on which
-     *                            evaluating the query.
+     *                            evaluating the query, if any.
      *
      * @return A {@link ControlledQuery} object with the
      *         <code>query</code>, <code>defaultGraphUris</code> and
@@ -125,9 +125,9 @@ public interface AccessController
          * Creates a new ControlledQuery object.
          * @param  query              the (updated) SPARQL query.
          * @param  defaultGraphUris   the (modified) list of default
-         *                            graph URIs.
+         *                            graph URIs, if any.
          * @param  namedGraphUris     the (modified) list of named
-         *                            graph URIs.
+         *                            graph URIs, if any.
          * @param  accessibleGraphs   The named graphs accessible to
          *                            the user.
          */
