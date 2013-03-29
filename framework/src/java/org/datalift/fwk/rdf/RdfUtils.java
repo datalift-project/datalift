@@ -257,8 +257,8 @@ public final class RdfUtils
         }
         catch (Exception e) {
             throw new RdfException(null, e,
-                            "Failed to upload RDF triples from " +
-                            source.getPath() + ": " + e.getLocalizedMessage());
+                        "Failed to upload RDF triples from \"" +
+                        source.getPath() + "\": " + e.getLocalizedMessage());
         }
         finally {
             if (in != null) {
