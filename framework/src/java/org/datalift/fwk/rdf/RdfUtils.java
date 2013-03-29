@@ -238,7 +238,8 @@ public final class RdfUtils
      *                      URIs.
      *
      * @throws IllegalArgumentException if no source file, MIME type
-     *         or target RDF store are provided.
+     *         or target RDF store are provided or the source file does
+     *         not exist or can not be read.
      * @throws RdfException if any error occurred parsing the file or
      *         accessing the RDF store.
      */
@@ -246,17 +247,23 @@ public final class RdfUtils
                               Repository target, URI namedGraph,
                               final UriMapper mapper, String baseUri)
                                                         throws RdfException {
-        if ((source == null) || (! source.isFile())) {
-            throw new IllegalArgumentException("source");
-        }
+        InputStream in = null;
         try {
-            upload(FileUtils.getInputStream(source), mimeType, target,
-                                                namedGraph, mapper, baseUri);
+            in = FileUtils.getInputStream(source);
+            upload(in, mimeType, target, namedGraph, mapper, baseUri);
+        }
+        catch (IllegalArgumentException e) {
+            throw e;
         }
         catch (Exception e) {
             throw new RdfException(null, e,
                             "Failed to upload RDF triples from " +
                             source.getPath() + ": " + e.getLocalizedMessage());
+        }
+        finally {
+            if (in != null) {
+                try { in.close(); } catch (Exception e) { /* Ignore... */ }
+            }
         }
     }
 
@@ -264,7 +271,12 @@ public final class RdfUtils
      * Parses the specified file and loads the resulting triples
      * into the specified RDF store, optionally placing them in the
      * specified named graph.
-     * @param  source       the RDF data to load.
+     * <p>
+     * <i>Note</i>: Closing the <code>source<code> input stream is
+     * the responsibility of the user. This method will not close the
+     * stream regardless the outcome of the RDF parse.</p>
+     * @param  source       the RDF data to load as an
+     *                      {@link InputStream}.
      * @param  mimeType     the type of RDF data present in the file.
      * @param  target       the RDF store to persist triples into.
      * @param  namedGraph   the named graph to use as context for the
@@ -296,6 +308,7 @@ public final class RdfUtils
 
         org.openrdf.model.URI targetGraph = null;
         RepositoryConnection cnx = target.newConnection();
+        log.debug("Loading RDF triples into {}...", target);
         try {
             // Clear target named graph, if any.
             targetGraph = getGraphUri(namedGraph, cnx, true);
