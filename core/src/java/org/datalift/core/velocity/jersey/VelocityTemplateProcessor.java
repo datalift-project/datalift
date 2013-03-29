@@ -43,10 +43,12 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.Map.Entry;
 
@@ -64,6 +66,7 @@ import org.apache.velocity.VelocityContext;
 import org.apache.velocity.Template;
 import org.apache.velocity.app.VelocityEngine;
 import org.apache.velocity.exception.ResourceNotFoundException;
+import org.apache.velocity.runtime.directive.Directive;
 import org.apache.velocity.runtime.log.Log4JLogChute;
 import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
 import org.apache.velocity.tools.ToolContext;
@@ -77,6 +80,7 @@ import static org.apache.velocity.runtime.log.Log4JLogChute.*;
 
 import org.datalift.core.velocity.i18n.I18nDirective;
 import org.datalift.core.velocity.i18n.LoadDirective;
+import org.datalift.core.velocity.sparql.SparqlTool;
 import org.datalift.fwk.i18n.PreferredLocales;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.Source.SourceType;
@@ -111,6 +115,8 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
     public final static String CTX_DATE_TOOL        = "date";
     /** The context key for Velocity Field tool. */
     public final static String CTX_FIELD_TOOL       = "field";
+    /** The context key for Datalift SPARQL tool. */
+    public final static String CTX_SPARQL_TOOL      = "sparql";
 
     /** The context key for the HTTP servlet request object. */
     public final static String CTX_HTTP_REQUEST     = "request";
@@ -162,6 +168,10 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
     // Class members
     //-------------------------------------------------------------------------
 
+    /** User provided directive classes. */
+    private final static Set<Class<? extends Directive>> directives  =
+                                    new HashSet<Class<? extends Directive>>();
+    /** Locations of Datalift module templates (directories or JAR file). */
     private final static Map<String,File> modulePaths  =
                                                 new TreeMap<String,File>();
 
@@ -284,7 +294,7 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
                 }
             }
             UriInfo uriInfo = this.httpContext.getUriInfo();
-            if (ctx.get(CTX_BASE_URI) == null) {
+            if (! ctx.containsKey(CTX_BASE_URI)) {
                 String baseUri = uriInfo.getBaseUri().toString();
                 if (baseUri.endsWith("/")) {
                     baseUri = baseUri.substring(0, baseUri.length() - 1);
@@ -293,31 +303,34 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
             }
             log.trace("Merging template {} with context {}", t.getName(), ctx);
             // Add predefined variables, the JSP way.
-            if (ctx.get(CTX_HTTP_REQUEST) == null) {
+            if (! ctx.containsKey(CTX_HTTP_REQUEST)) {
                 ctx.put(CTX_HTTP_REQUEST, this.httpContext.getRequest());
             }
-            if (ctx.get(CTX_HTTP_RESPONSE) == null) {
+            if (! ctx.containsKey(CTX_HTTP_RESPONSE)) {
                 ctx.put(CTX_HTTP_RESPONSE, this.httpContext.getResponse());
             }
-            if (ctx.get(CTX_URI_INFO) == null) {
+            if (! ctx.containsKey(CTX_URI_INFO)) {
                 ctx.put(CTX_URI_INFO, uriInfo);
             }
-            if (ctx.get(CTX_SECURITY_CONTEXT) == null) {
+            if (! ctx.containsKey(CTX_SECURITY_CONTEXT)) {
                 ctx.put(CTX_SECURITY_CONTEXT, SecurityContext.getContext());
             }
-            // Add Velocity tools: escaping, date, link, field...
+            // Add Velocity tools: escaping, date, link, field, sparql...
             ctx.put(CTX_ESCAPE_TOOL, new EscapeTool());
             ctx.put(CTX_LINK_TOOL, new LinkTool());
-            if (ctx.get(CTX_DATE_TOOL) == null) {
+            if (! ctx.containsKey(CTX_DATE_TOOL)) {
                 DateTool dateTool = new DateTool();
                 Map<String, Object> config = new HashMap<String, Object>();
                 config.put(ToolContext.LOCALE_KEY, PreferredLocales.get().get(0));
                 dateTool.configure(config);
                 ctx.put(CTX_DATE_TOOL, dateTool);
             }
-            if (ctx.get(CTX_FIELD_TOOL) == null) {
+            if (! ctx.containsKey(CTX_FIELD_TOOL)) {
                 // Initialize field tool with the known DataLift source types.
                 ctx.put(CTX_FIELD_TOOL, new FieldTool().in(SourceType.class));
+            }
+            if (! ctx.containsKey(CTX_SPARQL_TOOL)) {
+                ctx.put(CTX_SPARQL_TOOL, new SparqlTool());
             }
             // Apply Velocity template, using encoding from in HTTP request.
             Writer w = new OutputStreamWriter(out, this.getCharset());
@@ -369,6 +382,13 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
                                 new FileNotFoundException(path.getPath()));
         }
         modulePaths.put(name, path);
+    }
+
+    public static void addDirective(Class<? extends Directive> directive) {
+        if (directive == null) {
+            throw new IllegalArgumentException("directive");
+        }
+        directives.add(directive);
     }
 
     /**
@@ -497,11 +517,10 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
             String encoding = ctx.getInitParameter(TEMPLATES_ENCODING);
             config.setProperty(INPUT_ENCODING,
                                     isBlank(encoding)? UTF8_CHARSET: encoding);
-            // Configure custom Directives for Velocity
+            // Configure custom Directives for Velocity.
+            registerCoreDirectives();
             config.setProperty(USER_DIRECTIVES,
-                                    LoadDirective.class.getName() + ',' +
-                                    I18nDirective.class.getName());
-
+                               join(directives, ",").replace("class ", ""));
             // Start a new Velocity engine.
             log.trace("Starting Velocity with configuration: {}", config);
             engine = new VelocityEngine(config);
@@ -561,5 +580,10 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
 
     private static String getPropName(String loader, String prop) {
         return loader + LOADER_PROPS_PREFIX + prop;
+    }
+
+    private static void registerCoreDirectives() {
+        directives.add(LoadDirective.class);
+        directives.add(I18nDirective.class);
     }
 }
