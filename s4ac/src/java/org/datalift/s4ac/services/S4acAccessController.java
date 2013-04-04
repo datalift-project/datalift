@@ -1,3 +1,17 @@
+/*
+ * Contact: serena.villata@inria.fr
+ *
+ * This software is governed by the CeCILL license under French law and
+ * abiding by the rules of distribution of free software. You can use,
+ * modify and/or redistribute the software under the terms of the CeCILL
+ * license as circulated by CEA, CNRS and INRIA at the following URL
+ * "http://www.cecill.info".
+ * 
+ * @author Serena Villata (INRIA - Sophia-Antipolis)
+ * 
+ */
+
+
 package org.datalift.s4ac.services;
 
 import java.io.File;
@@ -333,6 +347,7 @@ public class S4acAccessController extends BaseModule
         return (this.userRepository != null)? this.userRepository: target;
     }
 
+    
     private Set<String> evaluatePolicies(String user,
                                          QueryType type, Repository r) {
         Set<String> graphs = new HashSet<String>();
@@ -395,6 +410,8 @@ public class S4acAccessController extends BaseModule
             if (isSet(user)) {
                 q.setBinding(USER_CONTEXT_VARIABLE, new URIImpl(
                             this.userContext.format(new Object[] { user })));
+                
+                log.debug("Added Context for user {}", user);
             }
             matches = q.evaluate();
             if (log.isTraceEnabled()) {
