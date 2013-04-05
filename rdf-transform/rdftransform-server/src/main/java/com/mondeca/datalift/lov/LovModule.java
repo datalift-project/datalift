@@ -103,7 +103,7 @@ public class LovModule extends BaseModule implements ProjectModule {
 		super.postInit(configuration);
 		System.out.println("LovModule post init phase");
 
-		File privateStorage = Configuration.getDefault().getPrivateStorage();
+		File privateStorage = Configuration.getDefault().getTempStorage();
 		File lovPrivateStorage = new File(privateStorage,"lov");
 		lovData = new File(lovPrivateStorage,"data");
 
