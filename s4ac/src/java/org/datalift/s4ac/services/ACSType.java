@@ -6,12 +6,7 @@
  * modify and/or redistribute the software under the terms of the CeCILL
  * license as circulated by CEA, CNRS and INRIA at the following URL
  * "http://www.cecill.info".
- * 
- * @author Serena Villata (INRIA - Sophia-Antipolis)
- * 
  */
-
-
 
 package org.datalift.s4ac.services;
 
@@ -19,6 +14,11 @@ package org.datalift.s4ac.services;
 import static org.datalift.fwk.rdf.RdfNamespace.S4AC;
 
 
+/**
+ * Types of access condition sets.
+ *
+ * @author Serena Villata (INRIA - Sophia-Antipolis)
+ */
 public enum ACSType
 {
     DISJUNCTIVE (S4AC.uri + "DisjunctiveAccessConditionSet"),

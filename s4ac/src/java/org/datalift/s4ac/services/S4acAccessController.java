@@ -6,13 +6,10 @@
  * modify and/or redistribute the software under the terms of the CeCILL
  * license as circulated by CEA, CNRS and INRIA at the following URL
  * "http://www.cecill.info".
- * 
- * @author Serena Villata (INRIA - Sophia-Antipolis)
- * 
  */
 
-
 package org.datalift.s4ac.services;
+
 
 import java.io.File;
 import java.text.MessageFormat;
@@ -61,7 +58,7 @@ import static org.datalift.s4ac.utils.QueryType.*;
  * Security for Access Control)</a> vocabulary for specifying the
  * access control policies.
  *
- * @author Serena Villata (INRIA)
+ * @author Serena Villata (INRIA - Sophia-Antipolis)
  * @author Laurent Bihanic (Atos)
  */
 public class S4acAccessController extends BaseModule

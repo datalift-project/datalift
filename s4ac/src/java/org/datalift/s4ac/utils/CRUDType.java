@@ -6,11 +6,7 @@
  * modify and/or redistribute the software under the terms of the CeCILL
  * license as circulated by CEA, CNRS and INRIA at the following URL
  * "http://www.cecill.info".
- * 
- * @author Serena Villata (INRIA - Sophia-Antipolis)
- * 
  */
-
 
 package org.datalift.s4ac.utils;
 
@@ -18,6 +14,12 @@ package org.datalift.s4ac.utils;
 import static org.datalift.fwk.rdf.RdfNamespace.S4AC;
 
 
+/**
+ * Types of SPARQL operation, reduced to a single Create (C), Read (R),
+ * Update (U) or Delete (D) operation.
+ *
+ * @author Serena Villata (INRIA - Sophia-Antipolis)
+ */
 public enum CRUDType
 {
     CREATE      (S4AC.uri + "Create"),
