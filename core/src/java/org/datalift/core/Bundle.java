@@ -359,8 +359,9 @@ public class Bundle
                             embeddedJarsFound = true;
                         }
                         File f = new File(tempJarDir, e.getName());
-                        if (! tempJarDir.exists()) {
-                            tempJarDir.mkdirs();
+                        File jarDir = f.getParentFile();
+                        if (! jarDir.exists()) {
+                            jarDir.mkdirs();
                         }
                         long entryDate = e.getTime();
                         if ((! f.exists()) || (f.lastModified() < entryDate)) {
