@@ -69,7 +69,6 @@ import org.datalift.fwk.project.CsvSource;
 import org.datalift.fwk.project.SparqlSource;
 import org.datalift.fwk.project.SqlDatabaseSource;
 import org.datalift.fwk.project.SqlQuerySource;
-import org.datalift.fwk.project.SqlSource;
 import org.datalift.fwk.project.Ontology;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectManager;
