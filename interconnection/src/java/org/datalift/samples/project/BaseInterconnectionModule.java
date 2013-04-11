@@ -15,8 +15,9 @@ import org.datalift.fwk.Configuration;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectManager;
 import org.datalift.fwk.project.ProjectModule;
+import org.datalift.fwk.view.TemplateModel;
+import org.datalift.fwk.view.ViewFactory;
 
-import com.sun.jersey.api.view.Viewable;
 
 /**
  * A common superclass for InterconnectionModule, providing some utility methods.
@@ -41,7 +42,7 @@ public abstract class BaseInterconnectionModule
                 return p;
                 }
 
-    protected final Viewable newViewable(String templateName, Object it) {
-        return new Viewable("/" + this.getName() + templateName, it);
+    protected final TemplateModel newViewable(String templateName, Object it) {
+        return ViewFactory.newView("/" + this.getName() + templateName, it);
     }
 }
