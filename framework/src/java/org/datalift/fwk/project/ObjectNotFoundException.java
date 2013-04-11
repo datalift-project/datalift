@@ -39,16 +39,22 @@ import java.text.MessageFormat;
 
 
 /**
- * Notifies of the failure to create a new object due to a duplicate key
- * in the underlying storage.
+ * A {@link PersistenceException} indicating that the requested
+ * RDF resource was not found in the RDF store.
  *
  * @author lbihanic
  */
-public class DuplicateObjectKeyException extends PersistenceException
+public class ObjectNotFoundException extends PersistenceException
 {
-    //------------------------------------------------------------------------
-    // Constructors
-    //------------------------------------------------------------------------
+    /**
+     * Constructs a new exception with the specified cause but no
+     * detail message.  The detail message of this exception will
+     * be the detail message of the cause.
+     * @param  cause   the cause.
+     */
+    public ObjectNotFoundException(Throwable cause) {
+        super(cause);
+    }
 
     /**
      * Constructs a new exception with the specified message code
@@ -65,7 +71,7 @@ public class DuplicateObjectKeyException extends PersistenceException
      * @param  data   the arguments to build the detail message
      *                from the format.
      */
-    public DuplicateObjectKeyException(String code, Object... data) {
+    public ObjectNotFoundException(String code, Object... data) {
         super(code, data);
     }
 
@@ -91,8 +97,8 @@ public class DuplicateObjectKeyException extends PersistenceException
      * @param  data    the arguments to build the detail message
      *                 from the format.
      */
-    public DuplicateObjectKeyException(String code, Throwable cause,
-                                                    Object... data) {
+    public ObjectNotFoundException(String code,
+                                   Throwable cause, Object... data) {
         super(code, cause, data);
     }
 }

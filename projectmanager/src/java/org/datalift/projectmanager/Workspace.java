@@ -56,7 +56,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 
-import javax.persistence.EntityNotFoundException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -107,6 +106,7 @@ import org.datalift.fwk.project.CsvSource;
 import org.datalift.fwk.project.DuplicateObjectKeyException;
 import org.datalift.fwk.project.FileSource;
 import org.datalift.fwk.project.GmlSource;
+import org.datalift.fwk.project.ObjectNotFoundException;
 import org.datalift.fwk.project.RdfSource;
 import org.datalift.fwk.project.Row;
 import org.datalift.fwk.project.ShpSource;
@@ -2521,7 +2521,7 @@ public class Workspace extends BaseModule
         if (e instanceof WebApplicationException) {
             throw (WebApplicationException)e;
         }
-        if (e instanceof EntityNotFoundException) {
+        if (e instanceof ObjectNotFoundException) {
             this.sendError(NOT_FOUND, null);
         }
         if (e instanceof DuplicateObjectKeyException) {

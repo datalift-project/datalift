@@ -51,6 +51,8 @@ import com.clarkparsia.empire.impl.RdfQuery;
 
 import org.datalift.core.util.web.RequestLifecycleFilter.RequestLifecycleListener;
 import org.datalift.fwk.log.Logger;
+import org.datalift.fwk.project.ObjectNotFoundException;
+import org.datalift.fwk.project.PersistenceException;
 
 import static org.datalift.fwk.util.StringUtils.*;
 
@@ -100,6 +102,17 @@ public class GenericRdfJpaDao<T> implements RequestLifecycleListener
     // LifeCycle contract support
     //-------------------------------------------------------------------------
 
+    /**
+     * Creates a new RDF JPA DAO.
+     * @param  persistentClass    the default classes for the objects
+     *                            persisted by this DAO.
+     * @param  entityMgrFactory   the JPA EntityManagerFactory to use to
+     *                            access the RDF store.
+     *
+     * @throws IllegalArgumentException if <code>persistentClass</code>
+     *         is <code>null</code> or can not be mapped to a known
+     *         persisted RDF type.
+     */
     public GenericRdfJpaDao(final Class<? extends T> persistentClass,
                             final EntityManagerFactory entityMgrFactory) {
         if (persistentClass == null) {
@@ -119,55 +132,155 @@ public class GenericRdfJpaDao<T> implements RequestLifecycleListener
     //-------------------------------------------------------------------------
 
     /**
-     * Retrieves all persistent instance of T.
+     * Retrieves all instances of T present in the RDF store.
      * @return a collection (possibly empty) containing all persistent
      *         instances found in the underlying storage.
+     * @throws PersistenceException if any error occurred accessing the
+     *         RDF store.
      */
     public Collection<? extends T> getAll() {
         return this.getAll(this.persistentClass, this.rdfType);
     }
 
+    /**
+     * Retrieves an instance of T.
+     * @param  id   the RDF object identifier, as a URI.
+     *
+     * @return the object read from the RDF store or <code>null</code>
+     *         if no object with the specified identifier was found.
+     * @throws PersistenceException if any error occurred accessing the
+     *         RDF store.
+     */
     public T find(URI id) {
         return this.find(this.persistentClass, id);
     }
 
+    /**
+     * Retrieves an instance of T.
+     * @param  id   the RDF object identifier, as a URI.
+     *
+     * @return the object read from the RDF store.
+     * @throws ObjectNotFoundException if no object with the specified
+     *         identifier was found.
+     * @throws PersistenceException if any error occurred accessing the
+     *         RDF store.
+     */
     public T get(URI id) {
         return this.get(this.persistentClass, id);
     }
 
+    /**
+     * Retrieves all instances of the specified persistent class found
+     * in the RDF store.
+     * @param  entityClass   the persistent class of the objects to
+     *                       retrieve.
+     *
+     * @return a collection (possibly empty) containing all persistent
+     *         instances found in the underlying storage.
+     * @throws IllegalArgumentException if <code>entityClass</code> is
+     *         <code>null</code> or can not be mapped to a known
+     *         persisted RDF type.
+     * @throws PersistenceException if any error occurred accessing the
+     *         RDF store.
+     */
     public <C> Collection<? extends C> getAll(Class<C> entityClass) {
         return this.getAll(entityClass, null);
     }
 
+    /**
+     * Makes the specified RDF object persistent and saves its initial
+     * state in the RDF store.
+     * @param  entity   the object to be saved into the RDF store.
+     *
+     * @throws PersistenceException if any error occurred accessing the
+     *         RDF store.
+     */
     public void persist(Object entity) {
-        EntityManager em = this.getEntityManager();
-        em.persist(entity);
-        em.flush();
+        try {
+            EntityManager em = this.getEntityManager();
+            em.persist(entity);
+            em.flush();
+        }
+        catch (javax.persistence.PersistenceException e) {
+            throw new PersistenceException(e);
+        }
     }
 
+    /**
+     * Saves the specified RDF object, merging its new state with the
+     * content of the RDF store.
+     * @param  entity   the object to be saved into the RDF store.
+     *
+     * @throws ObjectNotFoundException if no object matching
+     *         <code>entity</code> was found in the RDF store.
+     * @throws PersistenceException if any error occurred accessing the
+     *         RDF store.
+     */
     public <C> C save(C entity) {
-        EntityManager em = this.getEntityManager();
-        entity = em.merge(entity);
-        em.flush();
-        return entity;
+        try {
+            EntityManager em = this.getEntityManager();
+            entity = em.merge(entity);
+            em.flush();
+            return entity;
+        }
+        catch (EntityNotFoundException e) {
+            throw new ObjectNotFoundException(e);
+        }
+        catch (javax.persistence.PersistenceException e) {
+            throw new PersistenceException(e);
+        }
     }
 
+    /**
+     * Deletes the specified RDF object.
+     * @param  entity   the object to be deleted from the RDF store.
+     *
+     * @throws ObjectNotFoundException if no object matching
+     *         <code>entity</code> was found in the RDF store.
+     * @throws PersistenceException if any error occurred accessing the
+     *         RDF store.
+     */
     public void delete(Object entity) {
-        this.getEntityManager().remove(entity);
+        try {
+            this.getEntityManager().remove(entity);
+        }
+        catch (EntityNotFoundException e) {
+            throw new ObjectNotFoundException(e);
+        }
+        catch (javax.persistence.PersistenceException e) {
+            throw new PersistenceException(e);
+        }
     }
 
+    /**
+     * Deletes the specified RDF object.
+     * @param  id   the RDF object identifier, as a URI.
+     *
+     * @throws ObjectNotFoundException if no object with the specified
+     *         identifier was found.
+     * @throws PersistenceException if any error occurred accessing the
+     *         RDF store.
+     */
     public void delete(URI id) {
         this.delete(this.get(id));
     }
 
     protected <C> C find(Class<C> entityClass, URI primaryKey) {
-        return this.getEntityManager().find(entityClass, primaryKey);
+        try {
+            return this.getEntityManager().find(entityClass, primaryKey);
+        }
+        catch (EntityNotFoundException e) {
+            throw new ObjectNotFoundException(e);
+        }
+        catch (javax.persistence.PersistenceException e) {
+            throw new PersistenceException(e);
+        }
     }
 
     protected <C> C get(Class<C> entityClass, URI primaryKey) {
-        C entity = this.getEntityManager().find(entityClass, primaryKey);
+        C entity = this.find(entityClass, primaryKey);
         if (entity == null) {
-            throw new EntityNotFoundException(String.valueOf(primaryKey));
+            throw new ObjectNotFoundException(String.valueOf(primaryKey));
         }
         return entity;
     }
@@ -181,9 +294,17 @@ public class GenericRdfJpaDao<T> implements RequestLifecycleListener
         if (isBlank(query)) {
             throw new IllegalArgumentException("query");
         }
-        Query q = this.getEntityManager().createQuery(query);
-        q.setHint(RdfQuery.HINT_ENTITY_CLASS, entityClass);
-        return (List<C>)(q.getResultList());
+        try {
+            Query q = this.getEntityManager().createQuery(query);
+            q.setHint(RdfQuery.HINT_ENTITY_CLASS, entityClass);
+            return (List<C>)(q.getResultList());
+        }
+        catch (EntityNotFoundException e) {
+            throw new ObjectNotFoundException(e);
+        }
+        catch (javax.persistence.PersistenceException e) {
+            throw new PersistenceException(e);
+        }
     }
 
     //-------------------------------------------------------------------------
@@ -222,11 +343,16 @@ public class GenericRdfJpaDao<T> implements RequestLifecycleListener
         }
         List<C> results = new LinkedList<C>();
 
-        Query query = this.getEntityManager().createQuery(
+        try {
+            Query query = this.getEntityManager().createQuery(
                                 "where { ?result rdf:type " + rdfType + " . }");
-        query.setHint(RdfQuery.HINT_ENTITY_CLASS, entityClass);
-        for (Object p : query.getResultList()) {
-            results.add((C)p);
+            query.setHint(RdfQuery.HINT_ENTITY_CLASS, entityClass);
+            for (Object p : query.getResultList()) {
+                results.add((C)p);
+            }
+        }
+        catch (javax.persistence.PersistenceException e) {
+            throw new PersistenceException(e);
         }
         return results;
     }
