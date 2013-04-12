@@ -95,12 +95,12 @@ public final class Wrapper
      */
     private final static String SESAME_HOME =
                                         "info.aduna.platform.appdata.basedir";
+    /** The system property defining where Jetty is being run. */
     private final static String JETTY_HOME = "jetty.home";
 
-    private final static String SESAME_REPOSITORIES_DIR = "repositories";
-    private final static String WEBAPPS_DIR = "webapps";
-    private final static String CONFIG_DIR  = "conf";
-
+    // User-specific runtime environment structure definition
+    // 1. Mac OS X: well-behaved apps split files in various sub-directories
+    //    of users's Library folder (Application Support, Caches, Logs...)
     private final static String MAC_DATALIFT_NAME = "DataLift";
     private final static String MAC_APPL_DATA_PATH =
                             "Library/Application Support/" + MAC_DATALIFT_NAME;
@@ -110,28 +110,31 @@ public final class Wrapper
                             "Library/Logs/" + MAC_DATALIFT_NAME;
     private final static String MAC_WEB_APPS_PATH =
                             MAC_APPL_CACHE_PATH + "/webapps";
-
+    // 2. Windows: well-behaved apps place their user-specific configuration
+    //    and runtime data in %APPDATA%/Application Data
     private final static String WIN_DATALIFT_NAME = MAC_DATALIFT_NAME;
     private final static String WIN_APPL_DATA_PATH =
                             "Application Data/" + WIN_DATALIFT_NAME;
-
-    private final static String LINUX_REPOSITORIES_PATH =
-                            SESAME_REPOSITORIES_DIR + "/openrdf-sesame";
-    private final static String OTHER_REPOSITORIES_PATH =
-                            SESAME_REPOSITORIES_DIR + "/OpenRDF Sesame";
-
+    // 3. Other (Linux & UNIX) systems: use ~/.datalift
     private final static String OTHER_DATALIFT_NAME   = ".datalift";
     private final static String OTHER_APPL_DATA_PATH  = OTHER_DATALIFT_NAME;
     private final static String OTHER_APPL_CACHE_PATH = "temp";
     private final static String OTHER_APPL_LOGS_PATH  = "logs";
     private final static String OTHER_WEB_APPS_PATH   = "work";
+    // 4. Non system dependent directories.
+    private final static String WEBAPPS_DIR = "webapps";
+    private final static String CONFIG_DIR  = "conf";
+    // 5. Directory path for OpenRDF Sesame repositories.
+    private final static String SESAME_REPOSITORIES_DIR = "repositories";
+    private final static String LINUX_REPOSITORIES_PATH =
+                            SESAME_REPOSITORIES_DIR + "/openrdf-sesame";
+    private final static String OTHER_REPOSITORIES_PATH =
+                            SESAME_REPOSITORIES_DIR + "/OpenRDF Sesame";
 
     private final static String LOCALHOST = "localhost";
-    private final static String DATALIFT_PAGE = "/datalift/sparql";
-
     private final static String WAR_EXTENSION = ".war";
-    private final static String ROOT_WEB_APP_NAME = "root";
 
+    // Constants for well-known Java system properties.
     private final static String JAVA_CURRENT_DIR_PROP  = "user.dir";
     private final static String JAVA_USER_HOMEDIR_PROP = "user.home";
     private final static String JAVA_TEMP_DIR_PROP = "java.io.tmpdir";
@@ -171,6 +174,8 @@ public final class Wrapper
                 }
             };
 
+    private static String rootWebAppPath = "datalift";
+
     //-------------------------------------------------------------------------
     // Main method
     //-------------------------------------------------------------------------
@@ -193,11 +198,16 @@ public final class Wrapper
         // the Java app to accept all incoming connections by forcing the
         // HTTP server to listen only to loopback interface.
         boolean loopbackOnly = (CURRENT_OS == MacOS);
+        String homeDir = null;
+        String welcomePage = "";
         try {
             // Parse command-line arguments.
-            CmdLineParser parser = new CmdLineParser();
-            Option portOption = parser.addIntegerOption('p', "port");
+            CmdLineParser parser  = new CmdLineParser();
+            Option portOption     = parser.addIntegerOption('p', "port");
             Option externalOption = parser.addBooleanOption('e', "external");
+            Option homeDirOption  = parser.addStringOption('h',  "home-dir");
+            Option rootAppOption  = parser.addStringOption('r',  "root-app");
+            Option mainPageOption = parser.addStringOption('w',  "welcome-page");
             parser.parse(args);
             // 1. HTTP listening port.
             httpPort = ((Integer)(parser.getOptionValue(portOption,
@@ -205,6 +215,15 @@ public final class Wrapper
             // 2. Network interfaces to listen to.
             loopbackOnly = ! ((Boolean)(parser.getOptionValue(externalOption,
                                 new Boolean(! loopbackOnly)))).booleanValue();
+            // 3. Datalift home directory.
+            homeDir = (String)(parser.getOptionValue(homeDirOption,
+                                System.getProperty(DATALIFT_HOME)));
+            // 4. Root web application.
+            rootWebAppPath = (String)(parser.getOptionValue(rootAppOption,
+                                                            rootWebAppPath));
+            // 5. Welcome page
+            welcomePage = (String)(parser.getOptionValue(mainPageOption,
+                                                         welcomePage));
             // Parse other arguments.
             String[] otherArgs = parser.getRemainingArgs();
             // 3. DataLift installation directory.
@@ -219,8 +238,11 @@ public final class Wrapper
         catch (Exception e) {
             System.err.println(e.getMessage());
             System.err.println("Usage: java " + Wrapper.class.getName() +
-                               " [{-p,--port} port]" +
+                               " [{-p,--port} <port>]" +
                                " [{-e,--external}]" +
+                               " [{-h,--home-dir} <directory>]" +
+                               " [{-r,--root-app} <root_webapp_name>]" +
+                               " [{-w,--welcome-page} <welcome_page>]" +
                                " [install_dir]");
             System.exit(2);
         }
@@ -228,14 +250,16 @@ public final class Wrapper
         System.setProperty(DATALIFT_PORT, String.valueOf(httpPort));
         System.setProperty(JETTY_HOME,    dataliftRoot.getCanonicalPath());
         // Check (user-specific) runtime environment.
-        String homeDir = System.getProperty(DATALIFT_HOME);
-        File dataliftHome = (homeDir == null)? getUserEnv(): new File(homeDir);
+        File dataliftHome = (homeDir == null)? getUserEnv():
+                            (".".equals(homeDir))? dataliftRoot: new File(homeDir);
         boolean defaultHome = (homeDir == null);
         try {
             // Install user-specific configuration, if needed.
             installUserEnv(dataliftHome, dataliftRoot, defaultHome);
         }
         catch (IOException e) {
+            System.err.println("Failed to create Datalift user environment (\""
+                               + homeDir + "\"): " + e.toString());
             // Oops! Can't create a user-specific runtime environment.
             // => Run DataLift at the executable location.
             dataliftHome = dataliftRoot;
@@ -322,7 +346,7 @@ public final class Wrapper
                                                 Integer.valueOf(httpPort));
         // Open new browser window on user's display.
         BareBonesBrowserLaunch.openUrl(
-                        "http://" + LOCALHOST + ':' + httpPort + DATALIFT_PAGE);
+                    "http://" + LOCALHOST + ':' + httpPort + '/' + welcomePage);
         // Wait for server termination.
         httpServer.join();
         System.exit(0);
@@ -525,7 +549,7 @@ public final class Wrapper
             // Remove ending .war extension.
             path = path.substring(0, i);
         }
-        if (ROOT_WEB_APP_NAME.equals(path)) {
+        if (rootWebAppPath.equals(path)) {
             path = "";
         }
         return "/" + path;
