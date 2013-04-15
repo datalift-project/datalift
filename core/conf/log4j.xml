@@ -11,14 +11,13 @@
 
       <appender name="defaultLog"
                 class="org.datalift.core.log.log4j.DailyRollingFileAppender">
-        <param name="file" value="${catalina.home}/logs/datalift.log"/>
+        <param name="file" value="${datalift.home}/logs/datalift.log"/>
 
         <layout class="org.apache.log4j.PatternLayout">
           <param name="conversionPattern"
                  value="%d{ISO8601}|%-5p|%X{Timer}|%X{User}|%X{Path}|%c{1}|%m%n"/>
         </layout>
       </appender>
-
 
     </xi:fallback>
   </xi:include>
