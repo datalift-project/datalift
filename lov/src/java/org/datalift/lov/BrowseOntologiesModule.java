@@ -15,7 +15,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import javax.persistence.EntityNotFoundException;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
@@ -50,9 +49,6 @@ import org.openrdf.query.TupleQuery;
 import org.openrdf.query.TupleQueryResult;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.http.HTTPRepository;
-
-import com.sun.jersey.api.NotFoundException;
-import com.sun.jersey.api.view.Viewable;
 
 
 /**
@@ -284,7 +280,7 @@ public class BrowseOntologiesModule extends BaseModule {
 			
 			log.debug("Building response. Redirect URL : {}", redirectUrl);
 			response = Response
-					.ok(this.newViewable("/redirect.vm", redirectUrl))
+					.ok(this.newView("/redirect.vm", redirectUrl))
 					.type(TEXT_HTML).build();
 			
 		} catch (Exception e) {
@@ -349,21 +345,6 @@ public class BrowseOntologiesModule extends BaseModule {
 	 */
 	public Configuration getConfiguration() {
 		return this.configuration;
-	}
-
-	/**
-	 * Return a viewable for the specified template, populated with the
-	 * specified model object.
-	 * <p>
-	 * The template name shall be relative to the module, the module
-	 * name is automatically prepended.</p>
-	 * @param  templateName   the relative template name.
-	 * @param  it             the model object to pass on to the view.
-	 *
-	 * @return a populated viewable.
-	 */
-	protected final Viewable newViewable(String templateName, Object it) {
-		return new Viewable("/" + this.getName() + templateName, it);
 	}
 	
 	/**
@@ -451,9 +432,7 @@ public class BrowseOntologiesModule extends BaseModule {
 		lovEndPoint.initialize();
 
 		RepositoryConnection lovRepositoryConnection = lovEndPoint.getConnection();
-
 		try {
-
 			StringBuilder sparqlQuery = new StringBuilder();
 			sparqlQuery.append("PREFIX dcterms:<http://purl.org/dc/terms/>");
 			sparqlQuery.append("PREFIX voaf:<http://purl.org/vocommons/voaf#>");
@@ -471,7 +450,7 @@ public class BrowseOntologiesModule extends BaseModule {
 			sparqlQuery.append(" } ");
 			sparqlQuery.append(" } ");
 
-			log.info("Querying the sparql end point...");
+			log.info("Querying LOV SPARQL endpoint at \"{}\"...", endpointURL);
 			GraphQuery query = lovRepositoryConnection.prepareGraphQuery(QueryLanguage.SPARQL, sparqlQuery.toString());
 			GraphQueryResult result = query.evaluate();
 			
@@ -481,82 +460,37 @@ public class BrowseOntologiesModule extends BaseModule {
 			while (result.hasNext()) {
 				statements.add(result.next());
 			}
-			
 			result.close();
-
 		}
 		catch(Exception e) {
-
 			log.fatal("Failed to query the end point at {} ", endpointURL);
 			isSuccessful = false;
 			//throw new LovModuleException("Error querying the sparql end point", e);
-
 		}
 		finally {
-
 			Util.CloseQuietly(lovRepositoryConnection);
-
 		}
 
 		log.info("Finished querying the sparql end point. Adding result data to the internal repository.");
 		URI lovContextURI = new URI(LOV_CONTEXT);
 		RepositoryConnection internalRepositoryConnection = this.configuration.getInternalRepository().newConnection();
-
 		try {
-
 			org.openrdf.model.URI ctx = null;
 			ctx = internalRepositoryConnection.getValueFactory()
 					.createURI(lovContextURI.toString());
 			internalRepositoryConnection.clear(ctx);
-
 
 			log.info("Adding {} statements.", statements.size());
 			internalRepositoryConnection.add(statements, ctx); // auto commit
 			log.info("Internal repository size for context {} : {}", ctx, internalRepositoryConnection.size(ctx));
 
 		} catch (Exception e) {
-
 			e.printStackTrace();
-
 		} finally {
-
 			Util.CloseQuietly(internalRepositoryConnection);
-
 		}
-
 		return isSuccessful;
-
 	}
-	//	private Map LovData() throws Exception {
-	//
-	//		Map<String, List> args = new HashMap<String, List>();
-	//
-	//		SailRepository repo = new SailRepository(new MemoryStore());
-	//		repo.initialize();
-	//		RepositoryConnection conn = repo.getConnection();
-	//		conn.add(new InputStreamReader(new FileInputStream(
-	//				"C:\\Users\\karthik\\Downloads\\lov_aggregator.rdf"), "UTF-8"),
-	//				RDF.NAMESPACE, RDFFormat.RDFXML);
-	//
-	//		String sparqlQuery = "SELECT distinct ?vocabURI ?prefix ?vocabTitle WHERE{ ?vocabURI a <http://labs.mondeca.com/vocab/voaf#Vocabulary>.  ?vocabURI <http://purl.org/vocab/vann/preferredNamespacePrefix> ?prefix.  ?vocabURI <http://purl.org/vocab/vann/preferredNamespaceUri> ?vocabNspUri.  ?vocabURI <http://purl.org/dc/terms/title> ?vocabTitle.  FILTER(LANG(?vocabTitle)=\"en\") }ORDER BY ?prefix ";
-	//		TupleQuery query = conn.prepareTupleQuery(QueryLanguage.SPARQL,
-	//				sparqlQuery);
-	//
-	//		TupleQueryResult result = query.evaluate();
-	//		List<String> headerList = result.getBindingNames();
-	//
-	//		List<BindingSet> ontologies = new ArrayList<BindingSet>();
-	//
-	//		while (result.hasNext())
-	//			ontologies.add(result.next());
-	//
-	//		args.put("headers", headerList);
-	//		args.put("data", ontologies);
-	//
-	//		return args;
-	//
-	//	}
-
 
 	private Project findProject(URI uri) throws WebApplicationException {
 		try {
@@ -575,7 +509,7 @@ public class BrowseOntologiesModule extends BaseModule {
 		if (p == null) {
 			// Not found.
 			log.debug("project not found :(");
-			throw new NotFoundException(uri);
+			throw new WebApplicationException(Status.NOT_FOUND);
 		}
 		return p;
 	}
@@ -596,9 +530,7 @@ public class BrowseOntologiesModule extends BaseModule {
 		if (e instanceof WebApplicationException) {
 			throw (WebApplicationException) e;
 		}
-		if (e instanceof EntityNotFoundException) {
-			throw new NotFoundException();
-		} else {
+		else {
 			if (StringUtils.isSet(logMsg)) {
 				log.fatal(logMsg, e, logArgs);
 			} else {
