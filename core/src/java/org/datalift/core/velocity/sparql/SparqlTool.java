@@ -50,6 +50,7 @@ import org.openrdf.OpenRDFException;
 import org.openrdf.model.Statement;
 import org.openrdf.model.Value;
 import org.openrdf.model.impl.URIImpl;
+import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.query.Binding;
 import org.openrdf.query.BooleanQuery;
 import org.openrdf.query.GraphQuery;
@@ -432,12 +433,17 @@ public final class SparqlTool
      * @return the URI with any known namespace prefix replaced.
      */
     private String resolvePrefixes(String uri) {
-        int n = uri.indexOf(':');
-        if (n != -1) {
-            String prefix = uri.substring(0, n);
-            URI ns = prefixes.get(prefix);
-            if (ns != null) {
-                uri = ns.toString() + uri;
+        if ("a".equals(uri)) {
+            uri = RDF.TYPE.toString();
+        }
+        else {
+            int n = uri.indexOf(':');
+            if (n != -1) {
+                String prefix = uri.substring(0, n);
+                URI ns = prefixes.get(prefix);
+                if (ns != null) {
+                    uri = ns.toString() + uri.substring(n + 1);
+                }
             }
         }
         return uri;
@@ -639,6 +645,31 @@ public final class SparqlTool
         }
 
         /**
+         * Returns a single string value for the specified RDF property.
+         * @param  predicate   the URI of the RDF property, possibly
+         *                     using a declared namespace prefix.
+         *
+         * @return the string value of one the property, empty
+         *         if the property was not found.
+         */
+        public String valueOf(String predicate) {
+            Value v = this.value(predicate);
+            return (v != null)? v.stringValue(): "";
+        }
+        /**
+         * Returns a single string value for the specified RDF property,
+         * the Java Bean way.
+         * @param  predicate   the URI of the RDF property, possibly
+         *                     using a declared namespace prefix.
+         *
+         * @return the string value of one the property, empty
+         *         if the property was not found.
+         */
+        public String getValueOf(String predicate) {
+            return this.valueOf(predicate);
+        }
+
+        /**
          * Returns the values for the specified RDF property.
          * @param  predicate   the URI of the RDF property, possibly
          *                     using a declared namespace prefix.
@@ -667,6 +698,41 @@ public final class SparqlTool
          */
         public Collection<Value> getValues(String predicate) {
             return this.values(predicate);
+        }
+
+        /**
+         * Returns the string values for the specified RDF property.
+         * @param  predicate   the URI of the RDF property, possibly
+         *                     using a declared namespace prefix.
+         *
+         * @return the values of the property as a collection of
+         *         strings, empty if the property was not found.
+         */
+        public Collection<String> valuesOf(String predicate) {
+            Collection<String> s = null;
+            Collection<Value> r = this.values(predicate);
+            if (r.isEmpty()) {
+                s = Collections.emptySet();
+            }
+            else {
+                s = new HashSet<String>();
+                for (Value v : r) {
+                    s.add(v.stringValue());
+                }
+            }
+            return s;
+        }
+        /**
+         * Returns the string values for the specified RDF property,
+         * the Java Bean way.
+         * @param  predicate   the URI of the RDF property, possibly
+         *                     using a declared namespace prefix.
+         *
+         * @return the values of the property as a collection of
+         *         strings, empty if the property was not found.
+         */
+        public Collection<String> getValuesOf(String predicate) {
+            return this.valuesOf(predicate);
         }
     }
 }
