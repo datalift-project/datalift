@@ -54,26 +54,26 @@
 								"update" : "update"
 							},
 							"selectFormats" : [ {
-								"name" : "HTML",
-								"format" : "html",
-								"type" : "application/json"
-							}, {
 								"name" : "RDF/XML",
 								"format" : "sparql",
 								"type" : "application/sparql-results+xml, text/plain; q=0.5"
+							}, {
+								"name" : "HTML",
+								"format" : "html",
+								"type" : "application/json"
 							}, {
 								"name" : "CSV",
 								"format" : "csv",
 								"type" : "text/csv, text/plain; q=0.5"
 							} ],
 							"constructFormats" : [ {
-								"name" : "HTML",
-								"format" : "html",
-								"type" : "application/json"
-							}, {
 								"name" : "RDF/XML",
 								"format" : "sparql",
 								"type" : "application/rdf+xml, text/plain; q=0.5"
+							}, {
+								"name" : "HTML",
+								"format" : "html",
+								"type" : "application/json"
 							}, {
 								"name" : "N3/Turtle",
 								"format" : "turtle",
