@@ -452,7 +452,7 @@ public class DefaultConfiguration extends Configuration
      * Shuts down this configuration, freeing all attached resources
      * and closing all repository connections.
      */
-    /* package */ void shutdown() {
+    public void shutdown() {
         for (Repository r : this.repositories.values()) {
             try {
                 r.shutdown();
@@ -496,7 +496,7 @@ public class DefaultConfiguration extends Configuration
     /**
      * Initializes this configuration.
      */
-    /* package */ void init() {
+    public void init() {
         // Initialize the file storages.
         this.privateStorage = this.initFileStore(PRIVATE_STORAGE_PATH, true);
         this.publicStorage  = this.initFileStore(PUBLIC_STORAGE_PATH, false);
