@@ -8,8 +8,11 @@
              value="%d{ISO8601}|%-5p|%c{1}|%m%n"/>
     </layout>
   </appender>
-  <root>
+  <logger name="org.datalift">
     <level value="debug"/>
+  </logger>
+  <root>
+    <level value="info"/>
     <appender-ref ref="consoleLog"/>
   </root>
 
