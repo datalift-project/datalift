@@ -127,7 +127,8 @@
 
 	<h3><a href="#">#i18n("project.upload_db.title")</a></h3>
 	<div>
-#if( (!$current) || ($current.getType() == $field.SqlSource) )
+#if( (!$current) || ($current.getType() == $field.SqlQuerySource)
+                 || ($current.getType() == $field.SqlDatabaseSource) )
 	<form method="post" action="$target_db" class="form_formated">
 #if( $current )
 		<input type="hidden" id="current_source" name="current_source" value="$current.uri"/>
@@ -441,7 +442,8 @@
 		select_panel = 0;
 	#elseif( $current.getType() == $field.RdfFileSource )
 		select_panel = 1;
-	#elseif( $current.getType() == $field.SqlSource )
+	#elseif( ($current.getType() == $field.SqlQuerySource) ||
+                 ($current.getType() == $field.SqlDatabaseSource) )
 		select_panel = 2;
 	#elseif( $current.getType() == $field.SparqlSource )
 		select_panel = 3;
