@@ -38,13 +38,18 @@ package org.datalift.fwk.rdf;
 import java.io.File;
 import java.io.InputStream;
 import java.net.URI;
+import java.net.URL;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 import javax.ws.rs.core.MediaType;
 
+import org.openrdf.model.Literal;
 import org.openrdf.model.Statement;
+import org.openrdf.model.Value;
+import org.openrdf.model.ValueFactory;
+import org.openrdf.model.impl.ValueFactoryImpl;
 import org.openrdf.query.GraphQuery;
 import org.openrdf.query.QueryLanguage;
 import org.openrdf.query.TupleQueryResultHandler;
@@ -88,6 +93,12 @@ public final class RdfUtils
     //-------------------------------------------------------------------------
     // Class members
     //-------------------------------------------------------------------------
+
+    /**
+     * The default value factory, used when no repository
+     * connection-provided factory is available.
+     */
+    private final static ValueFactory defValueFactory = new ValueFactoryImpl();
 
     private final static Logger log = Logger.getLogger();
 
@@ -907,6 +918,74 @@ public final class RdfUtils
                 try { r.shutdown(); } catch (Exception e) { /* Ignore... */ }
             }
         }
+    }
+
+    /**
+     * Maps a Java object to an RDF data type.
+     * @param  o   the Java object to map.
+     *
+     * @return the corresponding RDF type object.
+     * @throws UnsupportedOperationException if no valid mapping can
+     *         be found the Java type.
+     * @see    #mapBinding(Object, ValueFactory)
+     */
+    public static Value mapBinding(Object o) {
+        return mapBinding(o, null);
+    }
+
+    /**
+     * Maps a Java object to an RDF data type.
+     * <p>
+     * Java (java.net) URIs and URLs are mapped to (RDF)
+     * {@link org.openrdf.model.URI URIs}; Java primitive type wrappers
+     * (Integer, Long, Double, Byte, Boolean...) are mapped to the
+     * corresponding RDF typed {@link Literal literals}; Strings are
+     * mapped to untyped RDF literals (without any language tag).</p>
+     * @param  o              the Java object to map.
+     * @param  valueFactory   the value factory to use when allocating
+     *                        RDF objects or <code>null</code> if the
+     *                        default factory shall be used.
+     *
+     * @return the corresponding RDF type object.
+     * @throws UnsupportedOperationException if no valid mapping is
+     *         defined for the object Java type.
+     */
+    public static Value mapBinding(Object o, ValueFactory valueFactory) {
+        if (valueFactory == null) {
+            valueFactory = defValueFactory;
+        }
+        Value v = null;
+        if (o instanceof Value) {       // Value, URI, Resource, Literal...
+            v = (Value)o;
+        }
+        else if (o instanceof URI) {
+            v = valueFactory.createURI(o.toString());
+        }
+        else if (o instanceof String) {
+            v = valueFactory.createLiteral(o.toString());
+        }
+        else if (o instanceof Integer) {
+            v = valueFactory.createLiteral(((Integer)o).intValue());
+        }
+        else if (o instanceof Long) {
+            v = valueFactory.createLiteral(((Long)o).longValue());
+        }
+        else if (o instanceof Boolean) {
+            v = valueFactory.createLiteral(((Boolean)o).booleanValue());
+        }
+        else if (o instanceof Double) {
+            v = valueFactory.createLiteral(((Double)o).doubleValue());
+        }
+        else if (o instanceof Byte) {
+            v = valueFactory.createLiteral(((Byte)o).byteValue());
+        }
+        else if (o instanceof URL) {
+            v = valueFactory.createURI(o.toString());
+        }
+        else {
+            throw new UnsupportedOperationException(o.getClass().getName());
+        }
+        return v;
     }
 
     //-------------------------------------------------------------------------
