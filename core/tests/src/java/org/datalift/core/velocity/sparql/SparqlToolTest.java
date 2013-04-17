@@ -123,21 +123,21 @@ public class SparqlToolTest
 
     @Test
     public void simpleAskTest() {
-        String query = "ASK { ?s a ?c . }";
-        String page = this.render(null,
+        String query = "ASK { ?s a ?type . }";
+        String template =
+                "$sparql.prefix('dc', '" + DC + "')" +
+                "#if($type)$sparql.bindUri('type',$type)#end" +
                 "#if ($sparql.ask('" + query + "'))" +
                 "Found!" +
-                "#end");
+                "#end";
+        String page = this.render(null, template);
         log.debug("{} -> {}", query, page);
         assertEquals("Found!", page);
 
-        query = "ASK { ?s a dc:Agent . }";
-        page = this.render(null,
-                "$sparql.prefix('dc', '" + DC + "')" +
-                "#if ($sparql.ask('" + query + "'))" +
-                "Found!" +
-                "#end");
-        log.debug("{} -> {}", query, page);
+        Map<String,Object> ctx = new HashMap<String,Object>();
+        ctx.put("type", "dc:Agent");
+        page = this.render(ctx, template);
+        log.debug("{} -> \"{}\"", query, page);
         assertEquals("", page);
     }
 
@@ -186,7 +186,7 @@ public class SparqlToolTest
                 "$c.put('title', $r.valueOf('dc:title')))"+
                 "$c.put('description', $r.valueOf('dc:description')))"+
                 "$c.put('creator', $r.valueOf('dc:creator')))");
-        log.debug("{} ->\n{}", SUBJECT1, page);
+        log.trace("{} ->\n{}", SUBJECT1, page);
         assertEquals(DT + "Sample",     results.get("type"));
         assertEquals("sample1",         results.get("title"));
         assertEquals("First test item", results.get("description"));

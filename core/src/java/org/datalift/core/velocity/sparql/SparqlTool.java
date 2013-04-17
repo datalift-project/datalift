@@ -44,6 +44,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.velocity.tools.config.DefaultKey;
 import org.openrdf.OpenRDFException;
@@ -68,6 +69,7 @@ import org.datalift.core.rdf.QueryException;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.rdf.RdfQueryException;
+import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.sparql.AccessController;
 import org.datalift.fwk.sparql.AccessController.ControlledQuery;
@@ -96,6 +98,7 @@ public final class SparqlTool
     private final Configuration cfg;
     private final AccessController accessController;
     private final Map<String,URI> prefixes = new LinkedHashMap<String,URI>();
+    private final Map<String,Value> bindings = new HashMap<String,Value>();
 
     public SparqlTool() {
         this.cfg = Configuration.getDefault();
@@ -126,6 +129,47 @@ public final class SparqlTool
             log.error("Failed to register prefix: \"{}\" -> \"{}\"", e,
                       prefix, uri);
             throw e;
+        }
+    }
+
+    /**
+     * Binds the specified value to the specified SPARQL query variable.
+     * If the value is a native Java object (URI, URL, Integer, Boolean,
+     * Byte...) it is first {@link RdfUtils#mapBinding(Object) converted}
+     * into an RDF {@link Value} object. 
+     * @param  name    the name of the SPARQL query variable.
+     * @param  value   the value to associate to variable
+     *                 <code>name</code>.
+     *
+     * @throws UnsupportedOperationException if no valid mapping is
+     *         defined for the object Java type.
+     */
+    public void bind(String name, Object value) {
+        this.bindings.put(name, RdfUtils.mapBinding(value));
+    }
+
+    /**
+     * Binds the specified URI to the specified SPARQL query variable.
+     * @param  name   the name of the SPARQL query variable.
+     * @param  uri    the URI to associate to variable
+     *                <code>name</code>.
+     *
+     * @see    #bind(String, Object)
+     */
+    public void bindUri(String name, String uri) {
+        this.bindings.put(name, new URIImpl(uri));
+    }
+
+    /**
+     * Registers the specified variable bindings.
+     * @param  bindings   the bindings, associating values to
+     *                    SPARQL query named variables.
+     *
+     * @see    #bind(String, Object)
+     */
+    public void bind(Map<String,Object> bindings) {
+        for (Map.Entry<String,Object> e : bindings.entrySet()) {
+            this.bind(e.getKey(), e.getValue());
         }
     }
 
@@ -176,12 +220,27 @@ public final class SparqlTool
             query = this.addPrefixes(query);
             BooleanQuery q = cnx.prepareBooleanQuery(SPARQL, query);
             this.checkAccessControls(query, q, repository);
-            return q.evaluate();
+            this.setBindings(q);
+            boolean result = q.evaluate();
+            if (log.isDebugEnabled()) {
+                if (this.bindings.isEmpty()) {
+                    log.debug("\"{}\" on RDF store: {} -> {}", query,
+                                        repository, Boolean.valueOf(result));
+                }
+                else {
+                    log.debug("\"{}\" ({}) on RDF store: {} -> {}",
+                                        query, this.bindings,
+                                        repository, Boolean.valueOf(result));
+                }
+            }
+            return result;
         }
         catch (OpenRDFException e) {
             log.error("Error executing SPARQL query \"{}\"", e, query);
-            close(cnx);
             throw new QueryException(query, e);
+        }
+        finally {
+            close(cnx);
         }
     }
 
@@ -236,13 +295,26 @@ public final class SparqlTool
             query = this.addPrefixes(query);
             TupleQuery q = cnx.prepareTupleQuery(SPARQL, query);
             this.checkAccessControls(query, q, repository);
+            this.setBindings(q);
+            if (log.isDebugEnabled()) {
+                if (this.bindings.isEmpty()) {
+                    log.debug("Executing \"{}\" on RDF store: {}...",
+                                            query, repository);
+                }
+                else {
+                    log.debug("Executing \"{}\" ({}) on RDF store: {}\"...",
+                                            query, this.bindings, repository);
+                }
+            }
             return new SelectResultIterator(cnx, q.evaluate());
         }
-        catch (OpenRDFException e) {
+        catch (Exception e) {
             log.error("Error executing SPARQL query \"{}\"", e, query);
             close(cnx);
             throw new QueryException(query, e);
         }
+        // Do not close connection until results have been read:
+        // SelectResultIterator takes care of it.
     }
 
     /**
@@ -296,13 +368,26 @@ public final class SparqlTool
             query = this.addPrefixes(query);
             GraphQuery q = cnx.prepareGraphQuery(SPARQL, query);
             this.checkAccessControls(query, q, repository);
+            this.setBindings(q);
+            if (log.isDebugEnabled()) {
+                if (this.bindings.isEmpty()) {
+                    log.debug("Executing \"{}\" on RDF store: {}...",
+                                            query, repository);
+                }
+                else {
+                    log.debug("Executing \"{}\" ({}) on RDF store: {}...",
+                                            query, this.bindings, repository);
+                }
+            }
             return new StatementIterator(cnx, q.evaluate());
         }
-        catch (OpenRDFException e) {
+        catch (Exception e) {
             log.error("Error executing SPARQL query \"{}\"", e, query);
             close(cnx);
             throw new QueryException(query, e);
         }
+        // Do not close connection until results have been read:
+        // StatementIterator takes care of it.
     }
 
     /**
@@ -350,24 +435,46 @@ public final class SparqlTool
         if (! isSet(uri)) {
             throw new IllegalArgumentException("uri");
         }
-        String query = "DESCRIBE <" + this.resolvePrefixes(uri) + '>';
+        String query = "DESCRIBE <" + this.resolvePrefixes(uri, false) + '>';
         RepositoryConnection cnx = null;
         try {
             cnx = repository.newConnection();
             query = this.addPrefixes(query);
             GraphQuery q = cnx.prepareGraphQuery(SPARQL, query);
             this.checkAccessControls(query, q, repository);
-            return new DescribeResult(uri, q.evaluate());
-        }
-        catch (RdfQueryException e) {
-            log.error("Error executing SPARQL query \"{}\"", e, query);
-            close(cnx);
-            throw e;
+            this.setBindings(q);
+            DescribeResult result = new DescribeResult(uri, q.evaluate());
+            if (log.isDebugEnabled()) {
+                if (this.bindings.isEmpty()) {
+                    log.debug("\"{}\" on RDF store: {} -> {} triples", query,
+                                    repository, Integer.valueOf(result.size()));
+                }
+                else {
+                    log.debug("\"{}\" ({}) on RDF store: {} -> {} triples",
+                                    query, this.bindings,
+                                    repository, Integer.valueOf(result.size()));
+                }
+            }
+            return result;
         }
         catch (Exception e) {
             log.error("Error executing SPARQL query \"{}\"", e, query);
-            close(cnx);
             throw new QueryException(query, e);
+        }
+        finally {
+            close(cnx);
+        }
+    }
+
+    /**
+     * Sets the initial variable bindings for a query.
+     * @param  query   the SPARQL query.
+     */
+    private void setBindings(Query query) {
+        if (! this.bindings.isEmpty()) {
+            for (Entry<String,Value> e : this.bindings.entrySet()) {
+                query.setBinding(e.getKey(), e.getValue());
+            }
         }
     }
 
@@ -428,12 +535,13 @@ public final class SparqlTool
      * Checks the specified URI for a
      * {@link #prefix(String, String) registered namespace prefix} and
      * replaces it the actual namespace.
-     * @param  uri   the URI to check for prefixes.
+     * @param  uri         the URI to check for prefixes.
+     * @param  predicate   whether the specified URI is a RDF predicate.
      *
      * @return the URI with any known namespace prefix replaced.
      */
-    private String resolvePrefixes(String uri) {
-        if ("a".equals(uri)) {
+    private String resolvePrefixes(String uri, boolean predicate) {
+        if (predicate && "a".equals(uri)) {
             uri = RDF.TYPE.toString();
         }
         else {
@@ -577,11 +685,9 @@ public final class SparqlTool
     /**
      * The results of a DESCRIBE query on a single URI.
      */
-    public final class DescribeResult
+    public final class DescribeResult extends HashMap<String,Collection<Value>>
     {
         private final String uri;
-        private final Map<String,Collection<Value>> values =
-                                        new HashMap<String,Collection<Value>>();
 
         private DescribeResult(String uri, GraphQueryResult result)
                                         throws QueryEvaluationException {
@@ -590,10 +696,10 @@ public final class SparqlTool
                 for (; result.hasNext(); ) {
                     Statement s = result.next();
                     String p = s.getPredicate().toString();
-                    Collection<Value> v = this.values.get(p);
+                    Collection<Value> v = this.get(p);
                     if (v == null) {
                         v = new HashSet<Value>();
-                        this.values.put(p, v);
+                        this.put(p, v);
                     }
                     v.add(s.getObject());
                 }
@@ -617,6 +723,10 @@ public final class SparqlTool
          */
         public String getUri() {
             return this.uri();
+        }
+
+        public Collection<String> predicates() {
+            return this.keySet();
         }
 
         /**
@@ -680,7 +790,7 @@ public final class SparqlTool
         public Collection<Value> values(String predicate) {
             Collection<Value> v = null;
             if (isSet(predicate)) {
-                v = this.values.get(resolvePrefixes(predicate));
+                v = this.get(resolvePrefixes(predicate, true));
             }
             if (v == null) {
                 v = Collections.emptySet();
