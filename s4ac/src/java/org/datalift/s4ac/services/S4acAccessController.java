@@ -319,6 +319,8 @@ public class S4acAccessController extends BaseModule
             }
             if (graphs.isEmpty()) {
                 // User is not allowed to access any content.
+                log.info("Denied access to RDF store \"{}\" for \"{}\"",
+                         repository, user);
                 throw new SecurityException();
             }
             // Update query and graphs data.

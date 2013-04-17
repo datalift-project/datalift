@@ -354,6 +354,7 @@ public abstract class Repository
     /** {@inheritDoc} */
     @Override
     public String toString() {
-        return (this.name != null)? this.name + ": " + this.url: this.url;
+        return (this.name != null)? this.name + " (" + this.url + ')':
+                                    this.url;
     }
 }
