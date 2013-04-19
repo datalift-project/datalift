@@ -42,6 +42,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -83,7 +84,6 @@ import org.datalift.core.velocity.i18n.LoadDirective;
 import org.datalift.core.velocity.sparql.SparqlTool;
 import org.datalift.fwk.i18n.PreferredLocales;
 import org.datalift.fwk.log.Logger;
-import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.security.SecurityContext;
 import org.datalift.fwk.view.TemplateModel;
 
@@ -267,32 +267,13 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
         // Commit the status and headers to the HttpServletResponse
         out.flush();
 
-        log.trace("Starting rendering template {}", t.getName());
         try {
             // Populate Velocity context from model data.
-            Map<String,Object> ctx = null;
-            Object m = viewable.getModel();
-            if (m instanceof TemplateModel) {
-                ctx = (TemplateModel)m;
-            }
-            else {
-                ctx = new HashMap<String,Object>();
-
-                if (m instanceof Map<?,?>) {
-                    // Copy all map entries with a string as key.
-                    Map<?,?> map = (Map<?,?>)m;
-                    for (Map.Entry<?,?> e : map.entrySet()) {
-                        if (e.getKey() instanceof String) {
-                            ctx.put((String)(e.getKey()), e.getValue());
-                        }
-                        // Else: ignore entry.
-                    }
-                }
-                else {
-                    // Single object model (may be null).
-                    ctx.put(CTX_MODEL, m);
-                }
-            }
+            FieldTool fieldTool = new FieldTool();
+            Map<String,Object> ctx = this.buildContext(viewable.getModel(),
+                                                       fieldTool);
+            log.trace("Merging template {} with context {}", t.getName(), ctx);
+            // Add predefined variable for base URI.
             UriInfo uriInfo = this.httpContext.getUriInfo();
             if (! ctx.containsKey(CTX_BASE_URI)) {
                 String baseUri = uriInfo.getBaseUri().toString();
@@ -301,7 +282,6 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
                 }
                 ctx.put(CTX_BASE_URI, baseUri);
             }
-            log.trace("Merging template {} with context {}", t.getName(), ctx);
             // Add predefined variables, the JSP way.
             if (! ctx.containsKey(CTX_HTTP_REQUEST)) {
                 ctx.put(CTX_HTTP_REQUEST, this.httpContext.getRequest());
@@ -326,8 +306,7 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
                 ctx.put(CTX_DATE_TOOL, dateTool);
             }
             if (! ctx.containsKey(CTX_FIELD_TOOL)) {
-                // Initialize field tool with the known DataLift source types.
-                ctx.put(CTX_FIELD_TOOL, new FieldTool().in(SourceType.class));
+                ctx.put(CTX_FIELD_TOOL, fieldTool);
             }
             if (! ctx.containsKey(CTX_SPARQL_TOOL)) {
                 ctx.put(CTX_SPARQL_TOOL, new SparqlTool());
@@ -530,6 +509,41 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
             throw new RuntimeException(
                                     "Failed to initialize Velocity engine", e);
         }
+    }
+
+    private Map<String,Object> buildContext(Object model, FieldTool fields) {
+        Map<String,Object> ctx = new HashMap<String,Object>();
+        if (model instanceof Map<?,?>) {
+            // Copy all map entries with a string as key.
+            Map<?,?> map = (Map<?,?>)model;
+            for (Map.Entry<?,?> e : map.entrySet()) {
+                if (e.getKey() instanceof String) {
+                    String key = (String)(e.getKey());
+
+                    // Check for field classes.
+                    if ((TemplateModel.FIELD_CLASSES_KEY.equals(key)) &&
+                        (e.getValue() instanceof Collection<?>)) {
+                        // Register each class to Velocity Field tool.
+                        for (Object o : (Collection<?>)(e.getValue())) {
+                            if (o instanceof Class<?>) {
+                                fields.in((Class<?>)o);
+                            }
+                        }
+                        // Else: ignore entry.
+                    }
+                    else {
+                        // Regular entry. => Add to the model.
+                        ctx.put((String)(e.getKey()), e.getValue());
+                    }
+                }
+                // Else: ignore entry.
+            }
+        }
+        else {
+            // Single object model (may be null).
+            ctx.put(CTX_MODEL, model);
+        }
+        return ctx;
     }
 
     /**

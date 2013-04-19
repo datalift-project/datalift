@@ -2161,7 +2161,9 @@ public class Workspace extends BaseModule
      * @return a populated viewable.
      */
     protected final TemplateModel newView(String templateName, Object it) {
-        return ViewFactory.newView(TEMPLATE_PATH + templateName, it);
+        TemplateModel m = ViewFactory.newView(TEMPLATE_PATH + templateName, it);
+        m.registerFieldsFor(SourceType.class);
+        return m;
     }
 
     /**
