@@ -68,6 +68,7 @@ import static org.openrdf.query.QueryLanguage.SPARQL;
 import org.datalift.core.rdf.QueryException;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.log.Logger;
+import org.datalift.fwk.rdf.RdfNamespace;
 import org.datalift.fwk.rdf.RdfQueryException;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
@@ -551,6 +552,13 @@ public final class SparqlTool
                 URI ns = prefixes.get(prefix);
                 if (ns != null) {
                     uri = ns.toString() + uri.substring(n + 1);
+                }
+                else {
+                    // Check for well-known prefix.
+                    RdfNamespace rdfNs = RdfNamespace.findByPrefix(prefix);
+                    if (rdfNs != null) {
+                        uri = rdfNs.uri;
+                    }
                 }
             }
         }
