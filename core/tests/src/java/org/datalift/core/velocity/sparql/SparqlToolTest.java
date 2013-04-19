@@ -125,8 +125,10 @@ public class SparqlToolTest
     @Test
     public void simpleAskTest() {
         String query = "ASK { ?s a ?type . }";
+        // Do not register any prefix for DC Elements namespace as
+        // bindUri() should resolve it from the well-known namespaces
+        // (from RdfNamespace) and it's not used elsewhere in the query.
         String template =
-                "$sparql.prefix('dc', '" + DC_Elements.uri + "')" +
                 "#if($type)$sparql.bindUri('type',$type)#end" +
                 "#if ($sparql.ask('" + query + "'))" +
                 "Found!" +

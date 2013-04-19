@@ -158,7 +158,7 @@ public final class SparqlTool
      * @see    #bind(String, Object)
      */
     public void bindUri(String name, String uri) {
-        this.bindings.put(name, new URIImpl(uri));
+        this.bindings.put(name, new URIImpl(this.resolvePrefixes(uri, false)));
     }
 
     /**
@@ -538,7 +538,7 @@ public final class SparqlTool
      * {@link RdfNamespace well-known} namespace prefix and
      * replaces it the actual namespace.
      * <p>
-     * Note: {@link Well-known prefixes RdfNamespace} resolution do not
+     * Note: {@link RdfNamespace Well-known prefixes} resolution do not
      * apply to the SPARQL query text. Hence all namespace prefixes used
      * in the query need to be properly registered. This method only
      * helps when accessing predicates in SPARQL responses, such as the
