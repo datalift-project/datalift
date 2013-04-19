@@ -34,6 +34,9 @@
 
 package org.datalift.fwk.rdf;
 
+import java.util.HashMap;
+import java.util.Map;
+
 
 /**
  * A set of predefined, well-known RDF namespaces.
@@ -107,6 +110,15 @@ public enum RdfNamespace
                                 "Linked Data Platform");
 
     //-------------------------------------------------------------------------
+    // Class members
+    //-------------------------------------------------------------------------
+
+    private final static Map<String,RdfNamespace> nsByPrefixes =
+                                            new HashMap<String,RdfNamespace>();
+    private final static Map<String,RdfNamespace> nsByUris =
+                                            new HashMap<String,RdfNamespace>();
+
+    //-------------------------------------------------------------------------
     // Instance members
     //-------------------------------------------------------------------------
 
@@ -116,6 +128,18 @@ public enum RdfNamespace
     public final String uri;
     /** A namespace description. */
     public final String label;
+
+    //-------------------------------------------------------------------------
+    // Class initializer
+    //-------------------------------------------------------------------------
+
+    static {
+        // Register all declared namespaces into the fast-access Maps.
+        for (RdfNamespace ns : RdfNamespace.values()) {
+            nsByPrefixes.put(ns.prefix, ns);
+            nsByUris.put(ns.uri, ns);
+        }
+    }
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -163,14 +187,7 @@ public enum RdfNamespace
      *         <code>null</code> if no matching mapping was found.
      */
     public static RdfNamespace findByPrefix(String prefix) {
-        RdfNamespace ns = null;
-        for (RdfNamespace n : RdfNamespace.values()) {
-            if (n.prefix.equalsIgnoreCase(prefix)) {
-                ns = n;
-                break;
-            }
-        }
-        return ns;
+        return (prefix != null)? nsByPrefixes.get(prefix.toLowerCase()): null;
     }
 
     /**
@@ -181,14 +198,7 @@ public enum RdfNamespace
      *         <code>null</code> if no matching mapping was found.
      */
     public static RdfNamespace findByUri(String uri) {
-        RdfNamespace ns = null;
-        for (RdfNamespace n : RdfNamespace.values()) {
-            if (n.uri.equals(uri)) {
-                ns = n;
-                break;
-            }
-        }
-        return ns;
+        return (uri != null)? nsByUris.get(uri): null;
     }
 
     /**
