@@ -39,9 +39,9 @@ import java.net.URI;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -534,8 +534,15 @@ public final class SparqlTool
 
     /**
      * Checks the specified URI for a
-     * {@link #prefix(String, String) registered namespace prefix} and
+     * {@link #prefix(String, String) registered} or
+     * {@link RdfNamespace well-known} namespace prefix and
      * replaces it the actual namespace.
+     * <p>
+     * Note: {@link Well-known prefixes RdfNamespace} resolution do not
+     * apply to the SPARQL query text. Hence all namespace prefixes used
+     * in the query need to be properly registered. This method only
+     * helps when accessing predicates in SPARQL responses, such as the
+     * result of a DESCRIBE query.</p>
      * @param  uri         the URI to check for prefixes.
      * @param  predicate   whether the specified URI is a RDF predicate.
      *
@@ -557,7 +564,7 @@ public final class SparqlTool
                     // Check for well-known prefix.
                     RdfNamespace rdfNs = RdfNamespace.findByPrefix(prefix);
                     if (rdfNs != null) {
-                        uri = rdfNs.uri;
+                        uri = rdfNs.uri + uri.substring(n + 1);
                     }
                 }
             }
@@ -706,7 +713,7 @@ public final class SparqlTool
                     String p = s.getPredicate().toString();
                     Collection<Value> v = this.get(p);
                     if (v == null) {
-                        v = new HashSet<Value>();
+                        v = new LinkedList<Value>();
                         this.put(p, v);
                     }
                     v.add(s.getObject());
@@ -833,7 +840,7 @@ public final class SparqlTool
                 s = Collections.emptySet();
             }
             else {
-                s = new HashSet<String>();
+                s = new LinkedList<String>();
                 for (Value v : r) {
                     s.add(v.stringValue());
                 }

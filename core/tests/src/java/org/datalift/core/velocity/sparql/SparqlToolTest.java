@@ -71,12 +71,13 @@ import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.rdf.Repository;
 
 import static org.datalift.core.DefaultConfiguration.*;
+import static org.datalift.fwk.rdf.RdfNamespace.DC_Elements;
 
 
 @RunWith(JUnit4.class)
 public class SparqlToolTest
 {
-    private final static String DC = "http://purl.org/dc/elements/1.1/";
+    private final static String DC = DC_Elements.uri;
     private final static String DT = "http://www.datalift.org/test/";
 
     private final static String SUBJECT1 = DT + "1";
@@ -125,7 +126,7 @@ public class SparqlToolTest
     public void simpleAskTest() {
         String query = "ASK { ?s a ?type . }";
         String template =
-                "$sparql.prefix('dc', '" + DC + "')" +
+                "$sparql.prefix('dc', '" + DC_Elements.uri + "')" +
                 "#if($type)$sparql.bindUri('type',$type)#end" +
                 "#if ($sparql.ask('" + query + "'))" +
                 "Found!" +
@@ -179,8 +180,10 @@ public class SparqlToolTest
         Map<String,Value> results = new HashMap<String,Value>();
         ctx.put("c", results);
         ctx.put("u", SUBJECT1);
+        // Do not register any prefix for DC Elements namespace as it's a
+        // well-known namespace (from RdfNamespace) and it's not used in the
+        // SPARQL query.
         String page = render(ctx,
-                "$sparql.prefix('dc', '" + DC + "')" +
                 "#set($r = $sparql.describe($u))" +
                 "$c.put('type', $r.valueOf('a')))"+
                 "$c.put('title', $r.valueOf('dc:title')))"+
