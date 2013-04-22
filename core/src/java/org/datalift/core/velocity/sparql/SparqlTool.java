@@ -48,6 +48,7 @@ import java.util.Map.Entry;
 
 import org.apache.velocity.tools.config.DefaultKey;
 import org.openrdf.OpenRDFException;
+import org.openrdf.model.Resource;
 import org.openrdf.model.Statement;
 import org.openrdf.model.Value;
 import org.openrdf.model.impl.URIImpl;
@@ -117,14 +118,28 @@ public final class SparqlTool
      *         <code>null</code> or <code>uri</code> is not a valid URI.
      */
     public void prefix(String prefix, String uri) {
+        if (! isSet(uri)) {
+            throw new IllegalArgumentException("uri");
+        }
+        this.prefix(prefix, URI.create(uri));
+    }
+    /**
+     * Registers a namespace prefix
+     * @param  prefix   the prefix.
+     * @param  uri      the namespace URI.
+     *
+     * @throws IllegalArgumentException if <code>prefix</code> is
+     *         <code>null</code> or <code>uri</code> is not a valid URI.
+     */
+    public void prefix(String prefix, URI uri) {
         try {
             if (! isSet(prefix)) {
                 throw new IllegalArgumentException("prefix");
             }
-            if (! isSet(uri)) {
+            if (uri == null) {
                 throw new IllegalArgumentException("uri");
             }
-            this.prefixes.put(prefix, URI.create(uri));
+            this.prefixes.put(prefix, uri);
         }
         catch (RuntimeException e) {
             log.error("Failed to register prefix: \"{}\" -> \"{}\"", e,
@@ -403,7 +418,7 @@ public final class SparqlTool
      *
      * @see    #describe(String, String)
      */
-    public DescribeResult describe(String uri) {
+    public DescribeResult describe(Object uri) {
        return this.describe(this.cfg.getDefaultRepository(), uri); 
     }
 
@@ -418,7 +433,7 @@ public final class SparqlTool
      * @throws RdfQueryException if any error occurred executing the
      *         query or processing the result.
      */
-    public DescribeResult describe(String repository, String uri) {
+    public DescribeResult describe(String repository, Object uri) {
         return this.describe(this.cfg.getRepository(repository), uri);
     }
 
@@ -432,11 +447,12 @@ public final class SparqlTool
      * @throws RdfQueryException if any error occurred executing the
      *         query or processing the result.
      */
-    private DescribeResult describe(Repository repository, String uri) {
-        if (! isSet(uri)) {
+    private DescribeResult describe(Repository repository, Object uri) {
+        if (uri == null) {
             throw new IllegalArgumentException("uri");
         }
-        String query = "DESCRIBE <" + this.resolvePrefixes(uri, false) + '>';
+        String u = uri.toString();
+        String query = "DESCRIBE <" + this.resolvePrefixes(u, false) + '>';
         RepositoryConnection cnx = null;
         try {
             cnx = repository.newConnection();
@@ -444,7 +460,7 @@ public final class SparqlTool
             GraphQuery q = cnx.prepareGraphQuery(SPARQL, query);
             this.checkAccessControls(query, q, repository);
             this.setBindings(q);
-            DescribeResult result = new DescribeResult(uri, q.evaluate());
+            DescribeResult result = new DescribeResult(u, q.evaluate());
             if (log.isDebugEnabled()) {
                 if (this.bindings.isEmpty()) {
                     log.debug("\"{}\" on RDF store: {} -> {} triples", query,
@@ -699,22 +715,52 @@ public final class SparqlTool
 
     /**
      * The results of a DESCRIBE query on a single URI.
+     * <p>
+     * If the DESCRIBE results include triples for other subjects (e.g.
+     * triples the value of which is the described URI),
+     * {@link DescribeResult#otherSubjects()} and
+     * {@link DescribeResult#resultsFor(Object)} allow to access the
+     * {@link DescribeResult} objects for these subjects.</p>
      */
     public final class DescribeResult extends HashMap<String,Collection<Value>>
     {
         private final String uri;
+        private final Map<String, DescribeResult> otherSubjects;
+
+        private DescribeResult(String uri,
+                               Map<String, DescribeResult> otherSubjects) {
+            if (! isSet(uri)) {
+                throw new IllegalArgumentException("uri");
+            }
+            if (otherSubjects == null) {
+                throw new IllegalArgumentException("otherSubjects");
+            }
+            this.uri = uri;
+            this.otherSubjects = otherSubjects;
+        }
 
         private DescribeResult(String uri, GraphQueryResult result)
                                         throws QueryEvaluationException {
-            this.uri = uri;
+            this(uri, new HashMap<String,SparqlTool.DescribeResult>());
             try {
+                URIImpl u = new URIImpl(uri);
                 for (; result.hasNext(); ) {
                     Statement s = result.next();
+                    DescribeResult m = this;
+                    Resource r = s.getSubject();
+                    if (! u.equals(r)) {
+                        String subject = r.toString();
+                        m = this.otherSubjects.get(subject);
+                        if (m == null) {
+                            m = new DescribeResult(subject, this.otherSubjects);
+                            this.otherSubjects.put(subject, m);
+                        }
+                    }
                     String p = s.getPredicate().toString();
-                    Collection<Value> v = this.get(p);
+                    Collection<Value> v = m.get(p);
                     if (v == null) {
                         v = new LinkedList<Value>();
-                        this.put(p, v);
+                        m.put(p, v);
                     }
                     v.add(s.getObject());
                 }
@@ -742,6 +788,16 @@ public final class SparqlTool
 
         public Collection<String> predicates() {
             return this.keySet();
+        }
+
+        public boolean hasOtherSubjects() {
+            return (! this.otherSubjects.keySet().isEmpty());
+        }
+        public Collection<String> otherSubjects() {
+            return this.otherSubjects.keySet();
+        }
+        public DescribeResult resultsFor(Object uri) {
+            return (uri == null)? this: this.otherSubjects.get(uri.toString());
         }
 
         /**

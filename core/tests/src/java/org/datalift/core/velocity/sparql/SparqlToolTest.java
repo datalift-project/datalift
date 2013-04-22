@@ -157,7 +157,7 @@ public class SparqlToolTest
                 "$l\n" +
                 "#end");
         log.debug("{} ->\n{}", ctx.get("q"), page);
-        assertEquals(8, results.size());
+        assertEquals(9, results.size());
     }
 
     @Test
@@ -181,7 +181,7 @@ public class SparqlToolTest
         Map<String,Object> ctx = new HashMap<String,Object>();
         Map<String,Value> results = new HashMap<String,Value>();
         ctx.put("c", results);
-        ctx.put("u", SUBJECT1);
+        ctx.put("u", java.net.URI.create(SUBJECT1));
         // Do not register any prefix for DC Elements namespace as it's a
         // well-known namespace (from RdfNamespace) and it's not used in the
         // SPARQL query.
@@ -190,13 +190,15 @@ public class SparqlToolTest
                 "$c.put('type', $r.valueOf('a')))"+
                 "$c.put('title', $r.valueOf('dc:title')))"+
                 "$c.put('description', $r.valueOf('dc:description')))"+
-                "$c.put('creator', $r.valueOf('dc:creator')))");
+                "$c.put('creator', $r.valueOf('dc:creator')))" +
+                "$c.put('creatorOf', $r.resultsFor('" + SUBJECT2 + "').valueOf('dc:creator')))");
         log.trace("{} ->\n{}", SUBJECT1, page);
         assertEquals(DT + "Sample",     results.get("type"));
         assertEquals("sample1",         results.get("title"));
         assertEquals("First test item", results.get("description"));
         assertEquals(SparqlToolTest.class.getSimpleName(),
                                         results.get("creator"));
+        assertEquals(SUBJECT1, results.get("creatorOf"));
     }
 
     private String render(Map<String,Object> ctx, String template) {
@@ -229,6 +231,7 @@ public class SparqlToolTest
             cnx.add(triple(s, DC + "title", "sample2"));
             cnx.add(triple(s, DC + "description", "Second test item"));
             cnx.add(triple(s, DC + "creator", SparqlToolTest.class.getSimpleName()));
+            cnx.add(triple(s, DC + "creator", new URIImpl(SUBJECT1)));
         }
         catch (Exception e) {
             throw new RuntimeException(e);
