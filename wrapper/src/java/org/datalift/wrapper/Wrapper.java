@@ -302,7 +302,7 @@ public final class Wrapper
             }
         }
         // Check for root web app, if any.
-        webappDir = webapps.remove("/ " + rootWebAppPath);
+        webappDir = webapps.remove("/" + rootWebAppPath);
         if (webappDir != null) {
             webapps.put("", webappDir);
         }
