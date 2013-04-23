@@ -161,6 +161,26 @@ public class SparqlToolTest
     }
 
     @Test
+    public void missingVarSelectTest() {
+        Map<String,Object> ctx = new HashMap<String,Object>();
+        List<String> results = new LinkedList<String>();
+        ctx.put("c", results);
+        ctx.put("q", "SELECT * WHERE { ?s a ?t ." +
+                                     " OPTIONAL { ?s dc:date ?d . } }");
+        ctx.put("u", java.net.URI.create(SUBJECT1));
+        String page = this.render(ctx,
+                "$sparql.prefix('dc', '" + DC + "')" +
+                "$sparql.bind('s', $u)" +
+                "#foreach($i in $sparql.select($q))\n" +
+                "#set($l = \"<$i['t']> $i['d']\")" +
+                "#set($x = $c.add($i['d']))"+
+                "$l\n" +
+                "#end");
+        log.debug("{} ->\n{}", ctx.get("q"), page);
+        assertEquals(1, results.size());
+        assertNull(results.iterator().next());
+    }
+    @Test
     public void simpleConstructTest() {
         Map<String,Object> ctx = new HashMap<String,Object>();
         List<Statement> results = new LinkedList<Statement>();
