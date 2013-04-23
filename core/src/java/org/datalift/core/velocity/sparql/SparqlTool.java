@@ -666,6 +666,13 @@ public final class SparqlTool
         private final RepositoryConnection cnx;
         private final GraphQueryResult result;
 
+        /**
+         * Creates a statement iterator, reading triples from the
+         * specified query result.
+         * @param  cnx      the connection to the RDF store, to be
+         *                  closed once the results have been read.
+         * @param  result   the query results to read triples from.
+         */
         public StatementIterator(RepositoryConnection cnx,
                                  GraphQueryResult result) {
             this.cnx = cnx;
@@ -786,16 +793,44 @@ public final class SparqlTool
             return this.uri();
         }
 
+        /**
+         * Returns the URIs of the predicates that describe the
+         * RDF resource.
+         * @return the URIs of the predicates for the RDF resource.
+         */
         public Collection<String> predicates() {
             return this.keySet();
         }
 
+        /**
+         * Returns whether the DESCRIBE query results include triples
+         * related to other RDF resources.
+         * @return <code>true</code> if the query results include
+         *         triples related to other RDF resource;
+         *         <code>false</code> otherwise.
+         */
         public boolean hasOtherSubjects() {
             return (! this.otherSubjects.keySet().isEmpty());
         }
+
+        /**
+         * Returns the subject URIs of the triples present in the query
+         * results and not pertaining the main RDF resource.
+         * @return the subject URIs different from the RDF resource
+         *         being described.
+         */
         public Collection<String> otherSubjects() {
             return this.otherSubjects.keySet();
         }
+
+        /**
+         * Return the triples for the specified URI.
+         * @param  uri   a subject URI, different from the URI of the
+         *               resource being described.
+         * @return the triples for the specified URI as a
+         *         {@link DescribeResult} object or <code>null</code>
+         *         if no triples for the specified URI were returned.
+         */
         public DescribeResult resultsFor(Object uri) {
             return (uri == null)? this: this.otherSubjects.get(uri.toString());
         }
@@ -809,7 +844,7 @@ public final class SparqlTool
          *         <code>null</code> if the property was not found.
          */
         public Value value(String predicate) {
-            Collection<Value> v = this.values(predicate);
+            Collection<Value> v = this.get(predicate);
             return (! v.isEmpty())? v.iterator().next(): null;
         }
         /**
@@ -850,35 +885,14 @@ public final class SparqlTool
             return this.valueOf(predicate);
         }
 
-        /**
-         * Returns the values for the specified RDF property.
-         * @param  predicate   the URI of the RDF property, possibly
-         *                     using a declared namespace prefix.
-         *
-         * @return the values of the property as a collection,
-         *         empty if the property was not found.
-         */
-        public Collection<Value> values(String predicate) {
+        /** {@inheritDoc} */
+        @Override
+        public Collection<Value> get(Object key) {
             Collection<Value> v = null;
-            if (isSet(predicate)) {
-                v = this.get(resolvePrefixes(predicate, true));
-            }
-            if (v == null) {
-                v = Collections.emptySet();
+            if (key != null) {
+                v = super.get(resolvePrefixes(key.toString(), true));
             }
             return v;
-        }
-        /**
-         * Returns the values for the specified RDF property, the
-         * Java Bean way.
-         * @param  predicate   the URI of the RDF property, possibly
-         *                     using a declared namespace prefix.
-         *
-         * @return the values of the property as a collection,
-         *         empty if the property was not found.
-         */
-        public Collection<Value> getValues(String predicate) {
-            return this.values(predicate);
         }
 
         /**
@@ -891,7 +905,7 @@ public final class SparqlTool
          */
         public Collection<String> valuesOf(String predicate) {
             Collection<String> s = null;
-            Collection<Value> r = this.values(predicate);
+            Collection<Value> r = this.get(predicate);
             if (r.isEmpty()) {
                 s = Collections.emptySet();
             }
