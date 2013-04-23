@@ -196,8 +196,8 @@
     <!-- Test configuration files -->
     <pathelement location="${tests.conf.home}"/>
     <!-- Project and test classes -->
-    <pathelement location="${classes.dir}"/>
     <pathelement location="${tests.classes.dir}"/>
+    <pathelement location="${classes.dir}"/>
     <!-- Runtime libraries -->
     <path refid="runtime.classpath"/>
     <!-- Test-specific libraries -->
