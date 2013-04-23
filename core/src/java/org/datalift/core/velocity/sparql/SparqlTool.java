@@ -845,7 +845,7 @@ public final class SparqlTool
          */
         public Value value(String predicate) {
             Collection<Value> v = this.get(predicate);
-            return (! v.isEmpty())? v.iterator().next(): null;
+            return ((v == null) || (v.isEmpty()))? null: v.iterator().next();
         }
         /**
          * Returns a single value for the specified RDF property, the
@@ -906,7 +906,7 @@ public final class SparqlTool
         public Collection<String> valuesOf(String predicate) {
             Collection<String> s = null;
             Collection<Value> r = this.get(predicate);
-            if (r.isEmpty()) {
+            if ((r == null) || (r.isEmpty())) {
                 s = Collections.emptySet();
             }
             else {

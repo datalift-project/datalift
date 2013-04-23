@@ -191,6 +191,7 @@ public class SparqlToolTest
                 "$c.put('title', $r.valueOf('dc:title')))"+
                 "$c.put('description', $r.valueOf('dc:description')))"+
                 "$c.put('creator', $r.valueOf('dc:creator')))" +
+                "$c.put('notFound', $r.valueOf('dc:unknown')))" +
                 "$c.put('creatorOf', $r.resultsFor('" + SUBJECT2 + "').valueOf('dc:creator')))");
         log.trace("{} ->\n{}", SUBJECT1, page);
         assertEquals(DT + "Sample",     results.get("type"));
@@ -198,6 +199,7 @@ public class SparqlToolTest
         assertEquals("First test item", results.get("description"));
         assertEquals(SparqlToolTest.class.getSimpleName(),
                                         results.get("creator"));
+        assertEquals("",       results.get("notFound"));
         assertEquals(SUBJECT1, results.get("creatorOf"));
     }
 
