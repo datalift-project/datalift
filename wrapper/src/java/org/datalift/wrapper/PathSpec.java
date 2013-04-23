@@ -93,7 +93,9 @@ public class PathSpec
         this.basePath = (appName == null)? basePath:
                                            new File(basePath, appName);
         if (! (this.basePath.isDirectory() && this.basePath.canWrite())) {
-            throw new FileNotFoundException(this.basePath.toString());
+            if (! this.basePath.mkdirs()) {
+                throw new FileNotFoundException(this.basePath.toString());
+            }
         }
     }
 

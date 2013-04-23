@@ -200,9 +200,6 @@ public final class Wrapper
             // 4. Root web application.
             rootWebAppPath = (String)(parser.getOptionValue(rootAppOption,
                                                             rootWebAppPath));
-            if (! (rootWebAppPath.charAt(0) == '/')) {
-                rootWebAppPath = "/" + rootWebAppPath;
-            }
             if (rootWebAppPath.endsWith(WAR_EXTENSION)) {
                 rootWebAppPath = rootWebAppPath.substring(0,
                             rootWebAppPath.length() - WAR_EXTENSION.length());
@@ -305,7 +302,7 @@ public final class Wrapper
             }
         }
         // Check for root web app, if any.
-        webappDir = webapps.remove(rootWebAppPath);
+        webappDir = webapps.remove("/ " + rootWebAppPath);
         if (webappDir != null) {
             webapps.put("", webappDir);
         }
