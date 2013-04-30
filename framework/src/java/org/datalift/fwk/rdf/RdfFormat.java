@@ -37,6 +37,7 @@ package org.datalift.fwk.rdf;
 
 import java.io.OutputStream;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -45,6 +46,8 @@ import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Request;
+import javax.ws.rs.core.Variant;
 
 import org.ccil.cowan.tagsoup.Parser;
 import org.openrdf.model.ValueFactory;
@@ -117,6 +120,12 @@ public enum RdfFormat
     // Class members
     //-------------------------------------------------------------------------
 
+    /**
+     * The supported RDF MIME types, in a format suitable for JAX-RS
+     * {@link Request#selectVariant(List) content negotiation.
+     */
+    public final static List<Variant> VARIANTS;
+
     /** A map to resolve MIME type strings into actual RDF type objects. */
     private final static Map<String,RdfFormat> mime2TypeMap =
                                         new LinkedHashMap<String,RdfFormat>();
@@ -141,11 +150,16 @@ public enum RdfFormat
     //-------------------------------------------------------------------------
 
     static {
+        List<Variant> rdfVariants = new ArrayList<Variant>();
         for (RdfFormat r : values()) {
             for (MediaType t : r.mimeTypes) {
                 mime2TypeMap.put(MediaTypes.toString(t), r);
+                if (r.canOutput) {
+                    rdfVariants.add(new Variant(t, null, null));
+                }
             }
         }
+        VARIANTS = Collections.unmodifiableList(rdfVariants);
     }
 
     //-------------------------------------------------------------------------

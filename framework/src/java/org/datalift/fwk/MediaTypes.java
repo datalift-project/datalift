@@ -35,16 +35,11 @@
 package org.datalift.fwk;
 
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Request;
-import javax.ws.rs.core.Variant;
 
-import org.datalift.fwk.rdf.RdfFormat;
 import org.datalift.fwk.util.web.Charsets;
 
 
@@ -167,32 +162,13 @@ public class MediaTypes extends MediaType
     public final static String APPLICATION_JSON_UTF8 =
                                             APPLICATION_JSON + UTF8_ENCODED;
 
-    /**
-     * The supported RDF MIME types, in a format suitable for JAX-RS
-     * {@link Request#selectVariant(List) content negotiation.
-     */
-    public final static List<Variant> RDF_VARIANTS;
     /** The supported RDF MIME type names. */ 
-    private final static Collection<String> RDF_TYPES;
-
-    //-------------------------------------------------------------------------
-    // Class initializer
-    //-------------------------------------------------------------------------
-
-    static {
-        List<String>  rdfTypeNames = new ArrayList<String>();
-        List<Variant> rdfVariants  = new ArrayList<Variant>();
-        for (RdfFormat r : RdfFormat.values()) {
-            if (r.canOutput) {
-                for (MediaType t : r.mimeTypes) {
-                    rdfTypeNames.add(MediaTypes.toString(t));
-                    rdfVariants.add(new Variant(t, null, null));
-                }
-            }
-        }
-        RDF_TYPES = Collections.unmodifiableCollection(rdfTypeNames);
-        RDF_VARIANTS = Collections.unmodifiableList(rdfVariants);
-    }
+    private final static Collection<String> RDF_TYPES =
+            Arrays.asList(APPLICATION_RDF_XML,
+                          TEXT_TURTLE, APPLICATION_TURTLE,
+                          TEXT_N3, TEXT_RDF_N3, APPLICATION_N3,
+                          APPLICATION_NTRIPLES, APPLICATION_TRIG,
+                          APPLICATION_TRIX);
 
     //-------------------------------------------------------------------------
     // Constructors
