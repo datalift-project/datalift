@@ -112,7 +112,7 @@ public class JsonLdResourceHandler implements UriPolicy
 
     /** {@inheritDoc} */
     @Override
-    public ResourceHandler canHandle(final UriInfo uriInfo,
+    public ResourceHandler canHandle(final URI uri, UriInfo uriInfo,
                                      Request request, String acceptHdr) {
         ResourceHandler h = null;
         // Check that JSON-LD is the preferred content type.
@@ -126,8 +126,7 @@ public class JsonLdResourceHandler implements UriPolicy
 
                     @Override
                     public Response getRepresentation() {
-                        StreamingOutput out = new JsonLdSerializer(
-                                            uriInfo.getRequestUri(),
+                        StreamingOutput out = new JsonLdSerializer(uri,
                                             Configuration.getDefault()
                                                          .getDataRepository());
                         return Response.ok(out, APPLICATION_JSON_LD
