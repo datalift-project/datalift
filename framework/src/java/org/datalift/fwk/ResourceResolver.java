@@ -35,6 +35,8 @@
 package org.datalift.fwk;
 
 
+import java.net.URI;
+
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
@@ -84,6 +86,26 @@ public interface ResourceResolver
     public Response resolveRdfResource(UriInfo uriInfo, Request request,
                                        String acceptHdr)
                                                 throws WebApplicationException;
+
+    /**
+     * Attempts to resolve a request as a RDF resource from the default
+     * (lifted data) triple store.
+     * @param  uri         the URI of the RDF resource.
+     * @param  uriInfo     the requested URI data.
+     * @param  request     the JAX-RS request object.
+     * @param  acceptHdr   the HTTP "Accept" header value.
+     *
+     * @return a {@link Response JAX-RS response} with the result of
+     *         the SPARQL DESCRIBE query on the RDF resource or
+     *         <code>null</code> if the request resource was not found
+     *         in the RDF store.
+     * @throws WebApplicationException if any error occurred accessing
+     *         the RDF resource.
+     */
+    public Response resolveRdfResource(URI uri, UriInfo uriInfo,
+                                       Request request, String acceptHdr)
+                                                throws WebApplicationException;
+
     /**
      * Attempts to resolve a request as a module public resource.
      * @param  module      the target module.
