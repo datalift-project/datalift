@@ -101,7 +101,7 @@ public enum RdfFormat
     /** "application/x-trig" */
     TRIX        ("TriX", RDFFormat.TRIX, "trix", APPLICATION_TRIX_TYPE),
     /** RDFa (text/html) */
-    RDFA        ("RDFa", RDFaFormat.RDFA,
+    RDFA        ("RDFa", RDFaFormat.RDFA, false,
                  new String[] { "html", "xhtml", "htm" },
                  APPLICATION_XHTML_XML_TYPE, TEXT_HTML_TYPE) {
             @Override
@@ -173,7 +173,7 @@ public enum RdfFormat
      */
     RdfFormat(String name, RDFFormat format,
                            String extension, MediaType... mimeTypes) {
-        this(name, format, new String[] { extension }, mimeTypes);
+        this(name, format, true, new String[] { extension }, mimeTypes);
     }
 
     /**
