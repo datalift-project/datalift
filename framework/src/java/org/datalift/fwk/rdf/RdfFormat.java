@@ -129,6 +129,8 @@ public enum RdfFormat
     public final String name;
     /** The OpenRDF RDFFormat object for this type. */
     private final RDFFormat format;
+    /** Whether outputting to this format is support. */
+    public final boolean canOutput;
     /** The file extensions. */
     public final List<String> extensions;
     /** The MIME types that map to the official type. */
@@ -167,6 +169,16 @@ public enum RdfFormat
      */
     RdfFormat(String name, RDFFormat format,
                            String[] extensions, MediaType... mimeTypes) {
+        this(name, format, true, extensions, mimeTypes);
+    }
+
+    /**
+     * Creates a new RdfFormat instance.
+     * @param  type        the official type.
+     * @param  mimeTypes   the MIME types that map to the official type.
+     */
+    RdfFormat(String name, RDFFormat format, boolean canOutput,
+                           String[] extensions, MediaType... mimeTypes) {
         if (StringUtils.isBlank(name)) {
             throw new IllegalArgumentException("name");
         }
@@ -181,6 +193,7 @@ public enum RdfFormat
         }
         this.name       = name;
         this.format     = format;
+        this.canOutput  = canOutput;
         this.extensions = Collections.unmodifiableList(
                                                     Arrays.asList(extensions));
         this.mimeTypes  = Collections.unmodifiableList(
