@@ -344,7 +344,10 @@ public final class Wrapper
             throw new IllegalArgumentException("env");
         }
         for (Directories d : Directories.values()) {
-            createDirectory(env.getPath(d));
+            if (d  != CONFIG) {
+                createDirectory(env.getPath(d));
+            }
+            // Else: CONFIG case is handled below, to copy config. files.
         }
         // Copy runtime templates: configuration...
         File target = env.getPath(CONFIG);
@@ -359,18 +362,23 @@ public final class Wrapper
         }
     }
 
-    private static void createDirectory(File path) throws IOException {
+    private static boolean createDirectory(File path) throws IOException {
         if (path == null) {
             throw new IllegalArgumentException("path");
         }
+        boolean created = false;
         // Create directory if it does not exist.
-        if (! (path.exists() || path.mkdirs())) {
-            reportPathCreationFailure(path);
+        if (! path.exists()) {
+            if (! path.mkdirs()) {
+                reportPathCreationFailure(path);
+            }
+            created = true;
         }
         // Check that path leads to a write-accessible directory.
         if (! (path.isDirectory() && path.canWrite())) {
             reportPathCreationFailure(path);
         }
+        return created;
     }
 
     private static void copy(File from, File to) throws IOException {
