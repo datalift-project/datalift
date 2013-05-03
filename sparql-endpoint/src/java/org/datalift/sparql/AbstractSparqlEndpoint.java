@@ -303,7 +303,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
             response = this.doExecute(defaultGraphUris, namedGraphUris, query,
                                       startOffset, endOffset, gridJson,
                                       format, jsonCallback,
-                                      uriInfo, request, acceptHdr, null);
+                                      uriInfo, request, acceptHdr, null, null);
         }
         catch (Exception e) {
             this.handleError(query, e);
@@ -314,29 +314,31 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     /** {@inheritDoc} */
     @Override
     public ResponseBuilder describe(String uri, ElementType type,
-                                    UriInfo uriInfo, Request request,
-                                    String acceptHdr)
+                                UriInfo uriInfo, Request request,
+                                String acceptHdr, List<Variant> allowedTypes)
                                                 throws WebApplicationException {
-        return this.describe(uri, type, null, uriInfo, request, acceptHdr);
+        return this.describe(uri, type, null,
+                                  uriInfo, request, acceptHdr, allowedTypes);
     }
 
     /** {@inheritDoc} */
     @Override
     public ResponseBuilder describe(String uri, ElementType type,
                                     Repository repository, UriInfo uriInfo,
-                                    Request request, String acceptHdr)
+                                    Request request, String acceptHdr,
+                                    List<Variant> allowedTypes)
                                                 throws WebApplicationException {
         return this.describe(uri, type, repository, -1, null, null,
-                                                uriInfo, request, acceptHdr);
+                                  uriInfo, request, acceptHdr, allowedTypes);
     }
 
     /** {@inheritDoc} */
     @Override
     public ResponseBuilder describe(String uri, ElementType type,
-                                    Repository repository, int max,
-                                    String format, String jsonCallback,
-                                    UriInfo uriInfo, Request request,
-                                    String acceptHdr)
+                                Repository repository, int max,
+                                String format, String jsonCallback,
+                                UriInfo uriInfo, Request request,
+                                String acceptHdr, List<Variant> allowedTypes)
                                                 throws WebApplicationException {
         if (isBlank(uri)) {
             this.throwInvalidParamError("uri", uri);
@@ -378,7 +380,8 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                 viewData.put("describe-uri",  u);
                 response = this.doExecute(defGraphs, null, query, -1, max,
                                           false, format, jsonCallback, uriInfo,
-                                          request, acceptHdr, viewData);
+                                          request, acceptHdr, allowedTypes,
+                                          viewData);
             }
             if (response == null) {
                 this.sendError(NOT_FOUND, null);
@@ -599,7 +602,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         }
         return this.describe(uri, ElementType.fromString(type),
                              repository, max, null, null,
-                             uriInfo, request, acceptHdr)
+                             uriInfo, request, acceptHdr, null)
                    .build();
     }
 
@@ -682,6 +685,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                                           String format, String jsonCallback,
                                           UriInfo uriInfo, Request request,
                                           String acceptHdr,
+                                          List<Variant> allowedTypes,
                                           Map<String,Object> viewData)
                                                             throws Exception;
 

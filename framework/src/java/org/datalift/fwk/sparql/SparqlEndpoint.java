@@ -237,6 +237,10 @@ public interface SparqlEndpoint
      *                        negotiation.
      * @param  acceptHdr      the HTTP Accept header, for content
      *                        negotiation.
+     * @param  allowedTypes   the supported response types, to drive
+     *                        content negotiation or <code>null</code>
+     *                        if all the response types supported by the
+     *                        SPARQL endpoint are acceptable.
      *
      * @return a JAX-RS response with the object description, formatted
      *         according to the negotiated format.
@@ -248,7 +252,8 @@ public interface SparqlEndpoint
      * @see    #describe(String, DescribeType, Repository, UriInfo, Request, String)
      */
     public ResponseBuilder describe(String uri, ElementType type,
-                            UriInfo uriInfo, Request request, String acceptHdr)
+                                UriInfo uriInfo, Request request,
+                                String acceptHdr, List<Variant> allowedTypes)
                                                 throws WebApplicationException;
 
     /**
@@ -269,6 +274,10 @@ public interface SparqlEndpoint
      *                      negotiation.
      * @param  acceptHdr    the HTTP Accept header, for content
      *                      negotiation.
+     * @param  allowedTypes   the supported response types, to drive
+     *                        content negotiation or <code>null</code>
+     *                        if all the response types supported by the
+     *                        SPARQL endpoint are acceptable.
      *
      * @return a JAX-RS response with the object description, formatted
      *         according to the negotiated format.
@@ -279,7 +288,8 @@ public interface SparqlEndpoint
      */
     public ResponseBuilder describe(String uri, ElementType type,
                                     Repository repository, UriInfo uriInfo,
-                                    Request request, String acceptHdr)
+                                    Request request, String acceptHdr,
+                                    List<Variant> allowedTypes)
                                                 throws WebApplicationException;
 
     /**
@@ -305,6 +315,10 @@ public interface SparqlEndpoint
      *                        negotiation.
      * @param  acceptHdr      the HTTP Accept header, for content
      *                        negotiation.
+     * @param  allowedTypes   the supported response types, to drive
+     *                        content negotiation or <code>null</code>
+     *                        if all the response types supported by the
+     *                        SPARQL endpoint are acceptable.
      *
      * @return a JAX-RS response with the object description, formatted
      *         according to the negotiated format.
@@ -314,10 +328,10 @@ public interface SparqlEndpoint
      *         perform the query.
      */
     public ResponseBuilder describe(String uri, ElementType type,
-                                    Repository repository, int max,
-                                    String format, String jsonCallback,
-                                    UriInfo uriInfo, Request request,
-                                    String acceptHdr)
+                                Repository repository, int max,
+                                String format, String jsonCallback,
+                                UriInfo uriInfo, Request request,
+                                String acceptHdr, List<Variant> allowedTypes)
                                                 throws WebApplicationException;
 
     /**

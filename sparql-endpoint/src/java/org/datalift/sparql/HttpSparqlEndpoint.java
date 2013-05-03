@@ -142,8 +142,9 @@ public class HttpSparqlEndpoint extends AbstractSparqlEndpoint
                                         String format, String jsonCallback,
                                         UriInfo uriInfo, Request request,
                                         String acceptHdr,
+                                        List<Variant> allowedTypes,
                                         Map<String,Object> viewData)
-                                        throws IOException, URISyntaxException {
+                                    throws IOException, URISyntaxException {
         log.trace("Processing SPARQL query: \"{}\"", query);
         // Forward query to the SPARQL endpoint.
         URL u = new URL(this.getTargetRepository(defaultGraphUris)

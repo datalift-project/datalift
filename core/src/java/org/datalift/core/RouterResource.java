@@ -672,7 +672,8 @@ public class RouterResource implements LifeCycle, ResourceResolver
                     log.trace("Resolved requested URI {} as RDF resource", uri);
                     b = sparqlEndpoint.describe(
                                     this.uri.toString(), result.type,
-                                    this.uriInfo, this.request, this.acceptHdr);
+                                    this.uriInfo, this.request, this.acceptHdr,
+                                    null);
                 }
                 // Else: Client already up-to-date.
 

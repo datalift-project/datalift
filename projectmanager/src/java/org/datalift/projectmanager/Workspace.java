@@ -1677,7 +1677,7 @@ public class Workspace extends BaseModule
                               .describe(src.getUri(), ElementType.Graph,
                                         cfg.getInternalRepository(),
                                         5000, null, null,
-                                        uriInfo, request, acceptHdr);
+                                        uriInfo, request, acceptHdr, null);
             }
             else {
                 // Ensure the source is not corrupt.
@@ -1859,7 +1859,7 @@ public class Workspace extends BaseModule
             response = cfg.getBean(SparqlEndpoint.class)
                           .describe(u.toString(), ElementType.Graph,
                                     cfg.getInternalRepository(),
-                                    uriInfo, request, acceptHdr).build();
+                                    uriInfo, request, acceptHdr, null).build();
         }
         catch (Exception e) {
             this.handleInternalError(e, "Failed to load source {}", srcId);

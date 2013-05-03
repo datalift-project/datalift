@@ -268,6 +268,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                                         String format, String jsonCallback,
                                         UriInfo uriInfo, Request request,
                                         String acceptHdr,
+                                        List<Variant> allowedTypes,
                                         Map<String,Object> viewData)
                                                 throws WebApplicationException {
         log.trace("Processing SPARQL query: \"{}\"", query);
@@ -336,7 +337,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
         Variant responseType = null;
         if (parsedQuery instanceof ParsedBooleanQuery) {
             // ASK query.
-            responseType = this.getResponseType(request, format,
+            responseType = this.getResponseType(request, format, allowedTypes,
                                                          ASK_RESPONSE_TYPES);
             MediaType mediaType = responseType.getMediaType();
 
@@ -358,7 +359,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
         }
         else if (parsedQuery instanceof ParsedGraphQuery) {
             // CONSTRUCT query.
-            responseType = this.getResponseType(request, format,
+            responseType = this.getResponseType(request, format, allowedTypes,
                                                 CONSTRUCT_RESPONSE_TYPES);
             MediaType mediaType = responseType.getMediaType();
 
@@ -380,7 +381,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
         }
         else if (parsedQuery instanceof ParsedTupleQuery) {
             // SELECT query.
-            responseType = this.getResponseType(request, format,
+            responseType = this.getResponseType(request, format, allowedTypes,
                                                          SELECT_RESPONSE_TYPES);
             MediaType mediaType = responseType.getMediaType();
 
@@ -425,6 +426,17 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
             }
         }
         return dataset;
+    }
+
+    private Variant getResponseType(Request request, String expected,
+                                    List<Variant> allowedTypes,
+                                    List<Variant> supportedTypes)
+                                                throws WebApplicationException {
+        List<Variant> types = allowedTypes;
+        if ((types == null) || (types.isEmpty())) {
+            types = supportedTypes;
+        }
+        return this.getResponseType(request, expected, types);
     }
 
     private boolean executeAskQuery(Repository repository, String query,

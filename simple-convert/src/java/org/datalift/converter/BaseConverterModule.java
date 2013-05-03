@@ -380,7 +380,7 @@ public abstract class BaseConverterModule
                                                .getBean(SparqlEndpoint.class);
         return endpoint.describe(namedGraph.toString(), ElementType.Graph,
                                  repository, 5000, TEXT_HTML, null,
-                                 uriInfo, request, acceptHdr).build();
+                                 uriInfo, request, acceptHdr, null).build();
     }
 
     /**
