@@ -2,6 +2,11 @@ package org.datalift.lov;
 
 public class OntologyDesc {
 
+	private String prefix;
+	private String url;
+	private String name;
+	private String description;
+
 	/*
 	 * The data model for an ontology
 	 */
@@ -47,10 +52,5 @@ public class OntologyDesc {
 	public void setDescription(String description) {
 		this.description = description;
 	}
-
-	private String prefix;
-	private String url;
-	private String name;
-	private String description;
 
 }

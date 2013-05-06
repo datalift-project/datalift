@@ -15,12 +15,15 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Request;
@@ -39,6 +42,9 @@ import org.datalift.fwk.util.StringUtils;
 import org.datalift.fwk.view.TemplateModel;
 import org.datalift.fwk.view.ViewFactory;
 import org.datalift.lov.exception.LovModuleException;
+import org.datalift.lov.service.LovService;
+import org.datalift.lov.service.OnlineLovService;
+import org.datalift.lov.service.SearchQueryParam;
 import org.openrdf.model.Statement;
 import org.openrdf.query.BindingSet;
 import org.openrdf.query.GraphQuery;
@@ -50,33 +56,37 @@ import org.openrdf.query.TupleQueryResult;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.http.HTTPRepository;
 
+import static org.datalift.fwk.MediaTypes.*;
+
 
 /**
  * This module lets end user select ontologies by browsing the 
  * LOV catalogue.
  * 
  */
-@Path(BrowseOntologiesModule.MODULE_NAME)
-public class BrowseOntologiesModule extends BaseModule {
+@Path(LovModule.MODULE_NAME)
+public class LovModule extends BaseModule {
 
 	//-------------------------------------------------------------------------
 	// Constants
 	//-------------------------------------------------------------------------
 
-	private final static Logger log = Logger.getLogger(BrowseOntologiesModule.class);
+	private final static Logger log = Logger.getLogger(LovModule.class);
 
 	//TODO see if this has to be changed
 	public final static String PROJECT_RESOURCE_PATH = "project";
 
 	public final static String MODULE_NAME = "lovbrowser";
 
-	private final static String LOV_CONTEXT = "http://lov.okfn.org/endpoint/lov";
+	private final static String LOV_CONTEXT = "http://lov.okfn.org/endpoint/lov_aggregator";
 	private final static String LOV_CONTEXT_SPARQL = "<" + LOV_CONTEXT + ">";
 	
     /** The path prefix for HTML page Velocity templates. */
     private final static String TEMPLATE_PATH = "/" + MODULE_NAME  + '/';
     
     private final static int DAYS_TO_UPDATE = 7;
+    
+    private final static LovService lovService = new OnlineLovService();
 
 	//-------------------------------------------------------------------------
 	// Instance members
@@ -96,7 +106,7 @@ public class BrowseOntologiesModule extends BaseModule {
 	// Constructors
 	//-------------------------------------------------------------------------
 
-	public BrowseOntologiesModule(){
+	public LovModule(){
 		super(MODULE_NAME);
 		
 		if(nextLovUpdate == null) {
@@ -141,6 +151,29 @@ public class BrowseOntologiesModule extends BaseModule {
 	//                       .location(target)
 	//                       .build();
 	//    }
+	
+	@GET
+	@Path("search")
+	@Produces(APPLICATION_JSON)
+	public Response searchLov(
+			@DefaultValue("") @QueryParam("q") String query,
+			@DefaultValue("") @QueryParam("type") String type,
+			@DefaultValue("") @QueryParam("vocSpace") String vocSpace,
+			@DefaultValue("") @QueryParam("voc") String voc,
+			@DefaultValue("0") @QueryParam("offset") int offset,
+			@DefaultValue("0") @QueryParam("limit") int limit) {
+		
+		SearchQueryParam params = new SearchQueryParam();
+		params.setQuery(query);
+		params.setType(type);
+		params.setVocSpace(vocSpace);
+		params.setVoc(voc);
+		params.setOffset(offset);
+		params.setLimit(limit);
+		
+		return Response.ok(lovService.search(params),
+				APPLICATION_JSON_UTF8).build();
+	}
 
 	/**
 	 * Display the LOV catalog. They are obtained by querying the LOV sparql

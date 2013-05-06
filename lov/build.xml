@@ -290,7 +290,7 @@
     <jar jarfile="${jar.path}">
       <fileset dir="${classes.dir}"/>
       <service type="org.datalift.fwk.Module">
-        <provider classname="org.datalift.lov.BrowseOntologiesModule"/>
+        <provider classname="org.datalift.lov.LovModule"/>
       </service>
     </jar>
   </target>
