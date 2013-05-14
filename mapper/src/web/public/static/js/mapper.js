@@ -435,21 +435,21 @@ function Mapping(type, baseUri, selectedSource, uri, name) {
 function VocabElement(data) {
   var self = this;
   
-  self.vocabElementUri = ko.observable(data.vocabElementURI);
-  self.vocabElementName = ko.observable(data.vocabElementName);
-  self.vocabElementType = ko.observable(data.vocabElementType);
-  self.vocabElementVocabUri = ko.observable(data.vocabElementVocabURI);
-  self.vocabElementScore = ko.observable(data.vocabElementScore);
+  self.vocabElementUri = ko.observable(data.uri);
+  self.vocabElementName = ko.observable(data.uriPrefixed);
+  self.vocabElementType = ko.observable(data.types);
+  self.vocabElementVocabUri = ko.observable(data.vocabulary);
+  self.vocabElementScore = ko.observable(data.score);
   
 }
 
 function Vocab(data) {
   var self = this;
   
-  self.vocabUri = ko.observable(data.vocabURI);
-  self.vocabPrefix = ko.observable(data.vocabPrefix);
-  self.vocabNsp = ko.observable(data.vocabNsp);
-  self.vocabName = ko.observable(data.vocabName);
+  self.vocabUri = ko.observable(data.vocabulary);
+  self.vocabPrefix = ko.observable(data.vocabularyPrefix);
+  self.vocabNsp = ko.observable(data.vocabularyPrefix);
+  self.vocabName = ko.observable(data.uriPrefixed);
   
 }
 
@@ -918,13 +918,13 @@ function MappingViewModel(baseUri, projectUri, sources, ontologies) {
   }
   
   self.searchLov = function(type) {
-    var url = self.baseUri + "/lov/vocabElements?query=" + self.searchQuery() + "&type=" + type;
+    var url = self.baseUri + "/lov/search?q=" + self.searchQuery() + "&type=" + type;
     $.ajax({
       url: url,
       dataType: 'json',
       success: function(data) {
-        var elements = $.map(data.vocabElements, function(item) { return new VocabElement(item); });
-        var vocabs = $.map(data.vocabs, function(item) { return new Vocab(item); });
+        var elements = $.map(data.results, function(item) { return new VocabElement(item); });
+        var vocabs = $.map(data.results, function(item) { return new Vocab(item); });
         self.currentPage(1);
         self.searchResults(new SearchResult(elements, vocabs));
       },
@@ -967,7 +967,7 @@ function MappingViewModel(baseUri, projectUri, sources, ontologies) {
     
     var project = self.projectUri;
     var source = self.selectedSource().uri;
-    var url = self.baseUri + "/rdf-transform/execute?project=" + project + "&source=" + source;
+    var url = self.baseUri + "/mapper/execute?project=" + project + "&source=" + source;
     var data = { dest_title: self.targetSrcName(), dest_graph_uri: self.targetSrcGraph(),
       script: script };
     
