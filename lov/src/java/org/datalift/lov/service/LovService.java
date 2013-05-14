@@ -9,7 +9,8 @@ import org.datalift.fwk.log.Logger;
  */
 public abstract class LovService {
 	
-//	protected final static Logger log = Logger.getLogger();
+	protected final static Logger log = Logger.getLogger();
 
 	public abstract String search(SearchQueryParam params);
+	public abstract String check(CheckQueryParam params);
 }

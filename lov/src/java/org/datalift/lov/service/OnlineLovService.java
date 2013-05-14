@@ -12,27 +12,53 @@ public class OnlineLovService extends LovService {
 	
 	private final static String QUERY_BASE_URL = "http://lov.okfn.org/dataset/lov/api/v1/";
 	private final static String SEARCH = "search";
+	private final static String CHECK = "check";
+	private final static String DEFAULT_JSON =  "{" +
+											    "\"count\": 0," +
+											    "\"offset\": 0," +
+											    "\"limit\": 15," +
+											    "\"search_query\": \"\"," +
+											    "\"search_type\": null," +
+											    "\"search_vocSpace\": null," +
+											    "\"search_voc\": null," +
+												"\"facet_vocSpaces\": null," +
+											    "\"facet_types\": null," +
+											    "\"params\": null," +
+											    "\"results\": []" +
+												"}";
 
 	@Override
 	public String search(SearchQueryParam params) {
+		if (params.getQuery().trim().isEmpty()) {
+			return DEFAULT_JSON;
+		}
+		
+		return getLovJson(SEARCH, params);
+	}
+
+	@Override
+	public String check(CheckQueryParam params) {
+		return getLovJson(CHECK, params);
+	}
+	
+	private String getLovJson(String service, LovQueryParam params) {
 		String line = "";
 		StringBuilder builder = new StringBuilder();
 		HttpURLConnection connection = null;
 		
 		try {
-			
-			URL url = new URL(QUERY_BASE_URL + SEARCH + params.toString());
+			URL url = new URL(QUERY_BASE_URL + service + params.getQueryParameters());
 			connection = (HttpURLConnection) url.openConnection();
 			connection.setRequestMethod("GET");
 			connection.setRequestProperty("Accept", "application/json");
 			
-			if(connection.getResponseCode() != 200) {
-//				log.error("HTTP request error.");
+			if (connection.getResponseCode() != 200) {
+				log.error("HTTP request error. Response code is {}", connection.getResponseCode());
 			}
 			
 			BufferedReader reader = new BufferedReader(new InputStreamReader(
 					connection.getInputStream()));
-			while((line = reader.readLine()) != null) {
+			while ((line = reader.readLine()) != null) {
 				builder.append(line);
 			}
 			
@@ -40,21 +66,18 @@ public class OnlineLovService extends LovService {
 			
 		}
 		catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.error("Not an URL");
 		}
 		catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.error(e.toString());
 		}
 		finally {
-			if(connection != null) {
+			if (connection != null) {
 				connection.disconnect();
 			}
 		}
 		
-		
 		return builder.toString();
 	}
-
+		
 }

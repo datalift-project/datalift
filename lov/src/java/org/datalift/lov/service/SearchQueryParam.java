@@ -1,14 +1,13 @@
 package org.datalift.lov.service;
 
+
 /**
  * Parameters for the search service.
  * @author freddy
  *
  */
-public class SearchQueryParam {
+public class SearchQueryParam extends LovQueryParam {
 	
-	private final static String PARAM_TOKEN = "?";
-	private final static String SEP = "&";
 	private final static String QUERY = "q";
 	private final static String TYPE = "type";
 	private final static String VOC_SPACE = "vocSpace";
@@ -45,16 +44,16 @@ public class SearchQueryParam {
 	
 	
 	@Override
-	public String toString() {
+	public String getQueryParameters() {
 		StringBuilder sb = new StringBuilder();
 		
 		sb.append(PARAM_TOKEN);
-		sb.append((query == null) ? QUERY + "=" + query + SEP : "");
-		sb.append((type == null) ? TYPE + "=" + type + SEP : "");
-		sb.append((vocSpace == null) ? VOC_SPACE + "=" + vocSpace + SEP : "");
-		sb.append((voc == null) ? VOC + "=" + voc + SEP : "");
-		sb.append((offset == 0) ? OFFSET + "=" + offset + SEP : "");
-		sb.append((limit == 0) ? LIMIT + "=" + limit + SEP : "");
+		sb.append(checkParameter(QUERY, query));
+		sb.append(checkParameter(TYPE, type));
+		sb.append(checkParameter(VOC_SPACE, vocSpace));
+		sb.append(checkParameter(VOC, voc));
+		sb.append(checkParameter(OFFSET, offset));
+		sb.append(checkParameter(LIMIT, limit));
 		
 		return sb.substring(0, sb.length() - 1);
 	}

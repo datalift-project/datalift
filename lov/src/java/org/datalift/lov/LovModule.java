@@ -76,7 +76,7 @@ public class LovModule extends BaseModule {
 	//TODO see if this has to be changed
 	public final static String PROJECT_RESOURCE_PATH = "project";
 
-	public final static String MODULE_NAME = "lovbrowser";
+	public final static String MODULE_NAME = "lov";
 
 	private final static String LOV_CONTEXT = "http://lov.okfn.org/endpoint/lov_aggregator";
 	private final static String LOV_CONTEXT_SPARQL = "<" + LOV_CONTEXT + ">";
@@ -86,8 +86,6 @@ public class LovModule extends BaseModule {
     
     private final static int DAYS_TO_UPDATE = 7;
     
-    private final static LovService lovService = new OnlineLovService();
-
 	//-------------------------------------------------------------------------
 	// Instance members
 	//-------------------------------------------------------------------------
@@ -96,6 +94,8 @@ public class LovModule extends BaseModule {
 	private Configuration configuration = null;
 	/** Project Manager bean. */
 	private ProjectManager projectManager = null;
+	/** Lov Service */
+	private LovService lovService = null;
 
 	private Date nextLovUpdate = null;
 	private List<Statement> statements = null;
@@ -128,6 +128,8 @@ public class LovModule extends BaseModule {
 	public void postInit(Configuration configuration) {
 		this.configuration  = configuration;
 		this.projectManager = configuration.getBean(ProjectManager.class);
+//		Configuration.getDefault().getTempStorage();
+		lovService = new OnlineLovService();
 	}
 
 	//-------------------------------------------------------------------------
