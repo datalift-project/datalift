@@ -42,7 +42,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -55,6 +54,7 @@ import org.openrdf.model.impl.URIImpl;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.query.Binding;
 import org.openrdf.query.BooleanQuery;
+import org.openrdf.query.Dataset;
 import org.openrdf.query.GraphQuery;
 import org.openrdf.query.GraphQueryResult;
 import org.openrdf.query.Query;
@@ -234,8 +234,9 @@ public final class SparqlTool
         try {
             cnx = repository.newConnection();
             query = this.addPrefixes(query);
-            BooleanQuery q = cnx.prepareBooleanQuery(SPARQL, query);
-            this.checkAccessControls(query, q, repository);
+            ControlledQuery ctrl = this.checkAccessControls(query, repository);
+            BooleanQuery q = cnx.prepareBooleanQuery(SPARQL, ctrl.query);
+            this.setGraphConstraints(q, ctrl);
             this.setBindings(q);
             boolean result = q.evaluate();
             if (log.isDebugEnabled()) {
@@ -309,8 +310,9 @@ public final class SparqlTool
         try {
             cnx = repository.newConnection();
             query = this.addPrefixes(query);
-            TupleQuery q = cnx.prepareTupleQuery(SPARQL, query);
-            this.checkAccessControls(query, q, repository);
+            ControlledQuery ctrl = this.checkAccessControls(query, repository);
+            TupleQuery q = cnx.prepareTupleQuery(SPARQL, ctrl.query);
+            this.setGraphConstraints(q, ctrl);
             this.setBindings(q);
             if (log.isDebugEnabled()) {
                 if (this.bindings.isEmpty()) {
@@ -382,8 +384,9 @@ public final class SparqlTool
         try {
             cnx = repository.newConnection();
             query = this.addPrefixes(query);
-            GraphQuery q = cnx.prepareGraphQuery(SPARQL, query);
-            this.checkAccessControls(query, q, repository);
+            ControlledQuery ctrl = this.checkAccessControls(query, repository);
+            GraphQuery q = cnx.prepareGraphQuery(SPARQL, ctrl.query);
+            this.setGraphConstraints(q, ctrl);
             this.setBindings(q);
             if (log.isDebugEnabled()) {
                 if (this.bindings.isEmpty()) {
@@ -457,8 +460,9 @@ public final class SparqlTool
         try {
             cnx = repository.newConnection();
             query = this.addPrefixes(query);
-            GraphQuery q = cnx.prepareGraphQuery(SPARQL, query);
-            this.checkAccessControls(query, q, repository);
+            ControlledQuery ctrl = this.checkAccessControls(query, repository);
+            GraphQuery q = cnx.prepareGraphQuery(SPARQL, ctrl.query);
+            this.setGraphConstraints(q, ctrl);
             this.setBindings(q);
             DescribeResult result = new DescribeResult(u, q.evaluate());
             if (log.isDebugEnabled()) {
@@ -495,39 +499,46 @@ public final class SparqlTool
         }
     }
 
-    private void checkAccessControls(String query, Query compiledQuery,
-                                     Repository repository) {
-        List<String> defaultGraphUris = null;
-        List<String> namedGraphUris = null;
-
+    private ControlledQuery checkAccessControls(String query,
+                                                Repository repository) {
+        ControlledQuery q = null;
         // Enforce access control policies, if any.
         if (this.accessController != null) {
-            ControlledQuery q = this.accessController.checkQuery(
-                                            query, repository, null, null);
-            // Get modified query, enriched with restrictions.
-            query = q.query;
-            // Override accessed graphs, except for ASK queries for which a
+            q = this.accessController.checkQuery(query, repository, null, null);
+            // Override accessed graphs for ASK queries for which a
             // Sesame bug leads to "false" results whenever a DataSet is set.
-            if (! "ASK".equals(q.queryType)) {
-                defaultGraphUris = q.defaultGraphUris;
-                namedGraphUris   = q.namedGraphUris;
+            if ("ASK".equals(q.queryType)) {
+                q.defaultGraphUris.clear();
+                q.namedGraphUris.clear();
             }
         }
-        // Build query dataset from specified graphs, if any.
-        if ((defaultGraphUris != null) || (namedGraphUris != null)) {
+        else {
+            q = new ControlledQuery(query, null, null, null, null);
+        }
+        // Return modified query, enriched with restrictions.
+        return q;
+    }
+
+    /**
+     * Builds the query dataset from the default and named graph URIs
+     * defined for the query, according to the access control policy.
+     * @param  query   the query with the access control information.
+     * @return a {@link Dataset dataset} with the accessible graphs or
+     *         <code>null</code> if no scope limitation is requested.
+     */
+    private Query setGraphConstraints(Query query, ControlledQuery ctrl) {
+        if (! (ctrl.defaultGraphUris.isEmpty()
+                                        && ctrl.namedGraphUris.isEmpty())) {
             DatasetImpl dataset = new DatasetImpl();
-            if (defaultGraphUris != null) {
-                for (String g : defaultGraphUris) {
-                    dataset.addDefaultGraph(new URIImpl(g));
-                }
+            for (String g : ctrl.defaultGraphUris) {
+                dataset.addDefaultGraph(new URIImpl(g));
             }
-            if (namedGraphUris != null) {
-                for (String g : namedGraphUris) {
-                    dataset.addNamedGraph(new URIImpl(g));
-                }
+            for (String g : ctrl.namedGraphUris) {
+                dataset.addNamedGraph(new URIImpl(g));
             }
-            compiledQuery.setDataset(dataset);
+            query.setDataset(dataset);
         }
+        return query;
     }
 
     /**
