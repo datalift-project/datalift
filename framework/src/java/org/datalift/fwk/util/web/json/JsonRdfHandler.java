@@ -41,6 +41,7 @@ import java.io.Writer;
 import java.util.Arrays;
 
 import org.openrdf.model.Statement;
+import org.openrdf.model.Value;
 import org.openrdf.rio.RDFHandler;
 import org.openrdf.rio.RDFHandlerException;
 
@@ -134,5 +135,11 @@ public class JsonRdfHandler extends AbstractJsonWriter implements RDFHandler
         catch (IOException e) {
             throw new RDFHandlerException(e);
         }
+    }
+
+    @Override
+    protected void writeValue(Value value, ResourceType type)
+                                                            throws IOException {
+        this.writeJsonValue(value, type);
     }
 }

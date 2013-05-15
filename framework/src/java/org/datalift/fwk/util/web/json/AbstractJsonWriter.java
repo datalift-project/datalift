@@ -205,6 +205,50 @@ public abstract class AbstractJsonWriter
 
     protected void writeValue(Value value, ResourceType type)
                                                             throws IOException {
+        this.writeValueSimple(value, type);
+    }
+
+    protected void writeJsonValue(Value value, ResourceType type)
+                                                            throws IOException {
+        this.openBraces();
+
+        if (value instanceof URI) {
+                this.writeKeyValue("type", "uri");
+                this.writeComma();
+                this.writeKeyValue("value", ((URI)value).toString());
+        }
+        else if (value instanceof BNode) {
+                this.writeKeyValue("type", "bnode");
+                this.writeComma();
+                this.writeKeyValue("value", ((BNode)value).getID());
+        }
+        else if (value instanceof Literal) {
+                Literal l = (Literal)value;
+                if (l.getDatatype() != null) {
+                        this.writeKeyValue("type", "typed-literal");
+                        this.writeComma();
+                        this.writeKeyValue("datatype",
+                                           l.getDatatype().toString());
+                }
+                else {
+                        this.writeKeyValue("type", "literal");
+                        if (l.getLanguage() != null) {
+                                this.writeComma();
+                                this.writeKeyValue("xml:lang", l.getLanguage());
+                        }
+                }
+                this.writeComma();
+                this.writeKeyValue("value", l.getLabel());
+        }
+        else {
+            throw new IOException(
+                            "Unknown Value object type: " + value.getClass());
+        }
+        this.closeBraces();
+    }
+
+    protected void writeValueSimple(Value value, ResourceType type)
+                                                            throws IOException {
         if (value instanceof BNode) {
             this.writeValue("_:" + value.stringValue(), type);
         }
