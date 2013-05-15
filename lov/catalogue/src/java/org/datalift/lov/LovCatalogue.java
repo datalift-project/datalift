@@ -15,15 +15,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import javax.ws.rs.DefaultValue;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Request;
@@ -41,10 +38,7 @@ import org.datalift.fwk.project.ProjectManager;
 import org.datalift.fwk.util.StringUtils;
 import org.datalift.fwk.view.TemplateModel;
 import org.datalift.fwk.view.ViewFactory;
-import org.datalift.lov.exception.LovModuleException;
-import org.datalift.lov.service.LovService;
-import org.datalift.lov.service.OnlineLovService;
-import org.datalift.lov.service.SearchQueryParam;
+import org.datalift.lov.exception.LovCatalogueException;
 import org.openrdf.model.Statement;
 import org.openrdf.query.BindingSet;
 import org.openrdf.query.GraphQuery;
@@ -56,27 +50,25 @@ import org.openrdf.query.TupleQueryResult;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.http.HTTPRepository;
 
-import static org.datalift.fwk.MediaTypes.*;
-
 
 /**
  * This module lets end user select ontologies by browsing the 
  * LOV catalogue.
  * 
  */
-@Path(LovModule.MODULE_NAME)
-public class LovModule extends BaseModule {
+@Path(LovCatalogue.MODULE_NAME)
+public class LovCatalogue extends BaseModule {
 
 	//-------------------------------------------------------------------------
 	// Constants
 	//-------------------------------------------------------------------------
 
-	private final static Logger log = Logger.getLogger(LovModule.class);
+	private final static Logger log = Logger.getLogger(LovCatalogue.class);
 
 	//TODO see if this has to be changed
 	public final static String PROJECT_RESOURCE_PATH = "project";
 
-	public final static String MODULE_NAME = "lov";
+	public final static String MODULE_NAME = "lov-catalogue";
 
 	private final static String LOV_CONTEXT = "http://lov.okfn.org/endpoint/lov_aggregator";
 	private final static String LOV_CONTEXT_SPARQL = "<" + LOV_CONTEXT + ">";
@@ -94,8 +86,6 @@ public class LovModule extends BaseModule {
 	private Configuration configuration = null;
 	/** Project Manager bean. */
 	private ProjectManager projectManager = null;
-	/** Lov Service */
-	private LovService lovService = null;
 
 	private Date nextLovUpdate = null;
 	private List<Statement> statements = null;
@@ -106,7 +96,7 @@ public class LovModule extends BaseModule {
 	// Constructors
 	//-------------------------------------------------------------------------
 
-	public LovModule(){
+	public LovCatalogue(){
 		super(MODULE_NAME);
 		
 		if(nextLovUpdate == null) {
@@ -128,54 +118,11 @@ public class LovModule extends BaseModule {
 	public void postInit(Configuration configuration) {
 		this.configuration  = configuration;
 		this.projectManager = configuration.getBean(ProjectManager.class);
-//		Configuration.getDefault().getTempStorage();
-		lovService = new OnlineLovService();
 	}
 
 	//-------------------------------------------------------------------------
 	// Web services
 	//-------------------------------------------------------------------------
-
-	/**
-	 * <i>[Resource method]</i> Redirects the client to the
-	 * {@link ProjectResource project resource} index page, using a
-	 * 301 (Moved permanently) HTTP status.
-	 * @param  uriInfo   the requested URI.
-	 *
-	 * @return a 301 redirection response to the project resource
-	 *         index page.
-	 */
-	//    @GET
-	//    public Response getIndex(@Context UriInfo uriInfo) {
-	//        URI target = uriInfo.getRequestUriBuilder()
-	//                            .path(PROJECT_RESOURCE_PATH).build();
-	//        return Response.status(Status.MOVED_PERMANENTLY)
-	//                       .location(target)
-	//                       .build();
-	//    }
-	
-	@GET
-	@Path("search")
-	@Produces(APPLICATION_JSON)
-	public Response searchLov(
-			@DefaultValue("") @QueryParam("q") String query,
-			@DefaultValue("") @QueryParam("type") String type,
-			@DefaultValue("") @QueryParam("vocSpace") String vocSpace,
-			@DefaultValue("") @QueryParam("voc") String voc,
-			@DefaultValue("0") @QueryParam("offset") int offset,
-			@DefaultValue("0") @QueryParam("limit") int limit) {
-		
-		SearchQueryParam params = new SearchQueryParam();
-		params.setQuery(query);
-		params.setType(type);
-		params.setVocSpace(vocSpace);
-		params.setVoc(voc);
-		params.setOffset(offset);
-		params.setLimit(limit);
-		
-		return Response.ok(lovService.search(params),
-				APPLICATION_JSON_UTF8).build();
-	}
 
 	/**
 	 * Display the LOV catalog. They are obtained by querying the LOV sparql
@@ -401,7 +348,7 @@ public class LovModule extends BaseModule {
 	 * Caches a copy of the LOV catalog from the internal store
 	 * @throws MalformedQueryException 
 	 * @throws Exception 
-	 * @throws LovModuleException
+	 * @throws LovCatalogueException
 	 * @throws URISyntaxException
 	 */
 	private void cacheLov() throws Exception{

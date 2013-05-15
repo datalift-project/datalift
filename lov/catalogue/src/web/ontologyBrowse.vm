@@ -4,8 +4,8 @@
 <head>
 ## charger des resources propres au module ?
 #load_core_resources
-#set( $moduleUri = "$baseUri/lov" )
-#set( $title = "lov browser" )
+#set( $moduleUri = "$baseUri/lov-catalogue" )
+#set( $title = "LOV Catalogue" )
 	<title>#i18n($title) - DataLift</title>
 #css_links
 <link rel="stylesheet" href="${moduleUri}/static/css/ontologyBrowse.css">
@@ -47,7 +47,7 @@
 	</table>
 
 
-<form id="LovCatalogue" method="post" action="${baseUri}/lov/${projectId}/ontologyBrowseUpload">
+<form id="LovCatalogue" method="post" action="${moduleUri}/${projectId}/ontologyBrowseUpload">
 	<input type="submit" value="submit" />
 </form>
 

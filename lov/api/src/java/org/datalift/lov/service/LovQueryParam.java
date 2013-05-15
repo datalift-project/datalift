@@ -5,6 +5,12 @@ import java.net.URLEncoder;
 
 import org.datalift.fwk.util.StringUtils;
 
+/**
+ * Base class for query parameters.
+ * 
+ * @author freddy
+ *
+ */
 public abstract class LovQueryParam {
 	
 	protected final static String PARAM_TOKEN = "?";

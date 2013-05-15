@@ -18,6 +18,13 @@ import org.openrdf.rio.RDFFormat;
 import org.openrdf.rio.RDFParseException;
 import org.openrdf.sail.memory.MemoryStore;
 
+/**
+ * Service implementation that performs local request to get its results.
+ * Handles the lov_aggregator download and updates.
+ * 
+ * @author freddy
+ *
+ */
 public class OfflineLovService extends LovService {
 	
 	/** Private Storage file */

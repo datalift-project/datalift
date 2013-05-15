@@ -4,6 +4,7 @@ import org.datalift.fwk.log.Logger;
 
 /**
  * Abstract class that defines a Lov Service.
+ * 
  * @author freddy
  *
  */

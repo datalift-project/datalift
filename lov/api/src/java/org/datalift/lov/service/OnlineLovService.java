@@ -7,7 +7,12 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-
+/**
+ * Service implementation that performs HTTP request to get its results.
+ * 
+ * @author freddy
+ *
+ */
 public class OnlineLovService extends LovService {
 	
 	private final static String QUERY_BASE_URL = "http://lov.okfn.org/dataset/lov/api/v1/";

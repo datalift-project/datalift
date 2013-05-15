@@ -30,7 +30,7 @@
   set to the current working directory.
 -->
 
-<project name="datalift-lov" default="dist" basedir=".">
+<project name="datalift-lov-catalogue" default="dist" basedir=".">
 
   <!-- ================ Property Definitions ============================== -->
 
@@ -59,11 +59,13 @@
 
   <property file="${user.home}/datalift-build.properties"/>
   <property file="build.properties"/>
+  
+  <property name="datalift.root" location="${basedir}/../.."/>
 
-  <property name="fwk.home"  location="${basedir}/../framework"/>
+  <property name="fwk.home"  location="${datalift.root}/framework"/>
   <property file="${fwk.home}/build.properties"/>
 
-  <property name="core.home" location="${basedir}/../core"/>
+  <property name="core.home" location="${datalift.root}/core"/>
   <property file="${core.home}/build.properties"/>
 
 
@@ -92,10 +94,10 @@
                         Defaults to "dist".
    -->
 
-  <property name="app.name"             value="lov"/>
-  <property name="app.version"          value="0.3"/>
+  <property name="app.name"             value="lov-catalogue"/>
+  <property name="app.version"          value="0.2"/>
   <property name="app.path"             value="/${app.name}"/>
-  <property name="app.long.name"        value="LinkedOpenVocabularies"/>
+  <property name="app.long.name"        value="LinkedOpenVocabulariesCatalogue"/>
 
   <property name="build.home"           location="${basedir}/build"/>
   <property name="dist.home"            location="${basedir}/dist"/>
@@ -290,7 +292,7 @@
     <jar jarfile="${jar.path}">
       <fileset dir="${classes.dir}"/>
       <service type="org.datalift.fwk.Module">
-        <provider classname="org.datalift.lov.LovModule"/>
+        <provider classname="org.datalift.lov.LovCatalogue"/>
       </service>
     </jar>
   </target>

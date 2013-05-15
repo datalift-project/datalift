@@ -8,6 +8,7 @@ package org.datalift.lov.service;
  */
 public class SearchQueryParam extends LovQueryParam {
 	
+	// Remplacer par une enum ?
 	private final static String QUERY = "q";
 	private final static String TYPE = "type";
 	private final static String VOC_SPACE = "vocSpace";

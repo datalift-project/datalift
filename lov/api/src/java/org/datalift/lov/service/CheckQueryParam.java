@@ -1,12 +1,20 @@
 package org.datalift.lov.service;
 
-
+/**
+ * Parameters for the check service.
+ * @author freddy
+ *
+ */
 public class CheckQueryParam extends LovQueryParam {
 	
+	// Remplacer par une enum ?
 	private final static String URI = "uri";
 	private final static String TIMEOUT = "timeout";
 	
+	/** Vocabulary URI to process */
 	private String uri;
+	
+	/** Number of seconds after which the process stop (default: 15; max: 60) */
 	private int timeout;
 	
 	public CheckQueryParam(String uri) {
