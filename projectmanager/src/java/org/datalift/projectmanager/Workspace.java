@@ -54,6 +54,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.MissingResourceException;
 import java.util.TreeSet;
 
 import javax.ws.rs.Consumes;
@@ -1879,6 +1880,15 @@ public class Workspace extends BaseModule
             Project p = this.loadProject(projectUri);
             
             TemplateModel view = this.newView("projectOntoUpload.vm", p);
+            boolean cataloguePresent = false;
+
+            try {
+                    Configuration.getDefault().getBean("lov-catalogue");
+                    cataloguePresent = true;
+            }
+            catch (MissingResourceException e) { /* Not present */ }
+
+            view.put("cataloguePresent", Boolean.valueOf(cataloguePresent));
             view.put("projectId", projectId);
 
             response = Response.ok(view,
