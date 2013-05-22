@@ -10,6 +10,7 @@ import java.lang.reflect.Type;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -30,6 +31,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.core.Response.ResponseBuilder;
@@ -53,6 +55,7 @@ import com.google.gson.JsonSerializer;
 
 import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
+import org.datalift.fwk.MediaTypes;
 import org.datalift.fwk.ResourceResolver;
 import org.datalift.fwk.i18n.PreferredLocales;
 import org.datalift.fwk.log.Logger;
@@ -64,6 +67,7 @@ import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.rdf.RdfFormat;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
+import org.datalift.fwk.sparql.SparqlQueries;
 import org.datalift.fwk.util.io.FileUtils;
 import org.datalift.fwk.util.web.Charsets;
 import org.datalift.fwk.util.web.HttpDateFormat;
@@ -77,6 +81,12 @@ import org.datalift.owl.OwlObject;
 import org.datalift.owl.OwlParser;
 import org.datalift.owl.OwlProperty;
 import org.datalift.owl.TechnicalException;
+import org.datalift.owl.toolkit.Argument;
+import org.datalift.owl.toolkit.CopyStatementRDFHandler;
+import org.datalift.owl.toolkit.Script;
+import org.datalift.owl.toolkit.SesameSPARQLExecuter;
+import org.datalift.owl.toolkit.Template;
+import org.datalift.owl.toolkit.TemplateRegistry;
 import org.datalift.sparql.query.ConstructQuery;
 import org.datalift.sparql.query.UpdateQuery;
 
@@ -113,6 +123,11 @@ public class Mapper extends BaseModule implements ProjectModule
 
     /** The DataLift project manager. */
     protected ProjectManager projectManager = null;
+    
+    /** The SPARQL queries used by this module */
+	private SparqlQueries queries;
+	
+    protected LabelFetcher labelFetcher;
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -136,6 +151,55 @@ public class Mapper extends BaseModule implements ProjectModule
         if (this.projectManager == null) {
             throw new TechnicalException("project.manager.not.available");
         }
+        
+		// create label fetcher and keep it in session
+		Repository internal = Configuration.getDefault().getInternalRepository();
+		org.openrdf.repository.Repository repository = internal.getNativeRepository();
+		this.labelFetcher = new LabelFetcher(this.queries, repository);
+		
+		// register templates
+		// TemplateRegistry.registerPackage("org.datalift.owl.mapper");
+		Template moveTypeTemplate = new Template();
+		moveTypeTemplate.setName("MOVE_CLASS");
+		moveTypeTemplate.setDisplayName("Translate class to another");
+		moveTypeTemplate.setBody("DELETE { ?s a ?source } INSERT { ?s a ?target } WHERE { ?s a ?source }");
+		
+		Argument sourceParam = new Argument();
+		sourceParam.setVarName("source");
+		sourceParam.setDisplayName("Source type");
+		sourceParam.setMandatory(true);
+		sourceParam.setOrder(0);
+		moveTypeTemplate.addArgument(sourceParam);
+		
+		Argument targetParam = new Argument();
+		targetParam.setVarName("target");
+		targetParam.setDisplayName("Target type");
+		targetParam.setMandatory(true);
+		targetParam.setOrder(1);
+		moveTypeTemplate.addArgument(targetParam);
+		
+		TemplateRegistry.register(moveTypeTemplate);
+		
+		Template movePredicateTemplate = new Template();
+		movePredicateTemplate.setName("MOVE_PREDICATE");
+		movePredicateTemplate.setDisplayName("Translate predicate to another");
+		movePredicateTemplate.setBody("DELETE { ?s ?source ?o } INSERT { ?s ?target ?o } WHERE { ?s ?source ?o }");
+		
+		Argument sourcePredicateParam = new Argument();
+		sourcePredicateParam.setVarName("source");
+		sourcePredicateParam.setDisplayName("Source type");
+		sourcePredicateParam.setMandatory(true);
+		sourcePredicateParam.setOrder(0);
+		movePredicateTemplate.addArgument(sourcePredicateParam);
+		
+		Argument targetPredicateParam = new Argument();
+		targetPredicateParam.setVarName("target");
+		targetPredicateParam.setDisplayName("Target type");
+		targetPredicateParam.setMandatory(true);
+		targetPredicateParam.setOrder(1);
+		movePredicateTemplate.addArgument(targetPredicateParam);
+		
+		TemplateRegistry.register(movePredicateTemplate);
     }
 
     //-------------------------------------------------------------------------
@@ -258,6 +322,82 @@ public class Mapper extends BaseModule implements ProjectModule
         return response;
     }
 
+    // Multiple ontology
+    
+	@POST
+	@Path("execute")
+	public Response executeScript(
+			@QueryParam("project") java.net.URI projectId,
+			@QueryParam("source") java.net.URI sourceId,
+			@QueryParam("callback") String callback,
+			@FormParam("dest_title") String destTitle,
+			@FormParam("dest_graph_uri") String targetGraph,
+			@FormParam("script") String script)
+					throws WebApplicationException {
+
+		System.out.println(
+				"RDF-Transform executing script '"+script+"'" +
+						" on project '"+projectId+"'," +
+								" source '"+sourceId+"'," +
+										" to target '"+targetGraph+"'" +
+												" with title '"+destTitle+"'");
+		
+		org.openrdf.repository.Repository internal = Configuration.getDefault().getInternalRepository().getNativeRepository();
+		try {
+			if ((script == null) || (script.equals(""))) {
+				log.error("Missing script parameter.");
+				throw new WebApplicationException(
+						Response.status(Status.BAD_REQUEST)
+						.type(MediaTypes.TEXT_PLAIN_TYPE)
+						.entity("Missing script parameter.").build()
+						);
+			}
+			// Retrieve project.
+			Project p = this.getProject(projectId);
+
+			// clear target graph
+			System.out.println("Clearing target graph...");
+			internal.getConnection().remove((Resource)null, null, null, internal.getValueFactory().createURI(targetGraph));
+			System.out.println("Done");
+			
+			// copy data into new graph and apply transforms on it ?
+			System.out.println("Copy original source...");
+			CopyStatementRDFHandler copyHandler = new CopyStatementRDFHandler(internal);
+			copyHandler.setTargetGraphs(Collections.singleton(java.net.URI.create(targetGraph)));
+			internal.getConnection().export(copyHandler, internal.getValueFactory().createURI(sourceId.toString()));
+			System.out.println("Done");
+			
+			// Execute script in target graph
+			Script scriptObject = new Script(script);
+			
+			SesameSPARQLExecuter executer = new SesameSPARQLExecuter(internal);
+			executer.setDefaultGraphs(Collections.singleton(java.net.URI.create(targetGraph)));
+			executer.setDefaultRemoveGraphs(Collections.singleton(java.net.URI.create(targetGraph)));
+			executer.setDefaultInsertGraph(java.net.URI.create(targetGraph));
+			System.out.println("Executing");
+			scriptObject.execute(executer,null);
+			System.out.println("Done");
+			
+			// Register new transformed RDF source.
+			TransformedRdfSource in = (TransformedRdfSource)p.getSource(sourceId);
+
+			System.out.println("Registering source");
+			addResultSource(p, in, destTitle, java.net.URI.create(targetGraph));
+			System.out.println("Done");
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+			try {
+				internal.getConnection().clear(internal.getValueFactory().createURI(targetGraph.toString()));
+			}
+			catch (Exception e1) { e1.printStackTrace(); }
+		}
+		System.out.println("returning");
+		return Response.ok().build();
+	}
+	
+    // Single ontology
+    
     @POST
     @Consumes(APPLICATION_FORM_URLENCODED)
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
@@ -435,6 +575,17 @@ public class Mapper extends BaseModule implements ProjectModule
         this.projectManager.saveProject(p);
         return newSrc;
     }
+    
+    private TransformedRdfSource addResultSource(Project p, Source parent,
+									            String name, java.net.URI uri)
+									                     throws IOException {
+		java.net.URI id = java.net.URI.create(uri.toString());
+		TransformedRdfSource newSrc =
+		this.projectManager.newTransformedRdfSource(p, id,
+		             name, null, id, parent);
+		this.projectManager.saveProject(p);
+		return newSrc;
+	}
 
     private String getRdfAcceptHeader() {
         StringBuilder buf = new StringBuilder();

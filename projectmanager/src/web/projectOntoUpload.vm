@@ -42,11 +42,13 @@
 	</div>
       </div>
     </div>
+  #if( $cataloguePresent )
     <div>
-	<form action="${baseUri}/lovbrowser/${projectId}/ontologyBrowse">
-    		<input type="submit" value="Browse Ontology Catalogue" />
+	<form action="${baseUri}/lov-catalogue/${projectId}/ontologyBrowse">
+    		<input type="submit" value="Browse Ontology Catalogue" style="margin: 10px;" />
 	</form>
     </div>
+	#end
   </div>
 #footer
 
