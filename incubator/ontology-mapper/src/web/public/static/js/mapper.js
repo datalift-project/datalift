@@ -29,6 +29,14 @@ function indent(e) {
   return (e == undefined)? 0: (1 + indent(e.owner));
 }
 
+function extractor(query) {
+  var result = /([^+]+)$/.exec(query);
+  if (result && result[1])
+    return result[1].trim();
+  return '';
+}
+
+
 var propertyMap = [];
 
 /**
@@ -583,7 +591,23 @@ function MappingViewModel(baseUri, projectUri, sources, ontologies) {
       }
       self.valueExpected(m.value != null);
       self.propertyValue(m.value);
-      $("#property-value").typeahead({ source: self.availableSrcProps });
+      $("#property-value").typeahead({
+          source: self.availableSrcProps,
+          updater: function(item) {
+            return this.$element.val().replace(/[^+]([\s]*)$/,'$1') + item;
+          },
+          matcher: function (item) {
+            var tquery = extractor(this.query);
+            if (!tquery) return false;
+            return ~item.toLowerCase().indexOf(tquery.toLowerCase())
+          },
+          highlighter: function (item) {
+            var query = extractor(this.query).replace(/[\-\[\]{}()*+?.,\\\^$|#\s]/g, '\\$&')
+            return item.replace(new RegExp('(' + query + ')', 'ig'), function ($1, match) {
+              return '<strong>' + match + '</strong>'
+            })
+          }
+        });
     }
   }
 
