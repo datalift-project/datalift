@@ -62,6 +62,7 @@ import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
 
 import static org.datalift.core.DefaultConfiguration.REPOSITORY_DEFAULT_FLAG;
+import static org.datalift.fwk.util.PrimitiveUtils.wrap;
 import static org.datalift.fwk.util.StringUtils.isBlank;
 
 
@@ -201,8 +202,7 @@ abstract public class BaseRepository extends Repository
             }
             boolean result = q.evaluate();
             if (log.isTraceEnabled()) {
-                log.trace("{} {} -> {}", query, bindings,
-                                         Boolean.valueOf(result));
+                log.trace("{} {} -> {}", query, bindings, wrap(result));
             }
             return result;
         }

@@ -449,7 +449,7 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
                             String.valueOf(updateInterval));
                 }
                 config.setProperty(getPropName(FILE_LOADER, LOADER_CACHE),
-                            Boolean.valueOf(updateInterval >= 0L).toString());
+                                        String.valueOf(updateInterval >= 0L));
             }
             // Configure module template loader.
             if (! modulePaths.isEmpty()) {
@@ -479,7 +479,7 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
                             String.valueOf(updateInterval));
                 }
                 config.setProperty(getPropName(MODULE_LOADER, LOADER_CACHE),
-                            Boolean.valueOf(updateInterval >= 0L).toString());
+                                        String.valueOf(updateInterval >= 0L));
             }
             // Configure classpath template loader.
             config.setProperty(getPropName(CLASSPATH_LOADER, LOADER_CLASS),

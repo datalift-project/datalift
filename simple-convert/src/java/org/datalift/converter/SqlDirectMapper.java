@@ -77,6 +77,7 @@ import org.datalift.fwk.util.Env;
 import org.datalift.fwk.util.UriBuilder;
 
 import static org.datalift.fwk.rdf.ElementType.*;
+import static org.datalift.fwk.util.PrimitiveUtils.wrap;
 import static org.datalift.fwk.util.StringUtils.*;
 import static org.datalift.fwk.MediaTypes.*;
 
@@ -288,8 +289,8 @@ public class SqlDirectMapper extends BaseConverterModule
             cnx.commit();
             long delay = System.currentTimeMillis() - t0;
             log.debug("Inserted {} RDF triples into <{}> from {} SQL results in {} seconds",
-                      Long.valueOf(statementCount), targetGraph,
-                      Integer.valueOf(i - 1), Double.valueOf(delay / 1000.0));
+                      wrap(statementCount), targetGraph,
+                      wrap(i - 1), wrap(delay / 1000.0));
         }
         catch (Exception e) {
             throw new TechnicalException("sql.conversion.failed", e);

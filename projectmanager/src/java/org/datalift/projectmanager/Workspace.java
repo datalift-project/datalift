@@ -139,6 +139,7 @@ import org.datalift.fwk.view.ViewFactory;
 
 import static org.datalift.fwk.MediaTypes.*;
 import static org.datalift.fwk.project.SparqlSource.*;
+import static org.datalift.fwk.util.PrimitiveUtils.wrap;
 import static org.datalift.fwk.util.StringUtils.*;
 
 
@@ -1888,7 +1889,7 @@ public class Workspace extends BaseModule
             }
             catch (MissingResourceException e) { /* Not present */ }
 
-            view.put("cataloguePresent", Boolean.valueOf(cataloguePresent));
+            view.put("cataloguePresent", wrap(cataloguePresent));
             view.put("projectId", projectId);
 
             response = Response.ok(view,

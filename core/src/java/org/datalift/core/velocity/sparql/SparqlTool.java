@@ -76,6 +76,7 @@ import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.sparql.AccessController;
 import org.datalift.fwk.sparql.AccessController.ControlledQuery;
 
+import static org.datalift.fwk.util.PrimitiveUtils.wrap;
 import static org.datalift.fwk.util.StringUtils.*;
 
 
@@ -241,13 +242,12 @@ public final class SparqlTool
             boolean result = q.evaluate();
             if (log.isDebugEnabled()) {
                 if (this.bindings.isEmpty()) {
-                    log.debug("\"{}\" on RDF store: {} -> {}", query,
-                                        repository, Boolean.valueOf(result));
+                    log.debug("\"{}\" on RDF store: {} -> {}",
+                              query, repository, wrap(result));
                 }
                 else {
                     log.debug("\"{}\" ({}) on RDF store: {} -> {}",
-                                        query, this.bindings,
-                                        repository, Boolean.valueOf(result));
+                              query, this.bindings, repository, wrap(result));
                 }
             }
             return result;
@@ -467,13 +467,13 @@ public final class SparqlTool
             DescribeResult result = new DescribeResult(u, q.evaluate());
             if (log.isDebugEnabled()) {
                 if (this.bindings.isEmpty()) {
-                    log.debug("\"{}\" on RDF store: {} -> {} triples", query,
-                                    repository, Integer.valueOf(result.size()));
+                    log.debug("\"{}\" on RDF store: {} -> {} triples",
+                                    query, repository, wrap(result.size()));
                 }
                 else {
                     log.debug("\"{}\" ({}) on RDF store: {} -> {} triples",
                                     query, this.bindings,
-                                    repository, Integer.valueOf(result.size()));
+                                    repository, wrap(result.size()));
                 }
             }
             return result;

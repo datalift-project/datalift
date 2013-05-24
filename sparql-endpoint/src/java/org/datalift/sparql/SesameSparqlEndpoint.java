@@ -102,6 +102,7 @@ import org.datalift.fwk.util.web.json.SparqlResultsJsonWriter;
 import org.datalift.fwk.util.web.json.AbstractJsonWriter.ResourceType;
 
 import static org.datalift.fwk.MediaTypes.*;
+import static org.datalift.fwk.util.PrimitiveUtils.wrap;
 import static org.datalift.fwk.util.StringUtils.*;
 
 
@@ -325,9 +326,9 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
         model.put("named-graph-uri", namedGraphUris);
         model.put("repository", repo.name);
         model.put("query", query);
-        model.put("min",  Integer.valueOf(startOffset));
-        model.put("max",  Integer.valueOf(endOffset));
-        model.put("grid", Boolean.valueOf(gridJson));
+        model.put("min",  wrap(startOffset));
+        model.put("max",  wrap(endOffset));
+        model.put("grid", wrap(gridJson));
         model.put("format", format);
         if (viewData != null) {
             model.putAll(viewData);
@@ -768,7 +769,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                             this.count -= startOffset;
                         }
                         log.debug("Processed {} statements from <{}> for: {}",
-                                  Integer.valueOf(this.count), repository.name,
+                                  wrap(this.count), repository.name,
                                   new QueryDescription(query));
                     }
                 };
@@ -849,8 +850,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                             this.count -= startOffset;
                         }
                         log.debug("Processed {} binding sets for: {}",
-                                  Integer.valueOf(this.count),
-                                  new QueryDescription(query));
+                                wrap(this.count), new QueryDescription(query));
                     }
                 };
         }
@@ -967,8 +967,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                         this.count -= this.startOffset;
                     }
                     log.debug("Processed {} results for: {}",
-                                            Integer.valueOf(this.count),
-                                            new QueryDescription(this.query));
+                            wrap(this.count), new QueryDescription(this.query));
                 }
             }
         }

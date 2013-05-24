@@ -86,6 +86,7 @@ import org.datalift.fwk.util.Env;
 import org.datalift.fwk.util.UriBuilder;
 
 import static org.datalift.fwk.rdf.ElementType.*;
+import static org.datalift.fwk.util.PrimitiveUtils.wrap;
 import static org.datalift.fwk.util.StringUtils.*;
 import static org.datalift.fwk.MediaTypes.*;
 
@@ -263,7 +264,7 @@ public class CsvDirectMapper extends BaseConverterModule
                         Mapping m  = Mapping.fromString(params.getFirst(k));
                         if (log.isTraceEnabled()) {
                             log.trace("Type mapping: Column #{} -> {}",
-                                                    Integer.valueOf(col), m);
+                                                                wrap(col), m);
                         }
                         typeMappings[col] = m;
                     }
@@ -416,9 +417,8 @@ public class CsvDirectMapper extends BaseConverterModule
                         if (log.isTraceEnabled()) {
                             duration = System.currentTimeMillis() - t0;
                             log.trace("Inserted {} RDF triples from {} CSV lines in {} seconds...",
-                                      Long.valueOf(statementCount),
-                                      Integer.valueOf(i - 1),
-                                      Double.valueOf(duration / 1000.0));
+                                      wrap(statementCount), wrap(i - 1),
+                                      wrap(duration / 1000.0));
                         }
                     }
                 }
@@ -427,8 +427,8 @@ public class CsvDirectMapper extends BaseConverterModule
             cnx.commit();
             duration = System.currentTimeMillis() - t0;
             log.debug("Inserted {} RDF triples into <{}> from {} CSV lines in {} seconds",
-                      Long.valueOf(statementCount), targetGraph,
-                      Integer.valueOf(i - 1), Double.valueOf(duration / 1000.0));
+                      wrap(statementCount), targetGraph,
+                      wrap(i - 1), wrap(duration / 1000.0));
         }
         catch (TechnicalException e) {
             throw e;
