@@ -42,7 +42,9 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
+import java.util.Collection;
 import java.util.Comparator;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -110,6 +112,7 @@ public final class Wrapper
 
     private final static String LOCALHOST = "localhost";
     private final static String WAR_EXTENSION = ".war";
+    private final static String JAR_EXTENSION = ".jar";
 
     // Constants for well-known Java system properties.
     private final static String JAVA_CURRENT_DIR_PROP   = "user.dir";
@@ -148,6 +151,16 @@ public final class Wrapper
                     return ((f.isDirectory()) ||
                             (f.isFile() && f.getName().toLowerCase()
                                                       .endsWith(WAR_EXTENSION)));
+                }
+            };
+
+    private final static FileFilter JAR_FILE_FILTER =
+            new FileFilter() {
+                @Override
+                public boolean accept(File f) {
+                    return ((f.isDirectory()) ||
+                            (f.isFile() && f.getName().toLowerCase()
+                                                      .endsWith(JAR_EXTENSION)));
                 }
             };
 
@@ -306,6 +319,9 @@ public final class Wrapper
         if (webappDir != null) {
             webapps.put("", webappDir);
         }
+        // Check for user-provided JARs to be made available to web apps.
+        String extraClasspath = join(
+                            getExtraClassPathentries(env.getPath(LIB)), ";");
         // Register web applications.
         for (Map.Entry<String,File> e : webapps.entrySet()) {
             String path = e.getKey();
@@ -316,6 +332,9 @@ public final class Wrapper
             ctx.setWar(webapp.getPath());
             if (! webapp.isDirectory()) {
                 ctx.setTempDirectory(new File(env.getPath(WORK), path));
+            }
+            if (extraClasspath.length() != 0) {
+                ctx.setExtraClasspath(extraClasspath);
             }
             httpServer.addHandler(ctx);
             System.out.println("Deploying \"" + webapp.getName() +
@@ -336,6 +355,16 @@ public final class Wrapper
         // Wait for server termination.
         httpServer.join();
         System.exit(0);
+    }
+
+    private static Collection<File> getExtraClassPathentries(File... dirs) {
+        Collection<File> extraJars = new LinkedList<File>();
+        for (File dir : dirs) {
+            for (File f : dir.listFiles(JAR_FILE_FILTER)) {
+                extraJars.add(f);
+            }
+        }
+        return extraJars;
     }
 
     private static void installUserEnv(PathSpec env, File source)
@@ -503,5 +532,26 @@ public final class Wrapper
             path = path.substring(0, i);
         }
         return "/" + path;
+    }
+
+    public static String join(Collection<?> c, String sep) {
+        if (sep == null) {
+            throw new IllegalArgumentException("sep");
+        }
+        String s = "";
+        if ((c != null) && (! c.isEmpty())) {
+            StringBuilder sb = new StringBuilder();
+            for (Object element : c) {
+                if (element != null) {
+                    sb.append(element).append(sep);
+                }
+            }
+            if (sb.length() != 0) {
+                // Remove last separator
+                sb.setLength(sb.length() - sep.length());
+                s = sb.toString();
+            }
+        }
+        return s;
     }
 }
