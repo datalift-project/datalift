@@ -76,12 +76,12 @@
   <property name="runtime.conf"         location="${conf.home}/runtime"/>
   <property name="webapp.conf"          location="${conf.home}/webapp"/>
 
-  <property name="mac.app.name"         value="DataLift.app"/>
+  <property name="mac.app.name"         value="Datalift.app"/>
   <property name="mac.conf"             location="${conf.home}/mac"/>
   <property name="mac.dist.dir"
             location="${dist.home}/${mac.app.name}"/>
 
-  <property name="windows.app.name"     value="DataLift"/>
+  <property name="windows.app.name"     value="Datalift"/>
   <property name="windows.conf"         location="${conf.home}/windows"/>
   <property name="windows.dist.dir"
             location="${dist.home}/${windows.app.name}"/>
@@ -248,9 +248,9 @@
     <copy todir="${gen.dist.dir}" preservelastmodified="true">
       <fileset dir="${runtime.conf}"/>
     </copy>
-    <!-- Copy DataLift main web application -->
+    <!-- Copy Datalift main web application -->
     <copy file="${datalift.war.path}" todir="${gen.dist.dir}/webapps"/>
-    <!-- Patch DataLift webapp to install standalon app. security config. -->
+    <!-- Patch Datalift webapp to install standalon app. security config. -->
     <!-- Force file copy to force JAR update: updated files must be newer
          than the ones they replace in JAR file. -->
     <copy todir="${tmp.build.dir}">
@@ -260,7 +260,7 @@
       <fileset dir="${tmp.build.dir}"/>
     </jar>
     <delete dir="${tmp.build.dir}" quiet="true"/>
-    <!-- Copy default DataLift modules -->
+    <!-- Copy default Datalift modules -->
     <pathconvert property="modules.jars" refid="build.modules" pathsep=",">
       <mapper>
         <chainedmapper>
@@ -316,7 +316,7 @@
     <chmod perm="ugo+rx" type="file">
       <fileset dir="${mac.dist.dir}/Contents/MacOS"/>
     </chmod>
-    <!-- Copy DataLift Java application -->
+    <!-- Copy Datalift Java application -->
     <copy todir="${mac.dist.dir}/Contents/Resources"
                                           preservelastmodified="true">
       <fileset dir="${gen.dist.dir}"/>
@@ -338,7 +338,7 @@
     <chmod perm="ugo+rx" type="file">
       <fileset dir="${windows.dist.dir}" includes="**/*.sh"/>
     </chmod>
-     <!-- Copy DataLift Java application -->
+     <!-- Copy Datalift Java application -->
     <copy todir="${windows.dist.dir}" preservelastmodified="true">
       <fileset dir="${gen.dist.dir}"/>
     </copy>
