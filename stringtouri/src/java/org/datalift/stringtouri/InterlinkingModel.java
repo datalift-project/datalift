@@ -9,8 +9,12 @@ package org.datalift.stringtouri;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.i18n.PreferredLocales;
@@ -20,6 +24,7 @@ import org.datalift.fwk.project.ProjectManager;
 import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.rdf.Repository;
+
 import org.openrdf.query.MalformedQueryException;
 import org.openrdf.query.QueryEvaluationException;
 import org.openrdf.query.QueryLanguage;
@@ -32,8 +37,8 @@ import org.openrdf.repository.RepositoryException;
  * An abstract class for all of the interlinking modules, combining default 
  * operations and values.
  * 
- * @author tcolas
- * @version 07102012
+ * @author tcolas, sugliac
+ * @version 18062013
  */
 public abstract class InterlinkingModel {
 	
@@ -50,6 +55,7 @@ public abstract class InterlinkingModel {
     protected static final String PB = "p";
     /** Binding for the default object var in SPARQL. */
     protected static final String OB = "o";
+    
     
     /** Default WHERE SPARQL clause to retrieve all classes. */
     private static final String CLASS_WHERE = "{?" + SB + " a ?" + OB + "}";
@@ -125,19 +131,33 @@ public abstract class InterlinkingModel {
     }
     
     /**
+     * Get the name of every source that belong to a project
+     * @param proj the Project URL
+     * @return a list with every name of the sources
+     */
+    protected final List<String> getSourcesName(Project proj){
+    	List<Source> sources = getSources(proj);
+    	List<String> sourcesName = new ArrayList<String>();
+    	for(Source src: sources){
+    		sourcesName.add(src.getTitle());
+    	}
+    	return sourcesName;
+    } 
+    
+    /**
      * Returns all of the URIs (as strings) from the {@link Project project}.
      * @param proj The project to use.
      * @return A LinkedList containing source file's URIs as strings.
      */
-    protected final LinkedList<String> getSourcesURIs(Project proj) {
-    	LinkedList<String> ret = new LinkedList<String>();
+    protected final List<Source> getSources(Project proj) {
+    	List<Source> sources = new ArrayList<Source>();
     	
     	for (Source src : proj.getSources()) {
     		if (isValidSource(src)) {
-    			ret.add(src.getUri());
+    			sources.add(src);
     		}
     	}
-    	return ret;
+    	return sources;
     }
     
     //-------------------------------------------------------------------------
@@ -145,7 +165,7 @@ public abstract class InterlinkingModel {
     //-------------------------------------------------------------------------
     
     /**
-	 * Tels if the bindings of the results are well-formed.
+	 * Tells if the bindings of the results are well-formed.
 	 * @param tqr The result of a SPARQL query.
 	 * @param bind The result one and only binding.
 	 * @return True if the results contains only bind.
@@ -162,10 +182,10 @@ public abstract class InterlinkingModel {
 	 * @param bind The result one and only binding.
 	 * @return The query's result as a list of Strings.
 	 */
-    protected LinkedList<String> selectQuery(String query, String bind) {
+    protected List<String> selectQuery(String query, String bind) {
 		TupleQuery tq;
 		TupleQueryResult tqr;
-		LinkedList<String> ret = new LinkedList<String>();
+		List<String> ret = new LinkedList<String>();
 		
 		LOG.debug("Processing query: \"{}\"", query);
 		RepositoryConnection cnx = INTERNAL_REPO.newConnection();
@@ -208,45 +228,79 @@ public abstract class InterlinkingModel {
     	return ret;
     }
     
+   
     /**
      * Retrieves multiple queries results based on a query pattern executed on
      * multiple contexts.
-     * @param contexts Contexts on which the query will be executed.
+     * @param sourceContext Context on which the query will be executed.
      * @param where Constraints given by the query.
      * @param bind Binding to use to retrieve data.
-     * @return Results as a LinkedList of Strings.
+     * @return Results as a List of Strings.
      */
-    protected final LinkedList<String> getMultipleResults(LinkedList<String> contexts, String where, String bind) {
-    	LinkedList<String> ret = new LinkedList<String>();
-    	
-    	for (String context : contexts) {
-    		ret.addAll(selectQuery(writeQuery(context, where, bind), bind));
-    	}
-    	return ret;
+    protected final List<String> getQueryResult(String sourceContext, String where, String bind) {
+    	String query = writeQuery(sourceContext, where, bind);
+    	return selectQuery(query, bind);
     }
+    
 
     /**
-     * Retrieves all of the classes used inside given contexts.
-     * @param contexts The contexts to use.
-     * @return A LinkedList of all of the classes used inside the contexts.
+     * Retrieves all of the classes used inside a given context.
+     * @param context The contexts to use.
+     * @return A List of all of the classes used inside the context.
      */
-    protected final LinkedList<String> getAllClasses(LinkedList<String> contexts) {
-		return getMultipleResults(contexts, CLASS_WHERE, OB);
+    protected final List<String> getClasses(String context) {
+		return getQueryResult(context, CLASS_WHERE, OB);
 	}
 	
 	/**
-     * Retrieves all of the predicates used inside given contexts.
-     * @param contexts The contexts to use.
-     * @return A LinkedList of all of the predicates used inside the contexts.
+     * Retrieves the predicates of a source.
+     * @param uriContext The uri of the source.
+     * @return A List of all of the predicates used inside the contexts.
      */
-	protected final LinkedList<String> getAllPredicates(LinkedList<String> contexts) {
-		return getMultipleResults(contexts, PREDICATE_WHERE, PB);
+	protected final List<String> getPredicates(String uriContext) {
+		return getQueryResult(uriContext, PREDICATE_WHERE, PB);
 	}
 	
-	//-------------------------------------------------------------------------
-    // Value validation.
-    //-------------------------------------------------------------------------
+	/**
+	 * Get every predicate of a certain class
+	 * @param uriSource Uri of the source
+	 * @param uriClass Uri of the class
+	 * @return a List of predicates that belong to a source and their type is of the selected class
+	 */
+	protected final List<String> getPredicatesOfClass(String uriSource, String uriClass){
+		String sourceQuery = this.writeQuery(uriSource, "{ ?"+SB + " a <"+ uriClass + ">}", SB);
+		Set<String> predicates = new HashSet<String>();
+		List<String> subjects = this.selectQuery(sourceQuery, SB);
+		for(String subj:subjects){
+			String predicateQuery = this.writeQuery(uriSource, "{ <" + subj + "> ?" + PB + " ?"+ OB+" }", PB);
+			predicates.addAll(this.selectQuery(predicateQuery, PB));
+		}
+		return new ArrayList<String>(predicates);
+		
+	}
+	
     
+    //-------------------------------------------------------------------------
+    // Launcher management.
+    //-------------------------------------------------------------------------
+
+    /**
+     * Creates a new transformed RDF source and attaches it to a project.
+     * @param  p        the owning project.
+     * @param  parent   the parent source object.
+     * @param  name     the new source name.
+     * @param  uri      the new source URI.
+     *
+     * @return the newly created transformed RDF source.
+     * @throws IOException if any error occurred creating the source.
+     */
+    protected void addResultSource(Project p, Source parent, String name, String description, URI uri) throws IOException {
+    	ProjectManager pm = Configuration.getDefault().getBean(ProjectManager.class);
+        pm.newTransformedRdfSource(p, uri, name, description, uri, parent);
+        pm.saveProject(p);
+    }
+    
+
 	/**
      * Checks whether a value is empty, eg. "", or the values corresponding 
      * to a field that wasn't filled.
@@ -260,54 +314,7 @@ public abstract class InterlinkingModel {
     		|| val.equals(getTranslatedResource("field.mandatory"));
     }
 	
-	/**
-     * Checks if the given string is numeric. Relies on exceptions being thrown,
-     * thus not very effective performance-wise.
-     * @param str A possibly numerical string.
-     * @return True if str is numeric.
-     */
-    public static boolean isNumeric(String str) { 
-    	boolean ret = true;
-    	try {  
-    		Double.parseDouble(str);  
-    	}  
-    	catch (NumberFormatException nfe) {  
-    		ret = false;  
-    	}  
-    	return ret;  
-    }
-    
-	/**
-     * Checks whether the given sources are different.
-     * @param one Source to check.
-     * @param two Source to check.
-     * @return True if the sources are different.
-     */
-    protected boolean isDifferentSources(String one, String two) {
-    	return !one.equals(two);
-    }
-    
-	/**
-     * Checks whether the given source exists for a given project.
-     * @param val Source to find.
-     * @param proj Project where to search for the source.
-     * @return True if the source exists in the given project.
-     */
-    protected boolean isValidSource(String val, Project proj) {
-    	return !isEmptyValue(val) && getSourcesURIs(proj).contains(val);
-    }
-    
-    /**
-     * Checks whether a value is valid, eg. is inside a list. The value must be
-     * trimmed first.
-     * @param val Value to check.
-     * @param values List where the value must be.
-     * @return True if the value is valid.
-     */
-    protected boolean isValidValue(String val, LinkedList<String> values) {
-    	return !val.isEmpty() && values.contains(val);
-    }
-   
+
     /**
      * Checks whether the given class exists inside a given context.
      * @param val Class to find.
@@ -330,26 +337,16 @@ public abstract class InterlinkingModel {
     		&& isValidValue(val, selectQuery(writeQuery(context, PREDICATE_WHERE, PB), PB));
     }
     
-    //-------------------------------------------------------------------------
-    // Launcher management.
-    //-------------------------------------------------------------------------
-
     /**
-     * Creates a new transformed RDF source and attaches it to a project.
-     * @param  p        the owning project.
-     * @param  parent   the parent source object.
-     * @param  name     the new source name.
-     * @param  uri      the new source URI.
-     *
-     * @return the newly created transformed RDF source.
-     * @throws IOException if any error occurred creating the source.
+     * Checks whether a value is valid, eg. is inside a list. The value must be
+     * trimmed first.
+     * @param val Value to check.
+     * @param values List where the value must be.
+     * @return True if the value is valid.
      */
-    protected void addResultSource(Project p, Source parent, String name, URI uri) throws IOException {
-    	ProjectManager pm = Configuration.getDefault().getBean(ProjectManager.class);
-        pm.newTransformedRdfSource(p, uri, name, null, uri, parent);
-        pm.saveProject(p);
+    protected boolean isValidValue(String val, List<String> values) {
+    	return !val.isEmpty() && values.contains(val);
     }
-    
     
 }
 

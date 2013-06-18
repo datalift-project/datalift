@@ -36,7 +36,10 @@ package org.datalift.stringtouri;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
+
 
 import me.assembla.stringtouri.SesameApp;
 
@@ -46,6 +49,7 @@ import org.datalift.fwk.project.RdfFileSource;
 import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.project.TransformedRdfSource;
+
 import org.openrdf.query.MalformedQueryException;
 import org.openrdf.query.QueryEvaluationException;
 import org.openrdf.query.QueryLanguage;
@@ -54,13 +58,15 @@ import org.openrdf.query.UpdateExecutionException;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
 
+
+
 /**
  * A {@link ProjectModule project module} that replaces RDF object fields from 
  * a {@link RdfFileSource RDF file source} by URIs to RDF entities.
  * This class handles StringToURI's interconnection constraints.
  *
- * @author tcolas
- * @version 07102012
+ * @author tcolas, csuglia
+ * @version 18062013
  */
 public class StringToURIModel extends InterlinkingModel
 {
@@ -79,7 +85,7 @@ public class StringToURIModel extends InterlinkingModel
     //-------------------------------------------------------------------------
     // Sources management.
     //-------------------------------------------------------------------------
-    
+
     /**
      * Checks if a given {@link Source} contains valid RDF-structured data.
      * @param src The source to check.
@@ -112,8 +118,7 @@ public class StringToURIModel extends InterlinkingModel
 											String targetClass, 
 											String sourcePredicate, 
 											String targetPredicate) {
-    	return isDifferentSources(sourceContext, targetContext)
-    		&& isValidSource(sourceContext, proj)
+    	return isValidSource(sourceContext, proj)
     		&& isValidSource(targetContext, proj)
     		&& (isEmptyValue(sourceClass) || isValidClass(sourceClass, sourceContext))
     		&& (isEmptyValue(targetClass) || isValidClass(targetClass, targetContext))
@@ -121,142 +126,157 @@ public class StringToURIModel extends InterlinkingModel
     		&& isValidPredicate(targetPredicate, targetContext);
     }
     
+    
     /**
-     * StringToURI error checker with error messages.
-     * @param proj Our project.
-     * @param sourceContext context of our source (reference) data.
-     * @param targetContext context of our target (updated) data.  
-     * @param sourceClass class in source data.
-     * @param targetClass class in target data.
-     * @param sourcePredicate predicate in source data.
-     * @param targetPredicate predicate in target data.
-     * @return Newly created triples.
+     * Checks whether the given source exists for a given project.
+     * @param val Source to find.
+     * @param proj Project where to search for the source.
+     * @return True if the source exists in the given project.
      */
-    public final LinkedList<String> getErrorMessages(Project proj,
-    										String sourceContext, 
-											String targetContext, 
-											String sourceClass, 
-											String targetClass, 
-											String sourcePredicate, 
-											String targetPredicate) {
-    	LinkedList<String> errors = new LinkedList<String>();
-    	
-    	// We have to test every value one by one in order to add the right error message.
-    	// TODO Add custom errors for empty values.
-       	if (!isDifferentSources(sourceContext, targetContext)) {
-    		errors.add(getTranslatedResource("error.samedatasets"));
+    protected boolean isValidSource(String val, Project proj) {
+    	List<Source> sources = getSources(proj);
+    	List<String> sourcesUrl = new ArrayList<String>();
+    	for(Source s: sources){
+    		sourcesUrl.add(s.getUri());
     	}
-    	else {
-    		if (!isValidSource(sourceContext, proj)) {
-        		errors.add(getTranslatedResource("error.datasetnotfound") + " \"" + proj.getTitle() + "\" : \"" + sourceContext  + "\".");
-    		}
-    		if (!isValidSource(targetContext, proj)) {
-        		errors.add(getTranslatedResource("error.datasetnotfound") + " \"" + proj.getTitle() + "\" : \"" + targetContext  + "\".");
-        	}
-    	}
-    	if (!isEmptyValue(sourceClass) && !isValidClass(sourceClass, sourceContext)) {
-    		errors.add(getTranslatedResource("error.classnotfound") + " \"" + sourceContext + "\" : \"" + sourceClass + "\".");
-    	}
-    	if (!isEmptyValue(targetClass) && !isValidClass(targetClass, targetContext)) {
-    		errors.add(getTranslatedResource("error.classnotfound") + " \"" + targetContext + "\" : \"" + targetClass + "\".");
-    	}
-    	if (!isValidPredicate(sourcePredicate, sourceContext)) {
-    		errors.add(getTranslatedResource("error.predicatenotfound") + " \"" + sourceContext + "\" : \"" + sourcePredicate  + "\".");
-    	}
-    	if (!isValidPredicate(targetPredicate, targetContext)) {
-    		errors.add(getTranslatedResource("error.predicatenotfound") + " \"" + targetContext + "\" : \"" + targetPredicate  + "\".");
-    	}
-    	
-    	return errors;
+    	return !isEmptyValue(val) && sourcesUrl.contains(val);
     }
     
     /**
-     * StringToURI module launcher.
-     * @param proj Our project.
+     * Checks whether a value is valid, eg. is inside a list. The value must be
+     * trimmed first.
+     * @param val Value to check.
+     * @param values List where the value must be.
+     * @return True if the value is valid.
+     */
+    protected boolean isValidValue(String val, LinkedList<String> values) {
+    	return !val.isEmpty() && values.contains(val);
+    }
+   
+    /**
+     * Get the new triples obtained by the interlinking
+     * @param prj URL of the project
      * @param sourceContext context of our source (reference) data.
      * @param targetContext context of our target (updated) data.  
      * @param sourceClass class in source data.
      * @param targetClass class in target data.
      * @param sourcePredicate predicate in source data.
      * @param targetPredicate predicate in target data.
-     * @param update tells if we want to update everything or just preview.
-     * @param validateAll Tells if we need to validate everything or not.
-     * @return Newly created triples.
+     * @param linkingPredicate predicate of the new triples
+     * @return a list where every element is a list that represents a triple, containing the interlinked triples
      */
-    public final LinkedList<LinkedList<String>> launchStringToURI(Project proj,
-    										String sourceContext, 
-    										String targetContext, 
-    										String sourceClass, 
-    										String targetClass, 
-    										String sourcePredicate, 
-    										String targetPredicate,
-    										String update,
-    										boolean validateAll) {
-    	 LinkedList<LinkedList<String>> ret = new LinkedList<LinkedList<String>>();
-    	 
-    	if (!validateAll || validateAll(proj, sourceContext, targetContext, sourceClass, targetClass, sourcePredicate, targetPredicate)) {
-    		try {
-    			// If the data is going to be updated, we have to create a new Datalift source.
-    			String finalTargetContext = update.equals("preview") ? targetContext : targetContext + "-stu";
-    			// If it already exists, we randomize it a little bit.
-    			String suffix = proj.getSource(finalTargetContext) != null && !update.equals("preview") ? "-" + Long.toHexString(Double.doubleToLongBits(Math.random())) : "";
-    			finalTargetContext += suffix;
-    			if (!update.equals("preview")) {
-    				RepositoryConnection cnx = INTERNAL_REPO.newConnection();
-    				
-    				// Copy all of the data to the new graph.
-    				String updateQy = "COPY <" + targetContext + "> TO <" + finalTargetContext + ">";
-    				Update up = cnx.prepareUpdate(QueryLanguage.SPARQL, updateQy);
-    				up.execute();
-    				
-    				Source parent = proj.getSource(targetContext);
-    				addResultSource(proj, parent, parent.getTitle() + "-stu" + suffix, new URI(finalTargetContext));
-    			}
-    			
-	    		// Launches a new StringToURI process.
-    			
-	            SesameApp stu = new SesameApp(INTERNAL_URL, INTERNAL_URL, sourceContext, finalTargetContext);
-	           
-	            if (sourceClass.isEmpty() && targetClass.isEmpty()) {
-	            	stu.useSimpleLinkage(sourcePredicate, targetPredicate);
-	            }
-	            else {
-	            	stu.useTypedLinkage(sourcePredicate, targetPredicate, sourceClass, targetClass);
-	            }
-            
-	            stu.useSPARQLOutput(update.equals("new") ? targetPredicate + "_URI" : "");
-	            ret = stu.getOutputAsList();
-	            
-	            if (!update.equals("preview")) {
-	            	LOG.debug("{} - the data is going to be updated.", this.moduleName);
-					stu.updateData();
-	            }
+    public final LinkedList<LinkedList<String>> getLinkingPreview(Project prj,
+    		String sourceContext, 
+			String targetContext, 
+			String sourceClass, 
+			String targetClass, 
+			String sourcePredicate, 
+			String targetPredicate,
+			String linkingPredicate){
+    	SesameApp stu = getLinkingApp(prj,sourceContext, targetContext, sourceClass, targetClass, sourcePredicate, targetPredicate, linkingPredicate, targetContext);
+    	if(stu==null){
+    		throw new TechnicalException("module not available");
+    	}
+    	return stu.getOutputAsList();
+    }
+    
+    /**
+     * Save the interlinking triple results as a new source
+     * @param proj URL of the project
+     * @param sourceContext context of our source (reference) data.
+     * @param targetContext context of our target (updated) data.  
+     * @param sourceClass class in source data.
+     * @param targetClass class in target data.
+     * @param sourcePredicate predicate in source data.
+     * @param targetPredicate predicate in target data.
+     * @param linkingPredicate predicate of the new triples
+     * @param newSourceContext target URL of the new source
+     * @param newSourceName Name of the new source
+     * @param newSourceDescription description of the new source
+     */
+    public final void saveResultToSource(Project proj,
+    		String sourceContext,
+    		String targetContext,
+    		String sourceClass,
+    		String targetClass, 
+			String sourcePredicate, 
+			String targetPredicate,
+			String linkingPredicate,
+			String newSourceContext,
+			String newSourceName,
+			String newSourceDescription){
+    	SesameApp app = getLinkingApp(proj,sourceContext, targetContext, sourceClass, targetClass, sourcePredicate, targetPredicate, linkingPredicate, newSourceContext);
+    	RepositoryConnection cnx = INTERNAL_REPO.newConnection();
+		// Copy all of the data to the new graph.
+		String updateQy = "COPY <" + targetContext + "> TO <" + newSourceContext + ">";
+		Update up;
+		try {
+			up = cnx.prepareUpdate(QueryLanguage.SPARQL, updateQy);
+			up.execute();		
+			Source parent = proj.getSource(targetContext);
+			addResultSource(proj,parent,newSourceName, newSourceDescription, new URI(newSourceContext));
+			LOG.debug("{} - the data is going to be updated.", this.moduleName);
+			app.updateData();
+			LOG.info("{} - Interconnection OK.", this.moduleName);
+		} catch (RepositoryException e) {
+			LOG.fatal("{} - Update failed:", e, this.moduleName);
+		} catch (MalformedQueryException e) {
+			LOG.fatal("{} - Update failed:", e, this.moduleName);
+		} catch (UpdateExecutionException e) {
+			LOG.fatal("{} - Update failed:", e, this.moduleName);
+		} catch (IOException e) {
+			LOG.fatal("{} - Update failed:", e, this.moduleName);
+		} catch (URISyntaxException e) {
+			LOG.fatal("{} - Update failed:", e, this.moduleName);
+		}
+	
+
+    }
+
+    /**
+     * Initialize the object to perform interlinking
+     * @param proj URL of the project
+     * @param sourceContext context of our source (reference) data.
+     * @param targetContext context of our target (updated) data.  
+     * @param sourceClass class in source data.
+     * @param targetClass class in target data.
+     * @param sourcePredicate predicate in source data.
+     * @param targetPredicate predicate in target data.
+     * @param linkingPredicate predicate of the new triples
+     * @param newContext target URL of the new source
+     * @return the Sasame Application object to perform interlinking
+     */
+    private SesameApp getLinkingApp(
+    		Project proj,
+			String sourceContext, 
+			String targetContext, 
+			String sourceClass, 
+			String targetClass, 
+			String sourcePredicate, 
+			String targetPredicate,
+			String linkingPredicate,
+			String newContext) {
+    	SesameApp stu = null;
+    	if(validateAll(proj, sourceContext, targetContext, sourceClass, targetClass, sourcePredicate, targetPredicate)){
+			try {
+				stu = new SesameApp(INTERNAL_URL, INTERNAL_URL, sourceContext, newContext);
+				
+				if (sourceClass.isEmpty() && targetClass.isEmpty()) {
+					stu.useSimpleLinkage(sourcePredicate, targetPredicate);
+				}else {
+					stu.useTypedLinkage(sourcePredicate, targetPredicate, sourceClass, targetClass);
+				}	
+				stu.useSPARQLOutput(linkingPredicate);
 			} catch (RepositoryException e) {
-				LOG.fatal("{} - Update failed:", e, this.moduleName);
-			} catch (UpdateExecutionException e) {
 				LOG.fatal("{} - Update failed:", e, this.moduleName);
 			} catch (MalformedQueryException e) {
 				LOG.fatal("{} - Update failed:", e, this.moduleName);
 			} catch (QueryEvaluationException e) {
 				LOG.fatal("{} - Update failed:", e, this.moduleName);
-			} catch (IOException e) {
-				LOG.fatal("{} - Update failed:", e, this.moduleName);
-			} catch (URISyntaxException e) {
-				LOG.fatal("{} - Update failed:", e, this.moduleName);
-			}
-            LOG.info("{} - Interconnection OK.", this.moduleName);
+			} 
+    	}else{
+    		 throw new TechnicalException("An error occurred during interlinking");
     	}
-    	else {
-    		// Should never happen.
-    		LinkedList<String> error = new LinkedList<String>();
-    		error.add(getTranslatedResource("error.label"));
-    		error.add(getTranslatedResource("error.label"));
-    		error.add(getTranslatedResource("error.label"));
-    		ret = new LinkedList<LinkedList<String>>();
-    		ret.add(error);
-
-            LOG.info("{} - Interconnection failed.", this.moduleName);
-    	}
-    	return ret;
-    }
+    	return stu;
+	}
 }

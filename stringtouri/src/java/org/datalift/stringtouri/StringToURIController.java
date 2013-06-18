@@ -38,8 +38,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 
-import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -51,15 +51,15 @@ import javax.ws.rs.core.Response;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectModule;
 import org.datalift.fwk.project.RdfFileSource;
+import org.datalift.fwk.project.Source;
 
 /**
  * A {@link ProjectModule project module} that replaces RDF object fields from 
  * a {@link RdfFileSource RDF file source} by URIs to RDF entities.
  * This class is a middle man between our front-end interface & back-end logic.
- * TODO Add a way to set form fields via GET.
  *
- * @author tcolas
- * @version 07102012
+ * @author sugliac,tcolas 
+ * @version 18062013
  */
 @Path(StringToURIController.MODULE_NAME)
 public class StringToURIController extends InterlinkingController
@@ -77,7 +77,23 @@ public class StringToURIController extends InterlinkingController
     
     /** The module's back-end logic handler. */
     protected StringToURIModel model;
-
+    
+    /**web service identifier path to get the sources of a project*/
+    private static final String SOURCE_PATH = "sources";
+    
+    /**web service identifier path to get the list of predicates */
+    private static final String PREDICATE_IDENTIFIER = "predicates";
+    
+    /**web service identifier path to get the classes of a datasource */
+    private static final String CLASSES_IDENTIFIER = "classes";
+    
+    /**web service identifier path to get the linking preview */
+    private static final String PREVIEW_PATH="preview";
+    
+    /**web service identifier path to save the interlinking result */
+    private static final String SAVE_PATH="save";
+    
+    
     //-------------------------------------------------------------------------
     // Constructors
     //-------------------------------------------------------------------------
@@ -143,110 +159,130 @@ public class StringToURIController extends InterlinkingController
     public Response getIndexPage(@QueryParam("project") URI projectId) throws ObjectStreamException {
         // Retrieve the current project and its sources.
         Project proj = this.getProject(projectId);
-        LinkedList<String> sourcesURIs = model.getSourcesURIs(proj);
-        
         HashMap<String, Object> args = new HashMap<String, Object>();
+        List<String> sources = model.getSourcesName(proj);
+        args.put("sources", sources);
         args.put("it", proj);
-        
-        args.put("sources", sourcesURIs);
-        args.put("classes", model.getAllClasses(sourcesURIs));
-        args.put("predicates", model.getAllPredicates(sourcesURIs));
-        
         return Response.ok(this.newViewable("/stringtouri-form.vm", args)).build();
     }
     
     /**
-     * Form submit handler : launching StringToURI.
-     * @param projectId the project using StringToURI.
-     * @param sourceDataset context of our source (reference) data.
-     * @param targetDataset context of our target (updated) data.
-     * @param sourcePredicate predicate in source data.
-     * @param targetPredicate predicate in target data.
-     * @param sourceClass class in source data.
-     * @param targetClass class in target data.
-     * @param update tells if we need to update the data.
-     * @return Our module's post-process page.
-     * @throws ObjectStreamException
+     * Get the triples resulting from the interlinking of the sources
+     * @param project project URL
+     * @param sourceDataSet source dataset URL
+     * @param sourceClass selected source class
+     * @param sourcePredicate selected source predicate
+     * @param targetDataSet target dataset URL
+     * @param targetClass selected target class
+     * @param targetPredicate selected target predicate
+     * @param linkingPredicate predicate of the new triples
+     * @return the JSON rappresentation of the new triples got by the interlinking module
+     * @throws ObjectStreamException 
      */
-    @POST
-    @Produces(MediaType.TEXT_HTML)
-    public Response doSubmit(@QueryParam("project") URI projectId,
-    	            	@FormParam("sourcedataset") String sourceDataset,
-    		            @FormParam("targetdataset") String targetDataset,
-    		            @FormParam("sourcepredicate") String sourcePredicate,
-    		            @FormParam("targetpredicate") String targetPredicate,
-    		            @FormParam("sourceclass") String sourceClass,
-    		            @FormParam("targetclass") String targetClass,
-    		            @FormParam("update") String update) throws ObjectStreamException {
-    	// Retrieves our project and its sources.
-        Project proj = this.getProject(projectId);
-        
-        sourceDataset = sourceDataset.trim();
-        targetDataset = targetDataset.trim();
-        sourcePredicate = sourcePredicate.trim();
-        targetPredicate = targetPredicate.trim();
-        sourceClass = sourceClass.trim();
-        targetClass = targetClass.trim();
-        update = update.trim();
-        
-        String view;
-        HashMap<String, Object> args = new HashMap<String, Object>();
-	    args.put("it", proj);
-        
-	    // We first validate all of the fields.
-        LinkedList<String> errorMessages = model.getErrorMessages(proj, sourceDataset, targetDataset, sourceClass, targetClass, sourcePredicate, targetPredicate);
-        
-        if (errorMessages.isEmpty()) {
-      	    args.put("sourcedataset", sourceDataset);
-    	    args.put("targetdataset", targetDataset);
-    	    args.put("sourcepredicate", sourcePredicate);
-    	    args.put("targetpredicate", targetPredicate);
-    	    args.put("sourceclass", sourceClass);
-    	    args.put("targetclass", targetClass);
-    	    // StringToURI is launched if and only if our values are all valid.
-            args.put("newtriples", model.launchStringToURI(proj, sourceDataset, targetDataset, sourceClass, targetClass, sourcePredicate, targetPredicate, update, false));
-            view = "stringtouri-success.vm";
-        }
-        else {
-        	args.put("errormessages", errorMessages);
-        	view = "stringtouri-error.vm";
-        }
-
-        return Response.ok(this.newViewable("/" + view, args)).build();
-	}
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path(PREVIEW_PATH)
+    public Response getLinkPreview(
+    		@QueryParam("project") URI projectId,
+    		@QueryParam("datasetSource") String sourceDataSet,
+    		@QueryParam("classSource") String sourceClass,
+    		@QueryParam("predicateSource") String sourcePredicate,
+    		@QueryParam("datasetTarget") String targetDataSet,
+    		@QueryParam("classTarget") String targetClass,
+    		@QueryParam("predicateTarget") String targetPredicate,
+    		@QueryParam("predicateLinking") String linkingPredicate) throws ObjectStreamException{
+    	LinkedList<LinkedList<String>> result = model.getLinkingPreview(this.getProject(projectId),sourceDataSet, targetDataSet, sourceClass, targetClass, 
+    			sourcePredicate, targetPredicate, linkingPredicate);
+    	return this.getOkResponse(this.getJsonTriplesMatrix(result));
+    }
     
     /**
-     * Remote submit handler : launching StringToURI.
-     * @param projectId the project using StringToURI.
-     * @param sourceDataset context of our source (reference) data.
-     * @param targetDataset context of our target (updated) data.
-     * @param sourcePredicate predicate in source data.
-     * @param targetPredicate predicate in target data.
-     * @param sourceClass class in source data.
-     * @param targetClass class in target data.
-     * @param update tells if the data is to be updated or not.
-     * @return Our module's post-process page.
+     * Get the list of the datasets
+     * @param projectId project URL
+     * @return the list of the sources that belong to the project
      * @throws ObjectStreamException
      */
     @GET
-    @Path("go")
-    @Produces(MediaType.TEXT_HTML)
-    public Response doRemoteSubmit(@QueryParam("project") URI projectId,
-    		@QueryParam("sourcedataset") String sourceDataset,
-    		@QueryParam("targetdataset") String targetDataset,
-    		@QueryParam("sourcepredicate") String sourcePredicate,
-    		@QueryParam("targetpredicate") String targetPredicate,
-            @QueryParam("sourceclass") String sourceClass,
-            @QueryParam("targetclass") String targetClass,
-            @QueryParam("update") String update) throws ObjectStreamException {
-    	// Remote call example : http://localhost:8080/datalift/stringtouri/go
-    	// ?project=http://localhost:8080/datalift/project/world
-    	// &targetdataset=http://localhost:8080/datalift/project/world/source/countries-tolink-rdf-rdf
-    	// &targetclass=http://www.geonames.org/ontology%23Country
-    	// &targetpredicate=http://telegraphis.net/ontology/geography/geography%23onContinent
-    	// &sourcedataset=http://localhost:8080/datalift/project/world/source/continents-rdf-rdf
-    	// &sourceclass=http://www.telegraphis.net/ontology/geography/geography%23Continent
-    	// &sourcepredicate=http://www.geonames.org/ontology%23name
-    	return doSubmit(projectId, sourceDataset, targetDataset, sourcePredicate, targetPredicate, sourceClass, targetClass, update);
+    @Path(SOURCE_PATH)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getDatasetList(
+    		@QueryParam("project") URI projectId) throws ObjectStreamException{
+		Project proj = this.getProject(projectId);
+	    List<Source> linkableSources = model.getSources(proj);
+    	return this.getOkResponse(this.getJsonSourceArray(linkableSources));
     }
+    
+    /**
+     * Get the list of the predicates of a source
+     * @param sourceId URL of the Source dataset
+     * @param type URL of the class of the predicate
+     * @return the predicates of a datasource that belong to a class
+     * @throws ObjectStreamException
+     */
+    @GET
+    @Path(PREDICATE_IDENTIFIER)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getPredicates(
+    		@QueryParam("source") String sourceId,
+    		@QueryParam("class") String type) throws ObjectStreamException{
+    	List<String> predicates; 
+    	if(type==null){
+    		predicates= model.getPredicates(sourceId);
+    	}else{
+    		predicates= model.getPredicatesOfClass(sourceId, type);
+    	}
+    	String jsonPredicates = this.getJsonArray(predicates);
+    	return this.getOkResponse(jsonPredicates);
+    }
+    
+    /**
+     * @param sourceId URL of the source dataset
+     * @return a list of all the classes that belong to a dataset
+     * @throws ObjectStreamException
+     */
+    @GET
+    @Path(CLASSES_IDENTIFIER)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getClasses(
+    		@QueryParam("source") String sourceId) throws ObjectStreamException{
+    	List<String> classes = model.getClasses(sourceId);
+    	String jsonClasses = this.getJsonArray(classes);
+    	return this.getOkResponse(jsonClasses);
+    }
+   
+    /**
+     * Given interlinking parameters, save the result to a new source, that will have a specific URL 
+     * @param projectId project URL
+     * @param sourceDataSet context of our source (reference) data.
+     * @param sourceClass class in source data
+     * @param sourcePredicate predicate in source data
+     * @param targetDataSet context of our target (updated) data.
+     * @param targetClass class in target data
+     * @param targetPredicate predicate in target data
+     * @param linkingPredicate the predicate of the new triples got by the module
+     * @param targetContext The target URL that will have the new source
+     * @param newSourceName the name of the new source
+     * @param newSourceDescr the description of the new source
+     * @throws ObjectStreamException
+     */
+    @POST
+    @Path(SAVE_PATH)
+    public void saveLinkingResult(
+    		@QueryParam("project") URI projectId,
+    		@QueryParam("datasetSource") String sourceDataSet,
+    		@QueryParam("classSource") String sourceClass,
+    		@QueryParam("predicateSource") String sourcePredicate,
+    		@QueryParam("datasetTarget") String targetDataSet,
+    		@QueryParam("classTarget") String targetClass,
+    		@QueryParam("predicateTarget") String targetPredicate,
+    		@QueryParam("predicateLinking") String linkingPredicate,
+    		@QueryParam("newSourceContext") String targetContext,
+    		@QueryParam("newSourceName") String newSourceName,
+    		@QueryParam("newSourceDescription") String newSourceDescr) throws ObjectStreamException{
+    	Project prj =this.getProject(projectId);
+    	model.saveResultToSource(prj, sourceDataSet, targetDataSet, sourceClass, targetClass, 
+    			sourcePredicate, targetPredicate,linkingPredicate, targetContext,newSourceName, newSourceName);
+    	
+    }
+    
 }
