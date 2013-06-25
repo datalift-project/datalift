@@ -392,17 +392,25 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     /** {@inheritDoc} */
     @Override
     public GmlSource newGmlSource(Project project, URI uri, String title,
-                                  String description, String filePath)
+                                  String description, String gmlFilePath,
+                                  String xsdFilePath)
                                                             throws IOException {
-        // Create new GML source.
+        // Create new Gmlfile source.
         GmlSourceImpl src = new GmlSourceImpl(uri.toString(), project);
         // Set source parameters.
         this.initSource(src, title, description);
-        File f = this.getFileStorage(filePath);
+        // Check and set GML main file (GML).
+        File f = this.getFileStorage(gmlFilePath);
         if (! f.isFile()) {
-            throw new FileNotFoundException(filePath);
+            throw new FileNotFoundException(gmlFilePath);
         }
-        src.setFilePath(filePath);
+        src.setGmlFilePath(gmlFilePath);
+        // Check and set schema file (XSD).
+        f = this.getFileStorage(xsdFilePath);
+        if (! f.isFile()) {
+            throw new FileNotFoundException(xsdFilePath);
+        }
+        src.setXsdFilePath(xsdFilePath);
         // Add source to project.
         project.add(src);
         log.debug("New GML source <{}> added to project \"{}\"",

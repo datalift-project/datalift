@@ -278,13 +278,15 @@ public interface ProjectManager
      * @param  title         the source label.
      * @param  description   the description of the source content or
      *                       intent.
-     * @param  filePath      the GML file path in the public storage.
+     * @param  gmlFilePath      the GML file path in the public storage.
+     * @param  xsdFilePath      the XSD file path in the public storage.
      * @return a new GML source, associated to the specified project.
      * @throws IOException if any error occurred creating the source
      *         or accessing the specified file.
      */
     public GmlSource newGmlSource(Project project, URI uri, String title,
-                                  String description, String filePath)
+                                  String description, String gmlFilePath,
+                                  String xsdFilePath)
                                                             throws IOException;
 
     /**

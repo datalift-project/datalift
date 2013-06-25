@@ -1,6 +1,6 @@
 /*
- * Copyright / Copr. IGN
- * Contributor(s) : F. Hamdi
+ * Copyright / Copr. IGN 2013
+ * Contributor(s) : Faycal Hamdi
  *
  * Contact: hamdi.faycal@gmail.com
  *
@@ -36,26 +36,23 @@ package org.datalift.geoconverter;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintStream;
 import java.net.URI;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
 
+import org.apache.commons.lang.WordUtils;
 import org.datalift.fwk.Configuration;
-import org.datalift.fwk.FileStore;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.FileSource;
 import org.datalift.fwk.project.Project;
@@ -64,10 +61,31 @@ import org.datalift.fwk.project.GmlSource;
 import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.rdf.RdfUtils;
+import org.datalift.fwk.rdf.Repository;
+import org.datalift.fwk.rdf.UriCachingValueFactory;
+import org.datalift.fwk.util.Env;
+import org.datalift.fwk.util.UriBuilder;
 import org.datalift.fwk.util.io.FileUtils;
-import org.datalift.geoconverter.usgs.rdf.util.ConfigFinder;
-import org.datalift.geoconverter.usgs.rdf.util.GMLConverter;
 
+import static javax.ws.rs.core.MediaType.APPLICATION_XHTML_XML;
+import static javax.ws.rs.core.MediaType.TEXT_HTML;
+import static org.datalift.fwk.rdf.ElementType.RdfType;
+import static org.datalift.fwk.util.StringUtils.*;
+
+import org.openrdf.model.BNode;
+import org.openrdf.model.Statement;
+import org.openrdf.model.ValueFactory;
+import org.openrdf.model.vocabulary.RDF;
+import org.openrdf.model.vocabulary.RDFS;
+import org.openrdf.repository.RepositoryConnection;
+import org.openrdf.repository.RepositoryException;
+
+import fr.ign.datalift.constants.GeoSPARQL;
+import fr.ign.datalift.constants.Geometrie;
+import fr.ign.datalift.model.AbstractFeature;
+import fr.ign.datalift.model.FeatureProperty;
+import fr.ign.datalift.model.GeometryProperty;
+import fr.ign.datalift.parser.Features_Parser;
 
 /**
  * A {@link ProjectModule project module} that loads the GML data
@@ -79,169 +97,305 @@ import org.datalift.geoconverter.usgs.rdf.util.GMLConverter;
 @Path(GmltoRdf.MODULE_NAME)
 public class GmltoRdf extends BaseConverterModule
 {
-    //-------------------------------------------------------------------------
-    // Constants
-    //-------------------------------------------------------------------------
+	//-------------------------------------------------------------------------
+	// Constants
+	//-------------------------------------------------------------------------
 
-    /** The name of this module in the DataLift configuration. */
-    public final static String MODULE_NAME = "gmltordf";
 
-    private final static String DEFAULT_MAPPING = "DEPARTEMENT_wgs84.conf";
+	/** The prefix for the URI of the project objects. */
+	public final static String PROJECT_URI_PREFIX = "project";
+	/** The prefix for the URI of the source objects, within projects. */
+	public final static String SOURCE_URI_PREFIX  = "source";
 
-    //-------------------------------------------------------------------------
-    // Class members
-    //-------------------------------------------------------------------------
+	/** The name of this module in the DataLift configuration. */
+	public final static String MODULE_NAME = "gmltordf";
 
-    private final static Logger log = Logger.getLogger();
+	//-------------------------------------------------------------------------
+	// Class members
+	//-------------------------------------------------------------------------
 
-    //-------------------------------------------------------------------------
-    // Constructors
-    //-------------------------------------------------------------------------
+	private final static Logger log = Logger.getLogger();
 
-    /** Default constructor. */
-    public GmltoRdf() {
-        super(MODULE_NAME, 900, SourceType.GmlSource);
-    }
+	//-------------------------------------------------------------------------
+	// Constructors
+	//-------------------------------------------------------------------------
 
-    //-------------------------------------------------------------------------
-    // Web services
-    //-------------------------------------------------------------------------
+	/** Default constructor. */
+	public GmltoRdf() {
+		super(MODULE_NAME, 800, SourceType.GmlSource);
+	}
 
-    @GET
-    public Response getIndexPage(@QueryParam("project") URI projectId) {
-        // Retrieve project.
-        Project p = this.getProject(projectId);
-        // Display conversion configuration page.
-        Map<String, Object> args = new HashMap<String, Object>();
-        args.put("it", p);
-        args.put("converter", this);
-        return Response.ok(this.newViewable("/gmltoRdf.vm", args))
-                       .build();
-    }
+	//-------------------------------------------------------------------------
+	// Web services
+	//-------------------------------------------------------------------------
 
-    @POST
-    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-    public Response convertGmlData(@FormParam("project") URI projectId,
-                                   @FormParam("source") URI sourceId,
-                                   @Context UriInfo uriInfo)
-                                                throws WebApplicationException {
-        Response response = null;
-        try {
-            // Retrieve project.
-            Project p = this.getProject(projectId);
-            // Retrieve source.
-            GmlSource s = (GmlSource)(p.getSource(sourceId));
-            if (s == null) {
-                this.throwInvalidParamError("source", sourceId);
-            }
-            // Create working directory.
-            File inGmlFile = new File(s.getFilePath());
-            File relPath   = inGmlFile.getParentFile();
-            File tmpDir = this.createWorkingDirectory(s);
-            // Copy source GML file to working directory.
-            inGmlFile = this.getLocalCopy(s.getFilePath(),
-                                          s.getInputStream(), tmpDir);
-            // Check for provided mapping configuration file.
-            String rootName = inGmlFile.getName();
-            rootName = rootName.substring(0, rootName.lastIndexOf('.'));
-            String confFileName = rootName + ".conf";
-            File mappingConf = new File(tmpDir, confFileName);
-            FileStore fs = s.getFileStore();
-            String mappingSrc = new File(relPath, confFileName).getPath();
-            if (fs.exists(mappingSrc)) {
-                fs.read(mappingSrc, mappingConf);
-            }
-            else {
-                log.debug("Generating GML to RDF mapping configuration file: {}", mappingConf);
-                FileUtils.save(this.getClass().getClassLoader()
-                                   .getResourceAsStream(DEFAULT_MAPPING), mappingConf);
-            }
-            File rdfOutFile = new File(tmpDir, rootName + ".rdf");
-            if (rdfOutFile.exists()) {
-                rdfOutFile.delete();
-            }
-            // Make sure the Geometry parser looks for its default
-            // configuration files in Datalift configuration directory.
-            File cfgPath = new File(Configuration.getDefault().getProperty(
-                                                "datalift.home"), "conf/geo");
-            log.debug("Geometry parser default config. path: {}", cfgPath);
-            // GeometryParser.setDefaultConfigPath(cfgPath);
-            ConfigFinder.setPaths(Arrays.asList(tmpDir, cfgPath));
-            // Redirect GML converter messages from System.out/err to log.
-            StdOutErrLog redirect = StdOutErrLog.install();
-            // Run converter.
-            log.debug("Generating {} from {}", rdfOutFile, inGmlFile);
-            GMLConverter converter = new GMLConverter(inGmlFile,
-                                                tmpDir, true, true, true, true);
-            converter.run();
-            // Restore System.out/err.
-            redirect.restore();
-            // Upload generated RDF file into internal repository.
-            URI targetGraph = new URI(s.getUri() + "-rdf");
-            RdfUtils.upload(rdfOutFile, Configuration.getDefault()
-                                                     .getInternalRepository(),
-                            targetGraph, null);
-            // Register new transformed RDF source.
-            Source out = this.addResultSource(p, s,
-                                "RDF mapping of " + s.getTitle(), targetGraph);
-            // Display project source tab, including the newly created source.
-            response = this.created(out).build();
-            // Delete working directory.
-            FileUtils.delete(tmpDir, true);
+	@GET
+	@Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
+	public Response getIndexPage(@QueryParam("project") URI projectId) {
+		return this.newProjectView("gmltoRdf.vm", projectId);
+	}
 
-            log.info("RDF data successfully loaded into \"{}\"", targetGraph);
-        }
-        catch (Exception e) {
-            this.handleInternalError(e);
-        }
-        return response;
-    }
+	@POST
+	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+	public Response convertGmlData(
+			@FormParam("project") URI projectId,
+			@FormParam("source") URI sourceId,
+			@FormParam("dest_title") String destTitle,
+			@FormParam("dest_graph_uri") URI targetGraph,
+			@FormParam("base_uri") URI baseUri,
+			@FormParam("dest_type") String targetType)
+					throws WebApplicationException {
 
-    private File createWorkingDirectory(FileSource s) {
-        String relPath = new File(s.getFilePath()).getParent();
-        File tmpDir = new File(Configuration.getDefault().getTempStorage(),
-                               relPath);
-        tmpDir.mkdirs();
-        return tmpDir;
-    }
+		Response response = null;
+		try {
+			// Retrieve project.
+			Project p = this.getProject(projectId);
+			// Retrieve source.
+			GmlSource src = (GmlSource)(p.getSource(sourceId));
+			if (src == null) {
+				this.throwInvalidParamError("source", sourceId);
+			}
+			// Create working directory.
+			File tmpDir = this.createWorkingDirectory(src);
+			// Copy source GmlFile files to working directory.
+			File inGmlFile = this.getLocalCopy(src.getGmlFilePath(),
+					src.getGmlFileInputStream(), tmpDir);
+			this.getLocalCopy(src.getXsdFilePath(),
+					src.getXsdFileInputStream(), tmpDir);
 
-    private File getLocalCopy(String path, InputStream in, File localDir)
-                                                            throws IOException {
-        File f = new File(localDir, new File(path).getName());
-        FileUtils.save(in, f);
-        return f;
-    }
+			// Convert GML data and load generated RDF triples.
+			Features_Parser parser = new Features_Parser();
+			parser.parseGML(inGmlFile.getCanonicalPath());
 
-    public final static class StdOutErrLog
-    {
-        private final PrintStream stdOut;
-        private final PrintStream stdErr;
+			this.convertToRDF(src, parser.readFeatureCollection(), parser.crs, 
+					parser.asGmlList, Configuration.getDefault().getInternalRepository(),
+					targetGraph, baseUri, targetType);
 
-        private StdOutErrLog() {
-            this.stdOut = System.out;
-            this.stdErr = System.err;
-        }
+			// Register new transformed RDF source.
+			Source out = this.addResultSource(p, src,
+					"RDF mapping of " + src.getTitle(), targetGraph);
 
-        public void restore() {
-            System.setOut(this.stdOut);
-            System.setErr(this.stdErr);
-        }
+			// Display project source tab, including the newly created source.
+			response = this.created(out).build();
 
-        public static StdOutErrLog install() {
-            StdOutErrLog x = new StdOutErrLog();
-            System.setOut(createLoggingProxy(x.stdOut));
-            System.setErr(createLoggingProxy(x.stdErr));
-            return x;
-        }
+		}
+		catch (Exception e) {
+			this.handleInternalError(e);
+		}
+		return response;
+	}
 
-        public static PrintStream createLoggingProxy(
-                                            final PrintStream realPrintStream) {
-            return new PrintStream(realPrintStream) {
-                public void print(final String string) {
-                    realPrintStream.print(string);
-                    log.info(string);
-                }
-            };
-        }
-    }
+	private File createWorkingDirectory(FileSource s) {
+		String relPath = new File(s.getFilePath()).getParent();
+		File tmpDir = new File(Configuration.getDefault().getTempStorage(),
+				relPath);
+		tmpDir.mkdirs();
+		return tmpDir;
+	}
+
+	private File getLocalCopy(String path, InputStream in, File localDir)
+			throws IOException {
+		File f = new File(localDir, new File(path).getName());
+		FileUtils.save(in, f);
+		return f;
+	}
+
+
+	//-------------------------------------------------------------------------
+	// Specific implementation
+	//-------------------------------------------------------------------------
+
+	public void convertToRDF(GmlSource src, ArrayList<AbstractFeature> featureList, 
+			String crs, ArrayList<String> asGmlList, Repository target, URI targetGraph, 
+			URI baseUri, String targetType) {
+
+		final UriBuilder uriBuilder = Configuration.getDefault()
+				.getBean(UriBuilder.class);
+		final RepositoryConnection cnx = target.newConnection();
+		org.openrdf.model.URI ctx = null;
+		try {
+			final ValueFactory vf =
+					new UriCachingValueFactory(cnx.getValueFactory());
+
+			// Clear target named graph, if any.
+			if (targetGraph != null) {
+				ctx = vf.createURI(targetGraph.toString());
+				cnx.clear(ctx);
+			}
+			// Create URIs for subjects and predicates.
+			if (baseUri == null) {
+				baseUri = targetGraph;
+			}
+			String sbjUri  = RdfUtils.getBaseUri(
+					(baseUri != null)? baseUri.toString(): null, '/');
+			String typeUri = RdfUtils.getBaseUri(
+					(baseUri != null)? baseUri.toString(): null, '#');
+			// Create target RDF type.
+			if (! isSet(targetType)) {
+				targetType = uriBuilder.urlify(src.getTitle(), RdfType);
+			}
+			org.openrdf.model.URI rdfType = null;
+			try {
+				// Assume target type is an absolute URI.
+				rdfType = vf.createURI(targetType);
+			}
+			catch (Exception e) {
+				// Oops, targetType is a relative URI. => Append namespace URI.
+				rdfType = vf.createURI(typeUri, targetType);
+			}
+
+			Statement statement;
+			List<Statement> aboutAttributes = new ArrayList<Statement>();
+			List<Statement> aboutGeometry = new ArrayList<Statement>();
+
+			// serialize a featureCollection into RDF
+			int count = 0;
+			for (int i = 0; i < featureList.size(); i++) {
+				count = i + 1;
+				org.openrdf.model.URI feature = vf.createURI(sbjUri + count);
+
+				statement = vf.createStatement(feature, RDF.TYPE, rdfType);
+				aboutAttributes.add(statement);
+
+				ArrayList<FeatureProperty> featureProperties = (ArrayList<FeatureProperty>) featureList.get(i).getProperties();
+
+				for (int j = 0; j < featureProperties.size(); j++) {
+
+					FeatureProperty fp = featureProperties.get(j);
+
+					if (fp instanceof GeometryProperty) {
+
+						org.openrdf.model.URI geomFeature = vf.createURI(sbjUri, this.cleanUpString(fp.getType()) + "_" + count);
+
+						statement = vf.createStatement(feature, Geometrie.GEOMETRIE, geomFeature);
+						aboutAttributes.add(statement);
+
+						statement = vf.createStatement(geomFeature, RDF.TYPE, Geometrie.GEOMETRIE);
+						aboutGeometry.add(statement);
+
+						statement = vf.createStatement(geomFeature, RDF.TYPE,  vf.createURI(Geometrie.NS, fp.getType()));
+						aboutGeometry.add(statement);
+
+						BNode systcoord = vf.createBNode();
+						if (crs != null) {
+							statement = vf.createStatement(systcoord, RDFS.LABEL, vf.createLiteral(crs));
+							aboutGeometry.add(statement);
+						}
+						statement = vf.createStatement(geomFeature, Geometrie.SYSTCOORD, systcoord);
+						aboutGeometry.add(statement);
+
+						statement = vf.createStatement(geomFeature, GeoSPARQL.ASWKT, vf.createLiteral(fp.getValue()));
+						aboutGeometry.add(statement);
+
+						if (asGmlList != null) {
+							statement = vf.createStatement(geomFeature, GeoSPARQL.ASGML, vf.createLiteral(asGmlList.get(j)));
+							aboutGeometry.add(statement);
+						}
+
+
+					} else {
+						if (fp.getType() != null){
+							if (fp.getType().contains("int")) {
+								statement = vf.createStatement(feature, vf.createURI(typeUri + fp.getName()), vf.createLiteral(fp.getIntValue()));
+								aboutAttributes.add(statement);
+							} else {
+								statement = vf.createStatement(feature, vf.createURI(typeUri + fp.getName()), vf.createLiteral(fp.getDoubleValue()));
+								aboutAttributes.add(statement);
+							}
+						} else {
+							statement = vf.createStatement(feature, vf.createURI(typeUri + fp.getName()), vf.createLiteral(fp.getValue()));
+							aboutAttributes.add(statement);
+						}
+					}
+				}
+			}
+
+			long startTime = System.currentTimeMillis();
+			long duration = -1L;
+			long statementCount = 0L;
+			int  batchSize = Env.getRdfBatchSize();
+
+			try {
+				// Prevent transaction commit for each triple inserted.
+				cnx.setAutoCommit(false);
+			}
+			catch (RepositoryException e) {
+				throw new RuntimeException("RDF triple insertion failed", e);
+			}
+
+			for (Statement at:aboutAttributes){
+				try {
+					cnx.add(at, ctx);
+
+					// Commit transaction according to the configured batch size.
+					statementCount++;
+					if ((statementCount % batchSize) == 0) {
+						cnx.commit();
+					}
+				}
+				catch (RepositoryException e) {
+					throw new RuntimeException("RDF triple insertion failed", e);
+				}
+			}
+
+			for (Statement gt:aboutGeometry){
+				try {
+					cnx.add(gt, ctx);
+
+					// Commit transaction according to the configured batch size.
+					statementCount++;
+					if ((statementCount % batchSize) == 0) {
+						cnx.commit();
+					}
+				}
+				catch (RepositoryException e) {
+					throw new RuntimeException("RDF triple insertion failed", e);
+				}
+			}
+
+			try {
+				cnx.commit();
+				duration = System.currentTimeMillis() - startTime;
+			}
+			catch (RepositoryException e) {
+				throw new RuntimeException("RDF triple insertion failed", e);
+			}
+
+			log.debug("Inserted {} RDF triples into <{}> in {} seconds",
+					Long.valueOf(statementCount), targetGraph,
+					Double.valueOf(duration / 1000.0));
+		}
+		catch (TechnicalException e) {
+			throw e;
+		}
+
+		catch (Exception e) {
+			try {
+				// Forget pending triples.
+				cnx.rollback();
+				// Clear target named graph, if any.
+				if (ctx != null) {
+					cnx.clear(ctx);
+				}
+			}
+			catch (Exception e2) { /* Ignore... */ }
+
+			throw new TechnicalException("gml.conversion.failed", e);
+		}
+		finally {
+			// Commit pending data (including graph removal in case of error).
+			try { cnx.commit(); } catch (Exception e) { /* Ignore... */ }
+			// Close repository connection.
+			try { cnx.close();  } catch (Exception e) { /* Ignore... */ }
+		}
+
+	}
+
+	protected String cleanUpString(String str) {
+		if (str.contains(":"))
+			str = str.substring(str.lastIndexOf(':') + 1);
+		return WordUtils.capitalizeFully(str, new char[] { ' ' }).replaceAll(" ", "").trim();
+	}
+
+
 }

@@ -1,6 +1,6 @@
 /*
- * Copyright / Copr. IGN
- * Contributor(s) : F. Hamdi
+ * Copyright / Copr. IGN 2013
+ * Contributor(s) : Faycal Hamdi
  *
  * Contact: hamdi.faycal@gmail.com
  *
@@ -33,6 +33,7 @@
 
 package org.datalift.core.project;
 
+import static org.datalift.fwk.util.StringUtils.isSet;
 
 import java.io.File;
 import java.io.IOException;
@@ -50,159 +51,176 @@ import org.datalift.fwk.project.Project;
 /**
  * Default implementation of the {@link ShpSource} interface.
  *
- * @author Fayçal Hamdi
+ * @author fhamdi
  */
 @Entity
 @RdfsClass("datalift:shpSource")
 public class ShpSourceImpl extends BaseFileSource
-                           implements ShpSource
+implements ShpSource
 {
-    //-------------------------------------------------------------------------
-    // Instance members
-    //-------------------------------------------------------------------------
+	//-------------------------------------------------------------------------
+	// Instance members
+	//-------------------------------------------------------------------------
 
-    @RdfProperty("datalift:shapeIndex")
-    private String shxFilePath;
-    @RdfProperty("datalift:shapeAttr")
-    private String dbfFilePath;
-    @RdfProperty("datalift:shapeProj")
-    private String prjFilePath;
+	@RdfProperty("datalift:crs")
+	private String crs;
+	@RdfProperty("datalift:shapeIndex")
+	private String shxFilePath;
+	@RdfProperty("datalift:shapeAttr")
+	private String dbfFilePath;
+	@RdfProperty("datalift:shapeProj")
+	private String prjFilePath;
 
-    private transient File shxFile = null;
-    private transient File dbfFile = null;
-    private transient File prjFile = null;
+	private transient File shxFile = null;
+	private transient File dbfFile = null;
+	private transient File prjFile = null;
 
-    //-------------------------------------------------------------------------
-    // Constructors
-    //-------------------------------------------------------------------------
+	//-------------------------------------------------------------------------
+	// Constructors
+	//-------------------------------------------------------------------------
 
-    /**
-     * Creates a new Shapefile source.
-     */
-    public ShpSourceImpl() {
-        super(SourceType.ShpSource);
-    }
+	/**
+	 * Creates a new Shapefile source.
+	 */
+	public ShpSourceImpl() {
+		super(SourceType.ShpSource);
+	}
 
-    /**
-     * Creates a new Shapefile source with the specified identifier and
-     * owning project.
-     * @param  uri       the source unique identifier (URI) or
-     *                   <code>null</code> if not known at this stage.
-     * @param  project   the owning project or <code>null</code> if not
-     *                   known at this stage.
-     *
-     * @throws IllegalArgumentException if either <code>uri</code> or
-     *         <code>project</code> is <code>null</code>.
-     */
-    public ShpSourceImpl(String uri, Project project) {
-        super(SourceType.ShpSource, uri, project);
-    }
+	/**
+	 * Creates a new Shapefile source with the specified identifier and
+	 * owning project.
+	 * @param  uri       the source unique identifier (URI) or
+	 *                   <code>null</code> if not known at this stage.
+	 * @param  project   the owning project or <code>null</code> if not
+	 *                   known at this stage.
+	 *
+	 * @throws IllegalArgumentException if either <code>uri</code> or
+	 *         <code>project</code> is <code>null</code>.
+	 */
+	public ShpSourceImpl(String uri, Project project) {
+		super(SourceType.ShpSource, uri, project);
+	}
 
-    //-------------------------------------------------------------------------
-    // Source contract support
-    //-------------------------------------------------------------------------
+	//-------------------------------------------------------------------------
+	// Source contract support
+	//-------------------------------------------------------------------------
 
-    /** {@inheritDoc} */
-    @Override
-    public void delete() {
-        super.delete();
+	/** {@inheritDoc} */
+	@Override
+	public void delete() {
+		super.delete();
 
-        this.delete(this.shxFilePath);
-        this.shxFile = null;
-        this.delete(this.dbfFilePath);
-        this.dbfFile = null;
-        this.delete(this.prjFilePath);
-        this.prjFile = null;
-    }
+		this.delete(this.shxFilePath);
+		this.shxFile = null;
+		this.delete(this.dbfFilePath);
+		this.dbfFile = null;
+		this.delete(this.prjFilePath);
+		this.prjFile = null;
+	}
 
-    //-------------------------------------------------------------------------
-    // ShpSource contract support
-    //-------------------------------------------------------------------------
+	//-------------------------------------------------------------------------
+	// ShpSource contract support
+	//-------------------------------------------------------------------------
 
-    /** {@inheritDoc} */
-    @Override
-    public String getShapeFilePath() {
-        return this.getFilePath();
-    }
+	/** {@inheritDoc} */
+	@Override
+	public String getCrs() {
+		return this.crs;
+	}
 
-    /** {@inheritDoc} */
-    @Override
-    public String getIndexFilePath() {
-        return this.shxFilePath;
-    }
+	/** {@inheritDoc} */
+	@Override
+	public void setCrs(String crs) {
+		if (! isSet(crs)) {
+			throw new IllegalArgumentException("crs");
+		}
+		this.crs = crs;
+	}
 
-    /** {@inheritDoc} */
-    @Override
-    public String getAttributeFilePath() {
-        return this.dbfFilePath;
-    }
+	/** {@inheritDoc} */
+	@Override
+	public String getShapeFilePath() {
+		return this.getFilePath();
+	}
 
-    /** {@inheritDoc} */
-    @Override
-    public String getProjectionFilePath() {
-        return this.prjFilePath;
-    }
+	/** {@inheritDoc} */
+	@Override
+	public String getIndexFilePath() {
+		return this.shxFilePath;
+	}
 
-    /** {@inheritDoc} */
-    @Override
-    public InputStream getShapeFileInputStream() throws IOException {
-        return this.getInputStream();
-    }
+	/** {@inheritDoc} */
+	@Override
+	public String getAttributeFilePath() {
+		return this.dbfFilePath;
+	}
 
-    /** {@inheritDoc} */
-    @Override
-    public InputStream getIndexFileInputStream() throws IOException {
-        this.init();
-        return this.getInputStream(this.shxFile);
-    }
+	/** {@inheritDoc} */
+	@Override
+	public String getProjectionFilePath() {
+		return this.prjFilePath;
+	}
 
-    /** {@inheritDoc} */
-    @Override
-    public InputStream getAttributeFileInputStream() throws IOException {
-        this.init();
-        return this.getInputStream(this.dbfFile);
-    }
+	/** {@inheritDoc} */
+	@Override
+	public InputStream getShapeFileInputStream() throws IOException {
+		return this.getInputStream();
+	}
 
-    /** {@inheritDoc} */
-    @Override
-    public InputStream getProjectionFileInputStream() throws IOException {
-        this.init();
-        return this.getInputStream(this.prjFile);
-    }
+	/** {@inheritDoc} */
+	@Override
+	public InputStream getIndexFileInputStream() throws IOException {
+		this.init();
+		return this.getInputStream(this.shxFile);
+	}
 
-    //-------------------------------------------------------------------------
-    // BaseFileSource contract support
-    //-------------------------------------------------------------------------
+	/** {@inheritDoc} */
+	@Override
+	public InputStream getAttributeFileInputStream() throws IOException {
+		this.init();
+		return this.getInputStream(this.dbfFile);
+	}
 
-    @Override
-    protected void init() {
-        super.init();
+	/** {@inheritDoc} */
+	@Override
+	public InputStream getProjectionFileInputStream() throws IOException {
+		this.init();
+		return this.getInputStream(this.prjFile);
+	}
 
-        if (this.prjFile == null) {
-            this.shxFile = this.getFile(this.shxFilePath);
-            this.dbfFile = this.getFile(this.dbfFilePath);
-            this.prjFile = this.getFile(this.prjFilePath);
-        }
-        // Else: Already initialized.
-    }
+	//-------------------------------------------------------------------------
+	// BaseFileSource contract support
+	//-------------------------------------------------------------------------
 
-    //-------------------------------------------------------------------------
-    // Specific implementation
-    //-------------------------------------------------------------------------
+	@Override
+	protected void init() {
+		super.init();
 
-    public void setShapeFilePath(String path) {
-        this.setFilePath(path);
-    }
+		if (this.prjFile == null) {
+			this.shxFile = this.getFile(this.shxFilePath);
+			this.dbfFile = this.getFile(this.dbfFilePath);
+			this.prjFile = this.getFile(this.prjFilePath);
+		}
+		// Else: Already initialized.
+	}
 
-    public void setIndexFilePath(String path) {
-        this.shxFilePath = path;
-    }
+	//-------------------------------------------------------------------------
+	// Specific implementation
+	//-------------------------------------------------------------------------
 
-    public void setAttributeFilePath(String path) {
-        this.dbfFilePath = path;
-    }
+	public void setShapeFilePath(String path) {
+		this.setFilePath(path);
+	}
 
-    public void setProjectionFilePath(String path) {
-        this.prjFilePath = path;
-    }
+	public void setIndexFilePath(String path) {
+		this.shxFilePath = path;
+	}
+
+	public void setAttributeFilePath(String path) {
+		this.dbfFilePath = path;
+	}
+
+	public void setProjectionFilePath(String path) {
+		this.prjFilePath = path;
+	}
 }
