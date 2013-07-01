@@ -398,6 +398,8 @@ public class RouterResource implements LifeCycle, ResourceResolver
             path = path.substring(1);
         }
         log.trace("Resolving unmapped resource: {}", path);
+        // Normalize path, e.g. to resolve relative directories ("x/../y").
+        path = URI.create(path).normalize().toString();
 
         try {
             if (bundle != null) {
