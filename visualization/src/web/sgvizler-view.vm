@@ -1,0 +1,119 @@
+#load_core_resources
+#load("visualization/resources")
+##
+## Hello Velocity !
+#set( $moduleUri = "$baseUri/visualization")
+##
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title>#i18n('visualization.title') - Datalift</title>
+        <meta name="description" content="visualization using sgvizler">
+        <meta name="viewport" content="width=device-width">
+
+        #css_links
+        <link rel="stylesheet" href="${moduleUri}/static/css/bootstrap.css">
+        <link rel="stylesheet" href="${moduleUri}/static/css/bootstrap-responsive.css">
+        <link rel="stylesheet" href="${moduleUri}/static/css/DT_bootstrap.css">
+        <link rel="stylesheet" href="${moduleUri}/static/css/main.css">
+        <link rel="stylesheet" type="text/css" href="http://sgvizler.googlecode.com/svn/www/sgvizler.css" />
+        <style>
+      body {
+        padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+      }
+    </style>
+    
+    
+
+    </head>
+    <body>
+        #banner
+        #if( ${securityCtx.userAuthenticated} )
+	   <div style="position:absolute;top:15px;right:15px;">
+		<a href="${baseUri}/project" id="goto_workspace" class="btn btn-large btn-primary" >#i18n("project.workspace.link")</a>
+	   </div>
+       #end
+        <div class="ui-widget-content" id="workspace">
+            <h3 class="ui-widget-header dl-widget-header">
+                #i18n("project.label")  &mdash; #i18n("visualization.title")
+            </h3>
+        </div>
+        
+        <div class="container"> <!--container-->
+           <div class="row">
+             <div class="span6">
+             <div class="alert alert-success"> <legend>#i18n("section.output.sgvizler")</legend> </div>    
+                 
+             <div class='alert alert-info'> 
+               <div id="sgvzlr_cMessage"></div>
+                           
+	        </div>
+	        
+             <div id="sgvzlr_gchart" style="width:800px; height:400px;"></div>
+           </div>
+         </div>
+      
+        
+        </div> <!-- end container -->
+      
+        
+        
+        #footer
+        #script_links
+        <!-- TODO : Reduce number of dependencies. Minify, concatenate. -->
+        <script type="text/javascript" src="${moduleUri}/static/js/vendor/jquery-1.8.2.js"></script>
+        <script type="text/javascript" src="${moduleUri}/static/js/vendor/underscore.min.js"></script>
+        <script type="text/javascript" src="${moduleUri}/static/js/vendor/underscore.string.min.js"></script>
+        <script type="text/javascript" src="${moduleUri}/static/js/vendor/bootstrap.js"></script>
+        <script type="text/javascript" src="${moduleUri}/static/js/vendor/d3.v2.js"></script>
+        <script type="text/javascript" id="sgvzlr_script" src="${moduleUri}/static/js/vendor/sgvizler.js"></script>
+		<script type="text/javascript" src="${moduleUri}/static/js/vendor/lib/d3.v2.min.js"></script>
+		<script type="text/javascript" src="${moduleUri}/static/js/vendor/lib/raphael-dracula.pack.min.js"></script>
+		
+		<!-- vendors script. -->
+        <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
+    	<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    	
+        
+       
+        <script type="text/javascript">
+          
+            //// Taking the options.
+       sgvizler.option.query = {
+           // Default query. 
+           'query':                $("#sgvzlr_cQuery").val(),
+    
+           // Endpoint URL. 
+           'endpoint':             "${baseUri}/sparql?default-graph-uri=internal",
+    
+           // Endpoint output format. 
+           //'endpoint_output':      'json',  // 'xml' or 'json' 
+    
+           // This string is appended the 'endpoint' variable and the query to it again to give a link to the "raw" query results.
+           //'endpoint_query_url':   "?output=text&amp;query=",
+    
+           // URL to SPARQL validation service. The query is appended to it. 
+           //'validator_query_url':  "http://www.sparql.org/query-validator?languageSyntax=SPARQL&amp;outputFormat=sparql&amp;linenumbers=true&amp;query=",
+    
+           // Default chart type. 
+           'chart':                $("#sgvzlr_optChart").val(),
+    
+           // Default log level. Must be either 0, 1, or 2. 
+             'loglevel':             2
+               };
+               
+                        
+         //launch sgvizler
+			$(document).ready(sgvizler.go());
+        </script>
+       
+        
+
+        
+    </body>
+</html>
