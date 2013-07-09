@@ -97,7 +97,7 @@
    -->
 
   <property name="app.name"             value="flint-endpoint"/>
-  <property name="app.version"          value="0.1"/>
+  <property name="app.version"          value="0.7.0"/>
   <property name="app.path"             value="/${app.name}"/>
   <property name="app.long.name"        value="SPARQL endpoint using Flint as user interface"/>
 

@@ -95,9 +95,9 @@
    -->
 
   <property name="app.name"             value="sparql-query"/>
-  <property name="app.version"          value="0.1"/>
+  <property name="app.version"          value="0.7.0"/>
   <property name="app.path"             value="/${app.name}"/>
-  <property name="app.long.name"        value="DataLift SPARQL Query Grammar"/>
+  <property name="app.long.name"        value="Datalift SPARQL Query Grammar"/>
 
   <property name="build.home"           location="${basedir}/build"/>
   <property name="dist.home"            location="${basedir}/dist"/>

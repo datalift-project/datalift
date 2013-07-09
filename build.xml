@@ -37,14 +37,14 @@
             value="framework,core,sparql-endpoint,projectmanager,simple-convert,geo-convert,ui-sample,s4ac"/>
 
   <property name="app.name"             value="${ant.project.name}"/>
-  <property name="app.version"          value="0.6.8"/>
+  <property name="app.version"          value="0.7.0"/>
 
   <property name="dist.home"            location="${basedir}/core/dist"/>
   <property name="docs.dir"             location="${dist.home}/docs"/>
 
   <property name="copyright.dates"      value="2010-2013"/>
   <property name="copyright.owner"
-           value="Atos - Public Sector France - BS &amp; Innovation for the DataLift project"/>
+           value="Atos - Public Sector France - BS &amp; Innovation for the Datalift project"/>
 
   <filelist id="build.modules" dir="." files="${datalift.default.modules}"/>
 
