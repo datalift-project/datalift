@@ -42,7 +42,9 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
+import java.util.Collection;
 import java.util.Comparator;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -53,10 +55,13 @@ import org.mortbay.jetty.webapp.WebAppContext;
 
 import com.centerkey.utils.BareBonesBrowserLaunch;
 
+import org.datalift.wrapper.PathSpec.Directories;
+
 import jargs.gnu.CmdLineParser;
 import jargs.gnu.CmdLineParser.Option;
 
 import static org.datalift.wrapper.OsType.*;
+import static org.datalift.wrapper.PathSpec.Directories.*;
 
 
 /**
@@ -95,46 +100,23 @@ public final class Wrapper
      */
     private final static String SESAME_HOME =
                                         "info.aduna.platform.appdata.basedir";
+    /** The system property defining where Jetty is being run. */
     private final static String JETTY_HOME = "jetty.home";
 
+    // Directory paths for OpenRDF Sesame repositories.
     private final static String SESAME_REPOSITORIES_DIR = "repositories";
-    private final static String WEBAPPS_DIR = "webapps";
-    private final static String CONFIG_DIR  = "conf";
-
-    private final static String MAC_DATALIFT_NAME = "DataLift";
-    private final static String MAC_APPL_DATA_PATH =
-                            "Library/Application Support/" + MAC_DATALIFT_NAME;
-    private final static String MAC_APPL_CACHE_PATH =
-                            "Library/Caches/" + MAC_DATALIFT_NAME;
-    private final static String MAC_APPL_LOGS_PATH =
-                            "Library/Logs/" + MAC_DATALIFT_NAME;
-    private final static String MAC_WEB_APPS_PATH =
-                            MAC_APPL_CACHE_PATH + "/webapps";
-
-    private final static String WIN_DATALIFT_NAME = MAC_DATALIFT_NAME;
-    private final static String WIN_APPL_DATA_PATH =
-                            "Application Data/" + WIN_DATALIFT_NAME;
-
     private final static String LINUX_REPOSITORIES_PATH =
                             SESAME_REPOSITORIES_DIR + "/openrdf-sesame";
     private final static String OTHER_REPOSITORIES_PATH =
                             SESAME_REPOSITORIES_DIR + "/OpenRDF Sesame";
 
-    private final static String OTHER_DATALIFT_NAME   = ".datalift";
-    private final static String OTHER_APPL_DATA_PATH  = OTHER_DATALIFT_NAME;
-    private final static String OTHER_APPL_CACHE_PATH = "temp";
-    private final static String OTHER_APPL_LOGS_PATH  = "logs";
-    private final static String OTHER_WEB_APPS_PATH   = "work";
-
     private final static String LOCALHOST = "localhost";
-    private final static String DATALIFT_PAGE = "/datalift/sparql";
-
     private final static String WAR_EXTENSION = ".war";
-    private final static String ROOT_WEB_APP_NAME = "root";
+    private final static String JAR_EXTENSION = ".jar";
 
-    private final static String JAVA_CURRENT_DIR_PROP  = "user.dir";
-    private final static String JAVA_USER_HOMEDIR_PROP = "user.home";
-    private final static String JAVA_TEMP_DIR_PROP = "java.io.tmpdir";
+    // Constants for well-known Java system properties.
+    private final static String JAVA_CURRENT_DIR_PROP   = "user.dir";
+    private final static String JAVA_TEMP_DIR_PROP      = "java.io.tmpdir";
 
     private final static Comparator<String> CONTEXT_PATH_COMPARATOR =
             new Comparator<String>() {
@@ -167,7 +149,18 @@ public final class Wrapper
                 @Override
                 public boolean accept(File f) {
                     return ((f.isDirectory()) ||
-                            (f.isFile() && f.getName().endsWith(WAR_EXTENSION)));
+                            (f.isFile() && f.getName().toLowerCase()
+                                                      .endsWith(WAR_EXTENSION)));
+                }
+            };
+
+    private final static FileFilter JAR_FILE_FILTER =
+            new FileFilter() {
+                @Override
+                public boolean accept(File f) {
+                    return ((f.isDirectory()) ||
+                            (f.isFile() && f.getName().toLowerCase()
+                                                      .endsWith(JAR_EXTENSION)));
                 }
             };
 
@@ -178,8 +171,11 @@ public final class Wrapper
     /**
      * The wrapper main method to run Datalift from the command line.
      * <p>
-     * Usage: java org.datalift.wrapper.Wrapper [{-p,--port} port]
-              [{-e,--external}] [install_dir]</p>
+     * Usage: java org.datalift.wrapper.Wrapper [{-e,--external}] 
+     *        [{-h,--home-dir} &lt;directory&gt;]
+     *        [{-p,--port} &lt;port&gt;]
+     *        [{-r,--root-app} &lt;root_webapp_name&gt;]" +
+     *        [{-w,--welcome-page} &lt;welcome_page&gt;] [install_dir]</p>
      * @param  args   the command-line arguments (see above).
      *
      * @throws Exception if any error occurred while running the
@@ -189,15 +185,21 @@ public final class Wrapper
     {
         File dataliftRoot = null;
         int httpPort = DEFAULT_HTTP_PORT;
+        String homeDir = null;
+        String rootWebAppPath = "datalift";
+        String welcomePage = "";
         // On MAC OS, avoid the annoying popup asking the user to allow
         // the Java app to accept all incoming connections by forcing the
         // HTTP server to listen only to loopback interface.
         boolean loopbackOnly = (CURRENT_OS == MacOS);
         try {
             // Parse command-line arguments.
-            CmdLineParser parser = new CmdLineParser();
-            Option portOption = parser.addIntegerOption('p', "port");
+            CmdLineParser parser  = new CmdLineParser();
+            Option portOption     = parser.addIntegerOption('p', "port");
             Option externalOption = parser.addBooleanOption('e', "external");
+            Option homeDirOption  = parser.addStringOption('h',  "home-dir");
+            Option rootAppOption  = parser.addStringOption('r',  "root-app");
+            Option mainPageOption = parser.addStringOption('w',  "welcome-page");
             parser.parse(args);
             // 1. HTTP listening port.
             httpPort = ((Integer)(parser.getOptionValue(portOption,
@@ -205,6 +207,19 @@ public final class Wrapper
             // 2. Network interfaces to listen to.
             loopbackOnly = ! ((Boolean)(parser.getOptionValue(externalOption,
                                 new Boolean(! loopbackOnly)))).booleanValue();
+            // 3. Datalift home directory.
+            homeDir = (String)(parser.getOptionValue(homeDirOption,
+                                System.getProperty(DATALIFT_HOME)));
+            // 4. Root web application.
+            rootWebAppPath = (String)(parser.getOptionValue(rootAppOption,
+                                                            rootWebAppPath));
+            if (rootWebAppPath.endsWith(WAR_EXTENSION)) {
+                rootWebAppPath = rootWebAppPath.substring(0,
+                            rootWebAppPath.length() - WAR_EXTENSION.length());
+            }
+            // 5. Welcome page
+            welcomePage = (String)(parser.getOptionValue(mainPageOption,
+                                                         welcomePage));
             // Parse other arguments.
             String[] otherArgs = parser.getRemainingArgs();
             // 3. DataLift installation directory.
@@ -217,53 +232,45 @@ public final class Wrapper
             }
         }
         catch (Exception e) {
-            System.err.println(e.getMessage());
+            System.err.println(e.toString());
             System.err.println("Usage: java " + Wrapper.class.getName() +
-                               " [{-p,--port} port]" +
                                " [{-e,--external}]" +
+                               " [{-h,--home-dir} <directory>]" +
+                               " [{-p,--port} <port>]" +
+                               " [{-r,--root-app} <root_webapp_name>]" +
+                               " [{-w,--welcome-page} <welcome_page>]" +
                                " [install_dir]");
             System.exit(2);
         }
-        System.setProperty(DATALIFT_ROOT, dataliftRoot.getCanonicalPath());
-        System.setProperty(DATALIFT_PORT, String.valueOf(httpPort));
-        System.setProperty(JETTY_HOME,    dataliftRoot.getCanonicalPath());
         // Check (user-specific) runtime environment.
-        String homeDir = System.getProperty(DATALIFT_HOME);
-        File dataliftHome = (homeDir == null)? getUserEnv(): new File(homeDir);
-        boolean defaultHome = (homeDir == null);
+        PathSpec env = (homeDir == null)?
+                            PathSpec.getPathSpec(rootWebAppPath):
+                            PathSpec.getPathSpec((".".equals(homeDir))?
+                                            dataliftRoot: new File(homeDir));
         try {
             // Install user-specific configuration, if needed.
-            installUserEnv(dataliftHome, dataliftRoot, defaultHome);
+            installUserEnv(env, dataliftRoot);
         }
         catch (IOException e) {
+            System.err.println("Failed to create Datalift user environment (\""
+                               + env.getPath() + "\"): " + e.toString());
             // Oops! Can't create a user-specific runtime environment.
             // => Run DataLift at the executable location.
-            dataliftHome = dataliftRoot;
-            installUserEnv(dataliftRoot, dataliftRoot, true);
+            env = PathSpec.getPathSpec(dataliftRoot);
+            installUserEnv(env, dataliftRoot);
         }
+        File dataliftHome = env.getPath();
+        // Set Datalift runtime configuration properties.
+        System.setProperty(DATALIFT_ROOT, dataliftRoot.getCanonicalPath());
         System.setProperty(DATALIFT_HOME, dataliftHome.getCanonicalPath());
+        System.setProperty(DATALIFT_PORT, String.valueOf(httpPort));
+        System.setProperty(DATALIFT_LOG_PATH,
+                                        env.getPath(LOGS).getCanonicalPath());
         // Set Sesame repositories location.
         if (System.getProperty(SESAME_HOME) == null) {
             File sesameHome = new File(dataliftHome, SESAME_REPOSITORIES_DIR);
             System.setProperty(SESAME_HOME, sesameHome.getCanonicalPath());
         }
-        // Set DataLift log files location.
-        File logPath = ((CURRENT_OS == MacOS) && defaultHome)?
-                                getUserPath(MAC_APPL_LOGS_PATH):
-                                new File(dataliftHome, OTHER_APPL_LOGS_PATH);
-        createDirectory(logPath);
-        System.setProperty(DATALIFT_LOG_PATH, logPath.getCanonicalPath());
-        // Set (and create) Jetty working directory.
-        File jettyWorkDir = ((CURRENT_OS == MacOS) && defaultHome)?
-                                getUserPath(MAC_WEB_APPS_PATH):
-                                new File(dataliftHome, OTHER_WEB_APPS_PATH);
-        createDirectory(jettyWorkDir);
-        // Set (and create) Jetty temporary directory.
-        File tempDir = ((CURRENT_OS == MacOS) && defaultHome)?
-                                getUserPath(MAC_APPL_CACHE_PATH):
-                                new File(dataliftHome, OTHER_APPL_CACHE_PATH);
-        createDirectory(tempDir);
-        System.setProperty(JAVA_TEMP_DIR_PROP, tempDir.getAbsolutePath());
         // On Windows and Linux/Gnome 2.x systems, gather proxy configuration
         // from the system (it's the default value for Mac OS X).
         if ((CURRENT_OS != MacOS) &&
@@ -272,6 +279,10 @@ public final class Wrapper
             System.setProperty("java.net.useSystemProxies",
                                                     Boolean.TRUE.toString());
         }
+        // Set Jetty runtime configuration properties.
+        System.setProperty(JETTY_HOME, dataliftRoot.getCanonicalPath());
+        System.setProperty(JAVA_TEMP_DIR_PROP,
+                                        env.getPath(TEMP).getAbsolutePath());
         // Create Jetty server.
         final Server httpServer = new Server(httpPort);
         httpServer.setSendServerVersion(false);     // No Server HTTP header.
@@ -285,7 +296,7 @@ public final class Wrapper
             }
         }
         // Check installation directory structure.
-        File webappDir = new File(dataliftRoot, WEBAPPS_DIR);
+        File webappDir = new File(dataliftRoot, WEBAPPS.path);
         if (! webappDir.isDirectory()) {
             System.err.println("Invalid directory: \"" + dataliftRoot
                                + "\": not a Datalift installation directory");
@@ -294,12 +305,23 @@ public final class Wrapper
         // Sort webapps, longest path first, as declaration order matters.
         Map<String,File> webapps = new TreeMap<String,File>(
                                                     CONTEXT_PATH_COMPARATOR);
-        // Search for web applications, both as WARs and directories.
+        // Search for web applications, both as WARs and directories,
+        // in both Datalift installation and user runtime environment.
         findWebApps(webappDir, webapps);
-        webappDir = new File(dataliftHome, WEBAPPS_DIR);
-        if (webappDir.isDirectory()) {
-            findWebApps(webappDir, webapps);
+        if (! env.getPath(WEBAPPS).equals(webappDir)) {
+            webappDir = env.getPath(WEBAPPS);
+            if (webappDir.isDirectory()) {
+                findWebApps(webappDir, webapps);
+            }
         }
+        // Check for root web app, if any.
+        webappDir = webapps.remove("/" + rootWebAppPath);
+        if (webappDir != null) {
+            webapps.put("", webappDir);
+        }
+        // Check for user-provided JARs to be made available to web apps.
+        String extraClasspath = join(
+                            getExtraClassPathentries(env.getPath(LIB)), ";");
         // Register web applications.
         for (Map.Entry<String,File> e : webapps.entrySet()) {
             String path = e.getKey();
@@ -309,12 +331,19 @@ public final class Wrapper
             ctx.setContextPath(path);
             ctx.setWar(webapp.getPath());
             if (! webapp.isDirectory()) {
-                ctx.setTempDirectory(new File(jettyWorkDir, path));
+                ctx.setTempDirectory(new File(env.getPath(WORK), path));
+            }
+            if (extraClasspath.length() != 0) {
+                ctx.setExtraClasspath(extraClasspath);
             }
             httpServer.addHandler(ctx);
             System.out.println("Deploying \"" + webapp.getName() +
                                "\" with context path \"" + path + '"');
         }
+        // Ensure unused local variables can be garbage-collected.
+        env = null;
+        webapps = null;
+        webappDir = null;
         // Start server.
         httpServer.setStopAtShutdown(true);
         httpServer.start();
@@ -322,86 +351,63 @@ public final class Wrapper
                                                 Integer.valueOf(httpPort));
         // Open new browser window on user's display.
         BareBonesBrowserLaunch.openUrl(
-                        "http://" + LOCALHOST + ':' + httpPort + DATALIFT_PAGE);
+                    "http://" + LOCALHOST + ':' + httpPort + '/' + welcomePage);
         // Wait for server termination.
         httpServer.join();
         System.exit(0);
     }
 
-    private static File getUserEnv() {
-        // Build user-specific DataLift execution environment path
-        // depending on local OS type.
-        File userEnv = null;
-        if (CURRENT_OS == Windows) {
-            String appDataPath = System.getenv("APPDATA");
-            userEnv = (appDataPath != null)?
-                            new File(new File(appDataPath), WIN_DATALIFT_NAME):
-                            getUserPath(WIN_APPL_DATA_PATH);
+    private static Collection<File> getExtraClassPathentries(File... dirs) {
+        Collection<File> extraJars = new LinkedList<File>();
+        for (File dir : dirs) {
+            for (File f : dir.listFiles(JAR_FILE_FILTER)) {
+                extraJars.add(f);
+            }
         }
-        else {
-            userEnv = getUserPath((CURRENT_OS == MacOS)? MAC_APPL_DATA_PATH:
-                                                         OTHER_APPL_DATA_PATH);
-        }
-        return userEnv;
+        return extraJars;
     }
 
-    private static File getUserPath(String path) {
-        if (path == null) {
-            throw new IllegalArgumentException("path");
-        }
-        if (path.charAt(0) == '/') {
-            // Path shall be relative to user home directory.
-            path = path.substring(1);
-        }
-        return new File(new File(System.getProperty(JAVA_USER_HOMEDIR_PROP)),
-                        path);
-    }
-
-    private static void installUserEnv(File path,
-                                       File source, boolean defaultHome)
+    private static void installUserEnv(PathSpec env, File source)
                                                             throws IOException {
-        if (path != null) {
-            createDirectory(path);
-            // Create working directory, if they do not exist yet...
-            createDirectory(new File(path, "lib"));
-            createDirectory(new File(path, "modules"));
-            createDirectory(new File(path, "storage/public"));
-            createDirectory(new File(path, WEBAPPS_DIR));
-            if (! ((CURRENT_OS == MacOS) && defaultHome)) {
-                createDirectory(new File(path, "logs"));
-                createDirectory(new File(path, "temp"));
-            }
-
-            if ((source != null) && (! source.equals(path))) {
-                // Copy runtime templates: configuration...
-                File target = new File(path, CONFIG_DIR);
-                if (! target.exists()) {
-                    copy(new File(source, CONFIG_DIR), target);
-                }
-                // and empty Sesame repositories.
-                target= (CURRENT_OS == Other)?
-                                    new File(path, LINUX_REPOSITORIES_PATH):
-                                    new File(path, OTHER_REPOSITORIES_PATH);
-                if (! target.exists()) {
-                    copy(new File(source, OTHER_REPOSITORIES_PATH), target);
-                }
-            }
+        if (env == null) {
+            throw new IllegalArgumentException("env");
         }
-        // Else: ignore...
+        for (Directories d : Directories.values()) {
+            if (d  != CONFIG) {
+                createDirectory(env.getPath(d));
+            }
+            // Else: CONFIG case is handled below, to copy config. files.
+        }
+        // Copy runtime templates: configuration...
+        File target = env.getPath(CONFIG);
+        if (! target.exists()) {
+            copy(new File(source, CONFIG.path), target);
+        }
+        // and empty Sesame repositories.
+        target = env.getPath((CURRENT_OS == Other)? LINUX_REPOSITORIES_PATH:
+                                                    OTHER_REPOSITORIES_PATH);
+        if (! target.exists()) {
+            copy(new File(source, OTHER_REPOSITORIES_PATH), target);
+        }
     }
 
-    private static void createDirectory(File path) throws IOException {
+    private static boolean createDirectory(File path) throws IOException {
         if (path == null) {
             throw new IllegalArgumentException("path");
         }
+        boolean created = false;
         // Create directory if it does not exist.
-        if (! (path.exists() || path.mkdirs())) {
-            reportPathCreationFailure(path);
+        if (! path.exists()) {
+            if (! path.mkdirs()) {
+                reportPathCreationFailure(path);
+            }
+            created = true;
         }
         // Check that path leads to a write-accessible directory.
         if (! (path.isDirectory() && path.canWrite())) {
             reportPathCreationFailure(path);
         }
+        return created;
     }
 
     private static void copy(File from, File to) throws IOException {
@@ -525,9 +531,27 @@ public final class Wrapper
             // Remove ending .war extension.
             path = path.substring(0, i);
         }
-        if (ROOT_WEB_APP_NAME.equals(path)) {
-            path = "";
-        }
         return "/" + path;
+    }
+
+    public static String join(Collection<?> c, String sep) {
+        if (sep == null) {
+            throw new IllegalArgumentException("sep");
+        }
+        String s = "";
+        if ((c != null) && (! c.isEmpty())) {
+            StringBuilder sb = new StringBuilder();
+            for (Object element : c) {
+                if (element != null) {
+                    sb.append(element).append(sep);
+                }
+            }
+            if (sb.length() != 0) {
+                // Remove last separator
+                sb.setLength(sb.length() - sep.length());
+                s = sb.toString();
+            }
+        }
+        return s;
     }
 }

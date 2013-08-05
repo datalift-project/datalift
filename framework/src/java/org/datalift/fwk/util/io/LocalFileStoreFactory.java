@@ -74,7 +74,11 @@ public class LocalFileStoreFactory extends FileStoreFactory
 
         if (! isBlank(path)) {
             try {
-                fs = new LocalFileStore(new File(path));
+                File root = new File(path);
+                if (! root.isDirectory()) {
+                    throw new FileNotFoundException(path);
+                }
+                fs = new LocalFileStore(new File(path).getCanonicalFile());
             }
             catch (IOException e) {
                 log.warn("Local file store initialization failed for {}", e,

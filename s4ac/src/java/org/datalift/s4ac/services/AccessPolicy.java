@@ -6,11 +6,7 @@
  * modify and/or redistribute the software under the terms of the CeCILL
  * license as circulated by CEA, CNRS and INRIA at the following URL
  * "http://www.cecill.info".
- * 
- * @author Serena Villata (INRIA - Sophia-Antipolis)
- * 
  */
-
 
 package org.datalift.s4ac.services;
 
@@ -23,6 +19,11 @@ import org.datalift.fwk.util.StringUtils;
 import org.datalift.s4ac.utils.CRUDType;
 
 
+/**
+ * Access policy business objct.
+ *
+ * @author Serena Villata (INRIA - Sophia-Antipolis)
+ */
 public class AccessPolicy
 {
     public final String uri;
@@ -31,7 +32,7 @@ public class AccessPolicy
     private final Set<CRUDType> privileges = new HashSet<CRUDType>();
     private final Set<String> asks         = new HashSet<String>();
 
-        public AccessPolicy(String uri, ACSType type) {
+    public AccessPolicy(String uri, ACSType type) {
         if (! StringUtils.isSet(uri)) {
             throw new IllegalArgumentException("uri");
         }

@@ -74,6 +74,7 @@ import org.datalift.fwk.view.TemplateModel;
 import org.datalift.fwk.view.ViewFactory;
 
 import static org.datalift.fwk.MediaTypes.*;
+import static org.datalift.fwk.util.PrimitiveUtils.wrap;
 
 
 /**
@@ -380,7 +381,7 @@ public abstract class BaseConverterModule
                                                .getBean(SparqlEndpoint.class);
         return endpoint.describe(namedGraph.toString(), ElementType.Graph,
                                  repository, 5000, TEXT_HTML, null,
-                                 uriInfo, request, acceptHdr).build();
+                                 uriInfo, request, acceptHdr, null).build();
     }
 
     /**
@@ -436,13 +437,12 @@ public abstract class BaseConverterModule
                     long delay = System.currentTimeMillis() - this.t0;
                     if (namedGraph != null) {
                        log.debug("Exported {} triples from <{}> in {} seconds",
-                              Long.valueOf(this.statementCount), namedGraph,
-                              Double.valueOf(delay / 1000.0));
+                              wrap(this.statementCount), namedGraph,
+                              wrap(delay / 1000.0));
                     }
                     else {
                        log.debug("Exported {} triples in {} seconds",
-                              Long.valueOf(this.statementCount),
-                              Double.valueOf(delay / 1000.0));
+                              wrap(this.statementCount), wrap(delay / 1000.0));
                     }
                 }
             };

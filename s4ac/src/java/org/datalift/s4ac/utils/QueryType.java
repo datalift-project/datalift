@@ -6,15 +6,17 @@
  * modify and/or redistribute the software under the terms of the CeCILL
  * license as circulated by CEA, CNRS and INRIA at the following URL
  * "http://www.cecill.info".
- * 
- * @author Serena Villata (INRIA - Sophia-Antipolis)
- * 
  */
-
 
 package org.datalift.s4ac.utils;
 
 
+/**
+ * Supported types of SPARQL queries and their corresponding CRUD
+ * operation.
+ * 
+ * @author Serena Villata (INRIA - Sophia-Antipolis)
+ */
 public enum QueryType
 {
     ASK         (CRUDType.READ),

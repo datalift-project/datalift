@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration xmlns="http://jakarta.apache.org/log4j/">
+
+  <appender name="consoleLog" class="org.apache.log4j.ConsoleAppender">
+    <layout class="org.apache.log4j.PatternLayout">
+      <param name="conversionPattern"
+             value="%d{ISO8601}|%-5p|%c{1}|%m%n"/>
+    </layout>
+  </appender>
+  <logger name="org.datalift">
+    <level value="debug"/>
+  </logger>
+  <root>
+    <level value="info"/>
+    <appender-ref ref="consoleLog"/>
+  </root>
+
+</configuration>

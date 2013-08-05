@@ -51,6 +51,7 @@ import com.mongodb.gridfs.GridFSInputFile;
 import org.datalift.fwk.FileStore;
 import org.datalift.fwk.util.io.FileUtils;
 
+import static org.datalift.fwk.util.PrimitiveUtils.wrap;
 import static org.datalift.fwk.util.StringUtils.isBlank;
 
 
@@ -321,7 +322,7 @@ public final class MongoFileStore extends FileStore
             GridFSDBFile f = this.getDbFile(true);
             if (f != null) {
                 try {
-                    f.put(LAST_MODIFIED_METADATA, Long.valueOf(time));
+                    f.put(LAST_MODIFIED_METADATA, wrap(time));
                     f.save();
                     updated = true;
                 }
@@ -451,8 +452,7 @@ public final class MongoFileStore extends FileStore
                 GridFSInputFile f = (from == null)?
                                             fs.createFile(path):
                                             fs.createFile(from, path, true);
-                f.put(LAST_MODIFIED_METADATA,
-                                    Long.valueOf(System.currentTimeMillis()));
+                f.put(LAST_MODIFIED_METADATA, wrap(System.currentTimeMillis()));
                 f.save();
             }
             catch (Exception e) {

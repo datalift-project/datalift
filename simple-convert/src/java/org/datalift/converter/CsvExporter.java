@@ -84,6 +84,7 @@ import org.datalift.fwk.util.web.Charsets;
 import org.datalift.fwk.view.TemplateModel;
 
 import static org.datalift.fwk.MediaTypes.*;
+import static org.datalift.fwk.util.PrimitiveUtils.wrap;
 
 
 /**
@@ -254,7 +255,7 @@ public class CsvExporter extends BaseConverterModule
                         }
                     });
                 log.trace("Found {} predicates to export",
-                                            Integer.valueOf(predicates.size()));
+                                                    wrap(predicates.size()));
                 // Write header line.
                 final String[] data = new String[predicates.size() + 1];
                 data[0] = "URI";
@@ -294,8 +295,8 @@ public class CsvExporter extends BaseConverterModule
                             // Log export elapsed time.
                             long delay = System.currentTimeMillis() - t0;
                             log.debug("Exported {} CSV lines from <{}> in {} seconds",
-                                      Long.valueOf(lineCount), namedGraph,
-                                      Double.valueOf(delay / 1000.0));
+                                      wrap(lineCount), namedGraph,
+                                      wrap(delay / 1000.0));
                         }
 
                         private void writeLine() {

@@ -60,11 +60,14 @@
   <property file="${user.home}/datalift-build.properties"/>
   <property file="build.properties"/>
 
-  <property name="fwk.home"  location="${basedir}/../framework"/>
+  <property name="datalift.root" location="${basedir}/.."/>
+
+  <property name="fwk.home" location="${datalift.root}/framework"/>
   <property file="${fwk.home}/build.properties"/>
 
-  <property name="core.home" location="${basedir}/../core"/>
+  <property name="core.home" location="${datalift.root}/core"/>
   <property file="${core.home}/build.properties"/>
+
 
   <!-- ================ File and Directory Names ========================== -->
 
@@ -92,7 +95,7 @@
    -->
 
   <property name="app.name"             value="stringtouri"/>
-  <property name="app.version"          value="1.1"/>
+  <property name="app.version"          value="1.2"/>
   <property name="app.path"             value="/${app.name}"/>
   <property name="app.long.name"        value="StringToURI module for DataLift"/>
 
@@ -101,12 +104,8 @@
 
   <property name="src.home"             location="${basedir}/src/java"/>
   <property name="web.home"             location="${basedir}/src/web"/>
-
   <property name="lib.home"             location="${basedir}/lib"/>
   <property name="run.lib.home"         location="${lib.home}/runtime"/>
-
-  <property name="stu.version"          value="1.2"/>
-  <property name="stringtouri.jar"      location="${run.lib.home}/stringtouri/stringtouri-${stu.version}.jar"/>
 
   <property name="fwk.web.home"         location="${fwk.home}/src/web"/>
   <property name="fwk.lib.home"         location="${fwk.home}/lib"/>
@@ -114,6 +113,8 @@
   <property name="fwk.build.libs"       location="${fwk.lib.home}/buildtime"/>
   <property name="fwk.run.libs"         location="${fwk.lib.home}/runtime"/>
   <property name="core.run.libs"        location="${core.home}/lib/runtime"/>
+
+
 
   <property name="classes.dir"          location="${build.home}/classes"/>
   <property name="docs.dir"             location="${dist.home}/docs"/>
@@ -127,19 +128,21 @@
 
   <available property="locale.exists" file="${locale.default_resources}"/>
 
+
   <!-- ================ Compilation Control Options ======================= -->
 
   <!--
     These properties control option settings on the Javac compiler when it
-    is invoked using the <javac>
-  task.
+    is invoked using the <javac> task.
      - compile.debug        Should compilation include the debug option?
      - compile.deprecation  Should compilation include the deprecation option?
      - compile.optimize     Should compilation include the optimize option?
    -->
+
   <property name="compile.debug"        value="true"/>
   <property name="compile.deprecation"  value="false"/>
   <property name="compile.optimize"     value="false"/>
+
 
   <!-- ================ Compilation Classpath ============================= -->
 
@@ -153,16 +156,17 @@
    -->
 
   <path id="runtime.classpath">
-    <!-- Include all JAR files that will be included in webapp WAR -->
-    <fileset dir="${fwk.run.libs}">
+    <fileset dir="${run.lib.home}">
       <include name="**/*.jar"/>
     </fileset>
-    <fileset dir="${run.lib.home}">
+    <!-- Include all JAR files that will be included in webapp WAR -->
+    <fileset dir="${fwk.run.libs}">
       <include name="**/*.jar"/>
     </fileset>
     <fileset dir="${fwk.dist.home}">
       <include name="**/*.jar"/>
     </fileset>
+
   </path>
 
   <path id="compile.classpath">
@@ -175,7 +179,11 @@
     <fileset dir="${core.run.libs}">
       <include name="**/*.jar"/>
     </fileset>
+
+
   </path>
+
+
 
   <!-- ================ All Target ======================================== -->
 
@@ -186,6 +194,7 @@
 
   <target name="all" depends="clean,dist"
    description="Cleans build and dist directories, then rebuilds distribution"/>
+
 
   <!-- ================ Clean Target ====================================== -->
 
@@ -199,6 +208,7 @@
     <delete dir="${build.home}"/>
     <delete dir="${dist.home}"/>
   </target>
+
 
   <!-- ================ Prepare Target ==================================== -->
 
@@ -222,6 +232,7 @@
     <mkdir dir="${classes.dir}"/>
   </target>
 
+
   <!-- ================ Compile Target ==================================== -->
 
   <!--
@@ -238,7 +249,8 @@
           destdir="${classes.dir}"
             debug="${compile.debug}"
       deprecation="${compile.deprecation}"
-         optimize="${compile.optimize}">
+         optimize="${compile.optimize}"
+         includeantruntime="false">
       <classpath refid="compile.classpath"/>
     </javac>
     <!-- Copy application resources -->
@@ -247,6 +259,7 @@
       <fileset dir="${src.home}" excludes="**/*.java,**/*.html,**/.*"/>
     </copy>
   </target>
+
 
   <!-- ================ Dist Target ======================================= -->
 
@@ -270,6 +283,12 @@
                                  preservelastmodified="true">
       <fileset dir="${web.home}" excludes="**/.*"/>
     </copy>
+    <!-- Copy runtime JARs to embed in distribution -->
+    <copy todir="${classes.dir}" flatten="true">
+      <fileset dir="${run.lib.home}">
+        <include name="**/*.jar"/>
+      </fileset>
+    </copy>
     <!-- Create build directories as needed -->
     <mkdir dir="${dist.home}"/>
   </target>
@@ -287,14 +306,14 @@
   <target name="dist" depends="compile,prepare-dist,resource-copy"
                       description="Create binary distribution">
     <!-- Create module JAR file -->
-    <copy file="${stringtouri.jar}" tofile="${jar.path}"/>
-    <jar jarfile="${jar.path}" update="true">
+    <jar jarfile="${jar.path}">
       <fileset dir="${classes.dir}"/>
       <service type="org.datalift.fwk.Module">
-        <provider classname="org.datalift.stringtouri.StringToURIController"/>
+      <provider classname="org.datalift.stringtouri.StringToURIController"/>
       </service>
     </jar>
   </target>
+
 
   <!-- ================ Helper Targets ==================================== -->
 

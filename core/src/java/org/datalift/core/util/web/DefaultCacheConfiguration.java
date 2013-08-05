@@ -51,6 +51,7 @@ import org.datalift.fwk.Configuration;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.util.web.CacheConfiguration;
 
+import static org.datalift.fwk.util.PrimitiveUtils.wrap;
 import static org.datalift.fwk.util.StringUtils.*;
 
 
@@ -187,7 +188,7 @@ public class DefaultCacheConfiguration implements CacheConfiguration
                 if (failSafe) {
                     log.warn(
                         "Invalid cache duration: {}. Using default value: {}",
-                        durationSpec, Integer.valueOf(cacheDuration));
+                        durationSpec, wrap(cacheDuration));
                 }
                 else {
                     throw new IllegalArgumentException(e);
@@ -310,8 +311,8 @@ public class DefaultCacheConfiguration implements CacheConfiguration
         }
 
         private String formatTime(int time) {
-            return String.format("%02d:%02d", Integer.valueOf(time / 100),
-                                              Integer.valueOf(time % 100));
+            return String.format("%02d:%02d", wrap(time / 100),
+                                              wrap(time % 100));
         }
 
         private int checkTime(int spec, String name) {

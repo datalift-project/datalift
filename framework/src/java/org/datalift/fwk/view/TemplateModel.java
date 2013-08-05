@@ -35,6 +35,7 @@
 package org.datalift.fwk.view;
 
 
+import java.util.Collection;
 import java.util.Map;
 
 
@@ -58,8 +59,19 @@ import java.util.Map;
  */
 public interface TemplateModel extends Map<String,Object>
 {
+    //-------------------------------------------------------------------------
+    // Constants
+    //-------------------------------------------------------------------------
+
     /** The context key for the default application model object. */
     public final static String MODEL_KEY = "it";
+    /** The context key for filed classes. */
+    public final static String FIELD_CLASSES_KEY =
+                            TemplateModel.class.getName() + ".fieldClasses";
+
+    //-------------------------------------------------------------------------
+    // Methods
+    //-------------------------------------------------------------------------
 
     /**
      * Returns the template name.
@@ -80,4 +92,16 @@ public interface TemplateModel extends Map<String,Object>
      * @return the default model object.
      */
     public Object get();
+
+    /**
+     * Registers a class to make its constants (static fields)
+     * directly available in the template.
+     */
+    public void registerFieldsFor(Class<?> clazz);
+
+    /**
+     * Returns the classes the static fields of which shall be
+     * made available to the template.
+     */
+    public Collection<Class<?>> getFieldClasses();
 }

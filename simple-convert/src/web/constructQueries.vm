@@ -21,7 +21,7 @@
 			<select name="source" id="source">
 #foreach( $curSrc in $it.getSources() )
 	#set( $count = 1 )
-	#if( $curSrc.getType() == $field.TransformedRdfSource )
+	#if( $converter.canHandle($curSrc) )
 		#foreach($source in $project.getSources())
 			#if( $source.getType() == $field.TransformedRdfSource && $source.getParent().uri == $curSrc.uri)
 				#set( $count = $count + 1)

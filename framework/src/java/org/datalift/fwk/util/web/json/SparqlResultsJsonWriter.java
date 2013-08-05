@@ -7,9 +7,6 @@ import java.io.Writer;
 import java.util.Iterator;
 import java.util.List;
 
-import org.openrdf.model.BNode;
-import org.openrdf.model.Literal;
-import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.query.Binding;
 import org.openrdf.query.BindingSet;
@@ -125,40 +122,6 @@ public class SparqlResultsJsonWriter extends AbstractJsonWriter
     @Override
     protected void writeValue(Value value, ResourceType type)
                                                             throws IOException {
-        this.openBraces();
-
-        if (value instanceof URI) {
-                this.writeKeyValue("type", "uri");
-                this.writeComma();
-                this.writeKeyValue("value", ((URI)value).toString());
-        }
-        else if (value instanceof BNode) {
-                this.writeKeyValue("type", "bnode");
-                this.writeComma();
-                this.writeKeyValue("value", ((BNode)value).getID());
-        }
-        else if (value instanceof Literal) {
-                Literal l = (Literal)value;
-                if (l.getDatatype() != null) {
-                        this.writeKeyValue("type", "typed-literal");
-                        this.writeComma();
-                        this.writeKeyValue("datatype",
-                                           l.getDatatype().toString());
-                }
-                else {
-                        this.writeKeyValue("type", "literal");
-                        if (l.getLanguage() != null) {
-                                this.writeComma();
-                                this.writeKeyValue("xml:lang", l.getLanguage());
-                        }
-                }
-                this.writeComma();
-                this.writeKeyValue("value", l.getLabel());
-        }
-        else {
-            throw new IOException(
-                            "Unknown Value object type: " + value.getClass());
-        }
-        this.closeBraces();
+        this.writeJsonValue(value, type);
     }
 }

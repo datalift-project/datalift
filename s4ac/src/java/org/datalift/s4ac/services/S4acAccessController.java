@@ -6,13 +6,10 @@
  * modify and/or redistribute the software under the terms of the CeCILL
  * license as circulated by CEA, CNRS and INRIA at the following URL
  * "http://www.cecill.info".
- * 
- * @author Serena Villata (INRIA - Sophia-Antipolis)
- * 
  */
 
-
 package org.datalift.s4ac.services;
+
 
 import java.io.File;
 import java.text.MessageFormat;
@@ -50,6 +47,7 @@ import org.datalift.s4ac.utils.CRUDType;
 import org.datalift.s4ac.utils.QueryType;
 
 import static org.datalift.fwk.rdf.RdfNamespace.S4AC;
+import static org.datalift.fwk.util.PrimitiveUtils.wrap;
 import static org.datalift.fwk.util.StringUtils.*;
 import static org.datalift.s4ac.services.ACSType.*;
 import static org.datalift.s4ac.utils.QueryType.*;
@@ -61,7 +59,7 @@ import static org.datalift.s4ac.utils.QueryType.*;
  * Security for Access Control)</a> vocabulary for specifying the
  * access control policies.
  *
- * @author Serena Villata (INRIA)
+ * @author Serena Villata (INRIA - Sophia-Antipolis)
  * @author Laurent Bihanic (Atos)
  */
 public class S4acAccessController extends BaseModule
@@ -263,8 +261,7 @@ public class S4acAccessController extends BaseModule
             }
             else {
                 log.info("Found {} access policies applicable to RDF stores {}",
-                         Integer.valueOf(this.policies.size()),
-                         this.securedRepositories);
+                         wrap(this.policies.size()), this.securedRepositories);
             }
             // Check that there's at least one repository under access control.
             if (this.securedRepositories.isEmpty()) {
@@ -318,10 +315,12 @@ public class S4acAccessController extends BaseModule
             }
             else {
                 log.debug("Found {} graph(s) accessible to {}",
-                          Integer.valueOf(graphs.size()), user);
+                                                    wrap(graphs.size()), user);
             }
             if (graphs.isEmpty()) {
                 // User is not allowed to access any content.
+                log.info("Denied access to RDF store \"{}\" for \"{}\"",
+                         repository, user);
                 throw new SecurityException();
             }
             // Update query and graphs data.
@@ -416,7 +415,7 @@ public class S4acAccessController extends BaseModule
             matches = q.evaluate();
             if (log.isTraceEnabled()) {
                 log.trace("{} ({}) -> {}", query, q.getBindings(),
-                                           Boolean.valueOf(matches));
+                                                  wrap(matches));
             }
         }
         catch (Exception e) {

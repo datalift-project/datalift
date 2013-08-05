@@ -127,7 +127,8 @@
 
 	<h3><a href="#">#i18n("project.upload_db.title")</a></h3>
 	<div>
-#if( (!$current) || ($current.getType() == $field.SqlSource) )
+#if( (!$current) || ($current.getType() == $field.SqlQuerySource)
+                 || ($current.getType() == $field.SqlDatabaseSource) )
 	<form method="post" action="$target_db" class="form_formated">
 #if( $current )
 		<input type="hidden" id="current_source" name="current_source" value="$current.uri"/>
@@ -210,13 +211,13 @@
 #if( (!$current) || ($current.getType() == $field.ShpSource) )
 	<form method="post" action="$target_shp" enctype="multipart/form-data" class="form_formated">
 #if( !$current )
-		<p><label for="file">#i18n("project.upload_shp"): </label>
+		<p><label for="file">#i18n("project.upload_shp")*: </label>
 		<input type="file" name="source1" size="64"/><br />
-		<p><label for="file">#i18n("project.upload_prj"): </label>
+		<p><label for="file">#i18n("project.upload_prj")*: </label>
 		<input type="file" name="source2" size="64"/><br />
-		<p><label for="file">#i18n("project.upload_shx"): </label>
+		<p><label for="file">#i18n("project.upload_shx")*: </label>
 		<input type="file" name="source3" size="64"/><br />
-		<p><label for="file">#i18n("project.upload_dbf"): </label>
+		<p><label for="file">#i18n("project.upload_dbf")*: </label>
 		<input type="file" name="source4" size="64"/><br />
 #else
 		<input type="hidden" name="current_source" value="$current.uri"/>
@@ -233,7 +234,7 @@
 #if( (!$current) || ($current.getType() == $field.GmlSource) )
 	<form method="post" action="$target_gml" enctype="multipart/form-data" class="form_formated">
 #if( !$current )
-		<p><label for="file">#i18n("project.upload_gml"): </label>
+		<p><label for="file">#i18n("project.upload_gml")*: </label>
 		<input type="file" name="source1" size="64"/><br />
 		<p><label for="file">#i18n("project.upload_xsd"): </label>
 		<input type="file" name="source2" size="64"/><br />
@@ -441,7 +442,8 @@
 		select_panel = 0;
 	#elseif( $current.getType() == $field.RdfFileSource )
 		select_panel = 1;
-	#elseif( $current.getType() == $field.SqlSource )
+	#elseif( ($current.getType() == $field.SqlQuerySource) ||
+                 ($current.getType() == $field.SqlDatabaseSource) )
 		select_panel = 2;
 	#elseif( $current.getType() == $field.SparqlSource )
 		select_panel = 3;

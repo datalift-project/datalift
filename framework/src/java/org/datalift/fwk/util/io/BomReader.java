@@ -166,7 +166,7 @@ public class BomReader extends InputStreamReader
         /**
          * Creates a new BomInputStream to extract the BOM information
          * from the specified input stream.
-         * @param  in   the inout stream.
+         * @param  in   the input stream.
          */
         public BomInputStream(InputStream in) {
             super(in, Env.getFileBufferSize());

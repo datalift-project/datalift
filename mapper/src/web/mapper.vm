@@ -154,8 +154,8 @@
                     </div>
                     <div class="control-group" data-bind="visible: $root.valueExpected">
                       <label for="property-value">#i18n("property.value.label"): </label>
-                      <!--input id="property-value" type="text" class="input-xlarge" data-bind="value: $root.propertyValue"/-->
-                      <select data-bind="options: $root.availableSrcProps, value: $root.propertyValue"></select>
+                      <input id="property-value" type="text" class="input-xlarge" data-bind="value: $root.propertyValue"/>
+                      <!-- select data-bind="options: $root.availableSrcProps, value: $root.propertyValue"></select -->
                     </div>
                     <button type="button" class="btn btn-small btn-primary" data-bind="click: $root.addPropertyMapping">#i18n("add.label")</button>
                   </form>

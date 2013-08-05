@@ -1,6 +1,6 @@
 /*
- * Copyright / Copr. IGN
- * Contributor(s) : F. Hamdi
+ * Copyright / Copr. IGN 2013
+ * Contributor(s) : Faycal Hamdi
  *
  * Contact: hamdi.faycal@gmail.com
  *
@@ -39,71 +39,104 @@ import java.io.InputStream;
 /**
  * A Shapefile source.
  *
- * @author Fayçal Hamdi
+ * @author fhamdi
  */
 public interface ShpSource extends FileSource
 {
-    /**
-     * Returns the path of the Shape file (SHP) for this Shapefile
-     * source.
-     * @return the Shape file path, relative to the DataLift public
-     *         storage directory.
-     */
-    public String getShapeFilePath();
+	/**
+	 * Supported Coordinate Reference Systems (CRS).
+	 */
+	public enum Crs {
+		none("none"), wgs84("EPSG:4326");
 
-    /**
-     * Returns the path of the index file (SHX) for this Shapefile
-     * source.
-     * @return the index file path, relative to the DataLift public
-     *         storage directory.
-     */
-    public String getIndexFilePath();
+		protected final String value;
 
-    /**
-     * Returns the path of the attribute file (DBF) for this Shapefile
-     * source.
-     * @return the attribute file path, relative to the DataLift public
-     *         storage directory.
-     */
-    public String getAttributeFilePath();
+		Crs(String s) {
+			this.value = s;
+		}
 
-    /**
-     * Returns the path of the projection file (PRJ) for this Shapefile
-     * source.
-     * @return the projection file path, relative to the DataLift public
-     *         storage directory.
-     */
-    public String getProjectionFilePath();
+		public String getValue() {
+			return value;
+		}
+	}
 
-    /**
-     * Returns an input stream for reading the Shape file (SHP)
-     * content.
-     * @return an input stream
-     * @throws IOException if any error occurred accessing the file.
-     */
-    public InputStream getShapeFileInputStream() throws IOException;
+	//-------------------------------------------------------------------------
+	// Methods
+	//-------------------------------------------------------------------------
 
-    /**
-     * Returns an input stream for reading the index file (SHX)
-     * content.
-     * @return an input stream
-     * @throws IOException if any error occurred accessing the file.
-     */
-    public InputStream getIndexFileInputStream() throws IOException;
+	/**
+	 * Returns the Coordinate Reference System (CRS).
+	 * @return the Coordinate Reference System (CRS).
+	 */
+	public String getCrs();
 
-    /**
-     * Returns an input stream for reading the attribute file (DBF)
-     * content.
-     * @return an input stream
-     * @throws IOException if any error occurred accessing the file.
-     */
-    public InputStream getAttributeFileInputStream() throws IOException;
+	/**
+	 * Sets the Coordinate Reference System (CRS).
+	 * @param  sep    the Coordinate Reference System (CRS).
+	 */
+	public void setCrs(String sep);
 
-    /**
-     * Returns an input stream for reading the projection file (PRJ)
-     * content.
-     * @return an input stream
-     * @throws IOException if any error occurred accessing the file.
-     */
-    public InputStream getProjectionFileInputStream() throws IOException;
+	/**
+	 * Returns the path of the Shape file (SHP) for this Shapefile
+	 * source.
+	 * @return the Shape file path, relative to the DataLift public
+	 *         storage directory.
+	 */
+	public String getShapeFilePath();
+
+	/**
+	 * Returns the path of the index file (SHX) for this Shapefile
+	 * source.
+	 * @return the index file path, relative to the DataLift public
+	 *         storage directory.
+	 */
+	public String getIndexFilePath();
+
+	/**
+	 * Returns the path of the attribute file (DBF) for this Shapefile
+	 * source.
+	 * @return the attribute file path, relative to the DataLift public
+	 *         storage directory.
+	 */
+	public String getAttributeFilePath();
+
+	/**
+	 * Returns the path of the projection file (PRJ) for this Shapefile
+	 * source.
+	 * @return the projection file path, relative to the DataLift public
+	 *         storage directory.
+	 */
+	public String getProjectionFilePath();
+
+	/**
+	 * Returns an input stream for reading the Shape file (SHP)
+	 * content.
+	 * @return an input stream
+	 * @throws IOException if any error occurred accessing the file.
+	 */
+	public InputStream getShapeFileInputStream() throws IOException;
+
+	/**
+	 * Returns an input stream for reading the index file (SHX)
+	 * content.
+	 * @return an input stream
+	 * @throws IOException if any error occurred accessing the file.
+	 */
+	public InputStream getIndexFileInputStream() throws IOException;
+
+	/**
+	 * Returns an input stream for reading the attribute file (DBF)
+	 * content.
+	 * @return an input stream
+	 * @throws IOException if any error occurred accessing the file.
+	 */
+	public InputStream getAttributeFileInputStream() throws IOException;
+
+	/**
+	 * Returns an input stream for reading the projection file (PRJ)
+	 * content.
+	 * @return an input stream
+	 * @throws IOException if any error occurred accessing the file.
+	 */
+	public InputStream getProjectionFileInputStream() throws IOException;
 }

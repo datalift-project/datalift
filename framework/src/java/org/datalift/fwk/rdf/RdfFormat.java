@@ -37,6 +37,7 @@ package org.datalift.fwk.rdf;
 
 import java.io.OutputStream;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -45,6 +46,8 @@ import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Request;
+import javax.ws.rs.core.Variant;
 
 import org.ccil.cowan.tagsoup.Parser;
 import org.openrdf.model.ValueFactory;
@@ -98,7 +101,7 @@ public enum RdfFormat
     /** "application/x-trig" */
     TRIX        ("TriX", RDFFormat.TRIX, "trix", APPLICATION_TRIX_TYPE),
     /** RDFa (text/html) */
-    RDFA        ("RDFa", RDFaFormat.RDFA,
+    RDFA        ("RDFa", RDFaFormat.RDFA, false,
                  new String[] { "html", "xhtml", "htm" },
                  APPLICATION_XHTML_XML_TYPE, TEXT_HTML_TYPE) {
             @Override
@@ -117,6 +120,12 @@ public enum RdfFormat
     // Class members
     //-------------------------------------------------------------------------
 
+    /**
+     * The supported RDF MIME types, in a format suitable for JAX-RS
+     * {@link Request#selectVariant(List) content negotiation.
+     */
+    public final static List<Variant> VARIANTS;
+
     /** A map to resolve MIME type strings into actual RDF type objects. */
     private final static Map<String,RdfFormat> mime2TypeMap =
                                         new LinkedHashMap<String,RdfFormat>();
@@ -129,6 +138,8 @@ public enum RdfFormat
     public final String name;
     /** The OpenRDF RDFFormat object for this type. */
     private final RDFFormat format;
+    /** Whether outputting to this format is support. */
+    public final boolean canOutput;
     /** The file extensions. */
     public final List<String> extensions;
     /** The MIME types that map to the official type. */
@@ -139,11 +150,16 @@ public enum RdfFormat
     //-------------------------------------------------------------------------
 
     static {
+        List<Variant> rdfVariants = new ArrayList<Variant>();
         for (RdfFormat r : values()) {
             for (MediaType t : r.mimeTypes) {
                 mime2TypeMap.put(MediaTypes.toString(t), r);
+                if (r.canOutput) {
+                    rdfVariants.add(new Variant(t, null, null));
+                }
             }
         }
+        VARIANTS = Collections.unmodifiableList(rdfVariants);
     }
 
     //-------------------------------------------------------------------------
@@ -157,7 +173,7 @@ public enum RdfFormat
      */
     RdfFormat(String name, RDFFormat format,
                            String extension, MediaType... mimeTypes) {
-        this(name, format, new String[] { extension }, mimeTypes);
+        this(name, format, true, new String[] { extension }, mimeTypes);
     }
 
     /**
@@ -166,6 +182,16 @@ public enum RdfFormat
      * @param  mimeTypes   the MIME types that map to the official type.
      */
     RdfFormat(String name, RDFFormat format,
+                           String[] extensions, MediaType... mimeTypes) {
+        this(name, format, true, extensions, mimeTypes);
+    }
+
+    /**
+     * Creates a new RdfFormat instance.
+     * @param  type        the official type.
+     * @param  mimeTypes   the MIME types that map to the official type.
+     */
+    RdfFormat(String name, RDFFormat format, boolean canOutput,
                            String[] extensions, MediaType... mimeTypes) {
         if (StringUtils.isBlank(name)) {
             throw new IllegalArgumentException("name");
@@ -181,6 +207,7 @@ public enum RdfFormat
         }
         this.name       = name;
         this.format     = format;
+        this.canOutput  = canOutput;
         this.extensions = Collections.unmodifiableList(
                                                     Arrays.asList(extensions));
         this.mimeTypes  = Collections.unmodifiableList(

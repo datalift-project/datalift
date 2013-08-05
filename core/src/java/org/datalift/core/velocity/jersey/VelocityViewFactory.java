@@ -36,7 +36,9 @@ package org.datalift.core.velocity.jersey;
 
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -56,20 +58,37 @@ import org.datalift.fwk.view.ViewFactory;
  */
 public class VelocityViewFactory extends ViewFactory
 {
+    //-------------------------------------------------------------------------
+    // ViewFactory contract support
+    //-------------------------------------------------------------------------
+
     /** {@inheritDoc} */
     @Override
     protected TemplateModel createView(String templateName, Object model) {
         return new VelocityTemplateModel(templateName, model);
     }
 
+    //-------------------------------------------------------------------------
+    // VelocityTemplateModel nested class
+    //-------------------------------------------------------------------------
+
     /**
      * A {@link TemplateModel} wrapper for Jersey's {@Link Viewable}
      * object.
      */
     private final static class VelocityTemplateModel extends Viewable
-                                                    implements TemplateModel
+                                                     implements TemplateModel
     {
+        //---------------------------------------------------------------------
+        // Instance members
+        //---------------------------------------------------------------------
+
         private final Map<String,Object> model;
+        private final Set<Class<?>> fieldClasses = new HashSet<Class<?>>();
+
+        //---------------------------------------------------------------------
+        // Constructors
+        //---------------------------------------------------------------------
 
         /**
          * Creates a new template view object.
@@ -83,6 +102,8 @@ public class VelocityViewFactory extends ViewFactory
             super(templateName, new HashMap<String,Object>());
             // Get a type-safe reference to the model object.
             this.model = (Map<String,Object>)(this.getModel());
+            // Register the pre-defined entry for storing field classes.
+            this.put(FIELD_CLASSES_KEY, this.fieldClasses);
             // Update internal model with provided object.
             if (model != null) {
                 if (model instanceof Map<?,?>) {
@@ -101,14 +122,35 @@ public class VelocityViewFactory extends ViewFactory
             }
         }
 
+        //---------------------------------------------------------------------
+        // TemplateModel contract support
+        //---------------------------------------------------------------------
+
+        /** {@inheritDoc} */
         @Override
         public Object put(Object value) {
             return this.model.put(MODEL_KEY, value);
         }
 
+        /** {@inheritDoc} */
         @Override
         public Object get() {
             return this.get(MODEL_KEY);
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public void registerFieldsFor(Class<?> clazz) {
+            if (clazz != null) {
+                this.fieldClasses.add(clazz);
+            }
+            // Else: ignore.
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public Collection<Class<?>> getFieldClasses() {
+            return Collections.unmodifiableCollection(this.fieldClasses);
         }
 
         @Override

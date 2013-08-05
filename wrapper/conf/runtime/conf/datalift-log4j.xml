@@ -16,7 +16,7 @@
   </appender>
 
   <!-- ===== Loggers ===== -->
-  <!-- DataLift framework and modules -->
+  <!-- Datalift framework and modules -->
   <logger name="org.datalift">
     <level value="info"/>
   </logger>

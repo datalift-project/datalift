@@ -162,12 +162,24 @@ public class MediaTypes extends MediaType
     public final static String APPLICATION_JSON_UTF8 =
                                             APPLICATION_JSON + UTF8_ENCODED;
 
+    /** The supported RDF MIME type names. */ 
     private final static Collection<String> RDF_TYPES =
             Arrays.asList(APPLICATION_RDF_XML,
                           TEXT_TURTLE, APPLICATION_TURTLE,
                           TEXT_N3, TEXT_RDF_N3, APPLICATION_N3,
                           APPLICATION_NTRIPLES, APPLICATION_TRIG,
                           APPLICATION_TRIX);
+
+    //-------------------------------------------------------------------------
+    // Constructors
+    //-------------------------------------------------------------------------
+
+    /**
+     * Default constructor, private on purpose.
+     */
+    private MediaTypes() {
+        throw new UnsupportedOperationException();
+    }
 
     //-------------------------------------------------------------------------
     // Helpers methods

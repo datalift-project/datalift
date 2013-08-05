@@ -13,7 +13,7 @@
 	<div id="banner" class="dl-banner">
 		<img id="datalift-logo" src="${baseUri}/images/datalift-logo.png"/>
 		<span id="datalift-title">DataLift</span>
-		<img id="datalift-partenaire" src="${baseUri}/images/logo-partenaire.png">
+		<img id="datalift-partenaire" src="${baseUri}/images/logo-partenaire.png"/>
 	</div>
 #end
 

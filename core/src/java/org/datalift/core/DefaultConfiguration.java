@@ -104,6 +104,9 @@ public class DefaultConfiguration extends Configuration
     public final static String TEMP_STORAGE_PATH =
                                             "datalift.temp.storage.path";
 
+    /** Java well-known system property: temp. directory. */
+    private final static String JAVA_TEMP_DIR_PROP = "java.io.tmpdir";
+
     //-------------------------------------------------------------------------
     // Class members
     //-------------------------------------------------------------------------
@@ -177,7 +180,7 @@ public class DefaultConfiguration extends Configuration
 
         File tmpStorage = this.initLocalPath(TEMP_STORAGE_PATH, false, true);
         if (tmpStorage == null) {
-            tmpStorage = new File(System.getProperty("java.io.tmpdir"));
+            tmpStorage = new File(System.getProperty(JAVA_TEMP_DIR_PROP));
         }
         this.tempStorage = tmpStorage;
     }
@@ -449,7 +452,7 @@ public class DefaultConfiguration extends Configuration
      * Shuts down this configuration, freeing all attached resources
      * and closing all repository connections.
      */
-    /* package */ void shutdown() {
+    public void shutdown() {
         for (Repository r : this.repositories.values()) {
             try {
                 r.shutdown();
@@ -484,8 +487,8 @@ public class DefaultConfiguration extends Configuration
         catch (IOException e) {
             TechnicalException error = new TechnicalException(
                             "configuration.not.found", e, CONFIGURATION_FILE);
-            log.fatal(error.getMessage(), e);
-            throw error;
+            log.warn(error.getMessage());
+            config = new VersatileProperties(props);
         }
         return config;
     }
@@ -493,7 +496,7 @@ public class DefaultConfiguration extends Configuration
     /**
      * Initializes this configuration.
      */
-    /* package */ void init() {
+    public void init() {
         // Initialize the file storages.
         this.privateStorage = this.initFileStore(PRIVATE_STORAGE_PATH, true);
         this.publicStorage  = this.initFileStore(PUBLIC_STORAGE_PATH, false);
@@ -627,12 +630,15 @@ public class DefaultConfiguration extends Configuration
         Collection<File> files = new LinkedList<File>();
 
         String paths = this.getConfigurationEntry(key, required);
-        for (String p : paths.split("\\s*,\\s*")) {
-            files.add(this.checkLocalPath(p, false, create));
-        }
-        if ((required) && (files.isEmpty())) {
-            // At least one existing path is mandated.
-            throw new TechnicalException("local.paths.not.directories", paths);
+        if (paths != null) {
+            for (String p : paths.split("\\s*,\\s*")) {
+                files.add(this.checkLocalPath(p, false, create));
+            }
+            if ((required) && (files.isEmpty())) {
+                // At least one existing path is mandated.
+                throw new TechnicalException(
+                                        "local.paths.not.directories", paths);
+            }
         }
         return files;
     }
@@ -723,7 +729,7 @@ public class DefaultConfiguration extends Configuration
      */
     private String getConfigurationEntry(String key, boolean required) {
         String s = this.props.getProperty(key);
-        if ((required) && ((s == null) || (s.length() == 0))) {
+        if (required && isBlank(s)) {
             throw new TechnicalException("configuration.missing.property", key);
         }
         return s;

@@ -136,7 +136,7 @@ public class GmlResourceHandler implements UriPolicy
 
     /** {@inheritDoc} */
     @Override
-    public ResourceHandler canHandle(UriInfo uriInfo,
+    public ResourceHandler canHandle(URI uri, UriInfo uriInfo,
                                      Request request, String acceptHdr) {
         ResourceHandler h = null;
         // 1. Check that GML is the preferred content type.
@@ -145,7 +145,7 @@ public class GmlResourceHandler implements UriPolicy
             ((APPLICATION_GML_XML_TYPE.equals(v.getMediaType())) ||
              (APPLICATION_VND_OGC_GML_TYPE.equals(v.getMediaType())))) {
             // 2. Check this request resource holds a GML field.
-            final String gml = this.getGmlData(uriInfo.getRequestUri());
+            final String gml = this.getGmlData(uri);
             if (StringUtils.isSet(gml)) {
                 h = new ResourceHandler() {
                         @Override

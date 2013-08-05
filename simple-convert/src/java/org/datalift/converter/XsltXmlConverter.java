@@ -68,6 +68,7 @@ import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.rdf.rio.rdfxml.RDFXMLParser;
 
 import static org.datalift.fwk.MediaTypes.*;
+import static org.datalift.fwk.util.PrimitiveUtils.wrap;
 
 
 /**
@@ -188,8 +189,8 @@ public class XsltXmlConverter extends BaseConverterModule
                         rdfParser.getSAXResult(rdfBaseUri));
 
             log.debug("Inserted {} RDF triples into <{}> in {} seconds",
-                      Long.valueOf(appender.getStatementCount()), targetGraph,
-                      Double.valueOf(appender.getDuration() / 1000.0));
+                      wrap(appender.getStatementCount()), targetGraph,
+                      wrap(appender.getDuration() / 1000.0));
         }
         catch (Exception e) {
             throw new TechnicalException("xml.conversion.failed", e);

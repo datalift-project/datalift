@@ -62,6 +62,7 @@ import org.datalift.fwk.project.Row;
 import org.datalift.fwk.util.CloseableIterator;
 import org.datalift.fwk.util.io.BomReader;
 
+import static org.datalift.fwk.util.PrimitiveUtils.wrap;
 import static org.datalift.fwk.util.StringUtils.*;
 
 
@@ -366,7 +367,7 @@ public class CsvSourceImpl extends BaseFileSource
         if (count < 0) {
             count = 0;
         }
-        log.trace("Skipping {} rows...", Integer.valueOf(count));
+        log.trace("Skipping {} rows...", wrap(count));
         while ((count > 0) && (reader.readNext() != null)) count--;
 
         return (count == 0);
@@ -491,7 +492,7 @@ public class CsvSourceImpl extends BaseFileSource
             Map<String,Integer> m = new LinkedHashMap<String,Integer>();
             int i = 0;
             for (String s : headers) {
-                m.put(s, Integer.valueOf(i++));
+                m.put(s, wrap(i++));
             }
             this.keyMapping = Collections.unmodifiableMap(m);
             // Skip rows until start of actual data and read first row.
@@ -501,7 +502,7 @@ public class CsvSourceImpl extends BaseFileSource
                 // Last data row set. => Compute number of rows to read.
                 this.maxRows = getLastDataRow() - getFirstDataRow() + 1;
             }
-            log.debug("Rows to read: {}", Integer.valueOf(this.maxRows));
+            log.debug("Rows to read: {}", wrap(this.maxRows));
         }
 
         /** {@inheritDoc} */

@@ -20,11 +20,11 @@
   </appender>
 
   <!-- ===== Loggers ===== -->
-  <!-- DataLift modules -->
+  <!-- Datalift modules -->
   <logger name="org.datalift">
     <level value="debug"/>
   </logger>
-  <!-- DataLift framework and core classes -->
+  <!-- Datalift framework and core classes -->
   <logger name="org.datalift.framework">
     <level value="info"/>
   </logger>

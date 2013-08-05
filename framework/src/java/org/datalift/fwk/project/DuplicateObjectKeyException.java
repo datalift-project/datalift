@@ -37,8 +37,6 @@ package org.datalift.fwk.project;
 
 import java.text.MessageFormat;
 
-import org.datalift.fwk.TechnicalException;
-
 
 /**
  * Notifies of the failure to create a new object due to a duplicate key
@@ -46,7 +44,7 @@ import org.datalift.fwk.TechnicalException;
  *
  * @author lbihanic
  */
-public class DuplicateObjectKeyException extends TechnicalException
+public class DuplicateObjectKeyException extends PersistenceException
 {
     //------------------------------------------------------------------------
     // Constructors

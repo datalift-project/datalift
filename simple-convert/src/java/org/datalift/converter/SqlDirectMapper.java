@@ -77,6 +77,7 @@ import org.datalift.fwk.util.Env;
 import org.datalift.fwk.util.UriBuilder;
 
 import static org.datalift.fwk.rdf.ElementType.*;
+import static org.datalift.fwk.util.PrimitiveUtils.wrap;
 import static org.datalift.fwk.util.StringUtils.*;
 import static org.datalift.fwk.MediaTypes.*;
 
@@ -253,6 +254,7 @@ public class SqlDirectMapper extends BaseConverterModule
             }
             // Load triples
             long statementCount = 0L;
+            long duration = 0L;
             int  batchSize = Env.getRdfBatchSize();
             i = 1;                              // Start numbering lines at 1.
             for (Row<Object> row : src) {
@@ -263,9 +265,11 @@ public class SqlDirectMapper extends BaseConverterModule
                 log.trace("Mapping {} to <{}>", key, subject);
                 boolean firstStatement = false;
                 for (int j=0; j<max; j++) {
-                    Object o = row.get(j);
-                    if ((o != null) && (predicates[j] != null)) {
-                        Literal value = this.mapValue(o, valueFactory);
+                    Literal value = null;
+                    if (predicates[j] != null) {
+                        value = this.mapValue(row.get(j), valueFactory);
+                    }
+                    if (value != null) {
                         cnx.add(valueFactory.createStatement(
                                         subject, predicates[j], value), ctx);
                         if (firstStatement) {
@@ -277,19 +281,25 @@ public class SqlDirectMapper extends BaseConverterModule
                         statementCount++;
                         if ((statementCount % batchSize) == 0) {
                             cnx.commit();
+                            // Trace progress.
+                            if (log.isTraceEnabled()) {
+                                duration = System.currentTimeMillis() - t0;
+                                log.trace("Inserted {} RDF triples from {} SQL results in {} seconds...",
+                                          wrap(statementCount), wrap(i - 1),
+                                          wrap(duration / 1000.0));
                         }
-                        //log.trace("<{}> <{}> {} ({})",
-                        //                    subject, predicates[j], value, o);
+                        }
+                        //log.trace("<{}> <{}> {}", subject, predicates[j], value);
                     }
                     // Else: ignore cell.
                 }
                 i++;
             }
             cnx.commit();
-            long delay = System.currentTimeMillis() - t0;
+            duration = System.currentTimeMillis() - t0;
             log.debug("Inserted {} RDF triples into <{}> from {} SQL results in {} seconds",
-                      Long.valueOf(statementCount), targetGraph,
-                      Integer.valueOf(i - 1), Double.valueOf(delay / 1000.0));
+                      wrap(statementCount), targetGraph,
+                      wrap(i - 1), wrap(duration / 1000.0));
         }
         catch (Exception e) {
             throw new TechnicalException("sql.conversion.failed", e);
@@ -300,8 +310,9 @@ public class SqlDirectMapper extends BaseConverterModule
     }
 
     private Literal mapValue(Object o, ValueFactory valueFactory) {
-        Literal v = null;
+        if (o == null) return null;
 
+        Literal v = null;
         if (o instanceof String) {
             v = valueFactory.createLiteral(o.toString());
         }
@@ -345,6 +356,10 @@ public class SqlDirectMapper extends BaseConverterModule
 
             v = valueFactory.createLiteral(
                                         dtFactory.newXMLGregorianCalendar(c));
+        }
+        else {
+            log.warn("Ignored unsupported SQL type: {} ({})",
+                                            o.getClass().getSimpleName(), o);
         }
         return v;
     }

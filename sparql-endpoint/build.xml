@@ -95,9 +95,9 @@
    -->
 
   <property name="app.name"             value="sparql-endpoint"/>
-  <property name="app.version"          value="0.6.8"/>
+  <property name="app.version"          value="0.7.0"/>
   <property name="app.path"             value="/${app.name}"/>
-  <property name="app.long.name"        value="DataLift SPARQL Endpoint"/>
+  <property name="app.long.name"        value="Datalift SPARQL Endpoint"/>
 
   <property name="build.home"           location="${basedir}/build"/>
   <property name="dist.home"            location="${basedir}/dist"/>

@@ -35,13 +35,10 @@
 package org.datalift.core.rdf;
 
 
-import java.net.URI;
-import java.net.URL;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import org.openrdf.OpenRDFException;
-import org.openrdf.model.Value;
 import org.openrdf.model.ValueFactory;
 import org.openrdf.query.BooleanQuery;
 import org.openrdf.query.Dataset;
@@ -61,9 +58,11 @@ import org.datalift.core.TechnicalException;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.rdf.RdfException;
+import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
 
 import static org.datalift.core.DefaultConfiguration.REPOSITORY_DEFAULT_FLAG;
+import static org.datalift.fwk.util.PrimitiveUtils.wrap;
 import static org.datalift.fwk.util.StringUtils.isBlank;
 
 
@@ -203,8 +202,7 @@ abstract public class BaseRepository extends Repository
             }
             boolean result = q.evaluate();
             if (log.isTraceEnabled()) {
-                log.trace("{} {} -> {}", query, bindings,
-                                         Boolean.valueOf(result));
+                log.trace("{} {} -> {}", query, bindings, wrap(result));
             }
             return result;
         }
@@ -308,53 +306,10 @@ abstract public class BaseRepository extends Repository
     private void setBindings(Query query, Map<String,Object> bindings) {
         if (bindings != null) {
             for (Entry<String,Object> e : bindings.entrySet()) {
-                query.setBinding(e.getKey(), this.mapBinding(e.getValue()));
+                query.setBinding(e.getKey(),
+                        RdfUtils.mapBinding(e.getValue(), this.valueFactory));
             }
         }
-    }
-
-    /**
-     * Maps a Java object to an RDF data type.
-     * @param  o   the Java object to map.
-     *
-     * @return the corresponding RDF type object.
-     * @throws UnsupportedOperationException if no valid mapping can
-     *         be found the Java type.
-     */
-    private Value mapBinding(Object o) {
-        Value v = null;
-
-        if (o instanceof Value) {       // Value, URI, Resource, Literal...
-            v = (Value)o;
-        }
-        else if (o instanceof URI) {
-            v = this.valueFactory.createURI(o.toString());
-        }
-        else if (o instanceof String) {
-            v = this.valueFactory.createLiteral(o.toString());
-        }
-        else if (o instanceof Integer) {
-            v = this.valueFactory.createLiteral(((Integer)o).intValue());
-        }
-        else if (o instanceof Long) {
-            v = this.valueFactory.createLiteral(((Long)o).longValue());
-        }
-        else if (o instanceof Boolean) {
-            v = this.valueFactory.createLiteral(((Boolean)o).booleanValue());
-        }
-        else if (o instanceof Double) {
-            v = this.valueFactory.createLiteral(((Double)o).doubleValue());
-        }
-        else if (o instanceof Byte) {
-            v = this.valueFactory.createLiteral(((Byte)o).byteValue());
-        }
-        else if (o instanceof URL) {
-            v = this.valueFactory.createURI(o.toString());
-        }
-        else {
-            throw new UnsupportedOperationException(o.getClass().getName());
-        }
-        return v;
     }
 
     /**

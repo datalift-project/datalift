@@ -50,30 +50,36 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
+import org.openrdf.model.Statement;
+import org.openrdf.rio.RDFHandler;
+import org.openrdf.rio.RDFHandlerException;
+import org.openrdf.rio.helpers.RDFHandlerWrapper;
+
 import static javax.ws.rs.core.Response.Status.*;
 
 import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.i18n.PreferredLocales;
 import org.datalift.fwk.log.Logger;
-import org.datalift.fwk.project.GmlSource;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectManager;
 import org.datalift.fwk.project.ProjectModule;
 import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.project.Source.SourceType;
+import org.datalift.fwk.rdf.ElementType;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.sparql.SparqlEndpoint;
 import org.datalift.fwk.view.TemplateModel;
 import org.datalift.fwk.view.ViewFactory;
 
 import static org.datalift.fwk.MediaTypes.*;
+import static org.datalift.fwk.util.PrimitiveUtils.wrap;
 
 
 /**
  * A common superclass for converters, providing some utility methods.
- * 
+ *
  * @author lbihanic
  */
 public abstract class BaseConverterModule
@@ -105,8 +111,6 @@ extends BaseModule implements ProjectModule
 
 	/** The DataLift project manager. */
 	protected ProjectManager projectManager = null;
-	/** The DataLift SPARQL endpoint. */
-	protected SparqlEndpoint sparqlEndpoint = null;
 
 	//-------------------------------------------------------------------------
 	// Constructors
@@ -160,15 +164,7 @@ extends BaseModule implements ProjectModule
 	@Override
 	public void postInit(Configuration configuration) {
 		super.postInit(configuration);
-
 		this.projectManager = configuration.getBean(ProjectManager.class);
-		if (this.projectManager == null) {
-			throw new TechnicalException("project.manager.not.available");
-		}
-		this.sparqlEndpoint = configuration.getBean(SparqlEndpoint.class);
-		if (this.sparqlEndpoint == null) {
-			throw new TechnicalException("sparql.endpoint.not.available");
-		}
 	}
 
 	//-------------------------------------------------------------------------
@@ -213,7 +209,7 @@ extends BaseModule implements ProjectModule
 	@Override
 	public String toString() {
 		return this.getClass().getSimpleName()
-				+ " (" + this.getName() + this.inputSources + ')';
+				+ " (\"/" + this.getName() + "\" " + this.inputSources + ')';
 	}
 
 	//-------------------------------------------------------------------------
@@ -297,40 +293,51 @@ extends BaseModule implements ProjectModule
 	}
 
 	/**
-	 * Creates a new GML source object.
-	 * @param  project       the owning project.
-	 * @param  uri           the source URI.
-	 * @param  title         the source label.
-	 * @param  description   the description of the source content or
-	 *                       intent.
-	 * @param  filePath      the SHP file path in the public storage.
-	 * @return a new SHP source, associated to the specified project.
-	 * @throws IOException if any error occurred creating the source
-	 *         or accessing the specified file.
+	 * Returns a service response displaying the specified project
+	 * using the specified template.
+	 * <p>
+	 * The template name shall be relative to the module, the module
+	 * name is automatically prepended.</p>
+	 * @param  templateName   the relative template name.
+	 * @param  projectId      the URI of the project to display.
+	 *
+	 * @return a template model for rendering the specified template,
+	 *         populated with the specified project.
 	 */
-	public GmlSource newGmlSource(Project p, URI uri, String title,
-			String description, String filePath)
-					throws IOException {
-		GmlSource newSrc =
-				this.projectManager.newGmlSource(p, uri,
-						title, null, filePath);
-		this.projectManager.saveProject(p);
-		return newSrc;
+	protected final Response newProjectView(String templateName,
+			URI projectId) {
+		Response response = null;
+		try {
+			// Retrieve project.
+			Project p = this.getProject(projectId);
+			// Display conversion configuration page.
+			TemplateModel view = this.newView(templateName, p);
+			view.put("converter", this);
+			response = Response.ok(view, TEXT_HTML_UTF8).build();
+		}
+		catch (ObjectNotFoundException e) {
+			this.throwInvalidParamError("project", projectId);
+		}
+		catch (IllegalArgumentException e) {
+			this.throwInvalidParamError("project", projectId);
+		}
+		return response;
 	}
 
 	/**
-	 * Return a viewable for the specified template, populated with the
-	 * specified model object.
+	 * Return a model for the specified template view, populated with
+	 * the specified model object.
 	 * <p>
 	 * The template name shall be relative to the module, the module
 	 * name is automatically prepended.</p>
 	 * @param  templateName   the relative template name.
 	 * @param  it             the model object to pass on to the view.
 	 *
-	 * @return a populated viewable.
+	 * @return a populated template model.
 	 */
-	protected final TemplateModel newViewable(String templateName, Object it) {
-		return ViewFactory.newView("/" + this.getName() + templateName, it);
+	protected final TemplateModel newView(String templateName, Object it) {
+		return ViewFactory.newView(
+				"/" + this.getName() + '/' + templateName, it);
 	}
 
 	/**
@@ -341,18 +348,12 @@ extends BaseModule implements ProjectModule
 	 *               be reported.
 	 *
 	 * @return an HTTP response redirecting to the project main page.
-	 * @throws TechnicalException if any error occurred.
 	 */
 	protected final ResponseBuilder created(Source src) {
-		try {
-			String targetUrl = src.getProject().getUri() + "#source";
-			return Response.created(new URI(src.getUri()))
-					.entity(this.newViewable("/redirect.vm", targetUrl))
-					.type(TEXT_HTML);
-		}
-		catch (Exception e) {
-			throw new TechnicalException(e);
-		}
+		String targetUrl = src.getProject().getUri() + "#source";
+		return Response.created(URI.create(src.getUri()))
+				.entity(this.newView("redirect.vm", targetUrl))
+				.type(TEXT_HTML_UTF8);
 	}
 
 	/**
@@ -376,19 +377,101 @@ extends BaseModule implements ProjectModule
 			defGraphs = new LinkedList<String>();
 			defGraphs.add(repository.getName());
 		}
-		return this.sparqlEndpoint.executeQuery(defGraphs, null,
-				"SELECT * WHERE { GRAPH <"
-						+ namedGraph + "> { ?s ?p ?o . } }",
-						uriInfo, request, acceptHdr).build();
+		SparqlEndpoint endpoint = Configuration.getDefault()
+				.getBean(SparqlEndpoint.class);
+		return endpoint.describe(namedGraph.toString(), ElementType.Graph,
+				repository, 5000, TEXT_HTML, null,
+				uriInfo, request, acceptHdr, null).build();
 	}
 
-	protected void throwInvalidParamError(String name, Object value) {
+	/**
+	 * Returns the last component of a URI, using both '/' and '#' as
+	 * separators and ignoring any trailing separator.
+	 * @param  uri   the URI to parse.
+	 * @return the last component of <code>uri</code>.
+	 */
+	protected String getTerminalName(String uri) {
+		int i = Math.max(uri.lastIndexOf('/'), uri.lastIndexOf('#'));
+		return (i != -1)? (i == (uri.length() - 1))?
+				this.getTerminalName(uri.substring(0, i)):
+					uri.substring(i + 1): uri;
+	}
+
+	/**
+	 * Returns an {@link RDFHandler} logging a debug message to measure
+	 * the performance of the specified RDFHandler. The message includes
+	 * the number of statements (triples) processed and the elapsed
+	 * time.
+	 * @param  h            the {@link RDFHandler} to monitor.
+	 * @param  namedGraph   the URI of the named graph from which the
+	 *                      triples are being extracted or
+	 *                      <code>null</code>.
+	 * @return a logging {@link RDFHandler} wrapping the specified one.
+	 */
+	protected RDFHandler getDebugHandler(final RDFHandler h,
+			final String namedGraph) {
+		return new RDFHandlerWrapper(h) {
+			private long statementCount = -1L;
+			private long t0 = -1L;
+
+			/** {@inheritDoc} */
+			@Override
+			public void startRDF() throws RDFHandlerException {
+				super.startRDF();
+				this.t0 = System.currentTimeMillis();
+				this.statementCount = 0L;
+			}
+
+			/** {@inheritDoc} */
+			@Override
+			public void handleStatement(Statement st)
+					throws RDFHandlerException {
+				super.handleStatement(st);
+				this.statementCount++;
+			}
+
+			/** {@inheritDoc} */
+			@Override
+			public void endRDF() throws RDFHandlerException {
+				super.endRDF();
+				long delay = System.currentTimeMillis() - this.t0;
+				if (namedGraph != null) {
+					log.debug("Exported {} triples from <{}> in {} seconds",
+							wrap(this.statementCount), namedGraph,
+							wrap(delay / 1000.0));
+				}
+				else {
+					log.debug("Exported {} triples in {} seconds",
+							wrap(this.statementCount), wrap(delay / 1000.0));
+				}
+			}
+		};
+	}
+
+	/**
+	 * Throws a {@link WebApplicationException} with a HTTP status set
+	 * to 400 (Bad request) to signal an invalid or missing web service
+	 * parameter.
+	 * @param  name    the parameter name in the web service interface.
+	 * @param  value   the invalid parameter value or <code>null</code>
+	 *                 if the parameter was absent.
+	 *
+	 * @throws WebApplicationException always.
+	 */
+	protected void throwInvalidParamError(String name, Object value)
+			throws WebApplicationException {
 		TechnicalException error = (value != null)?
 				new TechnicalException("ws.invalid.param.error", name, value):
 					new TechnicalException("ws.missing.param", name);
-				this.sendError(BAD_REQUEST, error.getMessage());
+				this.sendError(BAD_REQUEST, error.getLocalizedMessage());
 	}
 
+	/**
+	 * Logs and map an internal processing error onto HTTP status codes.
+	 * @param  e   the error to map.
+	 *
+	 * @throws WebApplicationException always.
+	 */
 	protected void handleInternalError(Exception e)
 			throws WebApplicationException {
 		TechnicalException error = null;
@@ -396,16 +479,16 @@ extends BaseModule implements ProjectModule
 			throw (WebApplicationException)e;
 		}
 		else if (e instanceof ObjectNotFoundException) {
-			this.sendError(NOT_FOUND, e.getMessage());
+			this.sendError(NOT_FOUND, e.getLocalizedMessage());
 		}
 		else if (e instanceof TechnicalException) {
 			error = (TechnicalException)e;
 		}
 		else {
 			error = new TechnicalException(
-					"ws.internal.error", e, e.getMessage());
+					"ws.internal.error", e, e.getLocalizedMessage());
 		}
 		log.fatal(e.getMessage(), e);
-		this.sendError(INTERNAL_SERVER_ERROR, error.getMessage());
+		this.sendError(INTERNAL_SERVER_ERROR, error.getLocalizedMessage());
 	}
 }

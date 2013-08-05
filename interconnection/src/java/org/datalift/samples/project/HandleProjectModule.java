@@ -8,7 +8,6 @@
 package org.datalift.samples.project;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -45,17 +44,15 @@ import org.datalift.fwk.MediaTypes;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.rdf.Repository;
-import org.semanticweb.owl.align.Alignment;
 import org.semanticweb.owl.align.AlignmentException;
-import org.semanticweb.owl.align.AlignmentVisitor;
 
 import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.FormDataParam;
 
 import de.fuberlin.wiwiss.silk.Silk;
 import fr.inrialpes.exmo.align.impl.renderer.CopyOfSilkRendererVisitor;
-import fr.inrialpes.exmo.align.impl.renderer.EDOALRendererVisitor;
 import fr.inrialpes.exmo.align.parser.AlignmentParser;
+
 
 @Path("/" + HandleProjectModule.MODULE_NAME)
 public class HandleProjectModule extends BaseInterconnectionModule
@@ -204,7 +201,6 @@ public class HandleProjectModule extends BaseInterconnectionModule
             target_address_sparql = url.substring(0,21);
     	    
             //create the silk script
-        	int i=0;
             File script = new File("script.xml");
         	//File script = new File("C://Zhengjie//study//datalift_6.13//configFile.xml");
         	PrintStream out = null;
@@ -417,11 +413,9 @@ public class HandleProjectModule extends BaseInterconnectionModule
         args.put("it", p4);
         args.put("linking", this);
     	
-        File configFile = null;
-		//link the data sets                
-        String filename = disposition.getFileName();
+	//link the data sets                
         try {
-			FileOutputStream fos = null;
+                FileOutputStream fos = null;
 	        BufferedInputStream bis = null;
 	        int BUFFER_SIZE = 1024;
 	        byte[] buf = new byte[BUFFER_SIZE];
@@ -455,7 +449,7 @@ public class HandleProjectModule extends BaseInterconnectionModule
 	                } 
 					
 		} finally {}      
-		} finally {}        
+	} finally {}        
         
         return Response.ok(this.newViewable("/ok.vm", args)).build();
         
@@ -479,9 +473,8 @@ public class HandleProjectModule extends BaseInterconnectionModule
         args.put("it", p4);
         args.put("linking", this);
     	
-        String filename = disposition.getFileName();
         try {
-			FileOutputStream fos = null;
+                FileOutputStream fos = null;
 	        BufferedInputStream bis = null;
 	        int BUFFER_SIZE = 1024;
 	        byte[] buf = new byte[BUFFER_SIZE];
@@ -514,7 +507,6 @@ public class HandleProjectModule extends BaseInterconnectionModule
 	                {
 	                	//create SILK script
 	                	AlignmentParser aparser = new AlignmentParser(0);
-	                	Alignment alignment = null;
 	                	URI file = configFile.toURI();
 	                	
 	                	//create Hashtable for init
@@ -525,7 +517,7 @@ public class HandleProjectModule extends BaseInterconnectionModule
 	                		params.setProperty( "target", targetdataset);
 	                	
 	        			try {
-							alignment = aparser.parse(file);
+							aparser.parse(file);
 							PrintWriter writer = null;
 							try {
 								writer = new PrintWriter(
@@ -624,7 +616,7 @@ public class HandleProjectModule extends BaseInterconnectionModule
         	        configFile.deleteOnExit();
 	                } 					
 		} finally {}      
-		} finally {}
+	} finally {}
 		
         return Response.ok(this.newViewable("/ok.vm", args)).build();
         

@@ -162,9 +162,9 @@ public class RouterResource implements LifeCycle, ResourceResolver
             @Override public void init(Configuration cfg)     { /* NOP */ }
             @Override public void postInit(Configuration cfg) { /* NOP */ }
             @Override public void shutdown(Configuration cfg) { /* NOP */ }
-            @Override public ResourceHandler canHandle(UriInfo uriInfo,
+            @Override public ResourceHandler canHandle(URI uri, UriInfo uriInfo,
                                             Request request, String acceptHdr) {
-                return new DefaultUriHandler(uriInfo, request, acceptHdr);
+                return new DefaultUriHandler(uri, uriInfo, request, acceptHdr);
             }
         };
 
@@ -278,27 +278,39 @@ public class RouterResource implements LifeCycle, ResourceResolver
     public Response resolveRdfResource(UriInfo uriInfo, Request request,
                                        String acceptHdr)
                                                 throws WebApplicationException {
+        return this.resolveRdfResource(null, uriInfo, request, acceptHdr);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Response resolveRdfResource(URI uri, UriInfo uriInfo,
+                                       Request request, String acceptHdr)
+                                                throws WebApplicationException {
         if (uriInfo == null) {
             throw new IllegalArgumentException("uriInfo");
         }
         if (request == null) {
             throw new IllegalArgumentException("request");
         }
+        if (uri == null) {
+            uri = uriInfo.getAbsolutePath();
+        }
 
         // Find a resource handler supporting the requested URI.
         ResourceHandler handler = null;
         for (Iterator<UriPolicy> i=this.policies.iterator(); i.hasNext(); ) {
-            handler = i.next().canHandle(uriInfo, request, acceptHdr);
+            handler = i.next().canHandle(uri, uriInfo, request, acceptHdr);
             if (handler != null) break;
         }
         if (handler == null) {
             // URI not supported by any configured handler. => Use default.
-            handler = this.defaultPolicy.canHandle(uriInfo, request, acceptHdr);
+            handler = this.defaultPolicy.canHandle(uri, uriInfo,
+                                                        request, acceptHdr);
         }
         Response response = null;
         // Check whether a 303 redirection is required for accessing resource.
         URI target = handler.resolve();
-        if ((target == null) || (target.equals(uriInfo.getRequestUri()))) {
+        if ((target == null) || (target.equals(uri))) {
             response = handler.getRepresentation();
         }
         else {
@@ -386,6 +398,8 @@ public class RouterResource implements LifeCycle, ResourceResolver
             path = path.substring(1);
         }
         log.trace("Resolving unmapped resource: {}", path);
+        // Normalize path, e.g. to resolve relative directories ("x/../y").
+        path = URI.create(path).normalize().toString();
 
         try {
             if (bundle != null) {
@@ -583,20 +597,23 @@ public class RouterResource implements LifeCycle, ResourceResolver
      */
     private final class DefaultUriHandler implements ResourceHandler
     {
+        private final URI     uri;
         private final UriInfo uriInfo;
         private final Request request;
         private final String acceptHdr;
 
         /**
          * Creates a new URI handler.
+         * @param  uri         the URI of the RDF resource being accessed.
          * @param  uriInfo     the request URI data.
          * @param  request     the JAX-RS Request object, for content
          *                     negotiation.
          * @param  acceptHdr   the HTTP Accept header, for content
          *                     negotiation.
          */
-        public DefaultUriHandler(UriInfo uriInfo,
-                              Request request, String acceptHdr) {
+        public DefaultUriHandler(URI uri, UriInfo uriInfo,
+                                 Request request, String acceptHdr) {
+            this.uri       = uri;
             this.uriInfo   = uriInfo;
             this.request   = request;
             this.acceptHdr = acceptHdr;
@@ -630,20 +647,19 @@ public class RouterResource implements LifeCycle, ResourceResolver
             }
             Response response = null;
 
-            final URI uri = this.uriInfo.getRequestUri();
             // Check that the requested URI exists as subject in the
             // public data RDF store.
             String query = queries.get("checkExists");
             ExistsQueryResultHandler result = new ExistsQueryResultHandler();
             try {
                 Map<String,Object> bindings = new HashMap<String,Object>();
-                bindings.put("u", uri);
+                bindings.put("u", this.uri);
                 Configuration.getDefault().getDataRepository()
                                           .select(query, bindings, result);
             }
             catch (Exception e) {
                 throw new RuntimeException("Failed to execute query \""
-                                        + query + "\" for \"" + uri + '"', e);
+                                    + query + "\" for \"" + this.uri + '"', e);
             }
             if (result.type != null) {
                 // URI found as subject in RDF store.
@@ -657,8 +673,9 @@ public class RouterResource implements LifeCycle, ResourceResolver
                     // => Get subject description from SPARQL endpoint.
                     log.trace("Resolved requested URI {} as RDF resource", uri);
                     b = sparqlEndpoint.describe(
-                                    uri.toString(), result.type,
-                                    this.uriInfo, this.request, this.acceptHdr);
+                                    this.uri.toString(), result.type,
+                                    this.uriInfo, this.request, this.acceptHdr,
+                                    null);
                 }
                 // Else: Client already up-to-date.
 

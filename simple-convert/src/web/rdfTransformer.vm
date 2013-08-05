@@ -18,7 +18,7 @@
 		<select id="source">
 #foreach( $curSrc in $it.getSources() )
 	#if( $converter.canHandle($curSrc) )
-			<option name="${curSrc.uri}">$esc.html($curSrc.title)</option>
+			<option value="${curSrc.uri}" name="${curSrc.title}">$esc.html($curSrc.title)</option>
 	#end
 #end
 		</select></p>
@@ -35,7 +35,7 @@
 
 		$("#source").change(function() {
 			$("#source option:selected").each(function () {
-				if ($(this).attr("name") == "") {
+				if ($(this).attr("value") == "") {
 					$("#source_submit").attr('disabled', true);
 				}
 				else {

@@ -1,6 +1,6 @@
 /*
- * Copyright / Copr. IGN
- * Contributor(s) : F. Hamdi
+ * Copyright / Copr. IGN 2013
+ * Contributor(s) : Faycal Hamdi
  *
  * Contact: hamdi.faycal@gmail.com
  *
@@ -34,8 +34,13 @@
 package org.datalift.core.project;
 
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+
 import javax.persistence.Entity;
 
+import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.RdfsClass;
 
 import org.datalift.fwk.project.GmlSource;
@@ -45,47 +50,114 @@ import org.datalift.fwk.project.Project;
 /**
  * Default implementation of the {@link GmlSource} interface.
  *
- * @author Fayçal Hamdi
+ * @author fhamdi
  */
 @Entity
 @RdfsClass("datalift:gmlSource")
 public class GmlSourceImpl extends BaseFileSource
-                           implements GmlSource
+implements GmlSource
 {
-    //-------------------------------------------------------------------------
-    // Constructors
-    //-------------------------------------------------------------------------
+	//-------------------------------------------------------------------------
+	// Instance members
+	//-------------------------------------------------------------------------
 
-    /**
-     * Creates a new GML source.
-     */
-    public GmlSourceImpl() {
-        super(SourceType.GmlSource);
-        this.setMimeType(GML_MIME_TYPE);
-    }
+	@RdfProperty("datalift:shapeXsd")
+	private String xsdFilePath;
 
-    /**
-     * Creates a new GML source with the specified identifier and
-     * owning project.
-     * @param  uri       the source unique identifier (URI) or
-     *                   <code>null</code> if not known at this stage.
-     * @param  project   the owning project or <code>null</code> if not
-     *                   known at this stage.
-     *
-     * @throws IllegalArgumentException if either <code>uri</code> or
-     *         <code>project</code> is <code>null</code>.
-     */
-    public GmlSourceImpl(String uri, Project project) {
-        super(SourceType.GmlSource, uri, project);
-        this.setMimeType(GML_MIME_TYPE);
-    }
+	private transient File xsdFile = null;
 
-    //-------------------------------------------------------------------------
-    // ShpSource contract support
-    //-------------------------------------------------------------------------
+	//-------------------------------------------------------------------------
+	// Constructors
+	//-------------------------------------------------------------------------
 
-    //-------------------------------------------------------------------------
-    // Specific implementation
-    //-------------------------------------------------------------------------
+	/**
+	 * Creates a new GML source.
+	 */
+	public GmlSourceImpl() {
+		super(SourceType.GmlSource);
+	}
+
+	/**
+	 * Creates a new GML source with the specified identifier and
+	 * owning project.
+	 * @param  uri       the source unique identifier (URI) or
+	 *                   <code>null</code> if not known at this stage.
+	 * @param  project   the owning project or <code>null</code> if not
+	 *                   known at this stage.
+	 *
+	 * @throws IllegalArgumentException if either <code>uri</code> or
+	 *         <code>project</code> is <code>null</code>.
+	 */
+	public GmlSourceImpl(String uri, Project project) {
+		super(SourceType.GmlSource, uri, project);
+	}
+
+	//-------------------------------------------------------------------------
+	// Source contract support
+	//-------------------------------------------------------------------------
+
+	/** {@inheritDoc} */
+	@Override
+	public void delete() {
+		super.delete();
+
+		this.delete(this.xsdFilePath);
+		this.xsdFile = null;
+	}
+
+	//-------------------------------------------------------------------------
+	// ShpSource contract support
+	//-------------------------------------------------------------------------
+
+	/** {@inheritDoc} */
+	@Override
+	public String getGmlFilePath() {
+		return this.getFilePath();
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	public String getXsdFilePath() {
+		return this.xsdFilePath;
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	public InputStream getGmlFileInputStream() throws IOException {
+		return this.getInputStream();
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	public InputStream getXsdFileInputStream() throws IOException {
+		this.init();
+		return this.getInputStream(this.xsdFile);
+	}
+
+	//-------------------------------------------------------------------------
+	// BaseFileSource contract support
+	//-------------------------------------------------------------------------
+
+	@Override
+	protected void init() {
+		super.init();
+
+		if (this.xsdFile == null) {
+			this.xsdFile = this.getFile(this.xsdFilePath);
+		}
+		// Else: Already initialized.
+	}
+
+	//-------------------------------------------------------------------------
+	// Specific implementation
+	//-------------------------------------------------------------------------
+
+	public void setGmlFilePath(String path) {
+		this.setFilePath(path);
+	}
+
+	public void setXsdFilePath(String path) {
+		this.xsdFilePath = path;
+	}
 
 }

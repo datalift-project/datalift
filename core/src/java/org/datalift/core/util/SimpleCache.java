@@ -132,7 +132,7 @@ public class SimpleCache<K,V>
         V v = null;
         if (this.cache.containsKey(key)) {
             Entry<K,V> e = this.cache.get(key);
-            if (e.isExpired()) {
+            if (! e.isExpired()) {
                 v = e.getValue();
             }
             else {
@@ -162,7 +162,7 @@ public class SimpleCache<K,V>
      * @param  v     value to be associated with the specified key.
      */
     public void put(K key, V v) {
-        put0(key, v, this.defaultTtl);
+        this.put(key, v, this.defaultTtl);
     }
 
     /**
@@ -175,7 +175,7 @@ public class SimpleCache<K,V>
      */
     public void put(K key, V v, int ttl) {
         this.put0(key, v, (ttl < 0)? Long.MAX_VALUE:
-                                     System.currentTimeMillis() + ttl);
+                                System.currentTimeMillis() + (ttl * 1000L));
     }
 
     /**

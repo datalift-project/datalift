@@ -95,7 +95,7 @@
   <property name="app.name"             value="ui-sample"/>
   <property name="app.version"          value="1.0"/>
   <property name="app.path"             value="/${app.name}"/>
-  <property name="app.long.name"        value="Sample UI module for DataLift"/>
+  <property name="app.long.name"        value="Sample UI module for Datalift"/>
 
   <property name="build.home"           location="${basedir}/build"/>
   <property name="dist.home"            location="${basedir}/dist"/>

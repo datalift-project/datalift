@@ -92,9 +92,9 @@
    -->
 
   <property name="app.name"             value="datalift"/>
-  <property name="app.version"          value="0.6.8"/>
+  <property name="app.version"          value="0.7.0"/>
   <property name="app.path"             value="/${app.name}"/>
-  <property name="app.long.name"        value="DataLift"/>
+  <property name="app.long.name"        value="Datalift"/>
 
   <property name="build.home"           location="${basedir}/build"/>
   <property name="dist.home"            location="${basedir}/dist"/>
@@ -196,8 +196,8 @@
     <!-- Test configuration files -->
     <pathelement location="${tests.conf.home}"/>
     <!-- Project and test classes -->
-    <pathelement location="${classes.dir}"/>
     <pathelement location="${tests.classes.dir}"/>
+    <pathelement location="${classes.dir}"/>
     <!-- Runtime libraries -->
     <path refid="runtime.classpath"/>
     <!-- Test-specific libraries -->
@@ -412,14 +412,14 @@
          windowtitle="${app.long.name} v${app.version}"
             doctitle="${app.long.name} v${app.version}&lt;br&gt;API Specification"
               header="&lt;b&gt;${app.name}&lt;br&gt;&lt;font size='-1'&gt;${app.version}&lt;/font&gt;&lt;/b&gt;"
-              bottom="Copyright &#169; 2010-2011 The DataLift project. All Rights Reserved.">
+              bottom="Copyright &#169; 2010-2011 The Datalift project. All Rights Reserved.">
       <fileset dir="${fwk.src.home}"/>
       <fileset dir="${src.home}"/>
       <classpath refid="compile.classpath"/>
 
-      <group title="DataLift Framework Packages"
+      <group title="Datalift Framework Packages"
           packages="org.datalift.fwk*"/>
-      <group title="DataLift Core Packages"
+      <group title="Datalift Core Packages"
           packages="org.datalift.core*"/>
 
       <link href="http://java.sun.com/javase/6/docs/api/"/>

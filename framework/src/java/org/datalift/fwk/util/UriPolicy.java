@@ -70,13 +70,16 @@ public interface UriPolicy extends LifeCycle
      * <p>
      * If several policies are configured, DataLift queries them in
      * turn until a non-null handler object is provided.
-     * @param  uriInfo   the requested URI.
+     * @param  uri         the URI of the RDF resource being accessed.
+     * @param  uriInfo     the requested URI data.
+     * @param  request     the JAX-RS request object.
+     * @param  acceptHdr   the HTTP "Accept" header value.
      *
      * @return a handler object for processing the request or
      *         <code>null</code> if this policy does not apply to the
      *         requested URI.
      */
-    public ResourceHandler canHandle(UriInfo uriInfo,
+    public ResourceHandler canHandle(URI uri, UriInfo uriInfo,
                                      Request request, String acceptHdr);
 
     //-------------------------------------------------------------------------

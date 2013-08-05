@@ -22,7 +22,17 @@
 	#end
 #end
 		</select></p>
-
+		<p><label for="separator">#i18n("dest.crs"): </label>
+		<select id="crs" name="crs">
+#foreach( $s in $crs )
+#set( $label = "shp.${s.name()}.crs" )
+#if( $foreach.count == 1 )
+			<option value="$esc.html($s.name())" selected="true">#i18n($label)</option>
+#else
+			<option value="$esc.html($s.name())">#i18n($label)</option>
+#end
+#end
+		</select></p>
 		<input type="submit" id="source_submit" value="#i18n('submit.label')"/>
 	</form>
 </div>
