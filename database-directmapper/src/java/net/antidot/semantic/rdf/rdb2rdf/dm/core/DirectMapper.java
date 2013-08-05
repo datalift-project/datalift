@@ -94,11 +94,11 @@ public abstract class DirectMapper extends Thread {
 		long delay = (System.currentTimeMillis() - start) / 1000;
 		try {
 	        dlLog.debug("Inserted {} RDF triples into <{}> from {} Database in {} seconds",
-	                nbTriples, targetGraph,conn.getCatalog(),
+	                Integer.valueOf(nbTriples), targetGraph,conn.getCatalog(),
 	                Double.valueOf(delay / 1000.0));
 		} catch (SQLException e) {
 			 dlLog.debug("Inserted {} RDF triples into <{}> from Database in {} seconds",
-					nbTriples, targetGraph,
+					Integer.valueOf(nbTriples), targetGraph,
 		            Double.valueOf(delay / 1000.0));
 		}
 		return result;
@@ -107,7 +107,7 @@ public abstract class DirectMapper extends Thread {
 	
 	public static SesameDataSet generateDirectMapping(Connection conn, Version version, DriverType driver, String baseURI, String timeZone, String fileToNativeStore) throws UnsupportedEncodingException{
 		log.info("Generate Direct Mapping...");
-		Long start = System.currentTimeMillis();
+		long start = System.currentTimeMillis();
 		SesameDataSet result = null;
 		// Check if use of native store is required
 		if (fileToNativeStore != null) {
@@ -134,7 +134,7 @@ public abstract class DirectMapper extends Thread {
 		while (te.next()){
 			convertNextTuple(result, te, dme, driver, baseURI);
 		}
-		Float stop = Float.valueOf(System.currentTimeMillis() - start) / 1000;
+		Double stop = Double.valueOf((System.currentTimeMillis() - start) / 1000);
 		log.info("Database extracted in "
 					+ stop + " seconds.");
 		log.info(nbTriples + " triples has been extracted.");
