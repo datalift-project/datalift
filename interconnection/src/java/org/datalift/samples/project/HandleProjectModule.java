@@ -11,7 +11,6 @@ import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -21,7 +20,6 @@ import java.io.ObjectStreamException;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
@@ -44,6 +42,8 @@ import org.datalift.fwk.MediaTypes;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.rdf.Repository;
+import org.datalift.fwk.util.StringUtils;
+
 import org.semanticweb.owl.align.AlignmentException;
 
 import com.sun.jersey.core.header.FormDataContentDisposition;
@@ -188,204 +188,201 @@ public class HandleProjectModule extends BaseInterconnectionModule
     		            @FormParam("regext20") String regex_t2_0,
     		            @FormParam("blacklistt0") String blacklist_t0,  		                		        
     		            @FormParam("filterlimit") String filter_limit)
-                        		throws IOException
-    {    	    	  	    	
-    	    //set the default value for each variables
-    	    required0 = false;
-    	    filter_limit=null;
-    	
-    	    //SPARQL endpoint URI
-            Repository r = Configuration.getDefault().getDataRepository();
-            String url = r.getEndpointUrl();
-            source_address_sparql = url.substring(0,21);
-            target_address_sparql = url.substring(0,21);
-    	    
-            //create the silk script
-            File script = new File("script.xml");
-        	//File script = new File("C://Zhengjie//study//datalift_6.13//configFile.xml");
-        	PrintStream out = null;
-    		try {
-    			out = new PrintStream(new FileOutputStream(script));
-    		} catch (FileNotFoundException e) {
-    			// TODO Auto-generated catch block
-    			e.printStackTrace();
-    		}
-        	System.setOut(out);
-        	
-        	System.out.println("<?xml version=\"1.0\" encoding=\"utf-8\" ?>");
-        	System.out.println("<Silk>");
-        	System.out.println("<Prefixes>");
-        	System.out.println("<Prefix id=\"rdf\" namespace=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\" />");
-        	System.out.println("<Prefix id=\"rdfs\" namespace=\"http://www.w3.org/2000/01/rdf-schema#\" />");
-        	System.out.println("<Prefix id=\"xsd\" namespace=\"http://www.w3.org/2001/XMLSchema#\" />");
-        	System.out.println("<Prefix id=\"dc\" namespace=\"http://purl.org/dc/elements/1.1/\" />");
-        	System.out.println("<Prefix id=\"cc\" namespace=\"http://creativecommons.org/ns#\" />");
-        	System.out.println("<Prefix id=\"owl\" namespace=\"http://www.w3.org/2002/07/owl#\"/>");
-        	System.out.println("<Prefix id=\"dcterms\" namespace=\"http://purl.org/dc/terms/\" />");
-        	System.out.println("<Prefix id=\"xmlns\" namespace=\"http://ec.europa.eu/eurostat/ramon/ontologies/geographic.rdf#\" />");
-        	System.out.println("<Prefix id=\""+ source_name +"\" namespace=\""+ prefix_source +"\" />");
-        	System.out.println("<Prefix id=\""+ target_name +"\" namespace=\""+ prefix_target +"\" />");
-        	System.out.println("</Prefixes>");
-        	System.out.println("\n");
-        	System.out.println("<DataSources>");
+                        		throws IOException {
+        //set the default value for each variables
+        // required0 = false;
+        // filter_limit=null;
+        if (StringUtils.isBlank(filter_limit)) {
+            filter_limit = null;
+        }
+        //SPARQL endpoint URI
+        Repository r = Configuration.getDefault().getDataRepository();
+        String url = r.getEndpointUrl();
+        source_address_sparql = url.substring(0,21);
+        target_address_sparql = url.substring(0,21);
+        //create the silk script
+        File script = new File("script.xml");
+        PrintStream out = null;
+        try {
+                out = new PrintStream(new FileOutputStream(script));
+        	out.println("<?xml version=\"1.0\" encoding=\"utf-8\" ?>");
+        	out.println("<Silk>");
+        	out.println("<Prefixes>");
+        	out.println("<Prefix id=\"rdf\" namespace=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\" />");
+        	out.println("<Prefix id=\"rdfs\" namespace=\"http://www.w3.org/2000/01/rdf-schema#\" />");
+        	out.println("<Prefix id=\"xsd\" namespace=\"http://www.w3.org/2001/XMLSchema#\" />");
+        	out.println("<Prefix id=\"dc\" namespace=\"http://purl.org/dc/elements/1.1/\" />");
+        	out.println("<Prefix id=\"cc\" namespace=\"http://creativecommons.org/ns#\" />");
+        	out.println("<Prefix id=\"owl\" namespace=\"http://www.w3.org/2002/07/owl#\"/>");
+        	out.println("<Prefix id=\"dcterms\" namespace=\"http://purl.org/dc/terms/\" />");
+        	out.println("<Prefix id=\"xmlns\" namespace=\"http://ec.europa.eu/eurostat/ramon/ontologies/geographic.rdf#\" />");
+        	out.println("<Prefix id=\""+ source_name +"\" namespace=\""+ prefix_source +"\" />");
+        	out.println("<Prefix id=\""+ target_name +"\" namespace=\""+ prefix_target +"\" />");
+        	out.println("</Prefixes>");
+        	out.println("\n");
+        	out.println("<DataSources>");
         	//the datasets should specify the sparqlendpoint or file format
-        	if (source_type.equals("file"))
-        	{
-            	System.out.println("<DataSource id=\""+ source_name +"\" type=\"file\">");
-            	System.out.println("<Param name=\"file\" value=\""+ source_address_file +"\"/>");
-            	System.out.println("<Param name=\"format\" value=\"RDF/XML\"/>");
-            	System.out.println("</DataSource>");
+        	if (source_type.equals("file")) {
+            	    out.println("<DataSource id=\""+ source_name +"\" type=\"file\">");
+            	    out.println("<Param name=\"file\" value=\""+ source_address_file +"\"/>");
+            	    out.println("<Param name=\"format\" value=\"RDF/XML\"/>");
+            	    out.println("</DataSource>");
         	}
-        	else if (source_type.equals("sparqlEndpoint"))
-        	{
-            	System.out.println("<DataSource id=\""+ source_name +"\" type=\"sparqlEndpoint\">");
-            	if (source_address_sparql.equals("other"))
-            	    System.out.println("<Param name=\"endpointURI\" value=\""+ source_address_sparql_other +"\"/>");
-            	else 
-            		System.out.println("<Param name=\"endpointURI\" value=\""+ source_address_sparql +"/datalift/sparql\"/>");
-            	//System.out.println("<Param name=\"graph\" value=\""+ source_graph_value +"\"/>");
-            	System.out.println("</DataSource>");
+        	else if (source_type.equals("sparqlEndpoint")) {
+            	    out.println("<DataSource id=\""+ source_name +"\" type=\"sparqlEndpoint\">");
+            	    if (source_address_sparql.equals("other")) {
+            	        out.println("<Param name=\"endpointURI\" value=\""+ source_address_sparql_other +"\"/>");
+            	    }
+            	    else {
+            		out.println("<Param name=\"endpointURI\" value=\""+ source_address_sparql +"/datalift/sparql\"/>");
+            	    }
+            	    //out.println("<Param name=\"graph\" value=\""+ source_graph_value +"\"/>");
+            	    out.println("</DataSource>");
         	}
-        	System.out.println("\n");
-        	if (target_type.equals("file"))
-        	{
-            	System.out.println("<DataSource id=\""+ target_name +"\" type=\"file\">");
-            	System.out.println("<Param name=\"file\" value=\""+ target_address_file +"\"/>");
-            	System.out.println("<Param name=\"format\" value=\"RDF/XML\"/>");
-            	System.out.println("</DataSource>");
+        	out.println("\n");
+        	if (target_type.equals("file")) {
+            	    out.println("<DataSource id=\""+ target_name +"\" type=\"file\">");
+            	    out.println("<Param name=\"file\" value=\""+ target_address_file +"\"/>");
+            	    out.println("<Param name=\"format\" value=\"RDF/XML\"/>");
+            	    out.println("</DataSource>");
         	}
-        	else if (target_type.equals("sparqlEndpoint"))
-        	{
-            	System.out.println("<DataSource id=\""+ target_name +"\" type=\"sparqlEndpoint\">");
-            	if (target_address_sparql.equals("other"))
-            	    System.out.println("<Param name=\"endpointURI\" value=\""+ target_address_sparql_other +"\"/>");
-            	else 
-            		System.out.println("<Param name=\"endpointURI\" value=\""+ target_address_sparql +"/datalift/sparql\"/>");
-            	//System.out.println("<Param name=\"graph\" value=\""+ target_graph_value +"\"/>");
-            	System.out.println("</DataSource>");
+        	else if (target_type.equals("sparqlEndpoint")) {
+            	    out.println("<DataSource id=\""+ target_name +"\" type=\"sparqlEndpoint\">");
+            	    if (target_address_sparql.equals("other")) {
+            	        out.println("<Param name=\"endpointURI\" value=\""+ target_address_sparql_other +"\"/>");
+            	    }
+            	    else {
+            		out.println("<Param name=\"endpointURI\" value=\""+ target_address_sparql +"/datalift/sparql\"/>");
+            	    }
+            	    //out.println("<Param name=\"graph\" value=\""+ target_graph_value +"\"/>");
+            	    out.println("</DataSource>");
         	}
-        	System.out.println("</DataSources>");
-        	System.out.println("\n");
-        	System.out.println("<Interlinks>");
+        	out.println("</DataSources>");
+        	out.println("\n");
+        	out.println("<Interlinks>");
         	//if there are several interlink
         	//for (i=0; i<num_interlink; i++)
         	//{
-    	    	System.out.println("<Interlink id=\""+ interlink_id +"\">");
-    	    	System.out.println("<LinkType>owl:sameAs</LinkType>");
-    	    	System.out.println("\n");
-    	    	System.out.println("<SourceDataset dataSource=\""+ source_name +"\" var=\""+v1+"\">");
-    	    	System.out.println("<RestrictTo>");
-    	    	System.out.println(source_query);
-    	    	System.out.println("</RestrictTo>");
-    	    	System.out.println("</SourceDataset>");
-    	    	System.out.println("\n");
-    	    	System.out.println("<TargetDataset dataSource=\""+ target_name +"\" var=\""+v2+"\">");
-    	    	System.out.println("<RestrictTo>");	    
-    	    	System.out.println(target_query);
-    		    System.out.println("</RestrictTo>");
-    		    System.out.println("</TargetDataset>");
-    		    System.out.println("\n");
-    		    System.out.println("<LinkageRule>");
-    		    System.out.println("<Aggregate type=\""+ aggregate_type +"\">");
+        	out.println("<Interlink id=\""+ interlink_id +"\">");
+        	out.println("<LinkType>owl:sameAs</LinkType>");
+        	out.println("\n");
+        	out.println("<SourceDataset dataSource=\""+ source_name +"\" var=\""+v1+"\">");
+        	out.println("<RestrictTo>");
+        	out.println(source_query);
+        	out.println("</RestrictTo>");
+        	out.println("</SourceDataset>");
+        	out.println("\n");
+        	out.println("<TargetDataset dataSource=\""+ target_name +"\" var=\""+v2+"\">");
+        	out.println("<RestrictTo>");	    
+        	out.println(target_query);
+        	out.println("</RestrictTo>");
+        	out.println("</TargetDataset>");
+        	out.println("\n");
+        	out.println("<LinkageRule>");
+        	out.println("<Aggregate type=\""+ aggregate_type +"\">");
 				
-    		    System.out.println("<Compare metric=\""+ metric0 +"\" threshold=\""+threshold0+"\" required=\""+required0+"\">");		    
-    		    if (transformInput_s0.equals("Yes"))
-    		    {
-        		    System.out.println("<TransformInput function=\""+function_s0+"\">");
-    		    }
-    		    System.out.println("<Input path=\"?"+v1+"/"+ source_property0 +"\" />");
-    		    if (transformInput_s0.equals("Yes"))
-    		    {
-    		    	if (function_s0.equals("capitalize"))
-    		    		System.out.println("<Param name=\"allWords\" value=\""+allWords_s0+"\"/>");
-    		    	if (function_s0.equals("replace"))
-    		    	{
-    		    		System.out.println("<Param name=\"search\" value=\""+search_s0+"\"/>");
-    		    		System.out.println("<Param name=\"replace\" value=\""+replace_s1_0+"\"/>");
+        	out.println("<Compare metric=\""+ metric0 +"\" threshold=\""+threshold0+"\" required=\""+required0+"\">");		    
+        	if (transformInput_s0.equals("Yes")) {
+        	    out.println("<TransformInput function=\""+function_s0+"\">");
+        	}
+        	out.println("<Input path=\"?"+v1+"/"+ source_property0 +"\" />");
+        	if (transformInput_s0.equals("Yes")) {
+    		    	if (function_s0.equals("capitalize")) {
+    		    		out.println("<Param name=\"allWords\" value=\""+allWords_s0+"\"/>");
+    		    	}
+    		    	if (function_s0.equals("replace")) {
+    		    		out.println("<Param name=\"search\" value=\""+search_s0+"\"/>");
+    		    		out.println("<Param name=\"replace\" value=\""+replace_s1_0+"\"/>");
     		    	}   		    		
-    		    	if (function_s0.equals("regexReplace"))
-    		    	{
-    		    		System.out.println("<Param name=\"regex\" value=\""+regex_s1_0+"\"/>");
-    		    		System.out.println("<Param name=\"replace\" value=\""+replace_s2_0+"\"/>");
+    		    	if (function_s0.equals("regexReplace")) {
+    		    		out.println("<Param name=\"regex\" value=\""+regex_s1_0+"\"/>");
+    		    		out.println("<Param name=\"replace\" value=\""+replace_s2_0+"\"/>");
     		    	} 
-    		    	if (function_s0.equals("logarithm"))
-    		    		System.out.println("<Param name=\"base\" value=\""+base_s0+"\"/>");
-    		    	if (function_s0.equals("convert"))
-        		    	{
-        		    		System.out.println("<Param name=\"sourceCharset\" value=\""+sourceCharset_s0+"\"/>");
-        		    		System.out.println("<Param name=\"targetCharset\" value=\""+targetCharset_s0+"\"/>");
-        		    	}
-        		    if (function_s0.equals("tokenize"))
-        		    	System.out.println("<Param name=\"regex\" value=\""+regex_s2_0+"\"/>");
-        		    if (function_s0.equals("removeValues"))
-        		    	System.out.println("<Param name=\"blacklist\" value=\""+blacklist_s0+"\"/>");
-        		    System.out.println("</TransformInput>");
-    		    }
-    		    if (transformInput_t0.equals("Yes"))
-    		    {
-        		    System.out.println("<TransformInput function=\""+function_t0+"\">");
-    		    }
-    		    System.out.println("<Input path=\"?"+v2+"/"+ target_property0 +"\" />");
-    		    if (transformInput_t0.equals("Yes"))
-    		    {
-    		    	if (function_t0.equals("capitalize"))
-    		    		System.out.println("<Param name=\"allWords\" value=\""+allWords_t0+"\"/>");
-    		    	if (function_t0.equals("replace"))
-    		    	{
-    		    		System.out.println("<Param name=\"search\" value=\""+search_t0+"\"/>");
-    		    		System.out.println("<Param name=\"replace\" value=\""+replace_t1_0+"\"/>");
+    		    	if (function_s0.equals("logarithm")) {
+    		    		out.println("<Param name=\"base\" value=\""+base_s0+"\"/>");
+    		    	}
+    		    	if (function_s0.equals("convert")) {
+        			out.println("<Param name=\"sourceCharset\" value=\""+sourceCharset_s0+"\"/>");
+        			out.println("<Param name=\"targetCharset\" value=\""+targetCharset_s0+"\"/>");
+        		}
+        		if (function_s0.equals("tokenize")) {
+        			out.println("<Param name=\"regex\" value=\""+regex_s2_0+"\"/>");
+        		}
+        		if (function_s0.equals("removeValues")) {
+        			out.println("<Param name=\"blacklist\" value=\""+blacklist_s0+"\"/>");
+        		}
+        		out.println("</TransformInput>");
+        	}
+        	if (transformInput_t0.equals("Yes")) {
+        	    out.println("<TransformInput function=\""+function_t0+"\">");
+        	}
+        	out.println("<Input path=\"?"+v2+"/"+ target_property0 +"\" />");
+        	if (transformInput_t0.equals("Yes")) {
+    		    	if (function_t0.equals("capitalize")) {
+    		    		out.println("<Param name=\"allWords\" value=\""+allWords_t0+"\"/>");
+    		    	}
+    		    	if (function_t0.equals("replace")) {
+    		    		out.println("<Param name=\"search\" value=\""+search_t0+"\"/>");
+    		    		out.println("<Param name=\"replace\" value=\""+replace_t1_0+"\"/>");
     		    	}   		    		
-    		    	if (function_t0.equals("regexReplace"))
-    		    	{
-    		    		System.out.println("<Param name=\"regex\" value=\""+regex_t1_0+"\"/>");
-    		    		System.out.println("<Param name=\"replace\" value=\""+replace_t2_0+"\"/>");
+    		    	if (function_t0.equals("regexReplace")) {
+    		    		out.println("<Param name=\"regex\" value=\""+regex_t1_0+"\"/>");
+    		    		out.println("<Param name=\"replace\" value=\""+replace_t2_0+"\"/>");
     		    	} 
-    		    	if (function_t0.equals("logarithm"))
-    		    		System.out.println("<Param name=\"base\" value=\""+base_t0+"\"/>");
-    		    	if (function_t0.equals("convert"))
-        		    	{
-        		    		System.out.println("<Param name=\"sourceCharset\" value=\""+sourceCharset_t0+"\"/>");
-        		    		System.out.println("<Param name=\"targetCharset\" value=\""+targetCharset_t0+"\"/>");
-        		    	}
-        		    if (function_t0.equals("tokenize"))
-        		    	System.out.println("<Param name=\"regex\" value=\""+regex_t2_0+"\"/>");
-        		    if (function_t0.equals("removeValues"))
-        		    	System.out.println("<Param name=\"blacklist\" value=\""+blacklist_t0+"\"/>");
-        		    System.out.println("</TransformInput>");
-    		    }  		    
-    		    if (metric0.equals("num"))  	
-    		    {
-    		    	System.out.println("<Param name=\"minValue\" value=\""+minValue0+"\"/>");
-    		    	System.out.println("<Param name=\"maxValue\" value=\""+maxValue0+"\"/>");
-    		    }    		    	
-    		    if (metric0.equals("wgs84"))  	
-    		    {
-    		    	System.out.println("<Param name=\"unit\" value=\""+unit0+"\"/>"); 
-    		    	System.out.println("<Param name=\"unit\" value=\""+curveStyle0+"\"/>"); 
-    		    }   		    			    		    
-    		    System.out.println("</Compare>");    		    				
-				System.out.println("</Aggregate>");
-    	    	System.out.println("</LinkageRule>");
-    	    	System.out.println("\n");
-    	    	if (filter_limit!=null)
-        		    System.out.println("<Filter limit=\""+ filter_limit +"\"/>");
-    	    	else
-    	    		System.out.println("<Filter />");
-        		System.out.println("\n");
-        		System.out.println("<Outputs>");
-        		System.out.println("<Output type=\"sparul\" >");
-        		//System.out.println("<Param name=\"uri\" value=\"http://localhost:8080/openrdf-sesame/repositories/lifted/statements\"/>");	
-        		System.out.println("<Param name=\"uri\" value=\"" + url + "/statements\"/>");	
-        		System.out.println("<Param name=\"parameter\" value=\"update\"/>");
-        		System.out.println("</Output>");
-    	    	System.out.println("</Outputs>");
-    	    	System.out.println("</Interlink>");
+    		    	if (function_t0.equals("logarithm")) {
+    		    		out.println("<Param name=\"base\" value=\""+base_t0+"\"/>");
+    		    	}
+    		    	if (function_t0.equals("convert")) {
+        			out.println("<Param name=\"sourceCharset\" value=\""+sourceCharset_t0+"\"/>");
+        			out.println("<Param name=\"targetCharset\" value=\""+targetCharset_t0+"\"/>");
+        		}
+        		if (function_t0.equals("tokenize")) {
+        		    	out.println("<Param name=\"regex\" value=\""+regex_t2_0+"\"/>");
+        		}
+        		if (function_t0.equals("removeValues")) {
+        		    	out.println("<Param name=\"blacklist\" value=\""+blacklist_t0+"\"/>");
+        		}
+        		out.println("</TransformInput>");
+        	}
+        	if (metric0.equals("num")) {
+        	    out.println("<Param name=\"minValue\" value=\""+minValue0+"\"/>");
+        	    out.println("<Param name=\"maxValue\" value=\""+maxValue0+"\"/>");
+        	}    		    	
+        	if (metric0.equals("wgs84")) {
+        	    out.println("<Param name=\"unit\" value=\""+unit0+"\"/>"); 
+        	    out.println("<Param name=\"unit\" value=\""+curveStyle0+"\"/>"); 
+        	}   		    			    		    
+        	out.println("</Compare>");
+        	out.println("</Aggregate>");
+        	out.println("</LinkageRule>");
+        	out.println("\n");
+        	if (filter_limit!=null) {
+        	    out.println("<Filter limit=\""+ filter_limit +"\"/>");
+        	}
+        	else {
+        	    out.println("<Filter />");
+        	}
+        	out.println("\n");
+        	out.println("<Outputs>");
+        	out.println("<Output type=\"sparul\" >");
+        	out.println("<Param name=\"uri\" value=\"" + url + "/statements\"/>");	
+        	out.println("<Param name=\"parameter\" value=\"update\"/>");
+        	out.println("</Output>");
+        	out.println("</Outputs>");
+        	out.println("</Interlink>");
         	//}
         	//end of the script
-        	System.out.println("</Interlinks>");
-        	System.out.println("</Silk>");
-    	    System.out.close();
-    	
+        	out.println("</Interlinks>");
+        	out.println("</Silk>");
+        	out.flush();
+        	out.close();
+        	out = null;
+        }
+        finally {
+            if (out != null) {
+                try { out.close(); } catch (Exception e) { /* Ignore... */ }
+            }
+        }
     	place = System.getProperty("user.dir")+"/script.xml";
         // Retrieve project.
         Project p3 = this.getProject(projectId);		
@@ -414,43 +411,43 @@ public class HandleProjectModule extends BaseInterconnectionModule
         args.put("linking", this);
     	
 	//link the data sets                
+        File silkScript = null;
+        FileOutputStream fos = null;
+        BufferedInputStream bis = null;
         try {
-                FileOutputStream fos = null;
-	        BufferedInputStream bis = null;
-	        int BUFFER_SIZE = 1024;
-	        byte[] buf = new byte[BUFFER_SIZE];
-	        int size = 0;
-	        bis = new BufferedInputStream(data);
-	        try {
-	        	    File silkScript = null;
-					try {
-						silkScript = File.createTempFile("silkScript",".xml");
-						fos = new FileOutputStream(silkScript);
-					} catch (IOException e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
-					} finally {
-	                
-	                try {
-	                        while ( (size = bis.read(buf)) != -1)
-	                            fos.write(buf, 0, size);
-	                        fos.close();
-	                        bis.close();
-	                        } catch (IOException e) {
-	                        	 // Includes FileNotFoundException
-	                             log.fatal("File upload error for {}", e, silkScript);
-	                             throw new WebApplicationException(
-	                                       Response.status(Status.INTERNAL_SERVER_ERROR)
-	                                                .entity(e.getMessage())
-	                                                .type(MediaType.TEXT_PLAIN).build());
-	                        }
-        	        Silk.executeFile(silkScript, null, 1, true);
-        	        silkScript.delete();
-	                } 
-					
-		} finally {}      
-	} finally {}        
-        
+            bis = new BufferedInputStream(data);
+            silkScript = File.createTempFile("silkScript",".xml");
+            fos = new FileOutputStream(silkScript);
+            byte[] buf = new byte[1024];
+            int size = 0;
+            while ( (size = bis.read(buf)) != -1) {
+                fos.write(buf, 0, size);
+            }
+            fos.close();
+            fos = null;
+            bis.close();
+            bis = null;
+
+            Silk.executeFile(silkScript, null, 1, true);
+	}
+        catch (IOException e) {
+            log.fatal("File upload error for {}", e, silkScript);
+            throw new WebApplicationException(
+                            Response.status(Status.INTERNAL_SERVER_ERROR)
+                                    .entity(e.getMessage())
+                                    .type(MediaType.TEXT_PLAIN).build());
+        }
+	finally {
+            if (fos != null) {
+                try { fos.close(); } catch (Exception e) { /* Ignore... */ }
+            }
+            if (bis != null) {
+                try { bis.close(); } catch (Exception e) { /* Ignore... */ }
+            }
+	    if (silkScript != null) {
+                silkScript.delete();
+	    }
+	}
         return Response.ok(this.newViewable("/ok.vm", args)).build();
         
     }
@@ -464,8 +461,7 @@ public class HandleProjectModule extends BaseInterconnectionModule
                         @FormDataParam("EDOALFile") FormDataContentDisposition disposition,
                         @FormDataParam("sourcedataset") String sourcedataset,
                         @FormDataParam("targetdataset") String targetdataset)
-                                        throws ObjectStreamException
-    {    	   	   
+                                        throws ObjectStreamException {
         // Retrieve project.
         Project p4 = this.getProject(projectId);		
         // Display conversion configuration page.  	
@@ -473,36 +469,23 @@ public class HandleProjectModule extends BaseInterconnectionModule
         args.put("it", p4);
         args.put("linking", this);
     	
+        FileOutputStream fos = null;
+        BufferedInputStream bis = null;
         try {
-                FileOutputStream fos = null;
-	        BufferedInputStream bis = null;
-	        int BUFFER_SIZE = 1024;
-	        byte[] buf = new byte[BUFFER_SIZE];
-	        int size = 0;
 	        bis = new BufferedInputStream(data);
-	        try {
-	        	    File configFile = null;
-					try {
-						configFile = File.createTempFile("configFile",".xml");
-						fos = new FileOutputStream(configFile);
-					} catch (IOException e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
-					} finally {
-	                
-	                try {
-	                        while ( (size = bis.read(buf)) != -1)
-	                        	 fos.write(buf, 0, size);	                              	                        
-	                             fos.close();
-	                             bis.close();
-	                        } catch (IOException e) {
-	                        	 // Includes FileNotFoundException
-	                             log.fatal("File upload error for {}", e, configFile);
-	                             throw new WebApplicationException(
-	                                       Response.status(Status.INTERNAL_SERVER_ERROR)
-	                                                .entity(e.getMessage())
-	                                                .type(MediaType.TEXT_PLAIN).build());
-	                        }
+	        File configFile = File.createTempFile("configFile",".xml");
+	        configFile.deleteOnExit();
+	        fos = new FileOutputStream(configFile);
+	        byte[] buf = new byte[1024];
+	        int size = 0;
+	        while ( (size = bis.read(buf)) != -1) {
+	            fos.write(buf, 0, size);
+	        }
+	        fos.close();
+	        fos = null;
+	        bis.close();
+	        bis = null;
+
 	                if (data!=null)
 	                {
 	                	//create SILK script
@@ -518,24 +501,12 @@ public class HandleProjectModule extends BaseInterconnectionModule
 	                	
 	        			try {
 							aparser.parse(file);
-							PrintWriter writer = null;
-							try {
-								writer = new PrintWriter(
+							PrintWriter writer = new PrintWriter(
 										 new BufferedWriter(
 								         new OutputStreamWriter( System.out, "UTF-8" )), true);
-							} catch (UnsupportedEncodingException e) {
-								// TODO Auto-generated catch block
-								System.out.println("cannot initialize a writer");
-							}							
 							
 							CopyOfSilkRendererVisitor renderer = new CopyOfSilkRendererVisitor(writer);
-
-		        			try {		        	
 		        				renderer.run(params, "SILKscript.xml", file.toString());
-							} catch (Exception e1) {
-								// TODO Auto-generated catch block
-								e1.printStackTrace();
-							}
 		                    writer.flush();
 		                    writer.close();
 
@@ -579,45 +550,43 @@ public class HandleProjectModule extends BaseInterconnectionModule
 		                                buff.append(System.getProperty("line.separator"));
 		                            }		                            
 		                        }
-		                    } catch (Exception e) {  
-		                        e.printStackTrace();  
 		                    } finally {  
-		                        // close the buffer
 		                        if (br != null) {  
-		                            try {  
-		                                br.close(); 
-		                            } catch (IOException e) {  
-		                                br = null; 
-		                            }  
+		                            try { br.close(); } catch (Exception e) { /* Ignore... */ }  
 		                        }  
 		                    } 
 		                    try {  
 		                        bw = new BufferedWriter(new FileWriter(fspec));  
 		                        bw.write(buff.toString());  
-		                    } catch (Exception e) {  
-		                        e.printStackTrace();  
 		                    } finally {  
 		                        if (bw != null) {  
-		                            try {  
-		                                bw.close();  
-		                            } catch (IOException e) {  
-		                                bw = null;  
-		                            }  
+		                            try { bw.close(); } catch (Exception e) { /* Ignore... */ }
 		                        }  
 		                    }
 		                    
 		                    Silk.executeFile(fspec, null, 1, true);
 		                    
 						} catch (AlignmentException e) {
-							// TODO Auto-generated catch block
-							System.out.println("cannot create EDOAL file");
+							log.fatal("Cannot create EDOAL file", e);
+							throw new IOException("Cannot create EDOAL file", e);
 						}	        			
 	                }
-        	        configFile.deleteOnExit();
-	                } 					
-		} finally {}      
-	} finally {}
-		
+	}
+        catch (Exception e) {
+            log.fatal("Processing error for {}", e, disposition.getFileName());
+            throw new WebApplicationException(
+                            Response.status(Status.INTERNAL_SERVER_ERROR)
+                                    .entity(e.getMessage())
+                                    .type(MediaType.TEXT_PLAIN).build());
+        }
+	finally {
+	    if (fos != null) {
+	        try { fos.close(); } catch (Exception e) { /* Ignore... */ }
+	    }
+	    if (bis != null) {
+	        try { bis.close(); } catch (Exception e) { /* Ignore... */ }
+	    }
+	}
         return Response.ok(this.newViewable("/ok.vm", args)).build();
         
     }
