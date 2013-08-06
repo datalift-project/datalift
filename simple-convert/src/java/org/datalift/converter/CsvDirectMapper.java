@@ -60,10 +60,11 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+import javax.xml.datatype.DatatypeConstants;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 
-import static javax.xml.datatype.DatatypeConstants.*;
+import static javax.xml.datatype.DatatypeConstants.FIELD_UNDEFINED;
 
 import org.openrdf.model.Literal;
 import org.openrdf.model.Value;
@@ -684,9 +685,6 @@ public class CsvDirectMapper extends BaseConverterModule
             DatatypeFactory df = null;
             if (isSet(dateFormat)) {
                 fmt = new SimpleDateFormat(dateFormat);
-                GregorianCalendar c = new GregorianCalendar();
-                c.clear();
-                fmt.setCalendar(c);
                 fmt.setLenient(true);   // Best effort!
                 try {
                     df = DatatypeFactory.newInstance();
@@ -720,8 +718,9 @@ public class CsvDirectMapper extends BaseConverterModule
             XMLGregorianCalendar date = null;
             if ((this.dateFormat != null) && (! isBlank(s))) {
                 try {
+                    CheckedCalendar c = new CheckedCalendar();
+                    this.dateFormat.setCalendar(c);
                     this.dateFormat.parse(s.trim());
-                    Calendar c = this.dateFormat.getCalendar();
                     date = this.dateFactory.newXMLGregorianCalendar(
                                 this.get(c, YEAR), this.get(c, MONTH),
                                 this.get(c, DAY_OF_MONTH),
@@ -741,9 +740,25 @@ public class CsvDirectMapper extends BaseConverterModule
             return date;
         }
 
-        private int get(Calendar c, int field) {
+        /**
+         * Returns the value of the specified field from the specified
+         * calendar.
+         * <p>
+         * This method returns consistent values suitable to
+         * build XML dateTime or time objects. For example, if one time
+         * field is set, all time fields must be set.</p>
+         * @param  c       the calendar to extract data from.
+         * @param  field   the field the value of which is expected.
+         *
+         * @return the value of the specified field is the field has
+         *         been set during the date parse process;
+         *         {@link DatatypeConstants#FIELD_UNDEFINED} otherwise.
+         */
+        private int get(CheckedCalendar c, int field) {
             int v = FIELD_UNDEFINED;
-            if (c.isSet(field)) {
+            // Ensure consistency of time fields.
+            if ((c.externallySet(field)) ||
+                (isTimeField(field) && isTimeSet(c))) {
                 v = c.get(field);
                 if (field == MONTH) {
                     v++;        // From 0-based Calendar to 1-based XML date.
@@ -751,5 +766,102 @@ public class CsvDirectMapper extends BaseConverterModule
             }
             return v;
         }
+
+        /**
+         * Returns whether the specified field belongs to the time part
+         * of a XML <code>dateTime</code> or <code>time</code> object.
+         * @param  field   the calendar field.
+         *
+         * @return <code>true</code> if the specified field is one of
+         *         {@link Calendar#HOUR_OF_DAY}, {@link Calendar#HOUR},
+         *         {@link Calendar#MINUTE} or {@link Calendar#SECOND};
+         *         <code>false</code> otherwise.
+         */
+        private boolean isTimeField(int field) {
+            return ((field == HOUR_OF_DAY) || (field == HOUR) ||
+                    (field == MINUTE)      || (field == SECOND));
+        }
+
+        /**
+         * Return whether at least one of the
+         * {@link #isTimeField(int) time fields} has been set for the
+         * specified calendar object.
+         * @param  c   the calendar.
+         *
+         * @return <code>true</code> if at least one of the time fields
+         *         is set; <code>false</code> otherwise.
+         */
+        private boolean isTimeSet(CheckedCalendar c) {
+            return c.externallySet(HOUR_OF_DAY) | c.externallySet(HOUR) |
+                   c.externallySet(MINUTE)      | c.externallySet(SECOND);
+        }
+    }
+
+    /**
+     * An extension of {@link GregorianCalendar} that provides access
+     * to the information of whether a field was externally set or not.
+     * <p>
+     * Calendar (and its subclasses), although it knows the information,
+     * provides no way to know whether a field was explicitly set or was
+     * computed as part of the setting of another field.</p>
+     */
+    private final static class CheckedCalendar extends GregorianCalendar
+    {
+        /** A set of flag indicating which fields have been set by the user. */
+        private boolean[] externallySet = new boolean[FIELD_COUNT];
+
+        /**
+         * Creates a new Gregorian calendar.
+         */
+        public CheckedCalendar() {
+            super();
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public void add(int field, int amount) {
+            this.externallySet[field] = true;
+            super.add(field, amount);
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public void roll(int field, boolean up) {
+            this.externallySet[field] = true;
+            super.roll(field, up);
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public void roll(int field, int amount) {
+            this.externallySet[field] = true;
+            super.roll(field, amount);
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public void set(int field, int value) {
+            this.externallySet[field] = true;
+            super.set(field, value);
+        }
+
+        /**
+         * Returns whether the specified field was set by the user.
+         * @param  field   the calendar field.
+         *
+         * @return <code>true</code> if the field was set by the user;
+         *         <code>false</code> if the field is still unset or was
+         *         internally computed.
+         */
+        public boolean externallySet(int field) {
+            return this.externallySet[field];
+        }
+
+//        public void reset() {
+//            for (int i=0; i<FIELD_COUNT; i++) {
+//                this.externallySet[i] = false;
+//            }
+//            super.clear();
+//        }
     }
 }
