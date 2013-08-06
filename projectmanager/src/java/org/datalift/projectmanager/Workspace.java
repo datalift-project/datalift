@@ -614,7 +614,7 @@ public class Workspace extends BaseModule
                     @FormDataParam("file_name") String file_name,
                     @FormDataParam("charset") String charset,
                     @FormDataParam("separator") String separator,
-                    @FormDataParam("title_row") @DefaultValue("0") int titleRow,
+                    @FormDataParam("title_row") @DefaultValue("1") int titleRow,
                     @FormDataParam("first_row") @DefaultValue("0") int firstRow,
                     @FormDataParam("last_row") @DefaultValue("0") int lastRow,
                     @FormDataParam("quote") String quote,
@@ -2363,7 +2363,9 @@ public class Workspace extends BaseModule
      * @return the filename, correctly decoded.
      */
     private String toFileName(String fileName) {
-        return new String(fileName.getBytes(), Charsets.UTF_8);
+        // Try decoding the file name using the local encoding.
+        String s = new String(fileName.getBytes(), Charsets.UTF_8);
+        return (s.indexOf('?') == -1)? s: fileName;
     }
 
     /**

@@ -49,11 +49,11 @@
 #if( (!$current) || ($current.getType() == $field.CsvSource) )
 	<form method="post" action="$target_csv" id="target_csv" enctype="multipart/form-data">
 #if( !$current )
-		<p><label class="control-label" for="file">#i18n("project.source.csv.upload") *: </label>
+		<p><label class="control-label" for="file">#i18n("project.source.csv.upload")*: </label>
 		<input type="file" id="csv_src" class="control-input" name="source" title="#i18n("project.source.tooltip.upload")" size="64" accept="*.csv"/><br />
-		<p><label class="control-label" for="file_url">#i18n("project.upload_source.file_url") *: </label>
+		<p><label class="control-label" for="file_url">#i18n("project.upload_source.file_url")*: </label>
 		<input type="text" class="control-input" placeholder="http://..." id="file_url" name="file_url" title="#i18n("project.source.tooltip.url")" /></p>
-		<p><label class="control-label" for="file_name">#i18n("project.upload_source.name") *: </label>
+		<p><label class="control-label" for="file_name">#i18n("project.upload_source.name")*: </label>
 		<input type="text" id="csv_name" class="control-input" placeholder="#i18n("project.source.placeholder.file_name")" name="file_name" title="#i18n("project.upload_source.file_name")" /></p>
 #else
 		<input type="hidden" name="current_source" value="$current.uri"/>
@@ -64,7 +64,7 @@
 		<p><label class="control-label" for="charset">#i18n("project.upload_source.charset"): </label>
 		<select id="charset" name="charset" title="#i18n("project.source.tooltip.charset")">
 #foreach( $s in $charsets )
-#if( ($foreach.count == 1 && !$current) || $s.equals($current.encoding) )
+#if( (!$current && $s == 'UTF-8' ) || $s.equals($current.encoding) )
 			<option value="$s" selected="true">$esc.html($s)</option>
 #else
 			<option value="$s">$esc.html($s)</option>
@@ -104,7 +104,7 @@
 		<input type="file" id="rdf_src" class="control-input" name="source" title="#i18n("project.source.tooltip.upload")" size="64"/><br />
 		<p><label class="control-label" for="file_url">#i18n("project.upload_source.file_url"): </label>
 		<input type="text" class="control-input" placeholder= "http://..." id="file_url" name="file_url" title="#i18n("project.source.tooltip.url")" /></p>
-		<p><label class="control-label" for="file_name">#i18n("project.upload_source.name") *: </label>
+		<p><label class="control-label" for="file_name">#i18n("project.upload_source.name")*: </label>
 		<input type="text" id="rdf_name" class="control-input" placeholder="#i18n("project.source.placeholder.file_name")" name="file_name" title="#i18n("project.upload_source.file_name")" /></p>
 #else
 		<input type="hidden" id="current_source" name="current_source" value="$current.uri"/>
@@ -134,11 +134,11 @@
 		<input type="hidden" id="current_source" name="current_source" value="$current.uri"/>
 		<p>#i18n("project.update_db"): <a href="$current.uri">$esc.html($current.title)</a></p>
 #end
-		<p><label for="title">#i18n("project.upload_source.name"): </label>
+		<p><label for="title">#i18n("project.upload_source.name")*: </label>
 		<input type="text" id="title" name="title" value="$!esc.html($current.title)"/></p>
 		<p><label for="description">#i18n("project.upload_source.description"): </label>
 		<input type="text" id="description" name="description" value="$!esc.html($current.description)"/></p>
-		<p><label for="source_url">#i18n("project.upload_db.source_url"): </label>
+		<p><label for="source_url">#i18n("project.upload_db.source_url")*: </label>
 		<input type="text" name="source_url" id="source_url" value="$!esc.html($current.connectionUrl)"/></p>
 		<p><label for="user">#i18n("project.upload_source.user"): </label>
 		<input type="text" id="user" name="user" value="$!esc.html($current.user)"/></p>
@@ -161,15 +161,15 @@
 		<input type="hidden" id="current_source" name="current_source" value="$current.uri"/>
 		<p>#i18n("project.update_sparql"): <a href="$current.uri">$esc.html($current.title)</a></p>
 #end
-		<p><label for="title">#i18n("project.upload_source.name"): </label>
+		<p><label for="title">#i18n("project.upload_source.name")*: </label>
 		<input type="text" id="title" name="title" value="$!esc.html($current.title)"/></p>
 		<p><label for="description">#i18n("project.upload_source.description"): </label>
 		<input type="text" id="description" name="description" value="$!esc.html($current.description)"/></p>
-		<p><label for="connection_url">#i18n("project.upload_sparql.connection_url"): </label>
+		<p><label for="connection_url">#i18n("project.upload_sparql.connection_url")*: </label>
 		<input type="text" id="connection_url" name="connection_url" value="$!esc.html($current.endpointUrl)"/></p>
 		<p><label for="default_graph_uri">#i18n("project.upload_sparql.default_graph_uri"): </label>
 		<input type="text" id="default_graph_uri" name="default_graph_uri" value="$!esc.html($current.defaultGraphUri)"/></p>
-		<p><label for="sparql_query">#i18n("project.upload_sparql.query"):</label>
+		<p><label for="sparql_query">#i18n("project.upload_sparql.query")*:</label>
 		<textarea id="sparql_query" name="sparql_query">$!esc.html($current.query)</textarea></p>
 
 		<fieldset class="ui-widget ui-widget-content">
@@ -194,7 +194,7 @@
 		<input type="file" id="xml_src" class="control-input" name="source" title="#i18n("project.source.tooltip.upload")" size="64" accept="*.xml"/><br />	
 		<p><label class="control-label" for="file_url">#i18n("project.upload_source.file_url"): </label></p>
 		<input type="text" class="control-input" placeholder= "http://..." id="file_url" name="file_url"/></p>
-		<p><label class="control-label" for="file_name">#i18n("project.upload_source.name") *: </label>
+		<p><label class="control-label" for="file_name">#i18n("project.upload_source.name")*: </label>
 		<input type="text" id="xml_name" class="control-input" placeholder="#i18n("project.source.placeholder.file_name")" name="file_name" title="#i18n("project.upload_source.file_name")" /></p>
 #else
 		<input type="hidden" name="current_source" value="$current.uri"/>
@@ -295,7 +295,7 @@
 							required: true,
 							remote: {
 								type: 'post',
-								data: {'project_uri': '$esc.html("${it.uri}")', 
+								data: {'project_uri': '$esc.javascript("${it.uri}")', 
 										'source': function() {
 											var source=$('#csv_name').val();
 											return source;
@@ -356,7 +356,7 @@
 							required: true,
 							remote: {
 								type: 'post',
-								data: {'project_uri': '$esc.html("${it.uri}")', 
+								data: {'project_uri': '$esc.javascript("${it.uri}")', 
 										'source': function() {
 											var source=$('#rdf_name').val();
 											return source;
@@ -399,7 +399,7 @@
 							required: true,
 							remote: {
 								type: 'post',
-								data: {'project_uri': '$esc.html("${it.uri}")', 
+								data: {'project_uri': '$esc.javascript("${it.uri}")', 
 										'source': function() {
 											var source=$('#xml_name').val();
 											return source;

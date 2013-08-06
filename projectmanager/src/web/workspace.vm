@@ -207,31 +207,31 @@
 		var mydata = [
 #foreach($curSrc in $current.getSources())
 		{
-			uri:"$curSrc.uri",
-			title:"<a href='$curSrc.uri'>$esc.html($curSrc.title)</a>",
+			uri:   "$curSrc.uri",
+			title: "<a href='$curSrc.uri'>$esc.javascript($curSrc.title)</a>",
 	#if( $curSrc.getType() == $field.CsvSource )
 		#set( $sep = "csv.source.${curSrc.separator}.separator" )
-			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.html($curSrc.description)<br />#end#i18n('project.upload_source.file'): <a href='${baseUri}/$esc.url(${curSrc.filePath})'>$!esc.html($curSrc.filePath)</a><br />#if( $curSrc.sourceUrl )#i18n('project.upload_source.src_url'): <a href='${curSrc.sourceUrl}'>$!esc.html($curSrc.sourceUrl)</a><br />#end#i18n('project.source.csv.separator'): #i18n(${sep}),&nbsp;#i18n('project.source.csv.title.present'): #i18n("boolean.${curSrc.hasTitleRow()}")<br />#i18n('project.upload_source.created'): $!date.format('medium', $curSrc.creationDate)"
+			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.javascript($curSrc.description)<br />#end#i18n('project.upload_source.file'): <a href='${baseUri}/${curSrc.filePath}'>$!esc.javascript($curSrc.filePath)</a><br />#if( $curSrc.sourceUrl )#i18n('project.upload_source.src_url'): <a href='${curSrc.sourceUrl}'>$!esc.javascript($curSrc.sourceUrl)</a><br />#end#i18n('project.source.csv.separator'): #i18n(${sep}),&nbsp;#i18n('project.source.csv.title.present'): #i18n("boolean.${curSrc.hasTitleRow()}")<br />#i18n('project.upload_source.created'): $!date.format('medium', $curSrc.creationDate)"
 	#elseif( $curSrc.getType() == $field.RdfFileSource )
-			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.html($curSrc.description)<br />#end#i18n('project.upload_source.file'): <a href='${baseUri}/$esc.url(${curSrc.filePath})'>$!esc.html($curSrc.filePath)</a><br />#if( $curSrc.sourceUrl )#i18n('project.upload_source.src_url'): <a href='${curSrc.sourceUrl}'>$!esc.html($curSrc.sourceUrl)</a><br />#end#i18n('project.upload_rdf_format'): $!esc.html($curSrc.mimeType)<br />#i18n('project.upload_source.created'): $!date.format('medium', $curSrc.creationDate)"
+			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.javascript($curSrc.description)<br />#end#i18n('project.upload_source.file'): <a href='${baseUri}/${curSrc.filePath}'>$!esc.javascript($curSrc.filePath)</a><br />#if( $curSrc.sourceUrl )#i18n('project.upload_source.src_url'): <a href='${curSrc.sourceUrl}'>$!esc.javascript($curSrc.sourceUrl)</a><br />#end#i18n('project.upload_rdf_format'): $!esc.javascript($curSrc.mimeType)<br />#i18n('project.upload_source.created'): $!date.format('medium', $curSrc.creationDate)"
 	#elseif( $curSrc.getType() == $field.SqlQuerySource )
-			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.html($curSrc.description)<br />#end#i18n('project.upload_db.source_url'): $!esc.html($curSrc.connectionUrl)<br />#i18n('project.upload_source.cache_duration'): $!esc.html($curSrc.cacheDuration)<br />#i18n('project.upload_source.cache_update'): $!date.format('medium', $curSrc.lastCacheUpdate)"
+			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.javascript($curSrc.description)<br />#end#i18n('project.upload_db.source_url'): $!esc.javascript($curSrc.connectionUrl)<br />#i18n('project.upload_source.cache_duration'): $!esc.javascript($curSrc.cacheDuration)<br />#i18n('project.upload_source.cache_update'): $!date.format('medium', $curSrc.lastCacheUpdate)"
 	#elseif( $curSrc.getType() == $field.SqlDatabaseSource )
-			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.html($curSrc.description)<br />#end#i18n('project.upload_db.source_url'): $!esc.html($curSrc.connectionUrl)<br />#i18n('project.upload_source.tables_numb'): $!esc.html($curSrc.tableCount)"
+			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.javascript($curSrc.description)<br />#end#i18n('project.upload_db.source_url'): $!esc.javascript($curSrc.connectionUrl)<br />#i18n('project.upload_source.tables_numb'): $!esc.javascript($curSrc.tableCount)"
 	#elseif( $curSrc.getType() == $field.TransformedRdfSource )
-			title:"<a href='${baseUri}/sparql/describe?uri=$esc.url(${curSrc.uri})&type=Graph&default-graph=internal&max=5000'>$esc.html($curSrc.title)</a>",
-			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.html($curSrc.description)<br />#end#i18n('project.upload_source.graph'): $!esc.html($curSrc.targetGraph.toString())<br />#i18n('project.upload_source.parent'): $!esc.html($curSrc.parent.title)<br />#i18n('project.upload_source.created'): $!date.format('medium', $curSrc.creationDate)"
+			title: "<a href='${baseUri}/sparql/describe?uri=$esc.url(${curSrc.uri})&type=Graph&default-graph=internal&max=5000'>$esc.javascript($curSrc.title)</a>",
+			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.javascript($curSrc.description)<br />#end#i18n('project.upload_source.graph'): $!esc.javascript($curSrc.targetGraph.toString())<br />#i18n('project.upload_source.parent'): $!esc.javascript($curSrc.parent.title)<br />#i18n('project.upload_source.created'): $!date.format('medium', $curSrc.creationDate)"
 	#elseif( $curSrc.getType() == $field.SparqlSource )
-			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.html($curSrc.description)<br />#end#i18n('project.upload_sparql.connection_url'): $!esc.html($curSrc.endpointUrl)<br />#i18n('project.upload_source.cache_duration'): $!esc.html($curSrc.cacheDuration)<br /> #i18n('project.upload_source.cache_update'): $!date.format('medium', $curSrc.lastCacheUpdate)"
+			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.javascript($curSrc.description)<br />#end#i18n('project.upload_sparql.connection_url'): $!esc.javascript($curSrc.endpointUrl)<br />#i18n('project.upload_source.cache_duration'): $!esc.javascript($curSrc.cacheDuration)<br /> #i18n('project.upload_source.cache_update'): $!date.format('medium', $curSrc.lastCacheUpdate)"
 	#elseif( $curSrc.getType() == $field.XmlSource )
-			title:"<a href='${baseUri}/$esc.url(${curSrc.filePath})'>$esc.html($curSrc.title)</a>",
-			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.html($curSrc.description)<br />#end#i18n('project.upload_source.file'): <a href='${baseUri}/$esc.url(${curSrc.filePath})'>$!esc.html($curSrc.filePath)</a><br />#if( $curSrc.sourceUrl )#i18n('project.upload_source.src_url'): <a href='${curSrc.sourceUrl}'>$!esc.html($curSrc.sourceUrl)</a><br />#end#i18n('project.upload_source.created'): $!date.format('medium', $curSrc.creationDate)"
+			title: "<a href='${baseUri}/${curSrc.filePath}'>$esc.javascript($curSrc.title)</a>",
+			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.javascript($curSrc.description)<br />#end#i18n('project.upload_source.file'): <a href='${baseUri}/${curSrc.filePath}'>$!esc.javascript($curSrc.filePath)</a><br />#if( $curSrc.sourceUrl )#i18n('project.upload_source.src_url'): <a href='${curSrc.sourceUrl}'>$!esc.javascript($curSrc.sourceUrl)</a><br />#end#i18n('project.upload_source.created'): $!date.format('medium', $curSrc.creationDate)"
 	#elseif( $curSrc.getType() == $field.ShpSource )
-			title:"<a href='${baseUri}/$esc.url(${curSrc.filePath})'>$esc.html($curSrc.title)</a>",
-			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.html($curSrc.description)<br />#end#i18n('project.upload_source.file'): $!esc.html($curSrc.filePath)<br />#i18n('project.upload_source.created'): $!date.format('medium', $curSrc.creationDate)"
+			title: "<a href='${baseUri}/${curSrc.filePath}'>$esc.javascript($curSrc.title)</a>",
+			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.javascript($curSrc.description)<br />#end#i18n('project.upload_source.file'): $!esc.javascript($curSrc.filePath)<br />#i18n('project.upload_source.created'): $!date.format('medium', $curSrc.creationDate)"
 	#elseif( $curSrc.getType() == $field.GmlSource )
-			title:"<a href='${baseUri}/$esc.url(${curSrc.filePath})'>$esc.html($curSrc.title)</a>",
-			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.html($curSrc.description)<br />#end#i18n('project.upload_source.file'): $!esc.html($curSrc.filePath)<br />#i18n('project.upload_source.created'): $!date.format('medium', $curSrc.creationDate)"
+			title: "<a href='${baseUri}/${curSrc.filePath}'>$esc.javascript($curSrc.title)</a>",
+			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.javascript($curSrc.description)<br />#end#i18n('project.upload_source.file'): $!esc.javascript($curSrc.filePath)<br />#i18n('project.upload_source.created'): $!date.format('medium', $curSrc.creationDate)"
 	#end
 		},
 #end
@@ -321,11 +321,11 @@
 		var mydataOntology = [
 #foreach( $curOnto in $current.getOntologies() )
 		{
-			uri:"$!esc.html($curOnto.uri)",
-			title:"$!esc.html($curOnto.title)",
-			source:"$!esc.html($curOnto.source)",
+			uri:"$!esc.javascript($curOnto.uri)",
+			title:"$!esc.javascript($curOnto.title)",
+			source:"$!esc.javascript($curOnto.source)",
 			dateSubmitted:"$!date.format('medium', $curOnto.dateSubmitted)",
-			operator:"$!esc.html($curOnto.operator)"
+			operator:"$!esc.javascript($curOnto.operator)"
 		},
 #end
 		];
