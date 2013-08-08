@@ -64,6 +64,7 @@ public class DefaultConfigurationTest
 
     @Before
     public void setUp() {
+        this.props.put(DATALIFT_HOME, "tests");
         this.props.put(REPOSITORY_URIS, RDF_STORE);
         this.props.put(RDF_STORE + REPOSITORY_URL, "sail:///");
         this.props.put(RDF_STORE + REPOSITORY_DEFAULT_FLAG, "true");
