@@ -381,10 +381,40 @@ public final class RdfUtils
      *         target RDF store are provided.
      * @throws RdfException if any error occurred reading triples or
      *         accessing the RDF store.
+     *
+     * @see    #upload(CloseableIterable, Repository, URI, UriMapper, boolean)
      */
     public static void upload(CloseableIterable<Statement> source,
                               Repository target, URI namedGraph,
                               final UriMapper mapper) throws RdfException {
+        upload(source, target, namedGraph, mapper, true);
+    }
+
+    /**
+     * Insert a collection of triples into the specified RDF store,
+     * optionally placing them in the specified named graph.
+     * @param  source             a collection of RDF triples, as a
+     *                            Java {@link Iterable} object.
+     * @param  target             the RDF store to persist triples
+     *                            into.
+     * @param  namedGraph         the named graph to use as context for
+     *                            the triples or <code>null</code>.
+     * @param  mapper             an optional {@link UriMapper mapper}
+     *                            to translate URIs as triples are
+     *                            loaded or <code>null</code> if no
+     *                            mapping is needed.
+     * @param  clearTargetGraph   whether to clear the target name graph
+     *                            prior inserting the new triples.
+     *
+     * @throws IllegalArgumentException if no source collection or
+     *         target RDF store are provided.
+     * @throws RdfException if any error occurred reading triples or
+     *         accessing the RDF store.
+     */
+    public static void upload(CloseableIterable<Statement> source,
+                              Repository target, URI namedGraph,
+                              final UriMapper mapper, boolean clearTargetGraph)
+                                                          throws RdfException {
         if (source == null) {
             throw new IllegalArgumentException("source");
         }
@@ -395,7 +425,7 @@ public final class RdfUtils
         RepositoryConnection cnx = target.newConnection();
         try {
             // Clear target named graph, if any.
-            targetGraph = getGraphUri(namedGraph, cnx, true);
+            targetGraph = getGraphUri(namedGraph, cnx, clearTargetGraph);
             // Load triples, mapping URIs on the fly.
             BatchStatementAppender appender =
                         new BatchStatementAppender(cnx, targetGraph, mapper);
@@ -414,7 +444,7 @@ public final class RdfUtils
                 // Forget pending triples.
                 cnx.rollback();
                 // Clear target named graph, if any.
-                if (targetGraph != null) {
+                if ((targetGraph != null) && (clearTargetGraph)) {
                     cnx.clear(targetGraph);
                 }
             }
@@ -430,74 +460,6 @@ public final class RdfUtils
         }
     }
 
-    /**
-     * Insert a collection of triples into the specified RDF store,
-     * optionally placing them in the specified named graph.
-     * @param  source       a collection of RDF triples, as a Java
-     *                      {@link Iterable} object.
-     * @param  target       the RDF store to persist triples into.
-     * @param  namedGraph   the named graph to use as context for the
-     *                      triples or <code>null</code>. If the named
-     *                      graph exists, it will be cleared prior
-     *                      loading the triples.
-     * @param  mapper       an optional {@link UriMapper mapper} to
-     *                      translate URIs as triples are loaded or
-     *                      <code>null</code> if no mapping is needed.
-     * @param clear         a flag to clear the target named graph 
-     *                      if true, the named graph is cleared else not
-     * @throws IllegalArgumentException if no source collection or
-     *         target RDF store are provided.
-     * @throws RdfException if any error occurred reading triples or
-     *         accessing the RDF store.
-     */
-    public static void upload(CloseableIterable<Statement> source,
-                              Repository target, URI namedGraph,
-                              final UriMapper mapper, boolean clear) throws RdfException {
-        if (source == null) {
-            throw new IllegalArgumentException("source");
-        }
-        if (target == null) {
-            throw new IllegalArgumentException("target");
-        }
-        org.openrdf.model.URI targetGraph = null;
-        RepositoryConnection cnx = target.newConnection();
-        try {
-            // Clear target named graph, if any.
-            targetGraph = getGraphUri(namedGraph, cnx, clear);
-            // Load triples, mapping URIs on the fly.
-            BatchStatementAppender appender =
-                        new BatchStatementAppender(cnx, targetGraph, mapper);
-            appender.startRDF();
-            for (Statement stmt : source) {
-                appender.handleStatement(stmt);
-            }
-            appender.endRDF();
-
-            log.debug("Inserted {} RDF triples into <{}> in {} seconds",
-                      Long.valueOf(appender.getStatementCount()), namedGraph,
-                      Double.valueOf(appender.getDuration() / 1000.0));
-        }
-        catch (Exception e) {
-            try {
-                // Forget pending triples.
-                cnx.rollback();
-                // Clear target named graph, if any.
-                if (targetGraph != null) {
-                    cnx.clear(targetGraph);
-                }
-            }
-            catch (Exception e2) { /* Ignore... */ }
-
-            throw new RdfException(e);
-        }
-        finally {
-            // Commit pending data (including graph removal in case of error).
-            try { cnx.commit(); } catch (Exception e) { /* Ignore... */ }
-            // Close repository connection.
-            try { cnx.close();  } catch (Exception e) { /* Ignore... */ }
-        }
-    }    
-    
     /**
      * Applies a set of SPARQL CONTRUCT queries on an RDF store to
      * build a set of RDF triples and save them into another RDF store.
