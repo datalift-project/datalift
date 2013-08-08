@@ -24,8 +24,8 @@
 		</select></p>
 		<p><label for="dest_graph_uri">#i18n("dest.uri"):</label>
 		<input type="text" name="dest_graph_uri" id="dest_graph_uri" title="#i18n('dest.graph.help')" value=""/></p>
-
 		<input type="submit" id="source_submit" value="#i18n('submit.label')"/>
+                <input type="checkbox" id="overwrite" name="overwrite" value="true"/> #i18n('source.overwrite.label') 
 	</form>
 </div>
 

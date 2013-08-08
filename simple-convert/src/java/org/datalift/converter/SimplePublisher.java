@@ -136,7 +136,7 @@ public class SimplePublisher extends BaseConverterModule
             if (overwrite) {
                 RdfUtils.clearGraph(pub, targetGraph);
             }
-            RdfUtils.upload(in, pub, targetGraph, null);
+            RdfUtils.upload(in, pub, targetGraph, null, false);
             // Display generated triples.
             response = this.displayGraph(null, targetGraph,
                                          uriInfo, request, acceptHdr);
