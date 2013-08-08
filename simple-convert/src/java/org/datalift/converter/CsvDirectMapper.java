@@ -770,7 +770,7 @@ public class CsvDirectMapper extends BaseConverterModule
                                 this.get(c, DAY_OF_MONTH),
                                 this.get(c, HOUR_OF_DAY), this.get(c, MINUTE),
                                 this.get(c, SECOND), this.get(c, MILLISECOND),
-                                FIELD_UNDEFINED /* Timezone */);
+                                this.get(c, ZONE_OFFSET));
                 }
                 catch (Exception e) {
                     throw new IllegalArgumentException(
@@ -800,8 +800,16 @@ public class CsvDirectMapper extends BaseConverterModule
             if ((c.externallySet(field)) ||
                 (isTimeField(field) && isTimeSet(c))) {
                 v = c.get(field);
-                if (field == MONTH) {
+                if (field == YEAR) {
+                    if (c.get(ERA) == GregorianCalendar.BC) {
+                        v = 1 - v;     // 1001 BC = -1000.
+                    }
+                }
+                else if (field == MONTH) {
                     v++;        // From 0-based Calendar to 1-based XML date.
+                }
+                else if (field == ZONE_OFFSET) {
+                    v = (v + c.get(DST_OFFSET)) / (60 * 1000);
                 }
             }
             return v;
