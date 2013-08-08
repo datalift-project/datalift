@@ -42,8 +42,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.GregorianCalendar;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -282,8 +284,16 @@ public class CsvDirectMapper extends BaseConverterModule
                 this.throwInvalidParamError("date_format", dateFormat);
             }
             // Convert CSV data and load generated RDF triples.
-            this.convert(in, Configuration.getDefault().getInternalRepository(),
+            Collection<MappingError> errors = this.convert(in,
+                             Configuration.getDefault().getInternalRepository(),
                              targetGraph, baseUri, targetType, desc);
+            // Log mapping errors.
+            if (! errors.isEmpty()) {
+                log.error("{} mapping errors occurred while converting "
+                                + "CSV source \"{}\":\n\t- {}",
+                          Integer.valueOf(errors.size()), in.getTitle(),
+                          join(errors, "\n\t- "));
+            }
             // Register new transformed RDF source.
             Source out = this.addResultSource(p, in, destTitle, targetGraph);
             // Display project source tab, including the newly created source.
@@ -307,14 +317,15 @@ public class CsvDirectMapper extends BaseConverterModule
         return Mapping.values();
     }
 
-    private void convert(CsvSource src, Repository target,
-                                        URI targetGraph, URI baseUri,
-                                        String targetType,
-                                        MappingDesc mapping) {
+    private Collection<MappingError> convert(
+                                CsvSource src, Repository target,
+                                URI targetGraph, URI baseUri,
+                                String targetType, MappingDesc mapping) {
         final UriBuilder uriBuilder = Configuration.getDefault()
                                                    .getBean(UriBuilder.class);
         final RepositoryConnection cnx = target.newConnection();
         org.openrdf.model.URI ctx = null;
+        MappingContext mappingCtx = new MappingContext();
         try {
             final ValueFactory valueFactory =
                             new UriCachingValueFactory(cnx.getValueFactory());
@@ -366,64 +377,64 @@ public class CsvDirectMapper extends BaseConverterModule
                             new LinkedHashMap<org.openrdf.model.URI,Value>();
             for (Row<String> row : src) {
                 statements.clear();
-                boolean skipRow = false;
-                // Scan columns to map values and build triples.
-                org.openrdf.model.URI subject = null;
-                for (int j=0, max=row.size(); j<max; j++) {
-                    Mapping m = mapping.getMapping(j);
-                    Value value = null;
-                    String v = trimToNull(row.get(j));  // Trim value.
-                    if (v != null) {
-                        // Handle special case of unmatched closing quote, left
-                        // over by CSV parser when followed by padding.
-                        if (v.indexOf(quote) == v.length() - 1) {
-                            v = v.substring(0, v.length() - 1);
+                // Build subject URI.
+                String s = null;
+                if (mapping.keyColumn != -1) {
+                    s = this.sanitizeValue(row.get(mapping.keyColumn), quote);
+                    if (s != null) {
+                        s = uriBuilder.urlify(s, Resource);
+                    }
+                }
+                else {
+                    // No identifier column defined. => Auto-generate row URI.
+                    s = String.valueOf(i);
+                }
+                mappingCtx.rowId = s;
+                if (s != null) {
+                    // Generate triples for current row.
+                    org.openrdf.model.URI subject =
+                                valueFactory.createURI(objUri + s); // + "#_";
+                    // Scan columns to map values and build triples.
+                    for (int j=0, max=row.size(); j<max; j++) {
+                        mappingCtx.columnName = row.getKey(j);
+                        Mapping m = mapping.getMapping(j);
+                        Value value = null;
+                        String v = this.sanitizeValue(row.get(j), quote);
+                        if (v != null) {
+                            value = this.mapValue(v, valueFactory, m, mapping,
+                                                  mappingCtx);
                         }
-                        value = this.mapValue(v, valueFactory, m, mapping);
-                        if (j == mapping.keyColumn) {
-                            subject = valueFactory.createURI(objUri +
-                                            uriBuilder.urlify(v, Resource)); // + "#_";
+                        if (value != null) {
+                            statements.put(predicates[j], value);
                         }
+                        // Else: Ignore cell.
                     }
-                    else {
-                        // Skip rows without identifier.
-                        if (j == mapping.keyColumn) skipRow = true;
+                    // Append RDF type triple.
+                    if (! statements.isEmpty()) {
+                        statements.put(RDF.TYPE, rdfType);
                     }
-                    if (value != null) {
-                        statements.put(predicates[j], value);
-                    }
-                    // Else: Ignore cell.
-                }
-                if (skipRow) continue;
-
-                // Auto-generate row URI if no identifier column was defined.
-                if (subject == null) {
-                    subject = valueFactory.createURI(objUri + i); // + "#_";
-                }
-                // Append RDF type triple.
-                if (! statements.isEmpty()) {
-                    statements.put(RDF.TYPE, rdfType);
-                }
-                // Save triples into RDF store.
-                for (Map.Entry<org.openrdf.model.URI,Value>e :
+                    // Save triples into RDF store.
+                    for (Map.Entry<org.openrdf.model.URI,Value>e :
                                                     statements.entrySet()) {
-                    cnx.add(valueFactory.createStatement(
+                        cnx.add(valueFactory.createStatement(
                                     subject, e.getKey(), e.getValue()), ctx);
 
-                    // Commit transaction according to the configured batch size.
-                    statementCount++;
-                    if ((statementCount % batchSize) == 0) {
-                        cnx.commit();
-                        // Trace progress.
-                        if (log.isTraceEnabled()) {
-                            duration = System.currentTimeMillis() - t0;
-                            log.trace("Inserted {} RDF triples from {} CSV lines in {} seconds...",
-                                      wrap(statementCount), wrap(i - 1),
-                                      wrap(duration / 1000.0));
+                        // Commit transaction according to the configured batch size.
+                        statementCount++;
+                        if ((statementCount % batchSize) == 0) {
+                            cnx.commit();
+                            // Trace progress.
+                            if (log.isTraceEnabled()) {
+                                duration = System.currentTimeMillis() - t0;
+                                log.trace("Inserted {} RDF triples from {} CSV lines in {} seconds...",
+                                          wrap(statementCount), wrap(i - 1),
+                                          wrap(duration / 1000.0));
+                            }
                         }
                     }
+                    i++;
                 }
-                i++;
+                // Else: Skip rows without identifier.
             }
             cnx.commit();
             duration = System.currentTimeMillis() - t0;
@@ -453,53 +464,67 @@ public class CsvDirectMapper extends BaseConverterModule
             // Close repository connection.
             try { cnx.close();  } catch (Exception e) { /* Ignore... */ }
         }
+        return mappingCtx.getErrors();
+    }
+
+    private String sanitizeValue(String v, char quote) {
+        v = trimToNull(v);      // Trim value.
+        if (v != null) {
+            // Handle special case of unmatched closing quote, left
+            // over by CSV parser when followed by padding.
+            if (v.indexOf(quote) == v.length() - 1) {
+                v = v.substring(0, v.length() - 1);
+            }
+        }
+        return v;
     }
 
     private Value mapValue(String s, ValueFactory valueFactory,
-                                       Mapping mapping, MappingDesc desc) {
+                           Mapping mapping, MappingDesc desc,
+                                            MappingContext ctx) {
         Value v = null;
         switch (mapping) {
             case Ignore:
                 break;
             case String:
-                v = this.mapString(s, valueFactory);
+                v = this.mapString(s, valueFactory, ctx);
                 break;
             case Integer:
-                v = this.mapInt(s, valueFactory);
+                v = this.mapInt(s, valueFactory, ctx);
                 break;
             case Float:
-                v = this.mapFloat(s, valueFactory);
+                v = this.mapFloat(s, valueFactory, ctx);
                 break;
             case Boolean:
-                v = this.mapBoolean(s, valueFactory, desc);
+                v = this.mapBoolean(s, valueFactory, desc, ctx);
                 break;
             case Date:
-                v = this.mapDate(s, valueFactory, desc, false);
+                v = this.mapDate(s, valueFactory, desc, ctx);
                 break;
             case URI:
-                v = this.mapUri(s, valueFactory);
+                v = this.mapUri(s, valueFactory, ctx);
                 break;
             default:
                 // Automatic mapping on a per-cell basis.
                 if ((s.indexOf('.') != -1) || (s.indexOf(',') != -1)) {
                     // Try double.
-                    v = this.mapFloat(s, valueFactory);
+                    v = this.mapFloat(s, valueFactory, null);
                 }
                 if (v == null) {
                     // Try integer.
-                    v = this.mapInt(s, valueFactory);
+                    v = this.mapInt(s, valueFactory, null);
                 }
                 if ((v == null) && (desc.hasBooleanValues())) {
                     // Try boolean.
-                    v = this.mapBoolean(s, valueFactory, desc);
+                    v = this.mapBoolean(s, valueFactory, desc, null);
                 }
                 if ((v == null) && (desc.hasDateFormat())) {
                     // Try date/time.
-                    v = this.mapDate(s, valueFactory, desc, true);
+                    v = this.mapDate(s, valueFactory, desc, null);
                 }
                 if (v == null) {
                     // Assume string.
-                    v = this.mapString(s, valueFactory);
+                    v = this.mapString(s, valueFactory, null);
                 }
                 break;
         }
@@ -511,9 +536,12 @@ public class CsvDirectMapper extends BaseConverterModule
      * @param  s              the string to map.
      * @param  valueFactory   the {@link ValueFactory value factory} to
      *                        use to allocate the literal.
+     * @param  ctx            the mapping context, for error reporting.
+     *
      * @return a {@link Literal} holding the string value.
      */
-    private Literal mapString(String s, ValueFactory valueFactory) {
+    private Literal mapString(String s, ValueFactory valueFactory,
+                                        MappingContext ctx) {
         return valueFactory.createLiteral(
                                         RdfUtils.removeInvalidDataCharacter(s));
     }
@@ -523,30 +551,35 @@ public class CsvDirectMapper extends BaseConverterModule
      * @param  s              the string to parse as an integer value.
      * @param  valueFactory   the {@link ValueFactory value factory} to
      *                        use to allocate the integer literal.
+     * @param  ctx            the mapping context, for error reporting.
      *
      * @return a {@link Literal} holding the extracted integer value.
      */
-    private Literal mapInt(String s, ValueFactory valueFactory) {
+    private Literal mapInt(String s, ValueFactory valueFactory,
+                                     MappingContext ctx) {
         Literal v = null;
         try {
             v = valueFactory.createLiteral(
                                     Long.parseLong(this.trimNumSeparators(s)));
         }
         catch (Exception e) {
-            /* Ignore... */
+            this.reportMappingFailure(ctx, s, Mapping.Integer);
         }
         return v;
     }
 
     /**
      * Maps a floating point value.
+     * @param  rowId          the identifier of the current row.
      * @param  s              the string to parse as a floating point value.
      * @param  valueFactory   the {@link ValueFactory value factory} to
      *                        use to allocate the decimal literal.
+     * @param  ctx            the mapping context, for error reporting.
      *
      * @return a {@link Literal} holding the extracted decimal value.
      */
-    private Literal mapFloat(String s, ValueFactory valueFactory) {
+    private Literal mapFloat(String s, ValueFactory valueFactory,
+                                       MappingContext ctx) {
         Literal v = null;
         try {
             // If the default decimal separator ('.') is absent, assume
@@ -556,7 +589,7 @@ public class CsvDirectMapper extends BaseConverterModule
                 if ((n != -1) && (n == s.lastIndexOf(','))) {
                     s.replace(',', '.');
                 }
-                // Else: no comma or more than one. => Ignore.
+                // Else: No comma or more than one. => Ignore.
             }
             // Trim all spaces, tabs and other separator characters.
             s = this.trimNumSeparators(s);
@@ -564,7 +597,7 @@ public class CsvDirectMapper extends BaseConverterModule
             v = valueFactory.createLiteral(Double.parseDouble(s));
         }
         catch (Exception e) {
-            /* Ignore... */
+            this.reportMappingFailure(ctx, s, Mapping.Float);
         }
         return v;
     }
@@ -576,11 +609,12 @@ public class CsvDirectMapper extends BaseConverterModule
      * @param  valueFactory   the {@link ValueFactory value factory} to
      *                        use to allocate the boolean literal.
      * @param  desc           the value mappings specified by the user.
+     * @param  ctx            the mapping context, for error reporting.
      *
      * @return a {@link Literal} holding the extracted boolean value.
      */
     private Literal mapBoolean(String s, ValueFactory valueFactory,
-                                         MappingDesc desc) {
+                                         MappingDesc desc, MappingContext ctx) {
         return valueFactory.createLiteral(desc.parseBoolean(s));
     }
 
@@ -593,18 +627,19 @@ public class CsvDirectMapper extends BaseConverterModule
      * @param  desc           the value mappings specified by the user.
      * @param  tentative      whether this call is just an attempt to
      *                        check whether the value contains a date.
+     * @param  ctx            the mapping context, for error reporting.
      *
      * @return a {@link Literal} holding the extracted date, time or
      *         date-time value.
      */
     private Literal mapDate(String s, ValueFactory valueFactory,
-                                      MappingDesc desc, boolean tentative) {
+                                      MappingDesc desc, MappingContext ctx) {
         Literal v = null;
         try {
-            v = valueFactory.createLiteral(desc.parseDate(s, tentative));
+            v = valueFactory.createLiteral(desc.parseDate(s));
         }
         catch (Exception e) {
-            /* Ignore... */
+            this.reportMappingFailure(ctx, s, Mapping.Date);
         }
         return v;
     }
@@ -614,19 +649,28 @@ public class CsvDirectMapper extends BaseConverterModule
      * @param  s              the string to parse as a URI.
      * @param  valueFactory   the {@link ValueFactory value factory} to
      *                        use to allocate the URI.
+     * @param  ctx            the mapping context, for error reporting.
      *
      * @return a {@link Literal} holding the extracted integer value.
      */
-    private Value mapUri(String s, ValueFactory valueFactory) {
+    private Value mapUri(String s, ValueFactory valueFactory,
+                                   MappingContext ctx) {
         Value v = null;
         try {
             // Use java.net.URI to ensure no illegal character is present.
             v = valueFactory.createURI(URI.create(s).toString());
         }
         catch (Exception e) {
-            /* Ignore... */
+            this.reportMappingFailure(ctx, s, Mapping.URI);
         }
         return v;
+    }
+
+    private void reportMappingFailure(MappingContext ctx, String s, Mapping m) {
+        if (ctx != null) {
+            log.warn(ctx.addError(s, m));
+        }
+        // Else: Do not report unqualified errors.
     }
 
     /**
@@ -685,7 +729,7 @@ public class CsvDirectMapper extends BaseConverterModule
             DatatypeFactory df = null;
             if (isSet(dateFormat)) {
                 fmt = new SimpleDateFormat(dateFormat);
-                fmt.setLenient(true);   // Best effort!
+                fmt.setLenient(false);          // Reject ill-formatted dates.
                 try {
                     df = DatatypeFactory.newInstance();
                 }
@@ -714,7 +758,7 @@ public class CsvDirectMapper extends BaseConverterModule
             return (this.dateFormat != null);
         }
 
-        public XMLGregorianCalendar parseDate(String s, boolean tentative) {
+        public XMLGregorianCalendar parseDate(String s) {
             XMLGregorianCalendar date = null;
             if ((this.dateFormat != null) && (! isBlank(s))) {
                 try {
@@ -729,12 +773,8 @@ public class CsvDirectMapper extends BaseConverterModule
                                 FIELD_UNDEFINED /* Timezone */);
                 }
                 catch (Exception e) {
-                    if (! tentative) {
-                        // Not a blind (auto-detect) conversion attempt.
-                        // => Report error.
-                        log.warn("Date conversion failed for \"{}\"", e, s);
-                    }
-                    // Else: Ignore...
+                    throw new IllegalArgumentException(
+                                "Date conversion failed for \"" + s + '"', e);
                 }
             }
             return date;
@@ -796,6 +836,64 @@ public class CsvDirectMapper extends BaseConverterModule
                    c.externallySet(MINUTE)      | c.externallySet(SECOND);
         }
     }
+
+    //-------------------------------------------------------------------------
+    // MappingError nested class
+    //-------------------------------------------------------------------------
+
+    private final static class MappingError
+    {
+        public final String rowId;
+        public final String columnName;
+        public final String value;
+        public final Mapping type;
+
+        public MappingError(String rowId, String columnName,
+                                          String value, Mapping type) {
+            this.rowId      = rowId;
+            this.columnName = columnName;
+            this.value      = value;
+            this.type       = type;
+        }
+   
+        @Override
+        public String toString() {
+            return "[row \"" + this.rowId + "\", column \"" + this.columnName
+                        + "\"] Failed to map value \"" + this.value + "\" to "
+                        + this.type.getLabel();
+        }
+    }
+
+    //-------------------------------------------------------------------------
+    // MappingContext nested class
+    //-------------------------------------------------------------------------
+
+    private final static class MappingContext
+    {
+        public String rowId;
+        public String columnName;
+        private final Collection<MappingError> errors =
+                                                new LinkedList<MappingError>();
+
+        public MappingContext() {
+            super();
+        }
+
+        public MappingError addError(String value, Mapping type) {
+            MappingError e = new MappingError(
+                                    this.rowId, this.columnName, value, type);
+            this.errors.add(e);
+            return e;
+        }
+
+        public Collection<MappingError> getErrors() {
+            return Collections.unmodifiableCollection(this.errors);
+        }
+    }
+
+    //-------------------------------------------------------------------------
+    // CheckedCalendar nested class
+    //-------------------------------------------------------------------------
 
     /**
      * An extension of {@link GregorianCalendar} that provides access
