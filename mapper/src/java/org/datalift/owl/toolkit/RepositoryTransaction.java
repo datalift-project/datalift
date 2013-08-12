@@ -36,7 +36,7 @@ public class RepositoryTransaction {
 	
 	public RepositoryTransaction(RepositoryConnection connection) throws RepositoryException {
 		this.connection = connection;
-		this.connection.setAutoCommit(false);
+		this.connection.begin();
 	}
 
 	public void add(Collection<Statement> sts, Resource... r) throws RepositoryException {
@@ -72,6 +72,7 @@ public class RepositoryTransaction {
 	
 	public void commit() throws RepositoryException {
 		this.connection.commit();
+		this.connection.begin();
 		this.currentTransactionCount = 0;		
 	}
 

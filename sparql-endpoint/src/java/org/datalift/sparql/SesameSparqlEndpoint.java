@@ -65,6 +65,7 @@ import org.openrdf.query.Dataset;
 import org.openrdf.query.GraphQuery;
 import org.openrdf.query.MalformedQueryException;
 import org.openrdf.query.QueryResult;
+import org.openrdf.query.QueryResultHandlerException;
 import org.openrdf.query.TupleQuery;
 import org.openrdf.query.TupleQueryResult;
 import org.openrdf.query.TupleQueryResultHandler;
@@ -96,10 +97,11 @@ import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.sparql.AccessController;
 import org.datalift.fwk.sparql.AccessController.ControlledQuery;
 import org.datalift.fwk.util.CloseableIterator;
-import org.datalift.fwk.util.web.json.GridJsonWriter;
 import org.datalift.fwk.util.web.json.JsonRdfHandler;
+import org.datalift.fwk.util.web.json.RdfGridJsonWriter;
+import org.datalift.fwk.util.web.json.SparqlResultsGridJsonWriter;
 import org.datalift.fwk.util.web.json.SparqlResultsJsonWriter;
-import org.datalift.fwk.util.web.json.AbstractJsonWriter.ResourceType;
+import org.datalift.fwk.util.web.json.JsonWriter.ResourceType;
 
 import static org.datalift.fwk.MediaTypes.*;
 import static org.datalift.fwk.util.PrimitiveUtils.wrap;
@@ -529,7 +531,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                     {
                         @Override
                         protected RDFHandler newHandler(OutputStream out) {
-                            return new GridJsonWriter(out,
+                            return new RdfGridJsonWriter(out,
                                             this.baseUri + DESCRIBE_URL_PATTERN,
                                             this.repository.name, jsonCallback);
                         }
@@ -630,7 +632,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                     {
                         @Override
                         protected TupleQueryResultHandler newHandler(OutputStream out) {
-                            return new GridJsonWriter(out,
+                            return new SparqlResultsGridJsonWriter(out,
                                             this.baseUri + DESCRIBE_URL_PATTERN,
                                             this.repository.name, jsonCallback);
                         }
@@ -822,6 +824,16 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
             final TupleQueryResultHandler handler = this.newHandler(out);
             return new TupleQueryResultHandler() {
                     private int count = 0;
+                    @Override
+                    public void handleBoolean(boolean value)
+                                        throws QueryResultHandlerException {
+                        handler.handleBoolean(value);
+                    }
+                    @Override
+                    public void handleLinks(List<String> linkUrls)
+                                        throws QueryResultHandlerException {
+                        handler.handleLinks(linkUrls);
+                    }
                     @Override
                     public void startQueryResult(List<String> bindingNames)
                                     throws TupleQueryResultHandlerException {

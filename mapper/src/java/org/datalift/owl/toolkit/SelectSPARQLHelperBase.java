@@ -14,6 +14,18 @@ import org.openrdf.query.TupleQueryResultHandlerException;
 public abstract class SelectSPARQLHelperBase extends SPARQLHelperBase implements SelectSPARQLHelper {
 
 	@Override
+	public void handleBoolean(boolean value)
+	throws TupleQueryResultHandlerException {
+		// rien
+	}
+
+	@Override
+	public void handleLinks(List<String> linkUrls)
+	throws TupleQueryResultHandlerException {
+		// rien
+	}
+
+	@Override
 	public void endQueryResult() 
 	throws TupleQueryResultHandlerException {
 		// rien

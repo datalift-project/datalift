@@ -52,7 +52,7 @@ import org.openrdf.rio.RDFHandlerException;
  *
  * @author lbihanic
  */
-public class JsonRdfHandler extends AbstractJsonWriter implements RDFHandler
+public class JsonRdfHandler extends JsonWriter implements RDFHandler
 {
     //-------------------------------------------------------------------------
     // Constructors

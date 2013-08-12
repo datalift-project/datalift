@@ -42,7 +42,6 @@ import javax.persistence.Entity;
 import org.openrdf.model.Statement;
 import org.openrdf.rio.ParserConfig;
 import org.openrdf.rio.RDFParser;
-import org.openrdf.rio.RDFParser.DatatypeHandling;
 
 import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.RdfsClass;
@@ -115,13 +114,14 @@ public class RdfFileSourceImpl extends BaseFileSource
 
     /** {@inheritDoc} */
     @Override
+    @SuppressWarnings("deprecation")
     public CloseableIterator<Statement> iterator() {
         try {
             ParserConfig config = new ParserConfig(
-                                        true,       // Assume data are valid.
-                                        false,      // Report all errors.
-                                        false,      // Don't preserve BNode ids.
-                                        DatatypeHandling.VERIFY);
+                            true,       // Assume data are valid.
+                            false,      // Report all errors.
+                            false,      // Don't preserve BNode ids.
+                            org.openrdf.rio.RDFParser.DatatypeHandling.VERIFY);
             RDFParser parser = RdfUtils.newRdfParser(this.getMimeType());
             parser.setParserConfig(config);
             return BoundedAsyncRdfParser.parse(this.getInputStream(),
