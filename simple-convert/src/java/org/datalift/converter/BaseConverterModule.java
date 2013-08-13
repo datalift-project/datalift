@@ -312,6 +312,7 @@ public abstract class BaseConverterModule
             Project p = this.getProject(projectId);
             // Display conversion configuration page.
             TemplateModel view = this.newView(templateName, p);
+            view.registerFieldsFor(SourceType.class);
             view.put("converter", this);
             response = Response.ok(view, TEXT_HTML_UTF8).build();
         }
