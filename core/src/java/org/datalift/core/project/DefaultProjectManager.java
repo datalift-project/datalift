@@ -57,8 +57,8 @@ import com.clarkparsia.empire.config.EmpireConfiguration;
 import com.clarkparsia.empire.sesametwo.OpenRdfEmpireModule;
 import com.clarkparsia.empire.sesametwo.RepositoryFactoryKeys;
 
-import javassist.ClassClassPath;
 import javassist.ClassPool;
+import javassist.LoaderClassPath;
 
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.FileStore;
@@ -662,7 +662,8 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         // multi-classloader environments (such as web apps)).
         ClassPool cp = ClassPool.getDefault();
         for (Class<?> c : this.classes) {
-            cp.insertClassPath(new ClassClassPath(c));
+            // cp.insertClassPath(new ClassClassPath(c));
+            cp.appendClassPath(new LoaderClassPath(c.getClassLoader()));
         }
         log.debug("Registered persistent classes: {}", classList);
         // Register custom annotation provider to retrieve the list of
