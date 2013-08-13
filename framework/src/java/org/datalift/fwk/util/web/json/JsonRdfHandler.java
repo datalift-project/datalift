@@ -59,11 +59,19 @@ public class JsonRdfHandler extends AbstractJsonWriter implements RDFHandler
     //-------------------------------------------------------------------------
 
     public JsonRdfHandler(OutputStream out) {
-        super(out);
+        this(out, null);
+    }
+
+    public JsonRdfHandler(OutputStream out, String jsonCallback) {
+        super(out, jsonCallback);
     }
 
     public JsonRdfHandler(Writer out) {
-        super(out);
+        this(out, null);
+    }
+
+    public JsonRdfHandler(Writer out, String jsonCallback) {
+        super(out, jsonCallback);
     }
 
     //-------------------------------------------------------------------------

@@ -542,7 +542,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                     {
                         @Override
                         protected RDFHandler newHandler(OutputStream out) {
-                            return new JsonRdfHandler(out);
+                            return new JsonRdfHandler(out, jsonCallback);
                         }
                     };
             }

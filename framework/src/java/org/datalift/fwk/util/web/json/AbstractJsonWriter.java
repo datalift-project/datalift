@@ -115,6 +115,10 @@ public abstract class AbstractJsonWriter
         this(out, null, null, null);
     }
 
+    public AbstractJsonWriter(OutputStream out, String jsonCallback) {
+        this(out, null, null, jsonCallback);
+    }
+
     public AbstractJsonWriter(OutputStream out,
                               String urlPattern, String defaultGraphUri,
                               String jsonCallback) {
@@ -124,6 +128,10 @@ public abstract class AbstractJsonWriter
 
     public AbstractJsonWriter(Writer out) {
         this(out, null, null, null);
+    }
+
+    public AbstractJsonWriter(Writer out, String jsonCallback) {
+        this(out, null, null, jsonCallback);
     }
 
     public AbstractJsonWriter(Writer out, String urlPattern,
