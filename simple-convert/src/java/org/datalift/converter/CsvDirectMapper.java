@@ -115,6 +115,7 @@ public class CsvDirectMapper extends BaseConverterModule
     public enum Mapping {
         String          ("string"),
         Integer         ("int"),
+        Long            ("long"),
         Float           ("float"),
         Boolean         ("boolean"),
         Date            ("date"),
@@ -492,6 +493,9 @@ public class CsvDirectMapper extends BaseConverterModule
             case Integer:
                 v = this.mapInt(s, valueFactory, ctx);
                 break;
+            case Long:
+                v = this.mapLong(s, valueFactory, ctx);
+                break;
             case Float:
                 v = this.mapFloat(s, valueFactory, ctx);
                 break;
@@ -512,7 +516,7 @@ public class CsvDirectMapper extends BaseConverterModule
                 }
                 if (v == null) {
                     // Try integer.
-                    v = this.mapInt(s, valueFactory, null);
+                    v = this.mapLong(s, valueFactory, null);
                 }
                 if ((v == null) && (desc.hasBooleanValues())) {
                     // Try boolean.
@@ -557,6 +561,28 @@ public class CsvDirectMapper extends BaseConverterModule
      */
     private Literal mapInt(String s, ValueFactory valueFactory,
                                      MappingContext ctx) {
+        Literal v = null;
+        try {
+            v = valueFactory.createLiteral(
+                                Integer.parseInt(this.trimNumSeparators(s)));
+        }
+        catch (Exception e) {
+            this.reportMappingFailure(ctx, s, Mapping.Integer);
+        }
+        return v;
+    }
+
+    /**
+     * Maps a long integer value.
+     * @param  s              the string to parse as a long integer.
+     * @param  valueFactory   the {@link ValueFactory value factory} to
+     *                        use to allocate the integer literal.
+     * @param  ctx            the mapping context, for error reporting.
+     *
+     * @return a {@link Literal} holding the extracted long integer
+     */
+    private Literal mapLong(String s, ValueFactory valueFactory,
+                                      MappingContext ctx) {
         Literal v = null;
         try {
             v = valueFactory.createLiteral(
