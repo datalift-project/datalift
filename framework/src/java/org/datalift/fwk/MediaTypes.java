@@ -126,6 +126,12 @@ public class MediaTypes extends MediaType
     public final static MediaType APPLICATION_TRIG_TYPE =
                                             MediaType.valueOf(APPLICATION_TRIG);
 
+    /** "application/rdf+json" */
+    public final static String APPLICATION_RDF_JSON = "application/rdf+json";
+    /** "application/rdf+json" */
+    public final static MediaType APPLICATION_RDF_JSON_TYPE =
+                                        MediaType.valueOf(APPLICATION_RDF_JSON);
+
     /** "text/csv" */
     public final static String TEXT_CSV = "text/csv";
     /** "text/csv" */
@@ -161,6 +167,9 @@ public class MediaTypes extends MediaType
     /** application/json; charset=utf-8 */
     public final static String APPLICATION_JSON_UTF8 =
                                             APPLICATION_JSON + UTF8_ENCODED;
+    /** application/rdf+json; charset=utf-8 */
+    public final static String APPLICATION_RDF_JSON_UTF8 =
+                                            APPLICATION_RDF_JSON + UTF8_ENCODED;
 
     /** The supported RDF MIME type names. */ 
     private final static Collection<String> RDF_TYPES =

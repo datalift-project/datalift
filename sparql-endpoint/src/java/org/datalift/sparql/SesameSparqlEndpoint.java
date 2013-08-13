@@ -522,6 +522,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
 
         MediaType mediaType = v.getMediaType();
         if ((mediaType.isCompatible(APPLICATION_JSON_TYPE)) ||
+            (mediaType.isCompatible(APPLICATION_RDF_JSON_TYPE)) ||
             (mediaType.isCompatible(APPLICATION_SPARQL_RESULT_JSON_TYPE))) {
             if (gridJson) {
                 handler = new ConstructStreamingOutput(repository, query,
@@ -623,6 +624,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
 
         MediaType mediaType = v.getMediaType();
         if ((mediaType.isCompatible(APPLICATION_JSON_TYPE)) ||
+            (mediaType.isCompatible(APPLICATION_RDF_JSON_TYPE)) ||
             (mediaType.isCompatible(APPLICATION_SPARQL_RESULT_JSON_TYPE))) {
             if (gridJson) {
                 handler = new SelectStreamingOutput(repository, query,
