@@ -61,6 +61,7 @@ import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.i18n.PreferredLocales;
 import org.datalift.fwk.log.Logger;
+import org.datalift.fwk.project.DuplicateObjectKeyException;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectManager;
 import org.datalift.fwk.project.ProjectModule;
@@ -481,6 +482,9 @@ public abstract class BaseConverterModule
         }
         else if (e instanceof ObjectNotFoundException) {
             this.sendError(NOT_FOUND, e.getLocalizedMessage());
+        }
+        else if (e instanceof DuplicateObjectKeyException) {
+            this.sendError(CONFLICT, e.getLocalizedMessage());
         }
         else if (e instanceof TechnicalException) {
             error = (TechnicalException)e;
