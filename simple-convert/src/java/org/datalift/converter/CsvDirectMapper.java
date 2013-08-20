@@ -87,6 +87,7 @@ import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.rdf.UriCachingValueFactory;
 import org.datalift.fwk.util.Env;
 import org.datalift.fwk.util.UriBuilder;
+import org.datalift.fwk.util.web.UriParam;
 
 import static org.datalift.fwk.rdf.ElementType.*;
 import static org.datalift.fwk.util.PrimitiveUtils.wrap;
@@ -238,11 +239,11 @@ public class CsvDirectMapper extends BaseConverterModule
     @POST
     @Consumes(APPLICATION_FORM_URLENCODED)
     public Response mapCsvData(
-                    @FormParam("project") URI projectId,
-                    @FormParam("source") URI sourceId,
+                    @FormParam("project") UriParam projectId,
+                    @FormParam("source") UriParam sourceId,
                     @FormParam("dest_title") String destTitle,
-                    @FormParam("dest_graph_uri") URI targetGraph,
-                    @FormParam("base_uri") URI baseUri,
+                    @FormParam("dest_graph_uri") UriParam targetGraphParam,
+                    @FormParam("base_uri") UriParam baseUriParam,
                     @FormParam("true_values") String trueValues,
                     @FormParam("date_format") String dateFormat,
                     @FormParam("key_column") @DefaultValue("-1") int keyColumn,
@@ -253,12 +254,21 @@ public class CsvDirectMapper extends BaseConverterModule
         //       empty unless at least one @FormParm annotation is present.
         // See: http://jersey.576304.n2.nabble.com/POST-parameters-not-injected-via-MultivaluedMap-td6434341.html
 
+        if (projectId == null) {
+            this.throwInvalidParamError("project", null);
+        }
+        if (sourceId == null) {
+            this.throwInvalidParamError("source", null);
+        }
+        if (targetGraphParam == null) {
+            this.throwInvalidParamError("dest_graph_uri", null);
+        }
         Response response = null;
         try {
             // Retrieve project.
-            Project p = this.getProject(projectId);
+            Project p = this.getProject(projectId.toUri("project"));
             // Load input source.
-            CsvSource in = (CsvSource)(p.getSource(sourceId));
+            CsvSource in = (CsvSource)(p.getSource(sourceId.toUri("source")));
             // Load datatype mapping for each column.
             Mapping[] typeMappings = new Mapping[params.size()];
             for (String k : params.keySet()) {
@@ -284,6 +294,8 @@ public class CsvDirectMapper extends BaseConverterModule
             catch (IllegalArgumentException e) {
                 this.throwInvalidParamError("date_format", dateFormat);
             }
+            URI targetGraph = targetGraphParam.toUri("dest_graph_uri");
+            URI baseUri     = UriParam.valueOf(baseUriParam, "base_uri");
             // Convert CSV data and load generated RDF triples.
             Collection<MappingError> errors = this.convert(in,
                              Configuration.getDefault().getInternalRepository(),
