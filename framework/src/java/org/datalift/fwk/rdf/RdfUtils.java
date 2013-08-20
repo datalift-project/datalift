@@ -36,6 +36,7 @@ package org.datalift.fwk.rdf;
 
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
@@ -136,8 +137,12 @@ public final class RdfUtils
      */
     public static void upload(File source, Repository target, URI namedGraph)
                                                         throws RdfException {
-        if ((source == null) || (! source.isFile())) {
+        if (source == null) {
             throw new IllegalArgumentException("source");
+        }
+        if (! (source.isFile() && source.canRead())) {
+            throw new IllegalArgumentException("source",
+                        new FileNotFoundException(String.valueOf(source)));
         }
         upload(source, target, namedGraph, null);
     }
@@ -166,8 +171,12 @@ public final class RdfUtils
      */
     public static void upload(File source, Repository target, URI namedGraph,
                               UriMapper mapper) throws RdfException {
-        if ((source == null) || (! source.isFile())) {
+        if (source == null) {
             throw new IllegalArgumentException("source");
+        }
+        if (! (source.isFile() && source.canRead())) {
+            throw new IllegalArgumentException("source",
+                        new FileNotFoundException(String.valueOf(source)));
         }
         upload(source, guessRdfTypeFromExtension(source.getName()),
                                                     target, namedGraph, mapper);
