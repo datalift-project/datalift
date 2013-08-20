@@ -44,6 +44,12 @@ import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.util.StringUtils;
 
 
+/**
+ * A standard interface for modules controlling access to the data
+ * present in the Datalift RDF stores.
+ *
+ * @author lbihanic
+ */
 public interface AccessController
 {
     //-------------------------------------------------------------------------
@@ -88,6 +94,11 @@ public interface AccessController
                                       List<String> namedGraphUris)
                                                     throws SecurityException;
 
+    /**
+     * Notifies this access controller that updates have occurred on
+     * one of the (public) Datalift RDF stores.
+     */
+    public void refresh();
 
     //-------------------------------------------------------------------------
     // ControlledQuery nested class

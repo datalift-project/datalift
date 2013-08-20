@@ -348,6 +348,20 @@ public class S4acAccessController extends BaseModule
                                    defaultGraphUris, namedGraphUris, graphs);
     }
 
+    /** {@inheritDoc} */
+    @Override
+    public void refresh() {
+        // Invalidate all public graph caches.
+        for (PublicGraphs g : this.publicGraphs.values()) {
+            g.invalidate();
+        }
+        log.debug("Public graph cache refreshed");
+    }
+
+    //-------------------------------------------------------------------------
+    // Specific implementation
+    //-------------------------------------------------------------------------
+
     private Repository getPolicyEvaluationRepository(Repository target) {
         return (this.userRepository != null)? this.userRepository: target;
     }
@@ -575,6 +589,10 @@ public class S4acAccessController extends BaseModule
             if (graphs != null) {
                 this.publicGraphs.addAll(graphs);
             }
+        }
+
+        public void invalidate() {
+            this.nextRefresh = 0L;
         }
     }
 }
