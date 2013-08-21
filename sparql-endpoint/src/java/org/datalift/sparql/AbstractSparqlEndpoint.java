@@ -124,6 +124,15 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     public final static String MODULE_NAME = "sparql";
 
     /**
+     * The (optional) configuration property indicating whether
+     * <a href="http://www.w3.org/Submission/CBD/">Concise Bounded Description</a>
+     * is supported by the back-end RDF stores for describing RDF
+     * resources. If set to <code>false</code>, a built-in CONSTRUCT
+     * query is used to include a first level of blank nodes.
+     */
+    public final static String CBD_SUPPORT_PROPERTY =
+                                            "sparql.use.repository.cdb";
+    /**
      * The (optional) configuration property holding the path of
      * the RDF file to load predefined queries from.
      */
@@ -140,7 +149,16 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                     "SELECT|CONSTRUCT|ASK|DESCRIBE", Pattern.CASE_INSENSITIVE);
     private final static int MAX_QUERY_DESC = 128;
 
-    private final static MessageFormat DESCRIBE_OBJECT_QUERY =
+    /**
+     * The object description query to use when the RDF store provides
+     * <a href="http://www.w3.org/Submission/CBD/">Concise Bounded Descriptions</a>
+     * of resources. OpenRDF Sesame supports CBD starting with
+     * version 2.7.
+     */
+    private final static MessageFormat CBD_DESCRIBE_OBJECT_QUERY =
+            new MessageFormat("DESCRIBE <{0}>");
+    /** The default query for object description. */ 
+    private final static MessageFormat DEFAULT_DESCRIBE_OBJECT_QUERY =
             new MessageFormat("CONSTRUCT '{' ?s1 ?p1 ?o1 ."
                               +            " ?o1 ?p2 ?o2 . '}'\n"
                               + "WHERE '{'\n"
@@ -197,6 +215,8 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                                             new LinkedList<PredefinedQuery>();
     /** The welcome page. */
     private final String welcomeTemplate;
+    /** Whether Concise Bounded Description queries should be used. */
+    private boolean useCdb;
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -236,6 +256,9 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     /** {@inheritDoc} */
     @Override
     public void init(Configuration configuration) {
+        // Check whether Concise Bounded Description is to be used.
+        this.useCdb = this.getBoolean(configuration,
+                                                CBD_SUPPORT_PROPERTY, false);
         // Load predefined SPARQL queries.
         this.predefinedQueries = Collections.unmodifiableList(
                                     this.loadPredefinedQueries(configuration));
@@ -368,10 +391,12 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
             else if (type != null) {
                 // URI found in RDF store as a subject, predicate or graph.
                 String query = null;
-                MessageFormat fmt = (type == Predicate)? DESCRIBE_PREDICATE_QUERY:
-                                    (type == Graph)?     DESCRIBE_GRAPH_QUERY:
-                                    (type == RdfType)?   DESCRIBE_TYPE_QUERY:
-                                                         DESCRIBE_OBJECT_QUERY;
+                MessageFormat fmt =
+                            (type == Predicate)? DESCRIBE_PREDICATE_QUERY:
+                            (type == Graph)?     DESCRIBE_GRAPH_QUERY:
+                            (type == RdfType)?   DESCRIBE_TYPE_QUERY:
+                            (this.useCdb)?       CBD_DESCRIBE_OBJECT_QUERY:
+                                                 DEFAULT_DESCRIBE_OBJECT_QUERY;
                 synchronized (fmt) {
                     query = fmt.format(new Object[] { u });
                 }
@@ -814,6 +839,49 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     protected final TemplateModel newView(String templateName, Object it) {
         return ViewFactory.newView(
                                 "/" + this.getName() + '/' + templateName, it);
+    }
+
+    /**
+     * Returns the value of the specified property in the Datalift
+     * configuration as a boolean value.
+     * <p>
+     * The following mapping applies:</p>
+     * <dl>
+     *  <dt><code>true</code></dt>
+     *  <dd>if the property value (case insensitive) is
+     *      "<code>true</code>", "<code>yes</code>" or
+     *      "<code>1</code>"</dd>
+     *  <dt><code>false</code></dt>
+     *  <dd>if the property value (case insensitive) is
+     *      "<code>false</code>", "<code>no</code>" or
+     *      "<code>0</code>"</dd>
+     *  <dt><code>def</code>, the default value</dt>
+     *  <dd>otherwise</dd>
+     * </dl>
+     * @param  cfg   the Datalift configuration.
+     * @param  key   the property name.
+     * @param  def   the value to return if the property is absent from
+     *               the configuration.
+     *
+     * @return the property value as a boolean.
+     */
+    protected boolean getBoolean(Configuration cfg, String key, boolean def) {
+        boolean value = def;
+
+        String s = trimToNull(cfg.getProperty(key));
+        if (s != null) {
+            s = s.toLowerCase();
+            if ((s.equals(Boolean.TRUE.toString())) || (s.equals("yes"))
+                                                    || (s.equals("1"))) {
+                value = true;
+            }
+            else if ((s.equals(Boolean.FALSE.toString())) || (s.equals("no"))
+                                                          || (s.equals("0"))) {
+                value = false;
+            }
+            // Else: use default value.
+        }
+        return value;
     }
 
     protected final void handleError(String query,
