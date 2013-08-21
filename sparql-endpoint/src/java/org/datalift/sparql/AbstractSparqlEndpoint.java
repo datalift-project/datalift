@@ -41,7 +41,6 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.net.URI;
 import java.text.MessageFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
@@ -340,37 +339,55 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                                 UriInfo uriInfo, Request request,
                                 String acceptHdr, List<Variant> allowedTypes)
                                                 throws WebApplicationException {
-        return this.describe(uri, type, null,
+        return this.describe(uri, type, null, null, null, -1, null, null,
                                   uriInfo, request, acceptHdr, allowedTypes);
     }
 
     /** {@inheritDoc} */
     @Override
-    public ResponseBuilder describe(String uri, ElementType type,
-                                    Repository repository, UriInfo uriInfo,
-                                    Request request, String acceptHdr,
-                                    List<Variant> allowedTypes)
+    public ResponseBuilder describe(
+                    String uri, ElementType type, Repository repository,
+                    UriInfo uriInfo, Request request,
+                    String acceptHdr, List<Variant> allowedTypes)
                                                 throws WebApplicationException {
-        return this.describe(uri, type, repository, -1, null, null,
-                                  uriInfo, request, acceptHdr, allowedTypes);
+        return this.describe(uri, type, repository, null, null, -1, null, null,
+                             uriInfo, request, acceptHdr, allowedTypes);
     }
 
     /** {@inheritDoc} */
     @Override
-    public ResponseBuilder describe(String uri, ElementType type,
-                                Repository repository, int max,
-                                String format, String jsonCallback,
-                                UriInfo uriInfo, Request request,
-                                String acceptHdr, List<Variant> allowedTypes)
+    public ResponseBuilder describe(
+                    String uri, ElementType type, Repository repository,
+                    List<String> defaultGraphUris, List<String> namedGraphUris,
+                    UriInfo uriInfo, Request request,
+                    String acceptHdr, List<Variant> allowedTypes)
+                                                throws WebApplicationException {
+        return this.describe(uri, type, repository,
+                             defaultGraphUris, namedGraphUris, -1, null, null,
+                             uriInfo, request, acceptHdr, allowedTypes);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public ResponseBuilder describe(
+                    String uri, ElementType type, Repository repository,
+                    List<String> defaultGraphUris, List<String> namedGraphUris,
+                    int max, String format, String jsonCallback,
+                    UriInfo uriInfo, Request request,
+                    String acceptHdr, List<Variant> allowedTypes)
                                                 throws WebApplicationException {
         if (isBlank(uri)) {
             this.throwInvalidParamError("uri", uri);
         }
-        List<String> defGraphs = null;
+        // Build the list of target graphs, including the target repository.
+        List<String> defGraphs = new LinkedList<String>();
         if (repository != null) {
-            defGraphs = new ArrayList<String>();
             defGraphs.add(repository.name);
         }
+        if (defaultGraphUris != null) {
+            defGraphs.addAll(defaultGraphUris);
+        }
+
         ResponseBuilder response = null;
         try {
             URI u = URI.create(uri);
@@ -403,10 +420,10 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                 Map<String,Object> viewData = new HashMap<String,Object>();
                 viewData.put("describe-type", type);
                 viewData.put("describe-uri",  u);
-                response = this.doExecute(defGraphs, null, query, -1, max,
-                                          false, format, jsonCallback, uriInfo,
-                                          request, acceptHdr, allowedTypes,
-                                          viewData);
+                response = this.doExecute(defGraphs, namedGraphUris, query,
+                                          -1, max, false, format, jsonCallback,
+                                          uriInfo, request, acceptHdr,
+                                          allowedTypes, viewData);
             }
             if (response == null) {
                 this.sendError(NOT_FOUND, null);
@@ -610,23 +627,18 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     @GET
     @Path("describe")
     public final Response getDescribe(
-                            @QueryParam("uri") String uri,
-                            @QueryParam("type") String type,
-                            @QueryParam("default-graph") String defaultGraph,
-                            @QueryParam("max") @DefaultValue("-1") int max,
-                            @Context UriInfo uriInfo,
-                            @Context Request request,
-                            @HeaderParam(ACCEPT) String acceptHdr)
+                @QueryParam("uri") String uri,
+                @QueryParam("type") String type,
+                @QueryParam("default-graph-uri") List<String> defaultGraphUris,
+                @QueryParam("named-graph-uri") List<String> namedGraphUris,
+                @QueryParam("max") @DefaultValue("-1") int max,
+                @Context UriInfo uriInfo,
+                @Context Request request,
+                @HeaderParam(ACCEPT) String acceptHdr)
                                                 throws WebApplicationException {
-        Repository repository = null;
-        if (! isBlank(defaultGraph)) {
-            // Resolve target repository (a mutable list is required).
-            List<String> l = new LinkedList<String>();
-            l.add(defaultGraph);
-            repository = this.getTargetRepository(l);
-        }
         return this.describe(uri, ElementType.fromString(type),
-                             repository, max, null, null,
+                             null, defaultGraphUris, namedGraphUris,
+                             max, null, null,
                              uriInfo, request, acceptHdr, null)
                    .build();
     }
@@ -660,16 +672,17 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     @Path("describe")
     @Consumes(APPLICATION_FORM_URLENCODED)
     public final Response postDescribe(
-                            @FormParam("uri") String uri,
-                            @FormParam("type") String type,
-                            @FormParam("default-graph") String defaultGraph,
-                            @FormParam("max") @DefaultValue("-1") int max,
-                            @Context UriInfo uriInfo,
-                            @Context Request request,
-                            @HeaderParam(ACCEPT) String acceptHdr)
+                @FormParam("uri") String uri,
+                @FormParam("type") String type,
+                @FormParam("default-graph-uri") List<String> defaultGraphUris,
+                @FormParam("named-graph-uri") List<String> namedGraphUris,
+                @FormParam("max") @DefaultValue("-1") int max,
+                @Context UriInfo uriInfo,
+                @Context Request request,
+                @HeaderParam(ACCEPT) String acceptHdr)
                                                 throws WebApplicationException {
-        return this.getDescribe(uri, type, defaultGraph, max,
-                                uriInfo, request, acceptHdr);
+        return this.getDescribe(uri, type, defaultGraphUris, namedGraphUris,
+                                max, uriInfo, request, acceptHdr);
     }
 
     //-------------------------------------------------------------------------

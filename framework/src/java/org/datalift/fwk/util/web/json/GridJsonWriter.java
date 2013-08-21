@@ -45,6 +45,7 @@ import java.util.List;
 import org.openrdf.model.Statement;
 import org.openrdf.model.impl.LiteralImpl;
 import org.openrdf.query.BindingSet;
+import org.openrdf.query.Dataset;
 import org.openrdf.query.TupleQueryResultHandlerException;
 import org.openrdf.query.resultio.TupleQueryResultFormat;
 import org.openrdf.query.resultio.TupleQueryResultWriter;
@@ -69,21 +70,23 @@ public class GridJsonWriter extends AbstractJsonWriter
     //-------------------------------------------------------------------------
 
     public GridJsonWriter(OutputStream out) {
-        this(out, null, null, null);
+        this(out, null, null, null, null);
     }
 
     public GridJsonWriter(OutputStream out, String urlPattern,
-                          String defaultGraphUri, String jsonCallback) {
-        super(out, urlPattern, defaultGraphUri, jsonCallback);
+                          String defaultGraphUri, Dataset dataset,
+                                                  String jsonCallback) {
+        super(out, urlPattern, defaultGraphUri, dataset, jsonCallback);
     }
 
     public GridJsonWriter(Writer out) {
-        this(out, null, null, null);
+        this(out, null, null, null, null);
     }
 
     public GridJsonWriter(Writer out, String urlPattern,
-                          String defaultGraphUri, String jsonCallback) {
-        super(out, urlPattern, defaultGraphUri, jsonCallback);
+                          String defaultGraphUri, Dataset dataset,
+                                                  String jsonCallback) {
+        super(out, urlPattern, defaultGraphUri, dataset, jsonCallback);
     }
 
     //-------------------------------------------------------------------------

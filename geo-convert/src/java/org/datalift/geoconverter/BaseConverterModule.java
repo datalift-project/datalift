@@ -41,8 +41,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Request;
@@ -372,15 +370,10 @@ extends BaseModule implements ProjectModule
 	protected Response displayGraph(Repository repository,
 			URI namedGraph, UriInfo uriInfo,
 			Request request, String acceptHdr) {
-		List<String> defGraphs = null;
-		if (repository != null) {
-			defGraphs = new LinkedList<String>();
-			defGraphs.add(repository.getName());
-		}
 		SparqlEndpoint endpoint = Configuration.getDefault()
 				.getBean(SparqlEndpoint.class);
 		return endpoint.describe(namedGraph.toString(), ElementType.Graph,
-				repository, 5000, TEXT_HTML, null,
+				repository, null, null, 5000, TEXT_HTML, null,
 				uriInfo, request, acceptHdr, null).build();
 	}
 

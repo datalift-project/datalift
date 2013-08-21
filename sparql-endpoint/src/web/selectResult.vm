@@ -33,7 +33,7 @@
 		#set( $value = false ) ## Preset local variable to force next assignment in all cases.
 		#set( $value = $!{item.getValue($c).toString()} )
 		#if( ${value.startsWith("http://")} || ${value.startsWith("https://")} )
-						<td><a href="${baseUri}/sparql/describe?uri=$esc.url($value)&default-graph=$!esc.url($repository)">$esc.html(${value})</a></td>
+						<td><a href="${baseUri}/sparql/describe?uri=$esc.url($value)&default-graph-uri=$!esc.url($repository)">$esc.html(${value})</a></td>
 		#else
 						<td>$esc.html(${value})</td>
 		#end

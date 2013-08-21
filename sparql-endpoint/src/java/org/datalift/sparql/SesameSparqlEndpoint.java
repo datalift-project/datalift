@@ -185,7 +185,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
             ResourceType.Object.value    + "#&type=" + ElementType.Resource  + "|" +
             ResourceType.Predicate.value + "#&type=" + ElementType.Predicate + "|" +
             ResourceType.Graph.value     + "#&type=" + ElementType.Graph     + "|" +
-            ResourceType.Graph.value     + "<}&default-graph={2}";
+            ResourceType.Graph.value     + "<}";
 
     //-------------------------------------------------------------------------
     // Instance members
@@ -477,9 +477,9 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
             }
             q.setMaxQueryTime(this.getMaxQueryDuration());
             TupleQueryResult r = q.evaluate();
-            result = new QueryResultIterator<BindingSet>(query,
-                                                startOffset, endOffset,
-                                                r, cnx, r.getBindingNames());
+            result = new QueryResultIterator<BindingSet>(repository, query,
+                                        startOffset, endOffset,
+                                        r, cnx, r.getBindingNames(), dataset);
         }
         catch (OpenRDFException e) {
             // Close repository connection.
@@ -502,9 +502,9 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                 q.setDataset(dataset);
             }
             q.setMaxQueryTime(this.getMaxQueryDuration());
-            result = new QueryResultIterator<Statement>(query,
-                                                startOffset, endOffset,
-                                                q.evaluate(), cnx, null);
+            result = new QueryResultIterator<Statement>(repository, query,
+                                        startOffset, endOffset,
+                                        q.evaluate(), cnx, null, dataset);
         }
         catch (OpenRDFException e) {
             // Close repository connection.
@@ -535,7 +535,8 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                         protected RDFHandler newHandler(OutputStream out) {
                             return new GridJsonWriter(out,
                                             this.baseUri + DESCRIBE_URL_PATTERN,
-                                            this.repository.name, jsonCallback);
+                                            this.repository.name, dataset,
+                                            jsonCallback);
                         }
                     };
             }
@@ -637,7 +638,8 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                         protected TupleQueryResultHandler newHandler(OutputStream out) {
                             return new GridJsonWriter(out,
                                             this.baseUri + DESCRIBE_URL_PATTERN,
-                                            this.repository.name, jsonCallback);
+                                            this.repository.name, dataset,
+                                            jsonCallback);
                         }
                     };
             }
@@ -649,7 +651,8 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                         protected TupleQueryResultHandler newHandler(OutputStream out) {
                             return new SparqlResultsJsonWriter(out,
                                             this.baseUri + DESCRIBE_URL_PATTERN,
-                                            this.repository.name, jsonCallback);
+                                            this.repository.name, dataset,
+                                            jsonCallback);
                         }
                     };
             }
@@ -773,9 +776,15 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                         if (startOffset != -1) {
                             this.count -= startOffset;
                         }
-                        log.debug("Processed {} statements from <{}> for: {}",
-                                  wrap(this.count), repository.name,
-                                  new QueryDescription(query));
+                        Collection<?> defGraphs = null;
+                        if (dataset != null) {
+                            defGraphs = dataset.getDefaultGraphs();
+                        }
+                        String msg = ((defGraphs == null) || (defGraphs.isEmpty()))?
+                            "Processed {} statements from \"{}\" for: \n{}":
+                            "Processed {} statements from \"{}\" for: \n{}\n on {}";
+                        log.debug(msg, wrap(this.count), repository.name,
+                                       new QueryDescription(query), defGraphs);
                     }
                 };
         }
@@ -854,8 +863,15 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                         if (startOffset != -1) {
                             this.count -= startOffset;
                         }
-                        log.debug("Processed {} binding sets for: {}",
-                                wrap(this.count), new QueryDescription(query));
+                        Collection<?> defGraphs = null;
+                        if (dataset != null) {
+                            defGraphs = dataset.getDefaultGraphs();
+                        }
+                        String msg = ((defGraphs == null) || (defGraphs.isEmpty()))?
+                            "Processed {} binding sets from \"{}\" for: \n{}":
+                            "Processed {} binding sets from \"{}\" for: \n{}\n on {}";
+                        log.debug(msg, wrap(this.count), repository.name,
+                                       new QueryDescription(query), defGraphs);
                     }
                 };
         }
@@ -877,29 +893,34 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
      *               {@link BindingSet} for SELECT queries.
      */
     public static class QueryResultIterator<T> implements CloseableIterator<T> {
+        public final Repository repository;
         public final String query;
         public final int startOffset;
         public final int endOffset;
         public final QueryResult<T> result;
         private RepositoryConnection cnx = null;
         private final List<String> columns;
+        private final Dataset dataset;
         private int count = 0;
 
-        public QueryResultIterator(String query, int startOffset, int endOffset,
+        public QueryResultIterator(Repository repository,
+                            String query, int startOffset, int endOffset,
                             QueryResult<T> result, RepositoryConnection cnx,
-                            List<String> columns) {
+                            List<String> columns, Dataset dataset) {
             if (result == null) {
                 throw new IllegalArgumentException("result");
             }
             if (cnx == null) {
                 throw new IllegalArgumentException("cnx");
             }
+            this.repository  = repository;
             this.query       = query;
             this.startOffset = startOffset;
             this.endOffset   = (endOffset < 0)? Integer.MAX_VALUE: endOffset;
             this.result      = result;
             this.cnx         = cnx;
             this.columns     = columns;
+            this.dataset     = dataset;
             // Skip first entries to reach requested start offset.
             while ((this.count < this.startOffset) && (this.hasNext())) {
                 this.next();
@@ -971,8 +992,15 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                     if (this.startOffset != -1) {
                         this.count -= this.startOffset;
                     }
-                    log.debug("Processed {} results for: {}",
-                            wrap(this.count), new QueryDescription(this.query));
+                    Collection<?> defGraphs = null;
+                    if (this.dataset != null) {
+                        defGraphs = dataset.getDefaultGraphs();
+                    }
+                    String msg = ((defGraphs == null) || (defGraphs.isEmpty()))?
+                            "Processed {} results from \"{}\" for: \n{}":
+                            "Processed {} results from \"{}\" for: \n{} on {}";
+                    log.debug(msg, wrap(this.count), this.repository.name,
+                                   new QueryDescription(query), defGraphs);
                 }
             }
         }

@@ -10,6 +10,7 @@ import java.util.List;
 import org.openrdf.model.Value;
 import org.openrdf.query.Binding;
 import org.openrdf.query.BindingSet;
+import org.openrdf.query.Dataset;
 import org.openrdf.query.TupleQueryResultHandlerException;
 import org.openrdf.query.resultio.TupleQueryResultFormat;
 import org.openrdf.query.resultio.TupleQueryResultWriter;
@@ -32,21 +33,23 @@ public class SparqlResultsJsonWriter extends AbstractJsonWriter
     //-------------------------------------------------------------------------
 
     public SparqlResultsJsonWriter(OutputStream out) {
-        this(out, null, null, null);
+        this(out, null, null, null, null);
     }
 
     public SparqlResultsJsonWriter(OutputStream out, String urlPattern,
-                                String defaultGraphUri, String jsonCallback) {
-        super(out, urlPattern, defaultGraphUri, jsonCallback);
+                                String defaultGraphUri, Dataset dataset,
+                                                        String jsonCallback) {
+        super(out, urlPattern, defaultGraphUri, dataset, jsonCallback);
     }
 
     public SparqlResultsJsonWriter(Writer out) {
-        this(out, null, null, null);
+        this(out, null, null, null, null);
     }
 
     public SparqlResultsJsonWriter(Writer out, String urlPattern,
-                                String defaultGraphUri, String jsonCallback) {
-        super(out, urlPattern, defaultGraphUri, jsonCallback);
+                                String defaultGraphUri, Dataset dataset,
+                                                        String jsonCallback) {
+        super(out, urlPattern, defaultGraphUri, dataset, jsonCallback);
     }
 
     //-------------------------------------------------------------------------

@@ -53,10 +53,12 @@ import org.openrdf.model.BNode;
 import org.openrdf.model.Literal;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
+import org.openrdf.query.Dataset;
 
 import info.aduna.io.IndentingWriter;
 import info.aduna.text.StringUtil;
 
+import static org.datalift.fwk.util.StringUtils.isBlank;
 import static org.datalift.fwk.util.web.Charsets.UTF_8;
 
 
@@ -98,9 +100,10 @@ public abstract class AbstractJsonWriter
     private final static Pattern NATIVE_TYPES_PATTERN = Pattern.compile(
                 "boolean|.*[iI]nt.*|.*[lL]ong|.*[sS]hort|decimal|double|float");
 
+    private final static String DEF_GRAPH_URI_PARAM = "&default-graph-uri=";
+
     private final IndentingWriter writer;
     private final MessageFormat urlPattern;
-    private final String defaultGraphUri;
     private final String jsonCallback;
     private final Map<String,String> nsPrefixes = new HashMap<String,String>();
 
@@ -112,30 +115,31 @@ public abstract class AbstractJsonWriter
     //-------------------------------------------------------------------------
 
     public AbstractJsonWriter(OutputStream out) {
-        this(out, null, null, null);
+        this(out, null, null, null, null);
     }
 
     public AbstractJsonWriter(OutputStream out, String jsonCallback) {
-        this(out, null, null, jsonCallback);
+        this(out, null, null, null, jsonCallback);
     }
 
     public AbstractJsonWriter(OutputStream out,
-                              String urlPattern, String defaultGraphUri,
-                              String jsonCallback) {
+                              String urlPattern, String targetRepository,
+                              Dataset dataset, String jsonCallback) {
         this(new OutputStreamWriter(out, UTF_8),
-             urlPattern, defaultGraphUri, jsonCallback);
+             urlPattern, targetRepository, dataset, jsonCallback);
     }
 
     public AbstractJsonWriter(Writer out) {
-        this(out, null, null, null);
+        this(out, null, null, null, null);
     }
 
     public AbstractJsonWriter(Writer out, String jsonCallback) {
-        this(out, null, null, jsonCallback);
+        this(out, null, null, null, jsonCallback);
     }
 
-    public AbstractJsonWriter(Writer out, String urlPattern,
-                              String defaultGraphUri, String jsonCallback) {
+    public AbstractJsonWriter(Writer out,
+                              String urlPattern, String targetRepository,
+                              Dataset dataset, String jsonCallback) {
         if (out == null) {
             throw new IllegalArgumentException("out");
         }
@@ -144,9 +148,21 @@ public abstract class AbstractJsonWriter
         }
         // this.writer = new IndentingWriter(out);
         this.writer = new CompactWriter(out);
+        if (urlPattern != null) {
+            // Build list of default graph URIs.
+            StringBuilder b = new StringBuilder(256);
+            b.append(urlPattern);
+            if (! isBlank(targetRepository)) {
+                b.append(DEF_GRAPH_URI_PARAM).append(targetRepository);
+            }
+            for (URI u : dataset.getDefaultGraphs()) {
+                b.append(DEF_GRAPH_URI_PARAM).append(u);
+            }
+            urlPattern = b.toString();
+        }
         this.urlPattern = (urlPattern != null)? new MessageFormat(urlPattern):
                                                 null;
-        this.defaultGraphUri = defaultGraphUri;
+        // JSONP support.
         if (jsonCallback != null) {
             jsonCallback = jsonCallback.trim();
             if (jsonCallback.length() == 0) {
@@ -299,8 +315,7 @@ public abstract class AbstractJsonWriter
             ((type != ResourceType.Unknown) ||
              (value.startsWith("http://") || (value.startsWith("https://"))))) {
             Object[] args = new Object[] { URLEncoder.encode(value, UTF_8.name()),
-                                           Integer.valueOf(type.value),
-                                           this.defaultGraphUri };
+                                           Integer.valueOf(type.value) };
             value = "<a href=\"" + this.urlPattern.format(args) + "\">"
                                  + ((label != null)? label: value) + "</a>";
         }
