@@ -158,6 +158,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                     new Variant(APPLICATION_TRIG_TYPE, null, null),
                     new Variant(APPLICATION_TRIX_TYPE, null, null),
                     new Variant(APPLICATION_SPARQL_RESULT_JSON_TYPE, null, null),
+                    new Variant(APPLICATION_RDF_JSON_TYPE, null, null),
                     new Variant(APPLICATION_JSON_TYPE, null, null),
                     new Variant(TEXT_HTML_TYPE, null, null),
                     new Variant(APPLICATION_XHTML_XML_TYPE, null, null),
@@ -167,6 +168,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
     protected final static List<Variant> ASK_RESPONSE_TYPES =
             Collections.unmodifiableList(Arrays.asList(
                     new Variant(APPLICATION_SPARQL_RESULT_JSON_TYPE, null, null),
+                    new Variant(APPLICATION_RDF_JSON_TYPE, null, null),
                     new Variant(APPLICATION_JSON_TYPE, null, null),
                     new Variant(TEXT_PLAIN_TYPE, null, null)));
 
@@ -345,6 +347,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
             String result = Boolean.toString(this.executeAskQuery(
                                                 repo, query, baseUri, dataset));
             if ((mediaType.isCompatible(APPLICATION_JSON_TYPE)) ||
+                (mediaType.isCompatible(APPLICATION_RDF_JSON_TYPE)) ||
                 (mediaType.isCompatible(APPLICATION_SPARQL_RESULT_JSON_TYPE))) {
                 String fmt = (gridJson)? GRID_JSON_SINGLE_VALUE_FMT:
                                          STD_JSON_SINGLE_VALUE_FMT;
