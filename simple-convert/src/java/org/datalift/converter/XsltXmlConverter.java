@@ -110,7 +110,7 @@ public class XsltXmlConverter extends BaseConverterModule
 
     /** Default constructor. */
     public XsltXmlConverter() {
-        super(MODULE_NAME, 100, SourceType.XmlSource);
+        super(MODULE_NAME, 800, SourceType.XmlSource);
     }
 
     //-------------------------------------------------------------------------

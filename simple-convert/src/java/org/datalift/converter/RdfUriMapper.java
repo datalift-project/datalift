@@ -95,7 +95,7 @@ public class RdfUriMapper extends BaseConverterModule
 
     /** Default constructor. */
     public RdfUriMapper() {
-        super(MODULE_NAME, 1100, SourceType.TransformedRdfSource);
+        super(MODULE_NAME, 5500, SourceType.TransformedRdfSource);
     }
 
     //-------------------------------------------------------------------------

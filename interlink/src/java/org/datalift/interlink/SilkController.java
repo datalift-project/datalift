@@ -92,8 +92,7 @@ public class SilkController extends InterlinkingController {
      * Creates a new InterconnectionController instance.
      */
     public SilkController() {
-        //TODO Switch to the right position.
-        super(MODULE_NAME, 13371337);
+        super(MODULE_NAME, 7100);
 
         label = getTranslatedResource(MODULE_NAME + ".button");
         model = new SilkModel(MODULE_NAME);

@@ -102,8 +102,7 @@ public class StringToURIController extends InterlinkingController
      * Creates a new InterconnectionController instance.
      */
     public StringToURIController() {
-        //TODO Switch to the right position.
-        super(MODULE_NAME, 13371337);
+        super(MODULE_NAME, 5100);
 
         label = getTranslatedResource(MODULE_NAME + ".button");
         model = new StringToURIModel(MODULE_NAME);

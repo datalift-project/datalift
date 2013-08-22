@@ -127,7 +127,7 @@ public class CsvExporter extends BaseConverterModule
 
     /** Default constructor. */
     public CsvExporter() {
-        super(MODULE_NAME, 10030, SourceType.TransformedRdfSource);
+        super(MODULE_NAME, 10310, SourceType.TransformedRdfSource);
     }
 
     //-------------------------------------------------------------------------

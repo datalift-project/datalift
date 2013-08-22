@@ -131,7 +131,7 @@ public class OntologyMapper extends BaseModule implements ProjectModule
     /** The name of this module in the DataLift configuration. */
     public final static String MODULE_NAME = "ontology-mapper";
     /** The module position in the project view. */
-    private final static int MODULE_POSITION = 6000;
+    private final static int MODULE_POSITION = 1800;
     /** Base name of the resource bundle for converter GUI. */
     private final static String GUI_RESOURCES_BUNDLE = "resources";
     /** The regex to split string concatenation expressions. */

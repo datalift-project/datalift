@@ -91,8 +91,7 @@ public class VisuController extends ModuleController {
      * Creates a new VisuController instance.
      */
     public VisuController() {
-        //TODO Switch to the right position.
-        super(MODULE_NAME, 13371337);
+        super(MODULE_NAME, 9100);
 
         //label = getTranslatedResource(MODULE_NAME + "visualization.button");
         model = new VisuModel(MODULE_NAME);

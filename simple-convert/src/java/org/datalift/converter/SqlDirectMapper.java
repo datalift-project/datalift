@@ -122,7 +122,7 @@ public class SqlDirectMapper extends BaseConverterModule
 
     /** Default constructor. */
     public SqlDirectMapper() {
-        super(MODULE_NAME, 100, SourceType.SqlQuerySource);
+        super(MODULE_NAME, 300, SourceType.SqlQuerySource);
     }
 
     //-------------------------------------------------------------------------

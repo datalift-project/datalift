@@ -84,7 +84,7 @@ public class HandleProjectModule extends BaseInterconnectionModule
                                "Interconnection");     	
             
             //if (this.position > 0) {
-                projectURL.setPosition(100000);
+                projectURL.setPosition(7500);
             //}
             }
             
