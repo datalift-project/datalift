@@ -375,7 +375,7 @@ public abstract class BaseConverterModule
         SparqlEndpoint endpoint = Configuration.getDefault()
                                                .getBean(SparqlEndpoint.class);
         return endpoint.describe(namedGraph.toString(), ElementType.Graph,
-                                 repository, null, null, 5000, TEXT_HTML, null,
+                                 repository, null, null, -1, TEXT_HTML, null,
                                  uriInfo, request, acceptHdr, null).build();
     }
 

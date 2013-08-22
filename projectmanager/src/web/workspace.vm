@@ -219,7 +219,7 @@
 	#elseif( $curSrc.getType() == $field.SqlDatabaseSource )
 			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.javascript($curSrc.description)<br />#end#i18n('project.upload_db.source_url'): $!esc.javascript($curSrc.connectionUrl)<br />#i18n('project.upload_source.tables_numb'): $!esc.javascript($curSrc.tableCount)"
 	#elseif( $curSrc.getType() == $field.TransformedRdfSource )
-			title: "<a href='${baseUri}/sparql/describe?uri=$esc.url(${curSrc.uri})&type=Graph&default-graph-uri=internal&max=5000'>$esc.javascript($curSrc.title)</a>",
+			title: "<a href='${baseUri}/sparql/describe?uri=$esc.url(${curSrc.uri})&type=Graph&default-graph-uri=internal'>$esc.javascript($curSrc.title)</a>",
 			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.javascript($curSrc.description)<br />#end#i18n('project.upload_source.graph'): $!esc.javascript($curSrc.targetGraph.toString())<br />#i18n('project.upload_source.parent'): $!esc.javascript($curSrc.parent.title)<br />#i18n('project.upload_source.created'): $!date.format('medium', $curSrc.creationDate)"
 	#elseif( $curSrc.getType() == $field.SparqlSource )
 			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.javascript($curSrc.description)<br />#end#i18n('project.upload_sparql.connection_url'): $!esc.javascript($curSrc.endpointUrl)<br />#i18n('project.upload_source.cache_duration'): $!esc.javascript($curSrc.cacheDuration)<br /> #i18n('project.upload_source.cache_update'): $!date.format('medium', $curSrc.lastCacheUpdate)"
