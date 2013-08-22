@@ -390,7 +390,10 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
 
         ResponseBuilder response = null;
         try {
-            URI u = URI.create(uri);
+            URI u = URI.create(uri).normalize();
+            if (! u.isAbsolute()) {
+                u = uriInfo.getBaseUri().resolve(u);
+            }
             if ((type == null) || (type == Value)) {
                 // Force revalidation of values to prevent redirecting user
                 // to a malevolent site in case of forged URI in request.
