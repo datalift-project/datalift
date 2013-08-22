@@ -39,7 +39,7 @@
 #else
 	#set( $title = "sparql.query.full" )
 #end
-		<h3 class="ui-widget-header dl-widget-header">#i18n($title)#if( $describe-uri ) &lt;$esc.html($describe-uri)&gt;#end #if( $min > 0 )#if( $max > 0 )#i18n("results.interval",${min},${max})#else#i18n("results.last",${min})#end#else#if( $max > 0)#i18n("results.first",${max})#end#end</h3>
+		<h3 id="resulttitle" class="ui-widget-header dl-widget-header">#i18n($title)#if( $describe-uri ) &lt;$esc.html($describe-uri)&gt;#end</h3>
 		<div id="results" class="dl-result-panel">
 			<table id="queryresults" style="width:100%">
 				<thead>
@@ -104,6 +104,10 @@
 					caption: "#i18n("grid.search.value.label")"
 				}
 			});
+			if ($("#queryresults tbody tr").length >= ${max}) {
+				var maxLimitTitle = " #if( $min > 0 )#if( $max > 0 )#i18n("results.interval",${min},${max})#else#i18n("results.last",${min})#end#else#if( $max > 0)#i18n("results.first",${max})#end#end";
+				$("#resulttitle").append(maxLimitTitle);
+			}
 			$("#goto_sparql").button();
 			$("#goto_workspace").button();
 			tableToGrid("#queryresults", { datatype: "local" });
