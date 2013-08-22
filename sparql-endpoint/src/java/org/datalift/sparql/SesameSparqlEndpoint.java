@@ -133,15 +133,6 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
      */
     public final static String MAX_QUERY_DURATION_PROPERTY =
                                                 "sparql.max.query.duration";
-    /**
-     * The configuration property defining the maximum number of entries
-     * (statements, binding sets...) to be displayed in HTML pages.
-     */
-    public final static String MAX_HTML_RESULTS_PROPERTY =
-                                                "sparql.max.html.results";
-    /** Default value for {@link #MAX_HTML_RESULTS_PROPERTY}. */
-    public final static int DEFAULT_MAX_HTML_RESULTS = 1000;
-
     /** The supported MIME types for SELECT query responses. */
     protected final static List<Variant> SELECT_RESPONSE_TYPES =
             Collections.unmodifiableList(Arrays.asList(
@@ -727,32 +718,6 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                      MAX_QUERY_DURATION_PROPERTY, v);
         }
         return maxDuration;
-    }
-
-    private int getDefaultMaxResults(int startOffset, int endOffset) {
-        if (endOffset <= 0) {
-            // Compute max number of results from configuration.
-            String v = Configuration.getDefault()
-                                    .getProperty(MAX_HTML_RESULTS_PROPERTY);
-            if (v != null) {
-                try {
-                    endOffset = Integer.parseInt(v);
-                }
-                catch (Exception e) {
-                    log.warn("Invalid value for configuration parameter \"{}\": " +
-                             "\"{}\". Integer value expected.",
-                             MAX_HTML_RESULTS_PROPERTY, v);
-                }
-            }
-            if (endOffset <= 0) {
-                endOffset = DEFAULT_MAX_HTML_RESULTS;
-            }
-            if (startOffset >= 0) {
-                endOffset += startOffset;
-            }
-        }
-        // Else: honor contract.
-        return endOffset;
     }
 
     /**

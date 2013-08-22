@@ -101,6 +101,7 @@ import org.datalift.fwk.view.TemplateModel;
 import org.datalift.fwk.view.ViewFactory;
 
 import static org.datalift.fwk.MediaTypes.*;
+import static org.datalift.fwk.util.PrimitiveUtils.wrap;
 import static org.datalift.fwk.util.StringUtils.*;
 import static org.datalift.fwk.rdf.RdfNamespace.*;
 import static org.datalift.fwk.rdf.ElementType.*;
@@ -131,6 +132,14 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
      */
     public final static String CBD_SUPPORT_PROPERTY =
                                             "sparql.use.repository.cdb";
+    /**
+     * The configuration property defining the maximum number of entries
+     * (statements, binding sets...) to be displayed in HTML pages.
+     */
+    public final static String MAX_HTML_RESULTS_PROPERTY =
+                                            "sparql.max.html.results";
+    /** Default value for {@link #MAX_HTML_RESULTS_PROPERTY}. */
+    public final static int DEFAULT_MAX_HTML_RESULTS = 1000;
     /**
      * The (optional) configuration property holding the path of
      * the RDF file to load predefined queries from.
@@ -821,6 +830,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         view.put("repositories", c);
         view.put("queries", predefinedQueries);
         view.put("namespaces", RdfNamespace.values());
+        view.put("max", wrap(this.getDefaultMaxResults()));
         ResponseBuilder response = Response.ok(view, TEXT_HTML_UTF8);
         // Add cache directives.
         CacheControl cc = new CacheControl();
@@ -898,6 +908,49 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
             // Else: use default value.
         }
         return value;
+    }
+
+    /**
+     * Returns the configured maximum number of HTML results for
+     * SPARQL queries.
+     * @return the configured maximum number of HTML results.
+     */
+    protected int getDefaultMaxResults() {
+        return this.getDefaultMaxResults(-1, -1);
+    }
+
+    /**
+     * Computes the maximum number of HTML results for the
+     * being-processed SPARQL query.
+     * @param  startOffset   the first requested result.
+     * @param  endOffset     the last requested result.
+     *
+     * @return the maximum number of HTML results for a query.
+     */
+    protected int getDefaultMaxResults(int startOffset, int endOffset) {
+        if (endOffset <= 0) {
+            // Compute max number of results from configuration.
+            String v = Configuration.getDefault()
+                                    .getProperty(MAX_HTML_RESULTS_PROPERTY);
+            if (v != null) {
+                try {
+                    endOffset = Integer.parseInt(v);
+                }
+                catch (Exception e) {
+                    log.warn("Invalid value for configuration parameter \"{}\": " +
+                             "\"{}\". Integer value expected.",
+                             MAX_HTML_RESULTS_PROPERTY, v);
+                }
+            }
+            if (endOffset <= 0) {
+                endOffset = DEFAULT_MAX_HTML_RESULTS;
+            }
+            if (startOffset >= 0) {
+                endOffset += startOffset;
+            }
+        }
+        // Else: honor contract.
+        return endOffset;
     }
 
     protected final void handleError(String query,

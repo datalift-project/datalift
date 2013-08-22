@@ -42,10 +42,10 @@
 				<input type="radio" id="trig_format" name="format" value="application/x-trig, text/plain; q=0.5"/><label for="trig_format">TriG</label>
 				<input type="radio" id="trix_format" name="format" value="application/trix, text/plain; q=0.5"/><label for="trix_format">TriX</label>
 				<input type="radio" id="csv_format" name="format" value="text/csv, text/plain; q=0.5"/><label for="csv_format">CSV</label>
-				<input type="hidden" id="format_save" />
+				<input type="hidden" id="format_save"/>
 			</div>
 			<div class="dl-form-elt" style="width: 100%;">
-				<p />
+				<p></p>
 				<label for="query">#i18n("sparql.query.light"): </label><br />
 				<textarea id="query" name="query" spellcheck="false" style="width:100%; min-height:100px;"></textarea></p>
 #if( !${queries.isEmpty()} )
@@ -57,10 +57,10 @@
 				</div>
 #end
 				<p><label for="max">#i18n("sparql.max.results"): </label>
-				<input type="text" name="max" id="max" value="5000"/></p>
+				<input type="text" name="max" id="max" value="${max}"/></p>
 			</div>
 			<div class="dl-form-buttons">
-				<input type="submit" value="#i18n("sparql.query.execute")" id="query_submit" />
+				<input type="submit" value="#i18n("sparql.query.execute")" id="query_submit"/>
 			</div>
 		    </form>
 		</div>
@@ -69,7 +69,7 @@
 			<div id="pagernav"></div>
 		</div>
 		<div id="searchnav" style="display:none">
-			#i18n("grid.search.value.label") <input type="search" id="gridsearch" placeholder="#i18n("grid.search.value.placeholder")" results="0" class="gridsearch" />
+			#i18n("grid.search.value.label") <input type="search" id="gridsearch" placeholder="#i18n("grid.search.value.placeholder")" results="0" class="gridsearch"/>
 			#i18n("grid.search.column.label") <select id="searchColumn"></select>
 		</div>
 	</div>
