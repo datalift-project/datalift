@@ -37,6 +37,7 @@ package org.datalift.sparql;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -58,6 +59,7 @@ import javax.ws.rs.core.Response.Status;
 
 import org.openrdf.OpenRDFException;
 import org.openrdf.model.Statement;
+import org.openrdf.model.URI;
 import org.openrdf.model.impl.URIImpl;
 import org.openrdf.query.BindingSet;
 import org.openrdf.query.BooleanQuery;
@@ -131,6 +133,14 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
      */
     public final static String MAX_QUERY_DURATION_PROPERTY =
                                                 "sparql.max.query.duration";
+    /**
+     * The configuration property defining the maximum number of entries
+     * (statements, binding sets...) to be displayed in HTML pages.
+     */
+    public final static String MAX_HTML_RESULTS_PROPERTY =
+                                                "sparql.max.html.results";
+    /** Default value for {@link #MAX_HTML_RESULTS_PROPERTY}. */
+    public final static int DEFAULT_MAX_HTML_RESULTS = 1000;
 
     /** The supported MIME types for SELECT query responses. */
     protected final static List<Variant> SELECT_RESPONSE_TYPES =
@@ -186,6 +196,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
             ResourceType.Predicate.value + "#&type=" + ElementType.Predicate + "|" +
             ResourceType.Graph.value     + "#&type=" + ElementType.Graph     + "|" +
             ResourceType.Graph.value     + "<}";
+    private final static String DEF_GRAPH_URI_PARAM = "&default-graph-uri=";
 
     //-------------------------------------------------------------------------
     // Instance members
@@ -370,7 +381,9 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
             if (mediaType.isCompatible(TEXT_HTML_TYPE) ||
                 mediaType.isCompatible(APPLICATION_XHTML_XML_TYPE)) {
                 // Execute query and provide iterator to Velocity template.
-                model.put("it", this.executeConstructQuery(repo, query,
+                endOffset = this.getDefaultMaxResults(startOffset, endOffset);
+                model.put("max", wrap(endOffset));
+                model.put("it",  this.executeConstructQuery(repo, query,
                                                         startOffset, endOffset,
                                                         baseUri, dataset));
                 response = Response.ok(this.newView("constructResult.vm", model));
@@ -392,7 +405,9 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
             if (mediaType.isCompatible(TEXT_HTML_TYPE) ||
                 mediaType.isCompatible(APPLICATION_XHTML_XML_TYPE)) {
                 // Execute query and provide iterator to Velocity template.
-                model.put("it", this.executeSelectQuery(repo, query,
+                endOffset = this.getDefaultMaxResults(startOffset, endOffset);
+                model.put("max", wrap(endOffset));
+                model.put("it",  this.executeSelectQuery(repo, query,
                                                         startOffset, endOffset,
                                                         baseUri, dataset));
                 response = Response.ok(this.newView("selectResult.vm", model));
@@ -527,16 +542,16 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
         if ((mediaType.isCompatible(APPLICATION_JSON_TYPE)) ||
             (mediaType.isCompatible(APPLICATION_RDF_JSON_TYPE)) ||
             (mediaType.isCompatible(APPLICATION_SPARQL_RESULT_JSON_TYPE))) {
+            final MessageFormat linkFormat =
+                    this.getDescribeLinkFormat(baseUri, repository, dataset);
             if (gridJson) {
+                final int max = this.getDefaultMaxResults(startOffset, endOffset);
                 handler = new ConstructStreamingOutput(repository, query,
-                                    startOffset, endOffset, baseUri, dataset)
+                                            startOffset, max, baseUri, dataset)
                     {
                         @Override
                         protected RDFHandler newHandler(OutputStream out) {
-                            return new GridJsonWriter(out,
-                                            this.baseUri + DESCRIBE_URL_PATTERN,
-                                            this.repository.name, dataset,
-                                            jsonCallback);
+                            return new GridJsonWriter(out, linkFormat, jsonCallback);
                         }
                     };
             }
@@ -631,15 +646,15 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
             (mediaType.isCompatible(APPLICATION_RDF_JSON_TYPE)) ||
             (mediaType.isCompatible(APPLICATION_SPARQL_RESULT_JSON_TYPE))) {
             if (gridJson) {
+                final int max = this.getDefaultMaxResults(startOffset, endOffset);
+                final MessageFormat linkFormat =
+                    this.getDescribeLinkFormat(baseUri, repository, dataset);
                 handler = new SelectStreamingOutput(repository, query,
-                                    startOffset, endOffset, baseUri, dataset)
+                                            startOffset, max, baseUri, dataset)
                     {
                         @Override
                         protected TupleQueryResultHandler newHandler(OutputStream out) {
-                            return new GridJsonWriter(out,
-                                            this.baseUri + DESCRIBE_URL_PATTERN,
-                                            this.repository.name, dataset,
-                                            jsonCallback);
+                            return new GridJsonWriter(out, linkFormat, jsonCallback);
                         }
                     };
             }
@@ -649,10 +664,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                     {
                         @Override
                         protected TupleQueryResultHandler newHandler(OutputStream out) {
-                            return new SparqlResultsJsonWriter(out,
-                                            this.baseUri + DESCRIBE_URL_PATTERN,
-                                            this.repository.name, dataset,
-                                            jsonCallback);
+                            return new SparqlResultsJsonWriter(out, jsonCallback);
                         }
                     };
             }
@@ -696,6 +708,12 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
         return (baseUri != null)? baseUri: uriInfo.getBaseUri().toString();
     }
 
+    /**
+     * Returns the maximum duration allowed for query execution.
+     * @return the maximum duration allowed for query execution,
+     *         <code>-1</code> if no limit has been defined in
+     *         configuration.
+     */
     private int getMaxQueryDuration() {
         int maxDuration = -1;
         String v = Configuration.getDefault()
@@ -710,6 +728,67 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
         }
         return maxDuration;
     }
+
+    private int getDefaultMaxResults(int startOffset, int endOffset) {
+        if (endOffset <= 0) {
+            // Compute max number of results from configuration.
+            String v = Configuration.getDefault()
+                                    .getProperty(MAX_HTML_RESULTS_PROPERTY);
+            if (v != null) {
+                try {
+                    endOffset = Integer.parseInt(v);
+                }
+                catch (Exception e) {
+                    log.warn("Invalid value for configuration parameter \"{}\": " +
+                             "\"{}\". Integer value expected.",
+                             MAX_HTML_RESULTS_PROPERTY, v);
+                }
+            }
+            if (endOffset <= 0) {
+                endOffset = DEFAULT_MAX_HTML_RESULTS;
+            }
+            if (startOffset >= 0) {
+                endOffset += startOffset;
+            }
+        }
+        // Else: honor contract.
+        return endOffset;
+    }
+
+    /**
+     * Returns the format of the URLs to substitute to RDF resource URIs
+     * when returning HTML data to the user. Selecting such a URL will
+     * display the description of the RDF resource.
+     * @param  baseUri      the base URI for this Datalift installation.
+     * @param  repository   the target repository.
+     * @param  dataset      the being-accessed default and named graphs.
+     *
+     * @return the URL format or <code>null</code> if some absent
+     *         parameter prevent creating a formatter that builds
+     *         valid URLs.
+     */
+    private MessageFormat getDescribeLinkFormat(String baseUri,
+                                    Repository repository, Dataset dataset) {
+        MessageFormat fmt = null;
+        if (baseUri != null) {
+            StringBuilder b = new StringBuilder(256);
+            b.append(baseUri).append(DESCRIBE_URL_PATTERN);
+            if (repository != null) {
+                b.append(DEF_GRAPH_URI_PARAM).append(repository.name);
+            }
+            if (dataset != null) {
+                for (URI u : dataset.getDefaultGraphs()) {
+                    b.append(DEF_GRAPH_URI_PARAM).append(u);
+                }
+            }
+            fmt = new MessageFormat(b.toString());
+        }
+        return fmt;
+    }
+
+    //-------------------------------------------------------------------------
+    // ConstructStreamingOutput nested class
+    //-------------------------------------------------------------------------
 
     private abstract class ConstructStreamingOutput implements StreamingOutput
     {
@@ -791,6 +870,10 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
 
         abstract protected RDFHandler newHandler(OutputStream out);
     }
+
+    //-------------------------------------------------------------------------
+    // SelectStreamingOutput nested class
+    //-------------------------------------------------------------------------
 
     private abstract class SelectStreamingOutput implements StreamingOutput
     {

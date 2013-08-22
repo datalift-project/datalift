@@ -48,7 +48,8 @@ import org.openrdf.rio.RDFHandlerException;
 
 /**
  * An {@link RDFHandler} implementation that serializes the processed
- * RDF triples in JSON.
+ * RDF triples in
+ * <a href="https://github.com/iand/rdf-json">RDF/JSON format</a>.
  *
  * @author lbihanic
  */
@@ -58,20 +59,59 @@ public class JsonRdfHandler extends AbstractJsonWriter implements RDFHandler
     // Constructors
     //-------------------------------------------------------------------------
 
+    /**
+     * Create a new RDF/JSON serializer.
+     * @param  out   the byte stream to write JSON text to.
+     */
     public JsonRdfHandler(OutputStream out) {
         this(out, null);
     }
 
+    /**
+     * Create a new RDF JSON serializer.
+     * @param  out            the byte stream to write JSON text to.
+     * @param  jsonCallback   the JSONP callback function to wrap the
+     *                        generated JSON object or <code>null</code>
+     *                        to produce standard JSON.
+     */
     public JsonRdfHandler(OutputStream out, String jsonCallback) {
         super(out, jsonCallback);
     }
 
+    /**
+     * Create a new RDF/JSON serializer.
+     * @param  out   the character stream to write JSON text to.
+     */
     public JsonRdfHandler(Writer out) {
         this(out, null);
     }
 
+    /**
+     * Create a new RDF/JSON serializer.
+     * @param  out            the character stream to write JSON text to.
+     * @param  jsonCallback   the JSONP callback function to wrap the
+     *                        generated JSON object or <code>null</code>
+     *                        to produce standard JSON.
+     */
     public JsonRdfHandler(Writer out, String jsonCallback) {
         super(out, jsonCallback);
+    }
+
+    //-------------------------------------------------------------------------
+    // AbstractJsonWriter contract support
+    //-------------------------------------------------------------------------
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * This implementation relies on
+     * {@link #writeJsonValue(Value, ResourceType)} to output
+     * RDF/JSON-compliant value descriptions.</p>
+     */
+    @Override
+    protected final void writeValue(Value value, ResourceType type)
+                                                            throws IOException {
+        this.writeJsonValue(value, type);
     }
 
     //-------------------------------------------------------------------------
@@ -84,13 +124,13 @@ public class JsonRdfHandler extends AbstractJsonWriter implements RDFHandler
         try {
             this.start(Arrays.asList(CONSTRUCT_VARS));
             this.openBraces();
-            // Write header
+            // Write header.
             this.writeKey("head");
             this.openBraces();
-            this.writeKeyValue("vars", columnHeaders);
+            this.writeKeyValue("vars", this.fields);
             this.closeBraces();
             this.writeComma();
-            // Write results
+            // Write results.
             this.writeKey("results");
             this.openBraces();
             this.writeKey("bindings");
@@ -105,7 +145,7 @@ public class JsonRdfHandler extends AbstractJsonWriter implements RDFHandler
     @Override
     public void handleNamespace(String prefix, String uri)
                                                     throws RDFHandlerException {
-        // Ignore namespace prefixes.
+        this.setPrefix(prefix, uri);
     }
 
     /** {@inheritDoc} */
@@ -135,19 +175,13 @@ public class JsonRdfHandler extends AbstractJsonWriter implements RDFHandler
     @Override
     public void endRDF() throws RDFHandlerException {
         try {
-            this.closeArray(); // bindings array
-            this.closeBraces(); // results braces
-            this.closeBraces(); // root braces
+            this.closeArray();          // bindings array
+            this.closeBraces();         // results braces
+            this.closeBraces();         // root braces
             this.end();
         }
         catch (IOException e) {
             throw new RDFHandlerException(e);
         }
-    }
-
-    @Override
-    protected void writeValue(Value value, ResourceType type)
-                                                            throws IOException {
-        this.writeJsonValue(value, type);
     }
 }

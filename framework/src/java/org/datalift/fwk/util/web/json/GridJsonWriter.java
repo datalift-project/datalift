@@ -38,14 +38,20 @@ package org.datalift.fwk.util.web.json;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Writer;
+import java.net.URLEncoder;
+import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.regex.Pattern;
 
+import org.openrdf.model.BNode;
+import org.openrdf.model.Literal;
 import org.openrdf.model.Statement;
+import org.openrdf.model.URI;
+import org.openrdf.model.Value;
 import org.openrdf.model.impl.LiteralImpl;
 import org.openrdf.query.BindingSet;
-import org.openrdf.query.Dataset;
 import org.openrdf.query.TupleQueryResultHandlerException;
 import org.openrdf.query.resultio.TupleQueryResultFormat;
 import org.openrdf.query.resultio.TupleQueryResultWriter;
@@ -54,11 +60,14 @@ import org.openrdf.rio.RDFHandlerException;
 
 import org.datalift.fwk.project.Row;
 
+import static org.datalift.fwk.util.web.Charsets.UTF_8;
+
 
 /**
- * A {@link TupleQueryResultWriter} implementation that serializes
- * SPARQL query results into a compact JSON syntax, suitable for
- * directly filling HTML tables with minimum client-side processing.
+ * An implementation of both {@link TupleQueryResultWriter} and
+ * {@link RDFHandler} that serializes SPARQL query results and RDF
+ * statements into a compact JSON syntax, suitable for directly
+ * filling HTML tables with minimum client-side processing.
  *
  * @author hdevos
  */
@@ -66,27 +75,92 @@ public class GridJsonWriter extends AbstractJsonWriter
                             implements TupleQueryResultWriter, RDFHandler
 {
     //-------------------------------------------------------------------------
+    // Constants
+    //-------------------------------------------------------------------------
+
+    /** Regex to identify native XML schema data types. */
+    private final static Pattern NATIVE_TYPES_PATTERN = Pattern.compile(
+                            "boolean|float|decimal|double|int|" +
+                            ".*[bB]yte|.*[iI]nteger|.*[lL]ong|.*[sS]hort");
+
+    //-------------------------------------------------------------------------
+    // Instance members
+    //-------------------------------------------------------------------------
+
+    /**
+     * The pattern to format HTML links when substituting URLs to
+     * RDF resource URIs.
+     */
+    private final MessageFormat urlPattern;
+
+    //-------------------------------------------------------------------------
     // Constructors
     //-------------------------------------------------------------------------
 
+    /**
+     * Create a new compact grid-oriented RDF JSON serializer.
+     * @param  out   the byte stream to write JSON text to.
+     */
     public GridJsonWriter(OutputStream out) {
-        this(out, null, null, null, null);
+        this(out, null, null);
     }
 
-    public GridJsonWriter(OutputStream out, String urlPattern,
-                          String defaultGraphUri, Dataset dataset,
-                                                  String jsonCallback) {
-        super(out, urlPattern, defaultGraphUri, dataset, jsonCallback);
+    /**
+     * Create a new compact grid-oriented RDF JSON serializer.
+     * @param  out            the byte stream to write JSON text to.
+     * @param  urlPattern     a message format to replace RDF resource
+     *                        URIs with HTML links
+     *                        (<code>&lt;a href=.../&gt;</code>).
+     * @param  jsonCallback   the JSONP callback function to wrap the
+     *                        generated JSON object or <code>null</code>
+     *                        to produce standard JSON.
+     */
+    public GridJsonWriter(OutputStream out, MessageFormat urlPattern,
+                                            String jsonCallback) {
+        super(out, jsonCallback);
+        this.urlPattern = urlPattern;
     }
 
+    /**
+     * Create a new compact grid-oriented RDF JSON serializer.
+     * @param  out   the character stream to write JSON text to.
+     */
     public GridJsonWriter(Writer out) {
-        this(out, null, null, null, null);
+        this(out, null, null);
     }
 
-    public GridJsonWriter(Writer out, String urlPattern,
-                          String defaultGraphUri, Dataset dataset,
-                                                  String jsonCallback) {
-        super(out, urlPattern, defaultGraphUri, dataset, jsonCallback);
+    /**
+     * Create a new compact grid-oriented RDF JSON serializer.
+     * @param  out            the character stream to write JSON text to.
+     * @param  urlPattern     a message format to replace RDF resource
+     *                        URIs with HTML links
+     *                        (<code>&lt;a href=.../&gt;</code>).
+     * @param  jsonCallback   the JSONP callback function to wrap the
+     *                        generated JSON object or <code>null</code>
+     *                        to produce standard JSON.
+     */
+    public GridJsonWriter(Writer out, MessageFormat urlPattern,
+                                      String jsonCallback) {
+        super(out, jsonCallback);
+        this.urlPattern = urlPattern;
+    }
+
+    //-------------------------------------------------------------------------
+    // AbstractJsonWriter contract support
+    //-------------------------------------------------------------------------
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * This implementation relies on
+     * {@link #writeValueSimple(Value, ResourceType)} to output RDF
+     * values in a format suitable for directly filling HTML tables
+     * with minimum client-side processing.</p>
+     */
+    @Override
+    protected final void writeValue(Value value, ResourceType type)
+                                                            throws IOException {
+        this.writeValueSimple(value, type);
     }
 
     //-------------------------------------------------------------------------
@@ -125,7 +199,7 @@ public class GridJsonWriter extends AbstractJsonWriter
         try {
             this.startSolution();       // start of new solution
 
-            for (Iterator<String> i=this.columnHeaders.iterator(); i.hasNext(); ) {
+            for (Iterator<String> i=this.fields.iterator(); i.hasNext(); ) {
                 String key = i.next();
                 this.writeKeyValue(key, bindingSet.getValue(key),
                                         ResourceType.Unknown);
@@ -219,7 +293,7 @@ public class GridJsonWriter extends AbstractJsonWriter
     public void handleRow(Row<?> row) throws IOException {
         this.startSolution();           // start of new solution
 
-        for (Iterator<String> i=this.columnHeaders.iterator(); i.hasNext(); ) {
+        for (Iterator<String> i=this.fields.iterator(); i.hasNext(); ) {
             String key = i.next();
             this.writeKeyValue(key, new LiteralImpl(row.getString(key)),
                                     ResourceType.Unknown);
@@ -228,5 +302,67 @@ public class GridJsonWriter extends AbstractJsonWriter
             }
         }
         this.endSolution();             // end solution
+    }
+
+    /**
+     * Appends an RDF field value (URI, blank node, literal...) as a
+     * simple string, substituting URLs to URIs if a URL format has
+     * been provided.
+     * @param  value   the RDF value.
+     * @param  type    the type of RDF resource referenced by the URI
+     *                 value. If set, the type value is passed to the
+     *                 URL format.
+     *
+     * @throws IOException if any error occurred output the JSON text.
+     */
+    private final void writeValueSimple(Value value, ResourceType type)
+                                                            throws IOException {
+        if (value instanceof BNode) {
+            this.writeValue("_:" + value.stringValue(), type);
+        }
+        else if (value instanceof Literal) {
+            Literal l = (Literal)value;
+            if ((l.getDatatype() != null) &&
+                (NATIVE_TYPES_PATTERN.matcher(l.getDatatype().getLocalName())
+                                     .matches())) {
+                this.writer.write(l.getLabel());
+            }
+            else {
+                this.writeValue(l.toString(), type);
+            }
+        }
+        else if (value instanceof URI) {
+            this.writeValue((URI)value, type);
+        }
+        else {
+            this.writeValue((value != null)? value.stringValue(): "", type);
+        }
+    }
+
+    private void writeValue(URI u, ResourceType type) throws IOException {
+        String label = null;
+        String prefix = this.getPrefix(u.getNamespace());
+        if (prefix != null) {
+            label = prefix + ':' + u.getLocalName();
+        }
+        this.writeValue(u.stringValue(), label, type);
+    }
+
+    private void writeValue(String value, ResourceType type)
+                                                            throws IOException {
+        this.writeValue(value, null, type);
+    }
+
+    private void writeValue(String value, String label, ResourceType type)
+                                                            throws IOException {
+        if ((type != null) && (this.urlPattern != null) &&
+            ((type != ResourceType.Unknown) ||
+             (value.startsWith("http://") || (value.startsWith("https://"))))) {
+            Object[] args = new Object[] { URLEncoder.encode(value, UTF_8.name()),
+                                           Integer.valueOf(type.value) };
+            value = "<a href=\"" + this.urlPattern.format(args) + "\">"
+                                 + ((label != null)? label: value) + "</a>";
+        }
+        this.writeString(value);
     }
 }

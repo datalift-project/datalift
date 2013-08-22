@@ -40,25 +40,22 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
-import java.net.URLEncoder;
 import java.text.ChoiceFormat;
-import java.text.MessageFormat;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 import org.openrdf.model.BNode;
 import org.openrdf.model.Literal;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
-import org.openrdf.query.Dataset;
 
 import info.aduna.io.IndentingWriter;
 import info.aduna.text.StringUtil;
 
-import static org.datalift.fwk.util.StringUtils.isBlank;
+import static org.datalift.fwk.util.StringUtils.*;
 import static org.datalift.fwk.util.web.Charsets.UTF_8;
 
 
@@ -69,6 +66,10 @@ import static org.datalift.fwk.util.web.Charsets.UTF_8;
  */
 public abstract class AbstractJsonWriter
 {
+    //-------------------------------------------------------------------------
+    // ResourceType enum
+    //-------------------------------------------------------------------------
+
     /** Types of RDF objects recognized for JSON serialization. */
     public enum ResourceType {
         /** RDF subject or object, literals excluded. */
@@ -95,89 +96,86 @@ public abstract class AbstractJsonWriter
         }
     }
 
+    //-------------------------------------------------------------------------
+    // Constants
+    //-------------------------------------------------------------------------
+
+    /** Default variables to outputting RDF statements. */
     protected final static String[] CONSTRUCT_VARS =
                                         { "subject", "predicate", "object" };
-    private final static Pattern NATIVE_TYPES_PATTERN = Pattern.compile(
-                "boolean|.*[iI]nt.*|.*[lL]ong|.*[sS]hort|decimal|double|float");
 
-    private final static String DEF_GRAPH_URI_PARAM = "&default-graph-uri=";
+    //-------------------------------------------------------------------------
+    // Instance members
+    //-------------------------------------------------------------------------
 
-    private final IndentingWriter writer;
-    private final MessageFormat urlPattern;
-    private final String jsonCallback;
+    protected final IndentingWriter writer;
+    protected final String jsonCallback;
+    protected List<String> fields;
+
     private final Map<String,String> nsPrefixes = new HashMap<String,String>();
-
     private boolean firstTupleWritten;
-    protected List<String> columnHeaders;
 
     //-------------------------------------------------------------------------
     // Constructors
     //-------------------------------------------------------------------------
 
+    /**
+     * Create a new RDF JSON serializer.
+     * @param  out   the byte stream to write JSON text to.
+     */
     public AbstractJsonWriter(OutputStream out) {
-        this(out, null, null, null, null);
+        this(out, null);
     }
 
+    /**
+     * Create a new RDF JSON serializer.
+     * @param  out            the byte stream to write JSON text to.
+     * @param  jsonCallback   the JSONP callback function to wrap the
+     *                        generated JSON object or <code>null</code>
+     *                        to produce standard JSON.
+     */
     public AbstractJsonWriter(OutputStream out, String jsonCallback) {
-        this(out, null, null, null, jsonCallback);
+        this(new OutputStreamWriter(out, UTF_8), jsonCallback);
     }
 
-    public AbstractJsonWriter(OutputStream out,
-                              String urlPattern, String targetRepository,
-                              Dataset dataset, String jsonCallback) {
-        this(new OutputStreamWriter(out, UTF_8),
-             urlPattern, targetRepository, dataset, jsonCallback);
-    }
-
+    /**
+     * Create a new RDF JSON serializer.
+     * @param  out   the character stream to write JSON text to.
+     */
     public AbstractJsonWriter(Writer out) {
-        this(out, null, null, null, null);
+        this(out, null);
     }
 
+    /**
+     * Create a new RDF JSON serializer.
+     * @param  out            the character stream to write JSON text to.
+     * @param  jsonCallback   the JSONP callback function to wrap the
+     *                        generated JSON object or <code>null</code>
+     *                        to produce standard JSON.
+     */
     public AbstractJsonWriter(Writer out, String jsonCallback) {
-        this(out, null, null, null, jsonCallback);
-    }
-
-    public AbstractJsonWriter(Writer out,
-                              String urlPattern, String targetRepository,
-                              Dataset dataset, String jsonCallback) {
         if (out == null) {
             throw new IllegalArgumentException("out");
         }
         if (! (out instanceof BufferedWriter)) {
             out = new BufferedWriter(out, 1024);
         }
-        // this.writer = new IndentingWriter(out);
         this.writer = new CompactWriter(out);
-        if (urlPattern != null) {
-            // Build list of default graph URIs.
-            StringBuilder b = new StringBuilder(256);
-            b.append(urlPattern);
-            if (! isBlank(targetRepository)) {
-                b.append(DEF_GRAPH_URI_PARAM).append(targetRepository);
-            }
-            for (URI u : dataset.getDefaultGraphs()) {
-                b.append(DEF_GRAPH_URI_PARAM).append(u);
-            }
-            urlPattern = b.toString();
-        }
-        this.urlPattern = (urlPattern != null)? new MessageFormat(urlPattern):
-                                                null;
-        // JSONP support.
-        if (jsonCallback != null) {
-            jsonCallback = jsonCallback.trim();
-            if (jsonCallback.length() == 0) {
-                jsonCallback = null;
-            }
-        }
-        this.jsonCallback = jsonCallback;
+        this.jsonCallback = trimToNull(jsonCallback);
     }
 
     //-------------------------------------------------------------------------
     // Specific implementation
     //-------------------------------------------------------------------------
 
-    protected void start(List<String> headers) throws IOException {
-        this.columnHeaders = headers;
+    /**
+     * Starts a new JSON document.
+     * @param  fields   the field names for the forthcoming JSON objects.
+     *
+     * @throws IOException if any error occurred output the JSON text.
+     */
+    protected void start(List<String> fields) throws IOException {
+        this.fields = Collections.unmodifiableList(fields);
         this.firstTupleWritten = false;
         if (this.jsonCallback != null) {
             this.writer.write(this.jsonCallback);
@@ -186,6 +184,10 @@ public abstract class AbstractJsonWriter
         this.nsPrefixes.clear();
     }
 
+    /**
+     * Terminates a JSON document.
+     * @throws IOException if any error occurred output the JSON text.
+     */
     protected void end() throws IOException {
         if (this.jsonCallback != null) {
             this.writer.write(')');
@@ -193,10 +195,30 @@ public abstract class AbstractJsonWriter
         this.writer.flush();
     }
 
-    protected void setPrefix(String prefix, String nsUri) {
+    /**
+     * Defines a namespace prefix mapping.
+     * @param  prefix   the namespace prefix.
+     * @param  nsUri    the namespace URI.
+     */
+    protected final void setPrefix(String prefix, String nsUri) {
         this.nsPrefixes.put(nsUri, prefix);
     }
 
+    /**
+     * Returns the prefix associated to the specified namespace URI.
+     * @return the prefix associated to the namespace URI or
+     *         <code>null</code> if no prefix mapping has been defined
+     *         fir the namespace.
+     */
+    protected final String getPrefix(String nsUri) {
+        return this.nsPrefixes.get(nsUri);
+    }
+
+    /**
+     * Starts a new solution, wrapped in a JSON object.
+     *
+     * @throws IOException if any error occurred output the JSON text.
+     */
     protected void startSolution() throws IOException {
         if (firstTupleWritten) {
             this.writeComma();
@@ -207,32 +229,89 @@ public abstract class AbstractJsonWriter
         this.openBraces();              // start of new solution
     }
 
+    /**
+     * Terminates the current, closing the associated JSON object.
+     *
+     * @throws IOException if any error occurred output the JSON text.
+     */
     protected void endSolution() throws IOException {
         this.closeBraces();             // end solution
-        // this.writer.flush();
     }
 
+    /**
+     * Appends an object field the value of which is an RDF value (URI,
+     * blank node, literal...).
+     * @param  key     the JSON object field name.
+     * @param  value   the field RDF value.
+     *
+     * @throws IOException if any error occurred output the JSON text.
+     * @see    #writeKeyValue(String, Value, ResourceType)
+     */
     protected void writeKeyValue(String key, Value value) throws IOException {
         this.writeKeyValue(key, value, null);
     }
 
+    /**
+     * Appends an object field.
+     * @param  key     the JSON object field name.
+     * @param  value   the field value as a string.
+     *
+     * @throws IOException if any error occurred output the JSON text.
+     * @see    #writeKey(String)
+     * @see    #writeString(String)
+     */
     protected void writeKeyValue(String key, String value) throws IOException {
         this.writeKey(key);
         this.writeString(value);
     }
 
+    /**
+     * Appends an object field the value of which is an RDF value (URI,
+     * blank node, literal...).
+     * @param  key     the JSON object field name.
+     * @param  value   the field RDF value.
+     * @param  type    the type of RDF resource referenced by the URI
+     *                 value, <code>null</code> if not applicable.
+     *
+     * @throws IOException if any error occurred output the JSON text.
+     * @see    #writeKey(String)
+     * @see    #writeValue(Value, ResourceType)
+     */
     protected void writeKeyValue(String key, Value value, ResourceType type)
                                                             throws IOException {
         this.writeKey(key);
         this.writeValue(value, type);
     }
 
-    protected void writeValue(Value value, ResourceType type)
-                                                            throws IOException {
-        this.writeValueSimple(value, type);
-    }
+    /**
+     * Appends an RDF field value (URI, blank node, literal...).
+     * <p>
+     * This implementation provides a default implementation to
+     * delegate calls to this method to:
+     * {@link #writeJsonValue(Value, ResourceType)} that writes the
+     * RDF value in compliance with the
+     * <a href="https://github.com/iand/rdf-json">RDF/JSON format.</p>
+     * @param  value   the RDF value.
+     * @param  type    the type of RDF resource referenced by the URI
+     *                 value, <code>null</code> if not applicable.
+     *
+     * @throws IOException if any error occurred output the JSON text.
+     * @see    #writeJsonValue(Value, ResourceType)
+     */
+    abstract protected void writeValue(Value value, ResourceType type)
+                                                            throws IOException;
 
-    protected void writeJsonValue(Value value, ResourceType type)
+    /**
+     * Appends an RDF field value (URI, blank node, literal...) in
+     * compliance with the
+     * <a href="https://github.com/iand/rdf-json">RDF/JSON format</a>.
+     * @param  value   the RDF value.
+     * @param  type    the type of RDF resource referenced by the URI
+     *                 value: <strong>ignored</strong>.
+     *
+     * @throws IOException if any error occurred output the JSON text.
+     */
+    protected final void writeJsonValue(Value value, ResourceType type)
                                                             throws IOException {
         this.openBraces();
 
@@ -271,68 +350,24 @@ public abstract class AbstractJsonWriter
         this.closeBraces();
     }
 
-    protected void writeValueSimple(Value value, ResourceType type)
-                                                            throws IOException {
-        if (value instanceof BNode) {
-            this.writeValue("_:" + value.stringValue(), type);
-        }
-        else if (value instanceof Literal) {
-            Literal l = (Literal)value;
-            if ((l.getDatatype() != null) &&
-                (NATIVE_TYPES_PATTERN.matcher(l.getDatatype().getLocalName())
-                                     .matches())) {
-                this.writer.write(l.getLabel());
-            }
-            else {
-                this.writeValue(l.toString(), type);
-            }
-        }
-        else if (value instanceof URI) {
-            this.writeValue((URI)value, type);
-        }
-        else {
-            this.writeValue((value != null)? value.stringValue(): "", type);
-        }
-    }
-
-    protected void writeValue(URI u, ResourceType type) throws IOException {
-        String label = null;
-        String prefix = this.nsPrefixes.get(u.getNamespace());
-        if (prefix != null) {
-            label = prefix + ':' + u.getLocalName();
-        }
-        this.writeValue(u.stringValue(), label, type);
-    }
-
-    protected void writeValue(String value, ResourceType type)
-                                                            throws IOException {
-        this.writeValue(value, null, type);
-    }
-
-    protected void writeValue(String value, String label, ResourceType type)
-                                                            throws IOException {
-        if ((type != null) && (this.urlPattern != null) &&
-            ((type != ResourceType.Unknown) ||
-             (value.startsWith("http://") || (value.startsWith("https://"))))) {
-            Object[] args = new Object[] { URLEncoder.encode(value, UTF_8.name()),
-                                           Integer.valueOf(type.value) };
-            value = "<a href=\"" + this.urlPattern.format(args) + "\">"
-                                 + ((label != null)? label: value) + "</a>";
-        }
-        this.writeString(value);
-    }
-
-    protected void writeKeyValue(String key, Iterable<String> array)
+    protected final void writeKeyValue(String key, Iterable<String> array)
                                                             throws IOException {
         this.writeKey(key);
         this.writeArray(array);
     }
 
-    protected void writeKey(String key) throws IOException {
+    protected final void writeKey(String key) throws IOException {
         this.writeString(key);
         this.writer.write(": ");
     }
 
+    /**
+     * Append a JSON string value, escaping special characters
+     * (/, \, \b, \f, \n, \r, \t).
+     * @param  value   the string value.
+     *
+     * @throws IOException if any error occurred output the JSON text.
+     */
     protected void writeString(String value) throws IOException {
         // Escape special characters
         value = StringUtil.gsub("\\", "\\\\", value);
@@ -349,55 +384,95 @@ public abstract class AbstractJsonWriter
         this.writer.write("\"");
     }
 
+    /**
+     * Outputs a JSON array.
+     *
+     * @throws IOException if any error occurred output the JSON text.
+     */
     protected void writeArray(Iterable<String> array) throws IOException {
-        this.writer.write("[ ");
+        this.openArray();
 
         Iterator<String> iter = array.iterator();
         while (iter.hasNext()) {
             this.writeString(iter.next());
             if (iter.hasNext()) {
-                this.writer.write(", ");
+                this.writeComma();
             }
         }
-        this.writer.write(" ]");
+        this.closeArray();
     }
 
-    protected void openArray() throws IOException {
+    /**
+     * Starts a new JSON array.
+     *
+     * @throws IOException if any error occurred output the JSON text.
+     */
+    protected final void openArray() throws IOException {
         this.writer.write("[");
         this.writer.writeEOL();
         this.writer.increaseIndentation();
     }
 
-    protected void closeArray() throws IOException {
+    /**
+     * Closes the current JSON array.
+     *
+     * @throws IOException if any error occurred output the JSON text.
+     */
+    protected final void closeArray() throws IOException {
         this.writer.writeEOL();
         this.writer.decreaseIndentation();
         this.writer.write("]");
     }
 
-    protected void openBraces() throws IOException {
+    /**
+     * Starts a new JSON object.
+     *
+     * @throws IOException if any error occurred output the JSON text.
+     */
+    protected final void openBraces() throws IOException {
         this.writer.write("{");
         this.writer.writeEOL();
         this.writer.increaseIndentation();
     }
 
-    protected void closeBraces() throws IOException {
+    /**
+     * Terminates the current JSON object.
+     *
+     * @throws IOException if any error occurred output the JSON text.
+     */
+    protected final void closeBraces() throws IOException {
         this.writer.writeEOL();
         this.writer.decreaseIndentation();
         this.writer.write("}");
     }
 
-    protected void writeComma() throws IOException {
+    /**
+     * Appends a comma separator.
+     *
+     * @throws IOException if any error occurred output the JSON text.
+     */
+    protected final void writeComma() throws IOException {
         this.writer.write(", ");
     }
 
+    //-------------------------------------------------------------------------
+    // CompactWriter nested class
+    //-------------------------------------------------------------------------
 
+    /**
+     * An {@link IndentingWriter} implementation without any indentation
+     * or line feeds.
+     */
     private final static class CompactWriter extends IndentingWriter
     {
         public CompactWriter(Writer out) {
             super(out);
         }
 
-        @Override public void writeEOL()            { /* NOP */ }
+        @Override public void writeEOL() throws IOException {
+            this.out.append(' ');
+        }
+
         @Override public void increaseIndentation() { /* NOP */ }
         @Override public void decreaseIndentation() { /* NOP */ }
 

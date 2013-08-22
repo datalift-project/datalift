@@ -10,7 +10,6 @@ import java.util.List;
 import org.openrdf.model.Value;
 import org.openrdf.query.Binding;
 import org.openrdf.query.BindingSet;
-import org.openrdf.query.Dataset;
 import org.openrdf.query.TupleQueryResultHandlerException;
 import org.openrdf.query.resultio.TupleQueryResultFormat;
 import org.openrdf.query.resultio.TupleQueryResultWriter;
@@ -18,10 +17,9 @@ import org.openrdf.query.resultio.TupleQueryResultWriter;
 
 /**
  * A {@link TupleQueryResultWriter} implementation that serializes
- * SPARQL query results into a JSON syntax compliant with the W3C
- * proposal for
- * <a href="http://www.w3.org/TR/rdf-sparql-json-res/">Serializing
- * SPARQL Query Results in JSON</a>.
+ * SPARQL query results in
+ * <a href="http://www.w3.org/TR/sparql11-results-json/">SPARQL 1.1
+ * Query Results JSON Format</a>.
  *
  * @author lbihanic
  */
@@ -32,24 +30,59 @@ public class SparqlResultsJsonWriter extends AbstractJsonWriter
     // Constructors
     //-------------------------------------------------------------------------
 
+    /**
+     * Create a new SPARQL Query Results JSON serializer.
+     * @param  out   the byte stream to write JSON text to.
+     */
     public SparqlResultsJsonWriter(OutputStream out) {
-        this(out, null, null, null, null);
+        this(out, null);
     }
 
-    public SparqlResultsJsonWriter(OutputStream out, String urlPattern,
-                                String defaultGraphUri, Dataset dataset,
-                                                        String jsonCallback) {
-        super(out, urlPattern, defaultGraphUri, dataset, jsonCallback);
+    /**
+     * Create a new SPARQL Query Results JSON serializer.
+     * @param  out            the byte stream to write JSON text to.
+     * @param  jsonCallback   the JSONP callback function to wrap the
+     *                        generated JSON object or <code>null</code>
+     *                        to produce standard JSON.
+     */
+    public SparqlResultsJsonWriter(OutputStream out, String jsonCallback) {
+        super(out, jsonCallback);
     }
 
+    /**
+     * Create a new SPARQL Query Results JSON serializer.
+     * @param  out   the character stream to write JSON text to.
+     */
     public SparqlResultsJsonWriter(Writer out) {
-        this(out, null, null, null, null);
+        this(out, null);
     }
 
-    public SparqlResultsJsonWriter(Writer out, String urlPattern,
-                                String defaultGraphUri, Dataset dataset,
-                                                        String jsonCallback) {
-        super(out, urlPattern, defaultGraphUri, dataset, jsonCallback);
+    /**
+     * Create a new SPARQL Query Results JSON serializer.
+     * @param  out            the character stream to write JSON text to.
+     * @param  jsonCallback   the JSONP callback function to wrap the
+     *                        generated JSON object or <code>null</code>
+     *                        to produce standard JSON.
+     */
+    public SparqlResultsJsonWriter(Writer out, String jsonCallback) {
+        super(out, jsonCallback);
+    }
+
+    //-------------------------------------------------------------------------
+    // AbstractJsonWriter contract support
+    //-------------------------------------------------------------------------
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * This implementation relies on
+     * {@link #writeJsonValue(Value, ResourceType)} to output
+     * RDF/JSON-compliant value descriptions.</p>
+     */
+    @Override
+    protected void writeValue(Value value, ResourceType type)
+                                                            throws IOException {
+        this.writeJsonValue(value, type);
     }
 
     //-------------------------------------------------------------------------
@@ -64,15 +97,15 @@ public class SparqlResultsJsonWriter extends AbstractJsonWriter
 
     /** {@inheritDoc} */
     @Override
-    public void startQueryResult(List<String> columnHeaders)
+    public void startQueryResult(List<String> bindingNames)
                                     throws TupleQueryResultHandlerException {
         try {
-            this.start(columnHeaders);
+            this.start(bindingNames);
             this.openBraces();
             // Write header
             this.writeKey("head");
             this.openBraces();
-            this.writeKeyValue("vars", columnHeaders);
+            this.writeKeyValue("vars", bindingNames);
             this.closeBraces();
             this.writeComma();
             // Write results
@@ -120,11 +153,5 @@ public class SparqlResultsJsonWriter extends AbstractJsonWriter
         catch (IOException e) {
             throw new TupleQueryResultHandlerException(e);
         }
-    }
-
-    @Override
-    protected void writeValue(Value value, ResourceType type)
-                                                            throws IOException {
-        this.writeJsonValue(value, type);
     }
 }
