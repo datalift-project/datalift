@@ -293,7 +293,7 @@ public class RouterResource implements LifeCycle, ResourceResolver
             throw new IllegalArgumentException("request");
         }
         if (uri == null) {
-            uri = uriInfo.getAbsolutePath();
+            uri = uriInfo.getAbsolutePath().normalize();
         }
 
         // Find a resource handler supporting the requested URI.
