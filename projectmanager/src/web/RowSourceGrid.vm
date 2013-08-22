@@ -39,7 +39,7 @@
 			$("#goto_sparql").button();
 			$("#goto_workspace").button();
 			//Load table content
-#set( $maxEntries = 5000 )
+#set( $maxEntries = 1000 )
 #set( $columns = $it.getColumnNames())	
 	
 ##Array to contain the row map
