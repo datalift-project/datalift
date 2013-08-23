@@ -32,7 +32,7 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 
-package org.datalift.fwk.util.web.json;
+package org.datalift.fwk.rdf.json;
 
 
 import java.io.BufferedWriter;

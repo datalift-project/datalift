@@ -32,29 +32,30 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 
-package org.datalift.fwk.util.web.json;
+package org.datalift.fwk.rdf.json;
 
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Writer;
 import java.text.MessageFormat;
-import java.util.Arrays;
+import java.util.List;
 
-import org.openrdf.model.Statement;
-import org.openrdf.rio.RDFHandler;
-import org.openrdf.rio.RDFHandlerException;
+import org.openrdf.query.BindingSet;
+import org.openrdf.query.TupleQueryResultHandlerException;
+import org.openrdf.query.resultio.TupleQueryResultFormat;
+import org.openrdf.query.resultio.TupleQueryResultWriter;
 
 
 /**
- * An implementation of {@link RDFHandler} that serializes RDF
- * statements into a compact JSON syntax, suitable for directly
- * filling HTML tables with minimum client-side processing.
+ * An implementation of {@link TupleQueryResultWriter} that serializes
+ * SPARQL query results into a compact JSON syntax, suitable for
+ * directly filling HTML tables with minimum client-side processing.
  *
  * @author hdevos
  */
-public class GridJsonRdfHandler extends AbstractGridJsonWriter
-                                implements RDFHandler
+public class SparqlResultsGridJsonWriter extends AbstractGridJsonWriter
+                                         implements TupleQueryResultWriter
 {
     //-------------------------------------------------------------------------
     // Constructors
@@ -64,7 +65,7 @@ public class GridJsonRdfHandler extends AbstractGridJsonWriter
      * Create a new compact grid-oriented RDF JSON serializer.
      * @param  out   the byte stream to write JSON text to.
      */
-    public GridJsonRdfHandler(OutputStream out) {
+    public SparqlResultsGridJsonWriter(OutputStream out) {
         this(out, null, null);
     }
 
@@ -78,7 +79,7 @@ public class GridJsonRdfHandler extends AbstractGridJsonWriter
      *                        generated JSON object or <code>null</code>
      *                        to produce standard JSON.
      */
-    public GridJsonRdfHandler(OutputStream out, MessageFormat urlPattern,
+    public SparqlResultsGridJsonWriter(OutputStream out, MessageFormat urlPattern,
                                             String jsonCallback) {
         super(out, urlPattern, jsonCallback);
     }
@@ -87,7 +88,7 @@ public class GridJsonRdfHandler extends AbstractGridJsonWriter
      * Create a new compact grid-oriented RDF JSON serializer.
      * @param  out   the character stream to write JSON text to.
      */
-    public GridJsonRdfHandler(Writer out) {
+    public SparqlResultsGridJsonWriter(Writer out) {
         this(out, null, null);
     }
 
@@ -101,58 +102,53 @@ public class GridJsonRdfHandler extends AbstractGridJsonWriter
      *                        generated JSON object or <code>null</code>
      *                        to produce standard JSON.
      */
-    public GridJsonRdfHandler(Writer out, MessageFormat urlPattern,
+    public SparqlResultsGridJsonWriter(Writer out, MessageFormat urlPattern,
                                       String jsonCallback) {
         super(out, urlPattern, jsonCallback);
     }
 
     //-------------------------------------------------------------------------
-    // RDFHandler contract support
+    // TupleQueryResultWriter contract support
     //-------------------------------------------------------------------------
 
     /** {@inheritDoc} */
     @Override
-    public void startRDF() throws RDFHandlerException {
+    public final TupleQueryResultFormat getTupleQueryResultFormat() {
+        return TupleQueryResultFormat.JSON;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void startQueryResult(List<String> bindingNames)
+                                    throws TupleQueryResultHandlerException {
         try {
-            this.startDocument(Arrays.asList(CONSTRUCT_VARS));
+            this.startDocument(bindingNames);
         }
         catch (IOException e) {
-            throw new RDFHandlerException(e);
+            throw new TupleQueryResultHandlerException(e);
         }
     }
 
     /** {@inheritDoc} */
     @Override
-    public void handleNamespace(String prefix, String uri)
-                                                    throws RDFHandlerException {
-        this.setPrefix(prefix, uri);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public void handleStatement(Statement st) throws RDFHandlerException {
+    public void handleSolution(BindingSet bindingSet)
+                                    throws TupleQueryResultHandlerException {
         try {
-            this.write(st);
+            this.write(bindingSet);
         }
         catch (IOException e) {
-            throw new RDFHandlerException(e);
+            throw new TupleQueryResultHandlerException(e);
         }
     }
 
     /** {@inheritDoc} */
     @Override
-    public void handleComment(String comment) throws RDFHandlerException {
-        // Ignore comments.
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public void endRDF() throws RDFHandlerException {
+    public void endQueryResult() throws TupleQueryResultHandlerException {
         try {
             this.endDocument();
         }
         catch (IOException e) {
-            throw new RDFHandlerException(e);
+            throw new TupleQueryResultHandlerException(e);
         }
     }
 }

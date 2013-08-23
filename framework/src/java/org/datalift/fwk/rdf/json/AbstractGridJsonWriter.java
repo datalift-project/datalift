@@ -32,7 +32,7 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 
-package org.datalift.fwk.util.web.json;
+package org.datalift.fwk.rdf.json;
 
 
 import java.io.IOException;
@@ -51,8 +51,8 @@ import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.query.BindingSet;
 
+import static org.datalift.fwk.rdf.json.AbstractJsonWriter.ResourceType.*;
 import static org.datalift.fwk.util.web.Charsets.UTF_8;
-import static org.datalift.fwk.util.web.json.AbstractJsonWriter.ResourceType.*;
 
 
 /**
