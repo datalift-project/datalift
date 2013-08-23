@@ -244,14 +244,11 @@ public class OntologyMapper extends BaseModule implements ProjectModule
         }
         Response response = null;
         try {
-            URL u = new URL(src);
-            String path = u.getPath();
-            if (path.charAt(0) == '/') {
-                path = path.substring(1);
-            }
             // Build canonical file path.
+            URL u = new URL(src);
+            String path = u.getHost() + File.separatorChar + u.getPath();
             File f = new File(Configuration.getDefault().getTempStorage(),
-                              MODULE_NAME + '/' + path);
+                              MODULE_NAME + File.separatorChar + path);
             // Make sure parent directories exist.
             f.getParentFile().mkdirs();
             // Check if ontology data have already been downloaded.
@@ -270,40 +267,19 @@ public class OntologyMapper extends BaseModule implements ProjectModule
             }
             long now = System.currentTimeMillis();
             if ((! f.exists()) || (f.lastModified() < now)) {
-                // Compute HTTP Accept header.
-                Map<String,String> headers = new HashMap<String,String>();
-                headers.put(ACCEPT, this.getRdfAcceptHeader());
-                if (f.exists()) {
-                    headers.put(IF_MODIFIED_SINCE,
-                                HttpDateFormat.formatDate(f.lastModified()));
+                // File not in cache or expired. => Download from server.
+                try {
+                    f = this.download(u, f);
                 }
-                // Retrieve file from source URL.
-                FileUtils.DownloadInfo info =
-                                        FileUtils.save(u, null, headers, f);
-                // Cache data as long as allowed, 1 month otherwise.
-                f.setLastModified((info.expires > 0L)? info.expires:
-                                            now + (MONTH_IN_SECONDS * 1000L));
-                if (info.httpStatus == 0) {
-                    // New file has been downloaded.
-                    // => Extract RDF format from MIME type to set file suffix.
-                    RdfFormat fmt = RdfFormat.find(info.mimeType);
-                    if (fmt == null) {
-                        throw new TechnicalException("invalid.remote.mime.type",
-                                                     info.mimeType);
+                catch (IOException e) {
+                    if (! f.exists()) {
+                        throw e;
                     }
-                    // Ensure file extension is present to allow RDF syntax
-                    // detection in future cache accesses.
-                    String ext = "." + fmt.getFileExtension();
-                    if (! f.getName().endsWith(ext)) {
-                        File newFile = new File(f.getCanonicalPath() + ext);
-                        f.renameTo(newFile);
-                        f = newFile;
-                    }
-                    // Mark file as to be deleted upon JVM termination.
-                    f.deleteOnExit();
+                    // Else: Continue with local (outdated) copy.
                 }
-                // Else: Not modified...
             }
+            // Else: Local cache copy is still valid. => Use it.
+
             // Parse ontology.
             Ontology o = new OwlParser().parse(f, src);
             // Return JSON representation of OWL ontology.
@@ -516,6 +492,57 @@ public class OntologyMapper extends BaseModule implements ProjectModule
                                                     name, null, id, parent);
         this.projectManager.saveProject(p);
         return newSrc;
+    }
+
+    /**
+     * Downloads the data from the specified URL and store them into
+     * the specified file, possibly renaming it to append an extension
+     * reflecting the MIME type of the data (as advertised in the HTTP
+     * response).
+     * @param  u   the URL to download the data from.
+     * @param  f   the target file.
+     * 
+     * @return the actual file in which the data have been stored.
+     * @throws IOException if any error occurred retrieving or saving
+     *         the data.
+     */
+    private File download(URL u, File f) throws IOException {
+        long now = System.currentTimeMillis();
+        // Compute HTTP Accept header.
+        Map<String,String> headers = new HashMap<String,String>();
+        headers.put(ACCEPT, this.getRdfAcceptHeader());
+        if (f.exists() && (f.lastModified() < now)) {
+            headers.put(IF_MODIFIED_SINCE,
+                        HttpDateFormat.formatDate(f.lastModified()));
+        }
+        // Retrieve file from source URL.
+        FileUtils.DownloadInfo info = FileUtils.save(u, null, headers, f);
+        // Cache data as long as allowed, 1 month otherwise.
+        f.setLastModified((info.expires > now)? info.expires:
+                                            now + (MONTH_IN_SECONDS * 1000L));
+        if (info.httpStatus == 0) {
+            // New file has been downloaded.
+            // => Extract RDF format from MIME type to set file suffix.
+            RdfFormat fmt = RdfFormat.find(info.mimeType);
+            if (fmt == null) {
+                throw new TechnicalException("invalid.remote.mime.type",
+                                             info.mimeType);
+            }
+            // Ensure file extension is present to allow RDF syntax
+            // detection in future cache accesses.
+            String ext = "." + fmt.getFileExtension();
+            if (! f.getName().endsWith(ext)) {
+                File newFile = new File(f.getCanonicalPath() + ext);
+                if (f.renameTo(newFile)) {
+                    f = newFile;
+                }
+            }
+            // Mark file as to be deleted upon JVM termination.
+            f.deleteOnExit();
+        }
+        // Else: Not modified...
+
+        return f;
     }
 
     private String getRdfAcceptHeader() {
