@@ -172,7 +172,8 @@ public abstract class AbstractJsonWriter
      * Starts a new JSON document.
      * @param  fields   the field names for the forthcoming JSON objects.
      *
-     * @throws IOException if any error occurred output the JSON text.
+     * @throws IOException if any error occurred outputting the
+     *         JSON text.
      */
     protected void start(List<String> fields) throws IOException {
         this.fields = Collections.unmodifiableList(fields);
@@ -186,7 +187,8 @@ public abstract class AbstractJsonWriter
 
     /**
      * Terminates a JSON document.
-     * @throws IOException if any error occurred output the JSON text.
+     * @throws IOException if any error occurred outputting the
+     *         JSON text.
      */
     protected void end() throws IOException {
         if (this.jsonCallback != null) {
@@ -217,7 +219,8 @@ public abstract class AbstractJsonWriter
     /**
      * Starts a new solution, wrapped in a JSON object.
      *
-     * @throws IOException if any error occurred output the JSON text.
+     * @throws IOException if any error occurred outputting the
+     *         JSON text.
      */
     protected void startSolution() throws IOException {
         if (firstTupleWritten) {
@@ -232,7 +235,8 @@ public abstract class AbstractJsonWriter
     /**
      * Terminates the current, closing the associated JSON object.
      *
-     * @throws IOException if any error occurred output the JSON text.
+     * @throws IOException if any error occurred outputting the
+     *         JSON text.
      */
     protected void endSolution() throws IOException {
         this.closeBraces();             // end solution
@@ -244,7 +248,8 @@ public abstract class AbstractJsonWriter
      * @param  key     the JSON object field name.
      * @param  value   the field RDF value.
      *
-     * @throws IOException if any error occurred output the JSON text.
+     * @throws IOException if any error occurred outputting the
+     *         JSON text.
      * @see    #writeKeyValue(String, Value, ResourceType)
      */
     protected void writeKeyValue(String key, Value value) throws IOException {
@@ -256,7 +261,8 @@ public abstract class AbstractJsonWriter
      * @param  key     the JSON object field name.
      * @param  value   the field value as a string.
      *
-     * @throws IOException if any error occurred output the JSON text.
+     * @throws IOException if any error occurred outputting the
+     *         JSON text.
      * @see    #writeKey(String)
      * @see    #writeString(String)
      */
@@ -273,7 +279,8 @@ public abstract class AbstractJsonWriter
      * @param  type    the type of RDF resource referenced by the URI
      *                 value, <code>null</code> if not applicable.
      *
-     * @throws IOException if any error occurred output the JSON text.
+     * @throws IOException if any error occurred outputting the
+     *         JSON text.
      * @see    #writeKey(String)
      * @see    #writeValue(Value, ResourceType)
      */
@@ -295,7 +302,8 @@ public abstract class AbstractJsonWriter
      * @param  type    the type of RDF resource referenced by the URI
      *                 value, <code>null</code> if not applicable.
      *
-     * @throws IOException if any error occurred output the JSON text.
+     * @throws IOException if any error occurred outputting the
+     *         JSON text.
      * @see    #writeJsonValue(Value, ResourceType)
      */
     abstract protected void writeValue(Value value, ResourceType type)
@@ -309,7 +317,8 @@ public abstract class AbstractJsonWriter
      * @param  type    the type of RDF resource referenced by the URI
      *                 value: <strong>ignored</strong>.
      *
-     * @throws IOException if any error occurred output the JSON text.
+     * @throws IOException if any error occurred outputting the
+     *         JSON text.
      */
     protected final void writeJsonValue(Value value, ResourceType type)
                                                             throws IOException {
@@ -366,7 +375,8 @@ public abstract class AbstractJsonWriter
      * (/, \, \b, \f, \n, \r, \t).
      * @param  value   the string value.
      *
-     * @throws IOException if any error occurred output the JSON text.
+     * @throws IOException if any error occurred outputting the
+     *         JSON text.
      */
     protected void writeString(String value) throws IOException {
         // Escape special characters
@@ -387,7 +397,8 @@ public abstract class AbstractJsonWriter
     /**
      * Outputs a JSON array.
      *
-     * @throws IOException if any error occurred output the JSON text.
+     * @throws IOException if any error occurred outputting the
+     *         JSON text.
      */
     protected void writeArray(Iterable<String> array) throws IOException {
         this.openArray();
@@ -405,7 +416,8 @@ public abstract class AbstractJsonWriter
     /**
      * Starts a new JSON array.
      *
-     * @throws IOException if any error occurred output the JSON text.
+     * @throws IOException if any error occurred outputting the
+     *         JSON text.
      */
     protected final void openArray() throws IOException {
         this.writer.write("[");
@@ -416,7 +428,8 @@ public abstract class AbstractJsonWriter
     /**
      * Closes the current JSON array.
      *
-     * @throws IOException if any error occurred output the JSON text.
+     * @throws IOException if any error occurred outputting the
+     *         JSON text.
      */
     protected final void closeArray() throws IOException {
         this.writer.writeEOL();
@@ -427,7 +440,8 @@ public abstract class AbstractJsonWriter
     /**
      * Starts a new JSON object.
      *
-     * @throws IOException if any error occurred output the JSON text.
+     * @throws IOException if any error occurred outputting the
+     *         JSON text.
      */
     protected final void openBraces() throws IOException {
         this.writer.write("{");
@@ -438,7 +452,8 @@ public abstract class AbstractJsonWriter
     /**
      * Terminates the current JSON object.
      *
-     * @throws IOException if any error occurred output the JSON text.
+     * @throws IOException if any error occurred outputting the
+     *         JSON text.
      */
     protected final void closeBraces() throws IOException {
         this.writer.writeEOL();
@@ -449,7 +464,8 @@ public abstract class AbstractJsonWriter
     /**
      * Appends a comma separator.
      *
-     * @throws IOException if any error occurred output the JSON text.
+     * @throws IOException if any error occurred outputting the
+     *         JSON text.
      */
     protected final void writeComma() throws IOException {
         this.writer.write(", ");
