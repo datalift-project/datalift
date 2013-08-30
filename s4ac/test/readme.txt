@@ -9,9 +9,7 @@ secured.repository.url = http://localhost:8080/openrdf-sesame/repositories/secur
 
 
 The s4ac sparql endpoint protects the access to the lifted repository.
-To use the s4ac sparql endpoint instead of the normal one, you have to:
-a) run "ant dist" on s4ac/ or modify core/build.xml to do it
-b) copy dist/s4ac.jar in datalift-home/modules
+To use the s4ac sparql endpoint, you have to build the s4ac module and copy dist/s4ac.jar in datalift-home/modules, as for the other modules.com'e'
 
 
 3- You have to associate to each policy (expressed in RDF) which are the named graphs it is associated to.
