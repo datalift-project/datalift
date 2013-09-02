@@ -24,8 +24,8 @@ STEP 3: Use the module "Data publishing to public RDF store" to publish the name
 
 The URIs of the named graphs of the test dataset are as follows:
 Berlin_1_named_graph.trig: http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/instances/dataFromRatingSite1/Graph-reviews
-Berlin_1(2)_named_graph.trig: http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/instances/dataFromRatingSite2/Graph-reviews
-Berlin_1(3)_named_graph.trig: http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/instances/dataFromVendor1/Graph-2005-11-01
+Berlin_1-2_named_graph.trig: http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/instances/dataFromRatingSite2/Graph-reviews
+Berlin_1-3_named_graph.trig: http://www4.wiwiss.fu-berlin.de/bizer/bsbm/v01/instances/dataFromVendor1/Graph-2005-11-01
 
 2) The user has to define her own access policies. A set of sample access policies is provided (file policies.rdf.xml). These sample policies protect the named graphs of the test dataset we provided. 
 
