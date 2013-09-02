@@ -95,13 +95,14 @@ import static org.openrdf.query.QueryLanguage.SPARQL;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.rdf.ElementType;
 import org.datalift.fwk.rdf.Repository;
+import org.datalift.fwk.rdf.json.GridJsonRdfHandler;
+import org.datalift.fwk.rdf.json.JsonRdfHandler;
+import org.datalift.fwk.rdf.json.SparqlResultsGridJsonWriter;
+import org.datalift.fwk.rdf.json.SparqlResultsJsonWriter;
+import org.datalift.fwk.rdf.json.AbstractJsonWriter.ResourceType;
 import org.datalift.fwk.sparql.AccessController;
 import org.datalift.fwk.sparql.AccessController.ControlledQuery;
 import org.datalift.fwk.util.CloseableIterator;
-import org.datalift.fwk.util.web.json.GridJsonWriter;
-import org.datalift.fwk.util.web.json.JsonRdfHandler;
-import org.datalift.fwk.util.web.json.SparqlResultsJsonWriter;
-import org.datalift.fwk.util.web.json.AbstractJsonWriter.ResourceType;
 
 import static org.datalift.fwk.MediaTypes.*;
 import static org.datalift.fwk.util.PrimitiveUtils.wrap;
@@ -542,7 +543,8 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                     {
                         @Override
                         protected RDFHandler newHandler(OutputStream out) {
-                            return new GridJsonWriter(out, linkFormat, jsonCallback);
+                            return new GridJsonRdfHandler(out, linkFormat,
+                                                               jsonCallback);
                         }
                     };
             }
@@ -645,7 +647,8 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                     {
                         @Override
                         protected TupleQueryResultHandler newHandler(OutputStream out) {
-                            return new GridJsonWriter(out, linkFormat, jsonCallback);
+                            return new SparqlResultsGridJsonWriter(out,
+                                                    linkFormat, jsonCallback);
                         }
                     };
             }

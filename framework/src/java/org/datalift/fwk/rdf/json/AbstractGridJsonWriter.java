@@ -32,7 +32,7 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 
-package org.datalift.fwk.util.web.json;
+package org.datalift.fwk.rdf.json;
 
 
 import java.io.IOException;
@@ -40,7 +40,6 @@ import java.io.OutputStream;
 import java.io.Writer;
 import java.net.URLEncoder;
 import java.text.MessageFormat;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -50,29 +49,21 @@ import org.openrdf.model.Literal;
 import org.openrdf.model.Statement;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
-import org.openrdf.model.impl.LiteralImpl;
 import org.openrdf.query.BindingSet;
-import org.openrdf.query.TupleQueryResultHandlerException;
-import org.openrdf.query.resultio.TupleQueryResultFormat;
-import org.openrdf.query.resultio.TupleQueryResultWriter;
-import org.openrdf.rio.RDFHandler;
-import org.openrdf.rio.RDFHandlerException;
 
-import org.datalift.fwk.project.Row;
-
+import static org.datalift.fwk.rdf.json.AbstractJsonWriter.ResourceType.*;
 import static org.datalift.fwk.util.web.Charsets.UTF_8;
 
 
 /**
- * An implementation of both {@link TupleQueryResultWriter} and
- * {@link RDFHandler} that serializes SPARQL query results and RDF
- * statements into a compact JSON syntax, suitable for directly
- * filling HTML tables with minimum client-side processing.
+ * An implementation of both {@link AbstractJsonWriter} to serialize
+ * SPARQL query results and RDF statements into a compact JSON syntax,
+ * suitable for directly filling HTML tables with minimum client-side
+ * processing.
  *
  * @author hdevos
  */
-public class GridJsonWriter extends AbstractJsonWriter
-                            implements TupleQueryResultWriter, RDFHandler
+public abstract class AbstractGridJsonWriter extends AbstractJsonWriter
 {
     //-------------------------------------------------------------------------
     // Constants
@@ -101,7 +92,7 @@ public class GridJsonWriter extends AbstractJsonWriter
      * Create a new compact grid-oriented RDF JSON serializer.
      * @param  out   the byte stream to write JSON text to.
      */
-    public GridJsonWriter(OutputStream out) {
+    public AbstractGridJsonWriter(OutputStream out) {
         this(out, null, null);
     }
 
@@ -115,8 +106,8 @@ public class GridJsonWriter extends AbstractJsonWriter
      *                        generated JSON object or <code>null</code>
      *                        to produce standard JSON.
      */
-    public GridJsonWriter(OutputStream out, MessageFormat urlPattern,
-                                            String jsonCallback) {
+    public AbstractGridJsonWriter(OutputStream out, MessageFormat urlPattern,
+                                                    String jsonCallback) {
         super(out, jsonCallback);
         this.urlPattern = urlPattern;
     }
@@ -125,7 +116,7 @@ public class GridJsonWriter extends AbstractJsonWriter
      * Create a new compact grid-oriented RDF JSON serializer.
      * @param  out   the character stream to write JSON text to.
      */
-    public GridJsonWriter(Writer out) {
+    public AbstractGridJsonWriter(Writer out) {
         this(out, null, null);
     }
 
@@ -139,8 +130,8 @@ public class GridJsonWriter extends AbstractJsonWriter
      *                        generated JSON object or <code>null</code>
      *                        to produce standard JSON.
      */
-    public GridJsonWriter(Writer out, MessageFormat urlPattern,
-                                      String jsonCallback) {
+    public AbstractGridJsonWriter(Writer out, MessageFormat urlPattern,
+                                              String jsonCallback) {
         super(out, jsonCallback);
         this.urlPattern = urlPattern;
     }
@@ -164,145 +155,90 @@ public class GridJsonWriter extends AbstractJsonWriter
     }
 
     //-------------------------------------------------------------------------
-    // TupleQueryResultWriter contract support
-    //-------------------------------------------------------------------------
-
-    /** {@inheritDoc} */
-    @Override
-    public final TupleQueryResultFormat getTupleQueryResultFormat() {
-        return TupleQueryResultFormat.JSON;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public void startQueryResult(List<String> columnHeaders)
-                                    throws TupleQueryResultHandlerException {
-        try {
-            this.start(columnHeaders);
-            this.openBraces();
-            // Write header
-            this.writeKeyValue("head", columnHeaders);
-            this.writeComma();
-            // Write results
-            this.writeKey("rows");
-            this.openArray();
-        }
-        catch (IOException e) {
-            throw new TupleQueryResultHandlerException(e);
-        }
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public void handleSolution(BindingSet bindingSet)
-                                    throws TupleQueryResultHandlerException {
-        try {
-            this.startSolution();       // start of new solution
-
-            for (Iterator<String> i=this.fields.iterator(); i.hasNext(); ) {
-                String key = i.next();
-                this.writeKeyValue(key, bindingSet.getValue(key),
-                                        ResourceType.Unknown);
-                if (i.hasNext()) {
-                    this.writeComma();
-                }
-            }
-            this.endSolution();         // end solution
-        }
-        catch (IOException e) {
-            throw new TupleQueryResultHandlerException(e);
-        }
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public void endQueryResult() throws TupleQueryResultHandlerException {
-        try {
-            this.closeArray();
-            this.closeBraces();
-            this.end();
-        }
-        catch (IOException e) {
-            throw new TupleQueryResultHandlerException(e);
-        }
-    }
-
-    //-------------------------------------------------------------------------
-    // RDFHandler contract support
-    //-------------------------------------------------------------------------
-
-    /** {@inheritDoc} */
-    @Override
-    public void startRDF() throws RDFHandlerException {
-        try {
-            this.startQueryResult(Arrays.asList(CONSTRUCT_VARS));
-        }
-        catch (Exception e) {
-            throw new RDFHandlerException(e);
-        }
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public void handleNamespace(String prefix, String uri)
-                                                    throws RDFHandlerException {
-        this.setPrefix(prefix, uri);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public void handleStatement(Statement stmt) throws RDFHandlerException {
-        try {
-            this.startSolution();       // start of new solution
-            this.writeKeyValue(CONSTRUCT_VARS[0], stmt.getSubject(),
-                                                  ResourceType.Object);
-            this.writeComma();
-            this.writeKeyValue(CONSTRUCT_VARS[1], stmt.getPredicate(),
-                                                  ResourceType.Predicate);
-            this.writeComma();
-            this.writeKeyValue(CONSTRUCT_VARS[2], stmt.getObject(),
-                                                  ResourceType.Unknown);
-            this.endSolution();         // end solution
-        }
-        catch (IOException e) {
-            throw new RDFHandlerException(e);
-        }
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public void handleComment(String comment) throws RDFHandlerException {
-        // Ignore comments.
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public void endRDF() throws RDFHandlerException {
-        try {
-            this.endQueryResult();
-        }
-        catch (Exception e) {
-            throw new RDFHandlerException(e);
-        }
-    }
-
-    //-------------------------------------------------------------------------
     // Specific implementation
     //-------------------------------------------------------------------------
 
-    public void handleRow(Row<?> row) throws IOException {
-        this.startSolution();           // start of new solution
+    /**
+     * Writes the beginning of the JSON document.
+     * @param  fields   the fields that will be present in the
+     *                  subsequent RDF data rows.
+     *
+     * @throws IOException if any error occurred outputting the
+     *         JSON text.
+     */
+    protected final void startDocument(List<String> fields)
+                                                        throws IOException {
+        this.start(fields);
+        this.openBraces();
+        // Write header
+        this.writeKeyValue("head", fields);
+        this.writeComma();
+        // Write results
+        this.writeKey("rows");
+        this.openArray();
+    }
 
+    /**
+     * Appends the specified binding set to the JSON document.
+     * @param  bindingSet   the binding set.
+     *
+     * @throws IOException if any error occurred outputting the
+     *         JSON text.
+     */
+    protected final void write(BindingSet bindingSet) throws IOException {
+        this.startSolution();           // start of new solution
         for (Iterator<String> i=this.fields.iterator(); i.hasNext(); ) {
             String key = i.next();
-            this.writeKeyValue(key, new LiteralImpl(row.getString(key)),
-                                    ResourceType.Unknown);
+            this.writeKeyValue(key, bindingSet.getValue(key), Unknown);
             if (i.hasNext()) {
                 this.writeComma();
             }
         }
         this.endSolution();             // end solution
     }
+
+    /**
+     * Appends the specified RDF statement to the JSON document.
+     * @param  stmt   the RDF statement.
+     *
+     * @throws IOException if any error occurred outputting the
+     *         JSON text.
+     */
+    protected final void write(Statement stmt) throws IOException {
+        this.startSolution();           // start of new solution
+        this.writeKeyValue(CONSTRUCT_VARS[0], stmt.getSubject(), Object);
+        this.writeComma();
+        this.writeKeyValue(CONSTRUCT_VARS[1], stmt.getPredicate(), Predicate);
+        this.writeComma();
+        this.writeKeyValue(CONSTRUCT_VARS[2], stmt.getObject(), Unknown);
+        this.endSolution();             // end solution
+    }
+
+    /**
+     * Terminates and closes the JSON document.
+     * @throws IOException if any error occurred outputting the
+     *         JSON text.
+     */
+    protected final void endDocument() throws IOException {
+        this.closeArray();              // rows array
+        this.closeBraces();             // root braces
+        this.end();
+    }
+
+/*
+    public void handleRow(Row<?> row) throws IOException {
+        this.startSolution();           // start of new solution
+
+        for (Iterator<String> i=this.fields.iterator(); i.hasNext(); ) {
+            String key = i.next();
+            this.writeKeyValue(key, new LiteralImpl(row.getString(key)), Unknown);
+            if (i.hasNext()) {
+                this.writeComma();
+            }
+        }
+        this.endSolution();             // end solution
+    }
+*/
 
     /**
      * Appends an RDF field value (URI, blank node, literal...) as a

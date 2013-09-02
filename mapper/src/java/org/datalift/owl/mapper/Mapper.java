@@ -288,10 +288,10 @@ public class Mapper extends BaseModule implements ProjectModule
                 // Make sure parent directories exist.
                 f.getParentFile().mkdirs();
                 // Retrieve file from source URL.
-                System.out.println("--- info url --- : " + u.toString() + " --- file : " + f.toString() + " --- headers : " + headers.toString());
+                log.trace("--- info url ---: {}, file: {}, headers: {}", u, f, headers);
                 
                 FileUtils.DownloadInfo info = FileUtils.save(u, null, headers, f);
-                System.out.println("--- info --- : " + info.toString());
+                log.trace("--- info ---: {}", info);
                 f.setLastModified((info.expires > 0L)? info.expires: now);
                 // Extract RDF format from MIME type to force file suffix.
                 RdfFormat fmt = RdfFormat.find(info.mimeType);
@@ -335,8 +335,7 @@ public class Mapper extends BaseModule implements ProjectModule
 			@FormParam("script") String script)
 					throws WebApplicationException {
 
-		System.out.println(
-				"RDF-Transform executing script '"+script+"'" +
+		log.debug("RDF-Transform executing script '"+script+"'" +
 						" on project '"+projectId+"'," +
 								" source '"+sourceId+"'," +
 										" to target '"+targetGraph+"'" +
@@ -356,16 +355,14 @@ public class Mapper extends BaseModule implements ProjectModule
 			Project p = this.getProject(projectId);
 
 			// clear target graph
-			System.out.println("Clearing target graph...");
+			log.trace("Clearing target graph...");
 			internal.getConnection().remove((Resource)null, null, null, internal.getValueFactory().createURI(targetGraph));
-			System.out.println("Done");
 			
 			// copy data into new graph and apply transforms on it ?
-			System.out.println("Copy original source...");
+			log.trace("Copy original source...");
 			CopyStatementRDFHandler copyHandler = new CopyStatementRDFHandler(internal);
 			copyHandler.setTargetGraphs(Collections.singleton(java.net.URI.create(targetGraph)));
 			internal.getConnection().export(copyHandler, internal.getValueFactory().createURI(sourceId.toString()));
-			System.out.println("Done");
 			
 			// Execute script in target graph
 			Script scriptObject = new Script(script);
@@ -374,16 +371,14 @@ public class Mapper extends BaseModule implements ProjectModule
 			executer.setDefaultGraphs(Collections.singleton(java.net.URI.create(targetGraph)));
 			executer.setDefaultRemoveGraphs(Collections.singleton(java.net.URI.create(targetGraph)));
 			executer.setDefaultInsertGraph(java.net.URI.create(targetGraph));
-			System.out.println("Executing");
+			log.trace("Executing script...");
 			scriptObject.execute(executer,null);
-			System.out.println("Done");
 			
 			// Register new transformed RDF source.
 			TransformedRdfSource in = (TransformedRdfSource)p.getSource(sourceId);
 
-			System.out.println("Registering source");
+			log.trace("Registering source");
 			addResultSource(p, in, destTitle, java.net.URI.create(targetGraph));
-			System.out.println("Done");
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -392,7 +387,6 @@ public class Mapper extends BaseModule implements ProjectModule
 			}
 			catch (Exception e1) { e1.printStackTrace(); }
 		}
-		System.out.println("returning");
 		return Response.ok().build();
 	}
 	
