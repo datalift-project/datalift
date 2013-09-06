@@ -73,6 +73,10 @@ public enum ElementType
                     break;
                 }
             }
+            // Support for legacy URLs for resource descriptions
+            if ((v == null) && ("Object".equalsIgnoreCase(s))) {
+                v = Resource;
+            }
         }
         return v;
     }
