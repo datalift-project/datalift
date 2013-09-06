@@ -52,6 +52,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import javax.activation.MimetypesFileTypeMap;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -89,6 +90,7 @@ import com.google.gson.JsonSerializer;
 
 import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
+import org.datalift.fwk.MediaTypes;
 import org.datalift.fwk.ResourceResolver;
 import org.datalift.fwk.i18n.PreferredLocales;
 import org.datalift.fwk.log.Logger;
@@ -522,8 +524,20 @@ public class OntologyMapper extends BaseModule implements ProjectModule
                                             now + (MONTH_IN_SECONDS * 1000L));
         if (info.httpStatus == 0) {
             // New file has been downloaded.
-            // => Extract RDF format from MIME type to set file suffix.
-            RdfFormat fmt = RdfFormat.find(info.mimeType);
+            // => Retrieve data MIME type.
+            MediaType mimeType = info.mimeType;
+            if ((mimeType == null) ||
+                (MediaTypes.APPLICATION_OCTET_STREAM.equals(mimeType))) {
+                // No server provided MIME type.
+                // => Try to guess MIME type from file name and content.
+                mimeType = MediaType.valueOf(
+                                new MimetypesFileTypeMap().getContentType(f));
+            }
+            // Extract RDF format from MIME type to set file suffix.
+            RdfFormat fmt = null;
+            if (mimeType != null) {
+                fmt = RdfFormat.find(mimeType);
+            }
             if (fmt == null) {
                 throw new TechnicalException("invalid.remote.mime.type",
                                              info.mimeType);
