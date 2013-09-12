@@ -84,7 +84,6 @@ angular.module("predicateChooserApp.controllers",[])
 				case 1:
 	       			//send ajax request
 	       			var previewUrl = moduleUrl + "/preview"; 
-
 	       			$http({
 	    				url: previewUrl, 
 	    				method: "GET",
