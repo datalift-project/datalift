@@ -38,6 +38,7 @@
 							"toolbar" : true,
 							"menu" : true
 						},
+						"initialQuery" : "SELECT * WHERE {\n   ?s ?p ?o .\n} LIMIT ${max}",
 						"namespaces" : [
 						                #foreach($ns in $namespaces)
 						                {

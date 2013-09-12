@@ -126,7 +126,8 @@ public interface SparqlEndpoint
      * the client.
      * @param  defaultGraphUris   the target default graphs, or
      *                            <code>null</code>.
-     * @param  namedGraphUris     named graph definitions for query.
+     * @param  namedGraphUris     named graph restrictions for query, or
+     *                            <code>null</code>.
      * @param  query              the SPARQL query string.
      * @param  uriInfo            the request URI data.
      * @param  request            the JAX-RS Request object, for content
@@ -151,7 +152,8 @@ public interface SparqlEndpoint
      * paginated results directly to the client.
      * @param  defaultGraphUris   the target default graphs, or
      *                            <code>null</code>.
-     * @param  namedGraphUris     named graph definitions for query.
+     * @param  namedGraphUris     named graph restrictions for query, or
+     *                            <code>null</code>.
      * @param  query              the SPARQL query string.
      * @param  startOffset        the index of the first expected result
      *                            (inclusive).
@@ -186,7 +188,8 @@ public interface SparqlEndpoint
      * paginated results directly to the client.
      * @param  defaultGraphUris   the target default graphs, or
      *                            <code>null</code>.
-     * @param  namedGraphUris     named graph definitions for query.
+     * @param  namedGraphUris     named graph restrictions for query, or
+     *                            <code>null</code>.
      * @param  query              the SPARQL query string.
      * @param  startOffset        the index of the first expected result
      *                            (inclusive).
@@ -264,20 +267,20 @@ public interface SparqlEndpoint
      * Whenever known, the type of description shall be provided to
      * avoid the overhead of querying the RDF store to try to detect
      * the possible applicable description types.</p>
-     * @param  uri          the URI of the object to describe.
-     * @param  type         the type of the object or
-     *                      <code>null</code> if unknown.
-     * @param  repository   the RDF store to read the object
-     *                      description from.
-     * @param  uriInfo      the request URI data.
-     * @param  request      the JAX-RS Request object, for content
-     *                      negotiation.
-     * @param  acceptHdr    the HTTP Accept header, for content
-     *                      negotiation.
-     * @param  allowedTypes   the supported response types, to drive
-     *                        content negotiation or <code>null</code>
-     *                        if all the response types supported by the
-     *                        SPARQL endpoint are acceptable.
+     * @param  uri                the URI of the object to describe.
+     * @param  type               the type of the object or
+     *                            <code>null</code> if unknown.
+     * @param  repository         the RDF store to read the object
+     *                            description from.
+     * @param  uriInfo            the request URI data.
+     * @param  request            the JAX-RS Request object, for content
+     *                            negotiation.
+     * @param  acceptHdr          the HTTP Accept header, for content
+     *                            negotiation.
+     * @param  allowedTypes       the supported response types, to drive
+     *                            content negotiation or <code>null</code>
+     *                            if all the response types supported by
+     *                            the SPARQL endpoint are acceptable.
      *
      * @return a JAX-RS response with the object description, formatted
      *         according to the negotiated format.
@@ -286,10 +289,10 @@ public interface SparqlEndpoint
      * @throws SecurityException if the user is not allowed to
      *         perform the query.
      */
-    public ResponseBuilder describe(String uri, ElementType type,
-                                    Repository repository, UriInfo uriInfo,
-                                    Request request, String acceptHdr,
-                                    List<Variant> allowedTypes)
+    public ResponseBuilder describe(
+                    String uri, ElementType type, Repository repository,
+                    UriInfo uriInfo, Request request,
+                    String acceptHdr, List<Variant> allowedTypes)
                                                 throws WebApplicationException;
 
     /**
@@ -300,25 +303,24 @@ public interface SparqlEndpoint
      * Whenever known, the type of description shall be provided to
      * avoid the overhead of querying the RDF store to try to detect
      * the possible applicable description types.</p>
-     * @param  uri            the URI of the object to describe.
-     * @param  type           the type of the object or
-     *                        <code>null</code> if unknown.
-     * @param  repository     the RDF store to read the object
-     *                        description from.
-     * @param  max            the maximum number of results to return.
-     * @param  format         the expected response format, overrides
-     *                        the HTTP Accept header.
-     * @param  jsonCallback   the name of the JSONP callback to wrap
-     *                        the JSON response.
-     * @param  uriInfo        the request URI data.
-     * @param  request        the JAX-RS Request object, for content
-     *                        negotiation.
-     * @param  acceptHdr      the HTTP Accept header, for content
-     *                        negotiation.
-     * @param  allowedTypes   the supported response types, to drive
-     *                        content negotiation or <code>null</code>
-     *                        if all the response types supported by the
-     *                        SPARQL endpoint are acceptable.
+     * @param  uri                the URI of the object to describe.
+     * @param  type               the type of the object or
+     *                            <code>null</code> if unknown.
+     * @param  repository         the RDF store to read the object
+     *                            description from.
+     * @param  defaultGraphUris   the target default graphs, or
+     *                            <code>null</code>.
+     * @param  namedGraphUris     named graph restrictions for query, or
+     *                            <code>null</code>.
+     * @param  uriInfo            the request URI data.
+     * @param  request            the JAX-RS Request object, for content
+     *                            negotiation.
+     * @param  acceptHdr          the HTTP Accept header, for content
+     *                            negotiation.
+     * @param  allowedTypes       the supported response types, to drive
+     *                            content negotiation or <code>null</code>
+     *                            if all the response types supported by
+     *                            the SPARQL endpoint are acceptable.
      *
      * @return a JAX-RS response with the object description, formatted
      *         according to the negotiated format.
@@ -327,11 +329,59 @@ public interface SparqlEndpoint
      * @throws SecurityException if the user is not allowed to
      *         perform the query.
      */
-    public ResponseBuilder describe(String uri, ElementType type,
-                                Repository repository, int max,
-                                String format, String jsonCallback,
-                                UriInfo uriInfo, Request request,
-                                String acceptHdr, List<Variant> allowedTypes)
+    public ResponseBuilder describe(
+                    String uri, ElementType type, Repository repository,
+                    List<String> defaultGraphUris, List<String> namedGraphUris,
+                    UriInfo uriInfo, Request request,
+                    String acceptHdr, List<Variant> allowedTypes)
+                                                throws WebApplicationException;
+
+    /**
+     * Provides the description of the specified object (node, predicate
+     * or named graph) from the specified RDF store and returns the
+     * results directly to the client.
+     * <p>
+     * Whenever known, the type of description shall be provided to
+     * avoid the overhead of querying the RDF store to try to detect
+     * the possible applicable description types.</p>
+     * @param  uri                the URI of the object to describe.
+     * @param  type               the type of the object or
+     *                            <code>null</code> if unknown.
+     * @param  repository         the RDF store to read the object
+     *                            description from.
+     * @param  defaultGraphUris   the target default graphs, or
+     *                            <code>null</code>.
+     * @param  namedGraphUris     named graph restrictions for query, or
+     *                            <code>null</code>.
+     * @param  max                the maximum number of results to
+     *                            return.
+     * @param  format             the expected response format,
+     *                            overrides the HTTP Accept header.
+     * @param  jsonCallback       the name of the JSONP callback to wrap
+     *                            the JSON response.
+     * @param  uriInfo            the request URI data.
+     * @param  request            the JAX-RS Request object, for content
+     *                            negotiation.
+     * @param  acceptHdr          the HTTP Accept header, for content
+     *                            negotiation.
+     * @param  allowedTypes       the supported response types, to drive
+     *                            content negotiation or <code>null</code>
+     *                            if all the response types supported by
+     *                            the SPARQL endpoint are acceptable.
+     *
+     * @return a JAX-RS response with the object description, formatted
+     *         according to the negotiated format.
+     * @throws WebApplicationException if any error occurred processing
+     *         the SPARQL query.
+     * @throws SecurityException if the user is not allowed to
+     *         perform the query.
+     */
+    public ResponseBuilder describe(
+                    String uri, ElementType type, Repository repository,
+                    List<String> defaultGraphUris, List<String> namedGraphUris,
+                    int max, String format, String jsonCallback,
+                    UriInfo uriInfo, Request request,
+                    String acceptHdr, List<Variant> allowedTypes)
                                                 throws WebApplicationException;
 
     /**

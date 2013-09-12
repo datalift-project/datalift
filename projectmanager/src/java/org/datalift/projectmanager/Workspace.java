@@ -205,9 +205,6 @@ public class Workspace extends BaseModule
     private final static String SOURCE_PATH = "/" + SOURCE_URI_PREFIX  + '/';
     /** The path prefix for HTML page Velocity templates. */
     private final static String TEMPLATE_PATH = "/" + MODULE_NAME  + '/';
-    /** The MIME type for GML files. */
-    private final static MediaType GML_TYPE =
-                                    MediaType.valueOf(GmlSource.GML_MIME_TYPE);
 
     //-------------------------------------------------------------------------
     // Class members
@@ -617,7 +614,7 @@ public class Workspace extends BaseModule
                     @FormDataParam("file_name") String file_name,
                     @FormDataParam("charset") String charset,
                     @FormDataParam("separator") String separator,
-                    @FormDataParam("title_row") @DefaultValue("0") int titleRow,
+                    @FormDataParam("title_row") @DefaultValue("1") int titleRow,
                     @FormDataParam("first_row") @DefaultValue("0") int firstRow,
                     @FormDataParam("last_row") @DefaultValue("0") int lastRow,
                     @FormDataParam("quote") String quote,
@@ -1481,102 +1478,94 @@ public class Workspace extends BaseModule
         }
         return response;
     }
-
+  
     @POST
     @Path("{id}/gmlupload")
     @Consumes(MULTIPART_FORM_DATA)
     public Response uploadGmlSource(
             @PathParam("id") String projectId,
             @FormDataParam("description") String description,
-            @FormDataParam("source1") InputStream fileData1,
+            @FormDataParam("source1") InputStream gmlData,
             @FormDataParam("source1")
-            FormDataContentDisposition fileDisposition1,
-            @FormDataParam("source2") InputStream fileData2,
-            @FormDataParam("source2")
-            FormDataContentDisposition fileDisposition2,
+                    FormDataContentDisposition gmlDisposition,
+            @FormDataParam("source2") InputStream xsdData,
             @Context UriInfo uriInfo)
-                    throws WebApplicationException {
-        if (fileData1 == null) {
-            this.throwInvalidParamError("source1", null);
+                                        throws WebApplicationException {
+        // Extract common file root name from main (GML) file.
+        String fileRoot = this.toFileName(gmlDisposition.getFileName());
+        int sep = fileRoot.lastIndexOf('.');
+        if (sep > 0) {
+            fileRoot = fileRoot.substring(0, sep);
         }
-        if (fileData2 == null) {
-            this.throwInvalidParamError("source2", null);
+        // Enforce strict naming convention (same root name) for all
+        // files composing the Gmlfile, ignoring user-provided
+        // filenames for all files but the main(GML) one.
+        String[] fileNames = new String[] {
+                        fileRoot + ".gml", fileRoot + ".xsd" };
+        InputStream[] fileData = new InputStream[] {
+                        gmlData, xsdData };
+        // Check that both file name and data are present for all files.
+        for (int i=0; i<2; i++) {
+            if ((fileData[i] == null) || (isBlank(fileNames[i]))) {
+            this.throwInvalidParamError("source" + i, null);
+            }
         }
-
         Response response = null;
+        File[] localFiles = new File[2];
+        String title = fileNames[0];
 
-        String fileName1 = null;
-        String fileName2 = null;
-
-        URL fileUrl1 = null;
-        URL fileUrl2 = null;
-
-        File localFile1 = null;
-        File localFile2 = null;
-
-        fileName1 = this.toFileName(fileDisposition1.getFileName());
-        if (isBlank(fileName1)) {
-            this.throwInvalidParamError("source1", null);
-        }
-
-        fileName2 = this.toFileName(fileDisposition2.getFileName());
-        if (isBlank(fileName2)) {
-            this.throwInvalidParamError("source2", null);
-        }
-
-        log.debug("Processing GML source creation request for \"{}\""
-                  + " (schema file: \"{}\")", fileName1, fileName2);
+        log.debug("Processing Gmlfile source creation request for {}",
+                  title);
+        boolean deleteFiles = false;
         try {
-            // Build object URIs from request path.
-            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
-            URI sourceUri1 = new URI(projectUri.getScheme(), null,
-                    projectUri.getHost(), projectUri.getPort(),
-                    this.getSourceId(projectUri.getPath(), fileName1),
-                    null, null);
-
             // Retrieve project.
+            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
             Project p = this.loadProject(projectUri);
-            // Save new source data to public project storage.
-            String filePath1 = this.getProjectFilePath(projectId, fileName1);
-            String filePath2 = this.getProjectFilePath(projectId, fileName2);
-            localFile1 = this.getFileData(fileData1, fileUrl1, filePath1,
-                                          uriInfo, GML_TYPE);
-            localFile2 = this.getFileData(fileData2, fileUrl2, filePath2,
-                                          uriInfo, APPLICATION_XML_TYPE);
-            // Initialize new source.
-            this.projectManager.newGmlSource(p, sourceUri1, fileName1, description, filePath1);
-            // Persist new source.
+
+            String[] paths = new String[2];
+            int i = 0;
+            try {
+                for (i=0; i<2; i++) {
+                    // Save new source data to public project storage.
+                    paths[i] = this.getProjectFilePath(projectId,
+                                                       fileNames[i]);
+                    localFiles[i] = this.getFileData(fileData[i], null,
+                                            paths[i], uriInfo, (MediaType)null);
+                }
+            }
+            catch (IOException e) {
+                String src = (fileData[i] != null)? fileNames[i]:
+                                                    "source" + i;
+                log.fatal("Failed to save data from {}", e, src);
+                this.throwInvalidParamError(src, e.getLocalizedMessage());
+            }
+            // Build object URIs from request path.
+            URI srcUri = new URI(projectUri.getScheme(), null,
+                                    projectUri.getHost(), projectUri.getPort(),
+                                    this.getSourceId(projectUri.getPath(), fileNames[0]),
+                                    null, null);
+            // Initialize & persist new source.
+            this.projectManager.newGmlSource(p, srcUri, title,
+                description, paths[0], paths[1]);
             this.projectManager.saveProject(p);
             // Notify user of successful creation, redirecting HTML clients
-            response = this.created(p, sourceUri1, ProjectTab.Sources).build();
-
-            log.info("New GML source \"{}\" created", sourceUri1);
-        }
-        catch (IOException e) {
-            if (localFile1 != null) {
-                this.deleteFileStorage(localFile1);
-            }
-            if (localFile2 != null) {
-                this.deleteFileStorage(localFile2);
-            }
-            String src1 = (fileData1 != null)? fileName1: (fileUrl1 != null)? fileUrl1.toString(): "file_url1";
-            log.fatal("Failed to save source data from {}", e, src1);
-            this.throwInvalidParamError(src1, e.getLocalizedMessage());
-            String src2 = (fileData2 != null)? fileName2: (fileUrl2 != null)? fileUrl2.toString(): "file_url2";
-            log.fatal("Failed to save source data from {}", e, src2);
-            this.throwInvalidParamError(src2, e.getLocalizedMessage());
+            response = this.created(p, srcUri, ProjectTab.Sources)
+                           .build();
+            log.info("New Gmlfile source \"{}\" created", title);
         }
         catch (Exception e) {
-            if (localFile1 != null) {
-                this.deleteFileStorage(localFile1);
-            }
+            deleteFiles = true;
             this.handleInternalError(e,
-                    "Failed to create GML source for {}", fileName1);
-            if (localFile2 != null) {
-                this.deleteFileStorage(localFile2);
+                    "Failed to create Gmlfile source for {}", title);
+        }
+        finally {
+            if (deleteFiles) {
+                for (File f : localFiles) {
+                    if (f != null) {
+                        this.deleteFileStorage(f);
+                    }
+                }
             }
-            this.handleInternalError(e,
-                    "Failed to create XSD source for {}", fileName2);
         }
         return response;
     }
@@ -1604,8 +1593,8 @@ public class Workspace extends BaseModule
             response = this.redirect(p, ProjectTab.Sources).build();
         }
         catch (Exception e) {
-            this.handleInternalError(e, "Could not modify GML source {}",
-                    sourceUri);
+            this.handleInternalError(e,
+                "Could not modify Gmlfile source {}", sourceUri);
         }
         return response;
     }
@@ -1678,7 +1667,7 @@ public class Workspace extends BaseModule
                 response = cfg.getBean(SparqlEndpoint.class)
                               .describe(src.getUri(), ElementType.Graph,
                                         cfg.getInternalRepository(),
-                                        5000, null, null,
+                                        null, null, -1, null, null,
                                         uriInfo, request, acceptHdr, null);
             }
             else {
@@ -2374,7 +2363,9 @@ public class Workspace extends BaseModule
      * @return the filename, correctly decoded.
      */
     private String toFileName(String fileName) {
-        return new String(fileName.getBytes(), Charsets.UTF_8);
+        // Try decoding the file name using the local encoding.
+        String s = new String(fileName.getBytes(), Charsets.UTF_8);
+        return (s.indexOf('?') == -1)? s: fileName;
     }
 
     /**

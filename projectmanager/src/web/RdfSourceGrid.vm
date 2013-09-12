@@ -39,7 +39,7 @@
 			$("#goto_workspace").button();
 
 
-#set( $maxEntries = 5000 )
+#set( $maxEntries = 1000 )
 	var tableContent = [
 #foreach( $triple in $it )
   #if( $foreach.count > $maxEntries ) 

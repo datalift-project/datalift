@@ -198,19 +198,24 @@ public class S4acAccessController extends BaseModule
         if (this.securityRepository != null) {
             // Get the name of the repository against which resolving
             // access control policy ASK queries.
+            final String policyQueryStoreMsg =
+                                "Resolving access policy ASK queries against ";
             String userRepositoryUri = configuration.getProperty(
                                                     USER_REPOSITORY_PROPERTY);
             if (userRepositoryUri != null) {
                 if (userRepositoryUri.equals(this.securityRepository.name)) {
                     this.userRepository = this.securityRepository;
-                    log.info("Resolving access policy ASK queries against security RDF store.");
+                    log.info(policyQueryStoreMsg + "security RDF store");
                 }
                 else {
                     this.userRepository = configuration.getRepository(
                                                             userRepositoryUri);
-                    log.info("Resolving access policy ASK queries against RDF store \"{}\"",
+                    log.info(policyQueryStoreMsg + "RDF store \"{}\"",
                              this.userRepository.name);
                 }
+            }
+            else {
+                log.info(policyQueryStoreMsg + "query target RDF store");
             }
             // Load access control policy files (if any) in security repository.
             if (! isBlank(policyFiles)) {
@@ -254,24 +259,25 @@ public class S4acAccessController extends BaseModule
                     try { cnx.close(); } catch (Exception e) { /* Ignore ... */ }
                 }
             }
-            // Check that secured repositories are indeed protected.
-            if ((! this.securedRepositories.isEmpty()) &&
-                (this.policies.isEmpty())) {
-                throw new TechnicalException("access.policies.not.found");
-            }
-            else {
-                log.info("Found {} access policies applicable to RDF stores {}",
-                         wrap(this.policies.size()), this.securedRepositories);
-            }
             // Check that there's at least one repository under access control.
             if (this.securedRepositories.isEmpty()) {
                 log.warn("{} configuration parameter not set. " +
                      "Access control policies not applicable to any RDF store.",
                      SECURED_REPOSITORIES);
             }
-            // Register all protected named graphs.
-            for (AccessPolicy ap : this.policies.values()){
-                this.protectedGraphs.addAll(ap.getGraphs());
+            else {
+                // Check that secured repositories are indeed protected.
+                if (this.policies.isEmpty()) {
+                    throw new TechnicalException("access.policies.not.found");
+                }
+                else {
+                    log.info("Found {} access policies applicable to RDF stores {}",
+                         wrap(this.policies.size()), this.securedRepositories);
+                }
+                // Register all protected named graphs.
+                for (AccessPolicy ap : this.policies.values()){
+                    this.protectedGraphs.addAll(ap.getGraphs());
+                }
             }
         }
         else {
@@ -341,6 +347,20 @@ public class S4acAccessController extends BaseModule
         return new ControlledQuery(query, type.name(),
                                    defaultGraphUris, namedGraphUris, graphs);
     }
+
+    /** {@inheritDoc} */
+    @Override
+    public void refresh() {
+        // Invalidate all public graph caches.
+        for (PublicGraphs g : this.publicGraphs.values()) {
+            g.invalidate();
+        }
+        log.debug("Public graph cache refreshed");
+    }
+
+    //-------------------------------------------------------------------------
+    // Specific implementation
+    //-------------------------------------------------------------------------
 
     private Repository getPolicyEvaluationRepository(Repository target) {
         return (this.userRepository != null)? this.userRepository: target;
@@ -511,12 +531,15 @@ public class S4acAccessController extends BaseModule
        return graphs;
     }
 
-    private void loadPolicyFiles(Collection<String> policyFiles) {
+    private int loadPolicyFiles(Collection<String> policyFiles) {
+        int loadedFiles = 0;
         for (String f : policyFiles) {
+            if (isBlank(f)) continue;
             log.debug("Loading policy file \"{}\" into {}...",
                                                     f, this.securityRepository);
             try {
                 RdfUtils.upload(new File(f), this.securityRepository, null);
+                loadedFiles++;
             }
             catch (IllegalArgumentException e) {
                 // Log error and continue processing policy files.
@@ -531,6 +554,7 @@ public class S4acAccessController extends BaseModule
                 log.error(error.getLocalizedMessage(), e);
             }
         }
+        return loadedFiles;
     }
 
     //-------------------------------------------------------------------------
@@ -565,6 +589,10 @@ public class S4acAccessController extends BaseModule
             if (graphs != null) {
                 this.publicGraphs.addAll(graphs);
             }
+        }
+
+        public void invalidate() {
+            this.nextRefresh = 0L;
         }
     }
 }

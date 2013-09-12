@@ -100,6 +100,8 @@ public final class Wrapper
      */
     private final static String SESAME_HOME =
                                         "info.aduna.platform.appdata.basedir";
+    /** The system property defining the location of the Sesame log files. */
+    private final static String SESAME_LOG_PATH = "info.aduna.logging.dir";
     /** The system property defining where Jetty is being run. */
     private final static String JETTY_HOME = "jetty.home";
 
@@ -264,8 +266,10 @@ public final class Wrapper
         System.setProperty(DATALIFT_ROOT, dataliftRoot.getCanonicalPath());
         System.setProperty(DATALIFT_HOME, dataliftHome.getCanonicalPath());
         System.setProperty(DATALIFT_PORT, String.valueOf(httpPort));
-        System.setProperty(DATALIFT_LOG_PATH,
-                                        env.getPath(LOGS).getCanonicalPath());
+        // Group all log files in a single location.
+        String logPath = env.getPath(LOGS).getCanonicalPath();
+        System.setProperty(DATALIFT_LOG_PATH, logPath);
+        System.setProperty(SESAME_LOG_PATH, logPath);
         // Set Sesame repositories location.
         if (System.getProperty(SESAME_HOME) == null) {
             File sesameHome = new File(dataliftHome, SESAME_REPOSITORIES_DIR);

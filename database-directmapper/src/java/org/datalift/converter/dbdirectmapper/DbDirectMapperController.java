@@ -53,7 +53,7 @@ public class DbDirectMapperController extends ModuleController {
 
     /** Default constructor. */
 	public DbDirectMapperController() {
-		super(MODULE_NAME, 100);
+		super(MODULE_NAME, 400);
 	}
 	
 	//-------------------------------------------------------------------------

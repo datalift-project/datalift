@@ -86,7 +86,7 @@ public class RdfTransformer extends BaseConverterModule
 
     /** Default constructor. */
     public RdfTransformer() {
-        super(MODULE_NAME, 1000, SourceType.TransformedRdfSource);
+        super(MODULE_NAME, 5000, SourceType.TransformedRdfSource);
     }
 
     //-------------------------------------------------------------------------

@@ -42,8 +42,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.GregorianCalendar;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -60,10 +62,11 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+import javax.xml.datatype.DatatypeConstants;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 
-import static javax.xml.datatype.DatatypeConstants.*;
+import static javax.xml.datatype.DatatypeConstants.FIELD_UNDEFINED;
 
 import org.openrdf.model.Literal;
 import org.openrdf.model.Value;
@@ -84,6 +87,7 @@ import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.rdf.UriCachingValueFactory;
 import org.datalift.fwk.util.Env;
 import org.datalift.fwk.util.UriBuilder;
+import org.datalift.fwk.util.web.UriParam;
 
 import static org.datalift.fwk.rdf.ElementType.*;
 import static org.datalift.fwk.util.PrimitiveUtils.wrap;
@@ -112,6 +116,7 @@ public class CsvDirectMapper extends BaseConverterModule
     public enum Mapping {
         String          ("string"),
         Integer         ("int"),
+        Long            ("long"),
         Float           ("float"),
         Boolean         ("boolean"),
         Date            ("date"),
@@ -234,11 +239,11 @@ public class CsvDirectMapper extends BaseConverterModule
     @POST
     @Consumes(APPLICATION_FORM_URLENCODED)
     public Response mapCsvData(
-                    @FormParam("project") URI projectId,
-                    @FormParam("source") URI sourceId,
+                    @FormParam("project") UriParam projectId,
+                    @FormParam("source") UriParam sourceId,
                     @FormParam("dest_title") String destTitle,
-                    @FormParam("dest_graph_uri") URI targetGraph,
-                    @FormParam("base_uri") URI baseUri,
+                    @FormParam("dest_graph_uri") UriParam targetGraphParam,
+                    @FormParam("base_uri") UriParam baseUriParam,
                     @FormParam("true_values") String trueValues,
                     @FormParam("date_format") String dateFormat,
                     @FormParam("key_column") @DefaultValue("-1") int keyColumn,
@@ -249,12 +254,21 @@ public class CsvDirectMapper extends BaseConverterModule
         //       empty unless at least one @FormParm annotation is present.
         // See: http://jersey.576304.n2.nabble.com/POST-parameters-not-injected-via-MultivaluedMap-td6434341.html
 
+        if (projectId == null) {
+            this.throwInvalidParamError("project", null);
+        }
+        if (sourceId == null) {
+            this.throwInvalidParamError("source", null);
+        }
+        if (targetGraphParam == null) {
+            this.throwInvalidParamError("dest_graph_uri", null);
+        }
         Response response = null;
         try {
             // Retrieve project.
-            Project p = this.getProject(projectId);
+            Project p = this.getProject(projectId.toUri("project"));
             // Load input source.
-            CsvSource in = (CsvSource)(p.getSource(sourceId));
+            CsvSource in = (CsvSource)(p.getSource(sourceId.toUri("source")));
             // Load datatype mapping for each column.
             Mapping[] typeMappings = new Mapping[params.size()];
             for (String k : params.keySet()) {
@@ -280,9 +294,19 @@ public class CsvDirectMapper extends BaseConverterModule
             catch (IllegalArgumentException e) {
                 this.throwInvalidParamError("date_format", dateFormat);
             }
+            URI targetGraph = targetGraphParam.toUri("dest_graph_uri");
+            URI baseUri     = UriParam.valueOf(baseUriParam, "base_uri");
             // Convert CSV data and load generated RDF triples.
-            this.convert(in, Configuration.getDefault().getInternalRepository(),
+            Collection<MappingError> errors = this.convert(in,
+                             Configuration.getDefault().getInternalRepository(),
                              targetGraph, baseUri, targetType, desc);
+            // Log mapping errors.
+            if (! errors.isEmpty()) {
+                log.error("{} mapping errors occurred while converting "
+                                + "CSV source \"{}\":\n\t- {}",
+                          Integer.valueOf(errors.size()), in.getTitle(),
+                          join(errors, "\n\t- "));
+            }
             // Register new transformed RDF source.
             Source out = this.addResultSource(p, in, destTitle, targetGraph);
             // Display project source tab, including the newly created source.
@@ -306,14 +330,15 @@ public class CsvDirectMapper extends BaseConverterModule
         return Mapping.values();
     }
 
-    private void convert(CsvSource src, Repository target,
-                                        URI targetGraph, URI baseUri,
-                                        String targetType,
-                                        MappingDesc mapping) {
+    private Collection<MappingError> convert(
+                                CsvSource src, Repository target,
+                                URI targetGraph, URI baseUri,
+                                String targetType, MappingDesc mapping) {
         final UriBuilder uriBuilder = Configuration.getDefault()
                                                    .getBean(UriBuilder.class);
         final RepositoryConnection cnx = target.newConnection();
         org.openrdf.model.URI ctx = null;
+        MappingContext mappingCtx = new MappingContext();
         try {
             final ValueFactory valueFactory =
                             new UriCachingValueFactory(cnx.getValueFactory());
@@ -365,64 +390,64 @@ public class CsvDirectMapper extends BaseConverterModule
                             new LinkedHashMap<org.openrdf.model.URI,Value>();
             for (Row<String> row : src) {
                 statements.clear();
-                boolean skipRow = false;
-                // Scan columns to map values and build triples.
-                org.openrdf.model.URI subject = null;
-                for (int j=0, max=row.size(); j<max; j++) {
-                    Mapping m = mapping.getMapping(j);
-                    Value value = null;
-                    String v = trimToNull(row.get(j));  // Trim value.
-                    if (v != null) {
-                        // Handle special case of unmatched closing quote, left
-                        // over by CSV parser when followed by padding.
-                        if (v.indexOf(quote) == v.length() - 1) {
-                            v = v.substring(0, v.length() - 1);
+                // Build subject URI.
+                String s = null;
+                if (mapping.keyColumn != -1) {
+                    s = this.sanitizeValue(row.get(mapping.keyColumn), quote);
+                    if (s != null) {
+                        s = uriBuilder.urlify(s, Resource);
+                    }
+                }
+                else {
+                    // No identifier column defined. => Auto-generate row URI.
+                    s = String.valueOf(i);
+                }
+                mappingCtx.rowId = s;
+                if (s != null) {
+                    // Generate triples for current row.
+                    org.openrdf.model.URI subject =
+                                valueFactory.createURI(objUri + s); // + "#_";
+                    // Scan columns to map values and build triples.
+                    for (int j=0, max=row.size(); j<max; j++) {
+                        mappingCtx.columnName = row.getKey(j);
+                        Mapping m = mapping.getMapping(j);
+                        Value value = null;
+                        String v = this.sanitizeValue(row.get(j), quote);
+                        if (v != null) {
+                            value = this.mapValue(v, valueFactory, m, mapping,
+                                                  mappingCtx);
                         }
-                        value = this.mapValue(v, valueFactory, m, mapping);
-                        if (j == mapping.keyColumn) {
-                            subject = valueFactory.createURI(objUri +
-                                            uriBuilder.urlify(v, Resource)); // + "#_";
+                        if (value != null) {
+                            statements.put(predicates[j], value);
                         }
+                        // Else: Ignore cell.
                     }
-                    else {
-                        // Skip rows without identifier.
-                        if (j == mapping.keyColumn) skipRow = true;
+                    // Append RDF type triple.
+                    if (! statements.isEmpty()) {
+                        statements.put(RDF.TYPE, rdfType);
                     }
-                    if (value != null) {
-                        statements.put(predicates[j], value);
-                    }
-                    // Else: Ignore cell.
-                }
-                if (skipRow) continue;
-
-                // Auto-generate row URI if no identifier column was defined.
-                if (subject == null) {
-                    subject = valueFactory.createURI(objUri + i); // + "#_";
-                }
-                // Append RDF type triple.
-                if (! statements.isEmpty()) {
-                    statements.put(RDF.TYPE, rdfType);
-                }
-                // Save triples into RDF store.
-                for (Map.Entry<org.openrdf.model.URI,Value>e :
+                    // Save triples into RDF store.
+                    for (Map.Entry<org.openrdf.model.URI,Value>e :
                                                     statements.entrySet()) {
-                    cnx.add(valueFactory.createStatement(
+                        cnx.add(valueFactory.createStatement(
                                     subject, e.getKey(), e.getValue()), ctx);
 
-                    // Commit transaction according to the configured batch size.
-                    statementCount++;
-                    if ((statementCount % batchSize) == 0) {
-                        cnx.commit();
-                        // Trace progress.
-                        if (log.isTraceEnabled()) {
-                            duration = System.currentTimeMillis() - t0;
-                            log.trace("Inserted {} RDF triples from {} CSV lines in {} seconds...",
-                                      wrap(statementCount), wrap(i - 1),
-                                      wrap(duration / 1000.0));
+                        // Commit transaction according to the configured batch size.
+                        statementCount++;
+                        if ((statementCount % batchSize) == 0) {
+                            cnx.commit();
+                            // Trace progress.
+                            if (log.isTraceEnabled()) {
+                                duration = System.currentTimeMillis() - t0;
+                                log.trace("Inserted {} RDF triples from {} CSV lines in {} seconds...",
+                                          wrap(statementCount), wrap(i - 1),
+                                          wrap(duration / 1000.0));
+                            }
                         }
                     }
+                    i++;
                 }
-                i++;
+                // Else: Skip rows without identifier.
             }
             cnx.commit();
             duration = System.currentTimeMillis() - t0;
@@ -452,53 +477,70 @@ public class CsvDirectMapper extends BaseConverterModule
             // Close repository connection.
             try { cnx.close();  } catch (Exception e) { /* Ignore... */ }
         }
+        return mappingCtx.getErrors();
+    }
+
+    private String sanitizeValue(String v, char quote) {
+        v = trimToNull(v);      // Trim value.
+        if (v != null) {
+            // Handle special case of unmatched closing quote, left
+            // over by CSV parser when followed by padding.
+            if (v.indexOf(quote) == v.length() - 1) {
+                v = v.substring(0, v.length() - 1);
+            }
+        }
+        return v;
     }
 
     private Value mapValue(String s, ValueFactory valueFactory,
-                                       Mapping mapping, MappingDesc desc) {
+                           Mapping mapping, MappingDesc desc,
+                                            MappingContext ctx) {
         Value v = null;
         switch (mapping) {
             case Ignore:
                 break;
             case String:
-                v = this.mapString(s, valueFactory);
+                v = this.mapString(s, valueFactory, ctx);
                 break;
             case Integer:
-                v = this.mapInt(s, valueFactory);
+                v = this.mapInt(s, valueFactory, ctx);
+                break;
+            case Long:
+                v = this.mapLong(s, valueFactory, ctx);
                 break;
             case Float:
-                v = this.mapFloat(s, valueFactory);
+                v = this.mapFloat(s, valueFactory, ctx);
                 break;
             case Boolean:
-                v = this.mapBoolean(s, valueFactory, desc);
+                v = this.mapBoolean(s, valueFactory, desc, ctx);
                 break;
             case Date:
-                v = this.mapDate(s, valueFactory, desc, false);
+                v = this.mapDate(s, valueFactory, desc, ctx);
                 break;
             case URI:
-                v = this.mapUri(s, valueFactory);
+                v = this.mapUri(s, valueFactory, ctx);
                 break;
             default:
                 // Automatic mapping on a per-cell basis.
                 if ((s.indexOf('.') != -1) || (s.indexOf(',') != -1)) {
                     // Try double.
-                    v = this.mapFloat(s, valueFactory);
+                    v = this.mapFloat(s, valueFactory, null);
                 }
                 if (v == null) {
                     // Try integer.
-                    v = this.mapInt(s, valueFactory);
+                    v = this.mapLong(s, valueFactory, null);
                 }
                 if ((v == null) && (desc.hasBooleanValues())) {
                     // Try boolean.
-                    v = this.mapBoolean(s, valueFactory, desc);
+                    v = this.mapBoolean(s, valueFactory, desc, null);
                 }
                 if ((v == null) && (desc.hasDateFormat())) {
                     // Try date/time.
-                    v = this.mapDate(s, valueFactory, desc, true);
+                    v = this.mapDate(s, valueFactory, desc, null);
                 }
                 if (v == null) {
                     // Assume string.
-                    v = this.mapString(s, valueFactory);
+                    v = this.mapString(s, valueFactory, null);
                 }
                 break;
         }
@@ -510,9 +552,12 @@ public class CsvDirectMapper extends BaseConverterModule
      * @param  s              the string to map.
      * @param  valueFactory   the {@link ValueFactory value factory} to
      *                        use to allocate the literal.
+     * @param  ctx            the mapping context, for error reporting.
+     *
      * @return a {@link Literal} holding the string value.
      */
-    private Literal mapString(String s, ValueFactory valueFactory) {
+    private Literal mapString(String s, ValueFactory valueFactory,
+                                        MappingContext ctx) {
         return valueFactory.createLiteral(
                                         RdfUtils.removeInvalidDataCharacter(s));
     }
@@ -522,30 +567,57 @@ public class CsvDirectMapper extends BaseConverterModule
      * @param  s              the string to parse as an integer value.
      * @param  valueFactory   the {@link ValueFactory value factory} to
      *                        use to allocate the integer literal.
+     * @param  ctx            the mapping context, for error reporting.
      *
      * @return a {@link Literal} holding the extracted integer value.
      */
-    private Literal mapInt(String s, ValueFactory valueFactory) {
+    private Literal mapInt(String s, ValueFactory valueFactory,
+                                     MappingContext ctx) {
+        Literal v = null;
+        try {
+            v = valueFactory.createLiteral(
+                                Integer.parseInt(this.trimNumSeparators(s)));
+        }
+        catch (Exception e) {
+            this.reportMappingFailure(ctx, s, Mapping.Integer);
+        }
+        return v;
+    }
+
+    /**
+     * Maps a long integer value.
+     * @param  s              the string to parse as a long integer.
+     * @param  valueFactory   the {@link ValueFactory value factory} to
+     *                        use to allocate the integer literal.
+     * @param  ctx            the mapping context, for error reporting.
+     *
+     * @return a {@link Literal} holding the extracted long integer
+     */
+    private Literal mapLong(String s, ValueFactory valueFactory,
+                                      MappingContext ctx) {
         Literal v = null;
         try {
             v = valueFactory.createLiteral(
                                     Long.parseLong(this.trimNumSeparators(s)));
         }
         catch (Exception e) {
-            /* Ignore... */
+            this.reportMappingFailure(ctx, s, Mapping.Integer);
         }
         return v;
     }
 
     /**
      * Maps a floating point value.
+     * @param  rowId          the identifier of the current row.
      * @param  s              the string to parse as a floating point value.
      * @param  valueFactory   the {@link ValueFactory value factory} to
      *                        use to allocate the decimal literal.
+     * @param  ctx            the mapping context, for error reporting.
      *
      * @return a {@link Literal} holding the extracted decimal value.
      */
-    private Literal mapFloat(String s, ValueFactory valueFactory) {
+    private Literal mapFloat(String s, ValueFactory valueFactory,
+                                       MappingContext ctx) {
         Literal v = null;
         try {
             // If the default decimal separator ('.') is absent, assume
@@ -555,7 +627,7 @@ public class CsvDirectMapper extends BaseConverterModule
                 if ((n != -1) && (n == s.lastIndexOf(','))) {
                     s.replace(',', '.');
                 }
-                // Else: no comma or more than one. => Ignore.
+                // Else: No comma or more than one. => Ignore.
             }
             // Trim all spaces, tabs and other separator characters.
             s = this.trimNumSeparators(s);
@@ -563,7 +635,7 @@ public class CsvDirectMapper extends BaseConverterModule
             v = valueFactory.createLiteral(Double.parseDouble(s));
         }
         catch (Exception e) {
-            /* Ignore... */
+            this.reportMappingFailure(ctx, s, Mapping.Float);
         }
         return v;
     }
@@ -575,11 +647,12 @@ public class CsvDirectMapper extends BaseConverterModule
      * @param  valueFactory   the {@link ValueFactory value factory} to
      *                        use to allocate the boolean literal.
      * @param  desc           the value mappings specified by the user.
+     * @param  ctx            the mapping context, for error reporting.
      *
      * @return a {@link Literal} holding the extracted boolean value.
      */
     private Literal mapBoolean(String s, ValueFactory valueFactory,
-                                         MappingDesc desc) {
+                                         MappingDesc desc, MappingContext ctx) {
         return valueFactory.createLiteral(desc.parseBoolean(s));
     }
 
@@ -592,18 +665,19 @@ public class CsvDirectMapper extends BaseConverterModule
      * @param  desc           the value mappings specified by the user.
      * @param  tentative      whether this call is just an attempt to
      *                        check whether the value contains a date.
+     * @param  ctx            the mapping context, for error reporting.
      *
      * @return a {@link Literal} holding the extracted date, time or
      *         date-time value.
      */
     private Literal mapDate(String s, ValueFactory valueFactory,
-                                      MappingDesc desc, boolean tentative) {
+                                      MappingDesc desc, MappingContext ctx) {
         Literal v = null;
         try {
-            v = valueFactory.createLiteral(desc.parseDate(s, tentative));
+            v = valueFactory.createLiteral(desc.parseDate(s));
         }
         catch (Exception e) {
-            /* Ignore... */
+            this.reportMappingFailure(ctx, s, Mapping.Date);
         }
         return v;
     }
@@ -613,19 +687,28 @@ public class CsvDirectMapper extends BaseConverterModule
      * @param  s              the string to parse as a URI.
      * @param  valueFactory   the {@link ValueFactory value factory} to
      *                        use to allocate the URI.
+     * @param  ctx            the mapping context, for error reporting.
      *
      * @return a {@link Literal} holding the extracted integer value.
      */
-    private Value mapUri(String s, ValueFactory valueFactory) {
+    private Value mapUri(String s, ValueFactory valueFactory,
+                                   MappingContext ctx) {
         Value v = null;
         try {
             // Use java.net.URI to ensure no illegal character is present.
             v = valueFactory.createURI(URI.create(s).toString());
         }
         catch (Exception e) {
-            /* Ignore... */
+            this.reportMappingFailure(ctx, s, Mapping.URI);
         }
         return v;
+    }
+
+    private void reportMappingFailure(MappingContext ctx, String s, Mapping m) {
+        if (ctx != null) {
+            log.warn(ctx.addError(s, m));
+        }
+        // Else: Do not report unqualified errors.
     }
 
     /**
@@ -684,10 +767,7 @@ public class CsvDirectMapper extends BaseConverterModule
             DatatypeFactory df = null;
             if (isSet(dateFormat)) {
                 fmt = new SimpleDateFormat(dateFormat);
-                GregorianCalendar c = new GregorianCalendar();
-                c.clear();
-                fmt.setCalendar(c);
-                fmt.setLenient(true);   // Best effort!
+                fmt.setLenient(false);          // Reject ill-formatted dates.
                 try {
                     df = DatatypeFactory.newInstance();
                 }
@@ -716,40 +796,216 @@ public class CsvDirectMapper extends BaseConverterModule
             return (this.dateFormat != null);
         }
 
-        public XMLGregorianCalendar parseDate(String s, boolean tentative) {
+        public XMLGregorianCalendar parseDate(String s) {
             XMLGregorianCalendar date = null;
             if ((this.dateFormat != null) && (! isBlank(s))) {
                 try {
+                    CheckedCalendar c = new CheckedCalendar();
+                    this.dateFormat.setCalendar(c);
                     this.dateFormat.parse(s.trim());
-                    Calendar c = this.dateFormat.getCalendar();
                     date = this.dateFactory.newXMLGregorianCalendar(
                                 this.get(c, YEAR), this.get(c, MONTH),
                                 this.get(c, DAY_OF_MONTH),
                                 this.get(c, HOUR_OF_DAY), this.get(c, MINUTE),
                                 this.get(c, SECOND), this.get(c, MILLISECOND),
-                                FIELD_UNDEFINED /* Timezone */);
+                                this.get(c, ZONE_OFFSET));
                 }
                 catch (Exception e) {
-                    if (! tentative) {
-                        // Not a blind (auto-detect) conversion attempt.
-                        // => Report error.
-                        log.warn("Date conversion failed for \"{}\"", e, s);
-                    }
-                    // Else: Ignore...
+                    throw new IllegalArgumentException(
+                                "Date conversion failed for \"" + s + '"', e);
                 }
             }
             return date;
         }
 
-        private int get(Calendar c, int field) {
+        /**
+         * Returns the value of the specified field from the specified
+         * calendar.
+         * <p>
+         * This method returns consistent values suitable to
+         * build XML dateTime or time objects. For example, if one time
+         * field is set, all time fields must be set.</p>
+         * @param  c       the calendar to extract data from.
+         * @param  field   the field the value of which is expected.
+         *
+         * @return the value of the specified field is the field has
+         *         been set during the date parse process;
+         *         {@link DatatypeConstants#FIELD_UNDEFINED} otherwise.
+         */
+        private int get(CheckedCalendar c, int field) {
             int v = FIELD_UNDEFINED;
-            if (c.isSet(field)) {
+            // Ensure consistency of time fields.
+            if ((c.externallySet(field)) ||
+                (isTimeField(field) && isTimeSet(c))) {
                 v = c.get(field);
-                if (field == MONTH) {
+                if (field == YEAR) {
+                    if (c.get(ERA) == GregorianCalendar.BC) {
+                        v = 1 - v;     // 1001 BC = -1000.
+                    }
+                }
+                else if (field == MONTH) {
                     v++;        // From 0-based Calendar to 1-based XML date.
+                }
+                else if (field == ZONE_OFFSET) {
+                    v = (v + c.get(DST_OFFSET)) / (60 * 1000);
                 }
             }
             return v;
         }
+
+        /**
+         * Returns whether the specified field belongs to the time part
+         * of a XML <code>dateTime</code> or <code>time</code> object.
+         * @param  field   the calendar field.
+         *
+         * @return <code>true</code> if the specified field is one of
+         *         {@link Calendar#HOUR_OF_DAY}, {@link Calendar#HOUR},
+         *         {@link Calendar#MINUTE} or {@link Calendar#SECOND};
+         *         <code>false</code> otherwise.
+         */
+        private boolean isTimeField(int field) {
+            return ((field == HOUR_OF_DAY) || (field == HOUR) ||
+                    (field == MINUTE)      || (field == SECOND));
+        }
+
+        /**
+         * Return whether at least one of the
+         * {@link #isTimeField(int) time fields} has been set for the
+         * specified calendar object.
+         * @param  c   the calendar.
+         *
+         * @return <code>true</code> if at least one of the time fields
+         *         is set; <code>false</code> otherwise.
+         */
+        private boolean isTimeSet(CheckedCalendar c) {
+            return c.externallySet(HOUR_OF_DAY) | c.externallySet(HOUR) |
+                   c.externallySet(MINUTE)      | c.externallySet(SECOND);
+        }
+    }
+
+    //-------------------------------------------------------------------------
+    // MappingError nested class
+    //-------------------------------------------------------------------------
+
+    private final static class MappingError
+    {
+        public final String rowId;
+        public final String columnName;
+        public final String value;
+        public final Mapping type;
+
+        public MappingError(String rowId, String columnName,
+                                          String value, Mapping type) {
+            this.rowId      = rowId;
+            this.columnName = columnName;
+            this.value      = value;
+            this.type       = type;
+        }
+   
+        @Override
+        public String toString() {
+            return "[row \"" + this.rowId + "\", column \"" + this.columnName
+                        + "\"] Failed to map value \"" + this.value + "\" to "
+                        + this.type.getLabel();
+        }
+    }
+
+    //-------------------------------------------------------------------------
+    // MappingContext nested class
+    //-------------------------------------------------------------------------
+
+    private final static class MappingContext
+    {
+        public String rowId;
+        public String columnName;
+        private final Collection<MappingError> errors =
+                                                new LinkedList<MappingError>();
+
+        public MappingContext() {
+            super();
+        }
+
+        public MappingError addError(String value, Mapping type) {
+            MappingError e = new MappingError(
+                                    this.rowId, this.columnName, value, type);
+            this.errors.add(e);
+            return e;
+        }
+
+        public Collection<MappingError> getErrors() {
+            return Collections.unmodifiableCollection(this.errors);
+        }
+    }
+
+    //-------------------------------------------------------------------------
+    // CheckedCalendar nested class
+    //-------------------------------------------------------------------------
+
+    /**
+     * An extension of {@link GregorianCalendar} that provides access
+     * to the information of whether a field was externally set or not.
+     * <p>
+     * Calendar (and its subclasses), although it knows the information,
+     * provides no way to know whether a field was explicitly set or was
+     * computed as part of the setting of another field.</p>
+     */
+    private final static class CheckedCalendar extends GregorianCalendar
+    {
+        /** A set of flag indicating which fields have been set by the user. */
+        private boolean[] externallySet = new boolean[FIELD_COUNT];
+
+        /**
+         * Creates a new Gregorian calendar.
+         */
+        public CheckedCalendar() {
+            super();
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public void add(int field, int amount) {
+            this.externallySet[field] = true;
+            super.add(field, amount);
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public void roll(int field, boolean up) {
+            this.externallySet[field] = true;
+            super.roll(field, up);
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public void roll(int field, int amount) {
+            this.externallySet[field] = true;
+            super.roll(field, amount);
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public void set(int field, int value) {
+            this.externallySet[field] = true;
+            super.set(field, value);
+        }
+
+        /**
+         * Returns whether the specified field was set by the user.
+         * @param  field   the calendar field.
+         *
+         * @return <code>true</code> if the field was set by the user;
+         *         <code>false</code> if the field is still unset or was
+         *         internally computed.
+         */
+        public boolean externallySet(int field) {
+            return this.externallySet[field];
+        }
+
+//        public void reset() {
+//            for (int i=0; i<FIELD_COUNT; i++) {
+//                this.externallySet[i] = false;
+//            }
+//            super.clear();
+//        }
     }
 }

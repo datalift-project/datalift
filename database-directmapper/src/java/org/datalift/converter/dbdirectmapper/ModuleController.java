@@ -247,7 +247,7 @@ public abstract class ModuleController extends BaseModule implements ProjectModu
 			}
 		} catch (URISyntaxException e) {
 			throw new TechnicalException("Wrong.uri.syntax", e);
-		};
+		}
 		return modulePage;
 	}
     

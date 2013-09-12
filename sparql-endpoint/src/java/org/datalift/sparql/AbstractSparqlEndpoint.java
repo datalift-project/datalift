@@ -41,7 +41,6 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.net.URI;
 import java.text.MessageFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
@@ -102,6 +101,7 @@ import org.datalift.fwk.view.TemplateModel;
 import org.datalift.fwk.view.ViewFactory;
 
 import static org.datalift.fwk.MediaTypes.*;
+import static org.datalift.fwk.util.PrimitiveUtils.wrap;
 import static org.datalift.fwk.util.StringUtils.*;
 import static org.datalift.fwk.rdf.RdfNamespace.*;
 import static org.datalift.fwk.rdf.ElementType.*;
@@ -124,6 +124,23 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     public final static String MODULE_NAME = "sparql";
 
     /**
+     * The (optional) configuration property indicating whether
+     * <a href="http://www.w3.org/Submission/CBD/">Concise Bounded Description</a>
+     * is supported by the back-end RDF stores for describing RDF
+     * resources. If set to <code>false</code>, a built-in CONSTRUCT
+     * query is used to include a first level of blank nodes.
+     */
+    public final static String CBD_SUPPORT_PROPERTY =
+                                            "sparql.use.repository.cdb";
+    /**
+     * The configuration property defining the maximum number of entries
+     * (statements, binding sets...) to be displayed in HTML pages.
+     */
+    public final static String MAX_HTML_RESULTS_PROPERTY =
+                                            "sparql.max.html.results";
+    /** Default value for {@link #MAX_HTML_RESULTS_PROPERTY}. */
+    public final static int DEFAULT_MAX_HTML_RESULTS = 1000;
+    /**
      * The (optional) configuration property holding the path of
      * the RDF file to load predefined queries from.
      */
@@ -140,7 +157,16 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                     "SELECT|CONSTRUCT|ASK|DESCRIBE", Pattern.CASE_INSENSITIVE);
     private final static int MAX_QUERY_DESC = 128;
 
-    private final static MessageFormat DESCRIBE_OBJECT_QUERY =
+    /**
+     * The object description query to use when the RDF store provides
+     * <a href="http://www.w3.org/Submission/CBD/">Concise Bounded Descriptions</a>
+     * of resources. OpenRDF Sesame supports CBD starting with
+     * version 2.7.
+     */
+    private final static MessageFormat CBD_DESCRIBE_OBJECT_QUERY =
+            new MessageFormat("DESCRIBE <{0}>");
+    /** The default query for object description. */ 
+    private final static MessageFormat DEFAULT_DESCRIBE_OBJECT_QUERY =
             new MessageFormat("CONSTRUCT '{' ?s1 ?p1 ?o1 ."
                               +            " ?o1 ?p2 ?o2 . '}'\n"
                               + "WHERE '{'\n"
@@ -197,6 +223,8 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                                             new LinkedList<PredefinedQuery>();
     /** The welcome page. */
     private final String welcomeTemplate;
+    /** Whether Concise Bounded Description queries should be used. */
+    private boolean useCdb;
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -236,6 +264,9 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     /** {@inheritDoc} */
     @Override
     public void init(Configuration configuration) {
+        // Check whether Concise Bounded Description is to be used.
+        this.useCdb = this.getBoolean(configuration,
+                                                CBD_SUPPORT_PROPERTY, false);
         // Load predefined SPARQL queries.
         this.predefinedQueries = Collections.unmodifiableList(
                                     this.loadPredefinedQueries(configuration));
@@ -317,40 +348,61 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                                 UriInfo uriInfo, Request request,
                                 String acceptHdr, List<Variant> allowedTypes)
                                                 throws WebApplicationException {
-        return this.describe(uri, type, null,
+        return this.describe(uri, type, null, null, null, -1, null, null,
                                   uriInfo, request, acceptHdr, allowedTypes);
     }
 
     /** {@inheritDoc} */
     @Override
-    public ResponseBuilder describe(String uri, ElementType type,
-                                    Repository repository, UriInfo uriInfo,
-                                    Request request, String acceptHdr,
-                                    List<Variant> allowedTypes)
+    public ResponseBuilder describe(
+                    String uri, ElementType type, Repository repository,
+                    UriInfo uriInfo, Request request,
+                    String acceptHdr, List<Variant> allowedTypes)
                                                 throws WebApplicationException {
-        return this.describe(uri, type, repository, -1, null, null,
-                                  uriInfo, request, acceptHdr, allowedTypes);
+        return this.describe(uri, type, repository, null, null, -1, null, null,
+                             uriInfo, request, acceptHdr, allowedTypes);
     }
 
     /** {@inheritDoc} */
     @Override
-    public ResponseBuilder describe(String uri, ElementType type,
-                                Repository repository, int max,
-                                String format, String jsonCallback,
-                                UriInfo uriInfo, Request request,
-                                String acceptHdr, List<Variant> allowedTypes)
+    public ResponseBuilder describe(
+                    String uri, ElementType type, Repository repository,
+                    List<String> defaultGraphUris, List<String> namedGraphUris,
+                    UriInfo uriInfo, Request request,
+                    String acceptHdr, List<Variant> allowedTypes)
+                                                throws WebApplicationException {
+        return this.describe(uri, type, repository,
+                             defaultGraphUris, namedGraphUris, -1, null, null,
+                             uriInfo, request, acceptHdr, allowedTypes);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public ResponseBuilder describe(
+                    String uri, ElementType type, Repository repository,
+                    List<String> defaultGraphUris, List<String> namedGraphUris,
+                    int max, String format, String jsonCallback,
+                    UriInfo uriInfo, Request request,
+                    String acceptHdr, List<Variant> allowedTypes)
                                                 throws WebApplicationException {
         if (isBlank(uri)) {
             this.throwInvalidParamError("uri", uri);
         }
-        List<String> defGraphs = null;
+        // Build the list of target graphs, including the target repository.
+        List<String> defGraphs = new LinkedList<String>();
         if (repository != null) {
-            defGraphs = new ArrayList<String>();
             defGraphs.add(repository.name);
         }
+        if (defaultGraphUris != null) {
+            defGraphs.addAll(defaultGraphUris);
+        }
+
         ResponseBuilder response = null;
         try {
-            URI u = URI.create(uri);
+            URI u = URI.create(uri).normalize();
+            if (! u.isAbsolute()) {
+                u = uriInfo.getBaseUri().resolve(u);
+            }
             if ((type == null) || (type == Value)) {
                 // Force revalidation of values to prevent redirecting user
                 // to a malevolent site in case of forged URI in request.
@@ -368,20 +420,22 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
             else if (type != null) {
                 // URI found in RDF store as a subject, predicate or graph.
                 String query = null;
-                MessageFormat fmt = (type == Predicate)? DESCRIBE_PREDICATE_QUERY:
-                                    (type == Graph)?     DESCRIBE_GRAPH_QUERY:
-                                    (type == RdfType)?   DESCRIBE_TYPE_QUERY:
-                                                         DESCRIBE_OBJECT_QUERY;
+                MessageFormat fmt =
+                            (type == Predicate)? DESCRIBE_PREDICATE_QUERY:
+                            (type == Graph)?     DESCRIBE_GRAPH_QUERY:
+                            (type == RdfType)?   DESCRIBE_TYPE_QUERY:
+                            (this.useCdb)?       CBD_DESCRIBE_OBJECT_QUERY:
+                                                 DEFAULT_DESCRIBE_OBJECT_QUERY;
                 synchronized (fmt) {
                     query = fmt.format(new Object[] { u });
                 }
                 Map<String,Object> viewData = new HashMap<String,Object>();
                 viewData.put("describe-type", type);
                 viewData.put("describe-uri",  u);
-                response = this.doExecute(defGraphs, null, query, -1, max,
-                                          false, format, jsonCallback, uriInfo,
-                                          request, acceptHdr, allowedTypes,
-                                          viewData);
+                response = this.doExecute(defGraphs, namedGraphUris, query,
+                                          -1, max, false, format, jsonCallback,
+                                          uriInfo, request, acceptHdr,
+                                          allowedTypes, viewData);
             }
             if (response == null) {
                 this.sendError(NOT_FOUND, null);
@@ -585,23 +639,18 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     @GET
     @Path("describe")
     public final Response getDescribe(
-                            @QueryParam("uri") String uri,
-                            @QueryParam("type") String type,
-                            @QueryParam("default-graph") String defaultGraph,
-                            @QueryParam("max") @DefaultValue("-1") int max,
-                            @Context UriInfo uriInfo,
-                            @Context Request request,
-                            @HeaderParam(ACCEPT) String acceptHdr)
+                @QueryParam("uri") String uri,
+                @QueryParam("type") String type,
+                @QueryParam("default-graph-uri") List<String> defaultGraphUris,
+                @QueryParam("named-graph-uri") List<String> namedGraphUris,
+                @QueryParam("max") @DefaultValue("-1") int max,
+                @Context UriInfo uriInfo,
+                @Context Request request,
+                @HeaderParam(ACCEPT) String acceptHdr)
                                                 throws WebApplicationException {
-        Repository repository = null;
-        if (! isBlank(defaultGraph)) {
-            // Resolve target repository (a mutable list is required).
-            List<String> l = new LinkedList<String>();
-            l.add(defaultGraph);
-            repository = this.getTargetRepository(l);
-        }
         return this.describe(uri, ElementType.fromString(type),
-                             repository, max, null, null,
+                             null, defaultGraphUris, namedGraphUris,
+                             max, null, null,
                              uriInfo, request, acceptHdr, null)
                    .build();
     }
@@ -635,16 +684,17 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     @Path("describe")
     @Consumes(APPLICATION_FORM_URLENCODED)
     public final Response postDescribe(
-                            @FormParam("uri") String uri,
-                            @FormParam("type") String type,
-                            @FormParam("default-graph") String defaultGraph,
-                            @FormParam("max") @DefaultValue("-1") int max,
-                            @Context UriInfo uriInfo,
-                            @Context Request request,
-                            @HeaderParam(ACCEPT) String acceptHdr)
+                @FormParam("uri") String uri,
+                @FormParam("type") String type,
+                @FormParam("default-graph-uri") List<String> defaultGraphUris,
+                @FormParam("named-graph-uri") List<String> namedGraphUris,
+                @FormParam("max") @DefaultValue("-1") int max,
+                @Context UriInfo uriInfo,
+                @Context Request request,
+                @HeaderParam(ACCEPT) String acceptHdr)
                                                 throws WebApplicationException {
-        return this.getDescribe(uri, type, defaultGraph, max,
-                                uriInfo, request, acceptHdr);
+        return this.getDescribe(uri, type, defaultGraphUris, namedGraphUris,
+                                max, uriInfo, request, acceptHdr);
     }
 
     //-------------------------------------------------------------------------
@@ -780,6 +830,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         view.put("repositories", c);
         view.put("queries", predefinedQueries);
         view.put("namespaces", RdfNamespace.values());
+        view.put("max", wrap(this.getDefaultMaxResults()));
         ResponseBuilder response = Response.ok(view, TEXT_HTML_UTF8);
         // Add cache directives.
         CacheControl cc = new CacheControl();
@@ -814,6 +865,92 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     protected final TemplateModel newView(String templateName, Object it) {
         return ViewFactory.newView(
                                 "/" + this.getName() + '/' + templateName, it);
+    }
+
+    /**
+     * Returns the value of the specified property in the Datalift
+     * configuration as a boolean value.
+     * <p>
+     * The following mapping applies:</p>
+     * <dl>
+     *  <dt><code>true</code></dt>
+     *  <dd>if the property value (case insensitive) is
+     *      "<code>true</code>", "<code>yes</code>" or
+     *      "<code>1</code>"</dd>
+     *  <dt><code>false</code></dt>
+     *  <dd>if the property value (case insensitive) is
+     *      "<code>false</code>", "<code>no</code>" or
+     *      "<code>0</code>"</dd>
+     *  <dt><code>def</code>, the default value</dt>
+     *  <dd>otherwise</dd>
+     * </dl>
+     * @param  cfg   the Datalift configuration.
+     * @param  key   the property name.
+     * @param  def   the value to return if the property is absent from
+     *               the configuration.
+     *
+     * @return the property value as a boolean.
+     */
+    protected boolean getBoolean(Configuration cfg, String key, boolean def) {
+        boolean value = def;
+
+        String s = trimToNull(cfg.getProperty(key));
+        if (s != null) {
+            s = s.toLowerCase();
+            if ((s.equals(Boolean.TRUE.toString())) || (s.equals("yes"))
+                                                    || (s.equals("1"))) {
+                value = true;
+            }
+            else if ((s.equals(Boolean.FALSE.toString())) || (s.equals("no"))
+                                                          || (s.equals("0"))) {
+                value = false;
+            }
+            // Else: use default value.
+        }
+        return value;
+    }
+
+    /**
+     * Returns the configured maximum number of HTML results for
+     * SPARQL queries.
+     * @return the configured maximum number of HTML results.
+     */
+    protected int getDefaultMaxResults() {
+        return this.getDefaultMaxResults(-1, -1);
+    }
+
+    /**
+     * Computes the maximum number of HTML results for the
+     * being-processed SPARQL query.
+     * @param  startOffset   the first requested result.
+     * @param  endOffset     the last requested result.
+     *
+     * @return the maximum number of HTML results for a query.
+     */
+    protected int getDefaultMaxResults(int startOffset, int endOffset) {
+        if (endOffset <= 0) {
+            // Compute max number of results from configuration.
+            String v = Configuration.getDefault()
+                                    .getProperty(MAX_HTML_RESULTS_PROPERTY);
+            if (v != null) {
+                try {
+                    endOffset = Integer.parseInt(v);
+                }
+                catch (Exception e) {
+                    log.warn("Invalid value for configuration parameter \"{}\": " +
+                             "\"{}\". Integer value expected.",
+                             MAX_HTML_RESULTS_PROPERTY, v);
+                }
+            }
+            if (endOffset <= 0) {
+                endOffset = DEFAULT_MAX_HTML_RESULTS;
+            }
+            if (startOffset >= 0) {
+                endOffset += startOffset;
+            }
+        }
+        // Else: honor contract.
+        return endOffset;
     }
 
     protected final void handleError(String query,

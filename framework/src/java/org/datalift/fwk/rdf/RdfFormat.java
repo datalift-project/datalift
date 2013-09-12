@@ -100,6 +100,9 @@ public enum RdfFormat
     TRIG        ("TriG", RDFFormat.TRIG, "trig", APPLICATION_TRIG_TYPE),
     /** "application/x-trig" */
     TRIX        ("TriX", RDFFormat.TRIX, "trix", APPLICATION_TRIX_TYPE),
+    // /** "application/rdf+json" */
+    // RDF_JSON    ("RDF/JSON", RDFFormat.RDFJSON, "json",
+    //              APPLICATION_RDF_JSON_TYPE, APPLICATION_JSON_TYPE),
     /** RDFa (text/html) */
     RDFA        ("RDFa", RDFaFormat.RDFA, false,
                  new String[] { "html", "xhtml", "htm" },
@@ -139,7 +142,7 @@ public enum RdfFormat
     /** The OpenRDF RDFFormat object for this type. */
     private final RDFFormat format;
     /** Whether outputting to this format is support. */
-    public final boolean canOutput;
+    private final boolean canOutput;
     /** The file extensions. */
     public final List<String> extensions;
     /** The MIME types that map to the official type. */
@@ -271,6 +274,18 @@ public enum RdfFormat
             throw new IllegalArgumentException("ext");
         }
         return this.extensions.contains(ext.toLowerCase());
+    }
+
+    /**
+     * Returns whether a writer is available to output data in this
+     * RDF format. Some formats such as RDFa do not support outputting.
+     * @return <code>true</code> if this format can provide a
+     *         {@link #newWriter(OutputStream) writer};
+     *         <code>false</code> otherwise.
+     * @see    #newWriter(OutputStream)
+     */
+    public boolean canOutput() {
+        return this.canOutput;
     }
 
     /**

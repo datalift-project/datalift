@@ -36,6 +36,7 @@ package org.datalift.fwk.rdf;
 
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
@@ -136,8 +137,12 @@ public final class RdfUtils
      */
     public static void upload(File source, Repository target, URI namedGraph)
                                                         throws RdfException {
-        if ((source == null) || (! source.isFile())) {
+        if (source == null) {
             throw new IllegalArgumentException("source");
+        }
+        if (! (source.isFile() && source.canRead())) {
+            throw new IllegalArgumentException("source",
+                        new FileNotFoundException(String.valueOf(source)));
         }
         upload(source, target, namedGraph, null);
     }
@@ -166,8 +171,12 @@ public final class RdfUtils
      */
     public static void upload(File source, Repository target, URI namedGraph,
                               UriMapper mapper) throws RdfException {
-        if ((source == null) || (! source.isFile())) {
+        if (source == null) {
             throw new IllegalArgumentException("source");
+        }
+        if (! (source.isFile() && source.canRead())) {
+            throw new IllegalArgumentException("source",
+                        new FileNotFoundException(String.valueOf(source)));
         }
         upload(source, guessRdfTypeFromExtension(source.getName()),
                                                     target, namedGraph, mapper);
@@ -381,10 +390,40 @@ public final class RdfUtils
      *         target RDF store are provided.
      * @throws RdfException if any error occurred reading triples or
      *         accessing the RDF store.
+     *
+     * @see    #upload(CloseableIterable, Repository, URI, UriMapper, boolean)
      */
     public static void upload(CloseableIterable<Statement> source,
                               Repository target, URI namedGraph,
                               final UriMapper mapper) throws RdfException {
+        upload(source, target, namedGraph, mapper, true);
+    }
+
+    /**
+     * Insert a collection of triples into the specified RDF store,
+     * optionally placing them in the specified named graph.
+     * @param  source             a collection of RDF triples, as a
+     *                            Java {@link Iterable} object.
+     * @param  target             the RDF store to persist triples
+     *                            into.
+     * @param  namedGraph         the named graph to use as context for
+     *                            the triples or <code>null</code>.
+     * @param  mapper             an optional {@link UriMapper mapper}
+     *                            to translate URIs as triples are
+     *                            loaded or <code>null</code> if no
+     *                            mapping is needed.
+     * @param  clearTargetGraph   whether to clear the target name graph
+     *                            prior inserting the new triples.
+     *
+     * @throws IllegalArgumentException if no source collection or
+     *         target RDF store are provided.
+     * @throws RdfException if any error occurred reading triples or
+     *         accessing the RDF store.
+     */
+    public static void upload(CloseableIterable<Statement> source,
+                              Repository target, URI namedGraph,
+                              final UriMapper mapper, boolean clearTargetGraph)
+                                                          throws RdfException {
         if (source == null) {
             throw new IllegalArgumentException("source");
         }
@@ -395,7 +434,7 @@ public final class RdfUtils
         RepositoryConnection cnx = target.newConnection();
         try {
             // Clear target named graph, if any.
-            targetGraph = getGraphUri(namedGraph, cnx, true);
+            targetGraph = getGraphUri(namedGraph, cnx, clearTargetGraph);
             // Load triples, mapping URIs on the fly.
             BatchStatementAppender appender =
                         new BatchStatementAppender(cnx, targetGraph, mapper);
@@ -414,7 +453,7 @@ public final class RdfUtils
                 // Forget pending triples.
                 cnx.rollback();
                 // Clear target named graph, if any.
-                if (targetGraph != null) {
+                if ((targetGraph != null) && (clearTargetGraph)) {
                     cnx.clear(targetGraph);
                 }
             }

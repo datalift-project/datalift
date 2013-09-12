@@ -8,11 +8,11 @@
           http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
 
   <display-name>datalift</display-name>
-  <description>DataLift</description>
+  <description>Datalift</description>
 
   <!-- ===== Lifecycle event listeners ===== -->
 
-  <!-- DataLift application initialisation and shutdown listener -->
+  <!-- Datalift application initialisation and shutdown listener -->
   <listener>
     <listener-class>
       org.datalift.core.ApplicationLoader

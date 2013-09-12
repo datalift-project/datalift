@@ -43,7 +43,7 @@ public class ScriptItem {
 	
 	public void execute(Script parent, SesameSPARQLExecuter executer, RDFHandler handler)
 	throws SPARQLExecutionException {
-		System.out.println("Execuring script item : "+this.toString());
+		//System.out.println("Execuring script item : "+this.toString());
 		TemplateCallSparqlHelper helper = new TemplateCallSparqlHelper(this, parent.getPrefixes());
 		try {
 			switch(TemplateRegistry.getTemplate(this.getTemplateName()).getSparqlQueryType()) {
@@ -60,7 +60,7 @@ public class ScriptItem {
 				break;
 			}
 			case UPDATE : {
-				System.out.println("Will execute an update");
+				//System.out.println("Will execute an update");
 				executer.executeUpdate(helper);
 				break;
 			}

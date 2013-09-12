@@ -12,7 +12,7 @@
 
   <!-- ===== Lifecycle event listeners ===== -->
 
-  <!-- DataLift application initialisation and shutdown listener -->
+  <!-- Datalift application initialisation and shutdown listener -->
   <listener>
     <listener-class>
       org.datalift.core.ApplicationLoader

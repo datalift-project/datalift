@@ -594,7 +594,7 @@ function MappingViewModel(baseUri, projectUri, sources, ontologies) {
       $("#property-value").typeahead({
           source: self.availableSrcProps,
           updater: function(item) {
-            return this.$element.val().replace(/[^+]([\s]*)$/,'$1') + item;
+            return this.$element.val().replace(/[^+\s]*$/,'') + item;
           },
           matcher: function (item) {
             var tquery = extractor(this.query);

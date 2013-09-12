@@ -93,7 +93,7 @@ public class TemplateCallSparqlHelper extends SPARQLHelper {
 			
 			this.result = null;
 			try {
-				System.out.println("'"+((prefixes == null)?"":prefixes+" ")+"\n"+"_:x a "+value+" ."+"'");
+				//System.out.println("'"+((prefixes == null)?"":prefixes+" ")+"\n"+"_:x a "+value+" ."+"'");
 				parser.parse(new StringReader(((prefixes == null)?"":prefixes+" ")+"\n"+"_:x a "+value+" ."), RDF.NAMESPACE);
 			} catch (Exception e) {
 				// Should never happen

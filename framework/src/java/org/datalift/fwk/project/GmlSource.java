@@ -1,6 +1,6 @@
 /*
- * Copyright / Copr. IGN
- * Contributor(s) : F. Hamdi
+ * Copyright / Copr. IGN 2013
+ * Contributor(s) : Faycal Hamdi
  *
  * Contact: hamdi.faycal@gmail.com
  *
@@ -33,22 +33,50 @@
 
 package org.datalift.fwk.project;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 /**
  * A file source object describing a GML file.
  *
- * @author Fayçal Hamdi
+ * @author fhamdi
  */
 public interface GmlSource extends FileSource
 {
-    //-------------------------------------------------------------------------
-    // Constants
-    //-------------------------------------------------------------------------
+	//-------------------------------------------------------------------------
+	// Methods
+	//-------------------------------------------------------------------------
 
-    public final static String GML_MIME_TYPE = "application/gml+xml";
+	/**
+	 * Returns the path of the GML file (GML) for this Gmlfile
+	 * source.
+	 * @return the GML file path, relative to the DataLift public
+	 *         storage directory.
+	 */
+	public String getGmlFilePath();
 
-    //-------------------------------------------------------------------------
-    // Methods
-    //-------------------------------------------------------------------------
+	/**
+	 * Returns the path of the schema file (XSD) for this Xsdfile
+	 * source.
+	 * @return the index file path, relative to the DataLift public
+	 *         storage directory.
+	 */
+	public String getXsdFilePath();
 
-    // None.
+	/**
+	 * Returns an input stream for reading the GML file (GML)
+	 * content.
+	 * @return an input stream
+	 * @throws IOException if any error occurred accessing the file.
+	 */
+	public InputStream getGmlFileInputStream() throws IOException;
+
+	/**
+	 * Returns an input stream for reading the schema file (XSD)
+	 * content.
+	 * @return an input stream
+	 * @throws IOException if any error occurred accessing the file.
+	 */
+	public InputStream getXsdFileInputStream() throws IOException;
+
 }

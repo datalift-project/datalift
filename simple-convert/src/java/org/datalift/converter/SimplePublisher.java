@@ -61,6 +61,7 @@ import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
+import org.datalift.fwk.sparql.AccessController;
 
 import static org.datalift.fwk.MediaTypes.*;
 
@@ -131,12 +132,20 @@ public class SimplePublisher extends BaseConverterModule
                 targetGraph = (origin != null)? new URI(origin.getUri()):
                                                 projectId;
             }
-            Repository pub = Configuration.getDefault().getDataRepository();
+            Configuration cfg = Configuration.getDefault();
+            Repository pub    = cfg.getDataRepository();
             // Publish input source triples in public repository.
             if (overwrite) {
                 RdfUtils.clearGraph(pub, targetGraph);
             }
-            RdfUtils.upload(in, pub, targetGraph, null);
+            RdfUtils.upload(in, pub, targetGraph, null, false);
+            // Notify all access controllers (if any) that new graphs appeared.
+            for (AccessController acs : cfg.getBeans(AccessController.class)) {
+                try {
+                    acs.refresh();
+                }
+                catch (Exception e) { /* Ignore... */ }
+            }
             // Display generated triples.
             response = this.displayGraph(null, targetGraph,
                                          uriInfo, request, acceptHdr);

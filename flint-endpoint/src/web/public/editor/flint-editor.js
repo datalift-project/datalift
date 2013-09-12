@@ -1750,9 +1750,9 @@ function FlintEditor(container, imagesPath, config) {
 
 	// This next section is the code for the actual editing window
 
-	function FlintCodeEditor(flint, editorMode) {
+	function FlintCodeEditor(flint, editorMode, config) {
 
-		var initialQuery = "SELECT * WHERE {\n   ?s ?p ?o .\n} LIMIT 5000";
+		var initialQuery = (config.initialQuery)? config.initialQuery: "SELECT * WHERE {\n   ?s ?p ?o .\n} LIMIT 1000";
 		var cm;
 		var spaceForTabsCount = 0;
 		var tabOffset = 0;
@@ -2959,7 +2959,7 @@ function FlintEditor(container, imagesPath, config) {
 			};
 
 			// Add actual code editing area
-			cm = new FlintCodeEditor(flint, "sparql10");
+			cm = new FlintCodeEditor(flint, "sparql11query", config);
 			cm.display(editorId);
 			this.getCodeEditor = function() {
 				return cm.getCodeMirror();

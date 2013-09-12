@@ -20,11 +20,17 @@
 	</div>
 #end
 
-#set($columnWidth = 100 / $it.columns.size())
+#set( $columnWidth = 100 / $it.columns.size() )
 	<div id="content" class="ui-widget-content dl-main-panel">
+#set( $graphContext = "&default-graph-uri=$!esc.url($repository)" )
+#foreach( $g in $default-graph-uri )
+	#set( $graphContext = "${graphContext}&default-graph-uri=$!esc.url($g)" )
+#end
 #if( $describe-uri )
 	#if( $describe-type == "Graph" )
 		#set( $title = "sparql.describe.graph" )
+		## Limit subsequent queries to the current named graph.
+		#set( $graphContext = "${graphContext}&default-graph-uri=$!esc.url($describe-uri)" )
 	#elseif( $describe-type == "Predicate" )
 		#set( $title = "sparql.describe.predicate" )
 	#else
@@ -33,7 +39,7 @@
 #else
 	#set( $title = "sparql.query.full" )
 #end
-		<h3 class="ui-widget-header dl-widget-header">#i18n($title)#if( $describe-uri ) &lt;$esc.html($describe-uri)&gt;#end #if( $min > 0 )#if( $max > 0 )#i18n("results.interval",${min},${max})#else#i18n("results.last",${min})#end#else#if( $max > 0)#i18n("results.first",${max})#end#end</h3>
+		<h3 id="resulttitle" class="ui-widget-header dl-widget-header">#i18n($title)#if( $describe-uri ) &lt;$esc.html($describe-uri)&gt;#end</h3>
 		<div id="results" class="dl-result-panel">
 			<table id="queryresults" style="width:100%">
 				<thead>
@@ -48,19 +54,19 @@
 					<tr>
 #set( $u = $!{item.subject.toString()} )
 #if( ${u.startsWith("http://")} || ${u.startsWith("https://")} )
-						<td><a href="${baseUri}/sparql/describe?uri=$esc.url($u)&type=Object&default-graph=$!esc.url($repository)">$esc.html($u)</a></td>
+						<td><a href="${baseUri}/sparql/describe?uri=$esc.url($u)&type=Resource${graphContext}">$esc.html($u)</a></td>
 #else
 						<td>$esc.html($!{item.subject})</td>
 #end
 #set( $u = $!{item.predicate.toString()} )
 #if( ${u.startsWith("http://")} || ${u.startsWith("https://")} )
-						<td><a href="${baseUri}/sparql/describe?uri=$esc.url($u)&type=Predicate&default-graph=$!esc.url($repository)">$esc.html($u)</a></td>
+						<td><a href="${baseUri}/sparql/describe?uri=$esc.url($u)&type=Predicate${graphContext}">$esc.html($u)</a></td>
 #else
 						<td>$esc.html($!{item.predicate})</td>
 #end
 #set( $u = $!{item.object.toString()} )
 #if( ${u.startsWith("http://")} || ${u.startsWith("https://")} )
-						<td><a href="${baseUri}/sparql/describe?uri=$esc.url($u)&default-graph=$!esc.url($repository)">$esc.html($u)</a></td>
+						<td><a href="${baseUri}/sparql/describe?uri=$esc.url($u)${graphContext}">$esc.html($u)</a></td>
 #else
 						<td>$esc.html($!{item.object})</td>
 #end
@@ -98,6 +104,10 @@
 					caption: "#i18n("grid.search.value.label")"
 				}
 			});
+			if ($("#queryresults tbody tr").length >= ${max}) {
+				var maxLimitTitle = " #if( $min > 0 )#if( $max > 0 )#i18n("results.interval",${min},${max})#else#i18n("results.last",${min})#end#else#if( $max > 0)#i18n("results.first",${max})#end#end";
+				$("#resulttitle").append(maxLimitTitle);
+			}
 			$("#goto_sparql").button();
 			$("#goto_workspace").button();
 			tableToGrid("#queryresults", { datatype: "local" });

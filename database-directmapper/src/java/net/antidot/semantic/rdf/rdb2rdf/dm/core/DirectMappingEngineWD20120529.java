@@ -39,7 +39,6 @@ import net.antidot.semantic.rdf.model.impl.sesame.SemiStatement;
 import net.antidot.semantic.rdf.model.tools.RDFDataValidator;
 import net.antidot.semantic.rdf.rdb2rdf.commons.RDFPrefixes;
 import net.antidot.semantic.rdf.rdb2rdf.commons.SQLToXMLS;
-import net.antidot.semantic.rdf.rdb2rdf.r2rml.core.R2RMLProcessor;
 import net.antidot.semantic.rdf.rdb2rdf.r2rml.tools.R2RMLToolkit;
 import net.antidot.semantic.xmls.xsd.XSDLexicalTransformation;
 import net.antidot.semantic.xmls.xsd.XSDType;
@@ -243,7 +242,7 @@ public class DirectMappingEngineWD20120529 implements DirectMappingEngine {
 	 * Check blob types. This type is not supported in this working draft.
 	 */
 	private void checkBlobType(String type, String tableName, String column) {
-		if (SQLType.toSQLType(Integer.valueOf(type)).isBlobType())
+		if (SQLType.toSQLType(Integer.parseInt(type)).isBlobType())
 			log.warn("[DirectMapper:checkBlobType] WARNING Table "
 					+ tableName
 					+ ", column "
@@ -373,7 +372,7 @@ public class DirectMappingEngineWD20120529 implements DirectMappingEngine {
 		for (String columnName : header.getColumnNames()) {
 			i++;
 			// Extract SQL date format in a ISO 8601 format
-			SQLType type = SQLType.toSQLType(Integer.valueOf(header
+			SQLType type = SQLType.toSQLType(Integer.parseInt(header
 					.getDatatypes().get(columnName)));
 			if (type == null) {
 				throw new IllegalStateException(
@@ -419,7 +418,7 @@ public class DirectMappingEngineWD20120529 implements DirectMappingEngine {
 		for (String columnName : header.getColumnNames()) {
 			i++;
 			// Extract SQL date format in a ISO 8601 format
-			SQLType type = SQLType.toSQLType(Integer.valueOf(header
+			SQLType type = SQLType.toSQLType(Integer.parseInt(header
 					.getDatatypes().get(columnName)));
 			if (type == null) {
 				throw new IllegalStateException(
@@ -773,7 +772,7 @@ public class DirectMappingEngineWD20120529 implements DirectMappingEngine {
 			return null;
 		}
 		XSDType type = null;
-		SQLType sqlType = SQLType.toSQLType(Integer.valueOf(d));
+		SQLType sqlType = SQLType.toSQLType(Integer.parseInt(d));
 		if (sqlType.isBlobType()) {
 			if (log.isDebugEnabled())
 				log.debug("[DirectMappingEngine:convertLex] Table "
@@ -784,11 +783,11 @@ public class DirectMappingEngineWD20120529 implements DirectMappingEngine {
 						+ " => this triple will be ignored.");
 			return null;
 		} else {
-			type = SQLToXMLS.getEquivalentType(Integer.valueOf(d));
+			type = SQLToXMLS.getEquivalentType(Integer.parseInt(d));
 			if (type == null)
 				throw new IllegalStateException(
 						"[DirectMappingEngine:convertLex] Unknown XSD equivalent type of : "
-								+ SQLType.toSQLType(Integer.valueOf(d))
+								+ SQLType.toSQLType(Integer.parseInt(d))
 								+ " in column : "
 								+ columnName
 								+ " in table : "
@@ -848,11 +847,11 @@ public class DirectMappingEngineWD20120529 implements DirectMappingEngine {
 	 */
 	private URI convertDatatype(String datatype) {
 		String upDatatype = datatype.toUpperCase();
-		if (!SQLToXMLS.isValidSQLDatatype(Integer.valueOf(upDatatype)))
+		if (!SQLToXMLS.isValidSQLDatatype(Integer.parseInt(upDatatype)))
 			log.debug("[DirectMappingEngine:convertDatatype] Unknown datatype : "
 					+ datatype);
 		String xsdDatatype = SQLToXMLS.getEquivalentType(
-				Integer.valueOf(upDatatype)).toString();
+				Integer.parseInt(upDatatype)).toString();
 		return vf.createURI(RDFPrefixes.prefix.get("xsd"), xsdDatatype);
 	}
 

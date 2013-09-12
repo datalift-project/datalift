@@ -41,8 +41,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Request;
@@ -61,6 +59,7 @@ import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.i18n.PreferredLocales;
 import org.datalift.fwk.log.Logger;
+import org.datalift.fwk.project.DuplicateObjectKeyException;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectManager;
 import org.datalift.fwk.project.ProjectModule;
@@ -312,6 +311,7 @@ public abstract class BaseConverterModule
             Project p = this.getProject(projectId);
             // Display conversion configuration page.
             TemplateModel view = this.newView(templateName, p);
+            view.registerFieldsFor(SourceType.class);
             view.put("converter", this);
             response = Response.ok(view, TEXT_HTML_UTF8).build();
         }
@@ -372,15 +372,10 @@ public abstract class BaseConverterModule
     protected Response displayGraph(Repository repository,
                                     URI namedGraph, UriInfo uriInfo,
                                     Request request, String acceptHdr) {
-        List<String> defGraphs = null;
-        if (repository != null) {
-            defGraphs = new LinkedList<String>();
-            defGraphs.add(repository.getName());
-        }
         SparqlEndpoint endpoint = Configuration.getDefault()
                                                .getBean(SparqlEndpoint.class);
         return endpoint.describe(namedGraph.toString(), ElementType.Graph,
-                                 repository, 5000, TEXT_HTML, null,
+                                 repository, null, null, -1, TEXT_HTML, null,
                                  uriInfo, request, acceptHdr, null).build();
     }
 
@@ -480,6 +475,9 @@ public abstract class BaseConverterModule
         }
         else if (e instanceof ObjectNotFoundException) {
             this.sendError(NOT_FOUND, e.getLocalizedMessage());
+        }
+        else if (e instanceof DuplicateObjectKeyException) {
+            this.sendError(CONFLICT, e.getLocalizedMessage());
         }
         else if (e instanceof TechnicalException) {
             error = (TechnicalException)e;

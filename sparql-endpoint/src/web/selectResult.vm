@@ -18,7 +18,7 @@
 
 #set( $columnWidth = 100 / $it.Columns.size() )
 	<div id="content" class="ui-widget-content dl-main-panel">
-		<h3 class="ui-widget-header dl-widget-header">#i18n("sparql.query.full") #if( $min > 0 )#if( $max > 0 )#i18n("results.interval",${min},${max})#else#i18n("results.last",${min})#end#else#if( $max > 0)#i18n("results.first",${max})#end#end</h3>
+		<h3 id="resulttitle" class="ui-widget-header dl-widget-header">#i18n("sparql.query.full")</h3>
 		<div id="results" class="dl-result-panel">
 			<table id="queryresults" style="width:100%">
 				<thead>
@@ -33,7 +33,7 @@
 		#set( $value = false ) ## Preset local variable to force next assignment in all cases.
 		#set( $value = $!{item.getValue($c).toString()} )
 		#if( ${value.startsWith("http://")} || ${value.startsWith("https://")} )
-						<td><a href="${baseUri}/sparql/describe?uri=$esc.url($value)&default-graph=$!esc.url($repository)">$esc.html(${value})</a></td>
+						<td><a href="${baseUri}/sparql/describe?uri=$esc.url($value)&default-graph-uri=$!esc.url($repository)">$esc.html(${value})</a></td>
 		#else
 						<td>$esc.html(${value})</td>
 		#end
@@ -72,6 +72,10 @@
 					caption: "#i18n("grid.search.value.label")"
 				}
 			});
+			if ($("#queryresults tbody tr").length >= ${max}) {
+				var maxLimitTitle = " #if( $min > 0 )#if( $max > 0 )#i18n("results.interval",${min},${max})#else#i18n("results.last",${min})#end#else#if( $max > 0)#i18n("results.first",${max})#end#end";
+				$("#resulttitle").append(maxLimitTitle);
+			}
 			$("#goto_sparql").button();
 			$("#goto_workspace").button();
 			tableToGrid("#queryresults", { datatype: "local" });

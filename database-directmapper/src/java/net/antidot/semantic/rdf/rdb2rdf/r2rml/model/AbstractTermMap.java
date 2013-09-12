@@ -41,8 +41,6 @@ import net.antidot.semantic.xmls.xsd.XSDLexicalTransformation;
 import net.antidot.semantic.xmls.xsd.XSDType;
 import net.antidot.sql.model.db.ColumnIdentifier;
 import net.antidot.sql.model.db.ColumnIdentifierImpl;
-import net.antidot.sql.model.tools.SQLDataValidator;
-import net.antidot.sql.model.tools.SQLToolkit;
 import net.antidot.sql.model.type.SQLType;
 
 import org.apache.commons.logging.Log;

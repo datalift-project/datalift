@@ -3,7 +3,8 @@
 	<appender name="MainLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
 		<!--  <file>${info.aduna.logging.dir}/main.log</file> -->
 		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-			<fileNamePattern>${info.aduna.logging.dir}/main-%d{yyyy-MM-dd}.log</fileNamePattern>
+			<fileNamePattern>${info.aduna.logging.dir}/openrdf-sesame-%d{yyyy-MM-dd}.log</fileNamePattern>
+			<maxHistory>10</maxHistory>
 		</rollingPolicy>
 		<encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
 			<layout class="info.aduna.logging.file.logback.StackTracePatternLayout"/>

@@ -882,7 +882,6 @@ public class VersatileProperties extends Properties
                 value = this.getProperty(variable);
             }
         }
-        // System.out.println("\"" + variable + "\" -> \"" +  value + "\"");
         return value;
     }
 

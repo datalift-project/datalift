@@ -54,7 +54,7 @@ public class TemplateRegistry {
 			Enumeration<URL> list = TemplateRegistry.class.getClassLoader().getResources(pkg.replace('.', '/'));
 			while (list.hasMoreElements()) {
 				URL url = list.nextElement();
-				System.out.println("Registering URL "+url.toString());
+				//System.out.println("Registering URL "+url.toString());
 				if (url.getProtocol().equals("jar"))
 					registerJarPackage(url, pkg);
 				else if (url.getProtocol().equals("file"))
@@ -132,7 +132,7 @@ public class TemplateRegistry {
 	 *  
 	 */
 	public static void register(String resourceName) {
-		System.out.println("Registering template from resource : "+resourceName);
+		//System.out.println("Registering template from resource : "+resourceName);
 		TemplateParser parser = new TemplateParser();
 		try {
 			List<Template> parsedTemplates = parser.parseTemplates(TemplateRegistry.class.getClassLoader().getResourceAsStream(resourceName), RDFFormat.forFileName(resourceName));
@@ -152,7 +152,7 @@ public class TemplateRegistry {
 	 *  
 	 */
 	public static void register(Template aTemplate) {
-		System.out.println("Registering template with name : "+aTemplate.getName());
+		//System.out.println("Registering template with name : "+aTemplate.getName());
 		templates.put(aTemplate.getName(),aTemplate);
 	}
 

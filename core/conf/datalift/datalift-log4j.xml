@@ -20,11 +20,11 @@
   </appender>
 
   <!-- ===== Loggers ===== -->
-  <!-- DataLift modules -->
+  <!-- Datalift modules -->
   <logger name="org.datalift">
     <level value="debug"/>
   </logger>
-  <!-- DataLift framework and core classes -->
+  <!-- Datalift framework and core classes -->
   <logger name="org.datalift.framework">
     <level value="info"/>
   </logger>
@@ -37,6 +37,10 @@
     <level value="info"/>
   </logger>
   <logger name="com.sun.jersey">
+    <level value="warn"/>
+  </logger>
+  <!-- Sesame Client API -->
+  <logger name="org.apache.commons.httpclient">
     <level value="warn"/>
   </logger>
   <!-- Apache Velocity template engine (and view processor) -->

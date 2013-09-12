@@ -323,8 +323,12 @@ public final class FileUtils
                 }
                 IOException e = new IOException("Failed to connect to \"" +
                                                 u + "\": status=" + status);
-                log.fatal("{}, message=\"{}\"", e,
+                if (l > 0) {
+                    log.fatal("{}, message=\"{}\"", e,
                                         e.getMessage(), new String(buf, 0, l));
+                }
+                // Else: No server-provided error message to log.
+                //       => Just report failure.
                 throw e;
             }
         }

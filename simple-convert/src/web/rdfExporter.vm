@@ -25,7 +25,7 @@
 		<p><label for="mime_type">#i18n("source.export_rdf_format"): </label>
 		<select id="mime_type" name="mime_type">
 #foreach( $f in $formats )
-#if( $f.canOutput )
+#if( $f.canOutput() )
 			<option id="${f.fileExtension}" value="${f.mimeType}">$esc.html($f.name)</option>
 #end
 #end
