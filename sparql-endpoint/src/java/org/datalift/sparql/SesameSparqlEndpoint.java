@@ -133,7 +133,14 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
      * for SPARQL queries.
      */
     public final static String MAX_QUERY_DURATION_PROPERTY =
-                                                "sparql.max.query.duration";
+                                            "sparql.max.query.duration";
+    /**
+     * The configuration property defining whether inferred triples
+     * shall be taken into account when evaluating SPARQL queries.
+     */
+    public final static String INCLUDE_INFERRED_TRIPLES_PROPERTY =
+                                            "sparql.include.inferred.triples";
+
     /** The supported MIME types for SELECT query responses. */
     protected final static List<Variant> SELECT_RESPONSE_TYPES =
             Collections.unmodifiableList(Arrays.asList(
@@ -460,6 +467,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                 q.setDataset(dataset);
             }
             q.setMaxQueryTime(this.getMaxQueryDuration());
+            q.setIncludeInferred(this.getIncludeInferredTriples());
             result = q.evaluate();
         }
         catch (OpenRDFException e) {
@@ -483,6 +491,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                 q.setDataset(dataset);
             }
             q.setMaxQueryTime(this.getMaxQueryDuration());
+            q.setIncludeInferred(this.getIncludeInferredTriples());
             TupleQueryResult r = q.evaluate();
             result = new QueryResultIterator<BindingSet>(repository, query,
                                         startOffset, endOffset,
@@ -509,6 +518,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                 q.setDataset(dataset);
             }
             q.setMaxQueryTime(this.getMaxQueryDuration());
+            q.setIncludeInferred(this.getIncludeInferredTriples());
             result = new QueryResultIterator<Statement>(repository, query,
                                         startOffset, endOffset,
                                         q.evaluate(), cnx, null, dataset);
@@ -721,6 +731,11 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                      MAX_QUERY_DURATION_PROPERTY, v);
         }
         return maxDuration;
+    }
+
+    public boolean getIncludeInferredTriples() {
+        return this.getBoolean(Configuration.getDefault(),
+                               INCLUDE_INFERRED_TRIPLES_PROPERTY, true);
     }
 
     /**
