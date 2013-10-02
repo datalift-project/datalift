@@ -1,326 +1,179 @@
 <!DOCTYPE html>
-<!--[if lt IE 7 ]> <html lang="en" class="ie6"> <![endif]--> <!--[if IE 7 ]>    <html lang="en" class="ie7"> <![endif]--> <!--[if IE 8 ]>    <html lang="en" class="ie8"> <![endif]--> <!--[if IE 9 ]>    <html lang="en" class="ie9"> <![endif]-->
-<!--[if (gt IE 9)|!(IE)]><!--> <html lang="fr"> <!--<![endif]-->
-<head>
+<html xmlns:ng="http://angularjs.org" ng-app="OntoMapper">
+	<head>
 #load("mapper/resources")
 #load_core_resources
 #set( $moduleUri = "$baseUri/mapper" )
-  <title>#i18n("ontology.mapper.title") - Datalift</title>
-  <meta name="description" content="#i18n('ontology.mapper.description')">
+		<title>#i18n("ontology.mapper.title") - Datalift</title>
+		<meta name="description" content="#i18n('ontology.mapper.description')">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<!-- Bootstrap -->
+		<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" media="screen">
+		<!-- Optional theme -->
+		<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-theme.min.css" media="screen">
+		<link rel="stylesheet" href="http://ivaynberg.github.com/select2/select2-3.2/select2.css"/>
+		<link rel="stylesheet" href="${moduleUri}/static/lib/angularui/css/angular-ui.css">
+		<link rel="stylesheet" href="${moduleUri}/static/css/datalift.css">
+		<link rel="stylesheet" href="${moduleUri}/static/css/mapper.css">
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		<!-- fav and touch icons -->
+		<link rel="shortcut icon" href="${moduleUri}/static/favicon.ico">
+		<link rel="apple-touch-icon" href="${moduleUri}/static/datalift.png">
 
-  <link rel="stylesheet" href="${moduleUri}/static/css/bootstrap.css">
-  <!-- style>
-    body {
-      padding-top: 60px;
-      padding-bottom: 40px;
-    }
-    .sidebar-nav {
-      padding: 9px 0;
-    }
-  </style -->
-  <style>
-  .mapping {
-      margin-top: 3px;
-      margin-bottom: 3px;
-      padding: 4px;
-      background-color: #F2F2F2;
-      border: 1px solid #A6AE97; 
-    }
-  </style>
-  <link rel="stylesheet" href="${moduleUri}/static/css/bootstrap-responsive.css">
-  <link rel="stylesheet" href="${moduleUri}/static/css/datalift.css">
-
-  <!-- fav and touch icons -->
-  <link rel="shortcut icon" href="${moduleUri}/static/favicon.ico">
-  <link rel="apple-touch-icon" href="${moduleUri}/static/datalift.png">
-
-  <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
-  <!--[if lt IE 9]>
-    <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
-  <![endif]-->
-</head>
-<body>
-  <div class="navbar navbar-static-top">
-    <div class="navbar-inner">
-      <div class="container-fluid">
-        <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-        </a>
-        <div class="brand">
-          <img id="datalift-logo" src="${moduleUri}/static/img/datalift-logo.png"/>
-          <a href="#">Datalift</a>
-        </div>
-        <div class="nav-collapse collapse">
-          <p class="navbar-text pull-right">
-            #i18n("login.label") <a href="#" class="navbar-link">$esc.html(${securityCtx.userPrincipal})</a>
-          </p>
-          <ul class="nav">
-            <li><a href="${baseUri}/sparql">#i18n("sparql.endpoint.link")</a></li>
-            <li><a href="${baseUri}/project">#i18n("project.workspace.link")</a></li>
-          </ul>
-        </div><!-- /nav-collapse -->
+		<!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+		<!--[if lt IE 9]>
+		  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+		<![endif]-->
+	</head>
+  <body ng-controller="AppCtrl">
+  	<nav class="navbar navbar-default navbar-fixed-top">
+      <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+              <span class="sr-only">Toggle navigation</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#">Datalift - Ontology Mapper</a>
       </div>
+        <ul class="nav navbar-nav navbar-right">
+          <li><a href="${it.uri}">Back to project</a></li>
+        </ul>
+  	</nav>
+  	<div class="container">
+			<ul class="wizard">
+				<li ng-class="getStepClass(step.num)" ng-repeat="step in steps"><a ng-href="{{step.link}}"><span class="step-number">{{step.num}}</span> {{step.name}}</a></li>
+			</ul>
+		  
+		  <div ng-view>
+		  </div>
     </div>
-  </div><!-- /navbar -->
+    <nav class="navbar navbar-default navbar-fixed-bottom">
+        <p class="navbar-text">
+            #i18n("footer.more_info") <a href="http://www.datalift.org/">http://www.datalift.org/</a>
+        </p>
+    </nav>
 
-  <div class="container-fluid">
-    <div class="row-fluid">
-      <!-- Page title -->
-      <div class="span12 mapping-title">
-        <h1>#i18n("ontology.mapper.title")</h1>
-      </div><!-- /mapping-title -->
-      <!-- Source and ontology selection -->
-      <div class="row-fluid">
-        <div class="span12" data-bind="visible: displaySourceSelection">
-          <form id="root-type" class="form-horizontal">
-            <div class="control-group">
-              <label for="from-source "class="control-label">#i18n("from.source.label"): </label>
-              <div class="controls">
-                <select id="from-source" data-bind="options: sources, optionsText: 'title', value: selectedSource, optionsCaption: '#i18n("select.source.caption")'"></select>
-                <label class="checkbox"><input type="checkbox" data-bind="checked: createNewSource"> #i18n("create.target.source.button")</label>
-              </div>
-            </div>
-            <div data-bind="visible: createNewSource">
-              <div class="control-group">
-                <label for="target-name" class="control-label">#i18n("target.source.title.label"): </label>
-                <div class="controls">
-                  <input id="target-name" type="text" class="input-large" data-bind="value: targetSrcName"/>
-                </div>
-              </div>
-              <div class="control-group">
-                <label for="target-graph" class="control-label">#i18n("target.source.graph.label"): </label>
-                <div class="controls">
-                  <input id="target-graph" type="text" class="input-xxlarge" data-bind="value: targetSrcGraph"/>
-                </div>
-              </div>
-            </div>
-            <div class="control-group">
-              <div class="controls">
-                <label class="checkbox">
-                  <input type="checkbox" data-bind="checked: multipleMapping" />
-                  #i18n("multiple.ontology.checkbox")
-                </label>
-                <button type="button" class="btn btn-small btn-primary" data-bind="visible: multipleMapping, click: $root.submitSrc">#i18n("submit.label")</button>
-              </div>   
-            </div>
-            <div data-bind="visible: ! multipleMapping()">
-              <div class="control-group">
-                <label for="target-ontology" class="control-label">#i18n("target.ontology.label"): </label>
-                <div class="controls">
-                  <select id="target-ontology" data-bind="options: availableOntologies, optionsText: 'name', value: selectedOntology, optionsCaption: '#i18n("select.ontology.caption")'"></select>
-                </div>
-              </div>
-              <div class="control-group" data-bind="visible: primaryTypes">
-                <label for="primary-type" class="control-label">#i18n("target.obj.type.label"): </label>
-                <div class="controls">
-                  <select id="primary-type" data-bind="options: primaryTypes, value: selectedPrimaryType, optionsCaption: '#i18n("select.obj.type.caption")'"/></select>
-                  <button type="button" class="btn btn-small btn-primary" data-bind="visible: selectedPrimaryType, click: $root.addTypeMapping">#i18n("submit.label")</button>
-                </div>
-              </div>
-            </div>
-          </form>
-        </div>
-      </div><!-- /row-fluid -->
-      
-      <div class="row-fluid" data-bind="visible: ! multipleMapping()">
-        <div class="span4 mapping-forms">
-          <!-- Property mapping -->
-          <div data-bind="with: currentMapping">
-            <h3>#i18n("mapping.for.label") <span data-bind="text: title"></span></h3>
-            <div class="tabbable">
-              <ul class="nav nav-pills nav-stacked">
-                <li class="active">
-                  <a href="#props-tab" data-toggle="tab">#i18n("properties.section.title")</a>
-                </li>
-                <li data-bind="visible: $root.secondaryTypes().length != 0">
-                  <a href="#types-tab" data-toggle="tab">#i18n("types.section.title")</a>
-                </li>
-              </ul>
-              <div class="tab-content">
-                <div class="tab-pane active" id="props-tab">
-                  <form id="property-form" class="active">
-                    <div class="control-group" data-bind="visible: $root.availableProperties">
-                      <label for="object-property">#i18n("new.property.label"): </label>
-                      <select id="object-property" data-bind="options: $root.availableProperties, value: $root.selectedProperty, optionsCaption: '#i18n("select.property.caption")'"/></select>
-                    </div>
-                    <div class="control-group" data-bind="visible: $root.primaryTypes">
-                      <label for="primary-type">#i18n("main.type.label"): </label>
-                      <select id="primary-type" data-bind="options: $root.primaryTypes, value: $root.selectedPrimaryType, optionsCaption: '#i18n("select.main.type.caption")'"/></select>
-                    </div>
-                    <div class="control-group" data-bind="visible: $root.valueExpected">
-                      <label for="property-value">#i18n("property.value.label"): </label>
-                      <input id="property-value" type="text" class="input-xlarge" data-bind="value: $root.propertyValue"/>
-                      <!-- select data-bind="options: $root.availableSrcProps, value: $root.propertyValue"></select -->
-                    </div>
-                    <button type="button" class="btn btn-small btn-primary" data-bind="click: $root.addPropertyMapping">#i18n("add.label")</button>
-                  </form>
-                </div>
-                <div class="tab-pane" id="types-tab">
-                  <form id="type-form" class="form-horizontal">
-                    <div class="control-group">
-                      <label for="secondary-type">#i18n("opt.type.label"): </label>
-                      <select id="secondary-type" data-bind="options: $root.secondaryTypes, value: $root.selectedSecondaryType, optionsCaption: '#i18n("select.opt.type.caption")'"/></select>
-                      <button type="button" class="btn btn-small btn-primary" data-bind="click: $root.addSecondaryType">#i18n("add.label")</button>
-                    </div>
-                  </form>
-                </div>
-              </div><!-- /tab-content -->
-            </div><!-- /tabbable -->
-          </div>
-        </div><!-- /mapping-forms -->
-
-        <div class="span8 mapping-result" data-bind="visible: mappings().length != 0">
-          <table class="table table-striped table-hover">
-            <tbody data-bind="foreach: mappings">
-              <tr data-bind="click: $root.selectMapping, css: { success: $data == $root.currentMapping() }">
-                <td data-bind="style: { paddingLeft: indent }"><i class="icon-ok"></i> <span data-bind="text: label"></span></td>
-                <td class="span1" style="text-align: right;"><button type="button" class="btn btn-mini btn-danger" data-bind="click: $root.removeMapping">#i18n("delete.label")</span></td>
-              </tr>
-            </tbody>
-          </table>
-          <div class="controls">
-            <label class="checkbox"><input type="checkbox" data-bind="checked: displayPreview"> #i18n("display.preview.button")</label>
-          </div>
-          <div data-bind="visible: (displayPreview() && preview())">
-            <h3>#i18n("preview.section.title")</h3>
-            <pre data-bind="text: preview"></pre>
-          </div>
-          <form id="execute-mapping-form" class="active" action="${moduleUri}" method="post">
-            <input type="hidden" name="project" id="submit-project" value="$!{it.uri}"/>
-            <input type="hidden" name="sourceGraph" id="submit-srcGraph" value=""/>
-            <input type="hidden" name="ontology" id="submit-ontology" value=""/>
-            <input type="hidden" name="mapping" id="submit-mapping" value=""/>
-            <input type="hidden" name="targetName" id="submit-targetName" value=""/>
-            <input type="hidden" name="targetGraph" id="submit-targetGraph" value=""/>
-            <button type="submit" id="submit-button" class="btn btn-danger" data-bind="enable: queryComplete"><i class="icon-play icon-white"></i> #i18n("convert.data.button")</button>
-          </form>
-        </div><!-- /mapping-result -->
-      </div><!-- /row-fluid -->
-      
-      <!-- multiple mappings -->
-      <div class="row-fluid" data-bind="visible: propertiesToMap().length > 0">
-        <div class="span2 mapping-forms">
-          <ul class="nav nav-tabs">
-            <li data-bind="css: {active: selectedTab() == 'classes'}"><a href="#" data-bind="click: selectClasses">Classes</a></li>
-            <li data-bind="css: {active: selectedTab() == 'properties'}"> <a href="#" data-bind="click: selectProperties">#i18n("data.properties.label")</a></li>
-          </ul>
-          <ul class="nav nav-pills nav-stacked" data-bind="visible: selectedTab() == 'classes', foreach: classesToMap">
-            <li data-bind="css: { active: name == $root.currentClassToMapName() },
-                           click: $root.selectClassToMap">
-              <a href="#" data-bind="text: name"></a>
-            </li>
-          </ul>
-          <ul class="nav nav-pills nav-stacked" data-bind="visible: selectedTab() == 'properties', foreach: propertiesToMap">
-            <li data-bind="css: { active: name == $root.currentPropToMapName() },
-                           click: $root.selectPropertyToMap">
-             <a href="#" data-bind="text: name"></a>
-            </li>
-          </ul>
-        </div><!-- /mapping-forms -->
+		<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+		<script src="//code.jquery.com/jquery.js"></script>
+		<!-- Include all compiled plugins (below), or include individual files as needed -->
+		<script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+		<!-- AngularJS -->
+		<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular.min.js"></script>
+		<script src="http://ivaynberg.github.com/select2/select2-3.2/select2.js"></script>
+		<script src="${moduleUri}/static/lib/angularui/js/angular-ui.js"></script>
+		<script src="${moduleUri}/static/js/libs/ui-bootstrap-tpls-0.5.0.min.js"></script>
+		<script src="${moduleUri}/static/js/mapperClasses.js"></script>
+		<script>
+angular.module('OntoMapper', ['ui.bootstrap', 'ui.directives']).
+    config(['$routeProvider', function($routeProvider) {
+    $routeProvider.
+        when('/select-source', {
+            templateUrl: '$!{moduleUri}/static/partials/select-source.html',
+            controller: SelectSourceCtrl}).
+        when('/mapping-lov/', {
+            templateUrl: '$!{moduleUri}/static/partials/mapping.html',
+            controller: MappingLovCtrl}).
+        when('/mapping-project/', {
+            templateUrl: '$!{moduleUri}/static/partials/mappingProject.html',
+            controller: MappingProjectCtrl}).
+        when('/convert/', {
+            templateUrl: '$!{moduleUri}/static/partials/convert.html',
+            controller: ConvertCtrl}).
+        otherwise({redirectTo: '/select-source'});
+}]).
+    service('Shared', function($rootScope) {
+        var sharedService = {};
         
-        <div class="span7 mapping-result">
-          <div class="progress" data-bind="visible: executing">
-            <div id="progress-bar" class="bar" style="width: 0%;"></div>
-          </div>
-          <div class="alert alert-error" data-bind="visible: executingError">
-            <strong>Execution failed.</strong>
-          </div>
-          <div data-bind="visible: selectedTab() == 'classes', with: currentClassToMap">
-            <span data-bind="text: name"></span> - <span data-bind="text: currentState()"></span>
-          </div>
-          <div data-bind="visible: selectedTab() == 'properties', with: currentPropertyToMap">
-            <span data-bind="text: name"></span> - <span data-bind="text: currentState()"></span>
-          </div>
-          <div>
-            <div class="input-append">
-              <input id="search-input" type="text" placeholder="Search LOV..." data-bind="value: searchQuery">
-              <button type="button" class="btn" data-bind="visible: selectedTab() == 'classes', click: searchLovClasses">Search</button>
-              <button type="button" class="btn" data-bind="visible: selectedTab() == 'properties', click: searchLovProperties">Search</button>
-            </div>
-            <div data-bind="visible: displayedResults().length == 0">
-              <span>No result</span>
-            </div>
-            <div data-bind="visible: displayedResults().length > 0">
-              <table class="table table-hover table-condensed">
-                <thead>
-                  <tr>
-                    <th>Name</th><th>Vocab</th><th>Score</th>
-                  </tr>
-                </thead>
-                <tbody data-bind="foreach: displayedResults">
-                  <!-- todo: utiliser l'uri -->
-                  <tr data-bind="css: { success: vocabElementUri() == $root.currentResultSelectionUri() },
-                                 click: $root.selectResult">
-                    <td data-bind="text: vocabElementName"></td>
-                    <td data-bind="text: vocabElementVocabUri"></td>
-                    <td data-bind="text: vocabElementScore"></td>
-                  </tr>
-                </tbody>
-              </table>
-              <div class="pagination">
-                <ul>
-                  <li><a href="#" data-bind="click: prevPage">Prev</a></li>
-                  <li class="active"><a href="#" data-bind="text: currentPageText"></a></li>
-                  <li><a href="#" data-bind="click: nextPage">Next</a></li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
+        var sources = [
+        #foreach( $s in $it.sources )#if( $s.type == $srcType )
+                { uri:"$esc.javascript($!{s.targetGraph})",
+                title:"$esc.javascript($!{s.title})" },#end
+        #end ];
+              var ontologies = [
+        #foreach( $o in $it.ontologies )
+                { uri:"$esc.javascript($!{o.source})",
+                title:"$esc.javascript($!{o.title})" },
+        #end ];
         
-        <div class="span3">
-          <button class="btn btn-danger" data-bind="click: $root.executeMappings">Execute</button>
-          <div data-bind="foreach: classesToMap">
-            <div class="mapping" data-bind="visible: mapping">
-              <div data-bind="html: html()"></div>
-              <div><button class="btn btn-danger" data-bind="click: removeMapping">Delete</button></div>
-            </div>
-          </div>
-          <div data-bind="foreach: propertiesToMap">
-            <div class="mapping" data-bind="visible: mapping">
-              <div data-bind="html: html()"></div>
-              <div><button class="btn btn-danger" data-bind="click: removeMapping">Delete</button></div>
-            </div>
-          </div>
-        </div> 
-      </div> <!-- multiple mapping -->
- 
-      </div><!-- /row-fluid -->
-      
-    </div><!-- /row-fluid -->
-    <hr>
-    <footer>
-      <p>#i18n("footer.more_info") <a href="http://www.datalift.org/">http://www.datalift.org/</a></p>
-    </footer>
-  </div><!-- /container-fluid -->
+        
+        sharedService.baseUri = "$!{baseUri}";
+        sharedService.projectUri = "$!{it.uri}";
+        sharedService.moduleUri = "$!{moduleUri}";
+        sharedService.sources = sources;
+        sharedService.selectedSource = "";
+        sharedService.ontologies = ontologies;
+        sharedService.currentStep = 1;
+        sharedService.mappings = [];
+        
+        sharedService.getMappings = function() {
+            return mappings;
+        };
+        
+        sharedService.setMappings = function(value) {
+            mappings = value;
+        };
+        
+        sharedService.broadcastCurrentStep = function(step) {
+            this.currentStep = step;
+            $rootScope.$broadcast('handleCurrentStep');
+        };
+        
+        return sharedService;
+}).
+    directive('tabs', function() {
+        return {
+            restrict: 'E',
+            transclude: true,
+            scope: {},
+            controller: function($scope, $element) {
+                var panes = $scope.panes = [];
 
-  <script src="${moduleUri}/static/js/libs/jquery-1.8.3.min.js" language="javascript"></script>
-  <script src="${moduleUri}/static/js/libs/bootstrap-2.1.0.min.js" language="javascript"></script>
-  <script src="${moduleUri}/static/js/libs/knockout-2.2.1.js" language="javascript"></script>
-  <script src="${moduleUri}/static/js/mapper.js" language="javascript"></script>
+                $scope.select = function(pane) {
+                    angular.forEach(panes, function(pane) {
+                        pane.selected = false;
+                    });
+                    pane.selected = true;
+                }
 
-  <script type="text/javascript">
-    var mapperErrorMessages = {
-      noRdfClassFound: "#i18n('no.rdf.class.found.error')",
-      readOnlogyFailed: "#i18n('ontology.retrieval.error')",
+                this.addPane = function(pane) {
+                    if (panes.length == 0) $scope.select(pane);
+                    panes.push(pane);
+                }
+            },
+            template:
+                '<div class="tabbable">' +
+                    '<ul class="nav nav-tabs">' +
+                        '<li ng-repeat="pane in panes" ng-class="{active:pane.selected}">'+
+                            '<a href="" ng-click="select(pane)">{{pane.title}}</a>' +
+                        '</li>' +
+                    '</ul>' +
+                    '<div class="tab-content" ng-transclude></div>' +
+                '</div>',
+                replace: true
+        };
+}).
+    directive('pane', function() {
+    return {
+        require: '^tabs',
+        restrict: 'E',
+        transclude: true,
+        scope: { title: 'bind' },
+        link: function(scope, element, attrs, tabsCtrl) {
+            tabsCtrl.addPane(scope);
+        },
+        template:
+            '<div class="tab-pane" ng-class="{active: selected}" ng-transclude>' +
+            '</div>',
+            replace: true
     };
-
-    $(function() {
-      var sources = [
-#foreach( $s in $it.sources )#if( $s.type == $srcType )
-        { uri:"$esc.javascript($!{s.targetGraph})", title:"$esc.javascript($!{s.title})" },#end
-#end ];
-      var ontologies = [
-#foreach( $o in $it.ontologies )
-        { uri:"$esc.javascript($!{o.source})", title:"$esc.javascript($!{o.title})" },
-#end ];
-      ko.applyBindings(new MappingViewModel("$!{baseUri}", "$!{it.uri}", sources, ontologies));
-    });
-  </script>
-</body>
+});
+		</script>
+		<script src="${moduleUri}/static/js/appCtrl.js"></script>
+		<script src="${moduleUri}/static/js/selectSourceCtrl.js"></script>
+		<script src="${moduleUri}/static/js/mappingLovCtrl.js"></script>
+		<script src="${moduleUri}/static/js/mappingProjectCtrl.js"></script>
+		<script src="${moduleUri}/static/js/convertCtrl.js"></script>
+	</body>
 </html>

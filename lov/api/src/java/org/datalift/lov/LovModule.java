@@ -25,7 +25,7 @@ import org.datalift.fwk.view.TemplateModel;
 import org.datalift.fwk.view.ViewFactory;
 import org.datalift.lov.service.CheckQueryParam;
 import org.datalift.lov.service.LovService;
-import org.datalift.lov.service.OnlineLovService;
+import org.datalift.lov.service.OfflineLovService;
 import org.datalift.lov.service.SearchQueryParam;
 
 /**
@@ -38,7 +38,6 @@ public class LovModule extends BaseModule {
 	//-------------------------------------------------------------------------
 	// Constants
 	//-------------------------------------------------------------------------
-
 	private final static Logger log = Logger.getLogger(LovModule.class);
 
 	//TODO see if this has to be changed
@@ -77,7 +76,9 @@ public class LovModule extends BaseModule {
 	public void postInit(Configuration configuration) {
 		this.configuration  = configuration;
 		this.projectManager = configuration.getBean(ProjectManager.class);
-		lovService = new OnlineLovService();
+//		lovService = new OnlineLovService();
+		log.info("Lov service is using offline repository.");
+		lovService = new OfflineLovService(configuration);
 	}
 
 	//-------------------------------------------------------------------------
@@ -115,6 +116,8 @@ public class LovModule extends BaseModule {
 		params.setOffset(offset);
 		params.setLimit(limit);
 		
+		lovService.checkLovData();
+		
 		log.info("Lov search with parameters : {}", params.getQueryParameters());
 		
 		return Response.ok(lovService.search(params),
@@ -137,9 +140,29 @@ public class LovModule extends BaseModule {
 		if (timeout > 60) timeout = 60;
 		CheckQueryParam params = new CheckQueryParam(uri, timeout);
 		
+		lovService.checkLovData();
+		
 		log.info("Lov check with parameters : {}", params.getQueryParameters());
 		
 		return Response.ok(lovService.check(params),
+				APPLICATION_JSON_UTF8).build();
+	}
+	
+	/**
+	 * The vocabs API allows a user to get the full list of vocabularies in LOV
+	 * along with basic information. 
+	 * @return
+	 */
+	@GET
+	@Path("vocabs")
+	@Produces(APPLICATION_JSON)
+	public Response getAllVocabs() {
+		
+		lovService.checkLovData();
+		
+		log.info("Fetching LOV vocabularies");
+		
+		return Response.ok(lovService.vocabs(),
 				APPLICATION_JSON_UTF8).build();
 	}
 
@@ -202,5 +225,5 @@ public class LovModule extends BaseModule {
     protected final TemplateModel newView(String templateName, Object it) {
         return ViewFactory.newView(TEMPLATE_PATH + templateName, it);
     }
-
+    
 }

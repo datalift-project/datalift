@@ -159,26 +159,87 @@ public class Mapper extends BaseModule implements ProjectModule
 		
 		// register templates
 		// TemplateRegistry.registerPackage("org.datalift.owl.mapper");
-		Template moveTypeTemplate = new Template();
-		moveTypeTemplate.setName("MOVE_CLASS");
-		moveTypeTemplate.setDisplayName("Translate class to another");
-		moveTypeTemplate.setBody("DELETE { ?s a ?source } INSERT { ?s a ?target } WHERE { ?s a ?source }");
+//		Template moveTypeTemplate = new Template();
+//		moveTypeTemplate.setName("MOVE_CLASS");
+//		moveTypeTemplate.setDisplayName("Translate class to another");
+//		moveTypeTemplate.setBody("DELETE { ?s a ?source } INSERT { ?s a ?target } WHERE { ?s a ?source }");
+//		
+//		Argument sourceParam = new Argument();
+//		sourceParam.setVarName("source");
+//		sourceParam.setDisplayName("Source type");
+//		sourceParam.setMandatory(true);
+//		sourceParam.setOrder(0);
+//		moveTypeTemplate.addArgument(sourceParam);
+//		
+//		Argument targetParam = new Argument();
+//		targetParam.setVarName("target");
+//		targetParam.setDisplayName("Target type");
+//		targetParam.setMandatory(true);
+//		targetParam.setOrder(1);
+//		moveTypeTemplate.addArgument(targetParam);
+//		
+//		TemplateRegistry.register(moveTypeTemplate);
+		
+		Template addTypeByPredicateTemplate = new Template();
+		addTypeByPredicateTemplate.setName("ADD_CLASS_BY_PRED");
+		addTypeByPredicateTemplate.setDisplayName("Add class based on another, selection based on predicate");
+		addTypeByPredicateTemplate.setBody("INSERT { ?s a ?target } WHERE { ?s ?predicate ?o. ?s a ?source. }");
+		
+		Argument predicateParam = new Argument();
+		predicateParam.setVarName("predicate");
+		predicateParam.setDisplayName("Source predicate");
+		predicateParam.setMandatory(true);
+		predicateParam.setOrder(0);
+		addTypeByPredicateTemplate.addArgument(predicateParam);
+		
+		Argument sourceParam1 = new Argument();
+		sourceParam1.setVarName("source");
+		sourceParam1.setDisplayName("Source type");
+		sourceParam1.setMandatory(true);
+		sourceParam1.setOrder(1);
+		addTypeByPredicateTemplate.addArgument(sourceParam1);
+		
+		Argument targetParam1 = new Argument();
+		targetParam1.setVarName("target");
+		targetParam1.setDisplayName("Target type");
+		targetParam1.setMandatory(true);
+		targetParam1.setOrder(2);
+		addTypeByPredicateTemplate.addArgument(targetParam1);
+		
+		Template addTypeTemplate = new Template();
+		addTypeTemplate.setName("ADD_CLASS");
+		addTypeTemplate.setDisplayName("Add class based on another");
+		addTypeTemplate.setBody("INSERT { ?s a ?target } WHERE { ?s a ?source }");
 		
 		Argument sourceParam = new Argument();
 		sourceParam.setVarName("source");
 		sourceParam.setDisplayName("Source type");
 		sourceParam.setMandatory(true);
 		sourceParam.setOrder(0);
-		moveTypeTemplate.addArgument(sourceParam);
+		addTypeTemplate.addArgument(sourceParam);
 		
 		Argument targetParam = new Argument();
 		targetParam.setVarName("target");
 		targetParam.setDisplayName("Target type");
 		targetParam.setMandatory(true);
 		targetParam.setOrder(1);
-		moveTypeTemplate.addArgument(targetParam);
+		addTypeTemplate.addArgument(targetParam);
 		
-		TemplateRegistry.register(moveTypeTemplate);
+		TemplateRegistry.register(addTypeTemplate);
+		
+		Template deleteTypeTemplate = new Template();
+		deleteTypeTemplate.setName("DELETE_CLASS");
+		deleteTypeTemplate.setDisplayName("Delete a class");
+		deleteTypeTemplate.setBody("DELETE { ?s a ?source } WHERE { ?s a ?source }");
+		
+		Argument sourceDeleteParam = new Argument();
+		sourceDeleteParam.setVarName("source");
+		sourceDeleteParam.setDisplayName("Source type");
+		sourceDeleteParam.setMandatory(true);
+		sourceDeleteParam.setOrder(0);
+		deleteTypeTemplate.addArgument(sourceParam);
+		
+		TemplateRegistry.register(deleteTypeTemplate);
 		
 		Template movePredicateTemplate = new Template();
 		movePredicateTemplate.setName("MOVE_PREDICATE");
@@ -210,7 +271,7 @@ public class Mapper extends BaseModule implements ProjectModule
     @Override
     public UriDesc canHandle(Project p) {
         UriDesc projectPage = null;
-        try {
+        try {//TODO retirer la contrainte du projet sur les ontologies non présentent
             if ((! p.getOntologies().isEmpty()) &&
                 (this.findSource(p, false) != null)) {
                 try {
@@ -327,9 +388,8 @@ public class Mapper extends BaseModule implements ProjectModule
 	@POST
 	@Path("execute")
 	public Response executeScript(
-			@QueryParam("project") java.net.URI projectId,
-			@QueryParam("source") java.net.URI sourceId,
-			@QueryParam("callback") String callback,
+			@FormParam("project") java.net.URI projectId,
+			@FormParam("source") java.net.URI sourceId,
 			@FormParam("dest_title") String destTitle,
 			@FormParam("dest_graph_uri") String targetGraph,
 			@FormParam("script") String script)
@@ -386,6 +446,8 @@ public class Mapper extends BaseModule implements ProjectModule
 				internal.getConnection().clear(internal.getValueFactory().createURI(targetGraph.toString()));
 			}
 			catch (Exception e1) { e1.printStackTrace(); }
+
+			return Response.status(INTERNAL_SERVER_ERROR).build();
 		}
 		return Response.ok().build();
 	}
