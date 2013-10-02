@@ -3,14 +3,22 @@ package org.datalift.lov.service;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
 
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.log.Logger;
@@ -39,15 +47,18 @@ public class OfflineLovService extends LovService {
 			+ "\"facet_types\": null," + "\"params\": null,"
 			+ "\"results\": []" + "}";
 
+	private final static String NQ_AGGREGATOR = "lov_aggregator.nq";
+	private final static String ZIPPED_AGGREGATOR = NQ_AGGREGATOR + ".zip";
+
 	/** Datalift configuration */
 	private Configuration configuration;
-	
+
 	/** LOV Data file */
 	private File lovData;
-	
+
 	/** Aggregator download state */
 	private boolean aggregatorDownloaded;
-	
+
 	/** Aggregator in tripleStore */
 	private boolean dataLoaded;
 
@@ -65,23 +76,22 @@ public class OfflineLovService extends LovService {
 		if (params.getQuery().trim().isEmpty()) {
 			return DEFAULT_JSON;
 		}
-		
+
 		String type = params.getType();
 		if (type.trim().isEmpty()) {
 			type = null;
 		}
-		
+
 		String vocSpace = params.getVocSpace();
 		if (vocSpace.trim().isEmpty()) {
 			vocSpace = null;
 		}
-		
+
 		String voc = params.getVoc();
 		if (voc.trim().isEmpty()) {
 			voc = null;
 		}
-		
-		
+
 		return localService.search(params.getQuery(), params.getOffset(),
 				params.getLimit(), type, vocSpace, voc).toJSON();
 	}
@@ -102,7 +112,8 @@ public class OfflineLovService extends LovService {
 
 	private void downloadAggregator() {
 
-		File lovPrivateStorage = configuration.getPrivateStorage().getFile("lov");
+		File lovPrivateStorage = configuration.getPrivateStorage().getFile(
+				"lov");
 		lovData = new File(lovPrivateStorage, "data");
 		aggregatorDownloaded = false;
 
@@ -118,35 +129,52 @@ public class OfflineLovService extends LovService {
 
 				@Override
 				public void run() {
-					log.info("Downloading file from http://lov.okfn.org/dataset/lov/agg/lov_aggregator.rdf");
+					log.info("Downloading file from http://lov.okfn.org/dataset/lov/agg/"
+							+ ZIPPED_AGGREGATOR);
 					try {
 
 						long startTime = System.currentTimeMillis();
 
 						// adresse pour récupérer le lov
 						URL lovUrl = new URL(
-								"http://lov.okfn.org/dataset/lov/agg/lov_aggregator.rdf");
+								"http://lov.okfn.org/dataset/lov/agg/"
+										+ ZIPPED_AGGREGATOR);
 
-						// instanciation de buffers pour la lecture et
-						// l'ecriture du fichier
-						BufferedReader in = new BufferedReader(
-								new InputStreamReader(lovUrl.openStream()));
-						FileWriter fw = new FileWriter(lovData
-								.getAbsolutePath() + "/lov_aggregator.rdf");
-						BufferedWriter out = new BufferedWriter(fw);
+//						// instanciation de buffers pour la lecture et
+//						// l'ecriture du fichier
+//						BufferedReader in = new BufferedReader(
+//								new InputStreamReader(lovUrl.openStream()));
+//						FileWriter fw = new FileWriter(lovData
+//								.getAbsolutePath() + "/" + ZIPPED_AGGREGATOR);
+//						BufferedWriter out = new BufferedWriter(fw);
+//
+//						// ecriture
+//						String inputLine;
+//						while ((inputLine = in.readLine()) != null) {
+//							// pretraitement pour encoder le debut des balises
+//							// "xh:"
+//							// (sinon pb chargement repository)
+//							// inputLine = inputLine.replaceAll("<xh:",
+//							// "&lt;xh:");
+//							// inputLine = inputLine.replaceAll("</xh:",
+//							// "&lt;/xh:");
+//							out.write(inputLine + '\n');
+//						}
+						
+				        URLConnection conn = lovUrl.openConnection();
+				        conn.setDoOutput(true);
+				        conn.setDoInput(true);
+				        conn.setRequestProperty("content-type", "binary/data");
+				        InputStream in = conn.getInputStream();
+				        FileOutputStream out = new FileOutputStream(lovData
+								.getAbsolutePath() + "/" + ZIPPED_AGGREGATOR);
 
-						// ecriture
-						String inputLine;
-						while ((inputLine = in.readLine()) != null) {
-							// pretraitement pour encoder le debut des balises
-							// "xh:"
-							// (sinon pb chargement repository)
-							inputLine = inputLine.replaceAll("<xh:", "&lt;xh:");
-							inputLine = inputLine.replaceAll("</xh:",
-									"&lt;/xh:");
-							out.write(inputLine + '\n');
-						}
+				        byte[] b = new byte[1024];
+				        int count;
 
+				        while ((count = in.read(b)) >= 0) {
+				            out.write(b, 0, count);
+				        }
 						// fermeture des streams
 						out.flush();
 						in.close();
@@ -154,7 +182,9 @@ public class OfflineLovService extends LovService {
 
 						long estimatedTime = ((System.currentTimeMillis() - startTime) / 1000);
 
-						log.info("File downloaded in about {} s.", estimatedTime);
+						log.info("File downloaded in about {} s.",
+								estimatedTime);
+						extractZippedAggregator();
 						aggregatorDownloaded = true;
 
 					} catch (IOException e) {
@@ -178,12 +208,12 @@ public class OfflineLovService extends LovService {
 		// autre thread ?)
 		// => il faudra probablement gérer l'accès au repository avec un
 		// semaphore
-		
-		if ( ! aggregatorDownloaded ) {
+
+		if (!aggregatorDownloaded) {
 			return;
 		}
-		
-		if ( dataLoaded ) {
+
+		if (dataLoaded) {
 			return;
 		}
 
@@ -205,18 +235,21 @@ public class OfflineLovService extends LovService {
 			long repositorySize = 0;
 			repositorySize = conn.size(ctx);
 			log.info("Repository size for LOV context : {}.", repositorySize);
-			
+
 			if (repositorySize == 0) {
-//				log.info("Clearing context.");
-//				conn.clear(ctx);
-	
-				File lov = new File(lovData.getAbsolutePath() + "/lov_aggregator.rdf");
-				
+				// log.info("Clearing context.");
+				// conn.clear(ctx);
+
+				File lov = new File(lovData.getAbsolutePath() + "/"
+						+ NQ_AGGREGATOR);
+
 				log.info("Loading {} into repository.", lov.getAbsolutePath());
 				long startTime = System.currentTimeMillis();
-				conn.add(lov, null, RDFFormat.RDFXML, ctx);
+				conn.add(lov, null, RDFFormat.NQUADS, ctx);
 				long estimatedTime = ((System.currentTimeMillis() - startTime) / 1000);
-				log.info("Loading has been done in {} s. Offline service is set and ready.", estimatedTime);
+				log.info(
+						"Loading has been done in {} s. Offline service is set and ready.",
+						estimatedTime);
 			}
 			dataLoaded = true;
 
@@ -241,6 +274,54 @@ public class OfflineLovService extends LovService {
 	@Override
 	public void checkLovData() {
 		loadDataIntoRepository();
+	}
+
+	private boolean extractZippedAggregator() {
+
+		log.info("Extracting aggregator...");
+		
+		byte[] buffer = new byte[1024];
+
+		try {
+
+			String output = lovData.getAbsolutePath() + "/" + NQ_AGGREGATOR;
+
+			// get the zip file content
+			ZipInputStream zis = new ZipInputStream(new FileInputStream(
+					lovData.getAbsolutePath() + "/" + ZIPPED_AGGREGATOR));
+			// get the zipped file list entry
+			ZipEntry ze = zis.getNextEntry();
+
+			while (ze != null) {
+
+				File newFile = new File(output);
+
+				// folders should have been created when downloading
+				FileOutputStream fos = new FileOutputStream(newFile);
+
+				int len;
+				while ((len = zis.read(buffer)) > 0) {
+					fos.write(buffer, 0, len);
+				}
+
+				fos.close();
+				ze = zis.getNextEntry();
+			}
+
+			zis.closeEntry();
+			zis.close();
+			
+			log.info("Aggregator unzipped.");
+			
+			return true;
+
+		} catch (IOException e) {
+//			e.printStackTrace();
+			log.error("Aggregator extraction failed.");
+		}
+		
+		return false;
+
 	}
 
 }
