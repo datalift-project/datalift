@@ -43,11 +43,7 @@ public class ScriptItem {
 	
 	public void execute(Script parent, SesameSPARQLExecuter executer, RDFHandler handler)
 	throws SPARQLExecutionException {
-<<<<<<< HEAD
-		System.out.println("Executing script item : "+this.toString());
-=======
 		//System.out.println("Execuring script item : "+this.toString());
->>>>>>> 3d203d68eac14bf6bccc07ecece849e4436136fa
 		TemplateCallSparqlHelper helper = new TemplateCallSparqlHelper(this, parent.getPrefixes());
 		try {
 			switch(TemplateRegistry.getTemplate(this.getTemplateName()).getSparqlQueryType()) {
