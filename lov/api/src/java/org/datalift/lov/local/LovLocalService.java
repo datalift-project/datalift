@@ -821,9 +821,9 @@ public class LovLocalService {
 						"vocNamespace").getValue()).stringValue().toString();
 				String vocabSpace = bindingSet.getBinding("vocabSpace")
 						.getValue().toString();
-				if (vocUri.equals("http://purl.org/dc/terms/")) {
-					System.out.println("this is DC");
-				}
+//				if (vocUri.equals("http://purl.org/dc/terms/")) {
+//					System.out.println("this is DC");
+//				}
 				Vocabulary v = new Vocabulary();
 				v.setUri(vocUri);
 				v.setPrefix(vocPrefix);
