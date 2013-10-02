@@ -63,7 +63,7 @@
 		<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular.min.js"></script>
 		<script src="http://ivaynberg.github.com/select2/select2-3.2/select2.js"></script>
 		<script src="${moduleUri}/static/lib/angularui/js/angular-ui.js"></script>
-		<script src="${moduleUri}/static/lib/ui-boostrap/ui-bootstrap-tpls-0.6.0.min.js"></script>
+		<script src="${moduleUri}/static/lib/ui-bootstrap/ui-bootstrap-tpls-0.5.0.min.js"></script>
 		<script src="${moduleUri}/static/js/mapperClasses.js"></script>
 		<script>
 angular.module('OntoMapper', ['ui.bootstrap', 'ui.directives']).
