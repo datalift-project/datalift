@@ -1,23 +1,20 @@
 package org.datalift.lov.service;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Arrays;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 
 import org.datalift.fwk.Configuration;
@@ -28,6 +25,9 @@ import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
 import org.openrdf.rio.RDFFormat;
 import org.openrdf.rio.RDFParseException;
+import org.semanticweb.yars.nx.Node;
+import org.semanticweb.yars.nx.Triple;
+import org.semanticweb.yars.nx.parser.NxParser;
 
 /**
  * Service implementation that performs local request to get its results.
@@ -47,6 +47,7 @@ public class OfflineLovService extends LovService {
 			+ "\"facet_types\": null," + "\"params\": null,"
 			+ "\"results\": []" + "}";
 
+	private final static String N3_AGGREGATOR = "lov_aggregator.n3";
 	private final static String NQ_AGGREGATOR = "lov_aggregator.nq";
 	private final static String ZIPPED_AGGREGATOR = NQ_AGGREGATOR + ".zip";
 
@@ -185,6 +186,10 @@ public class OfflineLovService extends LovService {
 						log.info("File downloaded in about {} s.",
 								estimatedTime);
 						extractZippedAggregator();
+						convertAggragator();
+						new File(lovData
+								.getAbsolutePath() + "/" + NQ_AGGREGATOR)
+								.delete();
 						aggregatorDownloaded = true;
 
 					} catch (IOException e) {
@@ -193,6 +198,7 @@ public class OfflineLovService extends LovService {
 					}
 
 				}
+
 			}).start();
 		} else { // on a déjà le fichier, on charge le lov
 					// TODO : vérifier si une mise à jour est disponible
@@ -239,13 +245,13 @@ public class OfflineLovService extends LovService {
 			if (repositorySize == 0) {
 				// log.info("Clearing context.");
 				// conn.clear(ctx);
-
+				
 				File lov = new File(lovData.getAbsolutePath() + "/"
-						+ NQ_AGGREGATOR);
+						+ N3_AGGREGATOR);
 
 				log.info("Loading {} into repository.", lov.getAbsolutePath());
 				long startTime = System.currentTimeMillis();
-				conn.add(lov, null, RDFFormat.NQUADS, ctx);
+				conn.add(lov, null, RDFFormat.N3, ctx);
 				long estimatedTime = ((System.currentTimeMillis() - startTime) / 1000);
 				log.info(
 						"Loading has been done in {} s. Offline service is set and ready.",
@@ -322,6 +328,51 @@ public class OfflineLovService extends LovService {
 		
 		return false;
 
+	}
+	
+	private void convertAggragator() {
+		
+		log.info("Converting {} to {}.", NQ_AGGREGATOR, N3_AGGREGATOR);
+
+		try {
+			NxParser nxp = new NxParser(new FileInputStream(lovData.getAbsolutePath() + 
+					"/" + NQ_AGGREGATOR), false);
+			
+			FileWriter fw = new FileWriter(lovData.getAbsolutePath() + 
+					"/" + N3_AGGREGATOR);
+			BufferedWriter out = new BufferedWriter(fw);
+			
+			int notQuad = 0;
+			int notEvenTriple = 0;
+			while (nxp.hasNext()) {
+				Node[] ns = nxp.next();
+				if (ns.length == 4) {
+					out.write(new Triple(ns[0], ns[1], ns[2]).toN3());
+				}
+				else {
+					++notQuad;
+					if (ns.length == 3) {
+						out.write(new Triple(ns[0], ns[1], ns[2]).toN3());
+					}
+					else {
+						++notEvenTriple;
+					}
+				}
+				out.newLine();
+			}
+			log.info("notQuad : {} - notEvenTriple : {}", notQuad, notEvenTriple);
+			out.flush();
+			out.close();
+
+			log.info("Conversion done.");
+			
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+//			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+//			e.printStackTrace();
+		} 
 	}
 
 }
