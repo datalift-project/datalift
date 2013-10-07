@@ -17,9 +17,40 @@ public class LovLocalVocabularyService {
 			.getLogger(LovLocalVocabularyService.class);
 
 	private Configuration configuration;
+	
+	private VocabsDictionary vocabsCache;
 
-	public VocabsDictionary getVocabularyDictionaryOverloaded(
-			RepositoryConnection lovFileCon) throws Exception {
+	public LovLocalVocabularyService(Configuration configuration) {
+		this.configuration = configuration;
+	}
+	
+	public VocabsDictionaryItem getVocabularyWithUri(String uri) {
+		loadVocabularies();
+		return vocabsCache.getVocabularyWithURI(uri);
+	}
+	
+	public VocabsDictionary getVocabularies() {
+		loadVocabularies();
+		return vocabsCache;
+	}
+	
+	private void loadVocabularies() {
+		if (vocabsCache == null) {
+			try {
+				vocabsCache = getVocabularyDictionaryOverloaded();
+			} catch (Exception e) {
+				log.error("{}", e.getMessage());
+				log.error("Stack trace :");
+				for (StackTraceElement s : e.getStackTrace()) {
+					log.error(s.toString());
+				}
+			}
+		}
+			
+	}
+
+	private VocabsDictionary getVocabularyDictionaryOverloaded()
+			throws Exception {
 		VocabsDictionary vocabs = new VocabsDictionary();
 		String query = "SELECT distinct ?vocabNspUri ?vocabURI ?prefix ?title ?description "
 				+ "WHERE{ "
@@ -29,8 +60,12 @@ public class LovLocalVocabularyService {
 				+ "	OPTIONAL{?vocabURI dcterms:title ?title.} "
 				+ "	OPTIONAL{?vocabURI dcterms:description ?description.} "
 				+ "}  " + "ORDER BY ?vocabNspUri  ";
+		
+		RepositoryConnection lovFileCon = configuration.getInternalRepository()
+				.newConnection();
 		TupleQueryResult result2 = lovFileCon.prepareTupleQuery(
 				QueryLanguage.SPARQL, LovConstants.PREFIXES + query).evaluate();
+		
 		while (result2.hasNext()) {
 			BindingSet bindingSet = result2.next();
 			VocabsDictionaryItem vocab = vocabs.getVocabularyWithURI(bindingSet
@@ -38,9 +73,9 @@ public class LovLocalVocabularyService {
 			if (vocab == null) {
 				vocab = new VocabsDictionaryItem(bindingSet
 						.getBinding("vocabURI").getValue().toString(),
-						((Literal) bindingSet.getBinding("vocabNspUri")
-								.getValue()).stringValue().toString(),
-						((Literal) bindingSet.getBinding("prefix").getValue())
+						bindingSet.getBinding("vocabNspUri")
+								.getValue().stringValue().toString(),
+						bindingSet.getBinding("prefix").getValue()
 								.stringValue().toString());
 				vocabs.add(vocab);
 			}
@@ -49,7 +84,7 @@ public class LovLocalVocabularyService {
 			if (bindingSet.getBinding("title") != null) {
 				org.datalift.lov.local.objects.Literal title = new org.datalift.lov.local.objects.Literal(
 						((Literal) bindingSet.getBinding("title").getValue())
-								.stringValue().toString(),
+								.getLabel(),
 						((Literal) bindingSet.getBinding("title").getValue())
 								.getLanguage(), null);
 				if (!vocab.getTitles().contains(title))
@@ -59,10 +94,10 @@ public class LovLocalVocabularyService {
 			// description
 			if (bindingSet.getBinding("description") != null) {
 				org.datalift.lov.local.objects.Literal description = new org.datalift.lov.local.objects.Literal(
-						((Literal) bindingSet.getBinding("description")
-								.getValue()).stringValue().toString(),
-						((Literal) bindingSet.getBinding("description")
-								.getValue()).getLanguage(), null);
+						((Literal) bindingSet.getBinding("description").getValue())
+								.getLabel(),
+						((Literal) bindingSet.getBinding("description").getValue())
+								.getLanguage(), null);
 				if (!vocab.getDescriptions().contains(description))
 					vocab.getDescriptions().add(description);
 			}
@@ -90,14 +125,14 @@ public class LovLocalVocabularyService {
 					LovConstants.PREFIXES + queryBuilder.toString()).evaluate();
 			while (result.hasNext()) {
 				BindingSet bindingSet1 = result.next();
-				String date = ((Literal) bindingSet1.getBinding("date")
-						.getValue()).stringValue();
-				String label = ((Literal) bindingSet1.getBinding("label")
-						.getValue()).stringValue();
+				String date = bindingSet1.getBinding("date")
+						.getValue().stringValue();
+				String label = bindingSet1.getBinding("label")
+						.getValue().stringValue();
 				String version = null;
 				if (bindingSet1.getBinding("version") != null)
-					version = ((Literal) bindingSet1.getBinding("version")
-							.getValue()).stringValue();
+					version = bindingSet1.getBinding("version")
+							.getValue().stringValue();
 				String manifestation = "";
 				if (bindingSet1.getBinding("manifestation") != null)
 					manifestation = bindingSet1.getBinding("manifestation")

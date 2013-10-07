@@ -20,7 +20,9 @@ import java.util.zip.ZipInputStream;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.log.Logger;
 import org.datalift.lov.local.LovLocalService;
+import org.datalift.lov.local.LovLocalVocabularyService;
 import org.datalift.lov.local.LovUtil;
+import org.datalift.lov.local.objects.vocab.VocabsDictionaryItem;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
 import org.openrdf.rio.RDFFormat;
@@ -65,10 +67,13 @@ public class OfflineLovService extends LovService {
 
 	/** Search service */
 	private LovLocalService localService;
+	/** Vocabs service */
+	private LovLocalVocabularyService vocabsService;
 
 	public OfflineLovService(Configuration configuration) {
 		this.configuration = configuration;
 		localService = new LovLocalService(configuration);
+		vocabsService = new LovLocalVocabularyService(configuration);
 		downloadAggregator();
 	}
 
@@ -105,8 +110,17 @@ public class OfflineLovService extends LovService {
 
 	@Override
 	public String vocabs() {
-		// TODO Auto-generated method stub
-		return null;
+		return vocabsService.getVocabularies().toJSON();
+	}
+	
+	public String vocabWithUri(String uri) {
+		VocabsDictionaryItem item = vocabsService.getVocabularyWithUri(uri);
+		if (item == null) {
+			return "{}";
+		}
+		else {
+			return item.toJSON();
+		}
 	}
 
 	// -------------------------------------------------------------------------

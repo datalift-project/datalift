@@ -1,6 +1,9 @@
 package org.datalift.lov.local.objects.vocab;
 
-public class VocabularyVersion {
+import org.datalift.lov.local.LovUtil;
+import org.datalift.lov.local.objects.JSONSerializable;
+
+public class VocabularyVersion implements JSONSerializable {
 	String date = null;
 	String versionDecimal = null;
 	String label = null;
@@ -41,6 +44,25 @@ public class VocabularyVersion {
 
 	public void setLink(String link) {
 		this.link = link;
+	}
+
+	@Override
+	public String toJSON() {
+		return new StringBuilder()
+		
+		// beginning of json
+		.append("{")
+		
+		// String properties
+		.append("\"date\": " + LovUtil.toJSON(date) + ",")
+		.append("\"versionDecimal\": " + LovUtil.toJSON(versionDecimal) + ",")
+		.append("\"label\": " + LovUtil.toJSON(label) + ",")
+		.append("\"link\": " + LovUtil.toJSON(link))
+		
+		// end of json
+		.append("}")
+		
+		.toString();
 	}
 
 }

@@ -2,7 +2,6 @@ package org.datalift.lov.local;
 
 import java.util.List;
 
-import org.apache.commons.lang.StringEscapeUtils;
 import org.datalift.lov.local.objects.JSONSerializable;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;

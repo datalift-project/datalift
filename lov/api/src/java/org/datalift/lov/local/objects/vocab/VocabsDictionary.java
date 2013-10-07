@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.datalift.lov.local.LovUtil;
+
 /**
  * 
  * This class represents a dictionary (list) of vocabulary with very basics
@@ -56,6 +58,22 @@ public class VocabsDictionary {
 				return voc;
 		}
 		return null;
+	}
+	
+	public String toJSON() {
+		StringBuilder jsonResult = new StringBuilder();
+		
+		// beginning of json
+		jsonResult.append("{");
+		
+		// List properties
+		// vocabularies
+		jsonResult.append("\"vocabularies\": " + LovUtil.toJSON(vocabularies, true));
+
+		// end of json
+		jsonResult.append("}");
+		
+		return jsonResult.toString();
 	}
 
 }

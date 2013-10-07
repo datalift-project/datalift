@@ -118,7 +118,7 @@ public class LovModule extends BaseModule {
 		
 		lovService.checkLovData();
 		
-		log.info("Lov search with parameters : {}", params.getQueryParameters());
+		log.trace("Lov search with parameters : {}", params.getQueryParameters());
 		
 		return Response.ok(lovService.search(params),
 				APPLICATION_JSON_UTF8).build();
@@ -142,30 +142,41 @@ public class LovModule extends BaseModule {
 		
 		lovService.checkLovData();
 		
-		log.info("Lov check with parameters : {}", params.getQueryParameters());
+		log.trace("Lov check with parameters : {}", params.getQueryParameters());
 		
 		return Response.ok(lovService.check(params),
 				APPLICATION_JSON_UTF8).build();
 	}
 	
 	/**
-	 * The vocabs API allows a user to get the full list of vocabularies in LOV
-	 * along with basic information. 
+	 * The vocabs API allows a user to get a single vocabulary or the full list
+	 * of vocabularies in LOV along with basic information.
+	 * @param uri Vocabulary URI to fetch, "" for full list
 	 * @return
 	 */
 	@GET
 	@Path("vocabs")
 	@Produces(APPLICATION_JSON)
-	public Response getAllVocabs() {
+	public Response getAllVocabs(
+			@DefaultValue("") @QueryParam("uri") String uri) {
+		
+		String response = "{}";
 		
 		lovService.checkLovData();
 		
-		log.info("Fetching LOV vocabularies");
+		if (uri.trim().isEmpty()) {
+			log.trace("Fetching LOV vocabularies");
+			response = lovService.vocabs();
+		}
+		else {
+			log.trace("Fetching LOV vocabulary with uri : {}", uri);
+			response = ((OfflineLovService) lovService).vocabWithUri(uri);
+		}
 		
-		return Response.ok(lovService.vocabs(),
+		return Response.ok(response,
 				APPLICATION_JSON_UTF8).build();
 	}
-
+	
     /**
      * Traps accesses to module static resources and redirect them
      * toward the default {@link ResourceResolver} for resolution.

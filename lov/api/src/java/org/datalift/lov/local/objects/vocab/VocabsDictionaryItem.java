@@ -3,6 +3,8 @@ package org.datalift.lov.local.objects.vocab;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.datalift.lov.local.LovUtil;
+import org.datalift.lov.local.objects.JSONSerializable;
 import org.datalift.lov.local.objects.Literal;
 
 /**
@@ -12,7 +14,7 @@ import org.datalift.lov.local.objects.Literal;
  * @author Pierre-Yves Vandenbussche
  * 
  */
-public class VocabsDictionaryItem {
+public class VocabsDictionaryItem implements JSONSerializable {
 	private String uri = null;
 	private String namespace = null;
 	private String prefix = null;
@@ -80,5 +82,34 @@ public class VocabsDictionaryItem {
 
 	public void setLastVersionReviewed(VocabularyVersion lastVersionReviewed) {
 		this.lastVersionReviewed = lastVersionReviewed;
+	}
+	
+	@Override
+	public String toJSON() {
+		StringBuilder jsonResult = new StringBuilder();
+		
+		// beginning of json
+		jsonResult.append("{");
+		
+		// String properties
+		jsonResult.append("\"uri\": " + LovUtil.toJSON(uri) + ",");
+		jsonResult.append("\"namespace\": " + LovUtil.toJSON(namespace) + ",");
+		jsonResult.append("\"prefix\": " + LovUtil.toJSON(prefix) + ",");
+		
+		// List properties
+		// titles
+		jsonResult.append("\"titles\": " + LovUtil.toJSON(titles));
+		
+		// descriptions
+		jsonResult.append("\"descriptions\": " + LovUtil.toJSON(descriptions));
+		
+		
+		// Vocab version
+		jsonResult.append("\"lastVersionReviewed\": " + LovUtil.toJSON(lastVersionReviewed));
+		
+		// end of json
+		jsonResult.append("}");
+		
+		return jsonResult.toString();
 	}
 }
