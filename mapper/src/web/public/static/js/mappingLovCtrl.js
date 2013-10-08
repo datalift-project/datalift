@@ -365,7 +365,7 @@ function MappingLovCtrl($scope, $location, $http, $timeout, Shared) {
 	self.createAutoMappings = function(sortedVocabularies) {
 		console.log("Auto mapping starting");
 		var it = 0;
-		while ( $scope.sourcePredicates.length > 0 ) {
+		while ( $scope.sourcePredicates.length > 0 && it < 30) {
 			var bestIndex = self.findBestVocabularyIndex(sortedVocabularies);
 			for ( var i = 0 ; i < sortedVocabularies[bestIndex].predicates.length ; ++i ) {
 				self.addMappingToArray({
