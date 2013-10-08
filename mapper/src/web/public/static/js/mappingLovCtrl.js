@@ -367,16 +367,18 @@ function MappingLovCtrl($scope, $location, $http, $timeout, Shared) {
 		var it = 0;
 		while ( $scope.sourcePredicates.length > 0 && it < 30) {
 			var bestIndex = self.findBestVocabularyIndex(sortedVocabularies);
-			for ( var i = 0 ; i < sortedVocabularies[bestIndex].predicates.length ; ++i ) {
-				self.addMappingToArray({
-					"name": sortedVocabularies[bestIndex].predicates[i].name,
-					"uri": sortedVocabularies[bestIndex].predicates[i].uri
-				},
-				{
-					"uri": sortedVocabularies[bestIndex].predicates[i].targetUri,
-					"uriPrefixed": sortedVocabularies[bestIndex].predicates[i].targetUriPrefixed,
-					"vocabulary": sortedVocabularies[bestIndex].vocabulary
-				});
+			if (bestIndex != -1) {
+				for ( var i = 0 ; i < sortedVocabularies[bestIndex].predicates.length ; ++i ) {
+					self.addMappingToArray({
+						"name": sortedVocabularies[bestIndex].predicates[i].name,
+						"uri": sortedVocabularies[bestIndex].predicates[i].uri
+					},
+					{
+						"uri": sortedVocabularies[bestIndex].predicates[i].targetUri,
+						"uriPrefixed": sortedVocabularies[bestIndex].predicates[i].targetUriPrefixed,
+						"vocabulary": sortedVocabularies[bestIndex].vocabulary
+					});
+				}
 			}
 			// on copie le tableau sinon problème lors du removePredicatesFromSortedVocabularies
 			var predicatesToRemove = sortedVocabularies[bestIndex].predicates.slice(0);
@@ -413,9 +415,7 @@ function MappingLovCtrl($scope, $location, $http, $timeout, Shared) {
 	self.removePredicatesFromSortedVocabularies = function(sortedVocabularies, predicatesToRemove) {
 		console.log("Removing " + predicatesToRemove.length + " predicates");
 		for (var i = 0 ; i < predicatesToRemove.length ; ++i) {
-//			console.log(" Predicate to remove at index " + i + " : " + predicatesToRemove[i].name);
 			self.removePredicateFromSortedVocabularies(sortedVocabularies, predicatesToRemove[i]);
-//			console.log("Checking array size : " + predicatesToRemove.length);
 		}
 		
 	}
