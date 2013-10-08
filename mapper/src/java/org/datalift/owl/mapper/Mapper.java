@@ -357,10 +357,14 @@ public class Mapper extends BaseModule implements ProjectModule
                 // Extract RDF format from MIME type to force file suffix.
                 RdfFormat fmt = RdfFormat.find(info.mimeType);
                 if (fmt == null) {
-                	// Download archive from LOV
-                	
-//                    throw new TechnicalException("invalid.remote.mime.type",
-//                                                 info.mimeType);
+                	// Got it from lov (but application/octet-stream)
+                	if (src.endsWith(".n3")) {
+                		fmt = RdfFormat.N3;
+                	}
+                	else {
+                		throw new TechnicalException("invalid.remote.mime.type",
+                				info.mimeType);
+                	}
                 }
                 // Ensure file extension is present to allow RDF syntax
                 // detection in future cache accesses.

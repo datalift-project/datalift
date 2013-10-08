@@ -191,6 +191,30 @@ function ConvertCtrl($scope, $http, $timeout, Shared) {
 			++$scope.ontologiesReceived;
 		})
 		.error(function(data, status, headers, config) {
+			console.log("no ontology for " + ontology);
+			self.findAlternativeUriFromLov(ontology);
+		});
+	}
+	
+	self.findAlternativeUriFromLov = function(ontology) {
+		$http.get(Shared.baseUri + "/lov/vocabs?uri=" + ontology)
+		.success(function(data, status, headers, config) {
+			if (data.hasOwnProperty("lastVersionReviewed")) {
+				self.loadOntologyFromLov(ontology, data.lastVersionReviewed.link);
+			}
+		})
+		.error(function(data, status, headers, config) {
+			++$scope.ontologiesReceived;
+		});
+	}
+	
+	self.loadOntologyFromLov = function(ontology, altUri) {
+		$http.get(Shared.baseUri + "/mapper/ontology?src=" + altUri)
+		.success(function(data, status, headers, config) {
+			$scope.loadedOntologies[ontology] = data;
+			++$scope.ontologiesReceived;
+		})
+		.error(function(data, status, headers, config) {
 			++$scope.ontologiesReceived;
 		});
 	}
