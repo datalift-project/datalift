@@ -48,7 +48,11 @@ function ConvertCtrl($scope, $http, $timeout, Shared) {
 	    	$scope.successfulConversion = true;
 	    })
     	.error(function(data, status, headers, config) {
-    		alert("error!");
+    		Shared.broadcastNotification({
+				heading: "Execution failed",
+				message: "The service returned an error while executing.",
+				type: "danger"
+    		});
     		$scope.loading = false;
     	});
 	}
@@ -204,6 +208,11 @@ function ConvertCtrl($scope, $http, $timeout, Shared) {
 			}
 		})
 		.error(function(data, status, headers, config) {
+			Shared.broadcastNotification({
+				heading: "Couldn't retrieve ontology",
+				message: "The onology " + ontology + " has not been loaded properly.",
+				type: "warning"
+    		});
 			++$scope.ontologiesReceived;
 		});
 	}
@@ -215,6 +224,11 @@ function ConvertCtrl($scope, $http, $timeout, Shared) {
 			++$scope.ontologiesReceived;
 		})
 		.error(function(data, status, headers, config) {
+			Shared.broadcastNotification({
+				heading: "Couldn't retrieve ontology",
+				message: "The onology " + ontology + " has not been loaded properly.",
+				type: "warning"
+    		});
 			++$scope.ontologiesReceived;
 		});
 	}

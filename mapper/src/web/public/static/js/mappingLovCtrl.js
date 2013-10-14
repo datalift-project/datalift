@@ -540,8 +540,11 @@ function MappingLovCtrl($scope, $location, $http, $timeout, Shared) {
 //		self.selectPropertyToMap(self.propertiesToMap()[0]);
 	})
 	.error(function(data, status, headers, config) {
-		// TODO
-		alert("error");
+		Shared.broadcastNotification({
+			heading: "Source predicate error",
+			message: "The service returned an error while fetching source predicates.",
+			type: "danger"
+		});
 	});
 	
 	$http.get(self.url_type)
@@ -560,7 +563,10 @@ function MappingLovCtrl($scope, $location, $http, $timeout, Shared) {
 		}
 	})
 	.error(function(data, status, headers, config) {
-		// TODO
-		alert("error");
+		Shared.broadcastNotification({
+			heading: "Source type error",
+			message: "The service returned an error while fetching source types.",
+			type: "danger"
+		});
 	});
 }

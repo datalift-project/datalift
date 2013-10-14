@@ -4,6 +4,26 @@ body {
 	padding-bottom: 50px;
 }
 
+.notification-bell {
+    font-size: 22px;
+    padding: 10px 15px;
+}
+
+.notification-badge {
+    font-size: 10px;
+    padding: 3px 5px;
+    position: relative;
+    right: 28px;
+}
+
+.notification-container {
+    position: fixed;
+    right: 10px;
+    top: 60px;
+    z-index: 9000;
+    width: 400px;
+}
+
 .center-content {
     margin: 10px;
     text-align: center;

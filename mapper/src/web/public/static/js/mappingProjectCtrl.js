@@ -38,6 +38,43 @@ function MappingProjectCtrl($scope, $http, $location, Shared) {
 			$scope.loadedOntology = data;
 			// Retirer le loader
 			$scope.upadatingOntology = false;
+		})
+		.error(function(data, status, headers, config) {
+			self.findAlternativeUriFromLov($scope.selectedOntology);
+		});
+	}
+	
+	self.findAlternativeUriFromLov = function(ontology) {
+		$http.get(Shared.baseUri + "/lov/vocabs?uri=" + ontology)
+		.success(function(data, status, headers, config) {
+			if (data.hasOwnProperty("lastVersionReviewed")) {
+				self.loadOntologyFromLov(ontology, data.lastVersionReviewed.link);
+			}
+		})
+		.error(function(data, status, headers, config) {
+			Shared.broadcastNotification({
+				heading: "Couldn't retrieve ontology",
+				message: "No alternative URI has been found for " + ontology + ".",
+				type: "warning"
+    		});
+			$scope.upadatingOntology = false;
+		});
+	}
+	
+	self.loadOntologyFromLov = function(ontology, altUri) {
+		$http.get(Shared.baseUri + "/mapper/ontology?src=" + altUri)
+		.success(function(data, status, headers, config) {
+			$scope.loadedOntology = data;
+			// Retirer le loader
+			$scope.upadatingOntology = false;
+		})
+		.error(function(data, status, headers, config) {
+			Shared.broadcastNotification({
+				heading: "Couldn't retrieve ontology",
+				message: "The onology " + ontology + " has not been loaded properly.",
+				type: "warning"
+    		});
+			$scope.upadatingOntology = false;
 		});
 	}
 	
@@ -300,8 +337,11 @@ function MappingProjectCtrl($scope, $http, $location, Shared) {
 //		self.selectPropertyToMap(self.propertiesToMap()[0]);
 	})
 	.error(function(data, status, headers, config) {
-		// TODO
-		alert("error");
+		Shared.broadcastNotification({
+			heading: "Source predicate error",
+			message: "The service returned an error while fetching source predicates.",
+			type: "danger"
+		});
 	});
 	
 	$http.get(self.url_type) // types
