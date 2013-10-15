@@ -62,9 +62,9 @@ public class HandleProjectModule extends BaseInterconnectionModule
     //-------------------------------------------------------------------------
 
     public final static String MODULE_NAME = "silk";
-    
+
     public String place=null;
-	
+
     private final static Logger log = Logger.getLogger();
 
     public HandleProjectModule() {
@@ -73,21 +73,21 @@ public class HandleProjectModule extends BaseInterconnectionModule
 
     //@Override
     public UriDesc canHandle(Project p) {
-    	
+
     	UriDesc projectURL = null;
-    	
-    	try {   	  	
-    		  	
+
+    	try {
+
             if (p.getSources().size()>1) {
             // The URI should be a URI for running the interconnection
             projectURL = new UriDesc(this.getName() + "?project=" + p.getUri(),
-                               "Interconnection");     	
-            
+                               "Interconnection");
+
             //if (this.position > 0) {
                 projectURL.setPosition(7500);
             //}
             }
-            
+
         }
         catch (Exception e) {
             log.fatal("Uh?", e);
@@ -99,14 +99,14 @@ public class HandleProjectModule extends BaseInterconnectionModule
     //-------------------------------------------------------------------------
     // Web services
     //-------------------------------------------------------------------------
-    
+
     @GET
     @Produces(MediaType.TEXT_HTML)
-    public Response getIndexPage(@QueryParam("project") java.net.URI projectId) 
+    public Response getIndexPage(@QueryParam("project") java.net.URI projectId)
     		                                            throws ObjectStreamException
     {
         // Retrieve project.
-        Project p = this.getProject(projectId);		
+        Project p = this.getProject(projectId);
         // Display conversion configuration page.
         Map<String, Object> args = new HashMap<String, Object>();
         args.put("it", p);
@@ -114,15 +114,15 @@ public class HandleProjectModule extends BaseInterconnectionModule
         return Response.ok(this.newViewable("/silk-webpage.vm", args))
                        .build();
     }
-    
+
     @GET
     @Path("build-silkscript")
     @Produces(MediaType.TEXT_HTML)
-    public Response getIndexPage2(@QueryParam("project") java.net.URI projectId) 
+    public Response getIndexPage2(@QueryParam("project") java.net.URI projectId)
     		                                            throws ObjectStreamException
     {
         // Retrieve project.
-        Project p2 = this.getProject(projectId);		
+        Project p2 = this.getProject(projectId);
         // Display conversion configuration page.
         Map<String, Object> args = new HashMap<String, Object>();
         args.put("it", p2);
@@ -130,7 +130,7 @@ public class HandleProjectModule extends BaseInterconnectionModule
         return Response.ok(this.newViewable("/script-webpage.vm", args))
                        .build();
     }
-    
+
     @POST
     @Path("build-silkscript/fillin")
     @Produces(MediaTypes.TEXT_HTML)
@@ -138,7 +138,7 @@ public class HandleProjectModule extends BaseInterconnectionModule
     	            	@FormParam("sourcename") String source_name,
     		            @FormParam("prefixsource") String prefix_source,
     		            @FormParam("targetname") String target_name,
-    		            @FormParam("prefixtarget") String prefix_target,    		           
+    		            @FormParam("prefixtarget") String prefix_target,
     		            @FormParam("sourcetype") String source_type,
     		            @FormParam("sourceaddressf") String source_address_file,
     		            @FormParam("sourceaddresss") String source_address_sparql,
@@ -147,13 +147,13 @@ public class HandleProjectModule extends BaseInterconnectionModule
     		            @FormParam("targetaddressf") String target_address_file,
     		            @FormParam("targetaddresss") String target_address_sparql,
     		            @FormParam("targetaddressso") String target_address_sparql_other,
-    		            @FormParam("interlinkid") String interlink_id,   		            
+    		            @FormParam("interlinkid") String interlink_id,
     		            @FormParam("sourcequery") String source_query,
     		            @FormParam("variable1") String v1,
     		            @FormParam("targetquery") String target_query,
     		            @FormParam("variable2") String v2,
     		            @FormParam("aggregatetype") String aggregate_type,
-    		            @FormParam("metric0") String metric0,    	
+    		            @FormParam("metric0") String metric0,
     		            @FormParam("threshold0") float threshold0,
     		            @FormParam("required0") boolean required0,
     		            @FormParam("weight0") int weight0,
@@ -173,7 +173,7 @@ public class HandleProjectModule extends BaseInterconnectionModule
     		            @FormParam("sourceCharsets0") String sourceCharset_s0,
     		            @FormParam("targetCharsets0") String targetCharset_s0,
     		            @FormParam("regexs20") String regex_s2_0,
-    		            @FormParam("blacklists0") String blacklist_s0,    		            
+    		            @FormParam("blacklists0") String blacklist_s0,
     		            @FormParam("targetproperty0") String target_property0,
     		            @FormParam("transformInputt0") String transformInput_t0,
     		            @FormParam("functiont0") String function_t0,
@@ -186,7 +186,7 @@ public class HandleProjectModule extends BaseInterconnectionModule
     		            @FormParam("sourceCharsett0") String sourceCharset_t0,
     		            @FormParam("targetCharsett0") String targetCharset_t0,
     		            @FormParam("regext20") String regex_t2_0,
-    		            @FormParam("blacklistt0") String blacklist_t0,  		                		        
+    		            @FormParam("blacklistt0") String blacklist_t0,
     		            @FormParam("filterlimit") String filter_limit)
                         		throws IOException {
         //set the default value for each variables
@@ -273,15 +273,15 @@ public class HandleProjectModule extends BaseInterconnectionModule
         	out.println("</SourceDataset>");
         	out.println("\n");
         	out.println("<TargetDataset dataSource=\""+ target_name +"\" var=\""+v2+"\">");
-        	out.println("<RestrictTo>");	    
+        	out.println("<RestrictTo>");
         	out.println(target_query);
         	out.println("</RestrictTo>");
         	out.println("</TargetDataset>");
         	out.println("\n");
         	out.println("<LinkageRule>");
         	out.println("<Aggregate type=\""+ aggregate_type +"\">");
-				
-        	out.println("<Compare metric=\""+ metric0 +"\" threshold=\""+threshold0+"\" required=\""+required0+"\">");		    
+
+        	out.println("<Compare metric=\""+ metric0 +"\" threshold=\""+threshold0+"\" required=\""+required0+"\">");
         	if (transformInput_s0.equals("Yes")) {
         	    out.println("<TransformInput function=\""+function_s0+"\">");
         	}
@@ -293,11 +293,11 @@ public class HandleProjectModule extends BaseInterconnectionModule
     		    	if (function_s0.equals("replace")) {
     		    		out.println("<Param name=\"search\" value=\""+search_s0+"\"/>");
     		    		out.println("<Param name=\"replace\" value=\""+replace_s1_0+"\"/>");
-    		    	}   		    		
+    		    	}
     		    	if (function_s0.equals("regexReplace")) {
     		    		out.println("<Param name=\"regex\" value=\""+regex_s1_0+"\"/>");
     		    		out.println("<Param name=\"replace\" value=\""+replace_s2_0+"\"/>");
-    		    	} 
+    		    	}
     		    	if (function_s0.equals("logarithm")) {
     		    		out.println("<Param name=\"base\" value=\""+base_s0+"\"/>");
     		    	}
@@ -324,11 +324,11 @@ public class HandleProjectModule extends BaseInterconnectionModule
     		    	if (function_t0.equals("replace")) {
     		    		out.println("<Param name=\"search\" value=\""+search_t0+"\"/>");
     		    		out.println("<Param name=\"replace\" value=\""+replace_t1_0+"\"/>");
-    		    	}   		    		
+    		    	}
     		    	if (function_t0.equals("regexReplace")) {
     		    		out.println("<Param name=\"regex\" value=\""+regex_t1_0+"\"/>");
     		    		out.println("<Param name=\"replace\" value=\""+replace_t2_0+"\"/>");
-    		    	} 
+    		    	}
     		    	if (function_t0.equals("logarithm")) {
     		    		out.println("<Param name=\"base\" value=\""+base_t0+"\"/>");
     		    	}
@@ -347,11 +347,11 @@ public class HandleProjectModule extends BaseInterconnectionModule
         	if (metric0.equals("num")) {
         	    out.println("<Param name=\"minValue\" value=\""+minValue0+"\"/>");
         	    out.println("<Param name=\"maxValue\" value=\""+maxValue0+"\"/>");
-        	}    		    	
+        	}
         	if (metric0.equals("wgs84")) {
-        	    out.println("<Param name=\"unit\" value=\""+unit0+"\"/>"); 
-        	    out.println("<Param name=\"unit\" value=\""+curveStyle0+"\"/>"); 
-        	}   		    			    		    
+        	    out.println("<Param name=\"unit\" value=\""+unit0+"\"/>");
+        	    out.println("<Param name=\"unit\" value=\""+curveStyle0+"\"/>");
+        	}
         	out.println("</Compare>");
         	out.println("</Aggregate>");
         	out.println("</LinkageRule>");
@@ -365,7 +365,7 @@ public class HandleProjectModule extends BaseInterconnectionModule
         	out.println("\n");
         	out.println("<Outputs>");
         	out.println("<Output type=\"sparul\" >");
-        	out.println("<Param name=\"uri\" value=\"" + url + "/statements\"/>");	
+        	out.println("<Param name=\"uri\" value=\"" + url + "/statements\"/>");
         	out.println("<Param name=\"parameter\" value=\"update\"/>");
         	out.println("</Output>");
         	out.println("</Outputs>");
@@ -385,15 +385,15 @@ public class HandleProjectModule extends BaseInterconnectionModule
         }
     	place = System.getProperty("user.dir")+"/script.xml";
         // Retrieve project.
-        Project p3 = this.getProject(projectId);		
-        // Display conversion configuration page.  	
+        Project p3 = this.getProject(projectId);
+        // Display conversion configuration page.
     	Map<String, Object> args = new HashMap<String, Object>();
         args.put("it", p3);
-        args.put("linking", this);  
+        args.put("linking", this);
     	return Response.ok(this.newViewable("/silk-webpage.vm", args))
-                .build();        
+                .build();
     }
- 
+
     @POST
     @Path("run-silk")
     @Consumes(MediaTypes.MULTIPART_FORM_DATA)
@@ -402,15 +402,15 @@ public class HandleProjectModule extends BaseInterconnectionModule
                         @FormDataParam("silkScript") InputStream data,
                         @FormDataParam("silkScript") FormDataContentDisposition disposition)
                                         throws ObjectStreamException
-    {    	   	
+    {
         // Retrieve project.
-        Project p4 = this.getProject(projectId);		
-        // Display conversion configuration page.  	
+        Project p4 = this.getProject(projectId);
+        // Display conversion configuration page.
     	Map<String, Object> args = new HashMap<String, Object>();
         args.put("it", p4);
         args.put("linking", this);
-    	
-	//link the data sets                
+
+	//link the data sets
         File silkScript = null;
         FileOutputStream fos = null;
         BufferedInputStream bis = null;
@@ -449,9 +449,9 @@ public class HandleProjectModule extends BaseInterconnectionModule
 	    }
 	}
         return Response.ok(this.newViewable("/ok.vm", args)).build();
-        
+
     }
-    
+
     @POST
     @Path("run-edoal")
     @Consumes(MediaTypes.MULTIPART_FORM_DATA)
@@ -463,12 +463,12 @@ public class HandleProjectModule extends BaseInterconnectionModule
                         @FormDataParam("targetdataset") String targetdataset)
                                         throws ObjectStreamException {
         // Retrieve project.
-        Project p4 = this.getProject(projectId);		
-        // Display conversion configuration page.  	
+        Project p4 = this.getProject(projectId);
+        // Display conversion configuration page.
     	Map<String, Object> args = new HashMap<String, Object>();
         args.put("it", p4);
         args.put("linking", this);
-    	
+
         FileOutputStream fos = null;
         BufferedInputStream bis = null;
         try {
@@ -491,40 +491,40 @@ public class HandleProjectModule extends BaseInterconnectionModule
 	                	//create SILK script
 	                	AlignmentParser aparser = new AlignmentParser(0);
 	                	URI file = configFile.toURI();
-	                	
+
 	                	//create Hashtable for init
 	                	Properties params = new Properties();
 	                	if (!sourcedataset.equals(""))
 	                		params.setProperty( "source", sourcedataset);
 	                	if (!targetdataset.equals(""))
 	                		params.setProperty( "target", targetdataset);
-	                	
+
 	        			try {
 							aparser.parse(file);
 							PrintWriter writer = new PrintWriter(
 										 new BufferedWriter(
 								         new OutputStreamWriter( System.out, "UTF-8" )), true);
-							
+
 							CopyOfSilkRendererVisitor renderer = new CopyOfSilkRendererVisitor(writer);
 		        				renderer.run(params, "SILKscript.xml", file.toString());
 		                    writer.flush();
 		                    writer.close();
 
 		                    //Run SILK script
-		                    File fspec = new File(System.getProperty("user.dir")+"\\SILKscript.xml");		                    
-                  
+		                    File fspec = new File(System.getProperty("user.dir")+"\\SILKscript.xml");
+
 		                    //replace the sparql endpoint of target data set:
-		                    BufferedReader br = null;  
-		                    BufferedWriter bw = null; 
-		                    String line = null;  
-		                    StringBuffer buff = new StringBuffer();  		                     
-		                    try {  
+		                    BufferedReader br = null;
+		                    BufferedWriter bw = null;
+		                    String line = null;
+		                    StringBuffer buff = new StringBuffer();
+		                    try {
 		                        // create input stream buffer
-		                        br = new BufferedReader(new FileReader(fspec));		                        
-		                        // read each line, and put into the buffer	                        
-		                        while ((line = br.readLine()) != null) {  
+		                        br = new BufferedReader(new FileReader(fspec));
+		                        // read each line, and put into the buffer
+		                        while ((line = br.readLine()) != null) {
 		                            // revise the content
-		                        	if (line.contains("<Outputs>")) {   
+		                        	if (line.contains("<Outputs>")) {
 		                        			line = br.readLine();
 		                            		buff.append("			<Outputs>");
 	                                    	buff.append(System.getProperty("line.separator"));
@@ -540,36 +540,34 @@ public class HandleProjectModule extends BaseInterconnectionModule
 			                            	line = br.readLine();
 		                                    buff.append("				</Output>");
 		                                    buff.append(System.getProperty("line.separator"));
-		                                    line = br.readLine();
-		                                    line = br.readLine();
-		                                    line = br.readLine();
-		                        		}		                        	
+                                                    buff.append("			</Outputs>\n");
+		                        		}
 		                            // if it don't need to be revised, copy as the same
-		                            else {  
+		                            else {
 		                                buff.append(line);
 		                                buff.append(System.getProperty("line.separator"));
-		                            }		                            
+		                            }
 		                        }
-		                    } finally {  
-		                        if (br != null) {  
-		                            try { br.close(); } catch (Exception e) { /* Ignore... */ }  
-		                        }  
-		                    } 
-		                    try {  
-		                        bw = new BufferedWriter(new FileWriter(fspec));  
-		                        bw.write(buff.toString());  
-		                    } finally {  
-		                        if (bw != null) {  
-		                            try { bw.close(); } catch (Exception e) { /* Ignore... */ }
-		                        }  
+		                    } finally {
+		                        if (br != null) {
+		                            try { br.close(); } catch (Exception e) { /* Ignore... */ }
+		                        }
 		                    }
-		                    
+		                    try {
+		                        bw = new BufferedWriter(new FileWriter(fspec));
+		                        bw.write(buff.toString());
+		                    } finally {
+		                        if (bw != null) {
+		                            try { bw.close(); } catch (Exception e) { /* Ignore... */ }
+		                        }
+		                    }
+
 		                    Silk.executeFile(fspec, null, 1, true);
-		                    
+
 						} catch (AlignmentException e) {
 							log.fatal("Cannot create EDOAL file", e);
 							throw new IOException("Cannot create EDOAL file", e);
-						}	        			
+						}
 	                }
 	}
         catch (Exception e) {
@@ -588,18 +586,18 @@ public class HandleProjectModule extends BaseInterconnectionModule
 	    }
 	}
         return Response.ok(this.newViewable("/ok.vm", args)).build();
-        
+
     }
-    
+
     @POST
     @Path("run-silk_2")
     @Produces(MediaTypes.TEXT_HTML)
     public Response doRun(@QueryParam("project") java.net.URI projectId)
                         		throws ObjectStreamException
-    {    	
+    {
         // Retrieve project.
-        Project p5 = this.getProject(projectId);		
-        // Display conversion configuration page.  	
+        Project p5 = this.getProject(projectId);
+        // Display conversion configuration page.
     	Map<String, Object> args = new HashMap<String, Object>();
         args.put("it", p5);
         args.put("linking", this);
@@ -609,10 +607,10 @@ public class HandleProjectModule extends BaseInterconnectionModule
     	    configFile = new File(place);
         if (configFile.length()>100)
         {
-        	Silk.executeFile(configFile, null, 1, true); 
+        	Silk.executeFile(configFile, null, 1, true);
         	configFile.delete();
-        }    		
-        
+        }
+
     	return Response.ok(this.newViewable("/ok.vm", args)).build();
     }
 }
