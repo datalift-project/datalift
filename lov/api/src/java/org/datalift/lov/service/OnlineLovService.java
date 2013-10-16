@@ -18,6 +18,7 @@ public class OnlineLovService extends LovService {
 	private final static String QUERY_BASE_URL = "http://lov.okfn.org/dataset/lov/api/v1/";
 	private final static String SEARCH = "search";
 	private final static String CHECK = "check";
+	private final static String VOCAB = "vocabs";
 	private final static String DEFAULT_JSON =  "{" +
 											    "\"count\": 0," +
 											    "\"offset\": 0," +
@@ -44,6 +45,11 @@ public class OnlineLovService extends LovService {
 	@Override
 	public String check(CheckQueryParam params) {
 		return getLovJson(CHECK, params);
+	}
+	
+	@Override
+	public String vocabs() {
+		return getLovJson(VOCAB, new NoQueryParam());
 	}
 	
 	private String getLovJson(String service, LovQueryParam params) {
@@ -83,6 +89,12 @@ public class OnlineLovService extends LovService {
 		}
 		
 		return builder.toString();
+	}
+
+	@Override
+	public void checkLovData() {
+		// TODO Auto-generated method stub
+		
 	}
 		
 }

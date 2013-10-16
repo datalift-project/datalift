@@ -1,0 +1,34 @@
+<form class="data-selection" role="form">
+	<div ng-class="selectSourceClass()">
+		<label for="selectSource">Select source to map</label>
+		<select
+			id="selectSource"
+			class="form-control input-lg"
+			ng-model="selectedSource"
+			ng-options="s.uri as s.title for s in sources">
+			<option value="">-- Choose source --</option>
+		</select>
+	</div>
+</form>
+<button 
+	id="lovButton"
+	type="button"
+	class="btn btn-default btn-lg pull-right nav-button"
+	ng-disabled="isSourceSelected()"
+	ng-click="goToLov()"
+	popover-placement="bottom"
+	popover-trigger="mouseenter"
+	popover="Search Linked Open Vocabularies to map predicates.">
+	Map using LOV search <span class="glyphicon glyphicon-chevron-right"></span>
+</button>
+<button
+	id="projectButton"
+	type="button"
+	class="btn btn-default btn-lg pull-right"
+	ng-disabled="isSourceSelected()"
+	ng-click="goToProject()"
+	popover-placement="bottom"
+	popover-trigger="mouseenter"
+	popover="Use ontologies from the project to map predicates.">
+	Map using project ontologies <span class="glyphicon glyphicon-chevron-right"></span>
+</button>

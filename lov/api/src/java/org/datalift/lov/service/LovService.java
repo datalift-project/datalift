@@ -12,6 +12,8 @@ public abstract class LovService {
 	
 	protected final static Logger log = Logger.getLogger();
 
+	public abstract void checkLovData();
 	public abstract String search(SearchQueryParam params);
 	public abstract String check(CheckQueryParam params);
+	public abstract String vocabs();
 }
