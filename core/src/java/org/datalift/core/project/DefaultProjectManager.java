@@ -548,7 +548,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         }
         p.setModificationDate(new Date());
         try {
-            if (this.findProject(new URL(p.getUri()).toURI()) == null) {
+            if (this.findProject(new URI(p.getUri())) == null) {
                 this.projectDao.persist(p);
                 this.projectDao.persist(new ProvEntity(p.getUri()));
                 String id = p.getUri().substring(p.getUri().lastIndexOf("/") + 1);

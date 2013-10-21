@@ -116,6 +116,7 @@ public class Prov {
 		
 		pm.deleteProject(project);
 	}
+	
 //	private void removeDataliftGraph() {
 //		EntityManager m = f.createEntityManager();
 //		Query q = m.createQuery(
