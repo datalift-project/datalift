@@ -7,8 +7,14 @@ import static org.datalift.core.DefaultConfiguration.REPOSITORY_URIS;
 import static org.datalift.core.DefaultConfiguration.REPOSITORY_URL;
 import static org.junit.Assert.assertEquals;
 
+import java.io.File;
+import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Properties;
+
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
 
 import org.apache.log4j.Logger;
 import org.datalift.core.DefaultConfiguration;
@@ -21,19 +27,20 @@ import org.junit.Before;
 import org.junit.Test;
 
 
-public class ProvTest {
+public class Prov {
     private final static String RDF_STORE = "internal";
 
     private Properties props = new Properties();
     
-    private static Logger logger = Logger.getLogger(ProvTest.class);
+    private static Logger logger = Logger.getLogger(Prov.class);
 	
 	@Before
 	public void setUp() throws Exception {
         this.props.put(DATALIFT_HOME, "tests");
         this.props.put(REPOSITORY_URIS, RDF_STORE);
-        this.props.put(RDF_STORE + REPOSITORY_URL, "sail:///");
-        //this.props.put(RDF_STORE + REPOSITORY_URL, "http://localhost:9091/openrdf-sesame/repositories/tests");
+//        this.props.put(RDF_STORE + REPOSITORY_URL, "sail:///");
+        this.props.put(RDF_STORE + REPOSITORY_URL, 
+        		"http://localhost:9091/openrdf-sesame/repositories/tests");
         this.props.put(RDF_STORE + REPOSITORY_DEFAULT_FLAG, "true");
         this.props.put(PRIVATE_STORAGE_PATH, ".");
 	}
@@ -51,12 +58,17 @@ public class ProvTest {
 		String projectDesc = "Project created to test prov";
 		String csvTitle = "kiosques";
 		String csvPath = "tests/files/file";
+
+		File file = new File(csvPath);
+		file.createNewFile();
 		
 		DefaultProjectManager pm = initProjectManager();
 		
+		
 		// Create a project and a CSV source
 		URI projectURI = new URI("http://projects.fr/myproject");
-		URI licenseURI = new URI("http://creativecommons.org/licenses/by-nc-sa/3.0/");
+		URI licenseURI = 
+				new URI("http://creativecommons.org/licenses/by-nc-sa/3.0/");
 		URI csvURI = new URI("http://datalift.fr/test");
 		Project project = pm.newProject(projectURI, projectTitle, 
 				projectDesc, licenseURI);
@@ -71,11 +83,16 @@ public class ProvTest {
 		Project project2 = pm.findProject(projectURI);
 		CsvSource csv2 = (CsvSource) project2.getSource(csvURI);
 
-		assertEquals("The project names are different.", project2.getTitle(), projectTitle);
-		assertEquals("The project descriptions are different.", project2.getDescription(), projectDesc);
-		assertEquals("The csv titles are different.", csv2.getTitle(), csvTitle);
-		assertEquals("The csv file paths are different.", csv2.getFilePath(), csvPath);
+		assertEquals("The project names are different.", 
+				project2.getTitle(), projectTitle);
+		assertEquals("The project descriptions are different.", 
+				project2.getDescription(), projectDesc);
+		assertEquals("The csv titles are different.", 
+				csv2.getTitle(), csvTitle);
+		assertEquals("The csv file paths are different.", 
+				csv2.getFilePath(), csvPath);
 	}
+	
 	
 	private DefaultProjectManager initProjectManager() {
         // Load application configuration.
@@ -90,4 +107,38 @@ public class ProvTest {
 		
 		return pm;
 	}
+
+	@Test
+	public void testProjectRemove() throws URISyntaxException {
+		URI projectURI = new URI("http://projects.fr/myproject");
+		DefaultProjectManager pm = initProjectManager();
+		Project project = pm.findProject(projectURI);
+		
+		pm.deleteProject(project);
+	}
+//	private void removeDataliftGraph() {
+//		EntityManager m = f.createEntityManager();
+//		Query q = m.createQuery(
+//				"select distinct ?result where { " +
+//				"?result a empire:Event ; dcterms:subject ??bo . }");
+//	}
+	
+//	@Test
+//	public void testProv() throws Exception {
+//		DefaultProjectManager pm = initProjectManager();
+//		
+//		// Create a project and a CSV source
+//		URI projectURI = new URI("http://projects.fr/myproject");
+//		URI licenseURI = 
+//				new URI("http://creativecommons.org/licenses/by-nc-sa/3.0/");
+//		URI csvURI = new URI("http://datalift.fr/test");
+//		Project project = pm.newProject(projectURI, "Title", 
+//				"Desc.", licenseURI);
+//		CsvSource csv = pm.newCsvSource(project, csvURI, "CSV Title", 
+//				"Kiosque: prov test", "tests/files/file", ',');
+//		
+//		// Save it
+//		project.add(csv);
+//		pm.saveProject(project);
+//	}
 }

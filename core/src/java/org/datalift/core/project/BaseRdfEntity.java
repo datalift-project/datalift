@@ -41,6 +41,7 @@ import javax.persistence.MappedSuperclass;
 
 import com.clarkparsia.empire.SupportsRdfId;
 import com.clarkparsia.empire.annotation.SupportsRdfIdImpl;
+import com.clarkparsia.empire.annotation.NamedGraph;
 
 import org.datalift.fwk.util.Iso8601DateFormat;
 

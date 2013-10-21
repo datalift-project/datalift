@@ -38,7 +38,9 @@ package org.datalift.core.project;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collection;
@@ -56,6 +58,8 @@ import com.clarkparsia.empire.config.ConfigKeys;
 import com.clarkparsia.empire.config.EmpireConfiguration;
 import com.clarkparsia.empire.sesametwo.OpenRdfEmpireModule;
 import com.clarkparsia.empire.sesametwo.RepositoryFactoryKeys;
+
+import org.datalift.core.project.ProvEntity;
 
 import javassist.ClassPool;
 import javassist.LoaderClassPath;
@@ -515,7 +519,9 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         return path;
     }
 
-    /** {@inheritDoc} */
+    /** {@inheritDoc} 
+     * @throws  
+     * @throws MalformedURLException */
     @Override
     public void deleteProject(Project p) {
         this.checkAvailable();
@@ -524,7 +530,12 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
             s.delete();
         }
         // Delete project (and dependent objects: sources, ontologies...)
-        this.projectDao.delete(p);
+        try {
+			this.projectDao.delete(new URI(p.getUri()));
+		} 
+        catch (URISyntaxException e) {
+            throw new RuntimeException("Invalid project URI: " + p.getUri(), e);
+		}
         log.debug("Project <{}> deleted", p.getUri());
     }
 
@@ -539,6 +550,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         try {
             if (this.findProject(new URL(p.getUri()).toURI()) == null) {
                 this.projectDao.persist(p);
+                this.projectDao.persist(new ProvEntity(p.getUri()));
                 String id = p.getUri().substring(p.getUri().lastIndexOf("/") + 1);
                 File projectStorage = this.getFileStorage(
                                             this.getProjectFilePath(id, null));

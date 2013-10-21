@@ -47,6 +47,7 @@ import javax.persistence.FetchType;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.OneToMany;
 
+import com.clarkparsia.empire.annotation.NamedGraph;
 import com.clarkparsia.empire.annotation.RdfId;
 import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.RdfsClass;
@@ -82,7 +83,8 @@ import org.datalift.fwk.util.StringUtils;
  */
 @Entity
 @MappedSuperclass
-@RdfsClass("vdpp:Project")
+@RdfsClass("datalift:Project")
+@NamedGraph(type = NamedGraph.NamedGraphType.Static, value="datalift:datalift")
 public class ProjectImpl extends BaseRdfEntity implements Project
 {
     //-------------------------------------------------------------------------
@@ -91,27 +93,33 @@ public class ProjectImpl extends BaseRdfEntity implements Project
 
     @RdfId
     private String uri;
-    @RdfProperty("dc:title")
+    @RdfProperty("dcterms:title")
     private String title;
-    @RdfProperty("dc:creator")
-    private String owner;
-    @RdfProperty("dc:description")
-    private String description;
-
-    @RdfProperty("datalift:source")
-    @OneToMany(fetch = FetchType.EAGER, cascade = { CascadeType.ALL })
-    private Collection<Source> sources = new LinkedList<Source>();
-
+    @RdfProperty("dcterms:license")
+    private URI license;
     @RdfProperty("dcterms:issued")
     private Date dateCreated;
     @RdfProperty("dcterms:modified")
     private Date dateModified;
-    @RdfProperty("dcterms:license")
-    private URI license;
-
-    @RdfProperty("void:vocabulary")
+    @RdfProperty("dcterms:description")
+    private String description;
+    // Was rdf poperty 'void:vocabulary'.
+    @RdfProperty("datalift:ontology")
     @OneToMany(fetch = FetchType.EAGER, cascade = { CascadeType.ALL })
     private Collection<Ontology> ontologies = new LinkedList<Ontology>();
+//    @RdfProperty("prov:wasAttributedTo")
+//    private UserImpl wasAttributedTo;
+    
+    
+    // Deprecated
+    @RdfProperty("dc:creator")
+    private String owner;
+
+    // Deprecated
+    @RdfProperty("datalift:source")
+    @OneToMany(fetch = FetchType.EAGER, cascade = { CascadeType.ALL })
+    private Collection<Source> sources = new LinkedList<Source>();
+
 
     //-------------------------------------------------------------------------
     // Constructors
