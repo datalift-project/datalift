@@ -205,6 +205,7 @@ public class OfflineLovService extends LovService {
 								.getAbsolutePath() + "/" + NQ_AGGREGATOR)
 								.delete();
 						aggregatorDownloaded = true;
+						loadDataIntoRepository();
 
 					} catch (IOException e) {
 						log.error("Download error.");
@@ -218,6 +219,7 @@ public class OfflineLovService extends LovService {
 					// TODO : vérifier si une mise à jour est disponible
 			log.info("No need for download. LovAggregator is here !");
 			aggregatorDownloaded = true;
+			loadDataIntoRepository();
 		}
 	}
 

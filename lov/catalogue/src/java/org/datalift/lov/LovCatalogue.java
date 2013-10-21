@@ -409,10 +409,11 @@ public class LovCatalogue extends BaseModule {
 
 		//TODO remove hard coding and put it in properties file
 		log.info("Starting the LOV catalog sync process...");
-		String endpointURL = "http://lov.okfn.org/endpoint/lov/repositories/";
+//		String endpointURL = "http://lov.okfn.org/endpoint/lov/repositories/";
+		String endpointURL = this.configuration.getInternalRepository().getEndpointUrl();
 		HTTPRepository lovEndPoint = new HTTPRepository(endpointURL);
 		lovEndPoint.initialize();
-
+		
 		RepositoryConnection lovRepositoryConnection = lovEndPoint.getConnection();
 		try {
 			StringBuilder sparqlQuery = new StringBuilder();
