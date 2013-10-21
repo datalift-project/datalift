@@ -90,7 +90,6 @@ import com.google.gson.JsonSerializer;
 
 import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
-import org.datalift.fwk.MediaTypes;
 import org.datalift.fwk.ResourceResolver;
 import org.datalift.fwk.i18n.PreferredLocales;
 import org.datalift.fwk.log.Logger;
@@ -248,7 +247,21 @@ public class OntologyMapper extends BaseModule implements ProjectModule
         try {
             // Build canonical file path.
             URL u = new URL(src);
-            String path = u.getHost() + File.separatorChar + u.getPath();
+            String path = u.getPath();
+            if (u.getProtocol().equals("file")) {
+                // Local file
+                // Make path relative by removing leading slash, if any.
+                if (path.charAt(0) == '/') {
+                    path = path.substring(1);
+                }
+                // Strip Windows disk name, if any.
+                path = path.replaceFirst("^[a-zA-Z]:(/|\\\\)", "");
+            }
+            else {
+                // Remote file
+                // Include host name in local cache file path.
+                path = u.getHost() + File.separatorChar + u.getPath();
+            }
             File f = new File(Configuration.getDefault().getTempStorage(),
                               MODULE_NAME + File.separatorChar + path);
             // Make sure parent directories exist.
@@ -272,6 +285,7 @@ public class OntologyMapper extends BaseModule implements ProjectModule
                 // File not in cache or expired. => Download from server.
                 try {
                     f = this.download(u, f);
+                    log.debug("Downloaded \"{}\" to local cache \"{}\"...", u, f);
                 }
                 catch (IOException e) {
                     if (! f.exists()) {
@@ -280,7 +294,10 @@ public class OntologyMapper extends BaseModule implements ProjectModule
                     // Else: Continue with local (outdated) copy.
                 }
             }
-            // Else: Local cache copy is still valid. => Use it.
+            else {
+                // Local cache copy is still valid. => Use it.
+                log.debug("Reading ontology data from local cache: {}", f);
+            }
 
             // Parse ontology.
             Ontology o = new OwlParser().parse(f, src);
@@ -527,11 +544,16 @@ public class OntologyMapper extends BaseModule implements ProjectModule
             // => Retrieve data MIME type.
             MediaType mimeType = info.mimeType;
             if ((mimeType == null) ||
-                (MediaTypes.APPLICATION_OCTET_STREAM.equals(mimeType))) {
+                (APPLICATION_OCTET_STREAM_TYPE.equals(mimeType))) {
                 // No server provided MIME type.
                 // => Try to guess MIME type from file name and content.
                 mimeType = MediaType.valueOf(
                                 new MimetypesFileTypeMap().getContentType(f));
+            }
+            if ((mimeType == null) ||
+                (APPLICATION_OCTET_STREAM_TYPE.equals(mimeType))) {
+                // Not recognized. => Try to match well-known RDF file suffixes.
+                mimeType = RdfUtils.guessRdfTypeFromExtension(f.getName());
             }
             // Extract RDF format from MIME type to set file suffix.
             RdfFormat fmt = null;
