@@ -2,6 +2,7 @@
  * Copyright / Copr. 2010-2013 Atos - Public Sector France -
  * BS & Innovation for the DataLift project,
  * Contributor(s) : L. Bihanic, H. Devos, O. Ventura, M. Chetima
+ *                  A. Valensi
  *
  * Contact: dlfr-datalift@atos.net
  *
@@ -51,19 +52,30 @@ import com.clarkparsia.empire.annotation.RdfsClass;
  * @author oventura
  */
 @Entity
-@RdfsClass("void:vocabulary")
+@RdfsClass("datalift:ontology")
 public class OntologyImpl extends BaseRdfEntity implements Ontology
 {
     //-------------------------------------------------------------------------
     // Instance members
     //-------------------------------------------------------------------------
 
-    @RdfProperty("dc:title")
+    @RdfProperty("dcterms:title")
     private String title;
     @RdfProperty("dcterms:source")
     private URI source;
+    @RdfProperty("datalift:project")
+    private URI project;
+    
+    
+    /**
+     * @deprecated date is now in Event 
+     */
     @RdfProperty("void:dateSubmitted")
     private Date dateSubmitted;
+
+    /**
+     * @deprecated publisher is not used anymore.
+     */
     @RdfProperty("dc:publisher")
     private String operator;
 
@@ -94,6 +106,18 @@ public class OntologyImpl extends BaseRdfEntity implements Ontology
     public void setSource(URI source) {
         this.source = source;
     }
+    
+    /** {@inheritDoc} */
+    @Override
+    public URI getProject() {
+		return project;
+	}
+
+    /** {@inheritDoc} */
+    @Override
+	public void setProject(URI project) {
+		this.project = project;
+	}
 
     /** {@inheritDoc} */
     @Override

@@ -8,17 +8,12 @@ import static org.datalift.core.DefaultConfiguration.REPOSITORY_URL;
 import static org.junit.Assert.assertEquals;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Properties;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
-
 import org.apache.log4j.Logger;
 import org.datalift.core.DefaultConfiguration;
-import org.datalift.core.project.DefaultProjectManager;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.project.CsvSource;
 import org.datalift.fwk.project.Project;

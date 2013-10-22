@@ -39,12 +39,14 @@ import java.util.Date;
 
 import javax.persistence.MappedSuperclass;
 
-import com.clarkparsia.empire.annotation.RdfId;
-import com.clarkparsia.empire.annotation.RdfProperty;
-
+import org.datalift.fwk.project.Event;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.Source;
+import org.datalift.fwk.project.User;
 import org.datalift.fwk.util.StringUtils;
+
+import com.clarkparsia.empire.annotation.RdfId;
+import com.clarkparsia.empire.annotation.RdfProperty;
 
 
 /**
@@ -62,18 +64,24 @@ public abstract class BaseSource extends BaseRdfEntity implements Source
 
     @RdfId
     private String uri;
-    @RdfProperty("dc:title")
+    @RdfProperty("dcterms:title")
     private String title;
     @RdfProperty("dc:description")
     private String description;
-    @RdfProperty("dcterms:source")
-    private String source;
     @RdfProperty("datalift:project")
     private Project project;
     @RdfProperty("dcterms:issued")
     private Date creationDate;
-    @RdfProperty("dc:creator")
+    @RdfProperty("dcterms:creator")
     private String operator;
+	@RdfProperty("prov:wasAttributedTo")
+    private User wasAttributedTo;
+    @RdfProperty("prov:wasDerivedFrom")
+    private Source wasDerivedFrom;
+    @RdfProperty("prov:wasGeneratedBy")
+    private Event wasGeneratedBy;
+    @RdfProperty("dcterms:source")
+    private String source;
 
     private transient final SourceType type;
 
@@ -198,6 +206,42 @@ public abstract class BaseSource extends BaseRdfEntity implements Source
     public void delete() {
         // NOP
     }
+
+    /** {@inheritDoc} */
+    @Override
+    public User getWasAttributedTo() {
+		return wasAttributedTo;
+	}
+
+    /** {@inheritDoc} */
+    @Override
+	public void setWasAttributedTo(User wasAttributedTo) {
+		this.wasAttributedTo = wasAttributedTo;
+	}
+
+    /** {@inheritDoc} */
+    @Override
+	public Source getWasDerivedFrom() {
+		return wasDerivedFrom;
+	}
+
+    /** {@inheritDoc} */
+    @Override
+	public void setWasDerivedFrom(Source wasDerivedFrom) {
+		this.wasDerivedFrom = wasDerivedFrom;
+	}
+
+    /** {@inheritDoc} */
+    @Override
+	public Event getWasGeneratedBy() {
+		return wasGeneratedBy;
+	}
+
+    /** {@inheritDoc} */
+    @Override
+	public void setWasGeneratedBy(Event wasGeneratedBy) {
+		this.wasGeneratedBy = wasGeneratedBy;
+	}
 
     //-------------------------------------------------------------------------
     // BaseRdfEntity contract support

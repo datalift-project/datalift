@@ -111,11 +111,15 @@ public class ProjectImpl extends BaseRdfEntity implements Project
 //    private UserImpl wasAttributedTo;
     
     
-    // Deprecated
+    /**
+     * @deprecated creator can be found with the {@link Event}.
+     */
     @RdfProperty("dc:creator")
     private String owner;
 
-    // Deprecated
+    /**
+     * @deprecated sources now are in {@link Source}.
+     */
     @RdfProperty("datalift:source")
     @OneToMany(fetch = FetchType.EAGER, cascade = { CascadeType.ALL })
     private Collection<Source> sources = new LinkedList<Source>();

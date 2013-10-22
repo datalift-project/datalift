@@ -2,6 +2,7 @@
  * Copyright / Copr. 2010-2013 Atos - Public Sector France -
  * BS & Innovation for the DataLift project,
  * Contributor(s) : L. Bihanic, H. Devos, O. Ventura, M. Chetima
+ *                  A. Valensi
  *
  * Contact: dlfr-datalift@atos.net
  *
@@ -49,6 +50,11 @@ public interface Ontology
     public URI getSource();
     public void setSource(URI source);
 
-    public Date getDateSubmitted();
+    public URI getProject();
+	public void setProject(URI project);
+
+	// Deprecated?
+	public Date getDateSubmitted();
+	// Deprecated?
     public String getOperator();
 }
