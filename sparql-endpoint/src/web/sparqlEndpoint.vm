@@ -5,10 +5,10 @@
 #load("sparql/resources")
 #load_core_resources
 	<title>#i18n("sparql.query.results") - #i18n("sparql.endpoint.title") - DataLift</title>
-#css_links
+#header_links
 </head>
 <body>
-#banner
+#h_tetiere
 #if( ${securityCtx.userAuthenticated} )
 	<div style="position:absolute;top:15px;right:15px;">
 		<a href="${baseUri}/project" id="goto_workspace" class="button">#i18n("project.workspace.link")</a>
@@ -73,7 +73,7 @@
 			#i18n("grid.search.column.label") <select id="searchColumn"></select>
 		</div>
 	</div>
-#footer
+#h_footer
 	<div style="text-align:right;font-style:italic;font-size:0.8em">
 		<span style="color:gray">Version @app.version@</span>
 	</div>

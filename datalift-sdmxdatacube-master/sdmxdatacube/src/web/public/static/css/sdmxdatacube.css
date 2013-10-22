@@ -1,0 +1,134 @@
+/*
+ * Navbar & header.
+ * ---------------------------------------------------------------------
+ */
+
+h1 {
+  font-size:100%;
+  display:inline-block;
+  vertical-align:middle;
+  padding:0;
+  margin:0;
+  text-transform : uppercase;
+}
+
+h1 small {
+  font-size : inherit;
+  text-transform : none;
+}
+
+h2 {
+  font-size: 160%;
+}
+
+h2 small {
+  font-size: inherit;
+}
+
+i {
+  position:relative;
+  top:1px;
+}
+
+h1 i, h2 i, h3 i, h4 i {
+  top:5px;
+}
+
+
+.navbar .brand {
+  margin:0;
+  padding:0;
+}
+
+.nav-collapse {
+  float:right;
+}
+
+.nav, .navbar-text {
+  display:inline-block;
+}
+
+
+/*
+ * Footer.
+ * ---------------------------------------------------------------------
+ */
+
+footer {
+  min-height: 200px;
+}
+
+footer .container {
+  margin-top:10px;
+  text-align:center;
+}
+
+/*
+ * Converter form.
+ * ---------------------------------------------------------------------
+ */
+
+label.checkbox {
+  background-color: white;
+  padding: 4px 5px 4px 24px;
+  border-radius: 4px;
+  border:1px solid #ddd;
+}
+
+.row-fluid .control-label {
+  min-height: 20px;
+}
+
+.form-actions {
+  display: inline-block;
+}
+
+.progress-indicator {
+  margin: 20px;
+}
+
+.progress-indicator .progress {
+  height:30px;
+  margin-bottom:0;
+}
+
+.bar p {
+  padding-top: 5px;
+  font-size: 150%;
+}
+
+/*
+ * Form validation.
+ * ---------------------------------------------------------------------
+ */
+
+.help-block:before, .validation-message:before {
+  font-size: 120%;
+  padding:0 5px;
+}
+
+.success .help-block:before, h3 .text-success:before {
+  content : '\2713';
+}
+
+.error .help-block:before {
+  content : '\2717';
+}
+
+.error .validation-message:before, h3 .text-error:before {
+  content : '\26A0';
+}
+
+/*
+ * Documentation.
+ * ---------------------------------------------------------------------
+ */
+
+pre {
+  min-height: 400px;
+}
+
+blockquote p {
+  padding-top: 10px;
+  min-height: 180px;
+}

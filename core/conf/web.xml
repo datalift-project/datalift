@@ -206,7 +206,7 @@
     <!-- Prevent Jersey from serving static files -->
     <init-param>
       <param-name>com.sun.jersey.config.property.WebPageContentRegex</param-name>
-      <param-value>/|(/(images|css|js|wro|(WEB-INF/jsp))/.*)|(/(.[^/]*\.html))</param-value>
+      <param-value>/|(/(images|bootstrapcss|js|wro|(WEB-INF/jsp))/.*)|(/(.[^/]*\.html))</param-value>
     </init-param>
     <!-- Install some filters to
           - Honor GZip accepted encoding in response

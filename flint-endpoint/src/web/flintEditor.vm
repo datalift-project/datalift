@@ -4,8 +4,8 @@
 <head>
 #load("sparql/resources")
 #load_core_resources
-	<title>#i18n("sparql.query.results") - #i18n("sparql.endpoint.title") - Datalift</title>
-#script_links
+	<title>#i18n("sparql.query.results") - #i18n("sparql.endpoint.title") - Datalift - test</title>
+<!-- script_links -->
 	<script type="text/javascript" src="${baseUri}/sparql/editor/lib/codemirror.js"></script>
 	<script type="text/javascript" src="${baseUri}/sparql/editor/sparql10querymode_ll1.js"></script>
 	<script type="text/javascript" src="${baseUri}/sparql/editor/sparql11querymode_ll1.js"></script>
@@ -14,21 +14,21 @@
 	<link rel="stylesheet" href="${baseUri}/sparql/editor/lib/codemirror.css"/>
 	<link rel="stylesheet" href="${baseUri}/sparql/editor/css/sparqlcolors.css"/>
 	<link rel="stylesheet" href="${baseUri}/sparql/editor/css/docs.css"/>
-#css_links
+#header_links
+
 </head>
 <body>
+#h_tetiere
 #if( ${securityCtx.userAuthenticated} )
 	<a href="${baseUri}/project" id="goto_workspace" class="button" style="position:absolute;top:15px;right:15px;">#i18n("project.workspace.link")</a>
 #end
-#banner
 	<div id="flint">
 	</div>
-#footer
-	<div style="text-align:right;font-style:italic;font-size:0.8em">
-		<span style="color:gray">Version @app.version@</span>
-	</div>
-	
+#h_footer
 <script type="text/javascript">
+jQuery.browser={};(function(){jQuery.browser.msie=false;
+jQuery.browser.version=0;if(navigator.userAgent.match(/MSIE ([0-9]+)\./)){
+jQuery.browser.msie=true;jQuery.browser.version=RegExp.$1;}})();
 	$(document)
 		.ready(
 				function() {

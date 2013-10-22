@@ -6,18 +6,119 @@
 #load_core_resources
 	<title>#i18n("workspace.title") - DataLift</title>
 #css_links
+#header_links
 </head>
 <body>
-#banner
+#h_tetiere
 <div style="position:absolute;top:15px;right:15px;">
 	<a href="${baseUri}/sparql" id="goto_sparql" class="button">#i18n("sparql.endpoint.link")</a>
 </div>
+<!-- ---------------- PROJECT SAPCE -------------------- -->
+<div class="span12 row-fluid projectSpaceContainer">
+	<div class="span3 " id="btnActionDiv">
+		<div id="new-projet-btn">
+			<a href="#createproject" role="button" class="btn" data-toggle="modal"><img style="margin-right: 4px;" src="./bootstrap/img/icon-add.png">Nouveau projet</a>
+		</div>
+	</div>
+	<div class="span9 row-fluid" style="margin:0 auto; float:none;">
+		<!-- DIV BAR DE FILTRES --> 
+		<div class="span12 row-fluid" style="margin:0 auto; float:none;">
+			<form class="navbar-search form-inline pagination-centered">
+				<label>Filtre : </label>
+	  			<input type="text" placeholder="Search">
+				<label>License : </label>
+				<select>
+					<option></option>
+					<option>Attribution, 3.0 non transposé (CC BY 3.0)</option>
+					<option>Paternité - Partage à l'identique, 3.0 non transposé (CC BY-SA 3.0)</option>
+					<option>Paternité - Pas de modifications, 3.0 non transposé (CC BY-ND 3.0)</option>
+					<option>Paternité - Pas d'utilisation commerciale, 3.0 non transposé (CC BY-NC 3.0)</option>
+					<option>Attribution - Pas d'utilisation commerciale - Partage à l'identique, 3.0 non transposé (CC BY-NC-SA 3.0)</option>
+					<option>Attribution - Pas d'utilisation commerciale - Pas de modifications, 3.0 non transposé (CC BY-NC-ND 3.0)</option>
+					<option>Open Data Commons Open Database License (ODbL)</option>
+				</select>
+			</form>
+		</div> <!-- FIN DIV BAR DE FILTRES -->
+		<div class="span12 row-fluid" style="margin:0px 0px 0px 8%; float:none;">
+			<div class="list-group" id="project-list">
+				<ul class="nav nav-stacked">
+					#foreach( $item in $it )
+					<li>
+						<!-- <a href="./editproject-v2.php?projectid=$item.title#sources"> -->
+						<a href="${item.uri}">
+							<div class="span12 list-elem">
+								<span class="span7">
+								 	<img src="./bootstrap/img/Project-img.png" id="img-nav-stacked"><span>$item.title</span><br>
+								 	<p style="display:inline-block;" class="info-list-title">Description:</p>
+								 	#if ($item.description) 
+										<p style="display:inline-block;" class="info-list">Description du projet "$item.title": $item.description </p><br>
+									#else
+										<p style="display:inline-block; color:red;" class="info-list">No description </p><br>
+									#end
+									<p style="display:inline-block;" class="info-list-title">License:</p>
+									<p style="display:inline-block;" class="info-list"> $licenses[$item.getLicense()].getLabel()</p>
+								</span>
+								<span class="span5 creater-block">
+									<p style="display:inline-block;">Créé par:&nbsp</p>
+									<p style="display:inline-block;">Gabriel Kepeklian</p><br>
+									<p style="display:inline-block;">Creation:&nbsp</p>
+									<p style="display:inline-block;">7 sept 2013</p><br>
+									<p style="display:inline-block;">Modification:&nbsp</p>
+									<p style="display:inline-block;">9 sept 2013</p><br>
+								</span>
+							</div>
+						</a>
+					</li>
+					#end
+				</ul> 
+			</div>
+		</div>
+			<!-- DIV POPUP FORM -->
+			<div class="modal hide pagination-centered fade large" id="createproject">
+			  	<div class="modal-header"> <a class="close" data-dismiss="modal">×</a>
+			    	<h3>Nouveau projet</h3>
+			  	</div>
+			  	<div class="modal-body">
+			    	<form class="form-horizontal" name="newproject">
+				  	<div class="control-group">
+				    	<label class="control-label" for="inputName">Nom du projet :</label>
+					    <div class="controls">
+					      <input type="text" id="inputName" placeholder="projectName">
+					    </div>
+				  	</div>
+				  	<div class="control-group">
+				  		<label class="control-label" for="inputLicense">License :</label>
+					  	<div class="controls">
+						    <select id="inputLicense">
+							  <option>Attribution, 3.0 non transposé (CC BY 3.0)</option>
+							  <option>Paternité - Partage à l'identique, 3.0 non transposé (CC BY-SA 3.0)</option>
+							  <option>Paternité - Pas de modifications, 3.0 non transposé (CC BY-ND 3.0)</option>
+							  <option>Paternité - Pas d'utilisation commerciale, 3.0 non transposé (CC BY-NC 3.0)</option>
+							  <option>Attribution - Pas d'utilisation commerciale - Partage à l'identique, 3.0 non transposé (CC BY-NC-SA 3.0)</option>
+							  <option>Attribution - Pas d'utilisation commerciale - Pas de modifications, 3.0 non transposé (CC BY-NC-ND 3.0)</option>
+							  <option>Open Data Commons Open Database License (ODbL)</option>
+							</select>
+						</div>
+				  	</div>
+				  	<div class="control-group">
+					    <label class="control-label" for="inputDescription">Description :</label>
+					    <div class="controls">
+					      <textarea type="description" id="inputDescription" placeholder="Description"></textarea>
+					    </div>
+				  	</div>
+				  	
+					</form>
+			  	</div>
+			  	<div class="modal-footer">
+				    <a href="#" class="btn" data-dismiss="modal">Annuler</a>
+				    <a href="./index.php" data-dismiss="modal" class="btn btn-primary">Créer</a>
+			  	</div>
+			</div>
+		
+	</div>
+<!--
 <div id="workspace" class="ui-widget-content">
-#if( $current )
-	<h3 class="ui-widget-header dl-widget-header">#i18n("project") $!esc.html($current.title)</h3>
-#else
-	<h3 class="ui-widget-header dl-widget-header">#i18n("workspace.title")</h3>
-#end
+
 	<div id="projects_panel" class="ui-widget-content">
 		<div id="project_scroll">
 			<h3 class="ui-widget-header dl-widget-header">#i18n("project.title.available")</h3>
@@ -93,7 +194,8 @@
 #end
 	</div>
 </div>
-#footer
+-->
+#h_footer
 
 #script_links
 <script type="text/javascript">

@@ -1,20 +1,88 @@
 ## Global library to centralize templates macros
 
 #macro( header_links )
+#h_js_links
+#h_favico
+#h_bootstrap_links
+#h_css_links
 #css_links
-#script_links
 #end
+
 
 #macro( load_core_resources )
 #load("core/resources")
 #end
 
-#macro( banner )
-	<div id="banner" class="dl-banner">
-		<img id="datalift-logo" src="${baseUri}/images/datalift-logo.png"/>
-		<span id="datalift-title">DataLift</span>
-		<img id="datalift-partenaire" src="${baseUri}/images/logo-partenaire.png"/>
+#macro( h_tetiere )
+<!-- ---------------- TETIERE -------------------- -->
+  	<div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+       	<div class="container-fluid">
+      		<a class="brand" href="#"> <img src="${baseUri}/images/logo_datalift.gif" width="37px"></a>
+      		<a class="brand .txt-bottom" href="#">DataLift</a>
+  				<a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        	</a>
+        	<ul class="nav pull-right">  
+            	<li class="dropdown">
+            		<a class="dropdown-toggle" id="drop5" role="button" data-toggle="dropdown" href=""><i class="icon-user"></i>Jean Dupont<b class="caret"></b></a>
+            		<ul class="dropdown-menu" role="menu" aria-labelledby="drop5">
+            			<li><a role="menuitem" href="#MonCompte">Mon Compte</a></li>
+            			<li class="divider"></li>
+            			<li><a role="menuitem" href="#MonCompte"><i class="icon-off"></i>D&eacuteconnexion</a></li>
+            		</ul>
+            	</li>
+        	</ul>
+            </ul>
+          <div class="nac-collapse collapse"></div>
+          	<ul class="nav pull-right menu nav_bar_menu">
+              <li id="wiki"><a href="./wikilocal.php">Wiki</a></li>
+              <li id="endpoint"><a href="./endpoint.php">Endpoint</a></li>
+              <li id="projets"><a href="${baseUri}/project" id="goto_workspace">Projets</a></li>
+              <li id="catalogues"><a href="#catalogues">Catalogues</a></li>
+              <li id="admin"><a href="./admin.php">Admin</a></li>
+          </div>
+      	</div>
+      </div>
+    <!-- ---------------- FIN TETIERE ---------------- -->
+#end
+
+#macro (h_footer)
+<!-- ---------------- FOOTER -------------------- -->
+<footer class="navbar navbar-fixed-bottom">
+    <div class="navbar-inner">
+     	<div class="container">	
+	       	<div class="nav-collapse" style="text-align: center;">
+    	   		<a style="color : #0094D6;" href="http://www.datalift.org">DataLift</a>
+		   		<p id="version">Version @app.version@</p>
+        	</div>
+      </div>
 	</div>
+</footer>
+<!-- ---------------- FIN FOOTER -------------------- -->
+#end
+
+#macro (h_favico)
+	<link rel="shortcut icon" href="${baseUri}/bootstrap/assets/ico/favicon.ico">
+#end
+
+#macro(h_bootstrap_links)
+	<link type="text/css" rel="stylesheet" href="${baseUri}/bootstrap/css/bootstrap.min.css">
+  	<link type="text/css" rel="stylesheet" href="${baseUri}/bootstrap/css/bootstrap-responsive.min.css">
+#end
+
+#macro (h_css_links)
+	<link type="text/css" rel="stylesheet" href="${baseUri}/bootstrap/css/datalift.css">
+	<link type="text/css" rel="stylesheet" href="${baseUri}/bootstrap/css/notes.css">
+#end
+
+#macro(h_js_links)
+	<script src="${baseUri}/bootstrap/js/jquery.min.js"></script>    
+    <script src="${baseUri}/bootstrap/js/bootstrap.min.js"></script>    
+    <script src="${baseUri}/bootstrap/js/easing.js"></script> 
+    <script src="${baseUri}/bootstrap/js/datalift.js"></script> 
 #end
 
 #macro( css_links )
@@ -33,10 +101,4 @@
 	<script language="javascript" src="${baseUri}/js/jquery/jquery.history.js"></script>
 	<!-- Datalift common javascript -->
 	<script language="javascript" src="${baseUri}/js/common.js"></script>
-#end
-
-#macro( footer )
-	<div id="footer" class="dl-footer">
-		<span id="more_info">#i18n("footer.more_info") <a href="http://www.datalift.org">http://www.datalift.org</a></span>
-	</div>
 #end
