@@ -75,4 +75,7 @@ public interface Project
     public void addOntology(Ontology ontology);
     public Ontology getOntology(String title);
     public Ontology removeOntology(String title);
+    
+    public User getWasAttributedTo();
+	public void setWasAttributedTo(User wasAttributedTo);
 }

@@ -46,6 +46,7 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.OneToMany;
+import javax.persistence.ManyToOne;
 
 import com.clarkparsia.empire.annotation.NamedGraph;
 import com.clarkparsia.empire.annotation.RdfId;
@@ -56,6 +57,7 @@ import org.datalift.fwk.project.Ontology;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.TransformedRdfSource;
+import org.datalift.fwk.project.User;
 import org.datalift.fwk.util.StringUtils;
 
 
@@ -107,11 +109,11 @@ public class ProjectImpl extends BaseRdfEntity implements Project
     @RdfProperty("datalift:ontology")
     @OneToMany(fetch = FetchType.EAGER, cascade = { CascadeType.ALL })
     private Collection<Ontology> ontologies = new LinkedList<Ontology>();
-//    @RdfProperty("prov:wasAttributedTo")
-//    private UserImpl wasAttributedTo;
+    @RdfProperty("prov:wasAttributedTo")
+    @ManyToOne(fetch = FetchType.EAGER, cascade = { CascadeType.PERSIST })
+    private User wasAttributedTo;
     
-    
-    /**
+	/**
      * @deprecated creator can be found with the {@link Event}.
      */
     @RdfProperty("dc:creator")
@@ -303,6 +305,18 @@ public class ProjectImpl extends BaseRdfEntity implements Project
         }
         return ontology;
     }
+    
+    /** {@inheritDoc} */
+    @Override
+    public User getWasAttributedTo() {
+		return wasAttributedTo;
+	}
+
+    /** {@inheritDoc} */
+    @Override
+	public void setWasAttributedTo(User wasAttributedTo) {
+		this.wasAttributedTo = wasAttributedTo;
+	}
 
     //-------------------------------------------------------------------------
     // BaseRdfEntity contract support

@@ -40,9 +40,22 @@ package org.datalift.fwk.project;
  * A user class to identify someone.
  * 
  * @author avalensi
+ * 
+ * TODO: See to move the BASE_USER_URI somewhere else.
  *
  */
 public interface User {
+
+	/**
+	 * Base User URI.
+	 */
+	public static final String BASE_USER_URI = "http://www.datalift.org/user/"; 
+	
+	/**
+	 * Get the RDF URI.
+	 * @return the RDF URI
+	 */
+	String getUri();
 
 	/**
 	 * Get the identifier of the user.

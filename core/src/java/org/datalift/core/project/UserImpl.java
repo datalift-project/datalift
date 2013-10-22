@@ -40,6 +40,7 @@ import javax.persistence.Entity;
 import org.datalift.fwk.project.User;
 
 import com.clarkparsia.empire.annotation.NamedGraph;
+import com.clarkparsia.empire.annotation.RdfId;
 import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.RdfsClass;
 
@@ -52,13 +53,16 @@ import com.clarkparsia.empire.annotation.RdfsClass;
 @Entity
 @RdfsClass("datalift:User")
 @NamedGraph(type = NamedGraph.NamedGraphType.Static, value="datalift:datalift")
-public class UserImpl implements User {
+public class UserImpl extends BaseRdfEntity implements User {
 
 	//-------------------------------------------------------------------------
     // Instance members
     //-------------------------------------------------------------------------
 
-	@RdfProperty("dcterms:identifier")
+    @RdfId
+    private String uri;
+
+    @RdfProperty("dcterms:identifier")
 	private String identifier;
 
 	@RdfProperty("prv:actedOnBehalfOf")
@@ -68,15 +72,22 @@ public class UserImpl implements User {
     // Constructors
     //-------------------------------------------------------------------------
 
-	public UserImpl(String user) {
-		this.identifier = user;
+	public UserImpl(String identifier) {
+		this.uri = User.BASE_USER_URI + identifier;
+		this.identifier = identifier;
 	}
 	
 	//-------------------------------------------------------------------------
     // User contract support
     //-------------------------------------------------------------------------
 
-	/** {@inheritDoc} */
+    /** {@inheritDoc} */
+    @Override
+    public String getUri() {
+        return this.uri;
+    }
+
+    /** {@inheritDoc} */
     @Override
 	public String getIdentifier() {
 		return identifier;
@@ -98,6 +109,16 @@ public class UserImpl implements User {
     @Override
 	public void setActedOnBehalfOf(String actedOnBehalfOf) {
 		this.actedOnBehalfOf = actedOnBehalfOf;
+	}
+
+	//-------------------------------------------------------------------------
+    // BaseRedfEntity contract support
+    //-------------------------------------------------------------------------
+
+    @Override
+	protected void setId(String id) {
+		// TODO Auto-generated method stub
+		
 	}
 	
 }

@@ -502,7 +502,10 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         Date date = new Date();
         p.setCreationDate(date);
         p.setModificationDate(date);
-        p.setOwner(SecurityContext.getUserPrincipal());
+        
+        UserImpl user = new UserImpl(SecurityContext.getUserPrincipal());
+        p.setWasAttributedTo(user);
+
         log.debug("New project <{}> created", p.getUri());
         return p;
     }
@@ -549,6 +552,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
             if (this.findProject(new URI(p.getUri())) == null) {
                 this.projectDao.persist(p);
                 this.projectDao.persist(new ProvEntity(p.getUri()));
+                this.projectDao.persist(new ProvAgent(p.getWasAttributedTo().getUri()));
                 String id = p.getUri().substring(p.getUri().lastIndexOf("/") + 1);
                 File projectStorage = this.getFileStorage(
                                             this.getProjectFilePath(id, null));

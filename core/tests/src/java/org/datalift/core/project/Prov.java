@@ -17,10 +17,13 @@ import org.datalift.core.DefaultConfiguration;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.project.CsvSource;
 import org.datalift.fwk.project.Project;
+import org.datalift.fwk.project.User;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+
+// TODO: test DefaultProjectManager.newProject
 
 public class Prov {
     private final static String RDF_STORE = "internal";
@@ -61,7 +64,7 @@ public class Prov {
 		
 		
 		// Create a project and a CSV source
-		URI projectURI = new URI("http://projects.fr/myproject");
+		URI projectURI = new URI("http://datalift.fr/proj/myproject");
 		URI licenseURI = 
 				new URI("http://creativecommons.org/licenses/by-nc-sa/3.0/");
 		URI csvURI = new URI("http://datalift.fr/test");
@@ -70,6 +73,10 @@ public class Prov {
 		CsvSource csv = pm.newCsvSource(project, csvURI, csvTitle, 
 				"Kiosque: prov test", csvPath, ',');
 		
+//		// Add user
+//		UserImpl user = new UserImpl("Foo");
+//		project.setWasAttributedTo(user);
+		
 		// Save it
 		project.add(csv);
 		pm.saveProject(project);
@@ -77,7 +84,8 @@ public class Prov {
 		// Read it
 		Project project2 = pm.findProject(projectURI);
 		CsvSource csv2 = (CsvSource) project2.getSource(csvURI);
-
+		User user2 = project.getWasAttributedTo();
+		
 		assertEquals("The project names are different.", 
 				project2.getTitle(), projectTitle);
 		assertEquals("The project descriptions are different.", 
@@ -86,6 +94,10 @@ public class Prov {
 				csv2.getTitle(), csvTitle);
 		assertEquals("The csv file paths are different.", 
 				csv2.getFilePath(), csvPath);
+		assertEquals("The user is wrong.", 
+				user2.getIdentifier(), null);
+		assertEquals("The User.getActedOnBehalfOf is wrong.", 
+				user2.getActedOnBehalfOf(), null);
 	}
 	
 	
@@ -105,11 +117,12 @@ public class Prov {
 
 	@Test
 	public void testProjectRemove() throws URISyntaxException {
-		URI projectURI = new URI("http://projects.fr/myproject");
+		URI projectURI = new URI("http://datalift.fr/proj/myproject");
 		DefaultProjectManager pm = initProjectManager();
 		Project project = pm.findProject(projectURI);
 		
-		pm.deleteProject(project);
+		if (project != null)
+			pm.deleteProject(project);
 	}
 	
 //	private void removeDataliftGraph() {
