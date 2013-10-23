@@ -290,7 +290,7 @@ public class GenericRdfJpaDao<T> implements RequestLifecycleListener
     }
 
     @SuppressWarnings("unchecked")
-    protected <C> List<C> executeQuery(String query, Class<C> entityClass) {
+    public <C> List<C> executeQuery(String query, Class<C> entityClass) {
         if (isBlank(query)) {
             throw new IllegalArgumentException("query");
         }

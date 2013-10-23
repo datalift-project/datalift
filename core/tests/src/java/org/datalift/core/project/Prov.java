@@ -10,6 +10,7 @@ import static org.junit.Assert.assertEquals;
 import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.List;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
@@ -37,9 +38,9 @@ public class Prov {
 	public void setUp() throws Exception {
         this.props.put(DATALIFT_HOME, "tests");
         this.props.put(REPOSITORY_URIS, RDF_STORE);
-//        this.props.put(RDF_STORE + REPOSITORY_URL, "sail:///");
-        this.props.put(RDF_STORE + REPOSITORY_URL, 
-        		"http://localhost:9091/openrdf-sesame/repositories/tests");
+        this.props.put(RDF_STORE + REPOSITORY_URL, "sail:///");
+//        this.props.put(RDF_STORE + REPOSITORY_URL, 
+//        		"http://localhost:9091/openrdf-sesame/repositories/tests");
         this.props.put(RDF_STORE + REPOSITORY_DEFAULT_FLAG, "true");
         this.props.put(PRIVATE_STORAGE_PATH, ".");
 	}
@@ -98,6 +99,9 @@ public class Prov {
 		Project project2 = pm.findProject(projectURI);
 		CsvSource csv2 = (CsvSource) project2.getSource(csvURI);
 		User user2 = project.getWasAttributedTo();
+		List<Ontology> ontologies = pm.getOntologies(project2);
+		
+		System.out.println(ontologies.get(0).getTitle());
 		
 		assertEquals("PROV: Project: The title is wrong.", 
 				project2.getTitle(), projectTitle);
@@ -116,7 +120,8 @@ public class Prov {
 		assertEquals("PROV: Project.User: The actedOnBehalfOf is wrong.", 
 				user2.getActedOnBehalfOf(), null);
 		
-		// TODO: commit, getOntologies
+		assertEquals("PROV: Ontologies owned by a project: Error.",
+				ontologies.get(0).getTitle(), "MyOntology");
 	}
 	
 	

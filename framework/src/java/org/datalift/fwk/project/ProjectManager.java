@@ -38,6 +38,7 @@ package org.datalift.fwk.project;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Collection;
+import java.util.List;
 
 import org.datalift.fwk.MediaTypes;
 
@@ -334,7 +335,7 @@ public interface ProjectManager
      * Get the collection of ontologies owned by a project.
      * @param  project    the owning project.
      */
-	void getOntologies(Project project);
+	List<Ontology> getOntologies(Project project);
 
 	/**
      * Builds the path to the project directory or to the specified

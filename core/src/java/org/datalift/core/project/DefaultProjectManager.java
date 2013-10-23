@@ -45,6 +45,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 
 import javax.persistence.EntityManagerFactory;
@@ -501,12 +502,29 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
 
     /** {@inheritDoc} */
     @Override
-    public void getOntologies(Project project) {
+    public List<Ontology> getOntologies(Project project) {
         this.checkAvailable();
         if (project == null) {
             throw new IllegalArgumentException("project");
         }
-//        this.projectDao.executeQuery(query);
+        
+//        String query = "select distinct ?result where {" + 
+//        		       "?result a <http://www.datalift.org/core#ontology>;" +
+//        		       "<http://www.datalift.org/core#project> <http://datalift.fr/proj/myproject> }";
+
+        StringBuilder query = new StringBuilder();
+        query.append("select distinct ?result where {");
+        query.append("?result a datalift:ontology;");
+        query.append("datalift:project <");
+        query.append(project.getUri().toString());
+        query.append("> }");
+        
+        
+        @SuppressWarnings("unchecked")
+		List<Ontology> ontologies = (List<Ontology>) this.projectDao.executeQuery(query.toString(), Ontology.class);
+        System.out.println(ontologies);
+        
+        return ontologies;
     }
 
     /** {@inheritDoc} */
