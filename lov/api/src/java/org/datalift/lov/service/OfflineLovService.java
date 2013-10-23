@@ -58,15 +58,19 @@ public class OfflineLovService extends LovService {
 
 	/** LOV Data file */
 	private File lovData;
-
+	
 	/** Aggregator download state */
 	private boolean aggregatorDownloaded;
 
+	/** Triple store loading state */
+	private boolean dataLoading;
+	
 	/** Aggregator in tripleStore */
 	private boolean dataLoaded;
 
 	/** Search service */
 	private LovLocalService localService;
+	
 	/** Vocabs service */
 	private LovLocalVocabularyService vocabsService;
 
@@ -122,6 +126,23 @@ public class OfflineLovService extends LovService {
 			return item.toJSON();
 		}
 	}
+	
+	@Override
+	public void checkLovData() {
+		while( dataLoading ) {
+			try {
+				Thread.sleep(800);
+
+			} catch (InterruptedException e) {
+				log.warn("Interrupted thread.");
+			}
+		}
+		loadDataIntoRepository();
+	}
+	
+	public boolean isDataLoaded() {
+		return dataLoaded;
+	}
 
 	// -------------------------------------------------------------------------
 
@@ -138,7 +159,7 @@ public class OfflineLovService extends LovService {
 
 		List<String> files = Arrays.asList(lovData.list());
 		// si le fichier lov_aggregator.rdf n'existe pas, on va le récupérer
-		if (!files.contains("lov_aggregator.rdf")) {
+		if ( ! files.contains("lov_aggregator.rdf")) {
 			// lancement du téléchargement dans un nouveau thread
 			new Thread(new Runnable() {
 
@@ -205,7 +226,9 @@ public class OfflineLovService extends LovService {
 								.getAbsolutePath() + "/" + NQ_AGGREGATOR)
 								.delete();
 						aggregatorDownloaded = true;
-						loadDataIntoRepository();
+						if ( ! dataLoading) {
+							loadDataIntoRepository();
+						}
 
 					} catch (IOException e) {
 						log.error("Download error.");
@@ -243,17 +266,18 @@ public class OfflineLovService extends LovService {
 		RepositoryConnection conn = null;
 
 		try {
+			dataLoading = true;
 			lovContextURI = new URI(LOV_CONTEXT);
 
-			log.info("Opening connection to internal repository.");
+			log.trace("Opening connection to internal repository.");
 			conn = this.configuration.getInternalRepository().newConnection();
 			if (conn.isOpen()) {
-				log.info("Connection is open.");
+				log.trace("Connection is open.");
 			}
 
 			org.openrdf.model.URI ctx = null;
 			ctx = conn.getValueFactory().createURI(lovContextURI.toString());
-			log.info("Checking context size for {}.", ctx.toString());
+			log.debug("Checking context size for {}.", ctx.toString());
 			long repositorySize = 0;
 			repositorySize = conn.size(ctx);
 			log.info("Repository size for LOV context : {}.", repositorySize);
@@ -278,7 +302,6 @@ public class OfflineLovService extends LovService {
 		} catch (URISyntaxException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-
 		} catch (RepositoryException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -290,17 +313,13 @@ public class OfflineLovService extends LovService {
 			e.printStackTrace();
 		} finally {
 			LovUtil.closeQuietly(conn);
+			dataLoading = false;
 		}
-	}
-
-	@Override
-	public void checkLovData() {
-		loadDataIntoRepository();
 	}
 
 	private boolean extractZippedAggregator() {
 
-		log.info("Extracting aggregator...");
+		log.trace("Extracting aggregator...");
 		
 		byte[] buffer = new byte[1024];
 
@@ -348,7 +367,7 @@ public class OfflineLovService extends LovService {
 	
 	private void convertAggragator() {
 		
-		log.info("Converting {} to {}.", NQ_AGGREGATOR, N3_AGGREGATOR);
+		log.trace("Converting {} to {}.", NQ_AGGREGATOR, N3_AGGREGATOR);
 
 		try {
 			NxParser nxp = new NxParser(new FileInputStream(lovData.getAbsolutePath() + 
@@ -376,7 +395,7 @@ public class OfflineLovService extends LovService {
 				}
 				out.newLine();
 			}
-			log.info("notQuad : {} - notEvenTriple : {}", notQuad, notEvenTriple);
+			log.debug("notQuad : {} - notEvenTriple : {}", notQuad, notEvenTriple);
 			out.flush();
 			out.close();
 
