@@ -164,8 +164,6 @@
 						                    <select class="grid-pagesize">
 						                        <option>5</option>
 						                        <option>10</option>
-						                        <option>20</option>
-						                        <option>50</option>
 						                    </select>
 						                    <span>#i18n("pager.perPage.label")</span>
 						                </div>

@@ -121,7 +121,7 @@ public abstract class InterlinkingController extends BaseModule implements Proje
      * @param previewResult the list of RDF triples, where every element will be a list of 3 element
      * @return a JSON string that represents a triple store
      */
-    protected String getJsonTriplesMatrix(LinkedList<LinkedList<String>> previewResult){
+    protected String getJsonTriplesMatrix(List<LinkedList<String>> previewResult){
     	JsonArray rowList = new JsonArray();
     	for(LinkedList<String> triple : previewResult){
     		JsonObject jsonTriple = new JsonObject();

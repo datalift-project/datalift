@@ -163,21 +163,27 @@ public class StringToURIModel extends InterlinkingModel
      * @param sourcePredicate predicate in source data.
      * @param targetPredicate predicate in target data.
      * @param linkingPredicate predicate of the new triples
+     * @param limit numbers of triples to return
      * @return a list where every element is a list that represents a triple, containing the interlinked triples
      */
-    public final LinkedList<LinkedList<String>> getInterlinkedTriples(Project prj,
+    public final List<LinkedList<String>> getInterlinkedTriples(Project prj,
     		String sourceContext, 
 			String targetContext, 
 			String sourceClass, 
 			String targetClass, 
 			String sourcePredicate, 
 			String targetPredicate,
-			String linkingPredicate){
+			String linkingPredicate,
+			int limit){
     	SesameApp stu = getLinkingApp(prj,sourceContext, targetContext, sourceClass, targetClass, sourcePredicate, targetPredicate, linkingPredicate, targetContext);
     	if(stu==null){
     		throw new TechnicalException("module not available");
     	}
-    	return stu.getOutputAsList();
+    	LinkedList<LinkedList<String>> newTriples = stu.getOutputAsList();
+    	if(limit>newTriples.size()){
+    		limit = newTriples.size();
+    	}
+    	return stu.getOutputAsList().subList(0, limit);
     }
     
     /**

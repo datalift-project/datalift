@@ -175,6 +175,7 @@ public class StringToURIController extends InterlinkingController
      * @param targetClass selected target class
      * @param targetPredicate selected target predicate
      * @param linkingPredicate predicate of the new triples
+     * @param max number of rows to display
      * @return the JSON rappresentation of the new triples got by the interlinking module
      * @throws ObjectStreamException 
      */
@@ -189,9 +190,10 @@ public class StringToURIController extends InterlinkingController
     		@QueryParam("datasetTarget") String targetDataSet,
     		@QueryParam("classTarget") String targetClass,
     		@QueryParam("predicateTarget") String targetPredicate,
-    		@QueryParam("predicateLinking") String linkingPredicate) throws ObjectStreamException{
-    	LinkedList<LinkedList<String>> result = model.getInterlinkedTriples(this.getProject(projectId),sourceDataSet, targetDataSet, sourceClass, targetClass, 
-    			sourcePredicate, targetPredicate, linkingPredicate);
+    		@QueryParam("predicateLinking") String linkingPredicate,
+    		@QueryParam("max") int maxRows) throws ObjectStreamException{
+    	List<LinkedList<String>> result = model.getInterlinkedTriples(this.getProject(projectId),sourceDataSet, targetDataSet, sourceClass, targetClass, 
+    			sourcePredicate, targetPredicate, linkingPredicate, maxRows);
     	return this.getOkResponse(this.getJsonTriplesMatrix(result));
     }
     
