@@ -92,7 +92,9 @@ public final class FileUtils
     //-------------------------------------------------------------------------
 
     /* BZip2 magic numbers. */
-    private static final byte[] BZ2_HEADERS = { 0x42, 0x5a, 0x68 };
+    private final static byte[] BZ2_HEADERS = { 0x42, 0x5a, 0x68 };
+    /* MIME type for contents of unknown type. */
+    private final static String CONTENT_UNKNOWN = "content/unknown";
 
     //-------------------------------------------------------------------------
     // Class members
@@ -294,7 +296,7 @@ public final class FileUtils
                             getExpiration(cnx, System.currentTimeMillis()));
             if (status == 0) {
                 // No error. => Save data locally.
-                log.debug("Downloading data from \"{}\"...", u);
+                log.debug("Downloading data from \"{}\" ({})...", u, info.mimeType);
                 save(cnx.getInputStream(), to);
             }
             else if (status == 304) {
@@ -539,8 +541,11 @@ public final class FileUtils
      *         strings.
      */
     private static MediaType parseContentType(String contentType) {
-        return MediaType.valueOf((isSet(contentType))?
-                            contentType: MediaTypes.APPLICATION_OCTET_STREAM);
+        MediaType t = MediaTypes.APPLICATION_OCTET_STREAM_TYPE;
+        if ((isSet(contentType)) && (! CONTENT_UNKNOWN.equals(contentType))) {
+            t = MediaType.valueOf(contentType);
+        }
+        return t;
     }
 
     /**

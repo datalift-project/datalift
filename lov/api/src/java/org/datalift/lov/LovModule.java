@@ -176,6 +176,19 @@ public class LovModule extends BaseModule {
 		return Response.ok(response,
 				APPLICATION_JSON_UTF8).build();
 	}
+
+	@GET
+	@Path("state")
+	@Produces(APPLICATION_JSON)
+	public Response lovState() {
+		
+		OfflineLovService service = (OfflineLovService) lovService;
+		Boolean loaded = service.isDataLoaded();
+		String response = "{ \"loaded\": " + loaded.toString() + "}";
+		
+		return Response.ok(response,
+				APPLICATION_JSON_UTF8).build();
+	}
 	
     /**
      * Traps accesses to module static resources and redirect them

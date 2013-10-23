@@ -163,19 +163,6 @@ public class CsvSourceImpl extends BaseFileSource
         }
     }
 
-    /**
-     * Defines whether the first line of the file contains column
-     * headings.
-     * @param  titleRow   <code>true</code> if the first line of the
-     *                    file contains column heading;
-     *                    <code>false</code> otherwise.
-     *
-     * @deprecated replaced by {@link #setTitleRow(int)}.
-     */
-    public void setTitleRow(boolean titleRow) {
-        this.setTitleRow(1);
-    }
-
     /** {@inheritDoc} */
     @Override
     public String getSeparator() {

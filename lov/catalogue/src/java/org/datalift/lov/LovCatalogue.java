@@ -99,6 +99,8 @@ public class LovCatalogue extends BaseModule {
 	public LovCatalogue(){
 		super(MODULE_NAME);
 		
+		cache = new HashSet<OntologyDesc>();
+		
 		if(nextLovUpdate == null) {
 			nextLovUpdate = new Date();
 			Calendar cal = Calendar.getInstance();
@@ -135,7 +137,7 @@ public class LovCatalogue extends BaseModule {
 								   @Context UriInfo uriInfo)
 										   throws WebApplicationException {
 
-		log.info("Entering ontologyBrowse()");
+		log.trace("Entering ontologyBrowse()");
 		Response response = null;
 		boolean dataChanged = false;
 
@@ -164,9 +166,9 @@ public class LovCatalogue extends BaseModule {
 				org.openrdf.model.URI ctx = null;
 				ctx = internalRepositoryConnection.getValueFactory().createURI(lovContextURI.toString());
 				repositorySize = internalRepositoryConnection.size(ctx);
-				log.info("Repository size for LOV context : {}.", repositorySize);
+				log.info("Repository size for Catalogue context : {}.", repositorySize);
 				if(repositorySize <= 0) {
-					log.info("No LOV data found. Loading LOV catalogue.");
+					log.trace("No LOV data found. Loading LOV catalogue.");
 					loadLOVCatalogue();
 					dataChanged = true;
 				}
@@ -186,17 +188,14 @@ public class LovCatalogue extends BaseModule {
 
 		try {
 
-			if (!cacheExists) {
-				log.debug("No cache of the LOV catalog exists. Will cache a copy now...");
+			if ( ! cacheExists || dataChanged) {
+				log.trace("No cache or new data. Caching now...");
 				cacheLov();
 			}
 
-			if (cache != null && cache.size() > 0) {
+			if (cache.size() > 0) {
 
-				log.debug("Cache of LOV catalog already exists");
-				
-				if(dataChanged)
-					cacheLov();
+				log.trace("Cache of LOV catalog already exists");
 				
 				TemplateModel view = this.newView("/ontologyBrowse.vm", cache);
 				view.put("projectId", id);
@@ -204,8 +203,11 @@ public class LovCatalogue extends BaseModule {
 				response = Response.ok(view, TEXT_HTML).build();
 			}
 			else {
-				//TODO else -> an error page?
-				response = Response.serverError().build();
+				log.warn("Loading view with no data.");
+				TemplateModel view = this.newView("/ontologyBrowse.vm",
+						new HashSet<OntologyDesc>());
+				view.put("projectId", id);
+				response = Response.ok(view, TEXT_HTML).build();
 			}
 
 		} catch (Exception e) {
@@ -352,14 +354,14 @@ public class LovCatalogue extends BaseModule {
 	 * @throws URISyntaxException
 	 */
 	private void cacheLov() throws Exception{
-		log.info("Caching lov ontology catalogue from the internal RDF repository...");
-		cache = new HashSet<OntologyDesc>();
+		log.trace("Caching lov ontology catalogue from the internal RDF repository...");
 
+		cache = new HashSet<OntologyDesc>();
 		RepositoryConnection connection = this.configuration.getInternalRepository().newConnection();
 
 		// Query to select some info from the internal repository with the lov context
 		StringBuilder query = new StringBuilder();
-		query.append("SELECT ?vocabURI ?vocabPrefix ?vocabTitle ?vocabDescr ");
+		query.append("SELECT DISTINCT ?vocabURI ?vocabPrefix ?vocabTitle ?vocabDescr ");
 		query.append("FROM " + LOV_CONTEXT_SPARQL);
 		query.append(" WHERE { ");
 		query.append(" ?vocabURI <http://purl.org/vocab/vann/preferredNamespacePrefix> ?vocabPrefix.");
@@ -392,8 +394,10 @@ public class LovCatalogue extends BaseModule {
 
 		}
 		
-		log.info("Caching is done. Size : {}", cache.size());
-		cacheExists = true;
+		if (cache.size() > 0) {
+			log.info("Caching is done. Size : {}", cache.size());
+			cacheExists = true;
+		}
 		
 	}
 
@@ -408,11 +412,12 @@ public class LovCatalogue extends BaseModule {
 		boolean isSuccessful = true;
 
 		//TODO remove hard coding and put it in properties file
-		log.info("Starting the LOV catalog sync process...");
-		String endpointURL = "http://lov.okfn.org/endpoint/lov/repositories/";
+		log.trace("Starting the LOV catalog sync process...");
+//		String endpointURL = "http://lov.okfn.org/endpoint/lov/repositories/";
+		String endpointURL = this.configuration.getInternalRepository().getEndpointUrl();
 		HTTPRepository lovEndPoint = new HTTPRepository(endpointURL);
 		lovEndPoint.initialize();
-
+		
 		RepositoryConnection lovRepositoryConnection = lovEndPoint.getConnection();
 		try {
 			StringBuilder sparqlQuery = new StringBuilder();
@@ -453,7 +458,7 @@ public class LovCatalogue extends BaseModule {
 			Util.CloseQuietly(lovRepositoryConnection);
 		}
 
-		log.info("Finished querying the sparql end point. Adding result data to the internal repository.");
+		log.trace("Finished querying the sparql end point. Adding result data to the internal repository.");
 		URI lovContextURI = new URI(LOV_CONTEXT);
 		RepositoryConnection internalRepositoryConnection = this.configuration.getInternalRepository().newConnection();
 		try {
@@ -462,7 +467,7 @@ public class LovCatalogue extends BaseModule {
 					.createURI(lovContextURI.toString());
 			internalRepositoryConnection.clear(ctx);
 
-			log.info("Adding {} statements.", statements.size());
+			log.debug("Adding {} statements.", statements.size());
 			internalRepositoryConnection.add(statements, ctx); // auto commit
 			log.info("Internal repository size for context {} : {}", ctx, internalRepositoryConnection.size(ctx));
 
