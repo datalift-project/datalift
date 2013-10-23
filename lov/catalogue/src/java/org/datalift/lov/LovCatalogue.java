@@ -33,6 +33,7 @@ import org.datalift.fwk.Configuration;
 import org.datalift.fwk.MediaTypes;
 import org.datalift.fwk.ResourceResolver;
 import org.datalift.fwk.log.Logger;
+import org.datalift.fwk.project.Ontology;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectManager;
 import org.datalift.fwk.util.StringUtils;
@@ -247,16 +248,11 @@ public class LovCatalogue extends BaseModule {
 				
 				URL url = urlIt.next();
 				String t = titleIt.next();
-				
-				// If it does not already exist
-				if(p.getOntology(t) == null) {
-					// Add ontology to project.
-					p.addOntology(this.projectManager.newOntology(p, url.toURI(), t));
-				}
+
+				// Create and persist ontology.
+				Ontology o = this.projectManager.newOntology(p, url.toURI(), t);
+				this.projectManager.saveOntology(o);
 			}
-			
-			// Persist new ontologies.
-			this.projectManager.saveProject(p);
 			
 			String redirectUrl = projectUri.toString() + "#ontology";
 			
