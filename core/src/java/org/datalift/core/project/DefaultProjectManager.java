@@ -451,18 +451,37 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     /** {@inheritDoc} */
     @Override
     public Ontology newOntology(Project project, URI url, String title) {
+        if (project == null) {
+            throw new IllegalArgumentException("project");
+        }
+        if (url == null) {
+            throw new IllegalArgumentException("url");
+        }
+        if (title == null) {
+            throw new IllegalArgumentException("title");
+        }
         // Create new ontology.
         OntologyImpl ontology = new OntologyImpl();
         // Set ontology parameters.
         ontology.setTitle(title);
         ontology.setSource(url);
-        ontology.setDateSubmitted(new Date());
-        ontology.setOperator(SecurityContext.getUserPrincipal());
-        // Add ontology to project.
-        project.addOntology(ontology);
+        ontology.setProject(project);
         log.debug("New ontology <{}> added to project \"{}\"",
                                                     url, project.getTitle());
         return ontology;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Ontology saveOntology(Ontology o) {
+        this.checkAvailable();
+        if (o== null) {
+            throw new IllegalArgumentException("ontology");
+        }
+        this.projectDao.save(o);
+        log.debug("Ontology <{}> saved to RDF store", o.getUri());
+        
+        return o;
     }
 
     /** {@inheritDoc} */
@@ -475,13 +494,19 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         if (ontology == null) {
             throw new IllegalArgumentException("ontology");
         }
-        // Remove ontology from project.
-        ontology = project.removeOntology(ontology.getTitle());
-        // Persist changes.
-        this.saveProject(project);
         this.projectDao.delete(ontology);
         log.debug("Ontology <{}> removed form project \"{}\"",
                                     ontology.getSource(), project.getTitle());
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void getOntologies(Project project) {
+        this.checkAvailable();
+        if (project == null) {
+            throw new IllegalArgumentException("project");
+        }
+//        this.projectDao.executeQuery(query);
     }
 
     /** {@inheritDoc} */

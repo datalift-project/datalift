@@ -42,7 +42,12 @@ import java.util.Date;
 
 public interface Ontology
 {
-    public String getUri();
+	/**
+	 * Base Ontology URI.
+	 */
+	public static final String BASE_USER_URI = "http://www.datalift.org/project/ontology/"; 
+
+	public String getUri();
 
     public String getTitle();
     public void setTitle(String title);
@@ -50,8 +55,8 @@ public interface Ontology
     public URI getSource();
     public void setSource(URI source);
 
-    public URI getProject();
-	public void setProject(URI project);
+    public Project getProject();
+	public void setProject(Project project);
 
 	// Deprecated?
 	public Date getDateSubmitted();

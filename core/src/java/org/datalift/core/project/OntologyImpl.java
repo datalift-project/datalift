@@ -39,9 +39,15 @@ import java.net.URI;
 import java.util.Date;
 
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.ManyToOne;
 
 import org.datalift.fwk.project.Ontology;
+import org.datalift.fwk.project.Project;
+import org.datalift.fwk.project.User;
 
+import com.clarkparsia.empire.annotation.NamedGraph;
+import com.clarkparsia.empire.annotation.RdfId;
 import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.RdfsClass;
 
@@ -53,32 +59,43 @@ import com.clarkparsia.empire.annotation.RdfsClass;
  */
 @Entity
 @RdfsClass("datalift:ontology")
+@NamedGraph(type = NamedGraph.NamedGraphType.Static, value="datalift:datalift")
 public class OntologyImpl extends BaseRdfEntity implements Ontology
 {
     //-------------------------------------------------------------------------
     // Instance members
     //-------------------------------------------------------------------------
 
+    @RdfId
+    private String uri;
     @RdfProperty("dcterms:title")
     private String title;
     @RdfProperty("dcterms:source")
     private URI source;
     @RdfProperty("datalift:project")
-    private URI project;
-    
-    
-    /**
-     * @deprecated date is now in Event 
-     */
-    @RdfProperty("void:dateSubmitted")
-    private Date dateSubmitted;
+    @ManyToOne(fetch = FetchType.LAZY, cascade = {})
+    private Project project;
+
+    //-------------------------------------------------------------------------
+    // Constructors
+    //-------------------------------------------------------------------------
 
     /**
-     * @deprecated publisher is not used anymore.
+     * Creates a new project.
      */
-    @RdfProperty("dc:publisher")
-    private String operator;
+    public OntologyImpl() {
+        // NOP
+    }
 
+    /**
+     * Creates a new ontology with the specified URI as identifier.
+     * @param  uri   the ontology identifier.
+     */
+    public OntologyImpl(String title) {
+		this.uri = Ontology.BASE_USER_URI + title;
+        this.title = title;
+    }
+    
     //-------------------------------------------------------------------------
     // Ontology contract support
     //-------------------------------------------------------------------------
@@ -86,6 +103,7 @@ public class OntologyImpl extends BaseRdfEntity implements Ontology
     /** {@inheritDoc} */
     @Override
     public void setTitle(String title) {
+		this.uri = Ontology.BASE_USER_URI + title;
         this.title = title;
     }
 
@@ -109,26 +127,32 @@ public class OntologyImpl extends BaseRdfEntity implements Ontology
     
     /** {@inheritDoc} */
     @Override
-    public URI getProject() {
+    public Project getProject() {
 		return project;
 	}
 
     /** {@inheritDoc} */
     @Override
-	public void setProject(URI project) {
+	public void setProject(Project project) {
 		this.project = project;
 	}
 
     /** {@inheritDoc} */
+    /**
+     * @deprecated date is now in Event 
+     */
     @Override
     public Date getDateSubmitted() {
-        return this.dateSubmitted;
+        return new Date(0);
     }
 
     /** {@inheritDoc} */
+    /**
+     * @deprecated publisher is not used anymore.
+     */
     @Override
     public String getOperator() {
-        return this.operator;
+        return "Deprecated";
     }
 
     /** {@inheritDoc} */
@@ -151,11 +175,17 @@ public class OntologyImpl extends BaseRdfEntity implements Ontology
     // Specific implementation
     //-------------------------------------------------------------------------
 
+    /**
+     * @deprecated date is now in Event 
+     */
     public void setDateSubmitted(Date dateSubmitted) {
-        this.dateSubmitted = dateSubmitted;
+    	// NOP
     }
 
+    /**
+     * @deprecated publisher is not used anymore.
+     */
     public void setOperator(String operator) {
-        this.operator = operator;
+        // NOP
     }
 }

@@ -96,6 +96,7 @@ public class UserImpl extends BaseRdfEntity implements User {
     /** {@inheritDoc} */
     @Override
 	public void setIdentifier(String identifier) {
+		this.uri = User.BASE_USER_URI + identifier;
 		this.identifier = identifier;
 	}
 

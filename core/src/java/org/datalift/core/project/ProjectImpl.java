@@ -106,6 +106,7 @@ public class ProjectImpl extends BaseRdfEntity implements Project
     @RdfProperty("dcterms:description")
     private String description;
     // Was rdf poperty 'void:vocabulary'.
+    // TODO: remove: deprecated.
     @RdfProperty("datalift:ontology")
     @OneToMany(fetch = FetchType.EAGER, cascade = { CascadeType.ALL })
     private Collection<Ontology> ontologies = new LinkedList<Ontology>();
@@ -274,18 +275,27 @@ public class ProjectImpl extends BaseRdfEntity implements Project
     }
 
     /** {@inheritDoc} */
+    /**
+     * @deprecated
+     */
     @Override
     public void addOntology(Ontology src) {
         ontologies.add(src);
     }
 
     /** {@inheritDoc} */
+    /**
+     * @deprecated
+     */
     @Override
     public Collection<Ontology> getOntologies() {
         return Collections.unmodifiableCollection(this.ontologies);
     }
 
     /** {@inheritDoc} */
+    /**
+     * @deprecated
+     */
     @Override
     public Ontology getOntology(String title) {
         for (Ontology ontology : this.ontologies) {
@@ -297,6 +307,9 @@ public class ProjectImpl extends BaseRdfEntity implements Project
     }
 
     /** {@inheritDoc} */
+    /**
+     * @deprecated
+     */
     @Override
     public Ontology removeOntology(String title) {
         Ontology ontology = getOntology(title);

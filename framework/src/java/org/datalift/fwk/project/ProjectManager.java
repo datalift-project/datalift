@@ -317,6 +317,13 @@ public interface ProjectManager
     public Ontology newOntology(Project project, URI srcUrl, String title);
 
     /**
+     * Marks the specified ontology for being persisted into permanent
+     * storage.
+     * @param  o   the ontology to save or update in the RDF store.
+     */
+	Ontology saveOntology(Ontology o);
+
+    /**
      * Deletes the specified ontology from the project.
      * @param  project    the owning project.
      * @param  ontology   the ontology to remove.
@@ -324,6 +331,12 @@ public interface ProjectManager
     public void deleteOntology(Project project, Ontology ontology);
 
     /**
+     * Get the collection of ontologies owned by a project.
+     * @param  project    the owning project.
+     */
+	void getOntologies(Project project);
+
+	/**
      * Builds the path to the project directory or to the specified
      * file belonging to the project. The returned path is relative to
      * the DataLift public storage directory.

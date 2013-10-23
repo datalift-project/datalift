@@ -16,6 +16,7 @@ import org.apache.log4j.Logger;
 import org.datalift.core.DefaultConfiguration;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.project.CsvSource;
+import org.datalift.fwk.project.Ontology;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.User;
 import org.junit.After;
@@ -50,6 +51,11 @@ public class Prov {
 
 	@Test
 	public void testProjectSave() throws Exception {
+
+		//-----------------------------------------------------------------
+		// Configure
+		//-----------------------------------------------------------------
+
 		logger.info("Beginning Prov Test");
 		
 		String projectTitle = "MyProject";
@@ -62,8 +68,11 @@ public class Prov {
 		
 		DefaultProjectManager pm = initProjectManager();
 		
+		//-----------------------------------------------------------------
+		// Write
+		//-----------------------------------------------------------------
 		
-		// Create a project and a CSV source
+		// Create a project, a CSV source and save it.
 		URI projectURI = new URI("http://datalift.fr/proj/myproject");
 		URI licenseURI = 
 				new URI("http://creativecommons.org/licenses/by-nc-sa/3.0/");
@@ -73,31 +82,41 @@ public class Prov {
 		CsvSource csv = pm.newCsvSource(project, csvURI, csvTitle, 
 				"Kiosque: prov test", csvPath, ',');
 		
-//		// Add user
-//		UserImpl user = new UserImpl("Foo");
-//		project.setWasAttributedTo(user);
-		
-		// Save it
 		project.add(csv);
 		pm.saveProject(project);
+
+		// Create an ontology and save it.
+		URI ontoURI = new URI("http://datalift.fr/onto/myontology");
+		Ontology ontology = pm.newOntology(project, ontoURI, "MyOntology");
+		pm.saveOntology(ontology);
+		
+		//-----------------------------------------------------------------
+		// Read
+		//-----------------------------------------------------------------
 		
 		// Read it
 		Project project2 = pm.findProject(projectURI);
 		CsvSource csv2 = (CsvSource) project2.getSource(csvURI);
 		User user2 = project.getWasAttributedTo();
 		
-		assertEquals("The project names are different.", 
+		assertEquals("PROV: Project: The title is wrong.", 
 				project2.getTitle(), projectTitle);
-		assertEquals("The project descriptions are different.", 
+		assertEquals("PROV: Project: The license is wrong.", 
+				project2.getLicense(), licenseURI);
+		assertEquals("PROV: Project: The description is wrong.", 
 				project2.getDescription(), projectDesc);
-		assertEquals("The csv titles are different.", 
+
+		assertEquals("PROV: CSVSource: The csv title is wrong.", 
 				csv2.getTitle(), csvTitle);
-		assertEquals("The csv file paths are different.", 
+		assertEquals("PROV: CSVSource: The path is wrong.", 
 				csv2.getFilePath(), csvPath);
-		assertEquals("The user is wrong.", 
+
+		assertEquals("PROV: Project.User: The user is wrong.", 
 				user2.getIdentifier(), null);
-		assertEquals("The User.getActedOnBehalfOf is wrong.", 
+		assertEquals("PROV: Project.User: The actedOnBehalfOf is wrong.", 
 				user2.getActedOnBehalfOf(), null);
+		
+		// TODO: commit, getOntologies
 	}
 	
 	

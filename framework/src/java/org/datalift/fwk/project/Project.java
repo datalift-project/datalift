@@ -71,9 +71,21 @@ public interface Project
     public URI getLicense();
     public void setLicense(URI license);
 
+    /**
+     * @deprecated
+     */
     public Collection<Ontology> getOntologies();
+    /**
+     * @deprecated
+     */
     public void addOntology(Ontology ontology);
+    /**
+     * @deprecated
+     */
     public Ontology getOntology(String title);
+    /**
+     * @deprecated
+     */
     public Ontology removeOntology(String title);
     
     public User getWasAttributedTo();
