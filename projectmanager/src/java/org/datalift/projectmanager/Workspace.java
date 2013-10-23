@@ -97,6 +97,7 @@ import com.google.gson.JsonObject;
 import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.FormDataParam;
 
+import org.datalift.core.project.UserImpl;
 import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.FileStore;
@@ -129,6 +130,7 @@ import org.datalift.fwk.rdf.ElementType;
 import org.datalift.fwk.rdf.RdfFormat;
 import org.datalift.fwk.rdf.RdfNamespace;
 import org.datalift.fwk.rdf.RdfUtils;
+import org.datalift.fwk.security.SecurityContext;
 import org.datalift.fwk.sparql.SparqlEndpoint;
 import org.datalift.fwk.util.CloseableIterator;
 import org.datalift.fwk.util.UriBuilder;
@@ -303,6 +305,7 @@ public class Workspace extends BaseModule
             // Create new project.
             Project p = this.projectManager.newProject(projectId, title,
                                                        description, license);
+            
             // Persist project to RDF store.
             this.projectManager.saveProject(p);
             // Register a namespace prefix for the project.
@@ -1904,10 +1907,10 @@ public class Workspace extends BaseModule
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
             Project p = this.loadProject(projectUri);
             // Add ontology to project.
-            p.addOntology(this.projectManager.newOntology(p,
-                                                        srcUrl.toURI(), title));
+            Ontology o = this.projectManager.newOntology(p,
+            		srcUrl.toURI(), title);
             // Persist new ontology.
-            this.projectManager.saveProject(p);
+            this.projectManager.saveOntology(o);
             // Notify user of successful update, redirecting HTML clients
             // (browsers) to the ontology tab of the project page.
             response = this.redirect(p, ProjectTab.Ontologies).build();
