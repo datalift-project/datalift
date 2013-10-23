@@ -1,0 +1,597 @@
+#load_core_resources
+#load("silk-interlinker/resources")
+##
+#set( $moduleUri = "$baseUri/silk-interlinker")
+##
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>#i18n('silk-interlinker.title') - Datalift</title>
+        <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+        <!--Angularjs -->
+        <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.8/angular.min.js"></script>
+        <!--Twitter Bootstrap-->
+        <link href="${moduleUri}/static/lib/bootstrap/css/bootstrap.css" rel="stylesheet">
+        <script src="${moduleUri}/static/lib/bootstrap/js/bootstrap.js"></script>
+        <!--FluelUX-->
+        <link href="${moduleUri}/static/lib/fuelux/css/fuelux.css" rel="stylesheet" />
+        <link href="${moduleUri}/static/lib/fuelux/css/fuelux-responsive.css" rel="stylesheet" />
+        <script src="${moduleUri}/static/lib/fuelux/loader.js" type="text/javascript"></script>
+        <!--Code Mirror-->
+        <script src="${moduleUri}/static/lib/codemirror/js/codemirror.js" type="text/javascript"></script>
+        <script src="${moduleUri}/static/lib/codemirror/js/xml.js" type="text/javascript"></script>
+        <link href="${moduleUri}/static/lib/codemirror/css/codemirror.css" rel="stylesheet" />
+        <!---vkbeautify-->
+        <script src="${moduleUri}/static/lib/vkbeautify/vkbeautify.js" type="text/javascript"></script>
+        <!--Controller and app-->
+        <script src="${moduleUri}/static/js/app.js"></script>
+        <script src="${moduleUri}/static/js/controllers.js"></script>
+        #css_links
+        <link href="${moduleUri}/static/css/silk-interlinker.css" rel="stylesheet"/>
+
+    </head>
+
+
+    <body ng-app="SilkInterlinkerApp">
+        <div class="navbar navbar-static-top">
+            <div class="navbar-inner">
+                <div class="container-fluid">
+                    <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </a>
+
+                     <div class="brand">
+                        <img src="${moduleUri}/static/img/datalift-logo.png"/>
+                        <H2>
+                            <a href="${baseUri}/sparql">Datalift</a><span> / </span>
+                            <a href="${it.uri}">${it.title}</a><span> / </span>
+                            #i18n("silk-interlinker.title")
+                        </H2>
+                    </div>
+
+                    <!-- Links on the right in the navbar. -->
+                    <div class="nav-collapse collapse">
+                        <ul class="nav">
+                            <li class="divider-vertical"></li>
+                            <li><a href="${baseUri}/sparql"><i class="icon-search"></i> #i18n("sparql.endpoint.link")</a></li>
+                            <li class="divider-vertical"></li>
+                            <li><a href="${baseUri}/project"><i class="icon-home"></i> #i18n("project.workspace.link")</a></li>
+                            <li class="divider-vertical"></li>
+                        </ul>
+                        <p class="navbar-text">
+                          <i class="icon-user"></i> #i18n("login.label") <a href="#" class="navbar-link">$esc.html(${securityCtx.userPrincipal})</a>
+                        </p>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="container-fluid">
+            <header>
+                <h5>#i18n("silk-interlinker.description")</h5>
+                <h5>#i18n("silk-interlinker.silk.description")</H5>
+            </header>
+            
+        </div>
+    <div class="container-fluid" ng-controller="InterlinkerCtrl" ng-init="moduleUrl='$moduleUri'; projectUri='$it.uri'" id="moduleBody">
+        
+
+        <ul class="nav nav-tabs">
+            <li class="active"><a href="#newConf" data-toggle="tab">Create a new configuration</a></li>
+            <li><a href="#upload" data-toggle="tab">Run a configuration file</a></li>
+        </ul>
+
+        <div class="tab-content fuelux">
+            <div class="tab-pane active" id="newConf">
+
+                <div id="moduleWizard" class="wizard">
+                    <ul class="steps">
+                        <li data-target="#creationDataset" class="active"><span class="badge badge-info">1</span><span class="chevron"></span>#i18n("new.wizard.creation.title")</li>
+                        <li data-target="#referenceDataset" ><span class="badge">2</span><span class="chevron"></span>#i18n("new.wizard.reference.title")</li>
+                        <li data-target="#linkingSettings"><span class="badge">3</span><span class="chevron"></span>#i18n("new.wizard.settings.title")</li>
+                        <li data-target="#script"><span class="badge">3</span><span class="chevron"></span>#i18n("new.wizard.script.title")</li>
+                    </ul>
+                    <div class="actions">
+                        <button class="btn btn-mini btn-prev" id="wizardPrev"> <i class="icon-arrow-left"></i>#i18n("previous.label")</button>
+                        <button class="btn btn-mini btn-next" data-last="#i18n('finish.label')"  id="wizard-next">
+                            #i18n("next.label")<i class="icon-arrow-right"></i></button>
+                    </div>
+                </div>
+
+                <div class="alert alert-error form-separator" id="creationParamsInvalid">
+                    <H3>#i18n("dataset.parameters.error.title")</H3>
+                    <p>#i18n("dataset.parameters.error.message")</p>
+                </div>
+                <div class="step-content wizard-step" >
+                    <div class="step-pane active" id="creationDataset">   
+                        <form class="form-horizontal" name="datasourceForm">
+                            <fieldset>
+                                <legend ><a href="#" data-toggle="tooltip" title="#i18n('dataset.address.help')" data-placement="right">#i18n("dataset.address.label")</a></legend>
+                                <div class="control-group">
+                                    <label class="control-label" for="selectOriginSource">#i18n("dataset.origin.label")</label>
+                                    <div class="controls">
+                                        <label class="radio inline">
+                                            <input type="radio" name="originRadios" id="optionLocal" value="local" checked ng-model="creation.origin">#i18n("dataset.origin.local.option")
+                                        </label>
+                                        <label class="radio inline">
+                                            <input type="radio" name="originRadios" id="optionRemote" value="remote" ng-model="creation.origin">
+                                            #i18n("dataset.origin.remote.option")
+                                        </label>
+                                    </div>
+                                </div>
+                                    
+                                <div class="control-group" ng-show="creation.origin=='local'">
+                                  <label class="control-label" for="selectLocalSource">#i18n("dataset.origin.local.label")</label>
+                                    <div class="controls">
+                                        <select id="selectLocalSource" class="span4"  ng-model="creation.source" ng-init="getSources()" ng-options="source.name for source in localSourceList" required name="datasourceLocalSelect" ng-change="getPredicates('creation')">
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="control-group" ng-show="creation.origin=='remote'">
+                                    <label class="control-label" for="selectLocalSource">#i18n("dataset.origin.remote.label")</label>
+                                    <div class="controls">
+                                        <input type="url" class="span4" ng-model="creation.source.uri" required name="datasourceRemoteInput" placeholder="#i18n('dataset.remote.placeholder')">
+                                    </div>
+                                </div>
+
+                                <div class="control-group" >
+                                    <label class="control-label" for="selectLocalSource">#i18n("dataset.refining-query.label")</label>
+                                    <div class="controls">
+                                        <textarea rows = '5' placeholder = '#i18n("dataset.refining-query.placeholder")' class="span4" ng-model="creation.query"></textarea>    
+                                    </div>
+                                </div>
+
+                                <H3>#i18n('comparison.label')
+                                    <button class="btn btn-primary" type="button" ng-click="addComparison()"><i class="icon-plus icon-white"></i>#i18n('add.label')</button>
+                                </H3> 
+                                <hr>
+                                <ol>
+                                    <li ng-repeat="comparison in creation.comparisons" >
+                                        <div class="well">
+                                            <div class="form-inline">
+                                                <label><a href="#" data-toggle="tooltip" title="#i18n('dataset.property.help')" data-placement="right">#i18n('property.label')</a></label>
+                                                <input class="span4" ng-show="creation.origin=='remote'" ng-model="creation.comparisons[$index].property" type="url" placeholder="#i18n('comparison.placeholder')" >
+
+                                                <select class="span4" ng-options="predicate for predicate in creationPredicateList" ng-model="creation.comparisons[$index].property" ng-show="creation.origin=='local'">
+                                                </select>
+                                                        
+                                                <label for="creationTransformation" class="horizontal-form-label"><a href="#" data-toggle="tooltip" title="#i18n('transform.help')" data-placement="right">#i18n('transform.title')</a></label>
+                                                <select name="creationTransformation" class="span4" ng-model="creation.comparisons[$index].transformation">
+                                                    <option value="none" selected="selected">#i18n('field.none')</option>
+                                                    <optgroup label="#i18n('transform.function.first')">
+                                                        <option value="lowerCase">#i18n('function.title.lowerCase')</option>
+                                                        <option value="upperCase">#i18n('function.title.upperCase')</option>
+                                                        <option value="capitalizeFirst">#i18n('function.title.capitalizeFirst')</option>
+                                                        <option value="capitalizeAll">#i18n('function.title.capitalizeAll')</option>
+                                                    </optgroup>
+                                                    <optgroup label="#i18n('transform.function.secund')">
+                                                        <option value="removeBlanks">#i18n('function.title.removeBlanks')</option>
+                                                        <option value="removeSpecialChars">#i18n('function.title.removeSpecialChars')</option>
+                                                        <option value="alphaReduce">#i18n('function.title.alphaReduce')</option>
+                                                        <option value="numReduce">#i18n('function.title.numReduce')</option>
+                                                        <option value="stem">#i18n('function.title.stem')</option>
+                                                    </optgroup>
+                                                    <optgroup label="#i18n('transform.function.third')">
+                                                        <option value="stripPrefix">#i18n('function.title.stripPrefix')</option>
+                                                        <option value="stripPostfix">#i18n('function.title.stripPostfix')</option>
+                                                        <option value="stripUriPrefix">#i18n('function.title.stripUriPrefix')</option>
+                                                    </optgroup>
+                                                    <optgroup label="#i18n('transform.function.fourth')">
+                                                        <option value="replace">#i18n('function.title.replace')</option>
+                                                        <option value="regexReplace">#i18n('function.title.regexReplace')</option>
+                                                        <option value="tokenize">#i18n('function.title.tokenize')</option>
+                                                        <option value="removeValues">#i18n('function.title.removeValues')</option>
+                                                    </optgroup>
+                                                    <optgroup label="#i18n('transform.function.fifth')">
+                                                        <option value="convertUTFISO">#i18n('function.title.convertUTFISO')</option>
+                                                        <option value="convertISOUTF">#i18n('function.title.convertISOUTF')</option>
+                                                    </optgroup>
+                                                    <optgroup label="#i18n('transform.function.sixth')">
+                                                        <option value="commonLogarithm">#i18n('function.title.commonLogarithm')</option>
+                                                        <option value="naturalLogarithm">#i18n('function.title.naturalLogarithm')</option>
+                                                        <option value="binaryLogarithm">#i18n('function.title.binaryLogarithm')</option>
+                                                    </optgroup>
+                                                </select>
+                                                <button class="btn btn-mini btn-danger simple-right" ng-disabled="$first" ng-click="removeComparison($index)"><i class = "icon-remove"></i></button>
+                                            </div>
+                                            <div ng-show="creation.comparisons[$index].transformation=='replace' || creation.comparisons[$index].transformation=='regexReplace'" class="form-separator form-inline">
+                                                <label for="targetSearchFirst">#i18n('field.label.search')</label>
+                                                <input class="span4" type="text" name="targetSearchFirst" id="targetSearchFirst" placeholder="#i18n('field.info.search')" ng-model="creation.comparisons[$index].stringParam[0]"/>
+
+                                                <label for="targetReplaceFirst" class="horizontal-form-label">#i18n('field.label.replace')</label>
+                                                    <input class="span4" type="text" name="targetReplaceFirst" id="targetReplaceFirst" placeholder="#i18n('field.info.replace')" ng-model="creation.comparisons[$index].stringParam[1]"/>
+                                                </div>
+
+                                                <div ng-show="creation.comparisons[$index].transformation=='tokenize'" class="form-separator form-inline">
+                                                    <label for="targetRegexpTokenFirst">#i18n('field.label.regexpToken')</label>
+                                                    <input class="span4" type="text" name="targetRegexpTokenFirst" id="targetRegexpTokenFirst" placeholder="#i18n('field.example') : #i18n('field.example.regexpToken')" ng-model="creation.comparisons[$index].stringParam[0]"/>
+                                                </div>
+
+                                                <div ng-show="creation.comparisons[$index].transformation=='removeValues'" class="form-separator form-inline">
+                                                    <label for="targetStopWordsFirst">#i18n('field.label.stopWords')</label>
+                                                    <input class="span4" type="text" name="targetStopWordsFirst" id="targetStopWordsFirst" placeholder="#i18n('field.example')   : #i18n('field.example.stopWords')" ng-model="creation.comparisons[$index].stringParam[0]"/>
+                                                </div>
+                                            </div>
+                                        </li>
+                                    </ol>
+                                </fieldset>
+                            </form>
+                    </div>
+                    
+                
+                    <div class="step-pane" id="referenceDataset" >
+                            <form class="form-horizontal" name="referenceDatasetForm">
+                                <fieldset>
+                                    <legend >
+                                        <a href="#" data-toggle="tooltip" title="#i18n('dataset.address.help')" data-placement="right">#i18n("dataset.address.label")</a>                            
+                                    </legend>
+                                    <div class="control-group">
+                                        <label class="control-label" for="selectReferenceOrigin">#i18n("dataset.origin.label")</label>
+                                        <div class="controls" >
+                                            <label class="radio inline">
+                                                <input type="radio" name="referenceRadios" id="optionLocal" value="local" checked ng-model="reference.origin" ng-disabled = "creation.origin=='remote'">
+                                                #i18n("dataset.origin.local.option")
+                                            </label>
+                                            <label class="radio inline">
+                                                <input type="radio" name="referenceRadios" id="optionRemote" value="remote" ng-model="reference.origin" ng-disabled = "creation.origin=='remote'">
+                                                #i18n("dataset.origin.remote.option")
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="control-group" ng-show="reference.origin=='local'" >
+                                        <div ng-class="{'form-separator': creation.origin=='remote'}">
+                                            <label class="control-label" >#i18n("dataset.origin.local.label")</label>
+                                            <div class="controls">
+                                                <select id="selectLocalSourceReference" class="span4"  ng-model="reference.source" ng-init="getSources()" ng-options="source.name for source in localSourceList" required name="dataTargetLocalSelect" ng-change="getPredicates(reference.source.uri,'reference')">
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="control-group" ng-show="reference.origin=='remote'">
+                                        <label class="control-label" >#i18n("dataset.origin.remote.label")</label>
+                                        <div class="controls">
+                                            <input type="url" class="span4" ng-model="reference.source.uri" required name="datasetReferenceRemoteInput" placeholder="#i18n('dataset.remote.placeholder')">
+                                        </div>
+                                   </div>
+
+                                   <div class="control-group">
+                                        <label class="control-label" for="selectLocalSource">#i18n("dataset.refining-query.label")</label>
+                                        <div class="controls">
+                                            <textarea rows = '5' placeholder = '#i18n("dataset.refining-query.placeholder")' class="span4" ng-model = "reference.query"></textarea>    
+                                        </div>
+                                    </div>
+                                    <H3>#i18n('comparison.label')</H3> 
+                                    <hr>
+                                    <ol>
+                                        <li ng-repeat="creation in creation.comparisons" >
+                                            <div class="well">
+                                                <div class="form-inline">
+                                                    <label><a href="#" data-toggle="tooltip" title="#i18n('dataset.property.help')" data-placement="right">#i18n('property.label')</a></label>
+
+                                                     <input class="span4" ng-show="reference.origin=='remote'" ng-model="reference.comparisons[$index].property" type="url" placeholder="#i18n('comparison.placeholder')">
+
+                                                    <select class="span4" ng-options="predicate for predicate in referencePredicateList" ng-model="reference.comparisons[$index].property" ng-show="reference.origin=='local'">
+                                                    </select>
+
+                                                    <label for="creationTransformation" class="horizontal-form-label"><a href="#" data-toggle="tooltip" title="#i18n('transform.help')" data-placement="right">#i18n('transform.title')</a></label>
+                                                    <select name="creationTransformation" class="span4" ng-model="reference.comparisons[$index].transformation">
+                                                        <option value="none" selected="selected">#i18n('field.none')</option>
+                                                            <optgroup label="#i18n('transform.function.first')">
+                                                                <option value="lowerCase">#i18n('function.title.lowerCase')</option>
+                                                                <option value="upperCase">#i18n('function.title.upperCase')</option>
+                                                                <option value="capitalizeFirst">#i18n('function.title.capitalizeFirst')</option>
+                                                                <option value="capitalizeAll">#i18n('function.title.capitalizeAll')</option>
+                                                            </optgroup>
+                                                            <optgroup label="#i18n('transform.function.secund')">
+                                                                <option value="removeBlanks">#i18n('function.title.removeBlanks')</option>
+                                                                <option value="removeSpecialChars">#i18n('function.title.removeSpecialChars')</option>
+                                                                <option value="alphaReduce">#i18n('function.title.alphaReduce')</option>
+                                                                <option value="numReduce">#i18n('function.title.numReduce')</option>
+                                                                <option value="stem">#i18n('function.title.stem')</option>
+                                                            </optgroup>
+                                                            <optgroup label="#i18n('transform.function.third')">
+                                                                <option value="stripPrefix">#i18n('function.title.stripPrefix')</option>
+                                                                <option value="stripPostfix">#i18n('function.title.stripPostfix')</option>
+                                                                <option value="stripUriPrefix">#i18n('function.title.stripUriPrefix')</option>
+                                                            </optgroup>
+                                                            <optgroup label="#i18n('transform.function.fourth')">
+                                                                <option value="replace">#i18n('function.title.replace')</option>
+                                                                <option value="regexReplace">#i18n('function.title.regexReplace')</option>
+                                                                <option value="tokenize">#i18n('function.title.tokenize')</option>
+                                                                <option value="removeValues">#i18n('function.title.removeValues')</option>
+                                                            </optgroup>
+                                                            <optgroup label="#i18n('transform.function.fifth')">
+                                                                <option value="convertUTFISO">#i18n('function.title.convertUTFISO')</option>
+                                                                <option value="convertISOUTF">#i18n('function.title.convertISOUTF')</option>
+                                                            </optgroup>
+                                                            <optgroup label="#i18n('transform.function.sixth')">
+                                                                <option value="commonLogarithm">#i18n('function.title.commonLogarithm')</option>
+                                                                <option value="naturalLogarithm">#i18n('function.title.naturalLogarithm')</option>
+                                                                <option value="binaryLogarithm">#i18n('function.title.binaryLogarithm')</option>
+                                                            </optgroup>
+                                                    </select>
+                                                </div>
+                                                <div ng-show="reference.comparisons[$index].transformation=='replace' || reference.comparisons[$index].transformation=='regexReplace'" class="form-separator form-inline">
+                                                    <label for="targetSearchFirst">#i18n('field.label.search')</label>
+                                                    <input class="span4" type="text" name="targetSearchFirst" id="targetSearchFirst" placeholder="#i18n('field.info.search')" ng-model="reference.comparisons[$index].stringParam[0]"/>
+
+                                                    <label for="targetReplaceFirst" class="horizontal-form-label">#i18n('field.label.replace')</label>
+                                                    <input class="span4" type="text" name="targetReplaceFirst" id="targetReplaceFirst" placeholder="#i18n('field.info.replace')" ng-model="reference.comparisons[$index].stringParam[1]"/>
+                                                </div>
+
+                                                <div ng-show="reference.comparisons[$index].transformation=='tokenize'" class="form-separator form-inline">
+                                                    <label for="targetRegexpTokenFirst">#i18n('field.label.regexpToken')</label>
+                                                    <input class="span4" type="text" name="targetRegexpTokenFirst" id="targetRegexpTokenFirst" placeholder="#i18n('field.example') : #i18n('field.example.regexpToken')" ng-model="reference.comparisons[$index].stringParam[0]"/>
+                                                </div>
+
+                                                <div ng-show="reference.comparisons[$index].transformation=='removeValues'" class="form-separator form-inline">
+                                                    <label for="targetStopWordsFirst">#i18n('field.label.stopWords')</label>
+                                                    <input class="span4" type="text" name="targetStopWordsFirst" id="targetStopWordsFirst" placeholder="#i18n('field.example')   : #i18n('field.example.stopWords')" ng-model="reference.comparisons[$index].stringParam[0]"/>
+                                                </div>
+                                            </div>
+                                        </li>
+                                    </ol>
+                                </fieldset>
+                            </form>                    
+                    </div>
+                    
+                    <div class="step-pane" id="linkingSettings" >
+                        <!--Step to set the comparison parameters-->
+                            <legend >
+                                <a href="#" data-toggle="tooltip" title="#i18n('comparison.help')" data-placement="right">#i18n("comparison.label")</a>                            
+                            </legend>
+                            <div class="form-inline aggregation" ng-show="interlinkingSetting.getSettingsNumber()>1">
+                                <label for="aggregation">#i18n('aggregation.title')</label>
+                                <select name="aggregation" id="aggregation" class="span4" required ng-model="interlinkingSetting.aggregation">
+                                    <option selected="selected" disabled="disabled"></option>
+                                    <optgroup label="#i18n('aggregation.average.info')">
+                                        <option value="average">#i18n('aggregation.average')</option>
+                                    </optgroup>
+                                    <optgroup label="#i18n('aggregation.maxmin.info')">
+                                        <option value="max">#i18n('aggregation.max')</option>
+                                        <option value="min">#i18n('aggregation.min')</option>
+                                    </optgroup>
+                                    <optgroup label="#i18n('aggregation.quadraticMean.info')">
+                                        <option value="quadraticMean">#i18n('aggregation.quadraticMean')</option>
+                                    </optgroup>
+                                    <optgroup label="#i18n('aggregation.geometricMean.info')">
+                                        <option value="geometricMean">#i18n('aggregation.geometricMean')</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+                  
+                            <div ng-class="{'form-separator': interlinkingSetting.getSettingsNumber()==1}">
+                                <ol>
+                                    <li ng-repeat="comparison in creation.comparisons">
+                                        <div class="well">
+                                            <div class="form-inline">
+                                                    <div class="row-fluid">
+                                                        <div class="span6"> 
+                                                            <label><b>#i18n('comparison.source.label')</b> {{creation.comparisons[$index].property}}</label>
+                                                        </div>
+                                                        <div class="span6">
+                                                            <label><b>#i18n('comparison.target.label')</b> {{reference.comparisons[$index].property}}</label>
+                                                        </div>
+                                                    </div>
+                                                <label for="metricSelect" class="comparison-label">#i18n('compare.measure.title')</label>
+
+                                                <select name="metricSelect" id="metricSelect" required class="span4" ng-model="interlinkingSetting.settingList[$index].metric" required>
+                                                    <option></option>
+                                                    <optgroup label="#i18n('compare.measure.first')">
+                                                        <option value="levenshteinDistance">#i18n('metric.title.levenshteinDistance')</option>
+                                                        <option value="levenshtein">#i18n('metric.title.levenshtein')</option>
+                                                        <option value="jaro">#i18n('metric.title.jaro')</option>
+                                                        <option value="jaroWinkler">#i18n('metric.title.jaroWinkler')</option>
+                                                        <option value="equality">#i18n('metric.title.equality')</option>
+                                                        <option value="inequality">#i18n('metric.title.inequality')</option>
+                                                    </optgroup>
+                                                    <optgroup label="#i18n('compare.measure.secund')">
+                                                        <option value="jaccard">#i18n('metric.title.jaccard')</option>
+                                                        <option value="dice">#i18n('metric.title.dice')</option>
+                                                        <option value="softjaccard">#i18n('metric.title.softjaccard')</option>
+                                                    </optgroup>
+                                                    <optgroup label="#i18n('compare.measure.third')">
+                                                        <option value="num">#i18n('metric.title.num')</option>
+                                                        <option value="date">#i18n('metric.title.date')</option>
+                                                        <option value="dateTime">#i18n('metric.title.dateTime')</option>
+                                                        <option value="wgs84">#i18n('metric.title.wgs84')</option>
+                                                    </optgroup>
+                                                </select>
+
+                                                <label for="threshold" class="comparison-label horizontal-form-label">#i18n('comparison.threshold.label')</label>
+                                                <input type="number" name="threshold" id="threshold"
+                                                    min="0" max="1" step="0.1" placeholder="#i18n('field.mandatory')" class = "input-small" required ng-model="interlinkingSetting.settingList[$index].threshold">
+
+                                                <label for="weight" class="comparison-label horizontal-form-label" >#i18n('comparison.weight.label')</label>
+                                                <input type="number" name="weight" id="weight"
+                                                    min="0" max="1" step="0.1" placeholder="#i18n('field.optional')" class="input-small" ng-model="interlinkingSetting.settingList[$index].weight">
+                                            </div>
+                                            <div class="form-separator form-inline" ng-show="interlinkingSetting.settingList[$index].metric=='num'">
+                                                <label for="minNum">#i18n('compare.num.min')</label>
+                                                <input type="number" name="minNum" id="minNum" step="5" ng-model="interlinkingSetting.settingList[$index].metricParams[0]" placeholder="#i18n('field.mandatory')"/>
+                                                <label for="maxNum" class="horizontal-form-label">#i18n('compare.num.max')</label>
+                                                <input type="number" name="maxNum" id="maxNum" step="5" ng-model="interlinkingSetting.settingList[$index].metricParams[1]" placeholder="#i18n('field.mandatory')"/>
+                                            </div>
+                                            <div class="form-separator form-inline" ng-show="interlinkingSetting.settingList[$index].metric=='wgs84'">
+                                                <label for="unit">#i18n('compare.geo.unit')</label>
+                                                <select name="unit" id="unit" ng-model="interlinkingSetting.settingList[$index].metricParams[0]">
+                                                    <option value="m" >#i18n('compare.geo.meters')</option>
+                                                    <option value="km">#i18n('compare.geo.kilometers')</option>
+                                                </select>
+                                                <label for="curve" class="horizontal-form-label">#i18n('compare.curve.unit')</label>
+                                                <select name="curve" id="curve" ng-model="interlinkingSetting.settingList[$index].metricParams[1]">
+                                                    <option value="linear">#i18n('compare.curve.linear')</option>
+                                                    <option value="logistic">#i18n('compare.curve.logistic')</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </li>
+                                </ol>
+                            </div>
+                            <legend >
+                                <a href="#" data-toggle="tooltip" title="#i18n('dataset.destination.help')" data-placement="right">#i18n("dataset.destination.label")</a>                            
+                            </legend>
+                                <div class="alert alert-block" id="changeNewSourceWarning">
+                                    <button type="button" class="close" data-dismiss="alert">&times;</button>
+                                    <h4>#i18n("warning.label")</h4>
+                                    #i18n("dataset.parameters.dataset.warning.message")
+                                </div>
+                            <form name="newSourceForm" class="form-inline">
+                                <label for="newSourceName">#i18n("dataset.new.name.label")</label>
+                                <input type="text" name="newSourceName" id="newSourceName" class="span4" required ng-model="newSource.name" />
+                                <label for="newSourceUrl" class="horizontal-form-label">#i18n("dataset.new.url.label")</label>
+                                <input type="url" name="newSourceUrl" class="span4" required ng-model="newSource.url" />
+                            </form>
+                    </div>
+                        
+                    <div class="step-pane" id="script">
+                        <div class="row-fluid">
+                            <div class="span9">
+                                <textarea id="scriptArea"></textarea>
+                            </div>
+
+                            <div class="span3 center-vertical">
+                                <a class="btn btn-large btn-block" download id="downloadLink">#i18n("script.save.label")</a>
+                                <a class="btn btn-large btn-primary btn-block" ng-click="runCreatedScriptFile()">#i18n("script.run.label")</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane" id="upload">
+                <form class="form-horizontal" action="$moduleUri/upload?project=${it.uri}" method="post" enctype="multipart/form-data">
+                    <div class="control-group">
+                        <label for="uploadScriptInput" class="control-label">#i18n("script.upload.label")</label>
+                        <div class="controls">                           
+                            <input type="file" accept="text/xml" name="uploadScriptFile"/>    
+                        </div>    
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label" for="uploadRadioFormat">#i18n("script.upload.format.label")</label>
+                        <div class="controls">
+                            <label class="radio inline">
+                                <input type="radio" name="uploadRadioFormat" id="optionSilk" value="silk" checked ng-model="upload.format" />
+                                #i18n("script.upload.format.silk.label")
+                            </label>
+                            <label class="radio inline">
+                                <input type="radio" name="uploadRadioFormat" id="optionEdoal" value="edoal" ng-model="upload.format"  />
+                                #i18n("script.upload.format.edoal.label")
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="control-group" ng-show="upload.format=='silk'">
+                        <label class="control-label" for="inputSilkIdentifier">#i18n("script.upload.silk.identifier")</label>
+                        <div class="controls">
+                            <input type="text" class="span4" name="inputSilkIdentifier"/> 
+                        </div>
+                    </div>
+
+                    <div class="control-group" ng-show="upload.format=='edoal'">
+                        <label class="control-label" for="inputEdoalSourceDataset">#i18n("script.upload.edoal.source.label")</label>
+                        <div class="controls">
+                            <input type="text" class="span4" name="inputEdoalSourceDataset"/> 
+                        </div>
+                        <br>
+                        <label class="control-label" for="inputEdoalTargetDataset">#i18n("script.upload.edoal.taget.label")</label>
+                        <div class="controls">
+                            <input type="text" class="span4" name="inputEdoalTargetDataset"/> 
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <div class="controls">
+                            <button type="submit" value="Submit" class="btn btn-primary"/>#i18n("submit.label")</button>
+                        </div>
+                    </div>
+                    <div class="alert alert-block" ng-show="upload.format=='silk'">
+                        <h5>#i18n('warning.label') !</h5>
+                        <p>#i18n('interlink.file.warning')</p>
+                        <pre>
+                            &lt;Output type=&quot;sparul&quot;&gt;
+                                &lt;Param name=&quot;uri&quot; value=&quot;http://url/of/datalift/repository&quot;/&gt;
+                                &lt;Param name=&quot;parameter&quot; value=&quot;update&quot;/&gt;
+                                &lt;Param name=&quot;graphUri&quot; value=&quot;http://uri/of/named/graph/to-update&quot;/&gt;
+                            &lt;/Output&gt;
+                        </pre>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+#footer  
+
+    <script type="text/javascript">
+        var wizardGoBack=false;//this variable is used to avoid a validation check when the user goes one step back
+
+        $(document).ready(function () {
+            $("a[data-toggle='tooltip']").tooltip();
+            $("#creationParamsInvalid").hide();
+            $("#changeNewSourceWarning").hide();
+        });
+
+        $("#wizardPrev").click(function(){
+            wizardGoBack = true;
+            var scope = angular.element("#moduleBody").scope();
+            if(scope.cmArea && $("#moduleWizard").wizard('selectedItem').step==4){
+                scope.cmArea.toTextArea();
+                $("#scriptArea").val("");
+            }
+        });
+
+        $("#moduleWizard").on("finished",function(event){
+            window.location.replace("$it.uri" + "#source");
+        });
+
+        $("#moduleWizard").on("change",function(event){
+            if(!wizardGoBack){
+                var scope = angular.element("#moduleBody").scope();
+                var currentStep = $(this).wizard('selectedItem').step;
+                var dataset;
+                if(currentStep==1){
+                    dataset = scope.creation;
+                }else{
+                    if(currentStep ==2){
+                        dataset = scope.reference;
+                        if(dataset.isValid){
+                            scope.setDefaultNewSourceName();
+                        }
+                    }
+                }
+                switch(currentStep){
+                    case 1:
+                    case 2:
+                        if(!dataset.isValid()){
+                            event.preventDefault();
+                            $("#creationParamsInvalid").show();
+                        }else{
+                            $("#creationParamsInvalid").hide();
+                        }
+                    break;
+
+                    case 3:
+                        if(!scope.interlinkingSetting.isValid()){
+                            event.preventDefault();
+                            $("#creationParamsInvalid").show();
+                        }else{
+                            $("#creationParamsInvalid").hide();
+                            //send the parameters to create the script to the server
+                            scope.postInterlinkResources();
+                        }
+                    break;
+                }
+            }
+            wizardGoBack = false;//reset the flag
+        });
+
+    </script>
+
+</body>
+
+</html>
