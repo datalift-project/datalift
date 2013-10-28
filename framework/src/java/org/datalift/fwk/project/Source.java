@@ -44,7 +44,7 @@ import java.util.Date;
  *
  * @author hdevos
  */
-public interface Source
+public interface Source extends Entity
 {
     //-------------------------------------------------------------------------
     // SourceType enumeration

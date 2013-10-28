@@ -358,4 +358,19 @@ public interface ProjectManager
      * @param  classes   the persistent classes.
      */
     public void addPersistentClasses(Collection<Class<?>> classes);
+    
+    /**
+     * Marks the specified event for being persisted into permanent
+     * storage.
+     * @param  e   the event to save or update in the RDF store.
+     */
+    public void saveEvent(Event e);
+
+    /**
+     * Removes the specified event from the DataLift internal RDF
+     * repository.
+     * @param  e   the event to remove.
+     */
+    public void deleteEvent(Event e);
+    
 }

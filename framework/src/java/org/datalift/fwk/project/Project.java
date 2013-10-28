@@ -45,10 +45,8 @@ import java.util.Date;
  *
  * @author hdevos
  */
-public interface Project
+public interface Project extends Entity
 {
-    public String getUri();
-
     public String getTitle();
     public void setTitle(String t);
 

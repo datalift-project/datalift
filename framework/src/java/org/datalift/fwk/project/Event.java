@@ -61,6 +61,7 @@ public interface Event {
 	// Event contract definition
     //-------------------------------------------------------------------------
 
+    public String getUri();
 	public EventStatus getEventStatus();
 	public void setEventStatus(EventStatus eventStatus);
 	public String getDescription();
@@ -73,8 +74,8 @@ public interface Event {
 	public void setEndedAtTime(Date endedAtTime);
 	public User getWasAssociatedWith();
 	public void setWasAssociatedWith(User wasAssociatedWith);
-	public Source getUsed();
-	public void setUsed(Source used);
+	public Entity getUsed();
+	public void setUsed(Entity used);
 	public Event getWasInformedBy();
 	public void setWasInformedBy(Event wasInformedBy);
 }

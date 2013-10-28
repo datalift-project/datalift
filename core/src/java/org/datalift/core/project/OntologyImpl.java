@@ -44,7 +44,6 @@ import javax.persistence.ManyToOne;
 
 import org.datalift.fwk.project.Ontology;
 import org.datalift.fwk.project.Project;
-import org.datalift.fwk.project.User;
 
 import com.clarkparsia.empire.annotation.NamedGraph;
 import com.clarkparsia.empire.annotation.RdfId;
@@ -56,6 +55,7 @@ import com.clarkparsia.empire.annotation.RdfsClass;
  * Default implementation of the {@link Ontology} interface.
  *
  * @author oventura
+ * @author avalensi
  */
 @Entity
 @RdfsClass("datalift:ontology")

@@ -33,31 +33,23 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 
-package org.datalift.fwk.project;
+package org.datalift.core.project;
 
+import javax.persistence.Entity;
+import javax.persistence.MappedSuperclass;
 
-import java.net.URI;
-import java.util.Date;
+import org.datalift.fwk.project.Source;
 
+import com.clarkparsia.empire.annotation.NamedGraph;
+import com.clarkparsia.empire.annotation.RdfProperty;
+import com.clarkparsia.empire.annotation.RdfsClass;
 
-public interface Ontology extends Entity
-{
-	/**
-	 * Base Ontology URI.
-	 */
-	public static final String BASE_USER_URI = "http://www.datalift.org/project/ontology/"; 
+@Entity
+@MappedSuperclass
+@RdfsClass("datalift:ProjectCreationEvent ")
+@NamedGraph(type = NamedGraph.NamedGraphType.Static, value="datalift:datalift")
+public class ProjectCreationEvent extends EventImpl {
+    @RdfProperty("prov:used")
+    private Source used;
 
-    public String getTitle();
-    public void setTitle(String title);
-
-    public URI getSource();
-    public void setSource(URI source);
-
-    public Project getProject();
-	public void setProject(Project project);
-
-	// Deprecated?
-	public Date getDateSubmitted();
-	// Deprecated?
-    public String getOperator();
 }

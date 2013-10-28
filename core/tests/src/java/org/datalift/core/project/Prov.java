@@ -10,6 +10,7 @@ import static org.junit.Assert.assertEquals;
 import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 
@@ -38,9 +39,9 @@ public class Prov {
 	public void setUp() throws Exception {
         this.props.put(DATALIFT_HOME, "tests");
         this.props.put(REPOSITORY_URIS, RDF_STORE);
-        this.props.put(RDF_STORE + REPOSITORY_URL, "sail:///");
-//        this.props.put(RDF_STORE + REPOSITORY_URL, 
-//        		"http://localhost:9091/openrdf-sesame/repositories/tests");
+//        this.props.put(RDF_STORE + REPOSITORY_URL, "sail:///");
+        this.props.put(RDF_STORE + REPOSITORY_URL, 
+        		"http://localhost:9091/openrdf-sesame/repositories/tests");
         this.props.put(RDF_STORE + REPOSITORY_DEFAULT_FLAG, "true");
         this.props.put(PRIVATE_STORAGE_PATH, ".");
 	}
@@ -124,6 +125,28 @@ public class Prov {
 				ontologies.get(0).getTitle(), "MyOntology");
 	}
 	
+	@Test
+	public void testProvEvent() throws URISyntaxException {
+		DefaultProjectManager pm = initProjectManager();
+		ProjectCreationEvent e = new ProjectCreationEvent();
+		UserImpl u = new UserImpl("John");
+		URI projectURI = new URI("http://datalift.fr/proj/myproject");
+		URI licenseURI = 
+				new URI("http://creativecommons.org/licenses/by-nc-sa/3.0/");
+		String eventURI = "http://datalift.fr/event/newProj1";
+		Project p = pm.newProject(projectURI, "MyProject", 
+				"Description.", licenseURI);
+		
+		e.setId(eventURI);
+		e.setDescription("Test creation event");
+		e.setParameter("none");
+		e.setStartedAtTime(new Date());
+		e.setEndedAtTime(new Date());
+		e.setWasAssociatedWith(u);
+		e.setUsed(p);
+		
+		pm.saveEvent(e);
+	}
 	
 	private DefaultProjectManager initProjectManager() {
         // Load application configuration.

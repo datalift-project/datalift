@@ -69,6 +69,7 @@ import org.datalift.fwk.LifeCycle;
 import org.datalift.fwk.MediaTypes;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.CsvSource;
+import org.datalift.fwk.project.Event;
 import org.datalift.fwk.project.SparqlSource;
 import org.datalift.fwk.project.SqlDatabaseSource;
 import org.datalift.fwk.project.SqlQuerySource;
@@ -613,6 +614,32 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
 
     /** {@inheritDoc} */
     @Override
+    public void saveEvent(Event e) {
+        this.checkAvailable();
+        if (e == null) {
+            throw new IllegalArgumentException("e");
+        }
+        if (e.getUri() == null) {
+        	throw new RuntimeException("Invalid event URI");
+        }
+        this.projectDao.save(e);
+        log.debug("Event <{}> saved to RDF store", e.getUri());
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void deleteEvent(Event e) {
+        try {
+			this.projectDao.delete(new URI(e.getUri()));
+		} 
+        catch (URISyntaxException ex) {
+            throw new RuntimeException("Invalid event URI: " + e.getUri(), ex);
+		}
+        log.debug("Event <{}> deleted", e.getUri());
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public void addPersistentClasses(Collection<Class<?>> classes) {
         if (this.emf != null) {
             // Too late! empire is already started.
@@ -756,6 +783,5 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
             throw new IllegalStateException("Not available");
         }
     }
-
 
 }
