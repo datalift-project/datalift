@@ -53,7 +53,9 @@ public class SilkInterlinkerController extends ModuleController{
     
     private final static String RUN_SCRIPT_PATH="run";
     
-    private final static String UPLOAD_FILE_PATH="upload";
+    private final static String UPLOAD_SILK_FILE_PATH="upload-silk";
+    
+    private final static String UPLOAD_EDOAL_FILE_PATH="upload-edoal";
     
     
     //-------------------------------------------------------------------------
@@ -171,38 +173,46 @@ public class SilkInterlinkerController extends ModuleController{
     
     
     @POST
-    @Path(UPLOAD_FILE_PATH)
+    @Path(UPLOAD_SILK_FILE_PATH)
     @Consumes(MediaTypes.MULTIPART_FORM_DATA)
     @Produces(MediaType.TEXT_HTML)
-    public Response runUploadedScript(@QueryParam("project") URI projectId,
-    		@FormDataParam("uploadScriptFile") InputStream scriptStream,
-    		@FormDataParam("uploadRadioFormat") String format,
-    		@FormDataParam("inputSilkIdentifier") String silkIdentifier,
-    		@FormDataParam("inputEdoalSourceDataset") String edoalSource,
-    		@FormDataParam("inputEdoalTargetDataset") String edoalTarget) throws ObjectStreamException{
+    public Response runUploadedSilkScript(@QueryParam("project") URI projectId,
+    		@FormDataParam("inputSilkFile") InputStream scriptStream,
+    		@FormDataParam("inputSilkIdentifier") String silkIdentifier) throws ObjectStreamException{
     	Project proj = this.getProject(projectId);
     	HashMap<String, Object> args = new HashMap<String, Object>();
 	    args.put("it", proj.getUri());
-    	if(format.equals("silk")){
-    	    String linkSpecId = silkIdentifier.trim();
-    	    
-    	    File configFile = model.importConfigFile("interlink-config", scriptStream);
+    	String linkSpecId = silkIdentifier.trim();
+    	File configFile = model.importConfigFile("interlink-config", scriptStream);
 
-            LinkedList<String> errorMessages = model.getErrorMessages(configFile, linkSpecId);
-            if (errorMessages.isEmpty()) {
-            	model.launchSilk(proj,configFile, null,null,null, linkSpecId, 
-            			SilkInterlinkerModel.DEFAULT_NB_THREADS, SilkInterlinkerModel.DEFAULT_RELOAD_CACHE, false);
-            	return Response.ok(this.newViewable("/redirect.vm" , args)).build();
-    	    }else{
-    	    	return Response.status(Status.BAD_REQUEST).build();
-    	    }
+        LinkedList<String> errorMessages = model.getErrorMessages(configFile, linkSpecId);
+        if (errorMessages.isEmpty()) {
+        	model.launchSilk(proj,configFile, null,null,null, linkSpecId, 
+        			SilkInterlinkerModel.DEFAULT_NB_THREADS, SilkInterlinkerModel.DEFAULT_RELOAD_CACHE, false);
+        	return Response.ok(this.newViewable("/redirect.vm" , args)).build();
     	}else{
-    		//model.convertEdoalScript(scriptStream, edoalSource, edoalTarget);
-    		return Response.ok(this.newViewable("/redirect.vm" , args)).build();
+    		return Response.status(Status.BAD_REQUEST).build();
     	}
+    	
     	
     }
     
+    @POST
+    @Path(UPLOAD_EDOAL_FILE_PATH)
+    @Consumes(MediaTypes.MULTIPART_FORM_DATA)
+    @Produces(MediaType.TEXT_HTML)
+    public Response runUploadedEdoalScript(
+    		@QueryParam("project") URI projectId,
+    		@FormDataParam("inputEdoalFile") InputStream scriptStream,
+    		@FormDataParam("selectEdoalSource") String edoalSource,
+    		@FormDataParam("selectEdoalTarget") String edoalTarget,
+    		@FormDataParam("edoalMetricSelect") String metric,
+    		@FormDataParam("edoalThreshold") String thresold){
+    	HashMap<String, Object> args = new HashMap<String, Object>();
+	    args.put("it", projectId);
+    	model.convertEdoalScript(scriptStream, edoalSource, edoalTarget, metric, thresold);
+    	return Response.ok(this.newViewable("/redirect.vm" , args)).build();
+    }
     
     @POST
     @Path(RUN_SCRIPT_PATH)

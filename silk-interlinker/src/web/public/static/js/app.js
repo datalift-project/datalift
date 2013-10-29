@@ -1,3 +1,3 @@
-angular.module('SilkInterlinkerApp', ["SilkInterlinkerApp.controllers"]);
+angular.module('SilkInterlinkerApp', ["SilkInterlinkerApp.controllers", "SilkInterlinkerApp.directives"]);
 
 

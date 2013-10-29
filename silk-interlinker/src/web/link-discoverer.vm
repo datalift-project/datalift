@@ -26,6 +26,7 @@
         <!--Controller and app-->
         <script src="${moduleUri}/static/js/app.js"></script>
         <script src="${moduleUri}/static/js/controllers.js"></script>
+        <script src="${moduleUri}/static/js/directives.js"></script>
         #css_links
         <link href="${moduleUri}/static/css/silk-interlinker.css" rel="stylesheet"/>
 
@@ -464,63 +465,106 @@
             </div>
 
             <div class="tab-pane" id="upload">
-                <form class="form-horizontal" action="$moduleUri/upload?project=${it.uri}" method="post" enctype="multipart/form-data">
-                    <div class="control-group">
-                        <label for="uploadScriptInput" class="control-label">#i18n("script.upload.label")</label>
-                        <div class="controls">                           
-                            <input type="file" accept="text/xml" name="uploadScriptFile"/>    
-                        </div>    
-                    </div>
+                <div class="tabbable tabs-left">
+                    <ul class="nav nav-tabs">
+                        <li class="active"><a href="#silk" data-toggle="tab">#i18n("script.upload.format.silk.label")</a></li>
+                        <li><a href="#edoal" data-toggle="tab">#i18n("script.upload.format.edoal.label")</a></li>
+                    </ul>
+                    <div class="tab-content">
+                        <div class="tab-pane active" id="silk">
+                            <form class="form-horizontal" action="$moduleUri/upload-silk?project=${it.uri}" method="post" enctype="multipart/form-data" name="silkUploadForm">
+                                 <div class="control-group">
+                                    <label for="uploadScriptInput" class="control-label">#i18n("script.upload.label")</label>
+                                    <div class="controls">                           
+                                        <input type="file" accept="text/xml" valid-file name="inputSilkFile" ng-model="upload.silk.file" required/>    
+                                    </div>    
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label" for="inputSilkIdentifier">#i18n("script.upload.silk.identifier")</label>
+                                    <div class="controls">
+                                        <input type="text" class="span4" name="inputSilkIdentifier" required ng-model="upload.silk.identifier"/> 
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <div class="controls">
+                                        <button type="submit" value="Submit" class="btn btn-primary" ng-disabled="silkUploadForm.$invalid"/>#i18n("submit.label")</button>
+                                    </div>
+                                </div>
+                            </form>
+                            <div class="alert alert-block" ng-show="upload.format=='silk'">
+                                <h5>#i18n('warning.label') !</h5>
+                                <p>#i18n('interlink.file.warning')</p>
+                                <pre>
+                                    &lt;Output type=&quot;sparul&quot;&gt;
+                                        &lt;Param name=&quot;uri&quot; value=&quot;http://url/of/datalift/repository&quot;/&gt;
+                                        &lt;Param name=&quot;parameter&quot; value=&quot;update&quot;/&gt;
+                                        &lt;Param name=&quot;graphUri&quot; value=&quot;http://uri/of/named/graph/to-update&quot;/&gt;
+                                    &lt;/Output&gt;
+                                </pre>
+                            </div>
+                        </div>
 
-                    <div class="control-group">
-                        <label class="control-label" for="uploadRadioFormat">#i18n("script.upload.format.label")</label>
-                        <div class="controls">
-                            <label class="radio inline">
-                                <input type="radio" name="uploadRadioFormat" id="optionSilk" value="silk" checked ng-model="upload.format" />
-                                #i18n("script.upload.format.silk.label")
-                            </label>
-                            <label class="radio inline">
-                                <input type="radio" name="uploadRadioFormat" id="optionEdoal" value="edoal" ng-model="upload.format"  />
-                                #i18n("script.upload.format.edoal.label")
-                            </label>
+                        <div class="tab-pane" id="edoal">
+                            <form class="form-horizontal" action="$moduleUri/upload-edoal?project=${it.uri}" method="post" enctype="multipart/form-data" name="edoalUploadForm">
+                                <div class="control-group">
+                                    <label for="uploadScriptInput" class="control-label">#i18n("script.upload.label")</label>
+                                    <div class="controls">                           
+                                        <input type="file" accept="text/xml" valid-file name="inputEdoalFile" ng-model="edoal.file" required/>    
+                                    </div>    
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label" for="inputEdoalSourceDataset">#i18n("script.upload.edoal.source.label")</label>
+                                    <div class="controls">
+                                        <select id="selectEdoalSource" class="span4"  ng-model="edoal.source"  required name="selectEdoalSource" >
+                                            <option ng-repeat="source in localSourceList" value="{{source.uri}}">{{source.name}}</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label" for="inputEdoalTargetDataset">#i18n("script.upload.edoal.taget.label")</label>
+                                    <div class="controls">
+                                        <select id="selectEdoalTarget" class="span4"  ng-model="edoal.target" required name="selectEdoalTarget" >
+                                            <option ng-repeat="source in localSourceList" value="{{source.uri}}">{{source.name}}</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <label for="edoalMetricSelect" class="control-label">#i18n('transform.title')</label>
+                                    <div class="controls">
+                                        <select name="edoalMetricSelect" id="edoalMetricSelect" required class="span4" ng-model="edoal.metric" required>
+                                            <option></option>
+                                            <optgroup label="#i18n('compare.measure.first')">
+                                                <option value="levenshteinDistance">#i18n('metric.title.levenshteinDistance')</option>
+                                                <option value="levenshtein">#i18n('metric.title.levenshtein')</option>
+                                                <option value="jaro">#i18n('metric.title.jaro')</option>
+                                                <option value="jaroWinkler">#i18n('metric.title.jaroWinkler')</option>
+                                                <option value="equality">#i18n('metric.title.equality')</option>
+                                                <option value="inequality">#i18n('metric.title.inequality')</option>
+                                            </optgroup>
+                                            <optgroup label="#i18n('compare.measure.secund')">
+                                                <option value="jaccard">#i18n('metric.title.jaccard')</option>
+                                                <option value="dice">#i18n('metric.title.dice')</option>
+                                                <option value="softjaccard">#i18n('metric.title.softjaccard')</option>
+                                            </optgroup>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="control-group">    
+                                    <label for="edoalThreshold" class="control-label">#i18n('comparison.threshold.label')</label>
+                                    <div class="controls">
+                                        <input type="number" name="edoalThreshold" id="edoalThreshold"
+                                            min="0" max="1" step="0.1" placeholder="#i18n('field.mandatory')" class = "input-small" required ng-model="edoal.thresold" />
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <div class="controls">
+                                        <button type="submit" value="Submit" class="btn btn-primary" ng-disabled="edoalUploadForm.$invalid"/>#i18n("submit.label")</button>
+                                    </div>
+                                </div>
+                            </form>
                         </div>
                     </div>
-
-                    <div class="control-group" ng-show="upload.format=='silk'">
-                        <label class="control-label" for="inputSilkIdentifier">#i18n("script.upload.silk.identifier")</label>
-                        <div class="controls">
-                            <input type="text" class="span4" name="inputSilkIdentifier"/> 
-                        </div>
-                    </div>
-
-                    <div class="control-group" ng-show="upload.format=='edoal'">
-                        <label class="control-label" for="inputEdoalSourceDataset">#i18n("script.upload.edoal.source.label")</label>
-                        <div class="controls">
-                            <input type="text" class="span4" name="inputEdoalSourceDataset"/> 
-                        </div>
-                        <br>
-                        <label class="control-label" for="inputEdoalTargetDataset">#i18n("script.upload.edoal.taget.label")</label>
-                        <div class="controls">
-                            <input type="text" class="span4" name="inputEdoalTargetDataset"/> 
-                        </div>
-                    </div>
-                    <div class="control-group">
-                        <div class="controls">
-                            <button type="submit" value="Submit" class="btn btn-primary"/>#i18n("submit.label")</button>
-                        </div>
-                    </div>
-                    <div class="alert alert-block" ng-show="upload.format=='silk'">
-                        <h5>#i18n('warning.label') !</h5>
-                        <p>#i18n('interlink.file.warning')</p>
-                        <pre>
-                            &lt;Output type=&quot;sparul&quot;&gt;
-                                &lt;Param name=&quot;uri&quot; value=&quot;http://url/of/datalift/repository&quot;/&gt;
-                                &lt;Param name=&quot;parameter&quot; value=&quot;update&quot;/&gt;
-                                &lt;Param name=&quot;graphUri&quot; value=&quot;http://uri/of/named/graph/to-update&quot;/&gt;
-                            &lt;/Output&gt;
-                        </pre>
-                    </div>
-                </form>
+                </div>
             </div>
         </div>
     </div>

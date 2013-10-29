@@ -1,35 +1,37 @@
 package org.datalift.interlinker;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
+import java.util.Random;
 import java.util.Set;
 
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-//import org.apache.commons.io.IOUtils;
+
+import org.apache.commons.io.IOUtils;
+
 import org.codehaus.jackson.JsonEncoding;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerationException;
@@ -46,13 +48,20 @@ import org.openrdf.query.Update;
 import org.openrdf.query.UpdateExecutionException;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
+import org.semanticweb.owl.align.Alignment;
+import org.semanticweb.owl.align.AlignmentException;
+
+import org.w3c.dom.Node;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+
 import de.fuberlin.wiwiss.silk.Silk;
+import fr.inrialpes.exmo.align.impl.renderer.SILKRendererVisitor;
 //import fr.inrialpes.exmo.align.impl.renderer.CopyOfSilkRendererVisitor;
+import fr.inrialpes.exmo.align.parser.AlignmentParser;
 
 public class SilkInterlinkerModel extends Model{
 	
@@ -297,144 +306,186 @@ public class SilkInterlinkerModel extends Model{
 		return ret;
     }
     
-    /*public final void convertEdoalScript(InputStream scriptStream, String edoalSource, String edoalTarget){
-    	FileOutputStream fos = null;
-        BufferedInputStream bis = null;
-        try {
-	        File edoalFile = File.createTempFile("uploaded_edoal",".xml");
-	        edoalFile.deleteOnExit();
-	        fos = new FileOutputStream(edoalFile);
+    public final void convertEdoalScript(InputStream edoalStream, String source, String target, String measure, String thresold){
+		LOG.debug("Convert and EDOAL File to a Silk Script and run it");
+    	try {
+			Random randomizer = new Random();
+			int randomNameMax=10000;
+			File edoalFile = File.createTempFile("uploaded_edoal"+ randomizer.nextInt(randomNameMax),".xml");
+			edoalFile.deleteOnExit();
+	        FileOutputStream edoalFos = new FileOutputStream(edoalFile);
 	        //upload the edoal script and put it into a temporary file
-	        IOUtils.copy(scriptStream, fos);
-	        fos.close();
-	        fos = null;
-//	        if (scriptStream!=null){
-	        	//create SILK script
-	        	//AlignmentParser aparser = new AlignmentParser(0);
-	          
-	            //create Hashtable for init
-	            Properties params = new Properties();
-	            if (!edoalSource.isEmpty()) params.setProperty( "source", edoalSource);
-	            if (!edoalTarget.isEmpty()) params.setProperty( "target", edoalTarget);
-	     //   	try {
-	        		//Alignment a = aparser.parse(edoalFile.toURI());
-					PrintWriter writer = new PrintWriter(
-							new BufferedWriter(
-							new OutputStreamWriter( System.out, "UTF-8" )), true);
-							
-					CopyOfSilkRendererVisitor renderer = new CopyOfSilkRendererVisitor(writer);
-					
-					File tmpDir = new File(Configuration.getDefault().getPublicStorage().getFile("project"), "edoal");
-		   			tmpDir.mkdirs();
-					File convertedSilk = new File(tmpDir, "converted_silk_script.xml");
-		        	renderer.run(params, convertedSilk.getAbsolutePath(), edoalFile.toURI().toString());
-		        //	PropertyId prop = new PropertyId(edoalSource);
-		        	
-		            writer.flush();
-		            writer.close();
-
-		            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-		        	DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-		        	Document doc = dBuilder.parse(convertedSilk);
-		        	NodeList outputNodeList = doc.getElementsByTagName("Outputs");
-		        	
-		        	Element outputNode = doc.createElement("Output");
-		        	outputNode.setAttribute("type", "sparul");
-		        	
-		        	Element paramUri = doc.createElement("param");
-		        	paramUri.setAttribute("name", "uri");
-		        	String liftedPointUrl = Configuration.getDefault().getRepositories().iterator().next().getEndpointUrl();
-		        	paramUri.setAttribute("value", liftedPointUrl);
-		        	outputNode.appendChild(paramUri);
-		        	
-		        	Element paramParams = doc.createElement("param");
-		        	paramParams.setAttribute("name", "parameter");
-		        	paramParams.setAttribute("value", "update");
-		        	outputNode.appendChild(paramParams);
-		        	
-		        	for(int i=0;i<outputNodeList.getLength();i++){
-		        		outputNodeList.item(i).appendChild(outputNode);
-		        	}
-		        	
-		        	TransformerFactory transformerFactory = TransformerFactory.newInstance();
-		   			Transformer transformer = transformerFactory.newTransformer();
-		   			DOMSource source = new DOMSource(doc);
-		   			
-		   			//save the updated script
-		   			StreamResult result = new StreamResult(convertedSilk);
-		   			transformer.transform(source, result);
-		            //replace the sparql endpoint of target data set:
-		           /* BufferedReader br = null;  
-		            BufferedWriter bw = null; 
-		            String line = null;  
-		            StringBuffer buff = new StringBuffer();  		                     
-		            try {  
-		            	// create input stream buffer
-		                br = new BufferedReader(new FileReader(convertedSilk));		                        
-		                // read each line, and put into the buffer	                        
-		                while ((line = br.readLine()) != null) {  
-		                	// revise the content
-		                	if (line.contains("<Outputs>")) {   
-		                    	line = br.readLine();
-		                        buff.append("			<Outputs>");
-	                            buff.append(System.getProperty("line.separator"));
-		                        line = br.readLine();
-			                    buff.append("				<Output type=\"sparul\">");
-		                        buff.append(System.getProperty("line.separator"));
-		                        line = br.readLine();
-			                   	buff.append("					<Param name=\"uri\" value=\"http://localhost:9091/openrdf-sesame/repositories/lifted/statements\"/>");
-			                    buff.append(System.getProperty("line.separator"));
-		                        line = br.readLine();
-			                    buff.append("					<Param name=\"parameter\" value=\"update\"/>");
-			                    buff.append(System.getProperty("line.separator"));
-			                    line = br.readLine();
-		                        buff.append("				</Output>");
-		                        buff.append(System.getProperty("line.separator"));
-		                        buff.append("				</Outputs>\n");
-		                    } else {  
-		                        buff.append(line);
-		                        buff.append(System.getProperty("line.separator"));
-		                    }		                            
-		                }
-		                    } finally {  
-		                        if (br != null) {  
-		                            try { br.close(); } catch (Exception e) { /* Ignore... */ //}  
-		                       // }  
-		                    //} 
-		                    /*try {  
-		                        bw = new BufferedWriter(new FileWriter(convertedSilk));  
-		                        bw.write(buff.toString());  
-		                    } finally {  
-		                        if (bw != null) {  
-		                            try { bw.close(); } catch (Exception e) { /* Ignore... */ //}
-		                      //  }  
-		                    //}
-		                    
-		                  //  Silk.executeFile(convertedSilk, null, 1, true);
-		                    
-//						} catch (AlignmentException e) {
-//							LOG.fatal("Cannot create EDOAL file", e);
-//							throw new IOException("Cannot create EDOAL file", e);
-//						}	        			
-//	                }
-/*	}
-        catch (Exception e) {
-            LOG.fatal("Processing error for {}", e);
-            throw new WebApplicationException(
-                            Response.status(Status.INTERNAL_SERVER_ERROR)
-                                    .entity(e.getMessage())
-                                    .type(MediaType.TEXT_PLAIN).build());
-        }
-	//finally {
-	  //  if (fos != null) {
-	    //    try { fos.close(); } catch (Exception e) { /* Ignore... */ //}
-	   // }
-	    //if (bis != null) {
-	      //  try { bis.close(); } catch (Exception e) { /* Ignore... */ }
-	    //}
-	//}
-   // }
+	        IOUtils.copy(edoalStream, edoalFos);
+	        LOG.debug("Copied an edoal uploaded file to {}", edoalFile.getAbsolutePath());
+	        edoalFos.close();
+	        
+	        AlignmentParser alParser = new AlignmentParser(0);
+			alParser.setEmbedded(false);
+			Alignment aligner = alParser.parse(edoalFile.toURI());
+			
+			File silkScript = File.createTempFile("converted_silk" + randomizer.nextInt(randomNameMax), ".xml");
+			silkScript.deleteOnExit();
+			PrintWriter silkWriter = new PrintWriter(silkScript);
+			SILKRendererVisitor visitor = new SILKRendererVisitor(silkWriter);
+			Properties renderProp = new Properties();
+			visitor.init(renderProp);
+			
+			visitor.visit(aligner);
+			LOG.debug("Converted the edoal file {} to a silk Script in {}",edoalFile.getName(), silkScript.getAbsolutePath());
+			silkWriter.close();
+			
+			//------------------------------------------------------------------------------------------------
+			//NOW WE START TO EDIT THE XML FILE
+			LOG.debug("The silk script will be now updated with the entered parameters.");
+			DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+			DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+			Document silkDoc = docBuilder.parse(silkScript);
+			
+			//rename the main node
+			silkDoc.renameNode(silkDoc.getFirstChild(), null, "Silk");
+			
+			//rename the source and target dataset:
+			renameNodes(silkDoc,"SourceDataSet", "SourceDataset");
+			
+			renameNodes(silkDoc, "TargetDataSet", "TargetDataset");
+			
+			Element prefixesElement = (Element) silkDoc.getElementsByTagName("Prefixes").item(0); 
+			//add the prefix:
+			List<String> prefixNamespaces = getPrefixes(edoalFile);
+			for(int i = 0;i<prefixNamespaces.size();i++){
+				Element prefixElem = silkDoc.createElement("Prefix");
+				prefixElem.setAttribute("id", "ns"+i);
+				prefixElem.setAttribute("namespace", prefixNamespaces.get(i));
+				prefixesElement.appendChild(prefixElem);
+			}
+			
+			//add the right datasource:
+			Node datasourcesNode = silkDoc.getElementsByTagName("DataSources").item(0);
+			cleanNode(datasourcesNode);
+			
+			//add the proper nodes:
+			addDataSource(datasourcesNode, silkDoc, "source", source);
+			addDataSource(datasourcesNode, silkDoc, "target", target);
+			
+			//edit the comparison metrics and threshold
+			NodeList comparisons = silkDoc.getElementsByTagName("Compare");
+			for(int index = 0; index<comparisons.getLength(); index++){
+				Element compElem = (Element) comparisons.item(index);
+				Node metricNode = compElem.getAttributeNode("metric");
+				metricNode.setNodeValue(measure);
+				Node thresholdNode = compElem.getAttributeNode("threshold");
+				thresholdNode.setNodeValue(thresold);
+			}
+			
+			//change the first iterlink id:
+			Element interlinkNode = (Element) silkDoc.getElementsByTagName("Interlink").item(0);
+			interlinkNode.getAttributeNode("id").setNodeValue("silk-interlink");
+			
+			//change the output:
+			NodeList outputsNodes = silkDoc.getElementsByTagName("Outputs");
+			for(int i = 0;i<outputsNodes.getLength();i++){
+				Node outputsNode = outputsNodes.item(i); 
+				cleanNode(outputsNode);
+				Element outputNode = silkDoc.createElement("Output");
+				outputNode.setAttribute("type", "sparul");
+				Element uriParam = silkDoc.createElement("Param");
+				uriParam.setAttribute("name", "uri");
+				uriParam.setAttribute("value", Configuration.getDefault().getInternalRepository().getUrl());
+				
+				Element paramParam = silkDoc.createElement("Param");
+				paramParam.setAttribute("name", "parameter");
+				paramParam.setAttribute("value", "update");
+				
+				outputNode.appendChild(uriParam);
+				outputNode.appendChild(paramParam);
+				((Element)outputsNode).appendChild(outputNode);
+				
+			}
+			TransformerFactory transformerFactory = TransformerFactory.newInstance();
+			Transformer transformer = transformerFactory.newTransformer();
+			transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+			DOMSource domSource = new DOMSource(silkDoc);
+			File updatedSilkScript = File.createTempFile("updated_silk" + randomizer.nextInt(randomNameMax), ".xml");
+			updatedSilkScript.deleteOnExit();
+			StreamResult result = new StreamResult(updatedSilkScript);
+			transformer.transform(domSource, result);
+			
+			LOG.debug("The silk script file in {} has been updated to run properly. The new file is located in {} and will now run", silkScript.getAbsolutePath(), updatedSilkScript.getAbsolutePath());
+			Silk.executeFile(updatedSilkScript,"silk-interlink" , 1, true); 
+			
+		} catch (IOException e) {
+			LOG.fatal("Edoal file copy failed - " + e);
+		} catch (AlignmentException e) {
+			LOG.fatal("Edoal file alignment failed - " + e);
+		} catch (ParserConfigurationException e) {
+			LOG.fatal("Edoal file parsing failed - " + e);
+		} catch (SAXException e) {
+			LOG.fatal("Xml file parsing failed - " + e);
+		} catch (TransformerConfigurationException e) {
+			LOG.fatal("Edoal file convertion to Silk failed - " + e);
+		} catch (TransformerException e) {
+			LOG.fatal("Edoal file convertion to Silk failed - " + e);
+		}
+        
+    }
     
+    private void cleanNode(Node node){
+    	NodeList oldSourceList = node.getChildNodes();
+		//clean the old node
+		for(int i=0;i<oldSourceList.getLength();i++){
+			Node childNode = oldSourceList.item(i);
+			if(childNode.getNodeType() == Node.ELEMENT_NODE){
+				node.removeChild(childNode);
+			}
+		}
+    }
+    
+    private void addDataSource(Node datasourcesNode, Document doc, String id, String graphUri){
+    	Element dataSource = doc.createElement("DataSource");
+		dataSource.setAttribute("type", "sparqlEndpoint");
+		dataSource.setAttribute("id", id);
+		
+		Element paramEndPoint = doc.createElement("Param");
+		paramEndPoint.setAttribute("name", "endpointURI");
+		paramEndPoint.setAttribute("value", Configuration.getDefault().getInternalRepository().getUrl());
+		
+		Element paramGraph = doc.createElement("Param");
+		paramGraph.setAttribute("name", "graph");
+		paramGraph.setAttribute("value", graphUri);
+		
+		dataSource.appendChild(paramEndPoint);
+		dataSource.appendChild(paramGraph);
+		
+		datasourcesNode.appendChild(dataSource);
+    }
+
+    private void renameNodes(Document doc, String oldName, String newName){
+    	NodeList sourceDatasetNodes = doc.getElementsByTagName(oldName);
+		for(int index = 0;index<sourceDatasetNodes.getLength();index++){
+			Node nodeSource = sourceDatasetNodes.item(index);
+			doc.renameNode(nodeSource, null, newName);
+		}
+    }
+    
+    private List<String> getPrefixes(File edoalFile) throws ParserConfigurationException, SAXException, IOException{
+    	DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+		DocumentBuilder docBuilder;
+		docBuilder = docFactory.newDocumentBuilder();
+		Document silkDoc = docBuilder.parse(edoalFile);
+		NodeList edoalProperties = silkDoc.getElementsByTagName("edoal:Property");
+		Set<String> entityIds = new HashSet<String>();
+		for(int i = 0;i<edoalProperties.getLength();i++){
+			Element edoalProp = (Element) edoalProperties.item(i);
+			String aboutProp = edoalProp.getAttribute("rdf:about");
+			if(aboutProp.contains("#")){
+				entityIds.add(aboutProp.substring(0, aboutProp.lastIndexOf("#")+1));
+			}else{
+				entityIds.add(aboutProp.substring(0, aboutProp.lastIndexOf("/")));
+			}
+				
+		}
+		return new ArrayList<String>(entityIds);
+    }
 }
 
 
