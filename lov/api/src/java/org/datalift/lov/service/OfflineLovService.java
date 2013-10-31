@@ -148,14 +148,11 @@ public class OfflineLovService extends LovService {
 
 	private void downloadAggregator() {
 
-		File lovPrivateStorage = configuration.getPrivateStorage().getFile(
-				"lov");
-		lovData = new File(lovPrivateStorage, "data");
-		aggregatorDownloaded = false;
-
+		lovData = new File(configuration.getTempStorage(), "lov/data");
 		if (!lovData.exists()) {
 			lovData.mkdirs();
 		}
+		aggregatorDownloaded = false;
 
 		List<String> files = Arrays.asList(lovData.list());
 		// si le fichier lov_aggregator.rdf n'existe pas, on va le récupérer

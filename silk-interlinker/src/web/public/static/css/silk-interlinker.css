@@ -1,0 +1,32 @@
+.form-separator{
+	margin-top: 20px;
+}
+
+.center-vertical{
+	margin-top: 80px;
+}
+
+.css-form input.ng-invalid.ng-dirty {
+	background-color: #FA787E;
+}
+
+.horizontal-form-label {
+	margin-left: 40px;
+}
+
+
+.header-right{
+	float:right;
+	margin-top: 3px;
+
+}
+
+.aggregation{
+	margin-top: 25px;
+	margin-bottom: 30px;
+	margin-left: 10px
+}
+
+.simple-right{
+	float: right;
+}

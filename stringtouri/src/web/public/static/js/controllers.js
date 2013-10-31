@@ -5,6 +5,8 @@ angular.module("predicateChooserApp.controllers",[])
 		$scope.validSelection = false;
 		$scope.linkingPredicate;
 		$scope.canMoveForward = false;
+
+		var MAX_PREVIEW_ROWS_TO_DISPLAY = 10;
 		
 		var previewDataColumns=  
 	        [
@@ -72,7 +74,8 @@ angular.module("predicateChooserApp.controllers",[])
 			    "classTarget": selectedTarget.class,
 			    "predicateTarget": selectedTarget.predicate,
 			    "predicateLinking": $scope.linkingPredicate,
-			    "project": getProjectUrl()
+			    "project": getProjectUrl(),
+			    "max": MAX_PREVIEW_ROWS_TO_DISPLAY
 	       	} 
 		}
 
@@ -80,6 +83,7 @@ angular.module("predicateChooserApp.controllers",[])
 			var currentStep = $("#moduleWizard").wizard("selectedItem").step; 
 			var currentUrl = $location.absUrl();
 	       	var moduleUrl = currentUrl.substring(0,currentUrl.indexOf("?"));
+
 			switch(currentStep){
 				case 1:
 	       			//send ajax request
@@ -101,6 +105,12 @@ angular.module("predicateChooserApp.controllers",[])
             
             	case 2:
 					$scope.canMoveForward = $scope.newSourceForm.$valid ; 
+					/*console.log($scope.newSourceForm.$valid);
+					if($scope.newSourceForm.$valid ){
+						$scope.targetURLNew = $scope.choosers.source.value.dataset;
+						console.log("updated!");
+						$scope.$apply();
+					}*/
 				break;
 
 				case 3:
