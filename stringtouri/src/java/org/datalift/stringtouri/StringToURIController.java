@@ -130,10 +130,10 @@ public class StringToURIController extends InterlinkingController
                 if (this.position > 0) {
                     uridesc.setPosition(this.position);
                 }
-                LOG.debug("Project {} can use StringToURI", p.getTitle());
+                LOG.trace("Project {} can use StringToURI", p.getTitle());
             }
             else {
-                LOG.debug("Project {} can not use StringToURI", p.getTitle());
+                LOG.trace("Project {} can not use StringToURI", p.getTitle());
             }
         }
         catch (URISyntaxException e) {
