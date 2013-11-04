@@ -38,6 +38,7 @@ package org.datalift.core.project;
 import javax.persistence.Entity;
 import javax.persistence.MappedSuperclass;
 
+import org.datalift.fwk.project.ProjectCreationEvent;
 import org.datalift.fwk.project.Source;
 
 import com.clarkparsia.empire.annotation.NamedGraph;
@@ -48,7 +49,7 @@ import com.clarkparsia.empire.annotation.RdfsClass;
 @MappedSuperclass
 @RdfsClass("datalift:ProjectCreationEvent ")
 @NamedGraph(type = NamedGraph.NamedGraphType.Static, value="datalift:datalift")
-public class ProjectCreationEvent extends EventImpl {
+public class ProjectCreationEventImpl extends EventImpl implements ProjectCreationEvent {
     @RdfProperty("prov:used")
     private Source used;
 

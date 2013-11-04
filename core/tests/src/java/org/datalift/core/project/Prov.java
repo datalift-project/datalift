@@ -128,7 +128,7 @@ public class Prov {
 	@Test
 	public void testProvEvent() throws URISyntaxException {
 		DefaultProjectManager pm = initProjectManager();
-		ProjectCreationEvent e = new ProjectCreationEvent();
+		ProjectCreationEventImpl e = new ProjectCreationEventImpl();
 		UserImpl u = new UserImpl("John");
 		URI projectURI = new URI("http://datalift.fr/proj/myproject");
 		URI licenseURI = 

@@ -46,6 +46,15 @@ import java.util.Date;
 public interface Event {
 
     //-------------------------------------------------------------------------
+    // Instance members
+    //-------------------------------------------------------------------------
+	
+	/**
+	 * Base Ontology URI.
+	 */
+	public static final String BASE_USER_URI = "http://www.datalift.org/project/event/"; 
+
+	//-------------------------------------------------------------------------
     // EventStatus enumeration
     //-------------------------------------------------------------------------
 

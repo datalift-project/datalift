@@ -1,7 +1,8 @@
 /*
  * Copyright / Copr. 2010-2013 Atos - Public Sector France -
  * BS & Innovation for the DataLift project,
- * Contributor(s) : L. Bihanic, H. Devos, O. Ventura, M. Chetima
+ * Contributor(s) : L. Bihanic, H. Devos, O. Ventura, M. Chetima,
+ *                  A. Valensi
  *
  * Contact: dlfr-datalift@atos.net
  *
@@ -311,9 +312,7 @@ public interface ProjectManager
      * @param  srcUrl   the ontology URL.
      * @param  title    the ontology name or description.
      *
-     * @return a new ontology description, ready to be
-     *         {@link Project#addOntology(Ontology) associated} to a
-     *         project.
+     * @return a new ontology description.
      */
     public Ontology newOntology(Project project, URI srcUrl, String title);
 
@@ -372,5 +371,14 @@ public interface ProjectManager
      * @param  e   the event to remove.
      */
     public void deleteEvent(Event e);
+
+    /**
+     * Create a new project creation event description.
+     * @param  u   the user associated with the event (activity).
+     * @param  p   the project used by the event (activity).
+     *
+     * @return a new project creation event description.
+     */
+	ProjectCreationEvent newProjectCreationEvent(User u, Project p);
     
 }

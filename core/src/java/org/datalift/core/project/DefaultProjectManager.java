@@ -81,6 +81,7 @@ import org.datalift.fwk.project.ShpSource;
 import org.datalift.fwk.project.GmlSource;
 import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.TransformedRdfSource;
+import org.datalift.fwk.project.User;
 import org.datalift.fwk.project.XmlSource;
 import org.datalift.fwk.project.CsvSource.Separator;
 import org.datalift.fwk.rdf.RdfNamespace;
@@ -93,7 +94,7 @@ import static org.datalift.fwk.util.StringUtils.*;
 /**
  * Default implementation of the {@link ProjectManager} interface.
  *
- * @author hdevos, lbihanic, oventura
+ * @author hdevos, lbihanic, oventura, avalensi
  */
 public class DefaultProjectManager implements ProjectManager, LifeCycle
 {
@@ -612,6 +613,23 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         }
     }
 
+    /** {@inheritDoc} */
+    // TODO: Maybe to remove.
+    @Override
+    public ProjectCreationEventImpl newProjectCreationEvent(User u, Project p) {
+    	ProjectCreationEventImpl e = new ProjectCreationEventImpl();
+
+    	//e.setId(eventURI);
+		//e.setDescription("");
+		//e.setParameter("none");
+		e.setStartedAtTime(new Date());
+		e.setEndedAtTime(new Date());
+		e.setUsed(p);
+		e.setWasAssociatedWith(u);
+		
+		return e;
+    }
+    
     /** {@inheritDoc} */
     @Override
     public void saveEvent(Event e) {
