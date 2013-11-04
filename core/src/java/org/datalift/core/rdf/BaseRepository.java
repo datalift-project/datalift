@@ -211,7 +211,7 @@ abstract public class BaseRepository extends Repository
                                                     bindings, dataset, baseUri);
         }
         finally {
-            try { cnx.close(); } catch (Exception e) { /* Ignore... */ }
+            closeQuietly(cnx);
         }
     }
 
@@ -238,7 +238,7 @@ abstract public class BaseRepository extends Repository
                                                     bindings, dataset, baseUri);
         }
         finally {
-            try { cnx.close(); } catch (Exception e) { /* Ignore... */ }
+            closeQuietly(cnx);
         }
     }
 
@@ -265,7 +265,7 @@ abstract public class BaseRepository extends Repository
                                                     bindings, dataset, baseUri);
         }
         finally {
-            try { cnx.close(); } catch (Exception e) { /* Ignore... */ }
+            closeQuietly(cnx);
         }
     }
 

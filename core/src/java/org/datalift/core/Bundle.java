@@ -384,9 +384,7 @@ public class Bundle
                          e, path);
             }
             finally {
-                if (in != null) {
-                    try { in.close(); } catch (Exception ex) { /* Ignore... */ }
-                }
+                FileUtils.closeQuietly(in);
             }
         }
         return urls.toArray(new URL[urls.size()]);

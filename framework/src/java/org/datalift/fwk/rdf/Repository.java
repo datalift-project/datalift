@@ -331,6 +331,38 @@ public abstract class Repository
     abstract public void shutdown();
 
     //-------------------------------------------------------------------------
+    // Helper methods
+    //-------------------------------------------------------------------------
+
+    /**
+     * Closes a repository connection, absorbing errors.
+     * @param  c   the repository connection to close or
+     *             <code>null</code> if the connection opening failed.
+     */
+    public final static void closeQuietly(RepositoryConnection c) {
+        if (c != null) {
+            try {
+                c.close();
+            }
+            catch (Exception e) { /* Ignore... */ }
+        }
+    }
+
+    /**
+     * Shuts a repository down, absorbing errors.
+     * @param  r   the repository to shut down or <code>null</code>
+     *             if the initialization failed.
+     */
+    public final static void shutdownQuietly(Repository r) {
+        if (r != null) {
+            try {
+                r.shutdown();
+            }
+            catch (Exception e) { /* Ignore... */ }
+        }
+    }
+
+    //-------------------------------------------------------------------------
     // Object contract support
     //-------------------------------------------------------------------------
 

@@ -162,7 +162,7 @@ public final class FileUtils
             in = getInputStream(in, bufferSize);
         }
         catch (IOException e) {
-            close(in);
+            closeQuietly(in);
             throw e;
         }
         return in;
@@ -321,7 +321,7 @@ public final class FileUtils
                 }
                 catch (Exception e) { /* Ignore... */ }
                 finally {
-                    close(r);
+                    closeQuietly(r);
                 }
                 IOException e = new IOException("Failed to connect to \"" +
                                                 u + "\": status=" + status);
@@ -335,14 +335,15 @@ public final class FileUtils
             }
         }
         finally {
-            close(out);
+            closeQuietly(out);
         }
         return info;
     }
 
     /**
      * Reads data from the specified input stream and saves them into
-     * the specified file.
+     * the specified file. The input stream is automatically closed,
+     * regardless whether the operation succeeded.
      * @param  from   the input stream to read the data from.
      * @param  to     the local file to save data to.
      *
@@ -399,9 +400,9 @@ public final class FileUtils
         }
         finally {
             if (closeInput) {
-                close(in);
+                closeQuietly(in);
             }
-            close(out);
+            closeQuietly(out);
             if (copyFailed) {
                 to.delete();
             }
@@ -457,8 +458,8 @@ public final class FileUtils
                     copyFailed = false;
                 }
                 finally {
-                    close(in);
-                    close(out);
+                    closeQuietly(in);
+                    closeQuietly(out);
                 }
             }
             else {
@@ -492,8 +493,8 @@ public final class FileUtils
                     byteCount = start;
                 }
                 finally {
-                    close(in);
-                    close(out);
+                    closeQuietly(in);
+                    closeQuietly(out);
                 }
             }
         }
@@ -526,6 +527,20 @@ public final class FileUtils
             f.delete();
         }
         // Else: ignore...
+    }
+
+    /**
+     * Closes a file or a (byte or character) stream, absorbing errors.
+     * @param  c   the stream to close  or <code>null</code> if the
+     *             stream creation failed.
+     */
+    public final static void closeQuietly(Closeable c) {
+        if (c != null) {
+            try {
+                c.close();
+            }
+            catch (Exception e) { /* Ignore... */ }
+        }
     }
 
     //-------------------------------------------------------------------------
@@ -582,19 +597,6 @@ public final class FileUtils
             catch (Exception e) { /* Ignore... */ }
         }
         return expiry;
-    }
-
-    /**
-     * Closes a file or a (byte or character) stream, absorbing errors.
-     * @param  c   the stream to close.
-     */
-    private final static void close(Closeable c) {
-        if (c != null) {
-            try {
-                c.close();
-            }
-            catch (Exception e) { /* Ignore... */ }
-        }
     }
 
     /**

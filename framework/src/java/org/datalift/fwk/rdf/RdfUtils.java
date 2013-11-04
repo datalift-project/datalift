@@ -368,7 +368,7 @@ public final class RdfUtils
             // Commit pending data (including graph removal in case of error).
             try { cnx.commit(); } catch (Exception e) { /* Ignore... */ }
             // Close repository connection.
-            try { cnx.close();  } catch (Exception e) { /* Ignore... */ }
+            Repository.closeQuietly(cnx);
         }
     }
 
@@ -465,7 +465,7 @@ public final class RdfUtils
             // Commit pending data (including graph removal in case of error).
             try { cnx.commit(); } catch (Exception e) { /* Ignore... */ }
             // Close repository connection.
-            try { cnx.close();  } catch (Exception e) { /* Ignore... */ }
+            Repository.closeQuietly(cnx);
         }
     }
 
@@ -614,12 +614,8 @@ public final class RdfUtils
             throw new RdfException(query, e);
         }
         finally {
-            if (in != null) {
-                try { in.close(); } catch (Exception e) { /* Ignore... */ }
-            }
-            if (out != null) {
-                try { out.close();  } catch (Exception e) { /* Ignore... */ }
-            }
+            Repository.closeQuietly(in);
+            Repository.closeQuietly(out);
         }
     }
 
@@ -681,9 +677,7 @@ public final class RdfUtils
             throw new RdfException(query, e);
         }
         finally {
-            if (in != null) {
-                try { in.close(); } catch (Exception e) { /* Ignore... */ }
-            }
+            Repository.closeQuietly(in);
         }
     }
 
@@ -889,9 +883,7 @@ public final class RdfUtils
             throw new RdfException(String.valueOf(graphName), e);
         }
         finally {
-            if (cnx != null) {
-                try { cnx.close(); } catch (Exception e) { /* Ignore... */ }
-            }
+            Repository.closeQuietly(cnx);
         }
     }
 
@@ -950,12 +942,8 @@ public final class RdfUtils
             throw new RdfException(e);
         }
         finally {
-            if (cnx != null) {
-                try { cnx.close(); } catch (Exception e) { /* Ignore... */ }
-            }
-            if (r != null) {
-                try { r.shutdown(); } catch (Exception e) { /* Ignore... */ }
-            }
+            Repository.closeQuietly(cnx);
+            Repository.shutdownQuietly(r);
         }
     }
 

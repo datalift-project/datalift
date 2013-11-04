@@ -129,6 +129,7 @@ import org.datalift.fwk.rdf.ElementType;
 import org.datalift.fwk.rdf.RdfFormat;
 import org.datalift.fwk.rdf.RdfNamespace;
 import org.datalift.fwk.rdf.RdfUtils;
+import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.sparql.SparqlEndpoint;
 import org.datalift.fwk.util.CloseableIterator;
 import org.datalift.fwk.util.UriBuilder;
@@ -2496,7 +2497,7 @@ public class Workspace extends BaseModule
                      e, prefix, uri);
         }
         finally {
-            try { cnx.close(); } catch (Exception e) { /* Ignore... */ }
+            Repository.closeQuietly(cnx);
         }
     }
 
@@ -2514,7 +2515,7 @@ public class Workspace extends BaseModule
         }
         catch (Exception e) { /* Ignore... */ }
         finally {
-            try { cnx.close(); } catch (Exception e) { /* Ignore... */ }
+            Repository.closeQuietly(cnx);
         }
     }
 

@@ -195,6 +195,9 @@ public class XsltXmlConverter extends BaseConverterModule
         catch (Exception e) {
             throw new TechnicalException("xml.conversion.failed", e);
         }
+        finally {
+            Repository.closeQuietly(cnx);
+        }
     }
 
     /**
