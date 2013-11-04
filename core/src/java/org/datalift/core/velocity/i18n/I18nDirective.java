@@ -38,6 +38,8 @@ package org.datalift.core.velocity.i18n;
 import java.io.IOException;
 import java.io.Writer;
 import java.text.MessageFormat;
+import java.util.List;
+import java.util.Locale;
 
 import org.apache.velocity.context.InternalContextAdapter;
 import org.apache.velocity.exception.MethodInvocationException;
@@ -46,6 +48,7 @@ import org.apache.velocity.exception.ResourceNotFoundException;
 import org.apache.velocity.runtime.directive.Directive;
 import org.apache.velocity.runtime.parser.node.Node;
 
+import org.datalift.fwk.i18n.PreferredLocales;
 import org.datalift.fwk.log.Logger;
 
 
@@ -112,7 +115,13 @@ public class I18nDirective extends Directive
                 for (int i=1; i<params; i++) {
                     args[i-1] = node.jjtGetChild(i).value(context);
                 }
-                msg = MessageFormat.format(msg, args);
+                MessageFormat fmt = new MessageFormat(msg);
+                // Use user's preferred locale when formatting dates, numbers...
+                List<Locale> l = PreferredLocales.get();
+                if ((l != null) && (! l.isEmpty())) {
+                    fmt.setLocale(l.get(0));
+                }
+                msg = fmt.format(args);
             }
             log.trace("{}: Rendered \"{}\" -> \"{}\"", this.getName(), key, msg);
             writer.write(msg);
