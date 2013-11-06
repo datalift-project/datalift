@@ -344,12 +344,12 @@ public class Bundle
             // JAR file. => Add the JAR file itself to the classpath.
             urls.add(getFileUrl(path, srcName));
             // Extract wrapped JARs and add them to classpath.
+            JarInputStream in = null;
             JarEntry e = null;
             try {
                 File tempJarDir = new File(cfg.getTempStorage(),
                                 CACHE_DIRECTORY_NAME + '/' + path.getName());
-                JarInputStream in = new JarInputStream(
-                                                    new FileInputStream(path));
+                in = new JarInputStream(new FileInputStream(path));
                 boolean embeddedJarsFound = false;
                 while ((e = in.getNextJarEntry()) != null) {
                     if (e.getName().endsWith(".jar")) {
@@ -382,6 +382,11 @@ public class Bundle
             catch (Exception ex) {
                 log.warn("Failed to extract embedded JAR {} from {}", ex,
                          e, path);
+            }
+            finally {
+                if (in != null) {
+                    try { in.close(); } catch (Exception ex) { /* Ignore... */ }
+                }
             }
         }
         return urls.toArray(new URL[urls.size()]);
