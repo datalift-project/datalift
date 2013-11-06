@@ -3,8 +3,7 @@ angular.module("predicateChooserApp.directives",[])
     .directive("predicateChooser",function($http,chooserInterface){
         return{
             restrict: "E",
-            template: "<div>"+
-                "<legend ng-bind='title'></legend>"+
+            template: "<div ng-hide='isExternalSource()'>"+
                 "<H4 ng-bind='datasetLabel' for='datasetList'></H4>"+
                 "<select ui-select2 ng-model='selectedSource'"+
                         "ng-class='selectStyle'"+
@@ -15,9 +14,7 @@ angular.module("predicateChooserApp.directives",[])
                 "</select>"+
                 "<br>"+
                 "<p class='alert alert-info' ng-show='selectedSource.description'>{{selectedSource.description}}</p>"+
-
                 "<br>"+
-
                 "<H4 ng-bind='classLabel' for='classList'></H4>"+
                 "<select ui-select2 "+
                         "ng-model='selectedClass'"+
@@ -27,8 +24,7 @@ angular.module("predicateChooserApp.directives",[])
                     "<option ng-repeat='class in classes'>{{class}}</option>"+
 
                 "</select>"+
-                "<br><br>"+
-
+                "<br>"+
                 "<H4 ng-bind='predicateLabel' for='predicateList'></H4>"+
                 "<select ui-select2 "+
                         "ng-model='selectedPredicate'"+
@@ -39,7 +35,6 @@ angular.module("predicateChooserApp.directives",[])
                 "</select>"+
             "</div>",
             scope:{
-                title:"@",
                 project:"@",
                 module:"@",
                 selectStyle:"@class",
@@ -52,7 +47,14 @@ angular.module("predicateChooserApp.directives",[])
                 id:"@"
 
             },
+
+
+
             controller:function($scope){
+                $scope.isExternalSource = function(){
+                    return ($scope.project && $scope.project=="ext");
+                }
+
                 $scope.$watch("selectedSource",function(sourceUrl){
                     if(sourceUrl){
                         $http.get($scope.module + "/predicates?source=" + sourceUrl).success(function(data){
@@ -64,7 +66,9 @@ angular.module("predicateChooserApp.directives",[])
                         });
 
                     }
-                    chooserInterface.setDataset($scope.id,sourceUrl);
+                    
+                    chooserInterface.setDataset($scope.id,sourceUrl,getSourceName(sourceUrl));
+                    
                 });
                 $scope.$watch("selectedPredicate",function(predicateUrl){
                     chooserInterface.setPredicate($scope.id,predicateUrl);
@@ -73,11 +77,25 @@ angular.module("predicateChooserApp.directives",[])
                     chooserInterface.setClass($scope.id,classUrl);
                 });
 
+                function getSourceName(sourceUri){
+                    if($scope.sources){
+                        for(var i =0;i< $scope.sources.length; i++){
+                            if($scope.sources[i].url==sourceUri){
+                                return $scope.sources[i].title;
+                            } 
+                        }
+                    }
+                }
+
                
             },
             link:function(scope, element, attrs){
-                $http.get(attrs.module + "/sources?project="+attrs.project).success(function(data){
-                    scope.sources = data;
+                scope.$watch("project", function(project){
+                    if(project && project!="ext"){
+                        $http.get(attrs.module + "/sources?project="+attrs.project).success(function(data){
+                            scope.sources = data;
+                        });
+                    }
                 });
             }
         }

@@ -13,14 +13,13 @@
 	#script_links
 	<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
 	<!--Angularjs -->
-    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.6/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.8/angular.min.js"></script>
     <!--AngularUI-->
     <link rel="stylesheet" href="${moduleUri}/static/lib/angularui/css/angular-ui.css">
     <script src="${moduleUri}/static/lib/angularui/js/angular-ui.js"></script>
     <!--Twitter Bootstrap-->
     <link href="${moduleUri}/static/lib/bootstrap/css/bootstrap.css" rel="stylesheet">
     <script src="${moduleUri}/static/lib/bootstrap/js/bootstrap.js"></script>
-    <script src="${moduleUri}/static/lib/purl/purl.js"></script>
     <!--Select2-->
 	<link href="http://ivaynberg.github.com/select2/select2-3.2/select2.css" rel="stylesheet"/>
     <script src="http://ivaynberg.github.com/select2/select2-3.2/select2.js"></script>
@@ -83,7 +82,7 @@
           	</header>
         	</div>
 
-	    <div class="fuelux" ng-controller="SelectionCtrl">
+	    <div class="fuelux" ng-controller="SelectionCtrl" ng-init="moduleUrl='$moduleUri'; projectUri='$it.uri'">
 	      	<div id="moduleWizard" class="wizard">
 	        	<ul class="steps">
 	            	<li data-target="#settings" class="active"><span class="badge badge-info">1</span>#i18n("wizard.settings.label")<span class="chevron"></span></li>
@@ -106,10 +105,15 @@
 					<div id="workspace" class="row-fluid">
 						<div class="span6">
 							<fieldset>
-						
+
+								<legend >#i18n('reference.label')</legend>
+
+								<H4 for="SourceProjectSelect">#i18n('dataset.project.label')</H4>
+								<select ng-init = "initProjectsLists()" ng-options="project.title for project in projectSourceList"
+								class="input-xxlarge" ng-model="source.project" name ="SourceProjectSelect"></select>
+
 								<predicate-chooser module="${moduleUri}"
-											title = "#i18n('reference.label')"
-						                   project="${it.uri}"
+						                   project="{{source.project.uri}}"
 						                   class="input-xxlarge"
 						                   dataset-label="#i18n('dataset.label')"
 						                   class-label="#i18n('class.label')"
@@ -120,16 +124,30 @@
 						                   id={{choosers.source.name}}
 						                  ></predicate-chooser>
 
+						        <form ng-show="source.project.uri=='ext'" name="externalSourceForm">
+						       		<H4 for='externalEndpoint'>#i18n("sparql-endpoint.label")</H4>
+									<input type="url" class="input-xxlarge" id="externalEndpoint" ng-model="externalSource.dataset" required/>
+
+									<H4 for='externalClass'>#i18n("class.label")</H4>
+									<input type="url" class="input-xxlarge" id="externalClass" ng-model="externalSource.class"/>
+
+									<H4 for='externalPredicate'>#i18n("predicate.label")</H4>
+									<input type="url" class="input-xxlarge" id="externalPredicate" ng-model="externalSource.predicate" required/>
+						        </form>
+
 							</fieldset>
 						</div>
 							
 						<div class="span6">
 							<fieldset>
+							<legend >#i18n('modified.label')</legend>
+							<H4 for="targetProjectSelect">#i18n('dataset.project.label')</H4>
+							<select ng-options="project.title for project in projectTargetList"
+								class="input-xxlarge" ng-model="target.project" name ="targetProjectSelect"></select>
 
 							<predicate-chooser module="${moduleUri}"
-							                   project="${it.uri}"
+							                   project="{{target.project.uri}}"
 							                   class="input-xxlarge"
-							                   title="#i18n('modified.label')"
 							                   dataset-label="#i18n('dataset.label')"
 							                   class-label="#i18n('class.label')"
 							                   predicate-label="#i18n('predicate.label')"
@@ -194,25 +212,24 @@
 					
 					<form name="newSourceForm" class="form-horizontal">
 						<div class="control-group">
-							<label class="control-label" for="sourceName">Source Name</label>
+							<label class="control-label" for="sourceName">#i18n('new-source.name.label')</label>
 							<div class="controls">
-								<input type="text" id="sourceName" placeholder="Enter the name of the new source" class="span4" required 
-									ng-model="sourceName">
+								<input type="text" id="sourceName" class="span4" required ng-model="sourceName">
 							</div>
 						</div>
 						<div class="control-group">
-							<label class="control-label" for="targetURLNew">Target URL</label>
+							<label class="control-label" for="targetURLNew">#i18n("new-source.target-uri.label")</label>
 							<div class="controls">
-								<input type="url" id="targetURLNew" placeholder="Enter URL to associate the new triples" class="span4" required
-									ng-model="targetURLNew">
+								<input type="url" id="targetURLNew" class="span4" required ng-model="targetURLNew">
 							</div>
 						</div>
 						<div class="control-group">
-								<label class="control-label" for="sourceDescription">Source Description</label>
-								<div class="controls">
-									<textarea rows="3" ng-model="sourceDescription" placeholder="Enter the description of the new source" class="span4"></textarea>
-								</div>
+							<label class="control-label" for="sourceDescription">#i18n("new-source.description.label")</label>
+							<div class="controls">
+								<textarea rows="3" ng-model="sourceDescription" placeholder="#i18n('new-source.description.placeholder')" class="span4" id="sourceDescription"></textarea>
 							</div>
+						</div>
+						<input type="checkbox" ng-model="keepTargetTriples" /> #i18n("new-source.keep-values.label")
 					</form>
 					
 				</div>

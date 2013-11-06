@@ -211,7 +211,8 @@ public class StringToURIModel extends InterlinkingModel
 			String linkingPredicate,
 			String newSourceContext,
 			String newSourceName,
-			String newSourceDescription){
+			String newSourceDescription, 
+			boolean keepTargetTriples){
     	LOG.info("{} is about to interconnect the sources located at {} and {} to put the interlinking result within the context {}", this.moduleName, sourceContext, 
     			targetContext, newSourceContext);
     	SesameApp app = getLinkingApp(proj,sourceContext, targetContext, sourceClass, targetClass, sourcePredicate, targetPredicate, linkingPredicate, targetContext);
@@ -230,8 +231,10 @@ public class StringToURIModel extends InterlinkingModel
 			addTriplesQuery.append("}}; ");
 		}
 		try {
-			Update upCopy = cnx.prepareUpdate(QueryLanguage.SPARQL, copyDsQuery);
-			upCopy.execute();
+			if(keepTargetTriples){
+				Update upCopy = cnx.prepareUpdate(QueryLanguage.SPARQL, copyDsQuery);
+				upCopy.execute();
+			}
 			Update upInsert = cnx.prepareUpdate(QueryLanguage.SPARQL, addTriplesQuery.toString());
 			upInsert.execute();
 			//now link the new graph to a datalift source, so it can be referenced easily
