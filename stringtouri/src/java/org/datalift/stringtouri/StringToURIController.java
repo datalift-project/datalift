@@ -36,6 +36,8 @@ package org.datalift.stringtouri;
 import java.io.ObjectStreamException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -48,7 +50,9 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.datalift.fwk.Configuration;
 import org.datalift.fwk.project.Project;
+import org.datalift.fwk.project.ProjectManager;
 import org.datalift.fwk.project.ProjectModule;
 import org.datalift.fwk.project.RdfFileSource;
 import org.datalift.fwk.project.Source;
@@ -92,6 +96,9 @@ public class StringToURIController extends InterlinkingController
     
     /**web service identifier path to save the interlinking result */
     private static final String SAVE_PATH="save";
+    
+    /**web service identifier path to get the list of the project of datalift   */
+    private static final String PROJECTS_PATH ="projects";
     
     
     //-------------------------------------------------------------------------
@@ -279,11 +286,18 @@ public class StringToURIController extends InterlinkingController
     		@QueryParam("predicateLinking") String linkingPredicate,
     		@QueryParam("newSourceContext") String targetContext,
     		@QueryParam("newSourceName") String newSourceName,
-    		@QueryParam("newSourceDescription") String newSourceDescr) throws ObjectStreamException{
+    		@QueryParam("newSourceDescription") String newSourceDescr,
+    		@QueryParam("copyTargetTriples") boolean copyTargetTriples) throws ObjectStreamException{
     	Project prj =this.getProject(projectId);
     	model.saveInterlinkedSource(prj, sourceDataSet, targetDataSet, sourceClass, targetClass, 
-    			sourcePredicate, targetPredicate,linkingPredicate, targetContext,newSourceName, newSourceDescr);
+    			sourcePredicate, targetPredicate,linkingPredicate, targetContext,newSourceName, newSourceDescr, copyTargetTriples);
     	
     }
     
+    @GET
+    @Path(PROJECTS_PATH)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getProjects(){
+    	return Response.ok(this.getJsonProjectList()).build();
+    }
 }
