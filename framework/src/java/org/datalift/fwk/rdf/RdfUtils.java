@@ -46,19 +46,23 @@ import java.util.List;
 
 import javax.ws.rs.core.MediaType;
 
+import org.openrdf.OpenRDFException;
 import org.openrdf.model.Literal;
 import org.openrdf.model.Statement;
 import org.openrdf.model.Value;
 import org.openrdf.model.ValueFactory;
 import org.openrdf.model.impl.ValueFactoryImpl;
 import org.openrdf.query.GraphQuery;
-import org.openrdf.query.QueryLanguage;
+import org.openrdf.query.MalformedQueryException;
 import org.openrdf.query.TupleQueryResultHandler;
+import org.openrdf.query.Update;
 import org.openrdf.query.impl.DatasetImpl;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
 import org.openrdf.rio.ParseErrorListener;
 import org.openrdf.rio.RDFParser;
+
+import static org.openrdf.query.QueryLanguage.SPARQL;
 
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.MediaTypes;
@@ -593,24 +597,40 @@ public final class RdfUtils
             // Apply CONSTRUCT queries to generate and insert triples.
             for (String s : constructQueries) {
                 query = s;
-                GraphQuery q = in.prepareGraphQuery(QueryLanguage.SPARQL,
-                                                    query, baseUri);
-                if (dataset != null) {
-                    q.setDataset(dataset);
+                // Assume query is a CONSTRUCT.
+                try {
+                    GraphQuery q = in.prepareGraphQuery(SPARQL, query, baseUri);
+                    if (dataset != null) {
+                        q.setDataset(dataset);
+                    }
+                    out.add(q.evaluate(), u);
                 }
-                out.add(q.evaluate(), u);
+                catch (OpenRDFException e) {
+                    if ((e instanceof MalformedQueryException) ||
+                        (e.getCause() instanceof MalformedQueryException)) {
+                        // Oops! Not a CONSTRUCT query.
+                        // => Assume INSERT or DELETE (DATA).
+                        Update q = in.prepareUpdate(SPARQL, query, baseUri);
+                        if (dataset != null) {
+                            q.setDataset(dataset);
+                        }
+                        q.execute();
+                    }
+                    else {
+                        throw e;
+                    }
+                }
             }
             query = null;       // No query in error.
         }
         catch (Exception e) {
-            try {
-                // Clear target named graph, if any.
-                if (out != null) {
-                    out.clear(u);
+            // Clear target named graph, if any.
+            if ((clearTargetGraph) && (u != null)) {
+                try {
+                    if (out != null) { out.clear(u); }
                 }
+                catch (Exception e2) { /* Ignore... */ }
             }
-            catch (Exception e2) { /* Ignore... */ }
-
             throw new RdfException(query, e);
         }
         finally {
@@ -668,8 +688,7 @@ public final class RdfUtils
 
             for (String s : updateQueries) {
                 query = s;
-                in.prepareUpdate(QueryLanguage.SPARQL, query, baseUri)
-                  .execute();
+                in.prepareUpdate(SPARQL, query, baseUri).execute();
             }
             query = null;       // No query in error.
         }

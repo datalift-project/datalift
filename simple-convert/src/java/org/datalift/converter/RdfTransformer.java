@@ -116,7 +116,7 @@ public class RdfTransformer extends BaseConverterModule
             // Clean the query list to remove empty entries.
             if (queries != null) {
                 List<String> l = new LinkedList<String>();
-                    for (String q : queries) {
+                for (String q : queries) {
                     if (! isBlank(q)) {
                         l.add(q);
                     }
