@@ -141,7 +141,7 @@
   <property name="locale.default_resources"
             value="${web.home}/WEB-INF/templates/core/resources_${locale.default}.properties"/>
 
-  <available property="locale.exists" file="${locale.default_resources}"/>
+  <available property="locale.exists"   file="${locale.default_resources}"/>
 
 
   <!-- ================ Compilation Control Options ======================= -->
@@ -315,7 +315,25 @@
       </copy>
   </target>
 
-  <target name="prepare-dist" depends="prepare">
+  <target name="production-deployment" unless="${datalift.test.mode}">
+    <!-- Production mode: cache static resources for a week -->
+    <property name="http.cache.duration"     value="604800"/> <!-- 1 week -->
+    <property name="velocity.cache.duration" value="0"/> <!-- Infinite -->
+    <property name="wro4j.debug"             value="false"/>
+    <property name="wro4j.ignore.errors"     value="true"/>
+  </target>
+  <target name="development-deployment" if="${datalift.test.mode}">
+    <!-- Development mode: disable client-side caching -->
+    <property name="http.cache.duration"     value="0"/>  <!-- No cache -->
+    <property name="velocity.cache.duration" value="-1"/> <!-- No cache -->
+    <property name="wro4j.debug"             value="true"/>
+    <property name="wro4j.ignore.errors"     value="false"/>
+  </target>
+  <target name="deployment-mode"
+          depends="production-deployment,development-deployment">
+  </target>
+
+  <target name="prepare-dist" depends="prepare,deployment-mode">
     <!-- Copy web application page templates and resources -->
     <copy todir="${build.home}" includeEmptyDirs="false"
                                 preservelastmodified="true">
@@ -324,13 +342,25 @@
     </copy>
     <!-- Copy web application static content and context definition -->
     <copy todir="${web-inf.dir}" encoding="UTF-8" preservelastmodified="true">
-      <fileset dir="${conf.home}" includes="web.xml"/>
-      <filterset refid="webapp.param.filters"/>
+      <fileset dir="${conf.home}" includes="web.xml,wro.xml"/>
+      <filterset>
+        <filterset refid="webapp.param.filters"/>
+        <filter token="http.cache.duration" value="${http.cache.duration}"/>
+        <filter token="velocity.cache.duration"
+                value="${velocity.cache.duration}"/>
+      </filterset>
+    </copy>
+    <copy todir="${web-inf.dir}" encoding="ISO-8859-1"
+                                 preservelastmodified="true">
+      <fileset dir="${conf.home}" includes="wro.properties"/>
+      <filterset>
+        <filterset refid="webapp.param.filters"/>
+        <filter token="http.cache.duration" value="${http.cache.duration}"/>
+        <filter token="wro4j.debug"         value="${wro4j.debug}"/>
+        <filter token="wro4j.ignore.errors" value="${wro4j.ignore.errors}"/>
+      </filterset>
     </copy>
     <!-- Copy application configuration files -->
-    <copy todir="${web-inf.dir}" preservelastmodified="true">
-      <fileset dir="${conf.home}" includes="wro.*"/>
-    </copy>
     <copy todir="${classes.dir}" preservelastmodified="true">
       <fileset dir="${conf.home}" excludes="web.xml,wro.*,datalift/**,**/.*"/>
     </copy>

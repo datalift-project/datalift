@@ -26,10 +26,10 @@
   </context-param -->
   <!-- Activate Velocity template cache (-1 = disabled, 0 = no check for
        updates, N = check template files for update every N seconds). -->
-  <!-- context-param>
+  <context-param>
     <param-name>velocity.templates.update.check</param-name>
-    <param-value>-1</param-value>
-  </context-param -->
+    <param-value>@velocity.cache.duration@</param-value>
+  </context-param>
 
   <!-- ===== Filter definitions & URL mappings ===== -->
 
@@ -114,14 +114,6 @@
     <filter-class>
       ro.isdc.wro.http.WroFilter
     </filter-class>
-    <init-param>
-      <param-name>configuration</param-name>
-      <param-value>DEPLOYMENT</param-value>
-    </init-param>
-    <init-param>
-      <param-name>jmxEnabled</param-name>
-      <param-value>false</param-value>
-    </init-param>
   </filter>
   <filter-mapping>
     <filter-name>WebResourceOptimizer</filter-name>
@@ -130,38 +122,38 @@
 
   <!-- Client-side cache management filter -->
   <filter>
-    <filter-name>CacheForWeek</filter-name>
+    <filter-name>StaticResourceCache</filter-name>
     <filter-class>
       org.datalift.core.util.web.ResponseHeaderFilter
     </filter-class>
     <init-param>
       <param-name>Cache-Control</param-name>
-      <param-value>public, max-age=604800</param-value>
+      <param-value>public, max-age=@http.cache.duration@</param-value>
     </init-param>
   </filter>
   <!-- Cache all static resource for a week -->
   <filter-mapping>
-    <filter-name>CacheForWeek</filter-name>
+    <filter-name>StaticResourceCache</filter-name>
     <url-pattern>*.css</url-pattern>
   </filter-mapping>
   <filter-mapping>
-    <filter-name>CacheForWeek</filter-name>
+    <filter-name>StaticResourceCache</filter-name>
     <url-pattern>*.js</url-pattern>
   </filter-mapping>
   <filter-mapping>
-    <filter-name>CacheForWeek</filter-name>
+    <filter-name>StaticResourceCache</filter-name>
     <url-pattern>*.gif</url-pattern>
   </filter-mapping>
   <filter-mapping>
-    <filter-name>CacheForWeek</filter-name>
+    <filter-name>StaticResourceCache</filter-name>
     <url-pattern>*.jpg</url-pattern>
   </filter-mapping>
   <filter-mapping>
-    <filter-name>CacheForWeek</filter-name>
+    <filter-name>StaticResourceCache</filter-name>
     <url-pattern>*.png</url-pattern>
   </filter-mapping>
   <filter-mapping>
-    <filter-name>CacheForWeek</filter-name>
+    <filter-name>StaticResourceCache</filter-name>
     <url-pattern>*.ico</url-pattern>
   </filter-mapping>
 
@@ -208,11 +200,15 @@
       <param-name>com.sun.jersey.config.property.WebPageContentRegex</param-name>
       <param-value>/|(/(images|css|js|wro|(WEB-INF/jsp))/.*)|(/(.[^/]*\.html))</param-value>
     </init-param>
+    <!-- Activation of automatic redirection for URLs ending with slash -->
+    <init-param>
+      <param-name>com.sun.jersey.config.feature.Redirect</param-name>
+      <param-value>true</param-value>
+    </init-param>
     <!-- Install some filters to
           - Honor GZip accepted encoding in response
           - Replace POST method by PUT or DELETE according to extended HTTP
             header or _method request parameter
-          - Make user's preferred locales globally available
      -->
     <init-param>
       <param-name>com.sun.jersey.spi.container.ContainerRequestFilters</param-name>
