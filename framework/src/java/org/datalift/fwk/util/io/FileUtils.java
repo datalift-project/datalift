@@ -69,6 +69,7 @@ import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.util.Env;
 import org.datalift.fwk.util.web.HttpDateFormat;
 
+import static org.datalift.fwk.util.PrimitiveUtils.wrap;
 import static org.datalift.fwk.util.StringUtils.isSet;
 import static org.datalift.fwk.util.web.Charsets.UTF_8;
 
@@ -409,8 +410,8 @@ public final class FileUtils
             else {
                 long delay = System.currentTimeMillis() - t0;
                 log.debug("{} MBs of data written to {} in {} seconds",
-                          Double.valueOf((byteCount / 1000) / 1000.0), to,
-                          Double.valueOf(delay / 1000.0));
+                          wrap((byteCount / 1000) / 1000.0), to,
+                          wrap(delay / 1000.0));
             }
         }
     }
@@ -505,8 +506,8 @@ public final class FileUtils
             else {
                 long delay = System.currentTimeMillis() - t0;
                 log.debug("Copied {} MBs of data from {} to {} in {} seconds",
-                          Double.valueOf((byteCount / 1000) / 1000.0),
-                          from, to, Double.valueOf(delay / 1000.0));
+                          wrap((byteCount / 1000) / 1000.0),
+                          from, to, wrap(delay / 1000.0));
             }
         }
     }
@@ -715,10 +716,9 @@ public final class FileUtils
                 long delay = System.currentTimeMillis() - this.startTime;
                 if (delay > 0L) {
                     log.debug("Read {} MBs from {} in {} seconds ({} MB/s)",
-                          Double.valueOf((this.readBytes / 1000L) / 1000.0),
-                          this.file,
-                          Double.valueOf(delay / 1000.0),
-                          Double.valueOf((this.readBytes / delay) / 1000.0));
+                          wrap((this.readBytes / 1000L) / 1000.0),
+                          this.file, wrap(delay / 1000.0),
+                          wrap((this.readBytes / delay) / 1000.0));
                 }
             }
         }
@@ -732,9 +732,8 @@ public final class FileUtils
                 ((this.readBytes - this.lastLog) > this.logThreshold)) {
                 long delay = System.currentTimeMillis() - this.startTime;
                 log.trace("Read {} MBs from {} in {} seconds",
-                          Double.valueOf((this.readBytes / 1000L) / 1000.0),
-                          this.file,
-                          Double.valueOf(delay / 1000.0));
+                          wrap((this.readBytes / 1000L) / 1000.0),
+                          this.file, wrap(delay / 1000.0));
                 this.lastLog = (this.readBytes / this.logThreshold)
                                                         * this.logThreshold;
             }
