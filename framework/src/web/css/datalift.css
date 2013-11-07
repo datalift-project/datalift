@@ -349,7 +349,7 @@ border-top: solid #808080 1px;
 
 .actionBtn-v2 {
 padding-left: 8%;
-padding-top: 190%;
+padding-top: 175%;
 }
 
 p.info-list {
@@ -521,6 +521,16 @@ max-height: 800px;
 }
 .alert-message p {
   margin-bottom: 0;
+}
+
+.green-message {
+	display:inline-block;
+	color:green;
+}
+
+.red-message {
+	display:inline-block;
+	color:green;
 }
 
 /*[class*="span8"] {
