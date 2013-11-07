@@ -72,6 +72,7 @@ import org.datalift.fwk.util.StringUtils;
 import org.datalift.fwk.util.UriMapper;
 import org.datalift.fwk.util.io.FileUtils;
 
+import static org.datalift.fwk.util.PrimitiveUtils.*;
 import static org.datalift.fwk.util.StringUtils.isBlank;
 
 
@@ -336,9 +337,9 @@ public final class RdfUtils
         try {
             // Clear target named graph, if any.
             targetGraph = getGraphUri(namedGraph, cnx, true);
-
+            // Load triples, mapping URIs on the fly.
             BatchStatementAppender appender =
-                        new BatchStatementAppender(cnx, targetGraph, mapper);
+                    new MappingBatchStatementAppender(cnx, targetGraph, mapper);
             // Load triples, mapping URIs on the fly.
             // Note: we're using an RDF parser and directly adding statements
             //       because Sesame RepositoryConnection.add(File, ...) is
@@ -349,10 +350,10 @@ public final class RdfUtils
 
             if (log.isDebugEnabled()) {
                 log.debug("Inserted {} RDF triples into {} in {} seconds",
-                          Long.valueOf(appender.getStatementCount()),
+                          wrap(appender.getStatementCount()),
                           (namedGraph != null)? "<" + namedGraph + '>':
                                                 "default graph",
-                          Double.valueOf(appender.getDuration() / 1000.0));
+                          wrap(appender.getDuration() / 1000.0));
             }
         }
         catch (Exception e) {
@@ -441,7 +442,7 @@ public final class RdfUtils
             targetGraph = getGraphUri(namedGraph, cnx, clearTargetGraph);
             // Load triples, mapping URIs on the fly.
             BatchStatementAppender appender =
-                        new BatchStatementAppender(cnx, targetGraph, mapper);
+                    new MappingBatchStatementAppender(cnx, targetGraph, mapper);
             appender.startRDF();
             for (Statement stmt : source) {
                 appender.handleStatement(stmt);
@@ -449,8 +450,8 @@ public final class RdfUtils
             appender.endRDF();
 
             log.debug("Inserted {} RDF triples into <{}> in {} seconds",
-                      Long.valueOf(appender.getStatementCount()), namedGraph,
-                      Double.valueOf(appender.getDuration() / 1000.0));
+                      wrap(appender.getStatementCount()), namedGraph,
+                      wrap(appender.getDuration() / 1000.0));
         }
         catch (Exception e) {
             try {
@@ -595,7 +596,9 @@ public final class RdfUtils
                 }
             }
             // Apply CONSTRUCT queries to generate and insert triples.
+            int i = 0;
             for (String s : constructQueries) {
+                i++;
                 query = s;
                 // Assume query is a CONSTRUCT.
                 try {
@@ -603,7 +606,14 @@ public final class RdfUtils
                     if (dataset != null) {
                         q.setDataset(dataset);
                     }
-                    out.add(q.evaluate(), u);
+                    BatchStatementAppender appender =
+                                            new BatchStatementAppender(out, u);
+                    q.evaluate(appender);
+
+                    log.debug("Inserted {} RDF triples into <{}>"
+                              + " in {} seconds for query #{}",
+                              wrap(appender.getStatementCount()), namedGraph,
+                              wrap(appender.getDuration() / 1000.0), wrap(i));
                 }
                 catch (OpenRDFException e) {
                     if ((e instanceof MalformedQueryException) ||

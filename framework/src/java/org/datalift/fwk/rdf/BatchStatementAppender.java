@@ -35,46 +35,33 @@
 package org.datalift.fwk.rdf;
 
 
-import java.net.URISyntaxException;
-
-import org.openrdf.model.Literal;
-import org.openrdf.model.Resource;
 import org.openrdf.model.Statement;
 import org.openrdf.model.URI;
-import org.openrdf.model.Value;
 import org.openrdf.model.ValueFactory;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
 import org.openrdf.rio.RDFHandler;
 import org.openrdf.rio.helpers.RDFHandlerBase;
 
-import org.datalift.fwk.util.UriMapper;
-
-import static org.datalift.fwk.rdf.RdfUtils.*;
 import static org.datalift.fwk.util.Env.*;
 
 
 /**
  * An {@link RDFHandler} implementation that inserts triples into an
- * RDF store in batches of configurable size, allowing to
- * {@link UriMapper translate URIs} on the fly. It also sanitizes the
- * string literal values by
- * {@link RdfUtils#removeInvalidDataCharacter(String) removing invalid
- * characters} that may be present in N3 or Turtle RDF files.
+ * RDF store in batches of configurable size.
  *
  * @author lbihanic
  */
-public final class BatchStatementAppender extends RDFHandlerBase
+public class BatchStatementAppender extends RDFHandlerBase
 {
     //-------------------------------------------------------------------------
     // Instance members
     //-------------------------------------------------------------------------
 
-    private final RepositoryConnection cnx;
-    private final ValueFactory valueFactory;
-    private final URI targetGraph;
-    private final UriMapper mapper;
-    private final int batchSize;
+    protected final RepositoryConnection cnx;
+    protected final ValueFactory valueFactory;
+    protected final URI targetGraph;
+    protected final int batchSize;
 
     private long statementCount = -1L;
     private long startTime = -1L;
@@ -90,13 +77,10 @@ public final class BatchStatementAppender extends RDFHandlerBase
      * @param  targetGraph   the named graph to which the inserted
      *                       triples shall belong or <code>null</code>
      *                       to insert the triples in the default graph.
-     * @param  mapper        an optional URI mapper to translate URIs
-     *                       while processing triples.
      */
     public BatchStatementAppender(RepositoryConnection cnx,
-                                  URI targetGraph,
-                                  UriMapper mapper) {
-        this(cnx, targetGraph, mapper, getRdfBatchSize());
+                                  URI targetGraph) {
+        this(cnx, targetGraph, getRdfBatchSize());
     }
 
     /**
@@ -105,14 +89,11 @@ public final class BatchStatementAppender extends RDFHandlerBase
      * @param  targetGraph   the named graph to which the inserted
      *                       triples shall belong or <code>null</code>
      *                       to insert the triples in the default graph.
-     * @param  mapper        an optional URI mapper to translate URIs
-     *                       while processing triples.
      * @param  batchSize     the size of triple batches, as a number of
      *                       triples.
      */
     public BatchStatementAppender(RepositoryConnection cnx,
-                                  URI targetGraph,
-                                  UriMapper mapper, int batchSize) {
+                                  URI targetGraph, int batchSize) {
         super();
 
         if (cnx == null) {
@@ -124,7 +105,6 @@ public final class BatchStatementAppender extends RDFHandlerBase
         this.cnx = cnx;
         this.valueFactory = cnx.getValueFactory();
         this.targetGraph = targetGraph;
-        this.mapper = mapper;
         // Batches can't be too small.
         this.batchSize = (batchSize < MIN_RDF_IO_BATCH_SIZE)?
                                             MIN_RDF_IO_BATCH_SIZE: batchSize;
@@ -136,7 +116,7 @@ public final class BatchStatementAppender extends RDFHandlerBase
 
     /** {@inheritDoc} */
     @Override
-    public void startRDF() {
+    public final void startRDF() {
         this.startTime = System.currentTimeMillis();
         this.statementCount = 0L;
         try {
@@ -150,20 +130,10 @@ public final class BatchStatementAppender extends RDFHandlerBase
 
     /** {@inheritDoc} */
     @Override
-    public void handleStatement(Statement stmt) {
+    public final void handleStatement(Statement stmt) {
         try {
-            Resource s = stmt.getSubject();
-            org.openrdf.model.URI p = stmt.getPredicate();
-            Value o = checkStringLitteral(stmt.getObject());
-
-            if (mapper != null) {
-                // Map URIs.
-                s = (Resource)(this.mapValue(s));
-                p = this.mapUri(p);
-                o = this.mapValue(o);
-            }
-            this.cnx.add(s, p, o, this.targetGraph);
-
+            // Add statement.
+            this.addStatement(stmt);
             // Commit transaction according to the configured batch size.
             this.statementCount++;
             if ((this.statementCount % this.batchSize) == 0) {
@@ -177,7 +147,7 @@ public final class BatchStatementAppender extends RDFHandlerBase
 
     /** {@inheritDoc} */
     @Override
-    public void endRDF() {
+    public final void endRDF() {
         try {
             this.cnx.commit();
             this.duration = System.currentTimeMillis() - this.startTime;
@@ -195,7 +165,7 @@ public final class BatchStatementAppender extends RDFHandlerBase
      * Returns the number of RDF triples that were inserted.
      * @return the number of RDF triples that were inserted.
      */
-    public long getStatementCount() {
+    public final long getStatementCount() {
         return this.statementCount;
     }
 
@@ -204,42 +174,18 @@ public final class BatchStatementAppender extends RDFHandlerBase
      * amount of time taken by the underlying RDF parser and RDF store.
      * @return the duration of the triples processing.
      */
-    public long getDuration() {
+    public final long getDuration() {
         return this.duration;
     }
 
-    //-------------------------------------------------------------------------
-    // Specific implementation
-    //-------------------------------------------------------------------------
-
-    private Value checkStringLitteral(Value v) {
-        if (v instanceof Literal) {
-            Literal l = (Literal)v;
-            if (l.getDatatype() == null) {
-                String s = l.stringValue();
-                if (! isValidStringLiteral(s)) {
-                    v = valueFactory.createLiteral(
-                                removeInvalidDataCharacter(s), l.getLanguage());
-                }
-            }
-        }
-        return v;
-    }
-
-    private Value mapValue(Value v) {
-        return (v instanceof org.openrdf.model.URI)?
-                                    this.mapUri((org.openrdf.model.URI)v): v;
-    }
-
-    private org.openrdf.model.URI mapUri(org.openrdf.model.URI u) {
-        try {
-            return this.valueFactory.createURI(
-                        this.mapper.map(new java.net.URI(u.stringValue()))
-                                   .toString());
-        }
-        catch (URISyntaxException e) {
-            // Should never happen.
-            throw new RuntimeException(e);
-        }
+    /**
+     * Appends the specified RDF triple to the repository.
+     * @param  stmt   the RDF triple.
+     *
+     * @throws RepositoryException if any error occurred while adding
+     *         the triple through the repository connection.
+     */
+    protected void addStatement(Statement stmt) throws RepositoryException {
+        this.cnx.add(stmt, this.targetGraph);
     }
 }

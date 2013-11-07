@@ -178,7 +178,7 @@ public class XsltXmlConverter extends BaseConverterModule
             // Create XML RDF parser and content handler, to insert triples
             // in RDF store in stream mode, without intermediate file storage.
             BatchStatementAppender appender =
-                        new BatchStatementAppender(cnx, ctx, null);
+                                new BatchStatementAppender(cnx, ctx);
             RDFXMLParser rdfParser = (RDFXMLParser)
                                 (RdfUtils.newRdfParser(RdfFormat.RDF_XML));
             rdfParser.setRDFHandler(appender);
