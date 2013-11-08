@@ -2,5 +2,5 @@
 
 function indexPageController($scope){
     $scope.value1 = true;
-    $scope.value2 = 'YES';
+    $scope.value2 = 'COUCOU';
 	}

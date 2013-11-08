@@ -231,9 +231,6 @@
 			        <option>XML</option>
 			        <option>...</option>
 				</select>
-				#foreach( $s in $charsets )
-					<option value="$s">$esc.html($s)</option>
-				#end
 		  		<legend>Ajouter une nouvelle source</legend>
 		  		<input type= text id="source_name" placeholder="Nom de la source"/>
 		  		<input id="file" type="file" />
