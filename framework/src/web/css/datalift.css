@@ -63,7 +63,7 @@ body {
 
 #datalift-partenaire {
 	display:inline;
-	height:100px;
+	height:auto;
 	width:auto;
 	vertical-align:middle;
 	margin-left: 10px;

@@ -1,9 +1,8 @@
 /*
- * Copyright / Copr. 2010-2013 Atos - Public Sector France -
- * BS & Innovation for the DataLift project,
- * Contributor(s) : L. Bihanic, H. Devos, O. Ventura, M. Chetima
+ * Copyright / Copr. IGN 2013
+ * Contributor(s) : Faycal Hamdi
  *
- * Contact: dlfr-datalift@atos.net
+ * Contact: hamdi.faycal@gmail.com
  *
  * This software is governed by the CeCILL license under French law and
  * abiding by the rules of distribution of free software. You can use,
@@ -32,52 +31,39 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 
-package org.datalift.fwk.rdf;
+package fr.ign.datalift.constants;
 
+import org.openrdf.model.URI;
+import org.openrdf.model.ValueFactory;
+import org.openrdf.model.impl.ValueFactoryImpl;
 
-import org.datalift.fwk.util.StringUtils;
+public class GML {
+	
+	public static String NS = "http://purl.org/ifgi/gml/0.2#";
+	
+	public static URI ID;
 
-
-/**
- * Types of objects manipulated in RDF statements and SPARQL queries. 
- *
- * @author lbihanic
- */
-public enum ElementType
-{
-    /** RDF resource, typically the subject of a statement */
-    Resource,
-    /** RDF property */
-    Predicate,
-    /** Named graph */
-    Graph,
-    /** RDF type/class */
-    RdfType,
-    /** RDF value, typically a literal. */
-    Value;
-
-    /**
-     * Return the enumeration value corresponding to the specified
-     * string, ignoring case.
-     * @param  s   the description type, as a string.
-     *
-     * @return the description type value or <code>null</code> if
-     *         the specified string was not recognized.
-     */
-    public static ElementType fromString(String s) {
-        ElementType v = null;
-        if (StringUtils.isSet(s)) {
-            for (ElementType t : values()) {
-                if (t.name().equalsIgnoreCase(s)) {
-                    v = t;
-                    break;
-                }
-            }
-            // Support for legacy URLs for resource descriptions
-            if ((v == null) && ("Object".equalsIgnoreCase(s))) {
-                v = Resource;
-            }
-        }
-        return v;
-    }
+	public static URI ABSTRACTGEOMETRY;
+	
+	public static URI HASPROPERTY;
+	
+	public static URI HASGEOMETRY;
+	
+	public static URI FEATURECOLLECTION;
+	
+	public static URI FEATUREMEMBER;
+	
+	public static URI HASVALUE;
+	
+	static {
+		ValueFactory vf = ValueFactoryImpl.getInstance(); 
+		ABSTRACTGEOMETRY = vf.createURI(NS, "AbstractGeometry"); 
+		ID = vf.createURI(NS, "id"); 
+		HASGEOMETRY = vf.createURI(NS, "hasGeometry"); 
+		HASPROPERTY = vf.createURI(NS, "hasProperty");
+		FEATURECOLLECTION = vf.createURI(NS, "FeatureCollection");
+		FEATUREMEMBER = vf.createURI(NS, "featureMember");
+		HASVALUE = vf.createURI(NS, "hasValue");
+	}
 }
+

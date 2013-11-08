@@ -1,9 +1,8 @@
 /*
- * Copyright / Copr. 2010-2013 Atos - Public Sector France -
- * BS & Innovation for the DataLift project,
- * Contributor(s) : L. Bihanic, H. Devos, O. Ventura, M. Chetima
+ * Copyright / Copr. IGN 2013
+ * Contributor(s) : Faycal Hamdi
  *
- * Contact: dlfr-datalift@atos.net
+ * Contact: hamdi.faycal@gmail.com
  *
  * This software is governed by the CeCILL license under French law and
  * abiding by the rules of distribution of free software. You can use,
@@ -32,52 +31,23 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 
-package org.datalift.fwk.rdf;
+package fr.ign.datalift.constants;
 
+import org.openrdf.model.URI;
+import org.openrdf.model.ValueFactory;
+import org.openrdf.model.impl.ValueFactoryImpl;
 
-import org.datalift.fwk.util.StringUtils;
+public class Geometrie {
 
+	public static String NS = "http://data.ign.fr/ontology/geometrie#";
 
-/**
- * Types of objects manipulated in RDF statements and SPARQL queries. 
- *
- * @author lbihanic
- */
-public enum ElementType
-{
-    /** RDF resource, typically the subject of a statement */
-    Resource,
-    /** RDF property */
-    Predicate,
-    /** Named graph */
-    Graph,
-    /** RDF type/class */
-    RdfType,
-    /** RDF value, typically a literal. */
-    Value;
+	public static URI GEOMETRIE;
 
-    /**
-     * Return the enumeration value corresponding to the specified
-     * string, ignoring case.
-     * @param  s   the description type, as a string.
-     *
-     * @return the description type value or <code>null</code> if
-     *         the specified string was not recognized.
-     */
-    public static ElementType fromString(String s) {
-        ElementType v = null;
-        if (StringUtils.isSet(s)) {
-            for (ElementType t : values()) {
-                if (t.name().equalsIgnoreCase(s)) {
-                    v = t;
-                    break;
-                }
-            }
-            // Support for legacy URLs for resource descriptions
-            if ((v == null) && ("Object".equalsIgnoreCase(s))) {
-                v = Resource;
-            }
-        }
-        return v;
-    }
+	public static URI SYSTCOORD;
+
+	static {
+		ValueFactory vf = ValueFactoryImpl.getInstance(); 
+		GEOMETRIE = vf.createURI(NS, "Geometrie");
+		SYSTCOORD = vf.createURI(NS, "systCoord");
+	}
 }

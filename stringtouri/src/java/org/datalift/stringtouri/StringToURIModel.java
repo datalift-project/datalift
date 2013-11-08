@@ -165,7 +165,7 @@ public class StringToURIModel extends InterlinkingModel
      * @param linkingPredicate predicate of the new triples
      * @return a list where every element is a list that represents a triple, containing the interlinked triples
      */
-    public final LinkedList<LinkedList<String>> getLinkingPreview(Project prj,
+    public final LinkedList<LinkedList<String>> getInterlinkedTriples(Project prj,
     		String sourceContext, 
 			String targetContext, 
 			String sourceClass, 
@@ -181,7 +181,8 @@ public class StringToURIModel extends InterlinkingModel
     }
     
     /**
-     * Save the interlinking triple results as a new source
+     * Create a new source which will consist of the novel interlinked triples and those that belongs to the dataset to be
+     * modified
      * @param proj URL of the project
      * @param sourceContext context of our source (reference) data.
      * @param targetContext context of our target (updated) data.  
@@ -194,7 +195,7 @@ public class StringToURIModel extends InterlinkingModel
      * @param newSourceName Name of the new source
      * @param newSourceDescription description of the new source
      */
-    public final void saveResultToSource(Project proj,
+    public final void saveInterlinkedSource(Project proj,
     		String sourceContext,
     		String targetContext,
     		String sourceClass,
@@ -205,18 +206,31 @@ public class StringToURIModel extends InterlinkingModel
 			String newSourceContext,
 			String newSourceName,
 			String newSourceDescription){
-    	SesameApp app = getLinkingApp(proj,sourceContext, targetContext, sourceClass, targetClass, sourcePredicate, targetPredicate, linkingPredicate, newSourceContext);
+    	LOG.info("{} is about to interconnect the sources located at {} and {} to put the interlinking result within the context {}", this.moduleName, sourceContext, 
+    			targetContext, newSourceContext);
+    	SesameApp app = getLinkingApp(proj,sourceContext, targetContext, sourceClass, targetClass, sourcePredicate, targetPredicate, linkingPredicate, targetContext);
     	RepositoryConnection cnx = INTERNAL_REPO.newConnection();
-		// Copy all of the data to the new graph.
-		String updateQy = "COPY <" + targetContext + "> TO <" + newSourceContext + ">";
-		Update up;
+		// Query to copy the triples of the dataset to the new graph.
+		String copyDsQuery = "COPY <" + targetContext + "> TO <" + newSourceContext + ">";
+		// Query to insert the interlinked triples into the new graph
+		StringBuilder addTriplesQuery = new StringBuilder();
+		LinkedList<LinkedList<String>> interlinkedTriples = app.getOutputAsList();
+		for(LinkedList<String> triple : interlinkedTriples){
+			addTriplesQuery.append("INSERT DATA { GRAPH <"+ newSourceContext +"> { ");
+			// put every element of the triple between < >, since you will only get uris
+			for(String tripleItem: triple){
+				addTriplesQuery.append("<" + tripleItem +"> ");
+			}
+			addTriplesQuery.append("}}; ");
+		}
 		try {
-			up = cnx.prepareUpdate(QueryLanguage.SPARQL, updateQy);
-			up.execute();		
+			Update upCopy = cnx.prepareUpdate(QueryLanguage.SPARQL, copyDsQuery);
+			upCopy.execute();
+			Update upInsert = cnx.prepareUpdate(QueryLanguage.SPARQL, addTriplesQuery.toString());
+			upInsert.execute();
+			//now link the new graph to a datalift source, so it can be referenced easily
 			Source parent = proj.getSource(targetContext);
 			addResultSource(proj,parent,newSourceName, newSourceDescription, new URI(newSourceContext));
-			LOG.debug("{} - the data is going to be updated.", this.moduleName);
-			app.updateData();
 			LOG.info("{} - Interconnection OK.", this.moduleName);
 		} catch (RepositoryException e) {
 			LOG.fatal("{} - Update failed:", e, this.moduleName);

@@ -1,9 +1,8 @@
 /*
- * Copyright / Copr. 2010-2013 Atos - Public Sector France -
- * BS & Innovation for the DataLift project,
- * Contributor(s) : L. Bihanic, H. Devos, O. Ventura, M. Chetima
+ * Copyright / Copr. IGN 2013
+ * Contributor(s) : Faycal Hamdi
  *
- * Contact: dlfr-datalift@atos.net
+ * Contact: hamdi.faycal@gmail.com
  *
  * This software is governed by the CeCILL license under French law and
  * abiding by the rules of distribution of free software. You can use,
@@ -32,52 +31,64 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 
-package org.datalift.fwk.rdf;
+package fr.ign.datalift.model;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.geotools.gml3.ApplicationSchemaXSD;
 
 
-import org.datalift.fwk.util.StringUtils;
 
+public class AbstractFeature {
 
-/**
- * Types of objects manipulated in RDF statements and SPARQL queries. 
- *
- * @author lbihanic
- */
-public enum ElementType
-{
-    /** RDF resource, typically the subject of a statement */
-    Resource,
-    /** RDF property */
-    Predicate,
-    /** Named graph */
-    Graph,
-    /** RDF type/class */
-    RdfType,
-    /** RDF value, typically a literal. */
-    Value;
+	List<FeatureProperty> properties;
+	String name;
+	String label;
+	public String getLabel() {
+		return label;
+	}
 
-    /**
-     * Return the enumeration value corresponding to the specified
-     * string, ignoring case.
-     * @param  s   the description type, as a string.
-     *
-     * @return the description type value or <code>null</code> if
-     *         the specified string was not recognized.
-     */
-    public static ElementType fromString(String s) {
-        ElementType v = null;
-        if (StringUtils.isSet(s)) {
-            for (ElementType t : values()) {
-                if (t.name().equalsIgnoreCase(s)) {
-                    v = t;
-                    break;
-                }
-            }
-            // Support for legacy URLs for resource descriptions
-            if ((v == null) && ("Object".equalsIgnoreCase(s))) {
-                v = Resource;
-            }
-        }
-        return v;
-    }
+	public void setLabel(String label) {
+		this.label = label;
+	}
+
+	ApplicationSchemaXSD schema;
+
+	public AbstractFeature(ApplicationSchemaXSD schema) {
+		this.setSchema(schema);
+	}
+
+	public AbstractFeature() {
+
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public void addProperty(FeatureProperty prop) {
+		getProperties().add(prop);
+	}
+
+	public List<FeatureProperty> getProperties() {
+		if (properties == null) {
+			properties = new ArrayList<FeatureProperty>();
+		}
+		return properties;
+	}
+
+	public ApplicationSchemaXSD getSchema() {
+		return schema;
+	}
+
+	public void setSchema(ApplicationSchemaXSD arg0) {
+		this.schema = arg0;
+
+	}
+
 }

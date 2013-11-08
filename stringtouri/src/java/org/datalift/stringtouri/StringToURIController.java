@@ -190,7 +190,7 @@ public class StringToURIController extends InterlinkingController
     		@QueryParam("classTarget") String targetClass,
     		@QueryParam("predicateTarget") String targetPredicate,
     		@QueryParam("predicateLinking") String linkingPredicate) throws ObjectStreamException{
-    	LinkedList<LinkedList<String>> result = model.getLinkingPreview(this.getProject(projectId),sourceDataSet, targetDataSet, sourceClass, targetClass, 
+    	LinkedList<LinkedList<String>> result = model.getInterlinkedTriples(this.getProject(projectId),sourceDataSet, targetDataSet, sourceClass, targetClass, 
     			sourcePredicate, targetPredicate, linkingPredicate);
     	return this.getOkResponse(this.getJsonTriplesMatrix(result));
     }
@@ -279,8 +279,8 @@ public class StringToURIController extends InterlinkingController
     		@QueryParam("newSourceName") String newSourceName,
     		@QueryParam("newSourceDescription") String newSourceDescr) throws ObjectStreamException{
     	Project prj =this.getProject(projectId);
-    	model.saveResultToSource(prj, sourceDataSet, targetDataSet, sourceClass, targetClass, 
-    			sourcePredicate, targetPredicate,linkingPredicate, targetContext,newSourceName, newSourceName);
+    	model.saveInterlinkedSource(prj, sourceDataSet, targetDataSet, sourceClass, targetClass, 
+    			sourcePredicate, targetPredicate,linkingPredicate, targetContext,newSourceName, newSourceDescr);
     	
     }
     

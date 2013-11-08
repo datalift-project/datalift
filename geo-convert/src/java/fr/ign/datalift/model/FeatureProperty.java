@@ -1,9 +1,8 @@
 /*
- * Copyright / Copr. 2010-2013 Atos - Public Sector France -
- * BS & Innovation for the DataLift project,
- * Contributor(s) : L. Bihanic, H. Devos, O. Ventura, M. Chetima
+ * Copyright / Copr. IGN 2013
+ * Contributor(s) : Faycal Hamdi
  *
- * Contact: dlfr-datalift@atos.net
+ * Contact: hamdi.faycal@gmail.com
  *
  * This software is governed by the CeCILL license under French law and
  * abiding by the rules of distribution of free software. You can use,
@@ -32,52 +31,62 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 
-package org.datalift.fwk.rdf;
+package fr.ign.datalift.model;
 
+public class FeatureProperty {
 
-import org.datalift.fwk.util.StringUtils;
+	String name;
+	String stringValue;
+	String propertyType;
+	int intValue;
+	double doubleValue;
+	
+	public FeatureProperty(){
+		
+	}
 
+//	public FeatureProperty(String name) {
+//		this.setName(name);
+//	}
+	
+	public int getIntValue() {
+		return intValue;
+	}
 
-/**
- * Types of objects manipulated in RDF statements and SPARQL queries. 
- *
- * @author lbihanic
- */
-public enum ElementType
-{
-    /** RDF resource, typically the subject of a statement */
-    Resource,
-    /** RDF property */
-    Predicate,
-    /** Named graph */
-    Graph,
-    /** RDF type/class */
-    RdfType,
-    /** RDF value, typically a literal. */
-    Value;
+	public void setIntValue(int intValue) {
+		this.intValue = intValue;
+	}
 
-    /**
-     * Return the enumeration value corresponding to the specified
-     * string, ignoring case.
-     * @param  s   the description type, as a string.
-     *
-     * @return the description type value or <code>null</code> if
-     *         the specified string was not recognized.
-     */
-    public static ElementType fromString(String s) {
-        ElementType v = null;
-        if (StringUtils.isSet(s)) {
-            for (ElementType t : values()) {
-                if (t.name().equalsIgnoreCase(s)) {
-                    v = t;
-                    break;
-                }
-            }
-            // Support for legacy URLs for resource descriptions
-            if ((v == null) && ("Object".equalsIgnoreCase(s))) {
-                v = Resource;
-            }
-        }
-        return v;
-    }
+	public double getDoubleValue() {
+		return doubleValue;
+	}
+
+	public void setDoubleValue(double doubleValue) {
+		this.doubleValue = doubleValue;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public String getValue() {
+		return stringValue;
+	}
+
+	public void setValue(String value) {
+		this.stringValue = value;
+	}
+
+	public String getType() {
+		return propertyType;
+	}
+
+	public void setType(String type) {
+		this.propertyType = type;
+	}
+
 }
