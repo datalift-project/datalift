@@ -29,7 +29,6 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-
 import org.apache.commons.io.IOUtils;
 
 import org.codehaus.jackson.JsonEncoding;
@@ -42,12 +41,7 @@ import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.SparqlSource;
 import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.project.Source.SourceType;
-import org.openrdf.query.MalformedQueryException;
-import org.openrdf.query.QueryLanguage;
-import org.openrdf.query.Update;
-import org.openrdf.query.UpdateExecutionException;
-import org.openrdf.repository.RepositoryConnection;
-import org.openrdf.repository.RepositoryException;
+
 import org.semanticweb.owl.align.Alignment;
 import org.semanticweb.owl.align.AlignmentException;
 
@@ -59,8 +53,8 @@ import org.xml.sax.SAXException;
 
 
 import de.fuberlin.wiwiss.silk.Silk;
+
 import fr.inrialpes.exmo.align.impl.renderer.SILKRendererVisitor;
-//import fr.inrialpes.exmo.align.impl.renderer.CopyOfSilkRendererVisitor;
 import fr.inrialpes.exmo.align.parser.AlignmentParser;
 
 public class SilkInterlinkerModel extends Model{
@@ -83,7 +77,6 @@ public class SilkInterlinkerModel extends Model{
      * @return True if src is {@link TransformedRdfSource} or {@link SparqlSource}.
      */
     protected boolean isValidSource(Source src) {
-    	//TODO Lower it further more ?
     	return src.getType().equals(SourceType.TransformedRdfSource) 
         	|| src.getType().equals(SourceType.SparqlSource);
     }
@@ -155,19 +148,10 @@ public class SilkInterlinkerModel extends Model{
 					if(targetContext!=null){
 						Source parent = proj.getSource(targetContext);
 						addResultSource(proj, parent, newSourceName, new URI(newSourceContext));
-						
-						RepositoryConnection cnx = INTERNAL_REPO.newConnection();
-						// Copy all of the data to the new graph.
-						String updateQy = "COPY <" + targetContext + "> TO <" + newSourceContext + ">";
-						Update up = cnx.prepareUpdate(QueryLanguage.SPARQL, updateQy);
-						up.execute();
 					}
 			} 
 			catch (IOException e) { LOG.fatal("Silk Configuration file execution failed - " + e); } 
 			catch (URISyntaxException e) { LOG.fatal("Silk Configuration file execution failed - " + e); }
-			catch (UpdateExecutionException e) { LOG.fatal("Silk Configuration file execution failed - " + e); } 
-			catch (RepositoryException e) { LOG.fatal("Silk Configuration file execution failed - " + e); } 
-			catch (MalformedQueryException e) { LOG.fatal("Silk Configuration file execution failed - " + e); }
 	    	
 			Silk.executeFile(config, linkID, threads, reload);
     	}else {

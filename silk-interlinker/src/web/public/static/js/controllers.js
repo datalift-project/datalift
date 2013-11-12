@@ -57,16 +57,6 @@ angular.module("SilkInterlinkerApp.controllers",[])
 				return $scope.newSourceForm.$valid;
 			}
 				
-			this.existsSourceReq = function(){
-				return	$.ajax({
-					url: $scope.moduleUrl + "/exists", 
-					data:  
-						{name: $scope.newSource.name,
-						uri: $scope.newSource.uri,
-						project: $scope.projectUri},
-					type:"GET"
-				});
-			}
 		}
 	
 
