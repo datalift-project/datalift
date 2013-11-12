@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" xmlns="http://www.w3.org/1999/xhtml" ng-app>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
 <head>
 #load("project/resources")
 #load_core_resources
@@ -7,7 +7,7 @@
 #css_links
 #header_links
 </head>
-<body>
+<body ng-app="project">
 #h_tetiere
 <!-- <div style="position:absolute;top:15px;right:15px;">
 	<a href="${baseUri}/sparql" id="goto_sparql" class="button">#i18n("sparql.endpoint.link")</a>
@@ -17,7 +17,7 @@
 	
 	<!-- <p>Owner = $current.owner</p>  -->
 	<!-- ---------------- EDIT PROJECT -------------------- -->
-<div class="container-fluid" id="projectSpaceContainer">
+<div class="container-fluid" id="projectSpaceContainer" ng-controller="projectController">
 	<div class="span12 row-fluid">
 		<h3 class="text-center">$current.title</h3>
 		<div class="row-fluid" style="margin-top: 20px;">
@@ -83,8 +83,8 @@
 								#foreach ($curSource in $current.getSources())
 									<li class="divider-group-list">
 										<a href="${curSource.uri}">$curSource.title</a>
-										<a href="#deleteSource" role"button" class="pull-right" data-toggle="modal" style="display: inline-block">
-											<img src="${baseUri}/images/icon-delete.png">
+										<a href="#deleteSource" role="button" class="pull-right" data-toggle="modal" style="display: inline-block">
+											<img src="${baseUri}/images/icon-delete.png" ng-click="deleteSource('$current.uri', '${curSource.uri}', '${baseUri}')">
 										</a>
 									</li>
 								#end
@@ -104,53 +104,17 @@
 				  		<div class="tab-pane active" id="sources">
 					  		<div class="span11 row" style="margin:0 auto; float:none;">
 								<div class="list-group" id="ontologies-list" style="max-height: 100px:">
-								<ul class="nav  nav-stacked">
-									<li class="divider-group-list">	
-										vcard
-										<a href="#deleteOntologie" role"button" class="pull-right" data-toggle="modal" style="display: inline-block">
-											<img src="${baseUri}/images/icon-delete.png">
-										</a>
-										<a href="#modifyOntologie" role"button" class="pull-right" data-toggle="modal" style="display: inline-block; margin-right: 20px;">
-											<img src="${baseUri}/images/icon-edit.png">
-										</a>
-									</li>
+								#foreach ($curOnto in $current.getOntologies())
 									<li class="divider-group-list">
-											Ontologie 3
-										<a href="#deleteOntologie" role"button" class="pull-right" data-toggle="modal" style="display: inline-block">
+										<a href="${curOnto.title}">$curOnto.title</a>	
+										<a href="#deleteOnto" role="button" class="pull-right" data-toggle="modal" style="display: inline-block" ng-click="deleteOntology('$current.uri', '$curOnto.title')">
 											<img src="${baseUri}/images/icon-delete.png">
 										</a>
 										<a href="#modifyOntologie" role"button" class="pull-right" data-toggle="modal" style="display: inline-block; margin-right: 20px;">
 											<img src="${baseUri}/images/icon-edit.png">
 										</a>
 									</li>
-									<li class="divider-group-list">
-											Ontologie 4
-										<a href="#deleteOntologie" role"button" class="pull-right" data-toggle="modal" style="display: inline-block">
-											<img src="${baseUri}/images/icon-delete.png">
-										</a>
-										<a href="#modifyOntologie" role"button" class="pull-right" data-toggle="modal" style="display: inline-block; margin-right: 20px;">
-											<img src="${baseUri}/images/icon-edit.png">
-										</a>
-									</li>
-									<li class="divider-group-list">
-											Ontologie 5
-										<a href="#deleteOntologie" role"button" class="pull-right" data-toggle="modal" style="display: inline-block">
-											<img src="${baseUri}/images/icon-delete.png">
-										</a>
-										<a href="#modifyOntologie" role"button" class="pull-right" data-toggle="modal" style="display: inline-block; margin-right: 20px;">
-											<img src="${baseUri}/images/icon-edit.png">
-										</a>
-									</li>
-									<li class="divider-group-list">
-											Ontologie 6
-										<a href="#deleteOntologie" role"button" class="pull-right" data-toggle="modal" style="display: inline-block">
-											<img src="${baseUri}/images/icon-delete.png">
-										</a>
-										<a href="#modifyOntologie" role"button" class="pull-right" data-toggle="modal" style="display: inline-block; margin-right: 20px;">
-											<img src="${baseUri}/images/icon-edit.png">
-										</a>
-									</li>
-								</ul>
+								#end
 								</div>
 							</div>
 				  		</div>
@@ -174,7 +138,7 @@
 	<!-- DIV POPUP REMOVE PROJECT -->
 	
 	<form method="post" action="${current.uri}?_method=DELETE" class="form_formated" name="delete_project">
-		<input type=""  id="delete" value="#i18n("delete")"/>
+		<input type="hidden"  id="delete" value="#i18n("delete")"/>
 	</form>
 	
 	<div class="modal hide pagination-centered fade" id="deleteProject">
@@ -229,7 +193,7 @@
 			        <option>CSV</option>
 			        <option>RDF</option>
 			        <option>XML</option>
-			        <option>...</option>
+			        <option>SHP</option>
 				</select>
 		  		<legend>Ajouter une nouvelle source</legend>
 		  		<input type= text id="source_name" placeholder="Nom de la source"/>
@@ -252,6 +216,7 @@
 				    	form.append('file_name', source_name);
 			    		console.log(form);
 				    	xhr.send(form);
+				    	window.location.reload();
 				    	}
 			    	else
 			    		alert('Verifiez que tout les champs sont bien rempli');
@@ -272,17 +237,19 @@
 	  	</div>
 	  	<div class="modal-body">
 	    	<p>Ajouter une nouvelle ontologie</p>
+	    	<input type="text" id="ontology-title" name="title" placeholder="Nom de l'ontologie" autofocus>
+	    	<input type="text" id="ontology-cource-url" name="source-url" placeholder="Url de l'ontologie">
 	  	</div>
 	  	<div class="modal-footer">
 		    <a href="#" class="btn" data-dismiss="modal">Annuler</a>
-		    <a href="./sourceSpace.php?sourcename=My_sources.csv&projectname=<?php echo $_GET["projectid"]."#actions";?>" class="btn btn-primary">Créer</a>
+		    <button class="btn btn-primary" ng-click="uploadOntology('$current.uri')">Créer</button>
 	  	</div>
 	</div>
 	<!-- FIN DIV POPUP AJOUTER UNE NOUVELLE ONTOLOGIE -->
-	<!-- DIV POPUP SUPPRIMER UNE SOURCE -->
+	<!-- DIV POPUP SUPPRIMER UNE SOURCE 
 	<div class="modal hide pagination-centered fade large" id="deleteSource">
-	  	<div class="modal-header"> <a class="close" data-dismiss="modal">×</a>
 	    	<h3>Supprimer</h3>
+	  	<div class="modal-header"> <a class="close" data-dismiss="modal">×</a>
 	  	</div>
 	  	<div class="modal-body">
 	    	<p>Etes-vous sûr de vouloir supprimer la source ?</p>
@@ -292,7 +259,7 @@
 		    <a href="#" data-dismiss="modal" class="btn btn-primary btn-custom-red">Supprimer</a>
 	  	</div>
 	</div>
-	<!-- FIN DIV POPUP AJOUTER UNE NOUVELLE SOURCE -->
+	 FIN DIV POPUP AJOUTER UNE NOUVELLE SOURCE -->
 	<!-- DIV POPUP SUPPRIMER UNE ONTOLOGIE -->
 	<div class="modal hide pagination-centered fade large" id="deleteOntologie">
 	  	<div class="modal-header"> <a class="close" data-dismiss="modal">×</a>
@@ -319,7 +286,7 @@
 		</div>
 	</div>
 	<div class="span9 row-fluid" style="margin:0 auto; float:none;">
-	<!-- TEST ANGULAR --> 
+	<!-- TEST ANGULAR 
 	<form name="myForm" ng-controller="indexPageController">
 		Value1: <input type="checkbox" ng-model="value1"> <br/>
 		Value2: <input type="checkbox" ng-model="value2"
@@ -328,7 +295,7 @@
 		<tt>value2 = {{value2}}</tt><br/>
 	</form>
 		
-	<!--  FIN TEST ANGULAR-->
+	  FIN TEST ANGULAR-->
 		<!-- DIV BAR DE FILTRES --> 
 		<div class="span12 row-fluid" style="margin:0 auto; float:none;">
 			<form class="navbar-search form-inline pagination-centered">
@@ -400,7 +367,7 @@
 				  	<div class="control-group">
 				    	<label class="control-label" for="title" ">#i18n("project.name"):</label>
 					    <div class="controls">
-					      <input type="text" id="title" name="title" value="$!esc.html($it.title_m)" placeholder="Nom du projet" autofocus="true">
+					      <input type="text" id="title" name="title" value="$!esc.html($it.title_m)" placeholder="Nom du projet" autofocus="autofocus">
 					    </div>
 				  	</div>
 				  	<div class="control-group">

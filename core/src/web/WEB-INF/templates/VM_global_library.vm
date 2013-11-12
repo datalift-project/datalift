@@ -83,7 +83,6 @@
     <script src="${baseUri}/bootstrap/js/bootstrap.min.js"></script>    
     <script src="${baseUri}/bootstrap/js/easing.js"></script> 
     <script src="${baseUri}/bootstrap/js/datalift.js"></script>
-    <script src="${baseUri}/js/controllers.js"></script>
     <script src="${baseUri}/js/angular.min.js"></script>
     <script src="${baseUri}/js/angular-bootstrap-prettify.min.js"></script>
     <script src="${baseUri}/js/angular-bootstrap.min.js"></script>
@@ -93,6 +92,7 @@
     <script src="${baseUri}/js/angular-resource.min.js"></script>
     <script src="${baseUri}/js/angular-sanitize.min.js"></script>
     <script src="${baseUri}/js/angular-scenario.js"></script>
+    <script src="${baseUri}/js/controllers.js"></script>
 #end
 
 #macro( css_links )
