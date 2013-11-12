@@ -200,6 +200,36 @@ public abstract class BaseConverterModule
         return projectPage;
     }
 
+    /** {@inheritDoc} */
+    @Override
+    public UriDesc canHandle(Source s) {
+        UriDesc projectPage = null;
+        try {
+            if (this.inputSources.contains(s.getType())) {
+                try {
+                    String label = PreferredLocales.get()
+                                .getBundle(GUI_RESOURCES_BUNDLE, this)
+                                .getString(this.getName() + ".module.label");
+
+                    projectPage = new UriDesc(
+                                    this.getName() + "?project=" + s.getProject().getUri(),
+                                    this.accessMethod, label);
+                    if (this.position > 0) {
+                        projectPage.setPosition(this.position);
+                    }
+                }
+                catch (Exception e) {
+                    throw new TechnicalException(e);
+                }
+            }
+        }
+        catch (Exception e) {
+            log.fatal("Failed to check status of project {}: {}", e,
+            		s.getProject().getUri(), e.getMessage());
+        }
+        return projectPage;
+    }
+
     //-------------------------------------------------------------------------
     // Object contract support
     //-------------------------------------------------------------------------
@@ -223,7 +253,7 @@ public abstract class BaseConverterModule
      * @return <code>true</code> if this converter supports the source;
      *         <code>false</code> otherwise.
      */
-    public boolean canHandle(Source s) {
+    private boolean worksWith(Source s) {
         if (s == null) {
             throw new IllegalArgumentException("s");
         }
@@ -261,7 +291,7 @@ public abstract class BaseConverterModule
         }
         Source src = null;
         for (Source s : p.getSources()) {
-            if (this.canHandle(s)) {
+            if (this.worksWith(s)) {
                 src = s;
                 if (! findLast) break;
                 // Else: continue to get last source of type in project...
