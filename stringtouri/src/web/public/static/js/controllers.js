@@ -30,9 +30,6 @@ angular.module("predicateChooserApp.controllers",[])
 			];
         var linkingDataSource = new PreviewDataSource(previewDataColumns);	
 
-        Array.prototype.clone = function(){
-        	return this.slice(0);
-        }
 
 		$scope.$on("ChooserUpdate",function(obj,updatedChooserValues){
 			var selectedSource = $scope.choosers.source.value;
@@ -111,11 +108,9 @@ angular.module("predicateChooserApp.controllers",[])
 	       	} 
 		}
 
-		$scope.initProjectsLists = function(){
+		$scope.initProjectLists = function(){
 			$http.get($scope.moduleUrl + "/projects").success(function(data){
-				$scope.projectTargetList = data;
-				$scope.target = { project: getCurrentProject($scope.projectTargetList)};
-				$scope.projectSourceList =  data.clone();
+				$scope.projectSourceList =  data;
 				$scope.projectSourceList.push({title: "External", uri:EXTERNAL_PROJECT_IDENTIFIER});
 				$scope.source = { project: getCurrentProject($scope.projectSourceList)};
 			});
@@ -139,6 +134,8 @@ angular.module("predicateChooserApp.controllers",[])
 	       			var previewUrl = $scope.moduleUrl + "/preview"; 
 	       			var linkingParams = getLinkingParams();
 	       			linkingParams.max = MAX_PREVIEW_ROWS_TO_DISPLAY;
+	       			console.log(previewUrl);
+	       			console.log(linkingParams);
 	       			$http({
 	    				url: previewUrl, 
 	    				method: "GET",
@@ -156,17 +153,17 @@ angular.module("predicateChooserApp.controllers",[])
             
             	case 2:
 					$scope.canMoveForward = $scope.newSourceForm.$valid ;
-					$scope.sourceName = $scope.choosers.source.value.title + "-s2u";
-					$scope.targetURLNew = $scope.choosers.source.value.dataset + "-s2u";
+					$scope.newSource = {name: $scope.choosers.source.value.title + "-s2u",
+						uri: $scope.choosers.source.value.dataset + "-s2u"}
 				break;
 
 				case 3:
 					var saveUrl = $scope.moduleUrl + "/save"; 
 					var saveParams = getLinkingParams();
 					//add the other parameters for saving
-					saveParams.newSourceContext = $scope.targetURLNew;
-					saveParams.newSourceName = $scope.sourceName;
-					saveParams.newSourceDescription=$scope.sourceDescription;
+					saveParams.newSourceContext = $scope.newSource.uri;
+					saveParams.newSourceName = $scope.newSource.name;
+					saveParams.newSourceDescription=$scope.newSource.description;
 					saveParams.copyTargetTriples = $scope.keepTargetTriples;
 					$http({
 		    			url: saveUrl, 
@@ -182,5 +179,44 @@ angular.module("predicateChooserApp.controllers",[])
             
        	};
 
-      
+       	$scope.$watch("newSource.name", function(newVal){
+			$scope.canMoveForward = $scope.isDatasourceNameAvailable() && $scope.newSourceForm.$valid;
+		});
+
+		$scope.$watch("newSource.uri", function(newVal){
+			$scope.canMoveForward = $scope.isDatasourceUriAvailable() && $scope.newSourceForm.$valid;
+		});
+
+       	$scope.initSourceList = function(){
+       		$http.get($scope.moduleUrl + "/sources?project="+$scope.projectUri).success(function(data){
+            	$scope.sourceList = data;
+            });
+       	}
+
+
+       	$scope.isDatasourceNameAvailable = function(){
+       		if($scope.sourceList && $scope.newSource){
+	       		for(var i=0;i< $scope.sourceList.length;i++){
+					if($scope.sourceList[i].title==$scope.newSource.name){
+						return false;
+					}
+				}
+				return true;
+			}else{
+				return true;
+			}
+       	}
+		
+		$scope.isDatasourceUriAvailable = function(){
+			if($scope.sourceList && $scope.newSource){
+				for(var i=0;i< $scope.sourceList.length;i++){
+					if($scope.sourceList[i].url==$scope.newSource.uri){
+						return false;
+					}
+				}
+				return true;
+			}else{
+				return true;
+			}
+		}
     })

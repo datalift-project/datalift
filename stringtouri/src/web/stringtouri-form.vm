@@ -109,7 +109,7 @@
 								<legend >#i18n('reference.label')</legend>
 
 								<H4 for="SourceProjectSelect">#i18n('dataset.project.label')</H4>
-								<select ng-init = "initProjectsLists()" ng-options="project.title for project in projectSourceList"
+								<select ng-init = "initProjectLists()" ng-options="project.title for project in projectSourceList"
 								class="input-xxlarge" ng-model="source.project" name ="SourceProjectSelect"></select>
 
 								<predicate-chooser module="${moduleUri}"
@@ -141,12 +141,9 @@
 						<div class="span6">
 							<fieldset>
 							<legend >#i18n('modified.label')</legend>
-							<H4 for="targetProjectSelect">#i18n('dataset.project.label')</H4>
-							<select ng-options="project.title for project in projectTargetList"
-								class="input-xxlarge" ng-model="target.project" name ="targetProjectSelect"></select>
 
 							<predicate-chooser module="${moduleUri}"
-							                   project="{{target.project.uri}}"
+							                   project="$it.uri"
 							                   class="input-xxlarge"
 							                   dataset-label="#i18n('dataset.label')"
 							                   class-label="#i18n('class.label')"
@@ -210,23 +207,33 @@
 
 				<div class="step-pane" id="save" >
 					
-					<form name="newSourceForm" class="form-horizontal">
+					<form name="newSourceForm" class="form-horizontal" ng-init="initSourceList()">
 						<div class="control-group">
 							<label class="control-label" for="sourceName">#i18n('new-source.name.label')</label>
 							<div class="controls">
-								<input type="text" id="sourceName" class="span4" required ng-model="sourceName">
+								<input type="text" id="sourceName" class="span4" required ng-model="newSource.name">
 							</div>
 						</div>
+
+						<div class="alert alert-error" ng-hide="isDatasourceNameAvailable()">
+							#i18n("new-source.source-name-taken.message")
+						</div>
+
 						<div class="control-group">
 							<label class="control-label" for="targetURLNew">#i18n("new-source.target-uri.label")</label>
 							<div class="controls">
-								<input type="url" id="targetURLNew" class="span4" required ng-model="targetURLNew">
+								<input type="url" id="targetURLNew" class="span4" required ng-model="newSource.uri">
 							</div>
 						</div>
+
+						<div class="alert alert-error" ng-hide="isDatasourceUriAvailable()">
+							#i18n("new-source.source-uri-taken.message")
+						</div>
+
 						<div class="control-group">
 							<label class="control-label" for="sourceDescription">#i18n("new-source.description.label")</label>
 							<div class="controls">
-								<textarea rows="3" ng-model="sourceDescription" placeholder="#i18n('new-source.description.placeholder')" class="span4" id="sourceDescription"></textarea>
+								<textarea rows="3" ng-model="sourceDescription" placeholder="#i18n('new-source.description.placeholder')" class="span4" id="newSource.description"></textarea>
 							</div>
 						</div>
 						<input type="checkbox" ng-model="keepTargetTriples" /> #i18n("new-source.keep-values.label")
