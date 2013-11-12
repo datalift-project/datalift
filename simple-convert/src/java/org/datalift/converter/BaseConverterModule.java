@@ -253,7 +253,7 @@ public abstract class BaseConverterModule
      * @return <code>true</code> if this converter supports the source;
      *         <code>false</code> otherwise.
      */
-    private boolean worksWith(Source s) {
+    private boolean accept(Source s) {
         if (s == null) {
             throw new IllegalArgumentException("s");
         }
@@ -291,7 +291,7 @@ public abstract class BaseConverterModule
         }
         Source src = null;
         for (Source s : p.getSources()) {
-            if (this.worksWith(s)) {
+            if (this.accept(s)) {
                 src = s;
                 if (! findLast) break;
                 // Else: continue to get last source of type in project...

@@ -1,10 +1,8 @@
 package org.datalift.converter.dbdirectmapper;
 
 import java.io.ObjectStreamException;
-
 import java.net.URI;
 import java.net.URISyntaxException;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,6 +26,7 @@ import org.datalift.fwk.project.ProjectManager;
 import org.datalift.fwk.project.ProjectModule;
 import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.SqlDatabaseSource;
+import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.view.TemplateModel;
 import org.datalift.fwk.view.ViewFactory;
 
@@ -142,7 +141,7 @@ public abstract class ModuleController extends BaseModule implements ProjectModu
      * @return <code>true</code> if this converter supports the source;
      *         <code>false</code> otherwise.
      */
-    public abstract boolean canHandle(Source s);
+    public abstract boolean accept(Source s);
     
     //-------------------------------------------------------------------------
     // Web Service
@@ -236,7 +235,7 @@ public abstract class ModuleController extends BaseModule implements ProjectModu
 			List<Source> projectSources = new ArrayList<Source>(p.getSources());
 			for(Source source : projectSources){
 				//if there is at least one source handlable by the module add the button
-				if(canHandle(source)){
+				if(accept(source)){
 					modulePage = new UriDesc(this.getName() + "?project=" + p.getUri(), accessMethod 
 							,this.label);
 					if(this.position > 0){
@@ -251,6 +250,24 @@ public abstract class ModuleController extends BaseModule implements ProjectModu
 		return modulePage;
 	}
     
+	@Override
+	public UriDesc canHandle(Source s) {
+		UriDesc modulePage = null;
+		try {
+			if(s.getType() == SourceType.SqlDatabaseSource){
+				modulePage = new UriDesc(this.getName() + "?project=" + s.getProject().getUri(), accessMethod 
+						,this.label);
+				if(this.position > 0){
+					modulePage.setPosition(this.position);
+				}
+				return modulePage;
+			}
+		} catch (URISyntaxException e) {
+			throw new TechnicalException("Wrong.uri.syntax", e);
+		}
+		return modulePage;
+	}
+	
     //-------------------------------------------------------------------------
     // Module contract support
     //-------------------------------------------------------------------------
