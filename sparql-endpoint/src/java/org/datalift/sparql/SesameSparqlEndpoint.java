@@ -489,7 +489,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
             this.handleError(query, e);
         }
         finally {
-            try { cnx.close(); } catch (Exception e) { /* Ignore... */ }
+            Repository.closeQuietly(cnx);
         }
         return result;
     }
@@ -525,7 +525,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
         }
         catch (OpenRDFException e) {
             // Close repository connection.
-            try { cnx.close(); } catch (Exception e2) { /* Ignore... */ }
+            Repository.closeQuietly(cnx);
             // Build plain text error response.
             this.handleError(query, e);
         }
@@ -563,7 +563,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
         }
         catch (OpenRDFException e) {
             // Close repository connection.
-            try { cnx.close(); } catch (Exception e2) { /* Ignore... */ }
+            Repository.closeQuietly(cnx);
             // Build plain text error response.
             this.handleError(query, e);
         }
@@ -865,7 +865,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                 handleError(query, e);
             }
             finally {
-                try { cnx.close(); } catch (Exception e) { /* Ignore... */ }
+                Repository.closeQuietly(cnx);
             }
         }
 
@@ -967,7 +967,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                 handleError(query, e);
             }
             finally {
-                try { cnx.close(); } catch (Exception e) { /* Ignore... */ }
+                Repository.closeQuietly(cnx);
             }
         }
 
@@ -1128,9 +1128,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                 try {
                     this.result.close();
                 } catch (Exception e) { /* Ignore... */ }
-                try {
-                    this.cnx.close();
-                } catch (Exception e) { /* Ignore... */ }
+                Repository.closeQuietly(this.cnx);
                 this.cnx = null;
 
                 // Check outcome.

@@ -475,7 +475,7 @@ public class CsvDirectMapper extends BaseConverterModule
             // Commit pending data (including graph removal in case of error).
             try { cnx.commit(); } catch (Exception e) { /* Ignore... */ }
             // Close repository connection.
-            try { cnx.close();  } catch (Exception e) { /* Ignore... */ }
+            Repository.closeQuietly(cnx);
         }
         return mappingCtx.getErrors();
     }

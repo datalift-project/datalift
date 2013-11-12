@@ -275,9 +275,7 @@ public class AdhocSchemaExporter extends BaseModule
                sendError(INTERNAL_SERVER_ERROR, e.getMessage());
             }
             finally {
-                if (cnx != null) {
-                    try { cnx.close(); } catch (Exception e) { /* Ignore... */ }
-                }
+                Repository.closeQuietly(cnx);
             }
         }
 

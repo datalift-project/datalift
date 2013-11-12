@@ -233,7 +233,22 @@
     </subant>
   </target>
 
-  <target name="prepare-dist" depends="compile,build-core,build-modules">
+  <target name="production-deployment" unless="${datalift.test.mode}">
+    <!-- Production mode: cache static resources for a week -->
+    <property name="http.cache.duration"     value="604800"/> <!-- 1 week -->
+    <property name="velocity.cache.duration" value="0"/> <!-- Infinite -->
+   </target>
+  <target name="development-deployment" if="${datalift.test.mode}">
+    <!-- Development mode: disable client-side caching -->
+    <property name="http.cache.duration"     value="0"/>  <!-- No cache -->
+    <property name="velocity.cache.duration" value="-1"/> <!-- No cache -->
+   </target>
+  <target name="deployment-mode"
+          depends="production-deployment,development-deployment">
+  </target>
+
+  <target name="prepare-dist"
+          depends="compile,build-core,build-modules,deployment-mode">
     <mkdir dir="${dist.home}"/>
     <mkdir dir="${gen.dist.dir}"/>
     <!-- Creates directory for potential native libraries. -->
@@ -255,7 +270,15 @@
     <!-- Force file copy to force JAR update: updated files must be newer
          than the ones they replace in JAR file. -->
     <copy todir="${tmp.build.dir}">
-      <fileset dir="${webapp.conf}"/>
+      <fileset dir="${webapp.conf}" excludes="WEB-INF/web.xml"/>
+    </copy>
+    <copy todir="${tmp.build.dir}" encoding="UTF-8">
+      <fileset dir="${webapp.conf}" includes="WEB-INF/web.xml"/>
+      <filterset>
+        <filter token="http.cache.duration" value="${http.cache.duration}"/>
+        <filter token="velocity.cache.duration"
+                value="${velocity.cache.duration}"/>
+      </filterset>
     </copy>
     <jar jarfile="${gen.dist.dir}/webapps/${datalift.war.name}" update="true">
       <fileset dir="${tmp.build.dir}"/>

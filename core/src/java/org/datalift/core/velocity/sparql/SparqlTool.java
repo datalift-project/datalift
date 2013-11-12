@@ -59,6 +59,7 @@ import org.openrdf.query.GraphQuery;
 import org.openrdf.query.GraphQueryResult;
 import org.openrdf.query.Query;
 import org.openrdf.query.QueryEvaluationException;
+import org.openrdf.query.QueryResult;
 import org.openrdf.query.TupleQuery;
 import org.openrdf.query.TupleQueryResult;
 import org.openrdf.query.impl.DatasetImpl;
@@ -257,7 +258,7 @@ public final class SparqlTool
             throw new QueryException(query, e);
         }
         finally {
-            close(cnx);
+            Repository.closeQuietly(cnx);
         }
     }
 
@@ -328,7 +329,7 @@ public final class SparqlTool
         }
         catch (Exception e) {
             log.error("Error executing SPARQL query \"{}\"", e, query);
-            close(cnx);
+            Repository.closeQuietly(cnx);
             throw new QueryException(query, e);
         }
         // Do not close connection until results have been read:
@@ -402,7 +403,7 @@ public final class SparqlTool
         }
         catch (Exception e) {
             log.error("Error executing SPARQL query \"{}\"", e, query);
-            close(cnx);
+            Repository.closeQuietly(cnx);
             throw new QueryException(query, e);
         }
         // Do not close connection until results have been read:
@@ -483,7 +484,7 @@ public final class SparqlTool
             throw new QueryException(query, e);
         }
         finally {
-            close(cnx);
+            Repository.closeQuietly(cnx);
         }
     }
 
@@ -600,14 +601,15 @@ public final class SparqlTool
     }
 
     /**
-     * Closes the specified repository connection, in a fail-safe way.
-     * @param  cnx   the connection to close.
+     * Closes the specified query result iterator, in a fail-safe way.
+     * @param  r   the query result to close.
      */
-    private static void close(RepositoryConnection cnx) {
-        if (cnx != null) {
-            try { cnx.close(); } catch (Exception e) { /* Ignore... */ }
+    private static <T> void closeQuietly(QueryResult<T> r) {
+        if (r != null) {
+            try { r.close(); } catch (Exception e) { /* Ignore... */ }
         }
     }
+
 
     /**
      * An iterator on the results of a SELECT SPARQL query.
@@ -663,8 +665,8 @@ public final class SparqlTool
         /** {@inheritDoc} */
         @Override
         protected void finalize() {
-            try { this.result.close(); } catch (Exception e) { /* Ignore... */ }
-            close(this.cnx);
+            closeQuietly(this.result);
+            Repository.closeQuietly(this.cnx);
         }
     }
 
@@ -726,8 +728,8 @@ public final class SparqlTool
         /** {@inheritDoc} */
         @Override
         protected void finalize() {
-            try { this.result.close(); } catch (Exception e) { /* Ignore... */ }
-            close(this.cnx);
+            closeQuietly(this.result);
+            Repository.closeQuietly(this.cnx);
         }
     }
 
@@ -784,7 +786,7 @@ public final class SparqlTool
                 }
             }
             finally {
-                try { result.close(); } catch (Exception e) { /* Ignore... */ }
+                closeQuietly(result);
             }
         }
 

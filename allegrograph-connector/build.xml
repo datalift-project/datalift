@@ -193,8 +193,12 @@
 
   <target name="clean" depends="init"
           description="Deletes build and dist directories">
-    <delete dir="${build.home}"/>
-    <delete dir="${dist.home}"/>
+    <delete includeEmptyDirs="true" quiet="true">
+      <fileset dir="${build.home}" followsymlinks="false"/>
+    </delete>
+    <delete includeEmptyDirs="true" quiet="true">
+      <fileset dir="${dist.home}" followsymlinks="false"/>
+    </delete>
   </target>
 
 
