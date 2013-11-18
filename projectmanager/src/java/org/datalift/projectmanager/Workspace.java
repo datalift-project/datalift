@@ -2041,10 +2041,68 @@ public class Workspace extends BaseModule
                                                    uriInfo, request, acceptHdr);
     }
 
+    
     //-------------------------------------------------------------------------
     // Specific implementation
     //-------------------------------------------------------------------------
-
+    
+    
+	@GET
+    @Path("{id}/applicable")
+    public Response getApplicableModules(@PathParam("id") String projectId,
+    								  @QueryParam("source") String sourceId,
+    								  @Context UriInfo uriInfo)
+    {
+    	// Populate view with project list.
+        Collection<Project> projects = this.projectManager.listProjects();
+    	TemplateModel view = this.newView("sourceActions.vm", projects);
+    	Collection<UriDesc> modules = new TreeSet<UriDesc>(
+                new Comparator<UriDesc>() {
+                    @Override
+                    public int compare(UriDesc u1, UriDesc u2) {
+                        int v = u1.getPosition() - u2.getPosition();
+                        return (v != 0)? v: u1.getLabel().compareToIgnoreCase(u2.getLabel());
+                    }
+                });
+        Project p = this.loadProject(uriInfo, projectId);
+        Source s = p.getSource(p.getUri() + "/source/" + sourceId);
+        if (s == null) {
+            // Not found.
+            this.sendError(NOT_ACCEPTABLE, null);
+        }
+    	for (ProjectModule m : Configuration.getDefault().getBeans(ProjectModule.class))
+    	{
+    		try 
+    		{
+    			log.info("module:" + m.getClass());
+    			UriDesc modulePage = m.canHandle(s);
+    			if (modulePage != null)
+    			{
+    				log.info("++++++++++++module Page : ++++++++++++" + modulePage.toString());
+    				modules.add(modulePage);
+    			}
+    		}
+    		catch (Exception e)
+    		{
+    			 TechnicalException error = new TechnicalException(
+                 "module.internal.error", e,
+                 m.getName(), e.getMessage());
+    			 log.error(error.getMessage(), e);
+    			 // Ignore module error...
+    		}
+    		
+    	}
+    	view.put("canHandle", modules);
+    	ResponseBuilder response = Response.ok(view).type(TEXT_HTML_UTF8);
+    	 // Force page revalidation.
+        CacheControl cc = new CacheControl();
+        cc.setPrivate(true);
+        cc.setMustRevalidate(true);
+        response.cacheControl(cc);
+        
+    	return response.build();
+    }
+    
     private ResponseBuilder displayIndexPage(ResponseBuilder response,
                                              Project p) {
     	// Populate view with project list.

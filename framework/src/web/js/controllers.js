@@ -20,15 +20,17 @@ app.controller('projectController', function ($scope, $http){
 		window.location = projectId + "/source/delete?uri=" + sourceUri;
 	}
 	
+	$scope.applicableModules = function(projectId)
+	{
+		window.location = projectId + "/applicable?source=tutu";
+	}
+	
 	$scope.uploadOntology = function(projectId) 
 	{
 		var target = projectId + "/ontologyupload";
 		var title = ($('#ontology-title').val());
 		var source_url = ($('#ontology-cource-url').val());
 		
-		alert(target);
-		alert(title);
-		alert(source_url);
 		$.post(target, {"title": title, "source_url": source_url})
 		.done(function(data, status, xhr) {
 			window.location = xhr.getRespondHeader('Location');

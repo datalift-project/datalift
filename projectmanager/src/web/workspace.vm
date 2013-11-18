@@ -64,7 +64,6 @@
 						<p style="display:inline-block;">$!date.format("medium", $current.creationDate)</p><br/>
 						<p style="display:inline-block;">#i18n("project.modification_s")</p>
 						<p style="display:inline-block;">$!date.format("medium", $current.modificationDate)</p><br/>
-							
 						<div class="span12 actionBtn" id="description-btn">
 							<a class="btn" id="popoverRemove" class="action btn" data-content="Supprimez le projet sélectionné" 
 								rel="popover" data-placement="top" data-trigger="hover"href="#modifyProject" data-toggle="modal">Modifier
@@ -81,8 +80,11 @@
 				  		<div class="span11 row" style="margin:0 auto; float:none;">
 							<div class="list-group" id="source-list" style="max-height: 100px:">
 								#foreach ($curSource in $current.getSources())
+									DESCRIPTION -> $curSource.description
+									URI -> $curSource.uri
+									INFO -> $curSource
 									<li class="divider-group-list">
-										<a href="${curSource.uri}">$curSource.title</a>
+										<a href="#" ng-click="applicableModules('$current.uri')">$curSource.title</a>
 										<a href="#deleteSource" role="button" class="pull-right" data-toggle="modal" style="display: inline-block">
 											<img src="${baseUri}/images/icon-delete.png" ng-click="deleteSource('$current.uri', '${curSource.uri}', '${baseUri}')">
 										</a>
