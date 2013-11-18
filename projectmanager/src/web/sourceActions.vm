@@ -1,0 +1,15 @@
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+#load("project/resources")
+#load_core_resources
+	<title>#i18n("workspace.title") - DataLift</title>
+#css_links
+#header_links
+</head>
+<body ng-app="project">
+#h_tetiere
+
+
+#h_footer
+</body>
+</html>
