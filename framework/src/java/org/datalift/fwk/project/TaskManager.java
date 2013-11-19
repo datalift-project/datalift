@@ -1,6 +1,7 @@
 package org.datalift.fwk.project;
 
 public interface TaskManager {
+	
 	public void addTask(ProcessingTask task);
 	public void start();
 	

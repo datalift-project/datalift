@@ -36,6 +36,7 @@ package org.datalift.converter;
 
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -49,10 +50,14 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 
+import org.datalift.core.project.ProcessingTaskImpl;
+import org.datalift.core.project.TaskManagerTest.TestModule;
 import org.datalift.fwk.Configuration;
+import org.datalift.fwk.project.ProcessingTask;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectModule;
 import org.datalift.fwk.project.Source;
+import org.datalift.fwk.project.TransformationModule;
 import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.rdf.RdfUtils;
@@ -60,6 +65,8 @@ import org.datalift.fwk.rdf.Repository;
 
 import static org.datalift.fwk.MediaTypes.*;
 import static org.datalift.fwk.util.StringUtils.isBlank;
+
+import org.datalift.fwk.project.TaskManager;;
 
 
 /**
@@ -71,7 +78,7 @@ import static org.datalift.fwk.util.StringUtils.isBlank;
  * @author lbihanic
  */
 @Path(RdfTransformer.MODULE_NAME)
-public class RdfTransformer extends BaseConverterModule
+public class RdfTransformer extends BaseConverterModule implements TransformationModule
 {
     //-------------------------------------------------------------------------
     // Constants
@@ -108,11 +115,53 @@ public class RdfTransformer extends BaseConverterModule
                                      @FormParam("query[]") List<String> queries,
                                      @FormParam("overwrite") boolean overwrite)
                                                 throws WebApplicationException {
-        Response response = null;
 
+    	ProcessingTaskImpl task = new ProcessingTaskImpl(this.getTransformationId());
+    	
+    	task.addParam("projectId", projectId);
+    	task.addParam("sourceId", sourceId);
+    	task.addParam("destTitle", destTitle);
+    	task.addParam("targetGraph", targetGraph);
+    	task.addParam("queries", queries);
+    	task.addParam("overwrite", overwrite);
+    	task.saveParams();
+    	
+    	TaskManager tm = this.getTaskManager();
+    	if (tm == null)
+        	System.out.println("[" + projectId + "] TaskManager is not initialized");
+    	tm.addTask(task);
+    	System.out.println("[" + projectId + "] Process added.");
+    	
+    	////////////////
+    	
+    	Response response = null;
+        //response = this.created(out).build();
+        return response;
+    }
+
+    //-------------------------------------------------------------------------
+    // TransformationModule contract
+    //-------------------------------------------------------------------------
+
+	@Override
+	public void execute(ProcessingTask task) {
         Repository internal = Configuration.getDefault()
-                                           .getInternalRepository();
-        try {
+                .getInternalRepository();
+		try {
+			task.loadParams();
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+		URI projectId = (URI) task.getParam("projectId");
+        URI sourceId = (URI) task.getParam("sourceId");
+        String destTitle = (String) task.getParam("destTitle");
+        URI targetGraph = (URI) task.getParam("targetGraph");
+		List<String> queries = (List<String>) task.getParam("queries");
+        boolean overwrite = (Boolean) task.getParam("overwrite");
+
+        System.out.println("[" + projectId + "] Task is running...");
+
+		try {
             // Clean the query list to remove empty entries.
             if (queries != null) {
                 List<String> l = new LinkedList<String>();
@@ -137,7 +186,6 @@ public class RdfTransformer extends BaseConverterModule
             // Register new transformed RDF source.
             Source out = this.addResultSource(p, in, destTitle, targetGraph);
             // Display project source tab, including the newly created source.
-            response = this.created(out).build();
         }
         catch (Exception e) {
             try {
@@ -147,6 +195,23 @@ public class RdfTransformer extends BaseConverterModule
 
             this.handleInternalError(e);
         }
-        return response;
-    }
+    	System.out.println("[" + projectId + "] Task done.");
+	}
+
+    /**
+     * TODO: put in superclass.
+     */
+	/** {@inheritDoc} */
+	@Override
+	public URI getTransformationId() {
+		URI id = null;
+		try {
+			id = new URI(TestModule.MODULE_NAME);
+		} catch (URISyntaxException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return id;
+	}
+	
 }

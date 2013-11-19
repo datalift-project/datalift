@@ -37,6 +37,7 @@ package org.datalift.converter;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -64,6 +65,8 @@ import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectManager;
 import org.datalift.fwk.project.ProjectModule;
 import org.datalift.fwk.project.Source;
+import org.datalift.fwk.project.TaskManager;
+import org.datalift.fwk.project.TransformationModule;
 import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.rdf.ElementType;
@@ -82,7 +85,8 @@ import static org.datalift.fwk.util.PrimitiveUtils.wrap;
  * @author lbihanic
  */
 public abstract class BaseConverterModule
-                                extends BaseModule implements ProjectModule
+                                extends BaseModule 
+                                implements ProjectModule, TransformationModule
 {
     //-------------------------------------------------------------------------
     // Constants
@@ -110,6 +114,9 @@ public abstract class BaseConverterModule
 
     /** The DataLift project manager. */
     protected ProjectManager projectManager = null;
+
+    /** The task manager */
+	private TaskManager taskManager = null;
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -164,6 +171,7 @@ public abstract class BaseConverterModule
     public void postInit(Configuration configuration) {
         super.postInit(configuration);
         this.projectManager = configuration.getBean(ProjectManager.class);
+       	this.taskManager = configuration.getBean(TaskManager.class);
     }
 
     //-------------------------------------------------------------------------
@@ -211,6 +219,26 @@ public abstract class BaseConverterModule
                 + " (\"/" + this.getName() + "\" " + this.inputSources + ')';
     }
 
+    //-------------------------------------------------------------------------
+    // TransformationModule contract support
+    //-------------------------------------------------------------------------
+    
+    /** {@inheritDoc} */
+    @Override
+	public TaskManager getTaskManager() {
+    	return this.taskManager;
+	}
+    
+	/** {@inheritDoc} */
+    @Override
+	public URI getTransformationId() {
+    	try {
+			return new URI(this.getName());
+		} catch (URISyntaxException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
     //-------------------------------------------------------------------------
     // Specific implementation
     //-------------------------------------------------------------------------

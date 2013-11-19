@@ -6,8 +6,8 @@ import javax.persistence.Entity;
 import javax.persistence.MappedSuperclass;
 
 import org.datalift.fwk.Configuration;
-import org.datalift.fwk.TransformationModule;
 import org.datalift.fwk.project.ProcessingTask;
+import org.datalift.fwk.project.TransformationModule;
 
 import com.clarkparsia.empire.annotation.NamedGraph;
 import com.clarkparsia.empire.annotation.RdfProperty;
