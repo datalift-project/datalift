@@ -50,33 +50,19 @@ public interface Event {
     //-------------------------------------------------------------------------
 	
 	/**
-	 * Base Ontology URI.
+	 * Base Event URI.
 	 */
-	public static final String BASE_USER_URI = "http://www.datalift.org/project/event/"; 
-
-	//-------------------------------------------------------------------------
-    // EventStatus enumeration
-    //-------------------------------------------------------------------------
-
-	// TODO: find something for 'new'
-	public enum EventStatus {
-		//new,
-		running,
-		failed,
-		complete
-	}
+	public static final String BASE_EVENT_URI = "http://www.datalift.org/project/event/"; 
 
     //-------------------------------------------------------------------------
 	// Event contract definition
     //-------------------------------------------------------------------------
 
     public String getUri();
-	public EventStatus getEventStatus();
-	public void setEventStatus(EventStatus eventStatus);
 	public String getDescription();
 	public void setDescription(String description);
-	public String getParameter();
-	public void setParameter(String parameter);
+	public String getParameters();
+	public void setParameters(String parameters);
 	public Date getStartedAtTime();
 	public void setStartedAtTime(Date startedAtTime);
 	public Date getEndedAtTime();

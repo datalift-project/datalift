@@ -460,7 +460,7 @@
 
     <mkdir dir="${tests.logs.dir}"/>
 
-    <junit printsummary="on" haltonfailure="yes" showoutput="yes" fork="no">
+    <junit printsummary="on" haltonfailure="no" showoutput="yes" fork="no">
       <batchtest todir="${tests.logs.dir}">
         <fileset dir="${tests.src.home}">
           <include name="**/*Test.java"/>

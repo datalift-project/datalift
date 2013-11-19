@@ -97,7 +97,6 @@ import com.google.gson.JsonObject;
 import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.FormDataParam;
 
-import org.datalift.core.project.UserImpl;
 import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.FileStore;
@@ -130,7 +129,6 @@ import org.datalift.fwk.rdf.ElementType;
 import org.datalift.fwk.rdf.RdfFormat;
 import org.datalift.fwk.rdf.RdfNamespace;
 import org.datalift.fwk.rdf.RdfUtils;
-import org.datalift.fwk.security.SecurityContext;
 import org.datalift.fwk.sparql.SparqlEndpoint;
 import org.datalift.fwk.util.CloseableIterator;
 import org.datalift.fwk.util.UriBuilder;

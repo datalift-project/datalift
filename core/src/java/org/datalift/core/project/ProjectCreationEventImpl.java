@@ -47,7 +47,7 @@ import com.clarkparsia.empire.annotation.RdfsClass;
 
 @Entity
 @MappedSuperclass
-@RdfsClass("datalift:ProjectCreationEvent ")
+@RdfsClass("datalift:ProjectCreationEvent")
 @NamedGraph(type = NamedGraph.NamedGraphType.Static, value="datalift:datalift")
 public class ProjectCreationEventImpl extends EventImpl implements ProjectCreationEvent {
     @RdfProperty("prov:used")

@@ -62,12 +62,10 @@ public class EventImpl extends BaseRdfEntity implements Event {
 
     @RdfId
     private String uri;
-    @RdfProperty("datalift:eventStatus")
-	private EventStatus eventStatus;
     @RdfProperty("dcterms:description")
     private String description;
-    @RdfProperty("datalift:parameter")
-    private String parameter;
+    @RdfProperty("datalift:parameters")
+    private String parameters;
     @RdfProperty("prov:startedAtTime")
     private Date startedAtTime;
     @RdfProperty("prov:endedAtTime")
@@ -91,18 +89,6 @@ public class EventImpl extends BaseRdfEntity implements Event {
 
     /** {@inheritDoc} */
 	@Override
-	public EventStatus getEventStatus() {
-		return eventStatus;
-	}
-
-    /** {@inheritDoc} */
-	@Override
-	public void setEventStatus(EventStatus eventStatus) {
-		this.eventStatus = eventStatus;
-	}
-
-    /** {@inheritDoc} */
-	@Override
 	public String getDescription() {
 		return description;
 	}
@@ -115,14 +101,14 @@ public class EventImpl extends BaseRdfEntity implements Event {
 
     /** {@inheritDoc} */
 	@Override
-	public String getParameter() {
-		return parameter;
+	public String getParameters() {
+		return parameters;
 	}
 
     /** {@inheritDoc} */
 	@Override
-	public void setParameter(String parameter) {
-		this.parameter = parameter;
+	public void setParameters(String parameters) {
+		this.parameters = parameters;
 	}
 
     /** {@inheritDoc} */

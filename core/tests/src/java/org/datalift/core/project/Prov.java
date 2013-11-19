@@ -139,7 +139,7 @@ public class Prov {
 		
 		e.setId(eventURI);
 		e.setDescription("Test creation event");
-		e.setParameter("none");
+		e.setParameters("none");
 		e.setStartedAtTime(new Date());
 		e.setEndedAtTime(new Date());
 		e.setWasAssociatedWith(u);
