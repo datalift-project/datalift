@@ -93,7 +93,7 @@
                         <li data-target="#creationDataset" class="active"><span class="badge badge-info">1</span><span class="chevron"></span>#i18n("new.wizard.creation.title")</li>
                         <li data-target="#referenceDataset" ><span class="badge">2</span><span class="chevron"></span>#i18n("new.wizard.reference.title")</li>
                         <li data-target="#linkingSettings"><span class="badge">3</span><span class="chevron"></span>#i18n("new.wizard.settings.title")</li>
-                        <li data-target="#script"><span class="badge">3</span><span class="chevron"></span>#i18n("new.wizard.script.title")</li>
+                        <li data-target="#script"><span class="badge">4</span><span class="chevron"></span>#i18n("new.wizard.script.title")</li>
                     </ul>
                     <div class="actions">
                         <button class="btn btn-mini btn-prev" id="wizardPrev"> <i class="icon-arrow-left"></i>#i18n("previous.label")</button>

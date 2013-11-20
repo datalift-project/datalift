@@ -283,13 +283,12 @@ public class StringToURIModel extends InterlinkingModel
     	if(validateAll(proj, sourceContext, targetContext, sourceClass, targetClass, sourcePredicate, targetPredicate)){
 			try {
 				stu = new SesameApp(INTERNAL_URL, INTERNAL_URL, sourceContext, newContext);
-				
 				if (sourceClass.isEmpty() && targetClass.isEmpty()) {
 					stu.useSimpleLinkage(sourcePredicate, targetPredicate);
 				}else {
 					stu.useTypedLinkage(sourcePredicate, targetPredicate, sourceClass, targetClass);
 				}	
-				stu.useSPARQLOutput(linkingPredicate);
+				stu.useSPARQLOutput(linkingPredicate, true);
 			} catch (RepositoryException e) {
 				LOG.fatal("{} - Update failed:", e, this.moduleName);
 			} catch (MalformedQueryException e) {
