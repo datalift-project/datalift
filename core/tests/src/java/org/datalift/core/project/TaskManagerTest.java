@@ -14,14 +14,15 @@ import org.apache.log4j.Logger;
 import org.datalift.core.DefaultConfiguration;
 import org.datalift.fwk.project.ProcessingTask;
 import org.datalift.fwk.project.TaskManager;
+import org.datalift.fwk.project.TransformationModule;
 import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
-import org.datalift.fwk.TransformationModule;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+
 import static org.junit.Assert.assertTrue;
 
 @RunWith(JUnit4.class)

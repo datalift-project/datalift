@@ -61,6 +61,7 @@ import org.datalift.fwk.Configuration;
 import org.datalift.fwk.i18n.PreferredLocales;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.DuplicateObjectKeyException;
+import org.datalift.fwk.project.ProcessingTask;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectManager;
 import org.datalift.fwk.project.ProjectModule;
@@ -223,12 +224,6 @@ public abstract class BaseConverterModule
     // TransformationModule contract support
     //-------------------------------------------------------------------------
     
-    /** {@inheritDoc} */
-    @Override
-	public TaskManager getTaskManager() {
-    	return this.taskManager;
-	}
-    
 	/** {@inheritDoc} */
     @Override
 	public URI getTransformationId() {
@@ -239,10 +234,20 @@ public abstract class BaseConverterModule
 		}
 	}
 	
+	/** {@inheritDoc} */
+    @Override
+	public void execute(ProcessingTask task) {
+    	// NOP
+    }
+
     //-------------------------------------------------------------------------
     // Specific implementation
     //-------------------------------------------------------------------------
 
+	public TaskManager getTaskManager() {
+    	return this.taskManager;
+	}
+	
     /**
      * Returns whether the specified source can be handled by this
      * converter.

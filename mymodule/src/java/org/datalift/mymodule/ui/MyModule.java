@@ -16,10 +16,10 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.log4j.Logger;
 import org.datalift.core.project.ProcessingTaskImpl;
 import org.datalift.fwk.Configuration;
-import org.datalift.fwk.TransformationModule;
 import org.datalift.fwk.view.TemplateModel;
 import org.datalift.fwk.view.ViewFactory;
 import org.datalift.fwk.project.ProcessingTask;
+import org.datalift.fwk.project.TransformationModule;
 import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.project.TaskManager;
 
