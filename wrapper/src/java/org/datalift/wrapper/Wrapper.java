@@ -325,7 +325,7 @@ public final class Wrapper
         }
         // Check for user-provided JARs to be made available to web apps.
         String extraClasspath = join(
-                            getExtraClassPathentries(env.getPath(LIB)), ";");
+                            getExtraClassPathEntries(env.getPath(LIB)), ";");
         // Register web applications.
         for (Map.Entry<String,File> e : webapps.entrySet()) {
             String path = e.getKey();
@@ -361,7 +361,7 @@ public final class Wrapper
         System.exit(0);
     }
 
-    private static Collection<File> getExtraClassPathentries(File... dirs) {
+    private static Collection<File> getExtraClassPathEntries(File... dirs) {
         Collection<File> extraJars = new LinkedList<File>();
         for (File dir : dirs) {
             for (File f : dir.listFiles(JAR_FILE_FILTER)) {
