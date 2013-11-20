@@ -6,16 +6,13 @@ import static org.datalift.core.DefaultConfiguration.REPOSITORY_DEFAULT_FLAG;
 import static org.datalift.core.DefaultConfiguration.REPOSITORY_URIS;
 import static org.datalift.core.DefaultConfiguration.REPOSITORY_URL;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
 import org.datalift.core.DefaultConfiguration;
 import org.datalift.fwk.project.ProcessingTask;
 import org.datalift.fwk.project.TaskManager;
-import org.datalift.fwk.project.TransformationModule;
-import org.datalift.fwk.BaseModule;
+
 import org.datalift.fwk.Configuration;
 import org.junit.After;
 import org.junit.Before;
@@ -62,22 +59,21 @@ public class TaskManagerTest {
 	@Test
 	public void testAddEvent() throws Exception {
 		TestModule m = new TestModule();
-		TestModule n = new TestModule();
 		cfg.registerBean(m.getTransformationId().toString(), m);
 		m.postInit(cfg);
 		m.addProcess("process1");
 //		Thread.sleep(1000);
-		m.addProcess("process2");
-		m.addProcess("process3");
-		m.addProcess("process4");
-		m.addProcess("process5");
-		m.addProcess("process6");
+//		m.addProcess("process2");
+//		m.addProcess("process3");
+//		m.addProcess("process4");
+//		m.addProcess("process5");
+//		m.addProcess("process6");
 		tm.shutdown(true, 10);
 		assertTrue(processExecuted);
 
 	}
 	
-	public class TestModule extends BaseModule implements TransformationModule {
+	public class TestModule extends BaseTransformationModule {
 
 	    //-------------------------------------------------------------------------
 	    // Constants
@@ -91,7 +87,6 @@ public class TaskManagerTest {
 	    //-------------------------------------------------------------------------
 
 		// private static Logger logger = Logger.getLogger(TestModule.class);
-	    TaskManager tm = null;
 	    
 	    //-------------------------------------------------------------------------
 	    // Constructors
@@ -104,12 +99,6 @@ public class TaskManagerTest {
 	    	super(TestModule.MODULE_NAME);
 	    }
 	        
-	    public void postInit(Configuration cfg) {
-	    	tm = cfg.getBean(TaskManager.class);
-	    	if (tm == null)
-	    		throw new RuntimeException("TaskManager is not initialized");
-	    }
-	    
 	    //-------------------------------------------------------------------------
 	    // Web services
 	    //-------------------------------------------------------------------------
@@ -123,9 +112,10 @@ public class TaskManagerTest {
 	    	task.addParam("projectId", projectId);
 	    	task.saveParams();
 	    	
+	    	TaskManager tm = this.getTaskManager();
 	    	if (tm == null)
 	    		logger.error("TaskManager is not initialized");
-	    	this.tm.addTask(task);
+	    	tm.addTask(task);
 			logger.debug("process added");
 	    	System.out.println("[" + projectId + "] Process added.");
 	    }
@@ -134,21 +124,6 @@ public class TaskManagerTest {
 	    // TransformationModule contract
 	    //-------------------------------------------------------------------------
 	    
-	    /**
-	     * TODO: put in superclass.
-	     */
-		@Override
-		public URI getTransformationId() {
-			URI id = null;
-			try {
-				id = new URI(TestModule.MODULE_NAME);
-			} catch (URISyntaxException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			return id;
-		}
-
 		@Override
 		public void execute(ProcessingTask task) {
 			logger.debug("execute()");
@@ -164,7 +139,7 @@ public class TaskManagerTest {
 	    	System.out.println("[" + projectId + "] Task is running...");
 
 			try {
-				Thread.sleep(5000);
+				Thread.sleep(50);
 			} catch (InterruptedException e) {
 				throw new RuntimeException(e);
 			}

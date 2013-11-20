@@ -23,13 +23,6 @@ public abstract class BaseTransformationModule extends BaseModule implements Tra
     	if (taskManager == null)
     		throw new RuntimeException("TaskManager is not initialized");
     }
-
-	/** {@inheritDoc} */
-    @Override
-	public TaskManager getTaskManager() {
-    	return this.taskManager;
-	}
-    
 	/** {@inheritDoc} */
     @Override
 	public URI getTransformationId() {
@@ -39,5 +32,9 @@ public abstract class BaseTransformationModule extends BaseModule implements Tra
 			throw new RuntimeException(e);
 		}
 	}
+    
+    public TaskManager getTaskManager() {
+    	return this.taskManager;
+    }
 
 }
