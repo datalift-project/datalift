@@ -166,6 +166,21 @@
     <delete dir="${build.home}"/>
   </target>
 
+  <target name="clean-core">
+    <subant target="clean">
+      <filelist dir="${datalift.root}" files="framework,core"/>
+    </subant>
+  </target>
+
+  <target name="clean-modules" depends="clean-core">
+    <subant target="clean">
+      <filelist refid="build.modules"/>
+    </subant>
+  </target>
+
+  <target name="clean-all" depends="clean-modules,clean"
+          description="Cleans all wrapper modules">
+  </target>
 
   <!-- ================ Prepare Target ==================================== -->
 
@@ -247,8 +262,7 @@
           depends="production-deployment,development-deployment">
   </target>
 
-  <target name="prepare-dist"
-          depends="compile,build-core,build-modules,deployment-mode">
+  <target name="prepare-dist" depends="compile,build-modules,deployment-mode">
     <mkdir dir="${dist.home}"/>
     <mkdir dir="${gen.dist.dir}"/>
     <!-- Creates directory for potential native libraries. -->
