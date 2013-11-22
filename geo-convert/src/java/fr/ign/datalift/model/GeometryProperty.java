@@ -34,5 +34,5 @@
 package fr.ign.datalift.model;
 
 public class GeometryProperty extends FeatureProperty {
-
+    // Marker interface
 }

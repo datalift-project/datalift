@@ -36,8 +36,6 @@ package org.datalift.stringtouri;
 import java.io.ObjectStreamException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -50,9 +48,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.datalift.fwk.Configuration;
 import org.datalift.fwk.project.Project;
-import org.datalift.fwk.project.ProjectManager;
 import org.datalift.fwk.project.ProjectModule;
 import org.datalift.fwk.project.RdfFileSource;
 import org.datalift.fwk.project.Source;
