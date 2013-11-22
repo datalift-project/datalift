@@ -64,9 +64,9 @@ public class PrimitiveUtils
 
     /**
      * Returns a wrapper object representing the specified primitive
-     * value. 
+     * value.
      * @param  b   a boolean value.
-     * 
+     *
      * @return a <code>Boolean</code> object representing
      *         <code>b</code>.
      * @see    Boolean#valueOf(boolean)
@@ -102,9 +102,9 @@ public class PrimitiveUtils
 
     /**
      * Returns a wrapper object representing the specified primitive
-     * value. 
+     * value.
      * @param  b   a byte value.
-     * 
+     *
      * @return a <code>Byte</code> instance representing <code>b</code>.
      * @see    Byte#valueOf(byte)
      */
@@ -139,9 +139,47 @@ public class PrimitiveUtils
 
     /**
      * Returns a wrapper object representing the specified primitive
-     * value. 
+     * value.
+     * @param  c   a character.
+     *
+     * @return a <code>Character</code> object representing
+     *         <code>c</code>.
+     * @see    Character#valueOf(char)
+     */
+    public static Character wrap(char c) {
+        return Character.valueOf(c);
+    }
+
+    /**
+     * Returns the primitive value wrapped by the specified object.
+     * @param  c   a <code>Character</code> object or <code>null</code>.
+     *
+     * @return the primitive value wrapped by the specified object;
+     *         <code>0x00</code> if <code>c</code> is <code>null</code>.
+     * @see    #charValue(Character)
+     */
+    public static char unwrap(Character c) {
+        return charValue(c);
+    }
+
+    /**
+     * Returns the primitive value wrapped by the specified object.
+     * @param  c     a <code>Character</code> object
+     * @param  def   the default value.
+     *
+     * @return the primitive value wrapped by the specified object;
+     *         <code>def</code> if <code>c</code> is <code>null</code>.
+     * @see    #charValue(Character, char)
+     */
+    public static char unwrap(Character c, char def) {
+        return charValue(c, def);
+    }
+
+    /**
+     * Returns a wrapper object representing the specified primitive
+     * value.
      * @param  i   an integer value.
-     * 
+     *
      * @return an <code>Integer</code> instance representing
      *         <code>i</code>.
      * @see    Integer#valueOf(int)
@@ -152,10 +190,10 @@ public class PrimitiveUtils
 
     /**
      * Returns a wrapper object representing the specified primitive
-     * value. 
+     * value.
      * @param  i     an integer value.
      * @param  def   the default value.
-     * 
+     *
      * @return an <code>Integer</code> instance representing
      *         <code>i</code> or <code>null</code> if <code>i</code>
      *         equals to <code>def</code>.
@@ -192,9 +230,9 @@ public class PrimitiveUtils
 
     /**
      * Returns a wrapper object representing the specified primitive
-     * value. 
+     * value.
      * @param  l   a long value.
-     * 
+     *
      * @return a <code>Long</code> instance representing <code>l</code>.
      * @see    Long#valueOf(long)
      */
@@ -204,10 +242,10 @@ public class PrimitiveUtils
 
     /**
      * Returns a wrapper object representing the specified primitive
-     * value. 
+     * value.
      * @param  l     a long value.
      * @param  def   the default value.
-     * 
+     *
      * @return a <code>Long</code> instance representing <code>l</code>
      *         or <code>null</code> if <code>l</code> equals to
      *         <code>def</code>.
@@ -269,9 +307,9 @@ public class PrimitiveUtils
 
     /**
      * Returns a wrapper object representing the specified primitive
-     * value. 
+     * value.
      * @param  d   a double value.
-     * 
+     *
      * @return a <code>Double</code> instance representing
      *         <code>d</code>.
      * @see    Double#valueOf(double)
@@ -330,7 +368,6 @@ public class PrimitiveUtils
         return floatValue(f, def);
     }
 
-
     /**
      * Returns the boolean value wrapped by the specified
      * <code>Boolean</code> object.
@@ -358,13 +395,42 @@ public class PrimitiveUtils
     }
 
     /**
+     * Returns the char value wrapped by the specified
+     * <code>Character</code> object.
+     * @param  c   a <code>Character</code> object or <code>null</code>.
+     *
+     * @return the value wrapped by the specified <code>Character</code>
+     *         as a <code>char</code>; <code>0x00</code> if
+     *         <code>c</code> is <code>null</code>.
+     * @see    #charValue(Character, char)
+     */
+    public static char charValue(Character c) {
+        return charValue(c, (char)0x00);
+    }
+
+    /**
+     * Returns the char value wrapped by the specified
+     * <code>Character</code> object.
+     * @param  c     a <code>Character</code> object.
+     * @param  def   the default value.
+     *
+     * @return the value wrapped by the specified <code>Character</code>
+     *         as a <code>char</code>; <code>def</code> if
+     *         <code>c</code> is <code>null</code>.
+     * @see    Character#charValue()
+     */
+    public static char charValue(Character c, char def) {
+        return (c != null)? c.charValue(): def;
+    }
+
+    /**
      * Returns the byte value wrapped by the specified
      * <code>Number</code> object.
      * @param  n   a <code>Number</code> object or <code>null</code>.
      *
      * @return the value wrapped by the specified <code>Number</code>
      *         as a byte; <code>0x00</code> if <code>n</code> is
-               <code>null</code>.
+     *         <code>null</code>.
      * @see    #byteValue(Number, int)
      */
     public static byte byteValue(Number n) {
@@ -379,7 +445,7 @@ public class PrimitiveUtils
      *
      * @return the value wrapped by the specified <code>Number</code>
      *         as a byte; <code>def</code> if <code>n</code> is
-               <code>null</code>.
+     *         <code>null</code>.
      * @see    Number#byteValue()
      */
     public static byte byteValue(Number n, int def) {
@@ -393,7 +459,7 @@ public class PrimitiveUtils
      *
      * @return the value wrapped by the specified <code>Number</code>
      *         as an integer; <code>0</code> if <code>n</code> is
-               <code>null</code>.
+     *         <code>null</code>.
      * @see    #intValue(Number, int)
      */
     public static int intValue(Number n) {
@@ -408,7 +474,7 @@ public class PrimitiveUtils
      *
      * @return the value wrapped by the specified <code>Number</code>
      *         as an integer; <code>def</code> if <code>n</code> is
-               <code>null</code>.
+     *         <code>null</code>.
      * @see    Number#intValue()
      */
     public static int intValue(Number n, int def) {
@@ -422,7 +488,7 @@ public class PrimitiveUtils
      *
      * @return the value wrapped by the specified <code>Number</code>
      *         as a long; <code>0L</code> if <code>n</code> is
-               <code>null</code>.
+     *         <code>null</code>.
      * @see    #longValue(Number, long)
      */
     public static long longValue(Number n) {
@@ -437,7 +503,7 @@ public class PrimitiveUtils
      *
      * @return the value wrapped by the specified <code>Number</code>
      *         as a long; <code>def</code> if <code>n</code> is
-               <code>null</code>.
+     *         <code>null</code>.
      * @see    Number#longValue()
      */
     public static long longValue(Number n, long def) {
@@ -451,7 +517,7 @@ public class PrimitiveUtils
      *
      * @return the value wrapped by the specified <code>Number</code>
      *         as a short; <code>0</code> if <code>b</code> is
-               <code>null</code>.
+     *         <code>null</code>.
      * @see    #shortbyteValue(Number, int)
      */
     public static short shortValue(Number n) {
@@ -466,7 +532,7 @@ public class PrimitiveUtils
      *
      * @return the value wrapped by the specified <code>Number</code>
      *         as a short; <code>def</code> if <code>b</code> is
-               <code>null</code>.
+     *         <code>null</code>.
      * @see    Number#shortValue()
      */
     public static short shortValue(Number n, int def) {
@@ -480,7 +546,7 @@ public class PrimitiveUtils
      *
      * @return the value wrapped by the specified <code>Number</code>
      *         as a double; <code>0.0</code> if <code>n</code> is
-               <code>null</code>.
+     *         <code>null</code>.
      * @see    #doubleValue(Number, double)
      */
     public static double doubleValue(Number n) {
@@ -495,7 +561,7 @@ public class PrimitiveUtils
      *
      * @return the value wrapped by the specified <code>Number</code>
      *         as a double; <code>def</code> if <code>n</code> is
-               <code>null</code>.
+     *         <code>null</code>.
      * @see    Number#doubleValue()
      */
     public static double doubleValue(Number n, double def) {
@@ -509,7 +575,7 @@ public class PrimitiveUtils
      *
      * @return the value wrapped by the specified <code>Number</code>
      *         as a float; <code>0.0f</code> if <code>n</code> is
-               <code>null</code>.
+     *         <code>null</code>.
      * @see    #floatValue(Number, float)
      */
     public static float floatValue(Number n) {
@@ -524,7 +590,7 @@ public class PrimitiveUtils
      *
      * @return the value wrapped by the specified <code>Number</code>
      *         as a float; <code>def</code> if <code>n</code> is
-               <code>null</code>.
+     *         <code>null</code>.
      * @see    Number#floatValue()
      */
     public static float floatValue(Number n, float def) {
