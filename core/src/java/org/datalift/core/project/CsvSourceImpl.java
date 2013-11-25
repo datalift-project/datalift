@@ -488,8 +488,9 @@ public class CsvSourceImpl extends BaseFileSource
             if (getLastDataRow() > 0) {
                 // Last data row set. => Compute number of rows to read.
                 this.maxRows = getLastDataRow() - getFirstDataRow() + 1;
+                log.debug("Rows to read: {}", wrap(this.maxRows));
             }
-            log.debug("Rows to read: {}", wrap(this.maxRows));
+            // Else: read all rows from source.
         }
 
         /** {@inheritDoc} */
