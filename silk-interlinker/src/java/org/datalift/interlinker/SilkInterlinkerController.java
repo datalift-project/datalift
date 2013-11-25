@@ -64,7 +64,7 @@ public class SilkInterlinkerController extends ModuleController{
 
     /** Default constructor. */
 	public SilkInterlinkerController() {
-		super(MODULE_NAME, 100);
+		super(MODULE_NAME, 9000);
 		model = new SilkInterlinkerModel();
 	}
 
@@ -99,9 +99,6 @@ public class SilkInterlinkerController extends ModuleController{
                 if (this.position > 0) {
                     uridesc.setPosition(this.position);
                 }
-                log.debug("Project {} can use Silk Interlinker", p.getTitle());
-            }else {
-                log.debug("Project {} can not use Silk Interlinker", p.getTitle());
             }
         }
         catch (URISyntaxException e) {
