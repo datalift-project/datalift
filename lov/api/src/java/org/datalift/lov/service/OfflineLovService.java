@@ -9,7 +9,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Arrays;
@@ -19,14 +18,17 @@ import java.util.zip.ZipInputStream;
 
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.log.Logger;
+import org.datalift.fwk.rdf.RdfException;
+import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.lov.local.LovLocalService;
 import org.datalift.lov.local.LovLocalVocabularyService;
 import org.datalift.lov.local.LovUtil;
 import org.datalift.lov.local.objects.vocab.VocabsDictionaryItem;
+
+import static org.datalift.fwk.util.PrimitiveUtils.wrap;
+
+import org.openrdf.OpenRDFException;
 import org.openrdf.repository.RepositoryConnection;
-import org.openrdf.repository.RepositoryException;
-import org.openrdf.rio.RDFFormat;
-import org.openrdf.rio.RDFParseException;
 import org.semanticweb.yars.nx.Node;
 import org.semanticweb.yars.nx.Triple;
 import org.semanticweb.yars.nx.parser.NxParser;
@@ -40,7 +42,7 @@ import org.semanticweb.yars.nx.parser.NxParser;
  */
 public class OfflineLovService extends LovService {
 
-	private final static Logger log = Logger.getLogger(OfflineLovService.class);
+	private final static Logger log = Logger.getLogger();
 	private final static String LOV_CONTEXT = "http://lov.okfn.org/datalift/local/lov_aggregator";
 	private final static String DEFAULT_JSON = "{" + "\"count\": 0,"
 			+ "\"offset\": 0," + "\"limit\": 15," + "\"search_query\": \"\","
@@ -215,8 +217,7 @@ public class OfflineLovService extends LovService {
 
 						long estimatedTime = ((System.currentTimeMillis() - startTime) / 1000);
 
-						log.info("File downloaded in about {} s.",
-								estimatedTime);
+						log.info("File downloaded in about {} s.", wrap(estimatedTime));
 						extractZippedAggregator();
 						convertAggragator();
 						new File(lovData
@@ -254,64 +255,50 @@ public class OfflineLovService extends LovService {
 		if (!aggregatorDownloaded) {
 			return;
 		}
-
 		if (dataLoaded) {
 			return;
 		}
+		dataLoading = true;
 
-		URI lovContextURI;
+		URI lovContextURI = URI.create(LOV_CONTEXT);
+		long repositorySize = 0L;
 		RepositoryConnection conn = null;
-
 		try {
-			dataLoading = true;
-			lovContextURI = new URI(LOV_CONTEXT);
-
-			log.trace("Opening connection to internal repository.");
 			conn = this.configuration.getInternalRepository().newConnection();
-			if (conn.isOpen()) {
-				log.trace("Connection is open.");
-			}
-
-			org.openrdf.model.URI ctx = null;
-			ctx = conn.getValueFactory().createURI(lovContextURI.toString());
-			log.debug("Checking context size for {}.", ctx.toString());
-			long repositorySize = 0;
+			org.openrdf.model.URI ctx = conn.getValueFactory()
+			                                .createURI(lovContextURI.toString());
 			repositorySize = conn.size(ctx);
-			log.info("Repository size for LOV context : {}.", repositorySize);
-
-			if (repositorySize == 0) {
-				// log.info("Clearing context.");
-				// conn.clear(ctx);
-				
-				File lov = new File(lovData.getAbsolutePath() + "/"
-						+ N3_AGGREGATOR);
-
-				log.info("Loading {} into repository.", lov.getAbsolutePath());
-				long startTime = System.currentTimeMillis();
-				conn.add(lov, null, RDFFormat.N3, ctx);
-				long estimatedTime = ((System.currentTimeMillis() - startTime) / 1000);
-				log.info(
-						"Loading has been done in {} s. Offline service is set and ready.",
-						estimatedTime);
-			}
-			dataLoaded = true;
-
-		} catch (URISyntaxException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (RepositoryException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (RDFParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} finally {
-			LovUtil.closeQuietly(conn);
-			dataLoading = false;
 		}
+		catch (OpenRDFException e) {
+			throw new RuntimeException(e);
+		}
+		finally {
+			LovUtil.closeQuietly(conn);
+			conn = null;
+		}
+		if (repositorySize == 0L) {
+			try {
+				File lov = new File(lovData, N3_AGGREGATOR);
+				log.info("Loading LOV data ({}) into repository...", lov);
+				long startTime = System.currentTimeMillis();
+				RdfUtils.upload(lov, this.configuration.getInternalRepository(), lovContextURI);
+				// conn.add(lov, null, RDFFormat.N3, ctx);
+				double loadTime = (System.currentTimeMillis() - startTime) / 1000.0;
+				log.info("LOV data ({}) successfully loaded in {} s. Offline service is ready.",
+				         lov, wrap(loadTime));
+			}
+			catch (RdfException e) {
+				throw new RuntimeException(e);
+			}
+			finally {
+				dataLoading = false;
+			}
+		}
+		else {
+			dataLoading = false;
+			log.info("LOV context (<{}>) size: {} triples.", LOV_CONTEXT, wrap(repositorySize));
+		}
+		dataLoaded = true;
 	}
 
 	private boolean extractZippedAggregator() {
@@ -392,7 +379,7 @@ public class OfflineLovService extends LovService {
 				}
 				out.newLine();
 			}
-			log.debug("notQuad : {} - notEvenTriple : {}", notQuad, notEvenTriple);
+			log.trace("notQuad : {} - notEvenTriple : {}", wrap(notQuad), wrap(notEvenTriple));
 			out.flush();
 			out.close();
 
