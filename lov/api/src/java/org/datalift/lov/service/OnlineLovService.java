@@ -7,6 +7,8 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+import org.datalift.fwk.log.Logger;
+
 /**
  * Service implementation that performs HTTP request to get its results.
  * 
@@ -15,6 +17,8 @@ import java.net.URL;
  */
 public class OnlineLovService extends LovService {
 	
+	private final static Logger log = Logger.getLogger();
+
 	private final static String QUERY_BASE_URL = "http://lov.okfn.org/dataset/lov/api/v1/";
 	private final static String SEARCH = "search";
 	private final static String CHECK = "check";
