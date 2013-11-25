@@ -82,6 +82,7 @@ public class ProcessingTaskImpl extends EventImpl implements ProcessingTask {
 	
 	public void saveParams() {
 		this.parameters = this.params.save();
+		System.out.println(this.parameters);
 	}
 	
 	public void loadParams() throws Exception {

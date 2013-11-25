@@ -48,7 +48,7 @@ public class TaskManagerTest {
         Configuration.setDefault(cfg);
 
         cfg.registerBean(tm);
-        tm.start();
+        tm.init(cfg);
 	}
 
 	@After
@@ -68,7 +68,7 @@ public class TaskManagerTest {
 //		m.addProcess("process4");
 //		m.addProcess("process5");
 //		m.addProcess("process6");
-		tm.shutdown(true, 10);
+		tm.shutdown(cfg);
 		assertTrue(processExecuted);
 
 	}

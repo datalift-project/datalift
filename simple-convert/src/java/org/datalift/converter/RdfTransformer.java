@@ -36,7 +36,6 @@ package org.datalift.converter;
 
 
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -51,7 +50,6 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 
 import org.datalift.core.project.ProcessingTaskImpl;
-import org.datalift.core.project.TaskManagerTest.TestModule;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.project.ProcessingTask;
 import org.datalift.fwk.project.Project;
@@ -134,9 +132,7 @@ public class RdfTransformer extends BaseConverterModule implements Transformatio
     	
     	////////////////
     	
-    	Response response = null;
-        //response = this.created(out).build();
-        return response;
+    	return Response.seeOther(projectId.resolve("#source")).build();
     }
 
     //-------------------------------------------------------------------------

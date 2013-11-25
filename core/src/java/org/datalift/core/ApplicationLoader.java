@@ -49,6 +49,7 @@ import javax.ws.rs.core.UriBuilder;
 
 import org.datalift.core.log.TimerContext;
 import org.datalift.core.project.DefaultProjectManager;
+import org.datalift.core.project.TaskManagerImpl;
 import org.datalift.core.velocity.jersey.VelocityTemplateProcessor;
 import org.datalift.core.velocity.jersey.VelocityViewFactory;
 import org.datalift.fwk.Configuration;
@@ -58,6 +59,7 @@ import org.datalift.fwk.ResourceResolver;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.log.web.LogServletContextListener;
 import org.datalift.fwk.project.ProjectManager;
+import org.datalift.fwk.project.TaskManager;
 import org.datalift.fwk.util.DefaultUriBuilder;
 import org.datalift.fwk.view.ViewFactory;
 
@@ -241,6 +243,11 @@ public class ApplicationLoader extends LogServletContextListener
                 // Add default resource resolver.
                 this.components.add(
                     this.initResource(new RouterResource(), cfg));
+            }
+            if (cfg.getBeans(TaskManager.class).isEmpty()) {
+                // Add default task manager implementation.
+                this.components.add(
+                    this.initResource(new TaskManagerImpl(), cfg));
             }
             if ((cfg.getRepositoryUris().contains(
                                         Configuration.INTERNAL_REPOSITORY)) &&
