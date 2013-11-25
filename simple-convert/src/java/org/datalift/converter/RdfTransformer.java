@@ -2,6 +2,7 @@
  * Copyright / Copr. 2010-2013 Atos - Public Sector France -
  * BS & Innovation for the DataLift project,
  * Contributor(s) : L. Bihanic, H. Devos, O. Ventura, M. Chetima
+ *                  A. Valensi
  *
  * Contact: dlfr-datalift@atos.net
  *
@@ -51,10 +52,10 @@ import javax.ws.rs.core.Response;
 
 import org.datalift.core.project.ProcessingTaskImpl;
 import org.datalift.fwk.Configuration;
+import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.ProcessingTask;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectModule;
-import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.TransformationModule;
 import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.project.Source.SourceType;
@@ -74,6 +75,7 @@ import org.datalift.fwk.project.TaskManager;;
  * {@link TransformedRdfSource source}.
  *
  * @author lbihanic
+ * @author avalensi
  */
 @Path(RdfTransformer.MODULE_NAME)
 public class RdfTransformer extends BaseConverterModule implements TransformationModule
@@ -84,6 +86,12 @@ public class RdfTransformer extends BaseConverterModule implements Transformatio
 
     /** The name of this module in the DataLift configuration. */
     public final static String MODULE_NAME = "rdftransformer";
+
+    //-------------------------------------------------------------------------
+    // Class members
+    //-------------------------------------------------------------------------
+    
+    private final static Logger log = Logger.getLogger();
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -126,11 +134,9 @@ public class RdfTransformer extends BaseConverterModule implements Transformatio
     	
     	TaskManager tm = this.getTaskManager();
     	if (tm == null)
-        	System.out.println("[" + projectId + "] TaskManager is not initialized");
+        	log.error("[" + projectId + "] TaskManager is not initialized");
     	tm.addTask(task);
-    	System.out.println("[" + projectId + "] Process added.");
-    	
-    	////////////////
+    	log.info("[" + projectId + "] Process added.");
     	
     	return Response.seeOther(projectId.resolve("#source")).build();
     }
@@ -155,7 +161,7 @@ public class RdfTransformer extends BaseConverterModule implements Transformatio
 		List<String> queries = (List<String>) task.getParam("queries");
         boolean overwrite = (Boolean) task.getParam("overwrite");
 
-        System.out.println("[" + projectId + "] Task is running...");
+        log.info("[" + projectId + "] Task is running...");
 
 		try {
             // Clean the query list to remove empty entries.
@@ -180,7 +186,7 @@ public class RdfTransformer extends BaseConverterModule implements Transformatio
             RdfUtils.convert(internal, queries, internal, targetGraph,
                                        overwrite, URI.create(in.getUri()));
             // Register new transformed RDF source.
-            Source out = this.addResultSource(p, in, destTitle, targetGraph);
+            this.addResultSource(p, in, destTitle, targetGraph);
             // Display project source tab, including the newly created source.
         }
         catch (Exception e) {
@@ -191,7 +197,7 @@ public class RdfTransformer extends BaseConverterModule implements Transformatio
 
             this.handleInternalError(e);
         }
-    	System.out.println("[" + projectId + "] Task done.");
+		log.info("[" + projectId + "] Task done.");
 	}
 	
 }
