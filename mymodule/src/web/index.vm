@@ -8,31 +8,58 @@
   <body>
 #banner
 
-    <h2>Tab</h2>
+    <h2>Tabb</h2>
     <div id="demo_widget">
     </div>
 
+    <table id="list"><tr><td></td></tr></table> 
+    <div id="pager"></div> 
+
 #script_links
     <script type="text/javascript">
-	$(function() {
-        console.log( "ready!" );
-        showHistory();
-    });
 
-	function showHistory() {
-		jQuery.ajax({
-			url: "${baseUri}/sparql?query=SELECT+*+WHERE+%7B%0D%0A++%3Fs+a+%3Chttp%3A%2F%2Fwww.datalift.org%2Fcore%23TransformationEvent%3E+%3B+%3Fp+%3Fo+.%0D%0A%7D%0D%0A&default-graph-uri=internal&max=1000&grid=true",
-			success: successfulQuery,
-	  		error: unsuccessfulQuery
-		});
+	function optionalLinkFormatter(cellvalue, options, rowObject){
+	    if(cellvalue.substring(0,5)=="http:"){
+		return "<a href=" + cellvalue + ">" + cellvalue + "</a>";
+	    }else{
+		return cellvalue;
+	    }
 	}
-	function successfulQuery(response){
-		$("#demo_widget").empty();
-		$("#demo_widget").append(response);
-	}
-	function unsuccessfulQuery(XMLHttpRequest){
-		alert("Error while requesting Widget");
-	}
+
+	var request = "SELECT+*+WHERE+%7B%0A++%3Fs+a+%3Chttp%3A%2F%2Fwww.datalift.org%2Fcore%23TransformationEvent%3E+%3B%0A++%3Chttp%3A%2F%2Fwww.datalift.org%2Fcore%23eventStatus%3E+%3Fstatus+%3B%0A++%3Chttp%3A%2F%2Fwww.w3.org%2Fns%2Fprov%23startedAtTime%3E+%3Fsubmitted+%3B%0A++%3Chttp%3A%2F%2Fwww.w3.org%2Fns%2Fprov%23endedAtTime%3E+%3FendDate+.%0A%7D";
+	// var request = "SELECT+*+WHERE+%7B%0D%0A++%3Fs+a+%3Chttp%3A%2F%2Fwww.datalift.org%2Fcore%23TransformationEvent%3E+%3B+%3Fp+%3Fo+.%0D%0A%7D%0D%0A";
+
+	$(function () {
+	    $("#list").jqGrid({
+		url: "${baseUri}/sparql?query=" + request + "&default-graph-uri=internal&max=1000&grid=true",
+		datatype: "json",
+		mtype: "GET",
+		jsonReader : {
+		    root: "rows",
+		    head: "head",
+		    repeatitems: false,
+		    //cell: "SDSD",
+		    //id: "0",
+		}, 
+		colNames:  ["Id", "Status", "Submitted", "End date"],
+		colModel: [
+		    { name: "s", formatter: optionalLinkFormatter, width: 300 },
+		    { name: "status"},
+		    { name: "submitted"},
+		    { name: "endDate"}
+		],
+	 	//pager: '#pagernav', 
+	 	//caption: $('#searchnav').html(),
+	 	//rowNum: 50,
+	 	//rownumbers: true,
+		//rowList: [50,100,200,500,1000,2000,5000],
+		ignoreCase: true,
+		gridview: true,
+		autowidth: true,
+		shrinkToFit: true,
+		height: '450'
+	    });
+	}); 
     </script>
   </body>
 </html>

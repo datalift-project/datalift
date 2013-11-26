@@ -188,16 +188,20 @@
 
   <!-- ================ Clean Target ====================================== -->
 
-  <!--
-    The "clean" target deletes any previous "build" and "dist" directories,
-    so that you can be ensured the application can be built from scratch.
-   -->
+	  <!--
+	    The "clean" target deletes any previous "build" and "dist" directories,
+	    so that you can be ensured the application can be built from scratch.
+	   -->
 
-  <target name="clean" depends="init"
-          description="Deletes build and dist directories">
-    <delete dir="${build.home}"/>
-    <delete dir="${dist.home}"/>
-  </target>
+	  <target name="clean" depends="init"
+	          description="Deletes build and dist directories">
+	    <delete includeEmptyDirs="true" quiet="true">
+	      <fileset dir="${build.home}" followsymlinks="false"/>
+	    </delete>
+	    <delete includeEmptyDirs="true" quiet="true">
+	      <fileset dir="${dist.home}" followsymlinks="false"/>
+	    </delete>
+	  </target>
 
 
   <!-- ================ Prepare Target ==================================== -->
