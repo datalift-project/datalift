@@ -58,7 +58,7 @@ import com.clarkparsia.empire.annotation.RdfsClass;
  * @author avalensi
  */
 @Entity
-@RdfsClass("datalift:ontology")
+@RdfsClass("datalift:Ontology")
 @NamedGraph(type = NamedGraph.NamedGraphType.Static, value="datalift:datalift")
 public class OntologyImpl extends BaseRdfEntity implements Ontology
 {
