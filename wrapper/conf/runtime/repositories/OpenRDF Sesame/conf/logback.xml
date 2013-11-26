@@ -1,11 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration debug="false">
 	<appender name="MainLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
-		<!--  <file>${info.aduna.logging.dir}/main.log</file> -->
-		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-			<fileNamePattern>${info.aduna.logging.dir}/openrdf-sesame-%d{yyyy-MM-dd}.log</fileNamePattern>
-			<maxHistory>10</maxHistory>
+		<file>${info.aduna.logging.dir}/openrdf-sesame.log</file>
+
+		<rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+			<fileNamePattern>${info.aduna.logging.dir}/openrdf-sesame.log.%i</fileNamePattern>
+			<minIndex>1</minIndex>
+			<maxIndex>9</maxIndex>
 		</rollingPolicy>
+		<triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+			<maxFileSize>100KB</maxFileSize>
+		</triggeringPolicy>
 		<encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
 			<layout class="info.aduna.logging.file.logback.StackTracePatternLayout"/>
 			<charset>UTF-8</charset>
@@ -14,7 +19,7 @@
 	</appender>
 	
 	<root>
-		<level value="WARN" />
+		<level value="INFO" />
 		<appender-ref ref="MainLog" />
 	</root>
 </configuration>
