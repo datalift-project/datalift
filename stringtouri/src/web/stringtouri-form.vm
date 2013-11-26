@@ -11,23 +11,22 @@
 	## Temporary link for dev. purposes.
 	## <link rel="stylesheet" type="text/css" href="http://localhost:1337/static/css/stringtouri-interface.css"/>
 	#script_links
-	    <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+	<script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
 	<!--Angularjs -->
-    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.6/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.8/angular.min.js"></script>
     <!--AngularUI-->
     <link rel="stylesheet" href="${moduleUri}/static/lib/angularui/css/angular-ui.css">
     <script src="${moduleUri}/static/lib/angularui/js/angular-ui.js"></script>
     <!--Twitter Bootstrap-->
-    <link href="http://twitter.github.com/bootstrap/assets/css/bootstrap.css" rel="stylesheet">
-    <script src="http://twitter.github.com/bootstrap/assets/js/bootstrap.js"></script>
-    <script src="${moduleUri}/static/lib/purl/purl.js"></script>
+    <link href="${moduleUri}/static/lib/bootstrap/css/bootstrap.css" rel="stylesheet">
+    <script src="${moduleUri}/static/lib/bootstrap/js/bootstrap.js"></script>
     <!--Select2-->
 	<link href="http://ivaynberg.github.com/select2/select2-3.2/select2.css" rel="stylesheet"/>
     <script src="http://ivaynberg.github.com/select2/select2-3.2/select2.js"></script>
     <!--FluelUX-->
-    <link href=" http://fuelcdn.com/fuelux/2.3/css/fuelux.css" rel="stylesheet" />
-    <link href="http://fuelcdn.com/fuelux-imh/2.2/css/fuelux-responsive.css" rel="stylesheet" />
-    <script src="http://fuelcdn.com/fuelux-imh/2.2/loader.min.js" type="text/javascript"></script>
+    <link href="${moduleUri}/static/lib/fuelux/css/fuelux.css" rel="stylesheet" />
+    <link href="${moduleUri}/static/lib/fuelux/css/fuelux-responsive.css" rel="stylesheet" />
+    <script src="${moduleUri}/static/lib/fuelux/loader.js" type="text/javascript"></script>
 
     <link href="${moduleUri}/static/css/stringtouri-interface.css" rel="stylesheet"></link>
 
@@ -83,7 +82,7 @@
           	</header>
         	</div>
 
-	    <div class="fuelux" ng-controller="SelectionCtrl">
+	    <div class="fuelux" ng-controller="SelectionCtrl" ng-init="moduleUrl='$moduleUri'; projectUri='$it.uri'">
 	      	<div id="moduleWizard" class="wizard">
 	        	<ul class="steps">
 	            	<li data-target="#settings" class="active"><span class="badge badge-info">1</span>#i18n("wizard.settings.label")<span class="chevron"></span></li>
@@ -106,29 +105,15 @@
 					<div id="workspace" class="row-fluid">
 						<div class="span6">
 							<fieldset>
-						
-								<predicate-chooser module="${moduleUri}"
-							                   project="${it.uri}"
-							                   class="input-xxlarge"
-							                   title="#i18n('modified.label')"
-							                   dataset-label="#i18n('dataset.label')"
-							                   class-label="#i18n('class.label')"
-							                   predicate-label="#i18n('predicate.label')"
-							                   dataset-placeholder="#i18n('dataset.info.target')"
-							                   class-placeholder="#i18n('class.info.target')"
-							                   predicate-placeholder="#i18n('predicate.info.target')"
-							                   id={{choosers.source.name}}
-							    ></predicate-chooser>
 
-							</fieldset>
-						</div>
-							
-						<div class="span6">
-							<fieldset>
+								<legend >#i18n('reference.label')</legend>
+
+								<H4 for="SourceProjectSelect">#i18n('dataset.project.label')</H4>
+								<select ng-init = "initProjectLists()" ng-options="project.title for project in projectSourceList"
+								class="input-xxlarge" ng-model="source.project" name ="SourceProjectSelect"></select>
 
 								<predicate-chooser module="${moduleUri}"
-											title = "#i18n('reference.label')"
-						                   project="${it.uri}"
+						                   project="{{source.project.uri}}"
 						                   class="input-xxlarge"
 						                   dataset-label="#i18n('dataset.label')"
 						                   class-label="#i18n('class.label')"
@@ -136,8 +121,38 @@
 						                   class-placeholder="#i18n('class.info.source')"
 						                   predicate-placeholder="#i18n('predicate.info.source')"
 						                   predicate-label="#i18n('predicate.label')"
-						                   id={{choosers.target.name}}
+						                   id={{choosers.source.name}}
 						                  ></predicate-chooser>
+
+						        <form ng-show="source.project.uri=='ext'" name="externalSourceForm">
+						       		<H4 for='externalEndpoint'>#i18n("sparql-endpoint.label")</H4>
+									<input type="url" class="input-xxlarge" id="externalEndpoint" ng-model="externalSource.dataset" required/>
+
+									<H4 for='externalClass'>#i18n("class.label")</H4>
+									<input type="url" class="input-xxlarge" id="externalClass" ng-model="externalSource.class"/>
+
+									<H4 for='externalPredicate'>#i18n("predicate.label")</H4>
+									<input type="url" class="input-xxlarge" id="externalPredicate" ng-model="externalSource.predicate" required/>
+						        </form>
+
+							</fieldset>
+						</div>
+							
+						<div class="span6">
+							<fieldset>
+							<legend >#i18n('modified.label')</legend>
+
+							<predicate-chooser module="${moduleUri}"
+							                   project="$it.uri"
+							                   class="input-xxlarge"
+							                   dataset-label="#i18n('dataset.label')"
+							                   class-label="#i18n('class.label')"
+							                   predicate-label="#i18n('predicate.label')"
+							                   dataset-placeholder="#i18n('dataset.info.target')"
+							                   class-placeholder="#i18n('class.info.target')"
+							                   predicate-placeholder="#i18n('predicate.info.target')"
+							                   id={{choosers.target.name}}
+							    ></predicate-chooser>
 										
 							</fieldset>
 						</div>
@@ -164,8 +179,6 @@
 						                    <select class="grid-pagesize">
 						                        <option>5</option>
 						                        <option>10</option>
-						                        <option>20</option>
-						                        <option>50</option>
 						                    </select>
 						                    <span>#i18n("pager.perPage.label")</span>
 						                </div>
@@ -194,27 +207,36 @@
 
 				<div class="step-pane" id="save" >
 					
-					<form name="newSourceForm" class="form-horizontal">
+					<form name="newSourceForm" class="form-horizontal" ng-init="initSourceList()">
 						<div class="control-group">
-							<label class="control-label" for="sourceName">Source Name</label>
+							<label class="control-label" for="sourceName">#i18n('new-source.name.label')</label>
 							<div class="controls">
-								<input type="text" id="sourceName" placeholder="Enter the name of the new source" class="span4" required 
-									ng-model="sourceName">
+								<input type="text" id="sourceName" class="span4" required ng-model="newSource.name">
 							</div>
 						</div>
+
+						<div class="alert alert-error" ng-hide="isDatasourceNameAvailable()">
+							#i18n("new-source.source-name-taken.message")
+						</div>
+
 						<div class="control-group">
-							<label class="control-label" for="targetURLNew">Target URL</label>
+							<label class="control-label" for="targetURLNew">#i18n("new-source.target-uri.label")</label>
 							<div class="controls">
-								<input type="url" id="targetURLNew" placeholder="Enter URL to associate the new triples" class="span4" required
-									ng-model="targetURLNew">
+								<input type="url" id="targetURLNew" class="span4" required ng-model="newSource.uri">
 							</div>
 						</div>
+
+						<div class="alert alert-error" ng-hide="isDatasourceUriAvailable()">
+							#i18n("new-source.source-uri-taken.message")
+						</div>
+
 						<div class="control-group">
-								<label class="control-label" for="sourceDescription">Source Description</label>
-								<div class="controls">
-									<textarea rows="3" ng-model="sourceDescription" placeholder="Enter the description of the new source" class="span4"></textarea>
-								</div>
+							<label class="control-label" for="sourceDescription">#i18n("new-source.description.label")</label>
+							<div class="controls">
+								<textarea rows="3" ng-model="sourceDescription" placeholder="#i18n('new-source.description.placeholder')" class="span4" id="newSource.description"></textarea>
 							</div>
+						</div>
+						<input type="checkbox" ng-model="keepTargetTriples" /> #i18n("new-source.keep-values.label")
 					</form>
 					
 				</div>

@@ -79,8 +79,9 @@ public class SparqlResultsGridJsonWriter extends AbstractGridJsonWriter
      *                        generated JSON object or <code>null</code>
      *                        to produce standard JSON.
      */
-    public SparqlResultsGridJsonWriter(OutputStream out, MessageFormat urlPattern,
-                                            String jsonCallback) {
+    public SparqlResultsGridJsonWriter(OutputStream out,
+                                       MessageFormat urlPattern,
+                                       String jsonCallback) {
         super(out, urlPattern, jsonCallback);
     }
 
@@ -103,7 +104,7 @@ public class SparqlResultsGridJsonWriter extends AbstractGridJsonWriter
      *                        to produce standard JSON.
      */
     public SparqlResultsGridJsonWriter(Writer out, MessageFormat urlPattern,
-                                      String jsonCallback) {
+                                                   String jsonCallback) {
         super(out, urlPattern, jsonCallback);
     }
 

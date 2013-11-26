@@ -79,7 +79,7 @@ public class GridJsonRdfHandler extends AbstractGridJsonWriter
      *                        to produce standard JSON.
      */
     public GridJsonRdfHandler(OutputStream out, MessageFormat urlPattern,
-                                            String jsonCallback) {
+                                                String jsonCallback) {
         super(out, urlPattern, jsonCallback);
     }
 
@@ -102,7 +102,7 @@ public class GridJsonRdfHandler extends AbstractGridJsonWriter
      *                        to produce standard JSON.
      */
     public GridJsonRdfHandler(Writer out, MessageFormat urlPattern,
-                                      String jsonCallback) {
+                                          String jsonCallback) {
         super(out, urlPattern, jsonCallback);
     }
 

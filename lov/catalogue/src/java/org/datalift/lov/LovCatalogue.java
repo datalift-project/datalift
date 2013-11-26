@@ -54,7 +54,7 @@ import org.openrdf.repository.http.HTTPRepository;
 
 /**
  * This module lets end user select ontologies by browsing the 
- * LOV catalogue.
+ * LOV catalog.
  * 
  */
 @Path(LovCatalogue.MODULE_NAME)
@@ -100,6 +100,8 @@ public class LovCatalogue extends BaseModule {
 	public LovCatalogue(){
 		super(MODULE_NAME);
 		
+		cache = new HashSet<OntologyDesc>();
+		
 		if(nextLovUpdate == null) {
 			nextLovUpdate = new Date();
 			Calendar cal = Calendar.getInstance();
@@ -126,36 +128,30 @@ public class LovCatalogue extends BaseModule {
 	//-------------------------------------------------------------------------
 
 	/**
-	 * Display the LOV catalog. They are obtained by querying the LOV sparql
-	 * end point and caching them in the internal store. They are re-queried
+	 * Display the LOV catalog. They are obtained by querying the LOV SPARQL
+	 * endpoint and caching them in the internal store. They are re-queried
 	 * when user asks for a refresh
 	 */
 	@GET
 	@Path("{id}/ontologyBrowse")
 	public Response ontologyUpload(@PathParam("id") String id,
-								   @Context UriInfo uriInfo)
-										   throws WebApplicationException {
-
-		log.info("Entering ontologyBrowse()");
+	                               @Context UriInfo uriInfo)
+						 throws WebApplicationException {
+		log.trace("Entering ontologyBrowse()");
 		Response response = null;
 		boolean dataChanged = false;
-
-		URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
-		Project proj = this.projectManager.findProject(projectUri);
-
 		try {
-			
 			// Checking if data needs an update
 			Date now = new Date();
 			if(now.after(nextLovUpdate)) {
-				log.info("LOV data are too old. Updating LOV catalogue.");
+				log.info("LOV data are too old. Updating LOV catalog...");
 				loadLOVCatalogue();
 				dataChanged = true;
 				Calendar cal = Calendar.getInstance();
 				cal.setTime(now);
 				cal.add(Calendar.DATE, DAYS_TO_UPDATE);
 				nextLovUpdate = cal.getTime();
-				log.info("Next LOV update : {}.", nextLovUpdate);
+				log.info("Next LOV catalog update: {}", nextLovUpdate);
 			}
 			else {
 				// Checking if data exists in repository
@@ -165,75 +161,65 @@ public class LovCatalogue extends BaseModule {
 				org.openrdf.model.URI ctx = null;
 				ctx = internalRepositoryConnection.getValueFactory().createURI(lovContextURI.toString());
 				repositorySize = internalRepositoryConnection.size(ctx);
-				log.info("Repository size for LOV context : {}.", repositorySize);
 				if(repositorySize <= 0) {
-					log.info("No LOV data found. Loading LOV catalogue.");
+					log.debug("No data found. Loading LOV catalog...");
 					loadLOVCatalogue();
 					dataChanged = true;
 				}
+				else {
+				    log.trace("Repository size for LOV catalog context: {}", repositorySize);
+				}
 			}
-			
-
 		} catch (Exception e1) {
-
-			log.fatal("Some serious error occured while syncing the catalog");
-			e1.printStackTrace();
-
+			this.handleInternalError(e1, "Some serious error occurred while synchronizing the catalog");
 		}
 
+		URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
+		Project proj = this.projectManager.findProject(projectUri);
 		if (proj != null) {
 			//TODO to be done only if the project exists!
 		}
 
 		try {
-
-			if (!cacheExists) {
-				log.debug("No cache of the LOV catalog exists. Will cache a copy now...");
+			if ( ! cacheExists || dataChanged) {
+				log.trace("No cache or new data. Caching now...");
 				cacheLov();
 			}
-
-			if (cache != null && cache.size() > 0) {
-
-				log.debug("Cache of LOV catalog already exists");
-				
-				if(dataChanged)
-					cacheLov();
-				
+			if (cache.size() > 0) {
+				log.trace("Cache of LOV catalog already exists");
 				TemplateModel view = this.newView("/ontologyBrowse.vm", cache);
 				view.put("projectId", id);
-				
 				response = Response.ok(view, TEXT_HTML).build();
 			}
 			else {
-				//TODO else -> an error page?
-				response = Response.serverError().build();
+				log.warn("Loading view with no data.");
+				TemplateModel view = this.newView("/ontologyBrowse.vm",
+						new HashSet<OntologyDesc>());
+				view.put("projectId", id);
+				response = Response.ok(view, TEXT_HTML).build();
 			}
-
 		} catch (Exception e) {
-			this.handleInternalError(e, "Failed to add ontology {}");
+			this.handleInternalError(e, "Failed to load LOV catalog");
 		}
-
 		return response;
 	}
 
 	/**
 	 * Upload the ontologies selected(can be multiple) by the browsing the LOV
-	 * catalogue
+	 * catalog
 	 */
 	@POST
 	@Path("{id}/ontologyBrowseUpload")
 	//@Consumes("application/x-www-form-urlencoded")
 	public Response ontologyBrowseUpload(@PathParam("id") String projectId,
-			  							 @FormParam("source_url") List<URL> srcUrl,
-			 							 @FormParam("title") List<String> title,
-										 @Context UriInfo uriInfo)
-												 throws WebApplicationException {
-		
+	                                     @FormParam("source_url") List<URL> srcUrl,
+	                                     @FormParam("title") List<String> title,
+	                                     @Context UriInfo uriInfo)
+							 throws WebApplicationException {
 		log.debug("ontologyBrowseUpload web service");
-		log.debug("source_url : {}, title : {}", srcUrl, title);
+		log.debug("source_url: {}, title: {}", srcUrl, title);
 
 		Response response = null;
-		
 		try {
 			// Retrieve project.
 			log.debug("Loading project {} with base uri {}", projectId, uriInfo.getBaseUri());
@@ -256,15 +242,13 @@ public class LovCatalogue extends BaseModule {
 			
 			String redirectUrl = projectUri.toString() + "#ontology";
 			
-			log.debug("Building response. Redirect URL : {}", redirectUrl);
-			response = Response
-					.ok(this.newView("/redirect.vm", redirectUrl))
-					.type(TEXT_HTML).build();
+			log.trace("Building response. Redirect URL: {}", redirectUrl);
+			response = Response.ok(this.newView("/redirect.vm", redirectUrl))
+			                   .type(TEXT_HTML).build();
 			
 		} catch (Exception e) {
-			this.handleInternalError(e, "Failed to add browse ontology {}", srcUrl);
+			this.handleInternalError(e, "Failed to add ontology {}", srcUrl);
 		}
-		
 		return response;
 	}
 
@@ -348,14 +332,14 @@ public class LovCatalogue extends BaseModule {
 	 * @throws URISyntaxException
 	 */
 	private void cacheLov() throws Exception{
-		log.info("Caching lov ontology catalogue from the internal RDF repository...");
-		cache = new HashSet<OntologyDesc>();
+		log.trace("Caching LOV ontology catalog from the internal repository...");
 
+		cache = new HashSet<OntologyDesc>();
 		RepositoryConnection connection = this.configuration.getInternalRepository().newConnection();
 
 		// Query to select some info from the internal repository with the lov context
 		StringBuilder query = new StringBuilder();
-		query.append("SELECT ?vocabURI ?vocabPrefix ?vocabTitle ?vocabDescr ");
+		query.append("SELECT DISTINCT ?vocabURI ?vocabPrefix ?vocabTitle ?vocabDescr ");
 		query.append("FROM " + LOV_CONTEXT_SPARQL);
 		query.append(" WHERE { ");
 		query.append(" ?vocabURI <http://purl.org/vocab/vann/preferredNamespacePrefix> ?vocabPrefix.");
@@ -371,7 +355,6 @@ public class LovCatalogue extends BaseModule {
 		List<String> bindingFields = result.getBindingNames();
 		
 		while(result.hasNext()) {
-			
 			BindingSet set = result.next();
 			OntologyDesc ontologyDesc = new OntologyDesc();
 			ontologyDesc.setUrl(set.getValue(bindingFields.get(0)).toString());
@@ -379,22 +362,23 @@ public class LovCatalogue extends BaseModule {
 			ontologyDesc.setName(set.getValue(bindingFields.get(2)).toString());
 			
 			// Description might not exist (foaf for instance)
-			if(set.getValue(bindingFields.get(3)) != null)
+			if(set.getValue(bindingFields.get(3)) != null) {
 				ontologyDesc.setDescription(set.getValue(bindingFields.get(3)).toString());
-			else
+			}
+			else {
 				ontologyDesc.setDescription("");
-			
+			}
 			cache.add(ontologyDesc);
-
 		}
 		
-		log.info("Caching is done. Size : {}", cache.size());
-		cacheExists = true;
-		
+		if (cache.size() > 0) {
+			log.info("LOV memory cache loaded ({} triples)", Integer.valueOf(cache.size()));
+			cacheExists = true;
+		}
 	}
 
 	/**
-	 * Queries the LOV sparql end point and loads a copy of the LOV catalogue in
+	 * Queries the LOV SPARQL endpoint and loads a copy of the LOV catalog in
 	 * the internal store
 	 * 
 	 * @throws Exception
@@ -404,11 +388,12 @@ public class LovCatalogue extends BaseModule {
 		boolean isSuccessful = true;
 
 		//TODO remove hard coding and put it in properties file
-		log.info("Starting the LOV catalog sync process...");
-		String endpointURL = "http://lov.okfn.org/endpoint/lov/repositories/";
+//		String endpointURL = "http://lov.okfn.org/endpoint/lov/repositories/";
+		String endpointURL = this.configuration.getInternalRepository().getEndpointUrl();
 		HTTPRepository lovEndPoint = new HTTPRepository(endpointURL);
 		lovEndPoint.initialize();
-
+		log.debug("Starting the LOV catalog sync process using SPARQL endpoint \"{}\"...", endpointURL);
+	
 		RepositoryConnection lovRepositoryConnection = lovEndPoint.getConnection();
 		try {
 			StringBuilder sparqlQuery = new StringBuilder();
@@ -428,28 +413,26 @@ public class LovCatalogue extends BaseModule {
 			sparqlQuery.append(" } ");
 			sparqlQuery.append(" } ");
 
-			log.info("Querying LOV SPARQL endpoint at \"{}\"...", endpointURL);
 			GraphQuery query = lovRepositoryConnection.prepareGraphQuery(QueryLanguage.SPARQL, sparqlQuery.toString());
 			GraphQueryResult result = query.evaluate();
 			
 			statements = new ArrayList<Statement>();
-
-			// note : result can't be iterated over another time
+			// Note: result can't be iterated over another time
 			while (result.hasNext()) {
 				statements.add(result.next());
 			}
 			result.close();
 		}
 		catch(Exception e) {
-			log.fatal("Failed to query the end point at {} ", endpointURL);
+			log.fatal("Failed to query SPARQL endpoint at {}", e, endpointURL);
 			isSuccessful = false;
-			//throw new LovModuleException("Error querying the sparql end point", e);
+			//throw new LovModuleException("Error querying the SPARQL endpoint", e);
 		}
 		finally {
 			Util.CloseQuietly(lovRepositoryConnection);
 		}
 
-		log.info("Finished querying the sparql end point. Adding result data to the internal repository.");
+		log.trace("Finished querying the SPARQL endpoint. Adding result data to the internal repository.");
 		URI lovContextURI = new URI(LOV_CONTEXT);
 		RepositoryConnection internalRepositoryConnection = this.configuration.getInternalRepository().newConnection();
 		try {
@@ -458,9 +441,9 @@ public class LovCatalogue extends BaseModule {
 					.createURI(lovContextURI.toString());
 			internalRepositoryConnection.clear(ctx);
 
-			log.info("Adding {} statements.", statements.size());
+			log.debug("Adding {} statements to context <{}>", statements.size(), ctx);
 			internalRepositoryConnection.add(statements, ctx); // auto commit
-			log.info("Internal repository size for context {} : {}", ctx, internalRepositoryConnection.size(ctx));
+			log.info("Internal repository size for context <{}>: {}", ctx, internalRepositoryConnection.size(ctx));
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -482,11 +465,11 @@ public class LovCatalogue extends BaseModule {
 	}
 
 	private Project loadProject(URI uri) throws WebApplicationException {
-		log.debug("Loading project - uri : {}", uri);
+		log.trace("Loading project: <{}>", uri);
 		Project p = this.findProject(uri);
 		if (p == null) {
 			// Not found.
-			log.debug("project not found :(");
+			log.warn("Project not found <{}> :(", uri);
 			throw new WebApplicationException(Status.NOT_FOUND);
 		}
 		return p;
@@ -494,10 +477,10 @@ public class LovCatalogue extends BaseModule {
 
 
 	private URI newProjectId(URI baseUri, String name) {
-		log.debug("new Project Id");
 		try {
-			return new URL(baseUri.toURL(), "project/" + urlify(name))
-			.toURI();
+			URI u = new URL(baseUri.toURL(), "project/" + urlify(name)).toURI();
+			log.trace("new Project Id: {}", u);
+			return u;
 		} catch (Exception e) {
 			throw new RuntimeException("Invalid base URI: " + baseUri);
 		}

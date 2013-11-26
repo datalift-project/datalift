@@ -50,6 +50,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.MissingResourceException;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -395,6 +396,13 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         }
         if (defaultGraphUris != null) {
             defGraphs.addAll(defaultGraphUris);
+        }
+        if ((repository == null) && (! defGraphs.isEmpty())) {
+            try {
+                repository = Configuration.getDefault()
+                                          .getRepository(defGraphs.get(0));
+            }
+            catch (MissingResourceException e) { /* Ignore... */ }
         }
 
         ResponseBuilder response = null;
@@ -747,19 +755,20 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
             targetRepo = defaultGraphUris.remove(0);
         }
         Configuration cfg = Configuration.getDefault();
-        Repository repo = cfg.getRepository(targetRepo);
-        if (repo == null) {
-            // No repository found for first default graph.
-            // => Use default DataLift repository.
-            defaultGraphUris.add(0, targetRepo);
-            repo = cfg.getDefaultRepository();
-        }
-        else {
+        Repository repo = null;
+        try {
+            repo = cfg.getRepository(targetRepo);
             if (! ((repo.isPublic()) ||
                    (SecurityContext.isUserAuthenticated()))) {
                 // Repository is not public and user is not authenticated.
                 throw new java.lang.SecurityException();
             }
+        }
+        catch (MissingResourceException e) {
+            // No repository found for first default graph.
+            // => Use default DataLift repository.
+            defaultGraphUris.add(0, targetRepo);
+            repo = cfg.getDefaultRepository();
         }
         return repo;
     }
@@ -794,6 +803,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
             // No specific output format requested.
             // => Get matching format from request Accept HTTP header.
             responseType = request.selectVariant(supportedTypes);
+            log.trace("Negotiated content type: {}", responseType);
         }
         if (responseType == null) {
             // Oops! No matching MIME type found.
@@ -808,7 +818,6 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
             log.error(error.getMessage());
             this.sendError(NOT_ACCEPTABLE, error.getLocalizedMessage());
         }
-        log.debug("Negotiated content type: {}", responseType);
         return responseType;
     }
 
@@ -1001,18 +1010,22 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         this.sendError(BAD_REQUEST, error.getLocalizedMessage());
     }
 
-    protected final static String getQueryDesc(String query) {
-        String desc = query;
+    protected final static String getQueryDesc(String query,
+                                               int max, boolean normalize) {
+        String desc = "";
         if (query != null) {
             // Strip prefix declarations.
             Matcher m = QUERY_START_PATTERN.matcher(query);
             if (m.find()) {
-                int i = m.start();
-                // Get the 100 first chars of the query string, minus prefixes.
-                desc = (query.length() - i > MAX_QUERY_DESC)?
-                                query.substring(i, MAX_QUERY_DESC + i) + "...":
-                                query.substring(i);
+                query = query.substring(m.start());
             }
+            if (normalize) {
+                // Normalize query string.
+                query = query.replaceAll("\\s+", " ");
+            }
+            // Get the N first chars of the query string, minus prefixes.
+            desc = ((max > 3) && (query.length() > max))?
+                                    query.substring(0, max - 3) + "...": query;
         }
         return desc;
     }
@@ -1176,22 +1189,50 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     {
         /** The full text of the SPARQL query. */
         public final String query;
+        private final int maxLength;
+        private final boolean normalize;
         /** The shortened description of the SPARQL query. */
         private String desc = null;
 
         /**
-         * Default constructor.
+         * Creates a SPARQL query logging helper that normalizes the
+         * query text and limits it to the first 128 characters.
          * @param  query   the SPARQL query to wrap.
          */
         public QueryDescription(String query) {
+            this(query, MAX_QUERY_DESC, true);
+        }
+
+        /**
+         * Creates a SPARQL query logging helper that limits the query
+         * text to the first 128 characters.
+         * @param  query       the SPARQL query to wrap.
+         * @param  normalize   whether to normalize spaces.
+         */
+        public QueryDescription(String query, boolean normalize) {
+            this(query, MAX_QUERY_DESC, normalize);
+        }
+
+        /**
+         * Creates a SPARQL query logging helper wrapping the specified
+         * query.
+         * @param  query       the SPARQL query to wrap.
+         * @param  max         the maximum length of the query
+         *                     description.
+         * @param  normalize   whether to normalize spaces.
+         */
+        public QueryDescription(String query, int max, boolean normalize) {
             this.query = query;
+            this.maxLength = max;
+            this.normalize = normalize;
         }
 
         /** {@inheritDoc} */
         @Override
         public String toString() {
             if (this.desc == null) {
-                this.desc = getQueryDesc(this.query);
+                this.desc = getQueryDesc(this.query,
+                                         this.maxLength, this.normalize);
             }
             return this.desc;
         }

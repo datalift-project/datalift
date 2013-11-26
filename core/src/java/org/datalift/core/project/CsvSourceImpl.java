@@ -165,19 +165,6 @@ public class CsvSourceImpl extends BaseFileSource
         }
     }
 
-    /**
-     * Defines whether the first line of the file contains column
-     * headings.
-     * @param  titleRow   <code>true</code> if the first line of the
-     *                    file contains column heading;
-     *                    <code>false</code> otherwise.
-     *
-     * @deprecated replaced by {@link #setTitleRow(int)}.
-     */
-    public void setTitleRow(boolean titleRow) {
-        this.setTitleRow(1);
-    }
-
     /** {@inheritDoc} */
     @Override
     public String getSeparator() {
@@ -503,8 +490,9 @@ public class CsvSourceImpl extends BaseFileSource
             if (getLastDataRow() > 0) {
                 // Last data row set. => Compute number of rows to read.
                 this.maxRows = getLastDataRow() - getFirstDataRow() + 1;
+                log.debug("Rows to read: {}", wrap(this.maxRows));
             }
-            log.debug("Rows to read: {}", wrap(this.maxRows));
+            // Else: read all rows from source.
         }
 
         /** {@inheritDoc} */

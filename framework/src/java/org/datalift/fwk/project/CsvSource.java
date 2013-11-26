@@ -52,7 +52,7 @@ public interface CsvSource extends FileSource, CloseableIterable<Row<String>>
      * Supported separator characters.
      */
     public enum Separator {
-        comma(','), semicolon(';'), tab('\t'), space(' ');
+        comma(','), semicolon(';'), tab('\t'), pipe('|'), space(' ');
 
         protected final char value;
 

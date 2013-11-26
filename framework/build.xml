@@ -86,7 +86,7 @@
    -->
 
   <property name="app.name"             value="${ant.project.name}"/>
-  <property name="fwk.version"          value="0.7.0"/>
+  <property name="fwk.version"          value="0.7.2"/>
   <property name="app.long.name"        value="Datalift"/>
 
   <property name="build.home"           location="${basedir}/build"/>
@@ -196,8 +196,12 @@
 
   <target name="clean" depends="init"
           description="Deletes build and dist directories">
-    <delete dir="${build.home}"/>
-    <delete dir="${dist.home}"/>
+    <delete includeEmptyDirs="true" quiet="true">
+      <fileset dir="${build.home}" followsymlinks="false"/>
+    </delete>
+    <delete includeEmptyDirs="true" quiet="true">
+      <fileset dir="${dist.home}" followsymlinks="false"/>
+    </delete>
   </target>
 
 

@@ -129,6 +129,7 @@ import org.datalift.fwk.rdf.ElementType;
 import org.datalift.fwk.rdf.RdfFormat;
 import org.datalift.fwk.rdf.RdfNamespace;
 import org.datalift.fwk.rdf.RdfUtils;
+import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.sparql.SparqlEndpoint;
 import org.datalift.fwk.util.CloseableIterator;
 import org.datalift.fwk.util.UriBuilder;
@@ -612,7 +613,7 @@ public class Workspace extends BaseModule
                     @FormDataParam("source")
                                     FormDataContentDisposition fileDisposition,
                     @FormDataParam("file_url") String sourceUrl,
-                    @FormDataParam("file_name") String file_name,
+                    @FormDataParam("file_name") String srcName,
                     @FormDataParam("charset") String charset,
                     @FormDataParam("separator") String separator,
                     @FormDataParam("title_row") @DefaultValue("1") int titleRow,
@@ -620,7 +621,10 @@ public class Workspace extends BaseModule
                     @FormDataParam("last_row") @DefaultValue("0") int lastRow,
                     @FormDataParam("quote") String quote,
                     @Context UriInfo uriInfo) throws WebApplicationException {
-        if (!isSet(separator)) {
+        if (! isSet(srcName)) {
+            this.throwInvalidParamError("file_name", srcName);
+        }
+        if (! isSet(separator)) {
             this.throwInvalidParamError("separator", separator);
         }
         Charset encoding = null;
@@ -653,21 +657,21 @@ public class Workspace extends BaseModule
             }
         }
         else {
-            fileName = this.toFileName(file_name);
+            fileName = this.toFileName(fileDisposition.getFileName());
             if (isBlank(fileName)) {
                 this.throwInvalidParamError("source", null);
             }
         }
         // Else: File data have been uploaded.
 
-        log.debug("Processing CSV source creation request for {}", fileName);
+        log.debug("Processing CSV source creation request for {}", srcName);
         boolean deleteFiles = false;
         try {
             // Build object URIs from request path.
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
             URI sourceUri = new URI(projectUri.getScheme(), null,
                                     projectUri.getHost(), projectUri.getPort(),
-                                    this.getSourceId(projectUri.getPath(), fileName),
+                                    this.getSourceId(projectUri.getPath(), srcName),
                                     null, null);
             // Retrieve project.
             Project p = this.loadProject(projectUri);
@@ -681,8 +685,8 @@ public class Workspace extends BaseModule
             Separator sep = Separator.valueOf(separator);
             // Initialize new source.
             CsvSource src = this.projectManager.newCsvSource(p, sourceUri,
-                                        fileName, description,
-                                        filePath, sep.getValue());
+                                                    srcName, description,
+                                                    filePath, sep.getValue());
             if (fileUrl != null) {
                 src.setSourceUrl(fileUrl.toString());
             }
@@ -727,7 +731,7 @@ public class Workspace extends BaseModule
         catch (Exception e) {
             deleteFiles = true;
             this.handleInternalError(e,
-                            "Failed to create CVS source for {}", fileName);
+                                "Failed to create CVS source for {}", srcName);
         }
         finally {
             if ((deleteFiles) && (localFile != null)) {
@@ -830,7 +834,7 @@ public class Workspace extends BaseModule
     @Consumes(MULTIPART_FORM_DATA)
     public Response uploadRdfSource(
                             @PathParam("id") String projectId,
-                            @FormDataParam("file_name") String file_name,
+                            @FormDataParam("file_name") String srcName,
                             @FormDataParam("description") String description,
                             @FormDataParam("base_uri") String baseUri,
                             @FormDataParam("source") InputStream fileData,
@@ -840,8 +844,8 @@ public class Workspace extends BaseModule
                             @FormDataParam("mime_type") String mimeType,
                             @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
-        if (fileData == null) {
-            this.throwInvalidParamError("source", null);
+        if (! isSet(srcName)) {
+            this.throwInvalidParamError("file_name", srcName);
         }
         URI rdfBaseUri = null;
         if (!isBlank(baseUri)) {
@@ -876,7 +880,7 @@ public class Workspace extends BaseModule
             }
         }
         else {
-            fileName = this.toFileName(file_name);
+            fileName = this.toFileName(fileDisposition.getFileName());
             if (isBlank(fileName)) {
                 this.throwInvalidParamError("source", null);
             }
@@ -885,14 +889,14 @@ public class Workspace extends BaseModule
 
         // Check requested MIME type.
         RdfFormat format = RdfFormat.get(mimeType);
-        log.debug("Processing RDF source creation request for {}", fileName);
+        log.debug("Processing RDF source creation request for {}", srcName);
         boolean deleteFiles = false;
         try {
             // Build object URIs from request path.
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
             URI sourceUri = new URI(projectUri.getScheme(), null,
                                     projectUri.getHost(), projectUri.getPort(),
-                                    this.getSourceId(projectUri.getPath(), fileName),
+                                    this.getSourceId(projectUri.getPath(), srcName),
                                     null, null);
             // Retrieve project.
             Project p = this.loadProject(projectUri);
@@ -902,7 +906,7 @@ public class Workspace extends BaseModule
                                          format.getMimeTypes(), false);
             // Initialize new source.
             RdfFileSource src = this.projectManager.newRdfSource(p, sourceUri,
-                                    fileName, description, rdfBaseUri, filePath,
+                                    srcName, description, rdfBaseUri, filePath,
                                     format.getMimeType().toString());
             if (fileUrl != null) {
                 src.setSourceUrl(fileUrl.toString());
@@ -942,7 +946,7 @@ public class Workspace extends BaseModule
         catch (Exception e) {
             deleteFiles = true;
             this.handleInternalError(e,
-                            "Failed to create RDF source for {}", fileName);
+                                "Failed to create RDF source for {}", srcName);
         }
         finally {
             if ((deleteFiles) && (localFile != null)) {
@@ -1230,14 +1234,17 @@ public class Workspace extends BaseModule
     @Consumes(MULTIPART_FORM_DATA)
     public Response uploadXmlSource(
                             @PathParam("id") String projectId,
-                            @FormDataParam("file_name") String file_name, 
-							@FormDataParam("description") String description,
+                            @FormDataParam("file_name") String srcName, 
+                            @FormDataParam("description") String description,
                             @FormDataParam("source") InputStream fileData,
                             @FormDataParam("source")
                                     FormDataContentDisposition fileDisposition,
                             @FormDataParam("file_url") String sourceUrl,
                             @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
+        if (! isSet(srcName)) {
+            this.throwInvalidParamError("file_name", srcName);
+        }
         Response response = null;
 
         String fileName = null;
@@ -1259,21 +1266,21 @@ public class Workspace extends BaseModule
             }
         }
         else {
-            fileName = this.toFileName(file_name);
+            fileName = this.toFileName(fileDisposition.getFileName());
             if (isBlank(fileName)) {
                 this.throwInvalidParamError("source", null);
             }
         }
         // Else: File data have been uploaded.
 
-        log.debug("Processing XML source creation request for {}", fileName);
+        log.debug("Processing XML source creation request for {}", srcName);
         boolean deleteFiles = false;
         try {
             // Build object URIs from request path.
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
             URI sourceUri = new URI(projectUri.getScheme(), null,
                                     projectUri.getHost(), projectUri.getPort(),
-                                    this.getSourceId(projectUri.getPath(), fileName),
+                                    this.getSourceId(projectUri.getPath(), srcName),
                                     null, null);
             // Retrieve project.
             Project p = this.loadProject(projectUri);
@@ -1283,7 +1290,7 @@ public class Workspace extends BaseModule
                      Arrays.asList(APPLICATION_XML_TYPE, TEXT_XML_TYPE), false);
             // Initialize new source.
             XmlSource src = this.projectManager.newXmlSource(p, sourceUri,
-                                            fileName, description, filePath);
+                                            srcName, description, filePath);
             if (fileUrl != null) {
                 src.setSourceUrl(fileUrl.toString());
             }
@@ -1317,7 +1324,7 @@ public class Workspace extends BaseModule
         catch (Exception e) {
             deleteFiles = true;
             this.handleInternalError(e,
-                            "Failed to create XML source for {}", fileName);
+                                "Failed to create XML source for {}", srcName);
         }
         finally {
             if ((deleteFiles) && (localFile != null)) {
@@ -2491,7 +2498,7 @@ public class Workspace extends BaseModule
                      e, prefix, uri);
         }
         finally {
-            try { cnx.close(); } catch (Exception e) { /* Ignore... */ }
+            Repository.closeQuietly(cnx);
         }
     }
 
@@ -2509,7 +2516,7 @@ public class Workspace extends BaseModule
         }
         catch (Exception e) { /* Ignore... */ }
         finally {
-            try { cnx.close(); } catch (Exception e) { /* Ignore... */ }
+            Repository.closeQuietly(cnx);
         }
     }
 

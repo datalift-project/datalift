@@ -198,11 +198,12 @@ public interface ProjectModule extends Module
          * There's no hard-coded rule for the position value. Yet the
          * following informal rules are recommended:</p>
          * <ul>
-         *  <li>From 0 to 999 for modules transforming non RDF data
+         *  <li>From 1 to 999 for modules transforming non RDF data
          *   into RDF data</li>
          *  <li>From 1000 to 9999 for modules transforming RDF data
          *   (ontology alignment, interlinking...)</li>
-         *  <li>Above 10000 for modules publishing data</li>
+         *  <li>Above 10000 for modules publishing or exporting RDF
+         *   data</li>
          * </ul>
          * @param  position   the position as a positive integer.
          */

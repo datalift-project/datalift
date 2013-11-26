@@ -11,6 +11,7 @@ import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 
 import java.io.ObjectStreamException;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -121,7 +122,7 @@ public abstract class InterlinkingController extends BaseModule implements Proje
      * @param previewResult the list of RDF triples, where every element will be a list of 3 element
      * @return a JSON string that represents a triple store
      */
-    protected String getJsonTriplesMatrix(LinkedList<LinkedList<String>> previewResult){
+    protected String getJsonTriplesMatrix(List<LinkedList<String>> previewResult){
     	JsonArray rowList = new JsonArray();
     	for(LinkedList<String> triple : previewResult){
     		JsonObject jsonTriple = new JsonObject();
@@ -168,6 +169,7 @@ public abstract class InterlinkingController extends BaseModule implements Proje
 		}
         return p;
     }
+    
     
     /**
      * 
@@ -232,5 +234,19 @@ public abstract class InterlinkingController extends BaseModule implements Proje
                             .getBean(ResourceResolver.class)
                             .resolveModuleResource(this.getName(),
                                                    uriInfo, request, acceptHdr);
+    }
+    
+    protected final String getJsonProjectList(){
+    	ProjectManager pm = Configuration.getDefault().getBean(ProjectManager.class);
+    	List<Project> projectList = new ArrayList<Project>(pm.listProjects());
+    	JsonArray jProjList = new JsonArray();
+    	for(Project proj: projectList){
+    		JsonObject jProj = new JsonObject();
+    		jProj.addProperty("title",proj.getTitle());
+    		jProj.addProperty("uri", proj.getUri());
+    		jProjList.add(jProj);
+    	}
+    	return new Gson().toJson(jProjList);
+    	
     }
 }
