@@ -7,7 +7,9 @@ import java.util.concurrent.TimeUnit;
 
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.project.ProcessingTask;
+import org.datalift.fwk.project.ProjectManager;
 import org.datalift.fwk.project.TaskManager;
+import org.datalift.fwk.project.ProcessingTask.EventStatus;
 
 // TODO: add properties in skel. properties file
 public class TaskManagerImpl implements TaskManager {
@@ -30,6 +32,12 @@ public class TaskManagerImpl implements TaskManager {
 		if (this.threadPoolExecutor == null)
 			throw new RuntimeException(
 					"ThreadPoolExecutor is null. Be sure to call 'start' method");
+
+		task.setEventStatus(EventStatus.NEW);
+		ProjectManager pm = 
+				Configuration.getDefault().getBean(ProjectManager.class);
+		pm.saveEvent(task);
+		
 		this.threadPoolExecutor.execute(task);
 	}
 

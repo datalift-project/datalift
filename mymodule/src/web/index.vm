@@ -30,21 +30,12 @@
 	loadHistorizedWidget();
 	// State change when using page
 	$(window).bind('popstate', function() {
-		loadHistorizedWidget();
+		showHistory();
 	});
 
-	function loadHistorizedWidget() {
-		if (History.getHash() != "") {
-			widgetRequest(History.getHash());
-		}
-		else {
-			$("#demo_widget").empty();
-		}
-	}
-
-	function widgetRequest(widgetName) {
+	function showHistory() {
 		jQuery.ajax({
-			url: "${baseUri}/sample-ui/widget/" + widgetName,
+			url: "${baseUri}/sparql?query=SELECT...&default-graph-uri=internal&grid=true",
 			success: successfulQuery,
 	  		error: unsuccessfulQuery
 		});

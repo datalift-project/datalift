@@ -2,7 +2,7 @@ package org.datalift.fwk.project;
 
 import java.net.URI;
 
-public interface ProcessingTask extends Runnable {
+public interface ProcessingTask extends Runnable, Event {
 
 	public enum EventStatus {
 		NEW,

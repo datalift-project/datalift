@@ -70,6 +70,7 @@ import org.datalift.fwk.MediaTypes;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.CsvSource;
 import org.datalift.fwk.project.Event;
+import org.datalift.fwk.project.ProcessingTask;
 import org.datalift.fwk.project.SparqlSource;
 import org.datalift.fwk.project.SqlDatabaseSource;
 import org.datalift.fwk.project.SqlQuerySource;
@@ -664,6 +665,12 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
             throw new IllegalStateException("Already started");
         }
         this.classes.addAll(classes);
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+	public ProcessingTask newProcessingTask(URI transformationId) {
+    	return new ProcessingTaskImpl(transformationId);
     }
 
     //-------------------------------------------------------------------------

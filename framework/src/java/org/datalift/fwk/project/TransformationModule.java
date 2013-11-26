@@ -5,6 +5,13 @@ import java.net.URI;
 import org.datalift.fwk.LifeCycle;
 
 public interface TransformationModule extends LifeCycle {
-	public void execute(ProcessingTask task);
+	
+	/**
+	 * This method is used by the thread pool to do the process of a module
+	 * asynchronously.
+	 * @param task   it is the task with the parameters inside
+	 * @return       true if succeed or false if not.
+	 */
+	public Boolean execute(ProcessingTask task);
 	public URI getTransformationId();
 }

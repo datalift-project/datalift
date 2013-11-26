@@ -7,7 +7,9 @@ import javax.persistence.MappedSuperclass;
 
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.project.ProcessingTask;
+import org.datalift.fwk.project.ProjectManager;
 import org.datalift.fwk.project.TransformationModule;
+import org.datalift.fwk.project.ProcessingTask.EventStatus;
 
 import com.clarkparsia.empire.annotation.NamedGraph;
 import com.clarkparsia.empire.annotation.RdfProperty;
@@ -54,10 +56,23 @@ public class ProcessingTaskImpl extends EventImpl implements ProcessingTask {
 
 	public void run() {
 		Configuration cfg = Configuration.getDefault();
-		TransformationModule m = (TransformationModule) cfg.getBean(this.getTransformationId().toString());
+		TransformationModule m = (TransformationModule) cfg.getBean(
+				this.getTransformationId().toString());
 		if (m == null)
 			throw new RuntimeException("Unable to gat TransformationModule (null)");
-		m.execute(this);
+		
+		ProjectManager pm = 
+				Configuration.getDefault().getBean(ProjectManager.class);
+		
+		this.setEventStatus(EventStatus.RUNNING);
+		pm.saveEvent(this);
+		
+		if (m.execute(this))
+			this.setEventStatus(EventStatus.COMPLETE);
+		else
+			this.setEventStatus(EventStatus.FAIL);
+		
+		pm.saveEvent(this);
 	}
 	
 	//-------------------------------------------------------------------------

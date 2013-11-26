@@ -379,6 +379,14 @@ public interface ProjectManager
      *
      * @return a new project creation event description.
      */
-	ProjectCreationEvent newProjectCreationEvent(User u, Project p);
+	public ProjectCreationEvent newProjectCreationEvent(User u, Project p);
     
+	/**
+	 * Create a new processing task used by the TaskManager to run a task.
+	 * @param transformationId    the URI identifier of the module which want to
+	 *                            execute the task.
+	 * @return the processing task.
+	 */
+	public ProcessingTask newProcessingTask(URI transformationId);
+	
 }
