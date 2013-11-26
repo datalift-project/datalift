@@ -84,7 +84,7 @@
 									URI -> $curSource.uri
 									INFO -> $curSource
 									<li class="divider-group-list">
-										<a href="#" ng-click="applicableModules('$current.uri')">$curSource.title</a>
+										<a href="#" ng-click="applicableModules('$current.uri', '$curSource.uri')">$curSource.title</a>
 										<a href="#deleteSource" role="button" class="pull-right" data-toggle="modal" style="display: inline-block">
 											<img src="${baseUri}/images/icon-delete.png" ng-click="deleteSource('$current.uri', '${curSource.uri}', '${baseUri}')">
 										</a>
@@ -221,7 +221,7 @@
 				    	window.location.reload();
 				    	}
 			    	else
-			    		alert('Verifiez que tout les champs sont bien rempli');
+			    		alert('Verifiez que tous les champs soient bien remplis');
    				});
     		});
 			</script>

@@ -2078,7 +2078,6 @@ public class Workspace extends BaseModule
     			UriDesc modulePage = m.canHandle(s);
     			if (modulePage != null)
     			{
-    				log.info("++++++++++++module Page : ++++++++++++" + modulePage.toString());
     				modules.add(modulePage);
     			}
     		}
@@ -2093,6 +2092,9 @@ public class Workspace extends BaseModule
     		
     	}
     	view.put("canHandle", modules);
+    	view.put("curProject", p);
+    	view.put("curSource", s);
+
     	ResponseBuilder response = Response.ok(view).type(TEXT_HTML_UTF8);
     	 // Force page revalidation.
         CacheControl cc = new CacheControl();

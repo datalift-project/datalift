@@ -6,6 +6,7 @@
 #load_core_resources
 	<title>$!esc.html($it.title) - #i18n("source.grid.title") - DataLift</title>
 #css_links
+#header_links
 </head>
 <body>
 #banner

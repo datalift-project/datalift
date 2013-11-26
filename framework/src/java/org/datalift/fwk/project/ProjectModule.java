@@ -67,7 +67,7 @@ public interface ProjectModule extends Module
     public abstract UriDesc canHandle(Project p);
     
     /**
-     * Returns whether this module applies to the specified source,
+     * Returns whether this module applies to the specified source,í
      * i.e. the project current state allows data manipulation (e.g.
      * transformation, conversion, data completion...) by this module.
      * @param  s   a data-lifting source.
@@ -212,7 +212,7 @@ public interface ProjectModule extends Module
          * There's no hard-coded rule for the position value. Yet the
          * following informal rules are recommended:</p>
          * <ul>
-         *  <li>From 0 to 999 for modules transforming non RDF data
+         *  <li>From 1 to 999 for modules transforming non RDF data
          *   into RDF data</li>
          *  <li>From 1000 to 9999 for modules transforming RDF data
          *   (ontology alignment, interlinking...)</li>
