@@ -12,6 +12,7 @@ import com.clarkparsia.empire.annotation.NamedGraph;
 import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.RdfsClass;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -59,6 +60,8 @@ public class ProcessingTaskImpl extends EventImpl implements ProcessingTask {
 		this.setId(baseUri + UUID.randomUUID());
 		this.transformationId = transformationId;
 		this.setEventStatus(EventStatus.NEW);
+
+		this.setStartedAtTime(new Date());
 	}
 
 	//-------------------------------------------------------------------------
@@ -80,7 +83,9 @@ public class ProcessingTaskImpl extends EventImpl implements ProcessingTask {
 			this.setEventStatus(EventStatus.COMPLETE);
 		else
 			this.setEventStatus(EventStatus.FAIL);
-		
+
+		this.setEndedAtTime(new Date());
+
 		pm.saveEvent(this);
 	}
 	

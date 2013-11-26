@@ -37,8 +37,8 @@ public class TaskManagerTest {
 		this.props.put(DATALIFT_HOME, "tests");
 		this.props.put(REPOSITORY_URIS, RDF_STORE);
 		this.props.put(RDF_STORE + REPOSITORY_URL, "sail:///");
-		//	        this.props.put(RDF_STORE + REPOSITORY_URL, 
-		//	        		"http://localhost:9091/openrdf-sesame/repositories/tests");
+			        this.props.put(RDF_STORE + REPOSITORY_URL, 
+			        		"http://localhost:9091/openrdf-sesame/repositories/tests");
 		this.props.put(RDF_STORE + REPOSITORY_DEFAULT_FLAG, "true");
 		this.props.put(PRIVATE_STORAGE_PATH, ".");
 		
@@ -149,7 +149,7 @@ public class TaskManagerTest {
 	    	System.out.println("[" + projectId + "] Task is running...");
 
 			try {
-				Thread.sleep(50);
+				Thread.sleep(5000);
 			} catch (InterruptedException e) {
 				throw new RuntimeException(e);
 			}

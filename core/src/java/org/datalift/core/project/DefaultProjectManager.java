@@ -642,6 +642,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         	throw new RuntimeException("Invalid event URI");
         }
         this.projectDao.save(e);
+        this.projectDao.save(new ProvActivity(e.getUri()));
         log.debug("Event <{}> saved to RDF store", e.getUri());
     }
 
