@@ -7,35 +7,21 @@
   </head>
   <body>
 #banner
-    <div id="demo">
-      <div id="widget_list">
-        <ul>
-          <li><a class="widget_link" href="#draggable" value="draggable">Draggable widget</a></li>
-          <li><a class="widget_link" href="#dropable" value="dropable">Dropable widget</a></li>
-          <li><a class="widget_link" href="#resizable" value="resizable">Resizable widget</a></li>
-          <li><a class="widget_link" href="#sortable" value="sortable">Sortable widget</a></li>
-          <li><a class="widget_link" href="#autocomplete" value="autocomplete">Autocomplete widget</a></li>
-          <li><a class="widget_link" href="#button" value="button">Button widget</a></li>
-          <li><a class="widget_link" href="#datepicker" value="datepicker">Datepicker widget</a></li>
-          <li><a class="widget_link" href="#dialog" value="dialog">Dialog widget</a></li>
-        </ul>
-      </div>
-    </div>
+
+    <h2>Tab</h2>
     <div id="demo_widget">
     </div>
 
 #script_links
     <script type="text/javascript">
-	// First page loading
-	loadHistorizedWidget();
-	// State change when using page
-	$(window).bind('popstate', function() {
-		showHistory();
-	});
+	$(function() {
+        console.log( "ready!" );
+        showHistory();
+    });
 
 	function showHistory() {
 		jQuery.ajax({
-			url: "${baseUri}/sparql?query=SELECT...&default-graph-uri=internal&grid=true",
+			url: "${baseUri}/sparql?query=SELECT+*+WHERE+%7B%0D%0A++%3Fs+a+%3Chttp%3A%2F%2Fwww.datalift.org%2Fcore%23TransformationEvent%3E+%3B+%3Fp+%3Fo+.%0D%0A%7D%0D%0A&default-graph-uri=internal&max=1000&grid=true",
 			success: successfulQuery,
 	  		error: unsuccessfulQuery
 		});

@@ -7,6 +7,7 @@ import org.datalift.fwk.Configuration;
 import org.datalift.fwk.project.ProcessingTask;
 import org.datalift.fwk.project.ProjectManager;
 import org.datalift.fwk.project.TransformationModule;
+import org.datalift.fwk.security.SecurityContext;
 
 import com.clarkparsia.empire.annotation.NamedGraph;
 import com.clarkparsia.empire.annotation.RdfProperty;
@@ -60,6 +61,9 @@ public class ProcessingTaskImpl extends EventImpl implements ProcessingTask {
 		this.setId(baseUri + UUID.randomUUID());
 		this.transformationId = transformationId;
 		this.setEventStatus(EventStatus.NEW);
+		
+		// TODO: 
+		//SecurityContext.getContext().getPrincipal();
 
 		this.setStartedAtTime(new Date());
 	}

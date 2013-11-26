@@ -53,8 +53,8 @@ public class MyModule extends BaseModule implements TransformationModule {
     
     /** {@inheritDoc} */
     @Override
-	public URI getTransformationId() {
-    	return URI.create(this.getName());
+	public String getTransformationId() {
+    	return this.getClass().toString();
     }
     
     //-------------------------------------------------------------------------
@@ -114,7 +114,8 @@ public class MyModule extends BaseModule implements TransformationModule {
     @Path("addprocess")
     public Response addProcess(String projectId) {
     	ProcessingTask task = this.getProjectManager().newProcessingTask(
-    			this.getTransformationId());
+    			this.getTransformationId(),
+    			"http://www.datalift.org/project/name/event/");
 
     	task.addParam("projectId", projectId);
     	task.saveParams();
