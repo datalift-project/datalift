@@ -1,7 +1,5 @@
 package org.datalift.fwk.project;
 
-import java.net.URI;
-
 public interface ProcessingTask extends Runnable, Event {
 
 	public enum EventStatus {
@@ -11,7 +9,7 @@ public interface ProcessingTask extends Runnable, Event {
 		COMPLETE
 	}
 
-	public URI getTransformationId();
+	public String getTransformationId();
 	public EventStatus getEventStatus();
 	public void setEventStatus(EventStatus eventStatus);
 	public void addParam(String name, Object param);

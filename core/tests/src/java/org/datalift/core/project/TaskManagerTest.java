@@ -6,13 +6,13 @@ import static org.datalift.core.DefaultConfiguration.REPOSITORY_DEFAULT_FLAG;
 import static org.datalift.core.DefaultConfiguration.REPOSITORY_URIS;
 import static org.datalift.core.DefaultConfiguration.REPOSITORY_URL;
 
+import java.net.URI;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
 import org.datalift.core.DefaultConfiguration;
 import org.datalift.fwk.project.ProcessingTask;
 import org.datalift.fwk.project.TaskManager;
-
 import org.datalift.fwk.Configuration;
 import org.junit.After;
 import org.junit.Before;
@@ -47,10 +47,17 @@ public class TaskManagerTest {
         cfg.init();
         Configuration.setDefault(cfg);
 
+        // Init ProjectManager.
+		DefaultProjectManager pm = new DefaultProjectManager();
+		pm.init(cfg);
+		pm.postInit(cfg);
+        cfg.registerBean(pm);
+
+        // Init task manager.
         cfg.registerBean(tm);
         tm.init(cfg);
 	}
-
+	
 	@After
 	public void tearDown() throws Exception {
 
@@ -59,7 +66,7 @@ public class TaskManagerTest {
 	@Test
 	public void testAddEvent() throws Exception {
 		TestModule m = new TestModule();
-		cfg.registerBean(m.getTransformationId().toString(), m);
+		cfg.registerBean(m.getTransformationId(), m);
 		m.postInit(cfg);
 		m.addProcess("process1");
 //		Thread.sleep(1000);
@@ -73,6 +80,7 @@ public class TaskManagerTest {
 
 	}
 	
+	// TODO: try to automatically register the class.
 	public class TestModule extends BaseTransformationModule {
 
 	    //-------------------------------------------------------------------------
@@ -104,7 +112,9 @@ public class TaskManagerTest {
 	    //-------------------------------------------------------------------------
 
 	    public void addProcess(String projectId) {
-	    	ProcessingTaskImpl task = new ProcessingTaskImpl(this.getTransformationId());
+	    	ProcessingTaskImpl task = new ProcessingTaskImpl(
+	    			this.getTransformationId(),
+	    			"http://www.datalift.org/project/name/event/");
 	    	
 	    	// TODO: verify
 	    	// e.setDescription(this.getTransformationId().toString());
@@ -125,7 +135,7 @@ public class TaskManagerTest {
 	    //-------------------------------------------------------------------------
 	    
 		@Override
-		public void execute(ProcessingTask task) {
+		public Boolean execute(ProcessingTask task) {
 			logger.debug("execute()");
 			try {
 				task.loadParams();
@@ -147,7 +157,15 @@ public class TaskManagerTest {
 			processExecuted = true;
 	    	System.out.println("[" + projectId + "] Task done.");
 			logger.info("Task done.");
+			
+			return true;
 		}
+
+		@Override
+		public String getTransformationId() {
+			return this.getClass().getName();
+		}
+
 	}
 
 }

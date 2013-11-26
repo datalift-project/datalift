@@ -669,8 +669,9 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     
     /** {@inheritDoc} */
     @Override
-	public ProcessingTask newProcessingTask(URI transformationId) {
-    	return new ProcessingTaskImpl(transformationId);
+	public ProcessingTask newProcessingTask(
+			String transformationId, String baseUri) {
+    	return new ProcessingTaskImpl(transformationId, baseUri);
     }
 
     //-------------------------------------------------------------------------

@@ -1,7 +1,5 @@
 package org.datalift.core.project;
 
-import java.net.URI;
-
 import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.project.TaskManager;
@@ -14,11 +12,11 @@ implements TransformationModule {
 		super(name);
 	}
 
-    /** {@inheritDoc} */
-    @Override
-	public URI getTransformationId() {
-    	return URI.create(this.getName());
-    }
+//    /** {@inheritDoc} */
+//    @Override
+//	public URI getTransformationId() {
+//    	return URI.create(this.getName());
+//    }
     
     public TaskManager getTaskManager() {
     	TaskManager taskManager = 

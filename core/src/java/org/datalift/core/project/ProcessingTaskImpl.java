@@ -1,7 +1,5 @@
 package org.datalift.core.project;
 
-import java.net.URI;
-
 import javax.persistence.Entity;
 import javax.persistence.MappedSuperclass;
 
@@ -9,7 +7,6 @@ import org.datalift.fwk.Configuration;
 import org.datalift.fwk.project.ProcessingTask;
 import org.datalift.fwk.project.ProjectManager;
 import org.datalift.fwk.project.TransformationModule;
-import org.datalift.fwk.project.ProcessingTask.EventStatus;
 
 import com.clarkparsia.empire.annotation.NamedGraph;
 import com.clarkparsia.empire.annotation.RdfProperty;
@@ -17,6 +14,7 @@ import com.clarkparsia.empire.annotation.RdfsClass;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import com.google.gson.Gson;
 
@@ -31,13 +29,13 @@ public class ProcessingTaskImpl extends EventImpl implements ProcessingTask {
     //-------------------------------------------------------------------------
 
 	@RdfProperty("datalift:transformationId")
-	URI transformationId;
-
-	@RdfProperty("datalift:eventStatus")
-	private EventStatus eventStatus;
+	String transformationId;
 
 	@RdfProperty("datalift:parameters")
 	String parameters;
+
+	@RdfProperty("datalift:eventStatus")
+	private String eventStatus;
 
 	JsonParam params = new JsonParam();
 	
@@ -45,9 +43,22 @@ public class ProcessingTaskImpl extends EventImpl implements ProcessingTask {
 	// Constructors
 	//-------------------------------------------------------------------------
 	
-	public ProcessingTaskImpl(URI transformationId) {
+	/**
+	 * Constructor to create a processing task.
+	 * 
+	 * @param transformationId   the id of the class derived from 
+	 *                           TransformationModule used to execute the task. 
+	 * @param baseUri            it is the base URI until the project name like
+	 *                           "http://www.datalift.org/project/name/"
+	 */
+	public ProcessingTaskImpl(String transformationId, String baseUri) {
+		char lastChar = baseUri.charAt(baseUri.length() - 1);
+		if (lastChar != '#' && lastChar != '/')
+			baseUri += '/';
+
+		this.setId(baseUri + UUID.randomUUID());
 		this.transformationId = transformationId;
-		this.eventStatus = EventStatus.NEW;
+		this.setEventStatus(EventStatus.NEW);
 	}
 
 	//-------------------------------------------------------------------------
@@ -57,9 +68,7 @@ public class ProcessingTaskImpl extends EventImpl implements ProcessingTask {
 	public void run() {
 		Configuration cfg = Configuration.getDefault();
 		TransformationModule m = (TransformationModule) cfg.getBean(
-				this.getTransformationId().toString());
-		if (m == null)
-			throw new RuntimeException("Unable to gat TransformationModule (null)");
+				this.getTransformationId());
 		
 		ProjectManager pm = 
 				Configuration.getDefault().getBean(ProjectManager.class);
@@ -79,16 +88,16 @@ public class ProcessingTaskImpl extends EventImpl implements ProcessingTask {
     // Specific implementation
     //-------------------------------------------------------------------------
 
-	public URI getTransformationId() {
-		return transformationId;
+	public String getTransformationId() {
+		return this.transformationId;
 	}
 
 	public EventStatus getEventStatus() {
-		return eventStatus;
+		return EventStatus.valueOf(this.eventStatus);
 	}
 
 	public void setEventStatus(EventStatus eventStatus) {
-		this.eventStatus = eventStatus;
+		this.eventStatus = eventStatus.toString();
 	}
 	
 	public void addParam(String name, Object param) {
@@ -97,7 +106,6 @@ public class ProcessingTaskImpl extends EventImpl implements ProcessingTask {
 	
 	public void saveParams() {
 		this.parameters = this.params.save();
-		System.out.println(this.parameters);
 	}
 	
 	public void loadParams() throws Exception {

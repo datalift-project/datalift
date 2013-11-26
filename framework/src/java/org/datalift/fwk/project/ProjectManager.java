@@ -387,6 +387,6 @@ public interface ProjectManager
 	 *                            execute the task.
 	 * @return the processing task.
 	 */
-	public ProcessingTask newProcessingTask(URI transformationId);
+	public ProcessingTask newProcessingTask(String transformationId, String baseUri);
 	
 }

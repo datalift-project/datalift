@@ -1,7 +1,5 @@
 package org.datalift.fwk.project;
 
-import java.net.URI;
-
 import org.datalift.fwk.LifeCycle;
 
 public interface TransformationModule extends LifeCycle {
@@ -13,5 +11,5 @@ public interface TransformationModule extends LifeCycle {
 	 * @return       true if succeed or false if not.
 	 */
 	public Boolean execute(ProcessingTask task);
-	public URI getTransformationId();
+	public String getTransformationId();
 }

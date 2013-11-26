@@ -45,7 +45,7 @@ public interface Ontology extends Entity
 	/**
 	 * Base Ontology URI.
 	 */
-	public static final String BASE_USER_URI = "http://www.datalift.org/project/ontology/"; 
+	public static final String BASE_ONTO_URI = "http://www.datalift.org/project/ontology/"; 
 
     public String getTitle();
     public void setTitle(String title);

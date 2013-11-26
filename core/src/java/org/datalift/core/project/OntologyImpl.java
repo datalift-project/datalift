@@ -92,7 +92,7 @@ public class OntologyImpl extends BaseRdfEntity implements Ontology
      * @param  uri   the ontology identifier.
      */
     public OntologyImpl(String title) {
-		this.uri = Ontology.BASE_USER_URI + title;
+		this.uri = Ontology.BASE_ONTO_URI + title;
         this.title = title;
     }
     
@@ -103,7 +103,7 @@ public class OntologyImpl extends BaseRdfEntity implements Ontology
     /** {@inheritDoc} */
     @Override
     public void setTitle(String title) {
-		this.uri = Ontology.BASE_USER_URI + title;
+		this.uri = Ontology.BASE_ONTO_URI + title;
         this.title = title;
     }
 

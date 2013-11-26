@@ -52,7 +52,7 @@ public interface Event {
 	/**
 	 * Base Event URI.
 	 */
-	public static final String BASE_EVENT_URI = "http://www.datalift.org/project/event/"; 
+	public static final String BASE_EVENT_URI = "http://www.datalift.org/project/event"; 
 
     //-------------------------------------------------------------------------
 	// Event contract definition
