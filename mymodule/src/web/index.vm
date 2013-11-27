@@ -8,8 +8,15 @@
   <body>
 #banner
 
-    <h2>Tabb</h2>
-    <div id="demo_widget">
+    <h2>Historique</h2>
+    <div id="panel">
+      <form id="filter-form" name="filter-form" method="get" action="#">
+	<input type="radio" name="filter-radio" value="ALL" checked/> All
+	<input type="radio" name="filter-radio" value="NEW" /> New
+	<input type="radio" name="filter-radio" value="RUNNING" /> Running
+	<input type="radio" name="filter-radio" value="COMPLETE" /> Complete
+	<input id="filter-submit" type="submit" value="refresh">
+      </form>
     </div>
 
     <table id="list"><tr><td></td></tr></table> 
@@ -26,10 +33,21 @@
 	    }
 	}
 
-	var request = "SELECT+*+WHERE+%7B%0A++%3Fs+a+%3Chttp%3A%2F%2Fwww.datalift.org%2Fcore%23TransformationEvent%3E+%3B%0A++%3Chttp%3A%2F%2Fwww.datalift.org%2Fcore%23eventStatus%3E+%3Fstatus+%3B%0A++%3Chttp%3A%2F%2Fwww.w3.org%2Fns%2Fprov%23startedAtTime%3E+%3Fsubmitted+%3B%0A++%3Chttp%3A%2F%2Fwww.w3.org%2Fns%2Fprov%23endedAtTime%3E+%3FendDate+.%0A%7D";
+	// var request = "SELECT+*+WHERE+%7B%0A++%3Fs+a+%3Chttp%3A%2F%2Fwww.datalift.org%2Fcore%23TransformationEvent%3E+%3B%0A++%3Chttp%3A%2F%2Fwww.datalift.org%2Fcore%23eventStatus%3E+%3Fstatus+%3B%0A++%3Chttp%3A%2F%2Fwww.w3.org%2Fns%2Fprov%23startedAtTime%3E+%3Fsubmitted+%3B%0A++%3Chttp%3A%2F%2Fwww.w3.org%2Fns%2Fprov%23endedAtTime%3E+%3FendDate+.%0A%7D";
 	// var request = "SELECT+*+WHERE+%7B%0D%0A++%3Fs+a+%3Chttp%3A%2F%2Fwww.datalift.org%2Fcore%23TransformationEvent%3E+%3B+%3Fp+%3Fo+.%0D%0A%7D%0D%0A";
 
-	$(function () {
+	var baseRequest = 
+	"SELECT * WHERE {" +
+	   "?s a <http://www.datalift.org/core#TransformationEvent> ;" +
+	   "<http://www.datalift.org/core#eventStatus> ?status ;" +
+	   "<http://www.w3.org/ns/prov#startedAtTime> ?submitted ;" +
+	   "<http://www.w3.org/ns/prov#endedAtTime> ?endDate .";
+
+	var requestFilter = "filter(?status = \"";
+
+	var endRequest = "}";
+
+	function displayGrid(request) {
 	    $("#list").jqGrid({
 		url: "${baseUri}/sparql?query=" + request + "&default-graph-uri=internal&max=1000&grid=true",
 		datatype: "json",
@@ -59,6 +77,33 @@
 		shrinkToFit: true,
 		height: '450'
 	    });
+	}
+
+	$(function () {
+	    var request = encodeURIComponent(
+		baseRequest + endRequest
+	    );
+	    displayGrid(request);
+	}); 
+
+	$("#filter-submit").click(function(event) { 
+	    event.preventDefault();
+
+	    var radioValue = $("input:radio[name='filter-radio']:checked").val();
+
+	    if (radioValue == "ALL") {
+		var encodedRequest = encodeURIComponent(
+		    baseRequest + endRequest
+		);
+		displayGrid(request);
+	    }
+	    else {
+		request = baseRequest + "filter(?status = \"" + radioValue + "\")" + endRequest;
+		encodedRequest = encodeURIComponent(request);
+	    }
+	    $("#list").GridUnload()
+	    displayGrid(encodedRequest);
+
 	}); 
     </script>
   </body>
