@@ -90,20 +90,6 @@
 		</div><!-- FIN DIV CONTENT TAB ONGLETS CONTAINER -->
 	</div>
 </div>
-	<!-- DIV POPUP CSV TO RDF POPOVER -->
-	<div class="modal hide pagination-centered fade" id="popoverModule">
-	  	<div class="modal-header"> <a class="close" data-dismiss="modal">×</a>
-		    <h3>CSV to RDF</h3>
-	  	</div>
-		<div class="modal-body">
-		   	<p>MODULE CSV to RDF</p>
-	 	</div>
-		<div class="modal-footer">
-			<a href="#" class="btn" data-dismiss="modal">Annuler</a>
-	    	<a href="./index.php" data-dismiss="modal" class="btn btn-primary">Valider</a>
-	  	</div>
-	</div>
-	<!-- FIN DIV POPUP CSV TO RDF POPOVER  -->
 </div> <!-- ---------------- FIN PROJECT SPACE -------------------- -->
 
 #h_footer

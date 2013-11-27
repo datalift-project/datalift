@@ -66,7 +66,7 @@
 						<p style="display:inline-block;">$!date.format("medium", $current.modificationDate)</p><br/>
 						<div class="span12 actionBtn" id="description-btn">
 							<a class="btn" id="popoverRemove" class="action btn" data-content="Supprimez le projet sélectionné" 
-								rel="popover" data-placement="top" data-trigger="hover"href="#modifyProject" data-toggle="modal">Modifier
+								rel="popover" data-placement="top" data-trigger="hover"href="#createproject" data-toggle="modal">Modifier
 							</a>
 							
 							<a class="btn" id="popoverRemove" class="action btn btn-custom-red" data-content="Supprimez le projet sélectionné" 
@@ -74,15 +74,15 @@
 							</a>
 						</div>
 				  	</div>
-				  	<!-- FINONGLET DESCRIPTION -->
+				  	<!-- FIN ONGLET DESCRIPTION -->
 				  	<!-- ONGLET SOURCES -->
 				  	<div class="tab-pane active" id="sources">
 				  		<div class="span11 row" style="margin:0 auto; float:none;">
 							<div class="list-group" id="source-list" style="max-height: 100px:">
 								#foreach ($curSource in $current.getSources())
-									DESCRIPTION -> $curSource.description
+									<!-- DESCRIPTION -> $curSource.description
 									URI -> $curSource.uri
-									INFO -> $curSource
+									INFO -> $curSource  -->
 									<li class="divider-group-list">
 										<a href="#" ng-click="applicableModules('$current.uri', '$curSource.uri')">$curSource.title</a>
 										<a href="#deleteSource" role="button" class="pull-right" data-toggle="modal" style="display: inline-block">
@@ -199,7 +199,7 @@
 				</select>
 		  		<legend>Ajouter une nouvelle source</legend>
 		  		<input type= text id="source_name" placeholder="Nom de la source"/>
-		  		<input id="file" type="file" />
+		  		<input style="padding-bottom: 11px;" id="file" type="file" />
 	  		</fieldset>
 	    	<script>
 	    	var currentProject = "$current.uri";
@@ -280,29 +280,19 @@
 <!-- ---------------- FIN EDIT PROJECT -------------------- -->
 #else
 <!-- ---------------- PROJECT SAPCE -------------------- -->
-<div class="span12 row-fluid projectSpaceContainer">
 <!-- if CURRENT IS NOT LOADED  --> 
+
+<div class="span12 row-fluid projectSpaceContainer" ng-controller="projectController">
 	<div class="span3 " id="btnActionDiv">
 		<div id="new-projet-btn">
 			<a id="add_project" href="#createproject" role="button" class="btn" data-toggle="modal"><img style="margin-right: 4px;" src="${baseUri}/images/icon-add.png">#i18n("project.title.new_project")</a>
 		</div>
 	</div>
 	<div class="span9 row-fluid" style="margin:0 auto; float:none;">
-	<!-- TEST ANGULAR 
-	<form name="myForm" ng-controller="indexPageController">
-		Value1: <input type="checkbox" ng-model="value1"> <br/>
-		Value2: <input type="checkbox" ng-model="value2"
-		ng-true-value="YES" ng-false-value="NO"> <br/>
-		<tt>value1 = {{value1}}</tt><br/>
-		<tt>value2 = {{value2}}</tt><br/>
-	</form>
-		
-	  FIN TEST ANGULAR-->
 		<!-- DIV BAR DE FILTRES --> 
 		<div class="span12 row-fluid" style="margin:0 auto; float:none;">
 			<form class="navbar-search form-inline pagination-centered">
-				<label>Filtre : </label>
-	  			<input type="text" placeholder="Search">
+	  			<label>Search filter : </label><input type="search" ng-model="projectfilter" placeholder="Search filter..."/>
 				<label>License : </label>
 				<select>
 					<option></option>
@@ -317,8 +307,36 @@
 			</form>
 		</div> <!-- FIN DIV BAR DE FILTRES -->
 		<div class="span12 row-fluid" style="margin:0px 0px 0px 8%; float:none;">
-			<div class="list-group" id="project-list">
+			<div class="list-group" id="project-list" ng-init='#foreach ($item in $it) initialize("$esc.javascript($!{item.uri})", "#if ($item.description) $esc.javascript($!{item.description}) #end", "$esc.javascript($!{item.title})", "license", "$esc.javascript($!{item.owner})", "$!date.format("medium", $item.creationDate)", "$!date.format("medium", $item.modificationDate)"); #end'>
 				<ul class="nav nav-stacked">
+					<li ng-repeat="project in projects | filter:projectfilter">
+						<a href="{{ project.uri }}">
+							<div class="span12 list-elem">
+								<span class="span7">
+								 	<img src="${baseUri}/images/Project-img.png" id="img-nav-stacked"><span>{{ project.title }}</span><br>
+								 	<p style="display:inline-block;" class="info-list-title">#i18n("project.description") :</p>
+									<p style="display:inline-block;" class="info-list">{{ project.description }} </p><br>
+									<p style="display:inline-block;" class="info-list-title">#i18n("project.license") :</p>
+									<p style="display:inline-block;" class="info-list"> $licenses[$item.getLicense()].getLabel()</p>
+								</span>
+								<span class="span5 creater-block">
+									<p style="display:inline-block;">Créé par:&nbsp</p>
+									<p style="display:inline-block;">{{ project.owner }}</p><br>
+									<p style="display:inline-block;">#i18n("project.creation_s")</p>
+									<p style="display:inline-block;">{{ project.creation_date }}</p><br>
+									<p style="display:inline-block;">#i18n("project.modification_s") </p>
+									<p style="display:inline-block;">{{ project.modification_date }}</p><br>
+								</span>
+							</div>
+						</a>
+					</li>
+				</ul> 
+				
+				
+				
+				
+				
+				<!-- <ul class="nav nav-stacked">
 					#foreach( $item in $it )
 					<li>
 						<a href="${item.uri}">
@@ -346,7 +364,7 @@
 						</a>
 					</li>
 					#end
-				</ul> 
+				</ul>  -->
 			</div>
 		</div>
 			<!-- DIV POPUP FORM -->

@@ -35,14 +35,22 @@
             		</ul>
             	</li>
         	</ul>
-            </ul>
-          <div class="nac-collapse collapse"></div>
+          	<div class="nac-collapse collapse"></div>
           	<ul class="nav pull-right menu nav_bar_menu">
               <li id="wiki"><a href="./wikilocal.php">Wiki</a></li>
-              <li id="endpoint"><a href="./endpoint.php">Endpoint</a></li>
+              <ul class="nav pull-right">  
+            	<li class="dropdown">
+            		<a class="dropdown-toggle" id="drop5" role="button" data-toggle="dropdown" href="">Endpoint<b class="caret"></b></a>
+            		<ul class="dropdown-menu" role="menu" aria-labelledby="drop5">
+            			<li><a role="menuitem" href="${baseUri}/sparql">Endpoint</a></li>
+            			<li class="divider"></li>
+            			<li><a role="menuitem" href="${baseUri}/legacy">Legacy</a></li>
+            		</ul>
+            	</li>
+        	</ul>
               <li id="projets"><a href="${baseUri}/project" id="goto_workspace">Projets</a></li>
               <li id="catalogues"><a href="#catalogues">Catalogues</a></li>
-              <li id="admin"><a href="./admin.php">Admin</a></li>
+              <li id="admin"><a href="#admin">Administration</a></li>
           </div>
       	</div>
       </div>
