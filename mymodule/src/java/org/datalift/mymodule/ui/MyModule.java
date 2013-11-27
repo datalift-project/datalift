@@ -112,20 +112,19 @@ public class MyModule extends BaseModule implements TransformationModule {
     @GET
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
     @Path("addprocess")
-    public Response addProcess(String projectId) {
+    public Response addProcess() {
     	ProcessingTask task = this.getProjectManager().newProcessingTask(
     			this.getTransformationId(),
     			"http://www.datalift.org/project/name/event/");
 
-    	task.addParam("projectId", projectId);
-    	task.saveParams();
+//    	task.addParam("projectId", projectId);
+//    	task.saveParams();
     	
     	TaskManager tm = this.getTaskManager();
     	if (tm == null)
     		logger.error("TaskManager is not initialized");
     	tm.addTask(task);
-		logger.debug("process added");
-    	System.out.println("[" + projectId + "] Process added.");
+		logger.debug("[" + task.getUri() + "] Process added");
 
     	Response response = null;
     	TemplateModel view = this.newView("index.vm", null);
@@ -154,20 +153,18 @@ public class MyModule extends BaseModule implements TransformationModule {
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
-		String projectId = (String) task.getParam("projectId");
+		//String projectId = (String) task.getParam("projectId");
 
-		logger.debug("Got param: " + projectId);
-		logger.info("Task is running...");
-    	System.out.println("[" + projectId + "] Task is running...");
+		//logger.debug("Got param: " + projectId);
+		logger.info("[" + task.getUri() + "Task is running...");
 
 		try {
-			Thread.sleep(5000);
+			Thread.sleep(15000);
 		} catch (InterruptedException e) {
 			throw new RuntimeException(e);
 		}
     	
-    	System.out.println("[" + projectId + "] Task done.");
-		logger.info("Task done.");
+		logger.info("[" + task.getUri() + "] Task done.");
 		
 		return true;
 	}

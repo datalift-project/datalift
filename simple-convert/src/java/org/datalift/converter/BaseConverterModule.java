@@ -37,7 +37,6 @@ package org.datalift.converter;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -116,9 +115,6 @@ public abstract class BaseConverterModule
     /** The DataLift project manager. */
     protected ProjectManager projectManager = null;
 
-    /** The task manager */
-	private TaskManager taskManager = null;
-
     //-------------------------------------------------------------------------
     // Constructors
     //-------------------------------------------------------------------------
@@ -171,8 +167,6 @@ public abstract class BaseConverterModule
     @Override
     public void postInit(Configuration configuration) {
         super.postInit(configuration);
-        this.projectManager = configuration.getBean(ProjectManager.class);
-       	this.taskManager = configuration.getBean(TaskManager.class);
     }
 
     //-------------------------------------------------------------------------
@@ -226,28 +220,36 @@ public abstract class BaseConverterModule
     
 	/** {@inheritDoc} */
     @Override
-	public URI getTransformationId() {
-    	try {
-			return new URI(this.getName());
-		} catch (URISyntaxException e) {
-			throw new RuntimeException(e);
-		}
+	public String getTransformationId() {
+    	return this.getClass().toString();
 	}
 	
 	/** {@inheritDoc} */
     @Override
-	public void execute(ProcessingTask task) {
+	public Boolean execute(ProcessingTask task) {
     	// NOP
+    	return true;
     }
 
     //-------------------------------------------------------------------------
     // Specific implementation
     //-------------------------------------------------------------------------
 
-	public TaskManager getTaskManager() {
-    	return this.taskManager;
-	}
-	
+    protected TaskManager getTaskManager() {
+    	TaskManager taskManager = 
+    			Configuration.getDefault().getBean(TaskManager.class);
+    	if (taskManager == null)
+    		throw new RuntimeException("TaskManager is not initialized");
+    	return taskManager;
+    }
+    
+    protected ProjectManager getProjectManager() {
+    	ProjectManager projectManager = 
+    			Configuration.getDefault().getBean(ProjectManager.class);
+    	if (projectManager == null)
+    		throw new RuntimeException("ProjectManager is not initialized");
+    	return projectManager;
+    }
     /**
      * Returns whether the specified source can be handled by this
      * converter.

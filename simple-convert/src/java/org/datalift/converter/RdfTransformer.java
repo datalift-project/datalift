@@ -50,7 +50,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 
-import org.datalift.core.project.ProcessingTaskImpl;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.ProcessingTask;
@@ -122,7 +121,9 @@ public class RdfTransformer extends BaseConverterModule implements Transformatio
                                      @FormParam("overwrite") boolean overwrite)
                                                 throws WebApplicationException {
 
-    	ProcessingTaskImpl task = new ProcessingTaskImpl(this.getTransformationId());
+    	ProcessingTask task = this.getProjectManager().newProcessingTask(
+    			this.getTransformationId(),
+    			"http://www.datalift.org/project/name/event/");
     	
     	task.addParam("projectId", projectId);
     	task.addParam("sourceId", sourceId);
@@ -146,7 +147,7 @@ public class RdfTransformer extends BaseConverterModule implements Transformatio
     //-------------------------------------------------------------------------
 
 	@Override
-	public void execute(ProcessingTask task) {
+	public Boolean execute(ProcessingTask task) {
         Repository internal = Configuration.getDefault()
                 .getInternalRepository();
 		try {
@@ -198,6 +199,9 @@ public class RdfTransformer extends BaseConverterModule implements Transformatio
             this.handleInternalError(e);
         }
 		log.info("[" + projectId + "] Task done.");
+		
+		// TODO: return false in case of error.
+		return true;
 	}
 	
 }
