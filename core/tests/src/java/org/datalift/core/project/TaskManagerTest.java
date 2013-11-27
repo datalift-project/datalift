@@ -150,7 +150,7 @@ public class TaskManagerTest {
 	    	System.out.println("[" + projectId + "] Task is running...");
 
 			try {
-				Thread.sleep(5000);
+				Thread.sleep(1000);
 			} catch (InterruptedException e) {
 				throw new RuntimeException(e);
 			}
