@@ -9,22 +9,22 @@ import java.net.URI;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
 
-import org.apache.log4j.Logger;
 import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
+import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.ProcessingTask;
-import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectManager;
 import org.datalift.fwk.project.TaskManager;
 import org.datalift.fwk.project.TransformationModule;
-import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.view.TemplateModel;
 import org.datalift.fwk.view.ViewFactory;
 
-@Path(MyModule.MODULE_NAME)
+@Path(MyModule.MODULE_NAME+ "/")
 public class MyModule extends BaseModule implements TransformationModule {
 
     //-------------------------------------------------------------------------
@@ -38,7 +38,7 @@ public class MyModule extends BaseModule implements TransformationModule {
     // Attributes
     //-------------------------------------------------------------------------
 
-    private static Logger logger = Logger.getLogger(MyModule.class);
+    private static Logger logger = Logger.getLogger();
     
     //-------------------------------------------------------------------------
     // Constructors
@@ -51,15 +51,15 @@ public class MyModule extends BaseModule implements TransformationModule {
     	super(MyModule.MODULE_NAME);
     }
     
-    /** {@inheritDoc} */
-    @Override
-	public String getTransformationId() {
-    	return this.getClass().toString();
-    }
-    
     //-------------------------------------------------------------------------
     // Specific implementation
     //-------------------------------------------------------------------------    
+    
+    /** {@inheritDoc} */
+    @Override
+	public String getTransformationId() {
+    	return this.getClass().getName();
+    }
     
     private TaskManager getTaskManager() {
     	TaskManager taskManager = 
@@ -75,6 +75,12 @@ public class MyModule extends BaseModule implements TransformationModule {
     	if (projectManager == null)
     		throw new RuntimeException("ProjectManager is not initialized");
     	return projectManager;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public void init(Configuration configuration) {
+    	configuration.registerBean(this.getClass().getName(), this);
     }
     
     /**
@@ -112,7 +118,7 @@ public class MyModule extends BaseModule implements TransformationModule {
     @GET
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
     @Path("addprocess")
-    public Response addProcess() {
+    public Response addProcess(@Context UriInfo uriInfo) {
     	ProcessingTask task = this.getProjectManager().newProcessingTask(
     			this.getTransformationId(),
     			"http://www.datalift.org/project/name/event/");
@@ -126,9 +132,12 @@ public class MyModule extends BaseModule implements TransformationModule {
     	tm.addTask(task);
 		logger.debug("[" + task.getUri() + "] Process added");
 
+		logger.info("URI: {}", uriInfo.getRequestUri());
+		
     	Response response = null;
-    	TemplateModel view = this.newView("index.vm", null);
-    	response = Response.ok(view, TEXT_HTML_UTF8).build();
+    	response = 
+    			Response.seeOther(uriInfo.getRequestUri().resolve(".")).build();
+    	
     	return response;
     }
     
@@ -148,18 +157,18 @@ public class MyModule extends BaseModule implements TransformationModule {
 	@Override
 	public Boolean execute(ProcessingTask task) {
 		logger.debug("execute()");
-		try {
-			task.loadParams();
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
+//		try {
+//			task.loadParams();
+//		} catch (Exception e) {
+//			throw new RuntimeException(e);
+//		}
 		//String projectId = (String) task.getParam("projectId");
 
 		//logger.debug("Got param: " + projectId);
 		logger.info("[" + task.getUri() + "Task is running...");
 
 		try {
-			Thread.sleep(15000);
+			Thread.sleep(10000);
 		} catch (InterruptedException e) {
 			throw new RuntimeException(e);
 		}

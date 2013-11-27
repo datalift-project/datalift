@@ -22,6 +22,11 @@
     <table id="list"><tr><td></td></tr></table> 
     <div id="pager"></div> 
 
+      <form id="addprocess" name="filter-form" method="get" action="http://localhost:9091/mymodule/addprocess">
+	<input id="addprocess-submit" type="submit" value="Add a 10s process.">
+      </form>
+
+
 #script_links
     <script type="text/javascript">
 
@@ -40,8 +45,8 @@
 	"SELECT * WHERE {" +
 	   "?s a <http://www.datalift.org/core#TransformationEvent> ;" +
 	   "<http://www.datalift.org/core#eventStatus> ?status ;" +
-	   "<http://www.w3.org/ns/prov#startedAtTime> ?submitted ;" +
-	   "<http://www.w3.org/ns/prov#endedAtTime> ?endDate .";
+	   "<http://www.w3.org/ns/prov#startedAtTime> ?submitted ." +
+	   "OPTIONAL { ?s <http://www.w3.org/ns/prov#endedAtTime> ?endDate . }";
 
 	var requestFilter = "filter(?status = \"";
 
@@ -95,7 +100,6 @@
 		var encodedRequest = encodeURIComponent(
 		    baseRequest + endRequest
 		);
-		displayGrid(request);
 	    }
 	    else {
 		request = baseRequest + "filter(?status = \"" + radioValue + "\")" + endRequest;
@@ -103,8 +107,9 @@
 	    }
 	    $("#list").GridUnload()
 	    displayGrid(encodedRequest);
+	});
 
-	}); 
+
     </script>
   </body>
 </html>

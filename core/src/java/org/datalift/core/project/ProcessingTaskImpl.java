@@ -3,12 +3,11 @@ package org.datalift.core.project;
 import javax.persistence.Entity;
 import javax.persistence.MappedSuperclass;
 
+import org.apache.log4j.Logger;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.project.ProcessingTask;
 import org.datalift.fwk.project.ProjectManager;
 import org.datalift.fwk.project.TransformationModule;
-import org.datalift.fwk.security.SecurityContext;
-
 import com.clarkparsia.empire.annotation.NamedGraph;
 import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.RdfsClass;
@@ -41,6 +40,8 @@ public class ProcessingTaskImpl extends EventImpl implements ProcessingTask {
 
 	JsonParam params = new JsonParam();
 	
+	private static Logger logger = Logger.getLogger(ProcessingTaskImpl.class);
+	
 	//-------------------------------------------------------------------------
 	// Constructors
 	//-------------------------------------------------------------------------
@@ -60,6 +61,7 @@ public class ProcessingTaskImpl extends EventImpl implements ProcessingTask {
 
 		this.setId(baseUri + UUID.randomUUID());
 		this.transformationId = transformationId;
+		System.out.println(transformationId);
 		this.setEventStatus(EventStatus.NEW);
 		
 		// TODO: 
@@ -91,6 +93,8 @@ public class ProcessingTaskImpl extends EventImpl implements ProcessingTask {
 		this.setEndedAtTime(new Date());
 
 		pm.saveEvent(this);
+		
+		logger.info("Saved");
 	}
 	
 	//-------------------------------------------------------------------------
