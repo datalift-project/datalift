@@ -53,13 +53,6 @@ import org.datalift.fwk.util.StringUtils;
 public interface AccessController
 {
     //-------------------------------------------------------------------------
-    // Constants
-    //-------------------------------------------------------------------------
-
-    /** Name of the user context variable in the access control ASK queries. */
-    public final static String USER_CONTEXT_VARIABLE = "context";
-
-    //-------------------------------------------------------------------------
     // Methods
     //-------------------------------------------------------------------------
 

@@ -12,12 +12,12 @@ package org.datalift.s4ac.services;
 
 
 import java.io.File;
-import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -27,7 +27,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.openrdf.model.impl.URIImpl;
+import org.openrdf.model.Value;
 import org.openrdf.query.BindingSet;
 import org.openrdf.query.BooleanQuery;
 import org.openrdf.query.TupleQueryResult;
@@ -41,6 +41,7 @@ import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.security.SecurityContext;
+import org.datalift.fwk.sparql.AccessContextProvider;
 import org.datalift.fwk.sparql.AccessController;
 import org.datalift.s4ac.TechnicalException;
 import org.datalift.s4ac.utils.CRUDType;
@@ -77,9 +78,6 @@ public class S4acAccessController extends BaseModule
                                         "sparql.security.repository";
     /** A list of files to load access control policies from. */
     public final static String POLICY_FILES = "sparql.security.policy.files";
-    /** The base URI for building user context URIs. */
-    public final static String USER_CONTEXT_PROPERTY    =
-                                        "sparql.security.user.context";
     /** The RDF store to execute access control ASK queries against. */
     public final static String USER_REPOSITORY_PROPERTY =
                                         "sparql.security.user.repository.uri";
@@ -116,7 +114,7 @@ public class S4acAccessController extends BaseModule
     private static final Logger log = Logger.getLogger();
 
     //-------------------------------------------------------------------------
-    // Class members
+    // Instance members
     //-------------------------------------------------------------------------
 
     private final Set<String> securedRepositories = new HashSet<String>();
@@ -128,7 +126,6 @@ public class S4acAccessController extends BaseModule
 
     private Repository securityRepository;
     private Repository userRepository;
-    private MessageFormat userContext;
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -152,16 +149,6 @@ public class S4acAccessController extends BaseModule
             this.securedRepositories.addAll(
                             Arrays.asList(securedRepNames.split("\\s*,\\s*")));
         }
-        // Retrieve the user context base URI.
-        String ctx = configuration.getProperty(USER_CONTEXT_PROPERTY);
-        if (isBlank(ctx)) {
-            ctx = DEFAULT_USER_CONTEXT;
-            if (! this.securedRepositories.isEmpty()) {
-                log.warn("User context base URI not set. Using default: <{}>",
-                         ctx);
-            }
-        }
-        this.userContext = new MessageFormat(ctx);
         // Get the policy files to populate the security repository from.
         String policyFiles = configuration.getProperty(POLICY_FILES);
         // Connect to or initialize security repository.
@@ -255,9 +242,7 @@ public class S4acAccessController extends BaseModule
                 throw new TechnicalException("access.policy.load.error", e);
             }
             finally {
-                if (cnx != null) {
-                    try { cnx.close(); } catch (Exception e) { /* Ignore ... */ }
-                }
+                Repository.closeQuietly(cnx);
             }
             // Check that there's at least one repository under access control.
             if (this.securedRepositories.isEmpty()) {
@@ -308,14 +293,15 @@ public class S4acAccessController extends BaseModule
 
         if (this.isSecured(repository)) {
             // Get accessible graphs for the currently logged user.
-            String user = SecurityContext.getUserPrincipal();
-            if (user != null) {
-                graphs = this.evaluatePolicies(user, type,
+            if (SecurityContext.isUserAuthenticated()) {
+                graphs = this.evaluatePolicies(type,
                                 this.getPolicyEvaluationRepository(repository));
             }
             // Public graphs, i.e. the ones upon which there are no access
             // control policies are accessible to anyone.
             graphs.addAll(this.getPublicGraphs(repository));
+
+            String user = SecurityContext.getUserPrincipal();
             if (log.isTraceEnabled()) {
                 log.trace("Graphs accessible to {}: {}", user, graphs);
             }
@@ -326,7 +312,7 @@ public class S4acAccessController extends BaseModule
             if (graphs.isEmpty()) {
                 // User is not allowed to access any content.
                 log.info("Denied access to RDF store \"{}\" for \"{}\"",
-                         repository, user);
+                                                            repository, user);
                 throw new SecurityException();
             }
             // Update query and graphs data.
@@ -362,15 +348,32 @@ public class S4acAccessController extends BaseModule
     // Specific implementation
     //-------------------------------------------------------------------------
 
-    private Repository getPolicyEvaluationRepository(Repository target) {
+    protected Repository getSecurityRepository() {
+        return this.securityRepository;
+    }
+
+    protected Repository getPolicyEvaluationRepository(Repository target) {
         return (this.userRepository != null)? this.userRepository: target;
     }
 
-    
-    private Set<String> evaluatePolicies(String user,
-                                         QueryType type, Repository r) {
+    private Set<String> evaluatePolicies(QueryType type, Repository r) {
         Set<String> graphs = new HashSet<String>();
 
+        // Populate access context.
+        Map<String,Object> accessCtx = new HashMap<String,Object>();
+        Configuration cfg = Configuration.getDefault();
+        for (AccessContextProvider p : cfg.getBeans(AccessContextProvider.class)) {
+            try {
+                p.populateContext(accessCtx);
+            }
+            catch (Exception e) {
+                log.warn("Access context provider \"{}\" failed.", e,
+                         p.getClass());
+            }
+        }
+        // Map context Java objects to RDF objects.
+        Map<String,Value> ctx = this.mapContext(accessCtx);
+        // Retrieve the list of accessible named graphs.
         RepositoryConnection cnx = null;
         try {
             cnx = r.newConnection();
@@ -384,7 +387,7 @@ public class S4acAccessController extends BaseModule
                     if (ap.getAcstype() == ACSType.CONJUNCTIVE) {
                         // Conjunctive set: all ASKs must be valid.
                         for (String askQuery : ap.getAsks()) {
-                            isOk = isOk && this.ask(cnx, askQuery, user);
+                            isOk = isOk && this.ask(cnx, askQuery, ctx);
                             if (isOk == false) break;
                         }
                     }
@@ -392,7 +395,7 @@ public class S4acAccessController extends BaseModule
                         // Disjunctive set: at least one ASK shall be valid.
                         isOk = false;
                         for (String askQuery : ap.getAsks()) {
-                            if (this.ask(cnx, askQuery, user)) {
+                            if (this.ask(cnx, askQuery, ctx)) {
                                 isOk = true;
                                 break;
                             }
@@ -406,7 +409,7 @@ public class S4acAccessController extends BaseModule
                 catch (Exception e) {
                     log.fatal("Error evaluating policy <{}>. Denying access.",
                               e, ap.uri);
-                    try { cnx.close(); } catch (Exception e1) { /* Ignore... */ }
+                    Repository.closeQuietly(cnx);
                     cnx = r.newConnection();
                 }
             }
@@ -415,27 +418,24 @@ public class S4acAccessController extends BaseModule
             // Ignore and deny any further accesses.
         }
         finally {
-            if (cnx != null) {
-                try { cnx.close(); } catch (Exception e1) { /* Ignore... */ }
-            }
+            Repository.closeQuietly(cnx);
         }
         return graphs;
     }
 
-    private boolean ask(RepositoryConnection cnx, String query, String user) {
+    private boolean ask(RepositoryConnection cnx, String query,
+                        Map<String,Value> ctx) {
         boolean matches = false;
         try {
             BooleanQuery q = cnx.prepareBooleanQuery(SPARQL, query);
-            if (isSet(user)) {
-                q.setBinding(USER_CONTEXT_VARIABLE, new URIImpl(
-                            this.userContext.format(new Object[] { user })));
-                
-                log.debug("Added Context for user {}", user);
+            if (ctx != null) {
+                for (Map.Entry<String,Value> e : ctx.entrySet()) {
+                    q.setBinding(e.getKey(), e.getValue());
+                }
             }
             matches = q.evaluate();
             if (log.isTraceEnabled()) {
-                log.trace("{} ({}) -> {}", query, q.getBindings(),
-                                                  wrap(matches));
+                log.trace("{} ({}) -> {}", query, ctx, wrap(matches));
             }
         }
         catch (Exception e) {
@@ -555,6 +555,28 @@ public class S4acAccessController extends BaseModule
             }
         }
         return loadedFiles;
+    }
+
+    private Map<String,Value> mapContext(Map<String,Object> accessCtx) {
+        Map<String,Value> ctx = null;
+
+        if (accessCtx != null) {
+            ctx = new HashMap<String,Value>();
+            for (Map.Entry<String,Object> e : accessCtx.entrySet()) {
+                Object o = e.getValue();
+                if (o instanceof Map<?,?>) {
+                    // Only take into account map values.
+                    o = ((Map<?,?>)o).values();
+                }
+                if (o instanceof Collection<?>) {
+                    // Only take into account the first element of collections.
+                    Iterator<?> i = ((Collection<?>)o).iterator();
+                    o = (i.hasNext())? i.next(): null;
+                }
+                ctx.put(e.getKey(), RdfUtils.mapBinding(o));
+            }
+        }
+        return ctx;
     }
 
     //-------------------------------------------------------------------------
