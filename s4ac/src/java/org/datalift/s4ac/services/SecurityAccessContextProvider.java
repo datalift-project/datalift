@@ -39,14 +39,22 @@ import java.net.URI;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
+import org.datalift.fwk.log.Logger;
+import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.security.SecurityContext;
 import org.datalift.fwk.sparql.AccessContextProvider;
 import org.datalift.fwk.util.StringUtils;
+import org.datalift.fwk.util.web.RequestContext;
+
+import static org.datalift.fwk.util.PrimitiveUtils.wrap;
 
 
 /**
@@ -74,13 +82,31 @@ public class SecurityAccessContextProvider extends BaseModule
                                         "sparql.security.role.uri";
 
     /** Name of the context variable for the user login. */
-    public final static String USER_LOGIN_CONTEXT = "principal";
+    public final static String USER_LOGIN_CONTEXT = "username";
     /** Name of the context variable for the user URI. */
     public final static String USER_URI_CONTEXT = "user";
     /** Name of the context variable for the user role names. */
     public final static String ROLE_NAME_CONTEXT = "rolename";
     /** Name of the context variable for the user role URIs. */
     public final static String ROLE_URI_CONTEXT = "role";
+
+    /**
+     * Name of the context variable indicating whether the request
+     * was made using a secure channel, such as HTTPS.
+     */
+    public final static String SECURE_ACCESS_CONTEXT = "secure";
+    /** Name of the context variable for the user IP address. */
+    public final static String USER_ADDRESS_CONTEXT = "useraddress";
+    /** Name of the context variable for the being-accessed HTTP server. */
+    public final static String SERVER_NAME_CONTEXT = "server";
+    /** Name of the context variable for the being-accessed HTTP server. */
+    public final static String PROTOCOL_CONTEXT = "protocol";
+
+    //-------------------------------------------------------------------------
+    // Class members
+    //-------------------------------------------------------------------------
+
+    private static final Logger log = Logger.getLogger();
 
     //-------------------------------------------------------------------------
     // Instance members
@@ -131,15 +157,27 @@ public class SecurityAccessContextProvider extends BaseModule
 
     /** {@inheritDoc} */
     @Override
-    public void populateContext(Map<String,Object> context) {
+    public void populateContext(Map<String,Object> context,
+                                Repository repository) {
+        Map<String,Object> ctx = new HashMap<String,Object>();
+        // Populate context with HTTP request data.
+        RequestContext reqCtx = RequestContext.get();
+        if (reqCtx != null) {
+            HttpServletRequest req = reqCtx.request;
+            ctx.put(SECURE_ACCESS_CONTEXT, wrap(req.isSecure()));
+            ctx.put(USER_ADDRESS_CONTEXT, req.getRemoteAddr());
+            ctx.put(SERVER_NAME_CONTEXT, req.getServerName());
+            ctx.put(PROTOCOL_CONTEXT, req.getScheme());
+        }
+        // Populate context with authenticated user data.
         try {
             SecurityContext securityCtx = SecurityContext.getContext();
             String user = securityCtx.getPrincipal();
             if (user != null) {
                 // Append user context.
-                context.put(USER_LOGIN_CONTEXT, user);
+                ctx.put(USER_LOGIN_CONTEXT, user);
                 if (this.userUriFormat != null) {
-                    context.put(USER_URI_CONTEXT, URI.create(
+                    ctx.put(USER_URI_CONTEXT, URI.create(
                             this.userUriFormat.format(new Object[] { user })));
                 }
                 // Append user role context.
@@ -160,14 +198,17 @@ public class SecurityAccessContextProvider extends BaseModule
                         }
                     }
                     if (! roles.isEmpty()) {
-                        context.put(ROLE_NAME_CONTEXT, roles);
+                        ctx.put(ROLE_NAME_CONTEXT, roles);
                     }
                     if ((roleUris != null) && (! roleUris.isEmpty())) {
-                        context.put(ROLE_URI_CONTEXT, roleUris);
+                        ctx.put(ROLE_URI_CONTEXT, roleUris);
                     }
                 }
             }
         }
         catch (Exception e) { /* Ignore... */ }
+
+        log.debug("Added context data: {}", ctx);
+        context.putAll(ctx);
     }
 }
