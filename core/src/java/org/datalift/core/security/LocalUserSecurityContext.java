@@ -47,13 +47,33 @@ import org.datalift.fwk.security.SecurityContext;
  */
 public class LocalUserSecurityContext extends SecurityContext
 {
-    /** {@inheritDoc} */
+    //-------------------------------------------------------------------------
+    // SecurityContext contract support
+    //-------------------------------------------------------------------------
+
+    /**
+     * {@inheritDoc}
+     * @return the login name of the user running the local JVM.
+     */
     @Override
     public String getPrincipal() {
         return System.getProperty("user.name");
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     * @return <code>false</code> always as no actual authentication
+     *         has been performed.
+     */
+    @Override
+    public boolean isAuthenticated() {
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     * @return <code>true</code> always.
+     */
     @Override
     public boolean hasRole(String role) {
         return true;                            // Local user is almighty!

@@ -80,7 +80,13 @@ public abstract class SecurityContext
     abstract public String getPrincipal();
 
     /**
-     * Returns whether the user performing the request is authenticated.
+     * Returns whether the user performing the request has been
+     * authenticated.
+     * <p>
+     * Note that this method may return <code>false</code> while a
+     * {@link #getPrincipal() user principal} is available in case a
+     * Remember-Me protocol is being used.</p>
+     * 
      * @return <code>true</code> if the user performing the request has
      *         successfully authenticated; <code>false</code> otherwise.
      */
@@ -89,12 +95,10 @@ public abstract class SecurityContext
     }
 
     /**
-     * Returns whether to current user is authenticated and has the
-     * specified role.
+     * Returns whether to current user has the specified role.
      * @param  role   the role name.
      * @return <code>true</code> if the user performing the request has
-     *         successfully authenticated and has the specified role;
-     *         <code>false</code> otherwise.
+     *         the specified role; <code>false</code> otherwise.
      */
     abstract public boolean hasRole(String role);
 
@@ -127,8 +131,7 @@ public abstract class SecurityContext
      * <code>{@link #getContext() SecurityContext.getContext().}{@link #hasRole(String)}</code>.
      * @param  role   the role name.
      * @return <code>true</code> if the user performing the request has
-     *         successfully authenticated and has the specified role;
-     *         <code>false</code> otherwise.
+     *         the specified role; <code>false</code> otherwise.
      */
     public static boolean isUserInRole(String role) {
         return getContext().hasRole(role);
