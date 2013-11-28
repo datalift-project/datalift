@@ -100,7 +100,7 @@ public class S4acAccessController extends BaseModule
                 "FILTER(?acstype = <" + CONJUNCTIVE + "> || " +
                        "?acstype = <" + DISJUNCTIVE + ">) }";
     private final static String ALL_GRAPHS_QUERY =
-            "SELECT DISTINCT ?g WHERE { GRAPH ?g { ?s ?p ?o. }}";
+            "SELECT DISTINCT ?g WHERE { GRAPH ?g { ?s ?p ?o . } }";
 
     private final static Pattern QUERY_TYPE_PATTERN = Pattern.compile(
             "(^|\\s)(" + ASK.name() + '|' + CONSTRUCT.name() + '|' +
@@ -293,15 +293,14 @@ public class S4acAccessController extends BaseModule
 
         if (this.isSecured(repository)) {
             // Get accessible graphs for the currently logged user.
-            if (SecurityContext.isUserAuthenticated()) {
+            String user = SecurityContext.getUserPrincipal();
+            if (user != null) {
                 graphs = this.evaluatePolicies(type,
                                 this.getPolicyEvaluationRepository(repository));
             }
             // Public graphs, i.e. the ones upon which there are no access
-            // control policies are accessible to anyone.
+            // control policy, are accessible to anyone.
             graphs.addAll(this.getPublicGraphs(repository));
-
-            String user = SecurityContext.getUserPrincipal();
             if (log.isTraceEnabled()) {
                 log.trace("Graphs accessible to {}: {}", user, graphs);
             }
@@ -364,7 +363,7 @@ public class S4acAccessController extends BaseModule
         Configuration cfg = Configuration.getDefault();
         for (AccessContextProvider p : cfg.getBeans(AccessContextProvider.class)) {
             try {
-                p.populateContext(accessCtx);
+                p.populateContext(accessCtx, r);
             }
             catch (Exception e) {
                 log.warn("Access context provider \"{}\" failed.", e,

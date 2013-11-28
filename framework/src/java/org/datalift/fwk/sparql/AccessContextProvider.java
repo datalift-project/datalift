@@ -37,6 +37,8 @@ package org.datalift.fwk.sparql;
 
 import java.util.Map;
 
+import org.datalift.fwk.rdf.Repository;
+
 
 public interface AccessContextProvider
 {
@@ -46,6 +48,8 @@ public interface AccessContextProvider
      * policies.
      * @param  context   the access context, possibly already partially
      *                   populated by other access control providers.
+     * @param  target    the RDF repository being-queried.
      */
-    public void populateContext(Map<String,Object> context);
+    public void populateContext(Map<String,Object> context,
+                                Repository repository);
 }
