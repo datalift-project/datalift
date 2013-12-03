@@ -33,7 +33,7 @@
   <property name="datalift.root" location="${basedir}/.."/>
 
   <property name="datalift.wrapper.modules"
-            value="flint-endpoint,projectmanager,simple-convert,interlink,stringtouri,geo-convert,incubator/ontology-mapper,lov/api,lov/catalogue"/>
+            value="flint-endpoint,projectmanager,simple-convert,silk-interlinker,stringtouri,geo-convert,incubator/ontology-mapper,lov/api,lov/catalogue"/>
 
 
   <!-- ================ File and Directory Names ========================== -->
