@@ -159,6 +159,17 @@ public class EventImpl extends BaseRdfEntity implements Event {
 		this.wasInformedBy = wasInformedBy;
 	}
  
+
+	@Override
+	public String getDescription() {
+		return this.description;
+	}
+
+	@Override
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
     //-------------------------------------------------------------------------
     // BaseRdfEntity contract support
     //-------------------------------------------------------------------------

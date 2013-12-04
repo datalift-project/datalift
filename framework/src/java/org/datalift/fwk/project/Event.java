@@ -64,7 +64,7 @@ public interface Event {
 	/**
 	 * Get the {@link URI} of the {@link Event}.
 	 * 
-	 * @return the {@link URI} of the {@link Event}.
+	 * @return The {@link URI} of the {@link Event}.
 	 */
     public String getUri();
 
@@ -72,7 +72,7 @@ public interface Event {
      * Get the parameters of the {@link Event}. If it is a {@link Task}, the 
      * parameters are used to execute it.
      * 
-     * @return the parameters of the {@link Event}.
+     * @return The parameters of the {@link Event}.
      */
 	public String getParameters();
 	
@@ -87,7 +87,7 @@ public interface Event {
 	/**
 	 * Get starting {@link Date} of the {@link Event}.
 	 * 
-	 * @return the starting {@link Date}.
+	 * @return The starting {@link Date}.
 	 */
 	public Date getStartedAtTime();
 	
@@ -101,7 +101,7 @@ public interface Event {
 	/**
 	 * Get ending {@link Date} of the {@link Event}.
 	 * 
-	 * @return the ending {@link Date}.
+	 * @return The ending {@link Date}.
 	 */
 	public Date getEndedAtTime();
 	
@@ -115,7 +115,7 @@ public interface Event {
 	/**
 	 * Get the {@link User} who initiated the {@link Event}.
 	 * 
-	 * @return the {@link User} who initiated the {@link Event}.
+	 * @return The {@link User} who initiated the {@link Event}.
 	 */
 	public User getWasAssociatedWith();
 
@@ -129,7 +129,7 @@ public interface Event {
 	/**
 	 * Get the {@link Entity} which use this {@link Event}.
 	 * 
-	 * @return the {@link Entity};
+	 * @return The {@link Entity};
 	 */
 	public Entity getUsed();
 
@@ -144,7 +144,7 @@ public interface Event {
 	 * In case of the {@link Event} is created from another {@link Event}, get 
 	 * this other {@link Event}.
 	 * 
-	 * @return the creator Event.
+	 * @return The creator Event.
 	 */
 	public Event getWasInformedBy();
 	
@@ -152,7 +152,21 @@ public interface Event {
 	 * In case of the {@link Event} is created from another {@link Event}, set 
 	 * this other {@link Event}.
 	 * 
-	 * @return the creator Event.
+	 * @param wasInformedBy
 	 */
 	public void setWasInformedBy(Event wasInformedBy);
+	
+	/**
+	 * Get the description of the {@link Event}.
+	 * 
+	 * @return Description.
+	 */
+	public String getDescription();
+
+	/**
+	 * Set the description of the {@link Event}.
+	 * 
+	 * @param description
+	 */
+	public void setDescription(String description);
 }
