@@ -447,7 +447,11 @@ public class CsvDirectMapper extends BaseConverterModule
                     }
                     i++;
                 }
-                // Else: Skip rows without identifier.
+                else {
+                    // Skip rows without identifier.
+                    log.warn("Skipped row #{} of {}: no identifier found",
+                             wrap(i), src.getFilePath());
+                }
             }
             cnx.commit();
             duration = System.currentTimeMillis() - t0;
