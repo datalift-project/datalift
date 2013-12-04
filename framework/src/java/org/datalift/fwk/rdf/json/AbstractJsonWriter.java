@@ -389,8 +389,8 @@ public abstract class AbstractJsonWriter
         value = StringUtil.gsub("\r", "\\r", value);
         value = StringUtil.gsub("\t", "\\t", value);
         value = StringUtil.gsub("&", "&amp;", value);
-        value = StringUtil.gsub("<", "&gt;", value);
-        value = StringUtil.gsub(">", "&lt;", value);
+        value = StringUtil.gsub("<", "&lt;", value);
+        value = StringUtil.gsub(">", "&gt;", value);
 
         this.writer.write("\"");
         this.writer.write(value);
