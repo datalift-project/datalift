@@ -61,6 +61,7 @@
   <property file="build.properties"/>
 
   <property name="datalift.root" location="${basedir}/../.."/>
+  <property file="${datalift.root}/build.properties"/>
 
   <property name="fwk.home" location="${datalift.root}/framework"/>
   <property file="${fwk.home}/build.properties"/>
