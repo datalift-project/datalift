@@ -2,6 +2,7 @@
  * Copyright / Copr. 2010-2013 Atos - Public Sector France -
  * BS & Innovation for the DataLift project,
  * Contributor(s) : L. Bihanic, H. Devos, O. Ventura, M. Chetima
+ *                  A. Valensi
  *
  * Contact: dlfr-datalift@atos.net
  *
@@ -511,10 +512,6 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
             throw new IllegalArgumentException("project");
         }
         
-//        String query = "select distinct ?result where {" + 
-//        		       "?result a <http://www.datalift.org/core#ontology>;" +
-//        		       "<http://www.datalift.org/core#project> <http://datalift.fr/proj/myproject> }";
-
         StringBuilder query = new StringBuilder();
         query.append("select distinct ?result where {");
         query.append("?result a datalift:ontology;");
@@ -522,10 +519,9 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         query.append(project.getUri().toString());
         query.append("> }");
         
-        
-        @SuppressWarnings("unchecked")
-		List<Ontology> ontologies = (List<Ontology>) this.projectDao.executeQuery(query.toString(), Ontology.class);
-        System.out.println(ontologies);
+		List<Ontology> ontologies = 
+				(List<Ontology>) this.projectDao.executeQuery(
+						query.toString(), Ontology.class);
         
         return ontologies;
     }
@@ -598,8 +594,10 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
             if (this.findProject(new URI(p.getUri())) == null) {
                 this.projectDao.persist(p);
                 this.projectDao.persist(new ProvEntity(p.getUri()));
-                this.projectDao.persist(new ProvAgent(p.getWasAttributedTo().getUri()));
-                String id = p.getUri().substring(p.getUri().lastIndexOf("/") + 1);
+                this.projectDao.persist(
+                		new ProvAgent(p.getWasAttributedTo().getUri()));
+                String id = 
+                		p.getUri().substring(p.getUri().lastIndexOf("/") + 1);
                 File projectStorage = this.getFileStorage(
                                             this.getProjectFilePath(id, null));
                 projectStorage.mkdirs();

@@ -89,18 +89,6 @@ public class EventImpl extends BaseRdfEntity implements Event {
 
     /** {@inheritDoc} */
 	@Override
-	public String getDescription() {
-		return description;
-	}
-
-    /** {@inheritDoc} */
-	@Override
-	public void setDescription(String description) {
-		this.description = description;
-	}
-
-    /** {@inheritDoc} */
-	@Override
 	public String getParameters() {
 		return parameters;
 	}

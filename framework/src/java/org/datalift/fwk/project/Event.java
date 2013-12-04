@@ -50,27 +50,109 @@ public interface Event {
     //-------------------------------------------------------------------------
 	
 	/**
-	 * Base Event URI.
+	 * Base event URI.
+	 * 
+	 * TODO: change for a dynamic string.
 	 */
-	public static final String BASE_EVENT_URI = "http://www.datalift.org/project/event"; 
+	public static final String BASE_EVENT_URI = 
+			"http://www.datalift.org/project/event"; 
 
     //-------------------------------------------------------------------------
 	// Event contract definition
     //-------------------------------------------------------------------------
 
+	/**
+	 * Get the {@link URI} of the {@link Event}.
+	 * 
+	 * @return the {@link URI} of the {@link Event}.
+	 */
     public String getUri();
-	public String getDescription();
-	public void setDescription(String description);
+
+    /**
+     * Get the parameters of the {@link Event}. If it is a {@link Task}, the 
+     * parameters are used to execute it.
+     * 
+     * @return the parameters of the {@link Event}.
+     */
 	public String getParameters();
+	
+	/**
+     * Set the parameters of the {@link Event}. If it is a {@link Task}, the 
+     * parameters are used to execute it.
+	 * 
+	 * @param parameters
+	 */
 	public void setParameters(String parameters);
+	
+	/**
+	 * Get starting {@link Date} of the {@link Event}.
+	 * 
+	 * @return the starting {@link Date}.
+	 */
 	public Date getStartedAtTime();
+	
+	/**
+	 * Set starting {@link Date} of the {@link Event}.
+	 * 
+	 * @param startedAtTime is the starting date.
+	 */
 	public void setStartedAtTime(Date startedAtTime);
+	
+	/**
+	 * Get ending {@link Date} of the {@link Event}.
+	 * 
+	 * @return the ending {@link Date}.
+	 */
 	public Date getEndedAtTime();
+	
+	/**
+	 * Set ending {@link Date} of the {@link Event}.
+	 * 
+	 * @param endedAtTime the ending {@link Date}.
+	 */
 	public void setEndedAtTime(Date endedAtTime);
+	
+	/**
+	 * Get the {@link User} who initiated the {@link Event}.
+	 * 
+	 * @return the {@link User} who initiated the {@link Event}.
+	 */
 	public User getWasAssociatedWith();
+
+	/**
+	 * Set the {@link User} who initiated the {@link Event}.
+	 * 
+	 * @param wasAssociatedWith
+	 */
 	public void setWasAssociatedWith(User wasAssociatedWith);
+	
+	/**
+	 * Get the {@link Entity} which use this {@link Event}.
+	 * 
+	 * @return the {@link Entity};
+	 */
 	public Entity getUsed();
+
+	/**
+	 * Set the {@link Entity} which use this {@link Event}.
+	 * 
+	 * @param used
+	 */
 	public void setUsed(Entity used);
+	
+	/**
+	 * In case of the {@link Event} is created from another {@link Event}, get 
+	 * this other {@link Event}.
+	 * 
+	 * @return the creator Event.
+	 */
 	public Event getWasInformedBy();
+	
+	/**
+	 * In case of the {@link Event} is created from another {@link Event}, set 
+	 * this other {@link Event}.
+	 * 
+	 * @return the creator Event.
+	 */
 	public void setWasInformedBy(Event wasInformedBy);
 }
