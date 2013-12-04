@@ -98,9 +98,10 @@
    -->
 
   <property name="app.name"             value="flint-endpoint"/>
-  <property name="app.version"          value="0.7.0"/>
+  <property name="app.version"          value="0.7.3"/>
   <property name="app.path"             value="/${app.name}"/>
   <property name="app.long.name"        value="SPARQL endpoint using Flint as user interface"/>
+  <property name="full.app.version"     value="${app.version}"/>
 
   <property name="build.home"           location="${basedir}/build"/>
   <property name="dist.home"            location="${basedir}/dist"/>
@@ -186,6 +187,7 @@
     <filter token="app.name"            value="${app.name}"/>
     <filter token="app.long.name"       value="${app.long.name}"/>
     <filter token="app.version"         value="${app.version}"/>
+    <filter token="full.app.version"    value="${full.app.version}"/>
   </filterset>
 
 

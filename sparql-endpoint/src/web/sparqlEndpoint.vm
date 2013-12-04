@@ -75,7 +75,7 @@
 	</div>
 #footer
 	<div style="text-align:right;font-style:italic;font-size:0.8em">
-		<span style="color:gray">Version @app.version@</span>
+		<span style="color:gray">Version @full.app.version@</span>
 	</div>
 
 #script_links
