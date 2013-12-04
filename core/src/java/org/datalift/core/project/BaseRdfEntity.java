@@ -2,6 +2,7 @@
  * Copyright / Copr. 2010-2013 Atos - Public Sector France -
  * BS & Innovation for the DataLift project,
  * Contributor(s) : L. Bihanic, H. Devos, O. Ventura, M. Chetima
+ *                  A. Valensi
  *
  * Contact: dlfr-datalift@atos.net
  *
@@ -41,7 +42,6 @@ import javax.persistence.MappedSuperclass;
 
 import com.clarkparsia.empire.SupportsRdfId;
 import com.clarkparsia.empire.annotation.SupportsRdfIdImpl;
-import com.clarkparsia.empire.annotation.NamedGraph;
 
 import org.datalift.fwk.util.Iso8601DateFormat;
 

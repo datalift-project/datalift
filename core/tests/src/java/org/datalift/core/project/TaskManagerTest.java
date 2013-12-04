@@ -12,6 +12,8 @@ import org.datalift.core.DefaultConfiguration;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.ProcessingTask;
 import org.datalift.fwk.project.TaskManager;
+import org.datalift.fwk.project.TransformationModule;
+import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
 import org.junit.After;
 import org.junit.Before;
@@ -72,7 +74,7 @@ public class TaskManagerTest {
 
 	}
 	
-	public class TestModule extends BaseTransformationModule {
+	public class TestModule extends BaseModule implements TransformationModule{
 
 	    //----------------------------------------------------------------------
 	    // Constants
@@ -160,11 +162,40 @@ public class TaskManagerTest {
 			return true;
 		}
 
+		/**
+		 * This method return the transformation id. The transformation id is
+		 * needed to register the class to get it when we want to execute the
+		 * transformation.
+		 * 
+		 * TODO: Put this class in an abstract class, because it is a recurrent 
+		 * implementation.
+		 * 
+		 * @return the transformation id.
+		 */
 		@Override
 		public String getTransformationId() {
 			return this.getClass().getName();
 		}
 
-	}
+	    //----------------------------------------------------------------------
+	    // Specific implementation
+	    //----------------------------------------------------------------------
 
+		/**
+		 * This method return the task manager
+		 * 
+		 * TODO: Put this class in an abstract class, because it is a recurrent 
+		 * implementation.
+		 * 
+		 * @return the task manager.
+		 */
+	    public TaskManager getTaskManager() {
+	    	TaskManager taskManager = 
+	    			Configuration.getDefault().getBean(TaskManager.class);
+	    	if (taskManager == null)
+	    		throw new RuntimeException("TaskManager is not initialized");
+	    	return taskManager;
+	    }
+
+	}
 }
