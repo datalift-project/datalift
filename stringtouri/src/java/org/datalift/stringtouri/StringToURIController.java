@@ -126,7 +126,7 @@ public class StringToURIController extends InterlinkingController
 
         try {           
             // The project can be handled if it has at least two RDF sources.
-            if (model.hasMultipleRDFSources(p, 2)) {
+            if (model.hasMultipleRDFSources(p, 1)) {
             	// link URL, link label
                 uridesc = new UriDesc(this.getName() + "?project=" + p.getUri(), this.label); 
                 
