@@ -758,8 +758,8 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         Repository repo = null;
         try {
             repo = cfg.getRepository(targetRepo);
-            if (! ((repo.isPublic()) ||
-                   (SecurityContext.isUserAuthenticated()))) {
+            if ((! repo.isPublic()) &&
+                (SecurityContext.getUserPrincipal() == null)) {
                 // Repository is not public and user is not authenticated.
                 throw new java.lang.SecurityException();
             }
@@ -831,7 +831,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
             throw new IllegalArgumentException("template");
         }
         // Get a list of available repositories for user.
-        boolean userAuthenticated = SecurityContext.isUserAuthenticated();
+        boolean userAuthenticated = (SecurityContext.getUserPrincipal() != null);
         Collection<Repository> c = Configuration.getDefault()
                                         .getRepositories(! userAuthenticated);
         // Create and populate view template.

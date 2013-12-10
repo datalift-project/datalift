@@ -10,7 +10,7 @@
 <body>
 #banner
 	<div style="position:absolute;top:15px;right:15px;">
-#if( ${securityCtx.userAuthenticated} )
+#if( ${securityCtx.principal} )
 		<a href="${baseUri}/project" id="goto_workspace" class="button">#i18n("project.workspace.link")</a>
 #end
 	</div>
