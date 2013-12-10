@@ -56,6 +56,11 @@ import org.datalift.fwk.project.TransformationModule;
 import org.datalift.fwk.view.TemplateModel;
 import org.datalift.fwk.view.ViewFactory;
 
+/**
+ * This class is a transformation module example. It only does a sleep for few
+ * seconds.
+ * @author avalensi
+ */
 @Path(MyModule.MODULE_NAME+ "/")
 public class MyModule extends BaseModule implements TransformationModule {
 
@@ -93,6 +98,12 @@ public class MyModule extends BaseModule implements TransformationModule {
     	return this.getClass().getName();
     }
     
+    /**
+     * TODO: Maybe to move to an abstract class
+     * 
+     * Get the {@link TaskManager}.
+     * @return The {@link TaskManager}.
+     */
     private TaskManager getTaskManager() {
     	TaskManager taskManager = 
     			Configuration.getDefault().getBean(TaskManager.class);
@@ -100,7 +111,13 @@ public class MyModule extends BaseModule implements TransformationModule {
     		throw new RuntimeException("TaskManager is not initialized");
     	return taskManager;
     }
-    
+
+    /**
+     * TODO: Maybe to move to an abstract class
+     * 
+     * Get the {@link ProjectManager}.
+     * @return The {@link ProjectManager}.
+     */
     private ProjectManager getProjectManager() {
     	ProjectManager projectManager = 
     			Configuration.getDefault().getBean(ProjectManager.class);
@@ -135,18 +152,27 @@ public class MyModule extends BaseModule implements TransformationModule {
     // Web services
     //-------------------------------------------------------------------------
 
+    /**
+     * Index page;
+     * @return The index page.
+     */
     @GET
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
     public Response index() {
     	Response response = null;
 
     	TemplateModel view = this.newView("index.vm", null);
-    	//view.put("converter", this);
     	response = Response.ok(view, TEXT_HTML_UTF8).build();
 
     	return response;
     }
     
+    /**
+     * This web service create an {@link Event} ({@link ProcessingTask}), and 
+     * give it to the {@link TaskManager} which will schedule the execution.
+     * @param uriInfo is automatically given.
+     * @return The previous page.
+     */
     @GET
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
     @Path("addprocess")
@@ -155,14 +181,13 @@ public class MyModule extends BaseModule implements TransformationModule {
     			this.getTransformationId(),
     			"http://www.datalift.org/project/name/event/");
 
-//    	task.addParam("projectId", projectId);
-//    	task.saveParams();
+    	task.addParam("uriInfo", uriInfo.getPath());
+    	task.saveParams();
     	
     	TaskManager tm = this.getTaskManager();
     	if (tm == null)
     		logger.error("TaskManager is not initialized");
     	tm.addTask(task);
-		logger.debug("[" + task.getUri() + "] Process added");
 
 		logger.info("URI: {}", uriInfo.getRequestUri());
 		
@@ -172,32 +197,23 @@ public class MyModule extends BaseModule implements TransformationModule {
     	
     	return response;
     }
-    
-    @GET
-    @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
-    @Path("gethistory")
-    public String getHistory() {
-    	///http://localhost:9091/sparql?query=SELECT...&default-graph-uri=internal
-    	
-    	return "history";
-    }
 
     //-------------------------------------------------------------------------
     // TransformationModule contract
     //-------------------------------------------------------------------------
     
+    /** {@inheritDoc} */
 	@Override
 	public Boolean execute(ProcessingTask task) {
-		logger.debug("execute()");
-//		try {
-//			task.loadParams();
-//		} catch (Exception e) {
-//			throw new RuntimeException(e);
-//		}
-		//String projectId = (String) task.getParam("projectId");
+		try {
+			task.loadParams();
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+		String uriInfo = (String) task.getParam("uriInfo");
 
-		//logger.debug("Got param: " + projectId);
-		logger.info("[" + task.getUri() + "Task is running...");
+		logger.info("[{}]Got param uriInfo: {}", task.getUri(), uriInfo);
+		logger.info("[{}]Task is running...", task.getUri());
 
 		try {
 			Thread.sleep(10000);
@@ -205,7 +221,7 @@ public class MyModule extends BaseModule implements TransformationModule {
 			throw new RuntimeException(e);
 		}
     	
-		logger.info("[" + task.getUri() + "] Task done.");
+		logger.info("[{}] Task done.", task.getUri());
 		
 		return true;
 	}
