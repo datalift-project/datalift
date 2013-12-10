@@ -77,7 +77,8 @@ import org.datalift.fwk.project.TaskManager;;
  * @author avalensi
  */
 @Path(RdfTransformer.MODULE_NAME)
-public class RdfTransformer extends BaseConverterModule implements TransformationModule
+public class RdfTransformer extends BaseConverterModule 
+implements TransformationModule
 {
     //-------------------------------------------------------------------------
     // Constants
@@ -146,7 +147,8 @@ public class RdfTransformer extends BaseConverterModule implements Transformatio
     // TransformationModule contract
     //-------------------------------------------------------------------------
 
-	@Override
+    /** {@inheritDoc} */
+    @Override
 	public Boolean execute(ProcessingTask task) {
         Repository internal = Configuration.getDefault()
                 .getInternalRepository();
@@ -159,10 +161,11 @@ public class RdfTransformer extends BaseConverterModule implements Transformatio
         URI sourceId = (URI) task.getParam("sourceId");
         String destTitle = (String) task.getParam("destTitle");
         URI targetGraph = (URI) task.getParam("targetGraph");
+		@SuppressWarnings("unchecked")
 		List<String> queries = (List<String>) task.getParam("queries");
         boolean overwrite = (Boolean) task.getParam("overwrite");
 
-        log.info("[" + projectId + "] Task is running...");
+        log.info("[{}] Task is running...", projectId);
 
 		try {
             // Clean the query list to remove empty entries.
@@ -198,9 +201,8 @@ public class RdfTransformer extends BaseConverterModule implements Transformatio
 
             this.handleInternalError(e);
         }
-		log.info("[" + projectId + "] Task done.");
+		log.info("[{}] Task done.", projectId);
 		
-		// TODO: return false in case of error.
 		return true;
 	}
 	
