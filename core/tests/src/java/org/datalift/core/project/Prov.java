@@ -163,7 +163,7 @@ public class Prov {
 	@Test
 	public void testProvEvent() throws URISyntaxException {
 		DefaultProjectManager pm = initProjectManager();
-		ProjectCreationEventImpl e = new ProjectCreationEventImpl();
+		
 		UserImpl u = new UserImpl("John");
 		URI projectURI = new URI("http://datalift.fr/proj/myproject");
 		URI licenseURI = 
@@ -171,14 +171,17 @@ public class Prov {
 		String eventURI = "http://datalift.fr/event/newProj1";
 		Project p = pm.newProject(projectURI, "MyProject", 
 				"Description.", licenseURI);
-		
-		e.setId(eventURI);
-		e.setDescription("Test creation event");
-		e.setParameters("none");
-		e.setStartedAtTime(new Date());
-		e.setEndedAtTime(new Date());
-		e.setWasAssociatedWith(u);
-		e.setUsed(p);
+
+        Date currentTime = new Date();
+		ProjectCreationEventImpl e = new ProjectCreationEventImpl(
+        		eventURI,
+        		"Test creation event", 
+        		"none", 
+        		currentTime, 
+        		currentTime, 
+        		u, 
+        		p,
+        		null);
 		
 		pm.saveEvent(e);
 	}

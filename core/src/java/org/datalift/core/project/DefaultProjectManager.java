@@ -83,7 +83,6 @@ import org.datalift.fwk.project.ShpSource;
 import org.datalift.fwk.project.GmlSource;
 import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.TransformedRdfSource;
-import org.datalift.fwk.project.User;
 import org.datalift.fwk.project.XmlSource;
 import org.datalift.fwk.project.CsvSource.Separator;
 import org.datalift.fwk.rdf.RdfNamespace;
@@ -480,10 +479,11 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     @Override
     public Ontology saveOntology(Ontology o) {
         this.checkAvailable();
-        if (o== null) {
+        if (o == null) {
             throw new IllegalArgumentException("ontology");
         }
         this.projectDao.save(o);
+        this.projectDao.persist(new ProvEntity(o.getUri()));
         log.debug("Ontology <{}> saved to RDF store", o.getUri());
         
         return o;
@@ -596,6 +596,20 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
                 this.projectDao.persist(new ProvEntity(p.getUri()));
                 this.projectDao.persist(
                 		new ProvAgent(p.getWasAttributedTo().getUri()));
+                
+                // TODO: change URI.
+                Date currentTime = new Date();
+                this.saveEvent(new ProjectCreationEventImpl(
+                		"http://www.datalift.org/project/name/event/", 
+                		p.getDescription(), 
+                		null, 
+                		currentTime, 
+                		currentTime, 
+                		p.getWasAttributedTo(), 
+                		p,
+                		null)
+                );
+                
                 String id = 
                 		p.getUri().substring(p.getUri().lastIndexOf("/") + 1);
                 File projectStorage = this.getFileStorage(
@@ -610,23 +624,6 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         catch (Exception e) {
             throw new RuntimeException("Invalid project URI: " + p.getUri(), e);
         }
-    }
-
-    /** {@inheritDoc} */
-    // TODO: Maybe to remove.
-    @Override
-    public ProjectCreationEventImpl newProjectCreationEvent(User u, Project p) {
-    	ProjectCreationEventImpl e = new ProjectCreationEventImpl();
-
-    	//e.setId(eventURI);
-		//e.setDescription("");
-		//e.setParameter("none");
-		e.setStartedAtTime(new Date());
-		e.setEndedAtTime(new Date());
-		e.setUsed(p);
-		e.setWasAssociatedWith(u);
-		
-		return e;
     }
     
     /** {@inheritDoc} */

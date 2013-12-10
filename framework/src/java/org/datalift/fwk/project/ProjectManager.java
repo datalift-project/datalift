@@ -371,17 +371,10 @@ public interface ProjectManager
      * @param  e   the event to remove.
      */
     public void deleteEvent(Event e);
-
-    /**
-     * Create a new project creation event description.
-     * @param  u   the user associated with the event (activity).
-     * @param  p   the project used by the event (activity).
-     *
-     * @return a new project creation event description.
-     */
-	public ProjectCreationEvent newProjectCreationEvent(User u, Project p);
     
 	/**
+	 * TODO: Maybe useless.
+	 * 
 	 * Create a new processing task used by the TaskManager to run a task.
 	 * @param transformationId    the URI identifier of the module which want to
 	 *                            execute the task.
