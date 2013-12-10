@@ -27,13 +27,11 @@
         padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
       }
     </style>
-    
-     
 
     </head>
     <body>
         #banner
-        #if( ${securityCtx.userAuthenticated} )
+        #if( ${securityCtx.principal} )
 	   <div style="position:absolute;top:15px;right:15px;">
 		<a class="btn btn-large btn-primary" href="${baseUri}/project" id="goto_workspace" >#i18n("project.workspace.link")</a>
 	   </div>
@@ -43,46 +41,42 @@
                 #i18n("project.label") ${it.title} &mdash; #i18n("visualization.title")
             </h3>
         </div>
-        
+
         <div class="container"> <!--container-->
            <div class="row">
              <div class="span6">
-              <div class="alert alert-success"><h3>#i18n("section.input.sgvizler")</h3></div>   
+              <div class="alert alert-success"><h3>#i18n("section.input.sgvizler")</h3></div>
                  #i18n("section.header.sgvizler")
 
              <div id="queryarea">
               <pre id="sgvzlr_cPrefix"></pre>
-              
+
               <textarea id="sgvzlr_cQuery" rows="10" cols="180"></textarea>
-              
+
               <form method="get" id="sgvzlr_formQuery" action="${moduleUri}/visu-sgvizler?project=$esc.url($it.uri)">
-	            
+
 	              <input type="hidden" value="" name="query" id="sgvzlr_strQuery"/>
 	              <!--<p> Endpoint: <input name="endpoint" value="internal endpoint" id="sgvzlr_endpoint" type="text" size="2"/> </p> -->
-	             <p> Width:  <input name="width" id="sgvzlr_strWidth" type="text" size="2"/> 
+	             <p> Width:  <input name="width" id="sgvzlr_strWidth" type="text" size="2"/>
 	              Height: <input name="height" id="sgvzlr_strHeight" type="text" size="2"/> </p>
 	             <p> Chart Type: <select name="chart" id="sgvzlr_optChart"></select> </p>
 	             <p><a class="btn btn-large btn-primary" id="reset_submit"  value="" href="${baseUri}/project/${it.title}">#i18n('reset.label') </a>
 	             <input type="submit" class="btn btn-large btn-primary" id="query_submit" value="#i18n('submit.query.label')" onclick="sgvizler.ui.submitQuery()"/></p>
-	             
+
 	          </form>
 	          </div>
 	        </div>
-	         
-	          
+
             <!-- <div class="span6">
-               <div class="alert alert-info"> 
+               <div class="alert alert-info">
                <div id="sgvzlr_cMessage"></div>
              </div>
             <div id="sgvzlr_gchart" style="width:800px; height:400px;"></div>
            </div> -->
          </div>
-      
-        
+
         </div> <!-- end container -->
-      
-        
-        
+
         #footer
         #script_links
         <!-- TODO : Reduce number of dependencies. Minify, concatenate. -->
@@ -91,59 +85,58 @@
         <script type="text/javascript" src="${moduleUri}/static/js/vendor/underscore.string.min.js"></script>
         <script type="text/javascript" src="${moduleUri}/static/js/vendor/bootstrap.js"></script>
         <script type="text/javascript" src="${moduleUri}/static/js/vendor/d3.v2.js"></script>
-         <script type="text/javascript" id="sgvzlr_script" src="${moduleUri}/static/js/vendor/sgvizler.js"></script>
-		<script type="text/javascript" src="${moduleUri}/static/js/vendor/lib/d3.v2.min.js"></script>
-		<script type="text/javascript" src="${moduleUri}/static/js/vendor/lib/raphael-dracula.pack.min.js"></script>
-		
-		<!-- vendors script. -->
+        <script type="text/javascript" id="sgvzlr_script" src="${moduleUri}/static/js/vendor/sgvizler.js"></script>
+        <script type="text/javascript" src="${moduleUri}/static/js/vendor/lib/d3.v2.min.js"></script>
+        <script type="text/javascript" src="${moduleUri}/static/js/vendor/lib/raphael-dracula.pack.min.js"></script>
+
+        <!-- vendors script. -->
         <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
-    	<script type="text/javascript" src="https://www.google.com/jsapi"></script>
-    	<!-- <script type="text/javascript" id="sgvzlr_script" src="http://sgvizler.googlecode.com/svn/release/0.5/sgvizler.js"></script> -->
-        
-       
+        <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+        <!-- <script type="text/javascript" id="sgvzlr_script" src="http://sgvizler.googlecode.com/svn/release/0.5/sgvizler.js"></script> -->
+
        <script type="text/javascript">
-          
+
           //// Query settings. The defaults settings are listed.
        sgvizler.option.query = {
-           // Default query. 
+           // Default query.
            'query':                "SELECT ?class (count(?instance) AS ?noOfInstances)\nWHERE{ ?instance a ?class }\nGROUP BY ?class\nORDER BY ?class",
-    
-           // Endpoint URL. 
+
+           // Endpoint URL.
            'endpoint':             "${baseUri}/sparql?default-graph-uri=internal",
-    
-           // Endpoint output format. 
-           //'endpoint_output':      'json',  // 'xml' or 'json' 
-    
+
+           // Endpoint output format.
+           //'endpoint_output':      'json',  // 'xml' or 'json'
+
            // This string is appended the 'endpoint' variable and the query to it again to give a link to the "raw" query results.
            //'endpoint_query_url':   "?output=text&amp;query=",
-    
-           // URL to SPARQL validation service. The query is appended to it. 
+
+           // URL to SPARQL validation service. The query is appended to it.
            //'validator_query_url':  "http://www.sparql.org/query-validator?languageSyntax=SPARQL&amp;outputFormat=sparql&amp;linenumbers=true&amp;query=",
-    
-           // Default chart type. 
+
+           // Default chart type.
            //'chart':                'gLineChart',
-    
-           // Default log level. Must be either 0, 1, or 2. 
+
+           // Default log level. Must be either 0, 1, or 2.
              'loglevel':             2
                };
            sgvizler.option.namespace['dbo'] = 'http://dbpedia.org/ontology/';
-    	   sgvizler.option.namespace['rdf'] = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#';
-		   sgvizler.option.namespace['lode'] = 'http://linkedevents.org/ontology/';
-		   sgvizler.option.namespace['event'] = 'http://purl.org/NET/c4dm/event.owl#';
-		   sgvizler.option.namespace['foaf'] = 'http://xmlns.com/foaf/0.1/';
-		   sgvizler.option.namespace['time'] = 'http://www.w3.org/2006/time#';
-		   sgvizler.option.namespace['dc'] = 'http://purl.org/dc/terms/';
-		   sgvizler.option.namespace['geo'] = 'http://www.w3.org/2003/01/geo/wgs84_pos#';
-		   sgvizler.option.namespace['dbpedia'] = 'http://fr.dbpedia.org/property/';
-		   
+           sgvizler.option.namespace['rdf'] = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#';
+           sgvizler.option.namespace['lode'] = 'http://linkedevents.org/ontology/';
+           sgvizler.option.namespace['event'] = 'http://purl.org/NET/c4dm/event.owl#';
+           sgvizler.option.namespace['foaf'] = 'http://xmlns.com/foaf/0.1/';
+           sgvizler.option.namespace['time'] = 'http://www.w3.org/2006/time#';
+           sgvizler.option.namespace['dc'] = 'http://purl.org/dc/terms/';
+           sgvizler.option.namespace['geo'] = 'http://www.w3.org/2003/01/geo/wgs84_pos#';
+           sgvizler.option.namespace['dbpedia'] = 'http://fr.dbpedia.org/property/';
+
          //// Your chart drawing preferences. The defaults are listed.
        // See the Google visualization API for available options for
        // Google charts, and the Sgvizler homepage for other
        // options. Options applicable to all charts are put in the
        // "root" of sgvizler.chartOptions. Chart specific options are
        // put in a "child" with the chart's id as name,
-       // e.g. 'gGeoMap'. 
-       sgvizler.option.chart = { 
+       // e.g. 'gGeoMap'.
+       sgvizler.option.chart = {
            //'width':           '800',
            //'height':          '400',
            //'chartArea':       { left: '5%', top: '5%', width: '75%', height: '80%' },
@@ -157,19 +150,12 @@
            //	 'dataMode':           'markers',
            //	 'showTip':            true,
            //	 'useMapTypeControl':  true
-           //     } 
+           //     }
        };
-         
-             
+
          //launch sgvizler
 			$(document).ready(sgvizler.go());
         </script>
-    
-       
-        
-         
-         
-       
-                
+
     </body>
 </html>
