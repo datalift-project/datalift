@@ -60,11 +60,13 @@ public class ProvActivity extends BaseRdfEntity
         this.setId(uri);
     }
 
+    /** {@inheritDoc} */
     @Override
     protected void setId(String id) {
         this.uri = id;
     }
 
+    /** {@inheritDoc} */
     @Override
     public String toString() {
         return "{ " + this.getClass().getSimpleName() + ": " + this.uri + " }";
