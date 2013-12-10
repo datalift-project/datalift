@@ -116,6 +116,7 @@ public class UserImpl extends BaseRdfEntity implements User {
     // BaseRedfEntity contract support
     //-------------------------------------------------------------------------
 
+    /** {@inheritDoc} */
     @Override
 	protected void setId(String id) {
 		// TODO Auto-generated method stub

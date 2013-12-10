@@ -45,11 +45,18 @@ import com.clarkparsia.empire.annotation.NamedGraph;
 import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.RdfsClass;
 
+/**
+ * ProjectCreationEvent default implementation.
+ * 
+ * @author avalensi
+ *
+ */
 @Entity
 @MappedSuperclass
 @RdfsClass("datalift:ProjectCreationEvent")
 @NamedGraph(type = NamedGraph.NamedGraphType.Static, value="datalift:datalift")
-public class ProjectCreationEventImpl extends EventImpl implements ProjectCreationEvent {
+public class ProjectCreationEventImpl extends EventImpl 
+implements ProjectCreationEvent {
     @RdfProperty("prov:used")
     private Source used;
 
