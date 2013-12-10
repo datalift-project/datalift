@@ -501,6 +501,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                                         String userQuery) {
         QueryResultIterator<BindingSet> result = null;
         RepositoryConnection cnx = repository.newConnection();
+        boolean error = true;
         try {
             // Parse query, to validate syntax.
             TupleQuery q = cnx.prepareTupleQuery(SPARQL, query, baseUri);
@@ -522,12 +523,17 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
             result = new QueryResultIterator<BindingSet>(repository, userQuery,
                                         startOffset, endOffset, r, cnx,
                                         r.getBindingNames(), dataset, evalTime);
+            error = false;
         }
         catch (OpenRDFException e) {
-            // Close repository connection.
-            Repository.closeQuietly(cnx);
             // Build plain text error response.
             this.handleError(query, e);
+        }
+        finally {
+            if (error) {
+                // Close repository connection.
+                Repository.closeQuietly(cnx);
+            }
         }
         return result;
     }
@@ -539,6 +545,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                                         String userQuery) {
         QueryResultIterator<Statement> result = null;
         RepositoryConnection cnx = repository.newConnection();
+        boolean error = true;
         try {
             // Parse query, to validate syntax.
             GraphQuery q = cnx.prepareGraphQuery(SPARQL, query, baseUri);
@@ -560,12 +567,17 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
             result = new QueryResultIterator<Statement>(repository, userQuery,
                                         startOffset, endOffset, r, cnx,
                                         null, dataset, evalTime);
+            error = false;
         }
         catch (OpenRDFException e) {
-            // Close repository connection.
-            Repository.closeQuietly(cnx);
             // Build plain text error response.
             this.handleError(query, e);
+        }
+        finally {
+            if (error) {
+                // Close repository connection.
+                Repository.closeQuietly(cnx);
+            }
         }
         return result;
     }
@@ -1124,13 +1136,8 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
 
         private void close(Throwable t) {
             if (this.cnx != null) {
-                // Close result and repository connection.
-                try {
-                    this.result.close();
-                } catch (Exception e) { /* Ignore... */ }
-                Repository.closeQuietly(this.cnx);
-                this.cnx = null;
-
+                // Close result set and repository connection.
+                this.closeConnection();
                 // Check outcome.
                 if (t != null) {
                     log.error("Query processing failed: \"{}\" for: {}",
@@ -1158,10 +1165,27 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                                   repository.name, desc, defGraphs);
                 }
             }
+            // Else: already closed.
         }
 
         public List<String> getColumns() {
             return this.columns;
+        }
+
+        private void closeConnection() {
+            if (this.cnx != null) {
+                // Close any pending result set.
+                try {
+                    this.result.close();
+                } catch (Exception e) { /* Ignore... */ }
+                // Close repository connection.
+                Repository.closeQuietly(this.cnx);
+                this.cnx = null;
+            }
+        }
+
+        protected void finalize() {
+            this.closeConnection();
         }
     }
 }
