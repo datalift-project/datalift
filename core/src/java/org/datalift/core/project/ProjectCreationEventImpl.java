@@ -64,7 +64,7 @@ public class ProjectCreationEventImpl extends EventImpl
 implements ProjectCreationEvent {
 
 	/** Instantiate ProjectCreationEventImpl */
-	ProjectCreationEventImpl(
+	public ProjectCreationEventImpl(
 			String uri,
 			String description,
 			String parameters,

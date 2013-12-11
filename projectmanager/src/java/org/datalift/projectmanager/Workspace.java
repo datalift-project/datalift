@@ -298,7 +298,12 @@ public class Workspace extends BaseModule
                                 @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
         Response response = null;
-
+        Map<String, Object> param = new HashMap<String, Object>();
+        
+        param.put("title", title);
+        param.put("description", description);
+        param.put("license", license);
+        
         URI projectId = this.newProjectId(uriInfo.getBaseUri(), title);
         try {
             // Create new project.
@@ -307,6 +312,7 @@ public class Workspace extends BaseModule
             
             // Persist project to RDF store.
             this.projectManager.saveProject(p);
+                        
             // Register a namespace prefix for the project.
             this.registerNamespacePrefix(title, projectId.toString());
             // Notify user of successful creation, redirecting HTML clients

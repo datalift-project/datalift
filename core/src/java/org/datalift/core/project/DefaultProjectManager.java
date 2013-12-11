@@ -590,26 +590,36 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
             throw new IllegalArgumentException("p");
         }
         p.setModificationDate(new Date());
+        
+        // Serialize parameters
+        JsonParam param = new JsonParam();
+        param.add("titre", p.getTitle());
+        param.add("description", p.getDescription());
+        param.add("license", p.getLicense());
+        String serializedParam = param.save();
+        
         try {
-            if (this.findProject(new URI(p.getUri())) == null) {
+        	Project existingProject = this.findProject(new URI(p.getUri()));
+            if (existingProject  == null) {
                 this.projectDao.persist(p);
                 this.projectDao.persist(new ProvEntity(p.getUri()));
                 this.projectDao.persist(
                 		new ProvAgent(p.getWasAttributedTo().getUri()));
-                
+
+                // Add an event
                 // TODO: change URI.
                 Date currentTime = new Date();
                 this.saveEvent(new ProjectCreationEventImpl(
                 		"http://www.datalift.org/project/name/event/", 
                 		p.getDescription(), 
-                		null, 
+                		serializedParam, 
                 		currentTime, 
                 		currentTime, 
                 		p.getWasAttributedTo(), 
                 		p,
                 		null)
-                );
-                
+                		);
+
                 String id = 
                 		p.getUri().substring(p.getUri().lastIndexOf("/") + 1);
                 File projectStorage = this.getFileStorage(
@@ -618,6 +628,19 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
             }
             else {
                 this.projectDao.save(p);
+                
+                // TODO: change URI.
+                Date currentTime = new Date();
+                this.saveEvent(new ProjectModificationEventImpl(
+                		"http://www.datalift.org/project/name/event/", 
+                		p.getDescription(), 
+                		serializedParam, 
+                		currentTime, 
+                		currentTime, 
+                		p.getWasAttributedTo(), 
+                		p,
+                		null)
+                		);
             }
             log.debug("Project <{}> saved to RDF store", p.getUri());
         }
