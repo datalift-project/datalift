@@ -579,6 +579,23 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         catch (URISyntaxException e) {
             throw new RuntimeException("Invalid project URI: " + p.getUri(), e);
 		}
+        
+        JsonParam param = new JsonParam();
+        param.add("titre", p.getTitle());
+
+        // TODO: 
+        Date currentTime = new Date();
+        this.saveEvent(new ProjectSuppressionEventImpl(
+        		"http://www.datalift.org/project/name/event/", 
+        		p.getDescription(), 
+        		param.save(), 
+        		currentTime, 
+        		currentTime, 
+        		p.getWasAttributedTo(), 
+        		p,
+        		null)
+        		);
+
         log.debug("Project <{}> deleted", p.getUri());
     }
 
