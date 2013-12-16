@@ -583,10 +583,9 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         JsonParam param = new JsonParam();
         param.add("titre", p.getTitle());
 
-        // TODO: 
         Date currentTime = new Date();
         this.saveEvent(new ProjectSuppressionEventImpl(
-        		"http://www.datalift.org/project/name/event/", 
+        		p.getUri(), 
         		p.getDescription(), 
         		param.save(), 
         		currentTime, 
@@ -639,10 +638,9 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         String serializedParam = param.save();
 
         // Add an event
-        // TODO: change URI.
         Date currentTime = new Date();
         this.saveEvent(new ProjectCreationEventImpl(
-        		"http://www.datalift.org/project/name/event/", 
+        		p.getUri(), 
         		p.getDescription(), 
         		serializedParam, 
         		currentTime, 
@@ -678,10 +676,9 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
 
         String serializedParam = param.save();
 
-        // TODO: change URI.
         Date currentTime = new Date();
         this.saveEvent(new ProjectModificationEventImpl(
-        		"http://www.datalift.org/project/name/event/", 
+        		p.getUri(), 
         		p.getDescription(), 
         		serializedParam, 
         		currentTime, 

@@ -65,7 +65,7 @@ implements ProjectCreationEvent {
 
 	/** Instantiate ProjectCreationEventImpl */
 	public ProjectCreationEventImpl(
-			String uri,
+			String projectUri,
 			String description,
 			String parameters,
 			Date startedAtTime,
@@ -74,11 +74,11 @@ implements ProjectCreationEvent {
 			Project used,
 			Event wasInformedBy
 	) {
-		char lastChar = uri.charAt(uri.length() - 1);
+		char lastChar = projectUri.charAt(projectUri.length() - 1);
 		if (lastChar != '#' && lastChar != '/')
-			uri += '/';
-
-		this.setId(uri + UUID.randomUUID());
+			projectUri += '/';
+		
+		this.setId(projectUri + "event/" + UUID.randomUUID());
 		this.setDescription(description);
 		this.setParameters(parameters);
 		this.setStartedAtTime(startedAtTime);
