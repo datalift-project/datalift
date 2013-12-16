@@ -382,7 +382,6 @@ public interface ProjectManager
 	 */
 	public ProcessingTask newProcessingTask(
 			String transformationId, 
-			String baseUri,
 			URI projectId, 
 			URI sourceId);
 	

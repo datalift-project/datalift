@@ -730,12 +730,10 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     @Override
 	public ProcessingTask newProcessingTask(
 			String transformationId, 
-			String baseUri,
 			URI projectId, 
 			URI sourceId) {
     	return new ProcessingTaskImpl(
     			transformationId, 
-    			baseUri,
     			projectId, 
     			sourceId);
     }

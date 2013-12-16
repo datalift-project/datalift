@@ -125,7 +125,6 @@ public class TaskManagerTest {
 	    public void addProcess(String projectId) throws URISyntaxException {
 	    	ProcessingTaskImpl task = new ProcessingTaskImpl(
 	    			this.getTransformationId(),
-	    			"http://www.datalift.org/project/name/event/",
 	    			new URI(projectId),
 	    			new URI("http://test.src"));
 	    	
