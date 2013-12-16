@@ -167,6 +167,7 @@ public abstract class BaseConverterModule
     @Override
     public void postInit(Configuration configuration) {
         super.postInit(configuration);
+        this.projectManager = configuration.getBean(ProjectManager.class);
     }
 
     //-------------------------------------------------------------------------
