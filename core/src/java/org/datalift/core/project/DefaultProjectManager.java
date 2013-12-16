@@ -591,6 +591,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         		param.save(), 
         		currentTime, 
         		currentTime, 
+        		// TODO: get current user
         		p.getWasAttributedTo(), 
         		p,
         		null)
@@ -608,62 +609,87 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         }
         p.setModificationDate(new Date());
         
-        // Serialize parameters
-        JsonParam param = new JsonParam();
-        param.add("titre", p.getTitle());
-        param.add("description", p.getDescription());
-        param.add("license", p.getLicense());
-        String serializedParam = param.save();
-        
         try {
         	Project existingProject = this.findProject(new URI(p.getUri()));
-            if (existingProject  == null) {
-                this.projectDao.persist(p);
-                this.projectDao.persist(new ProvEntity(p.getUri()));
-                this.projectDao.persist(
-                		new ProvAgent(p.getWasAttributedTo().getUri()));
-
-                // Add an event
-                // TODO: change URI.
-                Date currentTime = new Date();
-                this.saveEvent(new ProjectCreationEventImpl(
-                		"http://www.datalift.org/project/name/event/", 
-                		p.getDescription(), 
-                		serializedParam, 
-                		currentTime, 
-                		currentTime, 
-                		p.getWasAttributedTo(), 
-                		p,
-                		null)
-                		);
-
-                String id = 
-                		p.getUri().substring(p.getUri().lastIndexOf("/") + 1);
-                File projectStorage = this.getFileStorage(
-                                            this.getProjectFilePath(id, null));
-                projectStorage.mkdirs();
-            }
-            else {
-                this.projectDao.save(p);
-                
-                // TODO: change URI.
-                Date currentTime = new Date();
-                this.saveEvent(new ProjectModificationEventImpl(
-                		"http://www.datalift.org/project/name/event/", 
-                		p.getDescription(), 
-                		serializedParam, 
-                		currentTime, 
-                		currentTime, 
-                		p.getWasAttributedTo(), 
-                		p,
-                		null)
-                		);
-            }
+            if (existingProject == null)
+            	this.saveNewProject(p);
+            else
+            	this.saveExistingProject(p, existingProject);
             log.debug("Project <{}> saved to RDF store", p.getUri());
         }
         catch (Exception e) {
             throw new RuntimeException("Invalid project URI: " + p.getUri(), e);
         }
+    }
+    
+    /**
+     * Save a new project.
+     * @param p is the new project.
+     */
+    private void saveNewProject(Project p) {
+        this.projectDao.persist(p);
+        this.projectDao.persist(new ProvEntity(p.getUri()));
+        this.projectDao.persist(
+        		new ProvAgent(p.getWasAttributedTo().getUri()));
+
+        JsonParam param = new JsonParam();
+        param.add("titre", p.getTitle());
+        param.add("description", p.getDescription());
+        param.add("license", p.getLicense());
+        String serializedParam = param.save();
+
+        // Add an event
+        // TODO: change URI.
+        Date currentTime = new Date();
+        this.saveEvent(new ProjectCreationEventImpl(
+        		"http://www.datalift.org/project/name/event/", 
+        		p.getDescription(), 
+        		serializedParam, 
+        		currentTime, 
+        		currentTime, 
+        		p.getWasAttributedTo(), 
+        		p,
+        		null)
+        		);
+
+        String id = 
+        		p.getUri().substring(p.getUri().lastIndexOf("/") + 1);
+        File projectStorage = this.getFileStorage(
+                                    this.getProjectFilePath(id, null));
+        projectStorage.mkdirs();
+    }
+
+    /**
+     * Save an existing project. It also create a ProjectModificationEvent with
+     * only the modified parameters.
+     * @param p is the {@link Project} created by the service.
+     * @param existingProject is the {@link Project} already stored.
+     */
+    private void saveExistingProject(Project p, Project existingProject) {
+        this.projectDao.save(p);
+        
+        JsonParam param = new JsonParam();
+        if (!p.getTitle().equals(existingProject.getTitle()))
+        	param.add("titre", p.getTitle());
+        if (!p.getDescription().equals(existingProject.getDescription()))
+        	param.add("description", p.getDescription());
+        if (!p.getLicense().equals(existingProject.getLicense()))
+        	param.add("license", p.getLicense());
+
+        String serializedParam = param.save();
+
+        // TODO: change URI.
+        Date currentTime = new Date();
+        this.saveEvent(new ProjectModificationEventImpl(
+        		"http://www.datalift.org/project/name/event/", 
+        		p.getDescription(), 
+        		serializedParam, 
+        		currentTime, 
+        		currentTime, 
+        		p.getWasAttributedTo(), 
+        		p,
+        		null)
+        		);
     }
     
     /** {@inheritDoc} */
@@ -706,8 +732,15 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     /** {@inheritDoc} */
     @Override
 	public ProcessingTask newProcessingTask(
-			String transformationId, String baseUri) {
-    	return new ProcessingTaskImpl(transformationId, baseUri);
+			String transformationId, 
+			String baseUri,
+			URI projectId, 
+			URI sourceId) {
+    	return new ProcessingTaskImpl(
+    			transformationId, 
+    			baseUri,
+    			projectId, 
+    			sourceId);
     }
 
     //-------------------------------------------------------------------------

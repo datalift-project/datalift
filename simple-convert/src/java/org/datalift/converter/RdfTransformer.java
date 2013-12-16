@@ -124,7 +124,9 @@ implements TransformationModule
 
     	ProcessingTask task = this.getProjectManager().newProcessingTask(
     			this.getTransformationId(),
-    			"http://www.datalift.org/project/name/event/");
+    			"http://www.datalift.org/project/name/event/",
+    			projectId,
+    			sourceId);
     	
     	task.addParam("projectId", projectId);
     	task.addParam("sourceId", sourceId);

@@ -41,13 +41,17 @@ import javax.persistence.MappedSuperclass;
 import org.apache.log4j.Logger;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.project.ProcessingTask;
+import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectManager;
+import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.TransformationModule;
+import org.datalift.fwk.security.SecurityContext;
 
 import com.clarkparsia.empire.annotation.NamedGraph;
 import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.RdfsClass;
 
+import java.net.URI;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -96,19 +100,38 @@ public class ProcessingTaskImpl extends EventImpl implements ProcessingTask {
 	 * @param baseUri            it is the base URI until the project name like
 	 *                           "http://www.datalift.org/project/name/"
 	 */
-	public ProcessingTaskImpl(String transformationId, String baseUri) {
+	public ProcessingTaskImpl(
+			String transformationId, 
+			String baseUri, 
+			URI projectId, 
+			URI sourceId) 
+	{
 		char lastChar = baseUri.charAt(baseUri.length() - 1);
 		if (lastChar != '#' && lastChar != '/')
 			baseUri += '/';
 
+		// Set Id.
 		this.setId(baseUri + UUID.randomUUID());
+		
+		// Set transformation Id
 		this.transformationId = transformationId;
-		System.out.println(transformationId);
+		
+		// Set status.
 		this.setEventStatus(EventStatus.NEW);
 		
-		// TODO: 
-		//SecurityContext.getContext().getPrincipal();
+		// Set current User.
+        UserImpl user = new UserImpl(SecurityContext.getUserPrincipal());
+		this.setWasAssociatedWith(user);
 
+		// Set source used.
+		ProjectManager pm = 
+				Configuration.getDefault().getBean(ProjectManager.class);
+		Project p = pm.findProject(projectId);
+        if (p == null)
+        	throw new RuntimeException("Project not found.");
+        Source src = p.getSource(sourceId);
+		this.setUsed(src);
+		
 		this.setStartedAtTime(new Date());
 	}
 

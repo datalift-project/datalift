@@ -380,6 +380,10 @@ public interface ProjectManager
 	 *                            execute the task.
 	 * @return the processing task.
 	 */
-	public ProcessingTask newProcessingTask(String transformationId, String baseUri);
+	public ProcessingTask newProcessingTask(
+			String transformationId, 
+			String baseUri,
+			URI projectId, 
+			URI sourceId);
 	
 }

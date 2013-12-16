@@ -6,11 +6,14 @@ import static org.datalift.core.DefaultConfiguration.REPOSITORY_DEFAULT_FLAG;
 import static org.datalift.core.DefaultConfiguration.REPOSITORY_URIS;
 import static org.datalift.core.DefaultConfiguration.REPOSITORY_URL;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Properties;
 
 import org.datalift.core.DefaultConfiguration;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.ProcessingTask;
+import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.TaskManager;
 import org.datalift.fwk.project.TransformationModule;
 import org.datalift.fwk.BaseModule;
@@ -56,6 +59,13 @@ public class TaskManagerTest {
         // Init task manager.
         cfg.registerBean(tm);
         tm.init(cfg);
+        
+        Project p = pm.newProject(
+        		new URI("http://projet-test"), 
+        		"projet-test", 
+        		"Testing project", 
+        		new URI("http://test"));
+        pm.saveProject(p);
 	}
 	
 	@After
@@ -68,7 +78,7 @@ public class TaskManagerTest {
 		TestModule m = new TestModule();
 		cfg.registerBean(m.getTransformationId(), m);
 		m.postInit(cfg);
-		m.addProcess("process1");
+		m.addProcess("http://projet-test");
 		tm.shutdown(cfg);
 		assertTrue(processExecuted);
 
@@ -110,11 +120,14 @@ public class TaskManagerTest {
 	     * the method which will execute the transformation.
 	     * 
 	     * @param projectId
+	     * @throws URISyntaxException 
 	     */
-	    public void addProcess(String projectId) {
+	    public void addProcess(String projectId) throws URISyntaxException {
 	    	ProcessingTaskImpl task = new ProcessingTaskImpl(
 	    			this.getTransformationId(),
-	    			"http://www.datalift.org/project/name/event/");
+	    			"http://www.datalift.org/project/name/event/",
+	    			new URI(projectId),
+	    			new URI("http://test.src"));
 	    	
 	    	task.addParam("projectId", projectId);
 	    	task.saveParams();
