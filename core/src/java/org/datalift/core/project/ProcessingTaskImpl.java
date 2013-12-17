@@ -152,8 +152,7 @@ public class ProcessingTaskImpl extends EventImpl implements ProcessingTask {
 			ok = m.execute(this); 
 		}
 		catch (Exception e) {
-			this.setEventStatus(EventStatus.FAIL);
-			pm.saveEvent(this);
+			/** Ignore, ok variable is set. */
 		}
 			
 		if (ok)

@@ -198,8 +198,6 @@ implements TransformationModule
             this.addResultSource(p, in, destTitle, targetGraph);
             // Display project source tab, including the newly created source.
         }
-		// TODO: Some exception are ignore, so the TaskManager will no set FAIL
-		//       status for all errors.
         catch (Exception e) {
             try {
                 RdfUtils.clearGraph(internal, targetGraph);

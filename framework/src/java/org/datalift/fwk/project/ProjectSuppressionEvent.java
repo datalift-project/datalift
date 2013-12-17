@@ -33,59 +33,13 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 
-package org.datalift.core.project;
-
-import java.util.Date;
-import java.util.UUID;
-
-import javax.persistence.Entity;
-import javax.persistence.MappedSuperclass;
-
-import org.datalift.fwk.project.Event;
-import org.datalift.fwk.project.Project;
-import org.datalift.fwk.project.ProjectModificationEvent;
-import org.datalift.fwk.project.User;
-
-import com.clarkparsia.empire.annotation.NamedGraph;
-import com.clarkparsia.empire.annotation.RdfsClass;
-
+package org.datalift.fwk.project;
 
 /**
- * ProjectModificationEvent default implementation.
+ * This class is used to log the project suppression as prov activity.
  * 
  * @author avalensi
- *
  */
-@Entity
-@MappedSuperclass
-@RdfsClass("datalift:ProjectModificationEvent")
-@NamedGraph(type = NamedGraph.NamedGraphType.Static, value="datalift:datalift")
-public class ProjectModificationEventImpl extends EventImpl 
-implements ProjectModificationEvent {
-
-	/** Instantiate ProjectModificationEventImpl */
-	public ProjectModificationEventImpl(
-			String projectUri,
-			String description,
-			String parameters,
-			Date startedAtTime,
-			Date endedAtTime,
-			User wasAssociatedWith,
-			Project used,
-			Event wasInformedBy
-	) {
-		char lastChar = projectUri.charAt(projectUri.length() - 1);
-		if (lastChar != '#' && lastChar != '/')
-			projectUri += '/';
-		
-		this.setId(projectUri + "event/" + UUID.randomUUID());
-		this.setDescription(description);
-		this.setParameters(parameters);
-		this.setStartedAtTime(startedAtTime);
-		this.setEndedAtTime(endedAtTime);
-		this.setWasAssociatedWith(wasAssociatedWith);
-		this.setUsed(used);
-		this.setWasInformedBy(wasInformedBy);
-	}
+public interface ProjectSuppressionEvent extends Event {
 
 }
