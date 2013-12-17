@@ -146,8 +146,17 @@ public class ProcessingTaskImpl extends EventImpl implements ProcessingTask {
 		
 		this.setEventStatus(EventStatus.RUNNING);
 		pm.saveEvent(this);
-		
-		if (m.execute(this))
+
+		Boolean ok = false;
+		try {
+			ok = m.execute(this); 
+		}
+		catch (Exception e) {
+			this.setEventStatus(EventStatus.FAIL);
+			pm.saveEvent(this);
+		}
+			
+		if (ok)
 			this.setEventStatus(EventStatus.COMPLETE);
 		else
 			this.setEventStatus(EventStatus.FAIL);

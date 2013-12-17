@@ -100,6 +100,10 @@ implements TransformationModule
     /** Default constructor. */
     public RdfTransformer() {
         super(MODULE_NAME, 5000, SourceType.TransformedRdfSource);
+        
+        // TODO: Put that in super class to automatically register all 
+        //       simple-convert modules
+    	Configuration.getDefault().registerBean(this.getClass().getName(), this);
     }
 
     //-------------------------------------------------------------------------
@@ -194,6 +198,8 @@ implements TransformationModule
             this.addResultSource(p, in, destTitle, targetGraph);
             // Display project source tab, including the newly created source.
         }
+		// TODO: Some exception are ignore, so the TaskManager will no set FAIL
+		//       status for all errors.
         catch (Exception e) {
             try {
                 RdfUtils.clearGraph(internal, targetGraph);

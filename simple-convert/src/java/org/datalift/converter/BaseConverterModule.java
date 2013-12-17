@@ -222,7 +222,7 @@ public abstract class BaseConverterModule
 	/** {@inheritDoc} */
     @Override
 	public String getTransformationId() {
-    	return this.getClass().toString();
+    	return this.getClass().getName();
 	}
 	
 	/** {@inheritDoc} */
