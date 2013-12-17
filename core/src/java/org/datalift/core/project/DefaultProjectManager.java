@@ -738,6 +738,82 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     			sourceId);
     }
 
+    
+    /** {@inheritDoc} */
+    @Override
+    public void addSourceCreationEvent(
+    		Project project, Map<String, Object> parameters)
+    {
+        JsonParam param = new JsonParam();
+        param.add(parameters);
+        String serializedParam = param.save();
+    	
+        Date currentTime = new Date();
+
+        SourceCreationEventImpl evt = new SourceCreationEventImpl(
+        		project.getUri(),
+        		project.getDescription(),
+        		serializedParam,
+        		currentTime,
+        		currentTime,
+        		project.getWasAttributedTo(),
+        		project,
+        		null
+        		); 
+        
+        this.saveEvent(evt);
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public void addSourceModificationEvent(
+    		Project project, Map<String, Object> parameters)
+    {
+        JsonParam param = new JsonParam();
+        param.add(parameters);
+        String serializedParam = param.save();
+    	
+        Date currentTime = new Date();
+
+        SourceModificationEventImpl evt = new SourceModificationEventImpl(
+        		project.getUri(),
+        		project.getDescription(),
+        		serializedParam,
+        		currentTime,
+        		currentTime,
+        		project.getWasAttributedTo(),
+        		project,
+        		null
+        		); 
+        
+        this.saveEvent(evt);
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public void addSourceSuppressionEvent(
+    		Project project, Map<String, Object> parameters)
+    {
+        JsonParam param = new JsonParam();
+        param.add(parameters);
+        String serializedParam = param.save();
+    	
+        Date currentTime = new Date();
+
+        SourceCreationEventImpl evt = new SourceCreationEventImpl(
+        		project.getUri(),
+        		project.getDescription(),
+        		serializedParam,
+        		currentTime,
+        		currentTime,
+        		project.getWasAttributedTo(),
+        		project,
+        		null
+        		); 
+        
+        this.saveEvent(evt);
+    }
+
     //-------------------------------------------------------------------------
     // Object contract support
     //-------------------------------------------------------------------------

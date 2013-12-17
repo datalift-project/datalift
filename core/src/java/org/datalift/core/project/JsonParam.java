@@ -55,6 +55,15 @@ public class JsonParam
 	public void add(String name, Object param) {
 		this.m.put(name, param);
 	}
+	
+	/**
+	 * Add a parameter.
+	 * 
+	 * @param m map parameter to add.
+	 */
+	public void add(Map<String, Object> m) {
+		this.m.putAll(m);
+	}
 
 	/**
 	 * Save (serialize) the parameters.

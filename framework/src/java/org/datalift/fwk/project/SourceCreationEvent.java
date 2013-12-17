@@ -39,6 +39,7 @@ package org.datalift.fwk.project;
  * This class is used to log the source creation as prov activity.
  * 
  * @author avalensi
- */public interface SourceCreationEvent extends Event {
+ */
+public interface SourceCreationEvent extends Event {
 
 }

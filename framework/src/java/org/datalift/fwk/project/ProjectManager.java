@@ -39,7 +39,9 @@ package org.datalift.fwk.project;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import org.datalift.fwk.MediaTypes;
 
@@ -373,8 +375,6 @@ public interface ProjectManager
     public void deleteEvent(Event e);
     
 	/**
-	 * TODO: Maybe useless.
-	 * 
 	 * Create a new processing task used by the TaskManager to run a task.
 	 * @param transformationId    the URI identifier of the module which want to
 	 *                            execute the task.
@@ -384,5 +384,29 @@ public interface ProjectManager
 			String transformationId, 
 			URI projectId, 
 			URI sourceId);
-	
+
+	/**
+	 * Create and save a new {@link SourceCreationEvent}.
+	 * @param project is the project which own the source.
+	 * @param parameters is a map with all parameters.
+	 */
+    public void addSourceCreationEvent(
+    		Project project, Map<String, Object> parameters);
+
+	/**
+	 * Create and save a new {@link SourceModificationEvent}.
+	 * @param project is the project which own the source.
+	 * @param parameters is a map with all parameters.
+	 */
+    public void addSourceModificationEvent(
+    		Project project, Map<String, Object> parameters);
+
+	/**
+	 * Create and save a new {@link SourceSuppressionEvent}.
+	 * @param project is the project which own the source.
+	 * @param parameters is a map with all parameters.
+	 */
+    public void addSourceSuppressionEvent(
+    		Project project, Map<String, Object> parameters);
+
 }

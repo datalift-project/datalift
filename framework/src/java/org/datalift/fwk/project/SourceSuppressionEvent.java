@@ -39,6 +39,7 @@ package org.datalift.fwk.project;
  * This class is used to log the source suppression as prov activity.
  * 
  * @author avalensi
- */public interface SourceSuppressionEvent extends Event {
+ */
+public interface SourceSuppressionEvent extends Event {
 
 }

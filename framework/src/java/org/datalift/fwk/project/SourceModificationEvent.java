@@ -39,6 +39,7 @@ package org.datalift.fwk.project;
  * This class is used to log the source modification as prov activity.
  * 
  * @author avalensi
- */public interface SourceModificationEvent extends Event {
+ */
+public interface SourceModificationEvent extends Event {
 
 }

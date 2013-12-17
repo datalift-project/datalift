@@ -721,6 +721,23 @@ public class Workspace extends BaseModule
             }
             // Persist new source.
             this.projectManager.saveProject(p);
+            
+            // Create and save event.
+            Map<String, Object> param = new HashMap<String, Object>();
+            param.put("description", description);
+            param.put("fileData", fileData);
+            param.put("fileDisposition", fileDisposition);
+            param.put("sourceUrl", sourceUrl);
+            param.put("srcName", srcName);
+            param.put("charset", charset);
+            param.put("separator", separator);
+            param.put("titleRow", titleRow);
+            param.put("firstRow", firstRow);
+            param.put("lastRow", lastRow);
+            param.put("quote", quote);
+            
+            this.projectManager.addSourceCreationEvent(p, param);
+
             // Notify user of successful creation, redirecting HTML clients
             // (browsers) to the source tab of the project page.
             response = this.created(p, sourceUri, ProjectTab.Sources).build();
@@ -824,6 +841,20 @@ public class Workspace extends BaseModule
             }
             // Save updated source.
             this.projectManager.saveProject(p);
+            
+            // Event.
+            Map<String, Object> param = new HashMap<String, Object>();
+            param.put("sourceUri", sourceUri);
+            param.put("description", description);
+            param.put("charset", charset);
+            param.put("separator", separator);
+            param.put("titleRow", titleRow);
+            param.put("firstRow", firstRow);
+            param.put("lastRow", lastRow);
+            param.put("quote", quote);
+            
+            this.projectManager.addSourceModificationEvent(p, param);
+            
             // Notify user of successful update, redirecting HTML clients
             // (browsers) to the source tab of the project page.
             response = this.redirect(p, ProjectTab.Sources).build();
@@ -936,6 +967,19 @@ public class Workspace extends BaseModule
             }
             // Persist new source.
             this.projectManager.saveProject(p);
+            
+            // Event.
+            Map<String, Object> param = new HashMap<String, Object>();
+            param.put("srcName", srcName);
+            param.put("description", description);
+            param.put("baseUri", baseUri);
+            param.put("fileData", fileData);
+            param.put("fileDisposition", fileDisposition);
+            param.put("sourceUrl", sourceUrl);
+            param.put("mimeType", mimeType);
+            
+            this.projectManager.addSourceCreationEvent(p, param);
+
             // Notify user of successful creation, redirecting HTML clients
             // (browsers) to the source tab of the project page.
             response = this.created(p, sourceUri, ProjectTab.Sources).build();
@@ -993,6 +1037,16 @@ public class Workspace extends BaseModule
             s.setMimeType(mappedType.toString());
             // Save updated source.
             this.projectManager.saveProject(p);
+            
+            // Event.
+            Map<String, Object> param = new HashMap<String, Object>();
+            param.put("sourceUri", sourceUri);
+            param.put("description", description);
+            param.put("mimeType", mimeType);
+            param.put("baseUri", baseUri);
+            
+            this.projectManager.addSourceModificationEvent(p, param);
+
             // Notify user of successful update, redirecting HTML clients
             // (browsers) to the source tab of the project page.
             response = this.redirect(p, ProjectTab.Sources).build();
@@ -1046,6 +1100,19 @@ public class Workspace extends BaseModule
             }
             // Persist new source.
             this.projectManager.saveProject(p);
+            
+            // Event.
+            Map<String, Object> param = new HashMap<String, Object>();
+            param.put("title", title);
+            param.put("description", description);
+            param.put("cnxUrl", cnxUrl);
+            param.put("user", user);
+            param.put("password", password);
+            param.put("sqlQuery", sqlQuery);
+            param.put("cacheDuration", cacheDuration);
+            
+            this.projectManager.addSourceCreationEvent(p, param);
+
             // Notify user of successful creation, redirecting HTML clients
             // (browsers) to the source tab of the project page.
             response = this.created(p, sourceUri, ProjectTab.Sources).build();
@@ -1103,6 +1170,20 @@ public class Workspace extends BaseModule
             }
             // Save updated source.
             this.projectManager.saveProject(p);
+            
+            // Event.
+            Map<String, Object> param = new HashMap<String, Object>();
+            param.put("sourceUri", sourceUri);
+            param.put("title", title);
+            param.put("description", description);
+            param.put("cnxUrl", cnxUrl);
+            param.put("user", user);
+            param.put("password", password);
+            param.put("sqlQuery", sqlQuery);
+            param.put("cacheDuration", cacheDuration);
+            
+            this.projectManager.addSourceModificationEvent(p, param);
+
             // Notify user of successful update, redirecting HTML clients
             // (browsers) to the source tab of the project page.
             response = this.redirect(p, ProjectTab.Sources).build();
@@ -1159,6 +1240,20 @@ public class Workspace extends BaseModule
             i.close();
             // Persist new source.
             this.projectManager.saveProject(p);
+            
+            // Event.
+            Map<String, Object> param = new HashMap<String, Object>();
+            param.put("title", title);
+            param.put("description", description);
+            param.put("endpointUrl", endpointUrl);
+            param.put("sparqlQuery", sparqlQuery);
+            param.put("defaultGraph", defaultGraph);
+            param.put("user", user);
+            param.put("password", password);
+            param.put("cacheDuration", cacheDuration);
+            
+            this.projectManager.addSourceCreationEvent(p, param);
+
             // Notify user of successful creation, redirecting HTML clients
             // (browsers) to the source tab of the project page.
             response = this.created(p, sourceUri, ProjectTab.Sources).build();
@@ -1224,6 +1319,21 @@ public class Workspace extends BaseModule
             }
             // Save updated source.
             this.projectManager.saveProject(p);
+            
+            // Event.
+            Map<String, Object> param = new HashMap<String, Object>();
+            param.put("sourceUri", sourceUri);
+            param.put("title", title);
+            param.put("description", description);
+            param.put("endpointUrl", endpointUrl);
+            param.put("sparqlQuery", sparqlQuery);
+            param.put("defaultGraph", defaultGraph);
+            param.put("user", user);
+            param.put("password", password);
+            param.put("cacheDuration", cacheDuration);
+            
+            this.projectManager.addSourceModificationEvent(p, param);
+
             // Notify user of successful update, redirecting HTML clients
             // (browsers) to the source tab of the project page.
             response = this.redirect(p, ProjectTab.Sources).build();
@@ -1314,6 +1424,17 @@ public class Workspace extends BaseModule
             }
             // Persist new source.
             this.projectManager.saveProject(p);
+            
+            // Event.
+            Map<String, Object> param = new HashMap<String, Object>();
+            param.put("srcName", srcName);
+            param.put("description", description);
+            param.put("fileData", fileData);
+            param.put("fileDisposition", fileDisposition);
+            param.put("sourceUrl", sourceUrl);
+            
+            this.projectManager.addSourceCreationEvent(p, param);
+
             // Notify user of successful creation, redirecting HTML clients
             // (browsers) to the source tab of the project page.
             response = this.created(p, sourceUri, ProjectTab.Sources).build();
@@ -1359,6 +1480,14 @@ public class Workspace extends BaseModule
             s.setDescription(description);
             // Save updated source.
             this.projectManager.saveProject(p);
+            
+            // Event.
+            Map<String, Object> param = new HashMap<String, Object>();
+            param.put("sourceUri", sourceUri);
+            param.put("description", description);
+            
+            this.projectManager.addSourceModificationEvent(p, param);
+
             // Notify user of successful update, redirecting HTML clients
             // (browsers) to the source tab of the project page.
             response = this.redirect(p, ProjectTab.Sources).build();
@@ -1442,6 +1571,18 @@ public class Workspace extends BaseModule
             this.projectManager.newShpSource(p, srcUri, title,
                 description, paths[0], paths[1], paths[2], paths[3]);
             this.projectManager.saveProject(p);
+            
+            // Event.
+            Map<String, Object> param = new HashMap<String, Object>();
+            param.put("description", description);
+            param.put("shpData", shpData);
+            param.put("shpDisposition", shpDisposition);
+            param.put("prjData", prjData);
+            param.put("shxData", shxData);
+            param.put("dbfData", dbfData);
+            
+            this.projectManager.addSourceCreationEvent(p, param);
+            
             // Notify user of successful creation, redirecting HTML clients
             response = this.created(p, srcUri, ProjectTab.Sources)
                            .build();
@@ -1482,6 +1623,14 @@ public class Workspace extends BaseModule
             s.setDescription(description);
             // Save updated source.
             this.projectManager.saveProject(p);
+            
+            // Event.
+            Map<String, Object> param = new HashMap<String, Object>();
+            param.put("sourceUri", sourceUri);
+            param.put("description", description);
+            
+            this.projectManager.addSourceModificationEvent(p, param);
+
             // Notify user of successful update, redirecting HTML clients
             // (browsers) to the source tab of the project page.
             response = this.redirect(p, ProjectTab.Sources).build();
@@ -1562,6 +1711,16 @@ public class Workspace extends BaseModule
             this.projectManager.newGmlSource(p, srcUri, title,
                 description, paths[0], paths[1]);
             this.projectManager.saveProject(p);
+            
+            // Event.
+            Map<String, Object> param = new HashMap<String, Object>();
+            param.put("description", description);
+            param.put("gmlData", gmlData);
+            param.put("gmlDisposition", gmlDisposition);
+            param.put("xsdData", xsdData);
+            
+            this.projectManager.addSourceCreationEvent(p, param);
+
             // Notify user of successful creation, redirecting HTML clients
             response = this.created(p, srcUri, ProjectTab.Sources)
                            .build();
@@ -1602,6 +1761,14 @@ public class Workspace extends BaseModule
             s.setDescription(description);
             // Save updated source.
             this.projectManager.saveProject(p);
+            
+            // Event.
+            Map<String, Object> param = new HashMap<String, Object>();
+            param.put("sourceUri", sourceUri);
+            param.put("description", description);
+            
+            this.projectManager.addSourceModificationEvent(p, param);
+
             // Notify user of successful update, redirecting HTML clients
             // (browsers) to the source tab of the project page.
             response = this.redirect(p, ProjectTab.Sources).build();
@@ -1819,6 +1986,12 @@ public class Workspace extends BaseModule
             }
             // Delete source.
             this.projectManager.delete(s);
+            
+            // Event.
+            Map<String, Object> param = new HashMap<String, Object>();
+            param.put("srcUri", srcUri);
+            this.projectManager.addSourceCreationEvent(p, param);
+            
             // Notify user of successful update, redirecting HTML clients
             // (browsers) to the source tab of the project page.
             response = this.redirect(p, ProjectTab.Sources).build();
