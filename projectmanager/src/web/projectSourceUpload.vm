@@ -4,6 +4,8 @@
 <head>
 #load("project/resources")
 #load_core_resources
+#header_links
+#h_tetiere
 #if( $current )
 	#set( $title = "project.title.modify_dataset" )
 	#set( $submit = "modify" )
@@ -26,12 +28,11 @@
 	#set( $target_gml = "${it.uri}/gmlupload" )
 #end
 	<title>#i18n($title) - #i18n("workspace.title") - DataLift</title>
-#css_links
 	<link rel="stylesheet" type="text/css" href="${baseUri}/project/static/css/validation.css"/>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 </head>
 <body>
-#banner
+
 <div style="position:absolute;top:15px;right:15px;">
 	<a href="${baseUri}/sparql" id="goto_sparql" class="button">#i18n("sparql.endpoint.link")</a>
 	<a href="${baseUri}/project" id="goto_workspace" class="button">#i18n("project.workspace.link")</a>
@@ -251,7 +252,7 @@
 </div>
 </div>
 </div>
-#footer
+#h_footer
 
 #script_links
 <script language="javascript" src="${baseUri}/project/static/js/jquery.validate.js"></script>

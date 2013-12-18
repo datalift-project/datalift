@@ -17,20 +17,10 @@ app.directive('ngOntologyTitle', function(){
 
 app.controller('projectController', function ($scope, $http){
 	
-	$scope.projects = [];
-	$scope.initialize = function(uri, description, title, license, owner, creation_date, modification_date)
-	{
-		$scope.projects.push({
-			uri : uri, 
-			description : description, 
-			title : title, 
-			license : license, 
-			owner : owner, 
-			creation_date : creation_date, 
-			modification_date : modification_date
-			});
-		console.log($scope.projects);
-	}
+	$scope.projects = allProjects;
+	$scope.licenses = allLicenses;
+	$scope.curProj = currentProject;
+	
 	
 	$scope.deleteSource = function(projectId, sourceUri, baseUri) 
 	{	
@@ -39,7 +29,6 @@ app.controller('projectController', function ($scope, $http){
 	
 	$scope.applicableModules = function(projectId, sourceUri)
 	{
-		//alert(sourceUri);
 		var sourceId = sourceUri.substr(sourceUri.lastIndexOf('/') + 1);
 		window.location = projectId + "/applicable?source=" + sourceId;
 	}

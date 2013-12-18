@@ -9,21 +9,25 @@
 </head>
 <body ng-app="project">
 #h_tetiere
-<!-- <div style="position:absolute;top:15px;right:15px;">
-	<a href="${baseUri}/sparql" id="goto_sparql" class="button">#i18n("sparql.endpoint.link")</a>
-</div>  -->
 
+
+<!-- IF CURRENT IS LOADED -->
 #if($current)
+
+<script type="text/javascript">
+	var allProjects = "";
+	var allLicenses = "";
+	var currentProject = { uri : "$!esc.javascript($current.uri)", description: "$!esc.javascript($current.description)",  title : "$esc.javascript($!{current.title})", license : "$!esc.javascript($licenses[$current.getLicense()].getLabel())", owner : "$esc.javascript($!{current.owner})", creation_date : "$!date.format('medium', $current.creationDate)", modification_date :  "$!date.format('medium', $current.modificationDate)" };
 	
-	<!-- <p>Owner = $current.owner</p>  -->
+</script>
 	<!-- ---------------- EDIT PROJECT -------------------- -->
 <div class="container-fluid" id="projectSpaceContainer" ng-controller="projectController">
 	<div class="span12 row-fluid">
-		<h3 class="text-center">$current.title</h3>
+		<h3 class="text-center">{{curProj.title}}</h3>
 		<div class="row-fluid" style="margin-top: 20px;">
 			<!-- DIV HISTOIRIQUE -->
 			<div class="span3 border3">
-				<h4 class="pagination-centered">Historique</h4>
+				<h4 class="pagination-centered">#i18n("records")</h4>
 				<div class="span12" style="border: solid #808080 1px; height: 500px">
 					<div class="history-list" style="padding: 5px; color: #909090;">
 						<p>Ici se trouvera l'historique des projets.</p>
@@ -34,11 +38,11 @@
 			<!-- DIV CONTENT TAB ONGLET CONTAINER -->
 			<div class="span9">
 				<!-- LISTE ONGLET -->
-				<ul class="nav nav-tabs" id="tab_details">
+				<ul class="nav nav-tabs tab_details">
 					<li><a href="#suivi">#i18n("tab.name.monitoring")</a></li>
 					<li><a href="#description">#i18n("tab.name.description")</a></li>
-					<li class="active"><a href="#sources">#i18n("tab.name.sources")</a></li>
-					<li><a href="#ontologies">#i18n("tab.name.ontologies")</a></li>
+					<li class="active"><a href="#sources">#i18n("tab.name.data")</a></li>
+					<li><a href="#vocabulaires">#i18n("tab.name.vocabulary")</a></li>
 				</ul>
 				<!-- FIN LISTE ONGLET -->
 				<!-- DIV CONTENT TAB ONGLETS -->
@@ -46,88 +50,72 @@
 					<!-- ONGLET SUIVI -->
 					<div class="tab-pane" id="suivi">
 						<p>#i18n("tab.subtitle.monitoring")</p>
-						<p class="red-message">Ici se trouvera l'historique du projet $current.title</p>
+						<p class="red-message">Ici se trouvera l'historique du projet {{curProj.title}}</p>
 					</div>
 					<!-- FIN ONGLET SUIVI -->
 					<!-- ONGLET DESCRIPTION -->
 					<div class="tab-pane" id="description" style="height: 500px;">
 				  		<p>#i18n("project.description") : </p>
-				  		#if ($current.description) 
-							<p>$current.description </p><br />
-						#else
-							<p class="red-message">#i18n("project.description.empty")</p><br />
-						#end
-			  			<p>#i18n("project.license") : </p><p>$licenses[$current.getLicense()].getLabel() </p><br/>
+				  		<p>{{curProj.description}}</p>
+			  			<p>#i18n("project.license") : </p><p>{{curProj.license}} </p><br/>
 						<p style="display:inline-block;">Créé par:&nbsp</p>
-						<p style="display:inline-block;">$current.owner</p><br/>
+						<p style="display:inline-block;">{{curProj.owner}}</p><br/>
 						<p style="display:inline-block;">#i18n("project.creation_s") :</p>
-						<p style="display:inline-block;">$!date.format("medium", $current.creationDate)</p><br/>
+						<p style="display:inline-block;">{{curProj.creation_date}}</p><br/>
 						<p style="display:inline-block;">#i18n("project.modification_s")</p>
-						<p style="display:inline-block;">$!date.format("medium", $current.modificationDate)</p><br/>
+						<p style="display:inline-block;">{{curProj.modification_date}}</p><br/>
 						<div class="span12 actionBtn" id="description-btn">
 							<a class="btn" id="popoverRemove" class="action btn" data-content="Supprimez le projet sélectionné" 
-								rel="popover" data-placement="top" data-trigger="hover"href="#createproject" data-toggle="modal">Modifier
+								rel="popover" data-placement="top" data-trigger="hover"href="#createproject" data-toggle="modal">#i18n("modify")
 							</a>
 							
 							<a class="btn" id="popoverRemove" class="action btn btn-custom-red" data-content="Supprimez le projet sélectionné" 
-								rel="popover" data-placement="top" data-trigger="hover" href="#deleteProject" data-toggle="modal">Supprimer
+								rel="popover" data-placement="top" data-trigger="hover" href="#deleteProject" data-toggle="modal">#i18n("delete")
 							</a>
 						</div>
 				  	</div>
 				  	<!-- FIN ONGLET DESCRIPTION -->
 				  	<!-- ONGLET SOURCES -->
-				  	<div class="tab-pane active" id="sources">
-				  		<div class="span11 row" style="margin:0 auto; float:none;">
-							<div class="list-group" id="source-list" style="max-height: 100px:">
-								#foreach ($curSource in $current.getSources())
-									<!-- DESCRIPTION -> $curSource.description
-									URI -> $curSource.uri
-									INFO -> $curSource  -->
-									<li class="divider-group-list">
-										<a href="#" ng-click="applicableModules('$current.uri', '$curSource.uri')">$curSource.title</a>
-										<a href="#deleteSource" role="button" class="pull-right" data-toggle="modal" style="display: inline-block">
-											<img src="${baseUri}/images/icon-delete.png" ng-click="deleteSource('$current.uri', '${curSource.uri}', '${baseUri}')">
-										</a>
-									</li>
-								#end
-							</div>
+				  	<div class="tab-pane active tab-sub-menu" id="sources">
+						<div class="list-group">
+							#foreach ($curSource in $current.getSources())
+								<li class="divider-group-list row-fluid">
+									<a href="#" ng-click="applicableModules('$current.uri', '$curSource.uri')">$curSource.title</a>
+									<a href="#deleteSource" role="button" class="pull-right" data-toggle="modal" style="display: inline-block">
+										<img src="${baseUri}/images/icon-delete.png" ng-click="deleteSource('$current.uri', '${curSource.uri}', '${baseUri}')">
+									</a>
+									<a href="#modifySource" role"button" class="pull-right" data-toggle="modal" style="display: inline-block; margin-right: 20px;">
+										<img src="${baseUri}/images/icon-edit.png">
+									</a>
+								</li>
+							#end
 						</div>
-						<div class="span3">
-							<div class="actionBtn-v2">
-								<a href="#addSource" role="button" class="btn" data-toggle="modal">
-									<img style="margin-right: 4px" src="${baseUri}/images/icon-add.png">Nouvelle source
-								</a>
-							</div>
+						<div class="btnActionAdd">
+							<a href="{{curProj.uri}}/srcupload" role="button" class="btn">
+								<img src="${baseUri}/images/icon-add.png">#i18n("source.button.add")
+							</a>
 						</div>
 				  	</div>
 				  	<!-- FIN ONGLET SOURCES -->
 				  	<!-- ONGLET ONTOLOGIES -->
-				  	<div class="tab-pane" id="ontologies">
-				  		<div class="tab-pane active" id="sources">
-					  		<div class="span11 row" style="margin:0 auto; float:none;">
-								<div class="list-group" id="ontologies-list" style="max-height: 100px:">
-								#foreach ($curOnto in $current.getOntologies())
-									<li class="divider-group-list">
-										<a href="${curOnto.title}">$curOnto.title</a>	
-										<a href="#deleteOnto" role="button" class="pull-right" data-toggle="modal" style="display: inline-block" ng-click="deleteOntology('$current.uri', '$curOnto.title')">
-											<img src="${baseUri}/images/icon-delete.png">
-										</a>
-										<a href="#modifyOntologie" role"button" class="pull-right" data-toggle="modal" style="display: inline-block; margin-right: 20px;">
-											<img src="${baseUri}/images/icon-edit.png">
-										</a>
-									</li>
-								#end
-								</div>
-							</div>
-				  		</div>
-				  		<div class="span3">
-							<div class="actionBtn-v2">
-								<a href="#addOntologie" role="button" class="btn" data-toggle="modal">
-									<img style="margin-right: 4px;" src="${baseUri}/images/icon-add.png">
-									Nouvelle Ontologie
+				  	<div class="tab-pane tab-sub-menu" id="vocabulaires">
+						<div class="list-group" style="max-height: 100px:">
+						#foreach ($curOnto in $current.getOntologies())
+							<li class="divider-group-list row-fluid">
+								<a href="${curOnto.title}">$curOnto.title</a>	
+								<a href="#deleteOnto" role="button" class="pull-right" data-toggle="modal" style="display: inline-block" ng-click="deleteOntology('$current.uri', '$curOnto.title')">
+									<img src="${baseUri}/images/icon-delete.png">
 								</a>
-							</div>
+							</li>
+						#end
 						</div>
+						<div class="actionBtn-v2">
+						<a href="#addOntologie" role="button" class="btn" data-toggle="modal">
+							<img src="${baseUri}/images/icon-add.png">
+							#i18n("ontology.button.add")
+						</a>
+						</div>
+				  	
 				  	</div>
 				  	<!-- FIN ONGLET ONTOLOGIES -->
 			  	</div>
@@ -137,7 +125,7 @@
 		</div>
 	</div>
 
-	<!-- DIV POPUP REMOVE PROJECT -->
+	<!-- DIV POPUP REMOVE PROJECT 
 	
 	<form method="post" action="${current.uri}?_method=DELETE" class="form_formated" name="delete_project">
 		<input type="hidden"  id="delete" value="#i18n("delete")"/>
@@ -155,7 +143,7 @@
 	    	<a href="./index.php" data-dismiss="modal" onclick="document.forms['delete_project'].submit();  return false;" class="btn btn-primary">Supprimer</a>
 	  	</div>
 	</div>
-	<!-- FIN DIV POPUP REMOVE PROJECT -->
+	 FIN DIV POPUP REMOVE PROJECT -->
 	<!-- DIV POPUP MODIFY PROJECT -->
 	<div class="modal hide pagination-centered fade" id="modifyProject">
 	  	<div class="modal-header"> <a class="close" data-dismiss="modal">×</a>
@@ -170,13 +158,13 @@
 	  	</div>
 	</div>
 	<!-- FIN DIV POPUP MODIFY PROJECT -->
-	<!-- DIV POPUP MODIFY ONTOLOGIE -->
-	<div class="modal hide pagination-centered fade" id="modifyOntologie">
+	<!-- DIV POPUP MODIFY SOURCE -->
+	<div class="modal hide pagination-centered fade" id="modifySource">
 	  	<div class="modal-header"> <a class="close" data-dismiss="modal">×</a>
 		    <h3>Modifier</h3>
 	  	</div>
 		<div class="modal-body">
-		   	<p>Modification d'une ontologie</p>
+		   	<p>Modification d'un jeux de données</p>
 	 	</div>
 		<div class="modal-footer">
 			<a href="#" class="btn" data-dismiss="modal">Annuler</a>
@@ -184,54 +172,7 @@
 	  	</div>
 	</div>
 	<!-- FIN DIV POPUP MODIFY ONTOLOGIE -->
-	<!-- DIV POPUP AJOUTER UNE NOUVELLE SOURCE -->
-	<div class="modal hide pagination-centered fade large" id="addSource">
-	  	<div class="modal-header"> <a class="close" data-dismiss="modal">×</a>
-	    	<h3>Nouvelle source</h3>
-	  	</div>
-	  	<div class="modal-body">
-		  	<fieldset>
-		  		<select>
-			        <option>CSV</option>
-			        <option>RDF</option>
-			        <option>XML</option>
-			        <option>SHP</option>
-				</select>
-		  		<legend>Ajouter une nouvelle source</legend>
-		  		<input type= text id="source_name" placeholder="Nom de la source"/>
-		  		<input style="padding-bottom: 11px;" id="file" type="file" />
-	  		</fieldset>
-	    	<script>
-	    	var currentProject = "$current.uri";
-	    	var fileInput = document.querySelector('#file');
-	    	
-	    	$(document).ready(function(){
-	    		$('#submit_source').click(function(){
-	    			var source_name = ($('#source_name').val());
-	    			if (fileInput.files[0] && source_name) {
-				    	var xhr = new XMLHttpRequest();
-			    		var form = new FormData();
-			    		xhr.open('POST', currentProject + '/csvupload', true);
-				    	form.append('source', fileInput.files[0]);
-				    	form.append('project_uri', currentProject);
-				    	form.append('separator', 'semicolon');
-				    	form.append('file_name', source_name);
-			    		console.log(form);
-				    	xhr.send(form);
-				    	window.location.reload();
-				    	}
-			    	else
-			    		alert('Verifiez que tous les champs soient bien remplis');
-   				});
-    		});
-			</script>
-	  	</div>
-	  	<div class="modal-footer">
-		    <a href="#" class="btn" data-dismiss="modal">Annuler</a>
-		    <a href="#>" class="btn btn-primary" id="submit_source">Créer</a>
-	  	</div>
-	</div>
-	<!-- FIN DIV POPUP AJOUTER UNE NOUVELLE SOURCE -->
+	
 	<!-- DIV POPUP AJOUTER UNE NOUVELLE ONTOLOGIE -->
 	<div class="modal hide pagination-centered fade large" id="addOntologie">
 	  	<div class="modal-header"> <a class="close" data-dismiss="modal">×</a>
@@ -248,27 +189,14 @@
 	  	</div>
 	</div>
 	<!-- FIN DIV POPUP AJOUTER UNE NOUVELLE ONTOLOGIE -->
-	<!-- DIV POPUP SUPPRIMER UNE SOURCE 
-	<div class="modal hide pagination-centered fade large" id="deleteSource">
-	    	<h3>Supprimer</h3>
-	  	<div class="modal-header"> <a class="close" data-dismiss="modal">×</a>
-	  	</div>
-	  	<div class="modal-body">
-	    	<p>Etes-vous sûr de vouloir supprimer la source ?</p>
-	  	</div>
-	  	<div class="modal-footer">
-		    <a href="#" class="btn" data-dismiss="modal">Annuler</a>
-		    <a href="#" data-dismiss="modal" class="btn btn-primary btn-custom-red">Supprimer</a>
-	  	</div>
-	</div>
-	 FIN DIV POPUP AJOUTER UNE NOUVELLE SOURCE -->
+	
 	<!-- DIV POPUP SUPPRIMER UNE ONTOLOGIE -->
 	<div class="modal hide pagination-centered fade large" id="deleteOntologie">
 	  	<div class="modal-header"> <a class="close" data-dismiss="modal">×</a>
 	    	<h3>Supprimer</h3>
 	  	</div>
 	  	<div class="modal-body">
-	    	<p>Etes-vous sûr de vouloir supprimer cette ontologies ?</p>
+	    	<p>Etes-vous sûr de vouloir supprimer ce vocabulaire ?</p>
 	  	</div>
 	  	<div class="modal-footer">
 		    <a href="#" class="btn" data-dismiss="modal">Annuler</a>
@@ -276,171 +204,145 @@
 	  	</div>
 	</div>
 	<!-- FIN DIV POPUP AJOUTER UNE NOUVELLE ONTOLOGIE -->
-</div>
 <!-- ---------------- FIN EDIT PROJECT -------------------- -->
+</div>
+#h_footer
 #else
 <!-- ---------------- PROJECT SAPCE -------------------- -->
 <!-- if CURRENT IS NOT LOADED  --> 
 
+<script type="text/javascript">
+var currentProject = "";
+	var allProjects = [
+#foreach ($item in $it)
+       { uri : "$esc.javascript($!{item.uri})", description : "$!esc.javascript($item.description)", title : "$esc.javascript($!{item.title})", license : "$!esc.javascript($licenses[$item.getLicense()].getLabel())", owner :  "$esc.javascript($!{item.owner})", creation_date : "$!date.format('medium', $item.creationDate)", modification_date : "$!date.format('medium', $item.modificationDate)" },
+       				#end];
+	 
+	
+	var  allLicenses = [];
+	allLicenses.push({license : ""});
+	#foreach ($li in $licenses)
+		allLicenses.push({ license : "$!esc.javascript($li.label)"});
+	#end
+	
+</script>
+
 <div class="span12 row-fluid projectSpaceContainer" ng-controller="projectController">
-	<div class="span3 " id="btnActionDiv">
-		<div id="new-projet-btn">
-			<a id="add_project" href="#createproject" role="button" class="btn" data-toggle="modal"><img style="margin-right: 4px;" src="${baseUri}/images/icon-add.png">#i18n("project.title.new_project")</a>
+	<div class="span12 row-fluid" style="margin:0 auto; float:none;">
+		<div class="span3 row" id="btnActionDiv">
+			<div id="new-projet-btn">
+				<a id="add_project" href="#createproject" role="button" class="btn" data-toggle="modal"><img style="margin-right: 4px;" src="${baseUri}/images/icon-add.png">#i18n("project.title.new_project")</a>
+			</div>
 		</div>
-	</div>
-	<div class="span9 row-fluid" style="margin:0 auto; float:none;">
+		
 		<!-- DIV BAR DE FILTRES --> 
-		<div class="span12 row-fluid" style="margin:0 auto; float:none;">
+		<div class="span9 row" style="margin:0 auto; float:none;">
 			<form class="navbar-search form-inline pagination-centered">
-	  			<label>Search filter : </label><input type="search" ng-model="projectfilter" placeholder="Search filter..."/>
-				<label>License : </label>
-				<select>
-					<option></option>
-					<option>Attribution, 3.0 non transposé (CC BY 3.0)</option>
-					<option>Paternité - Partage à l'identique, 3.0 non transposé (CC BY-SA 3.0)</option>
-					<option>Paternité - Pas de modifications, 3.0 non transposé (CC BY-ND 3.0)</option>
-					<option>Paternité - Pas d'utilisation commerciale, 3.0 non transposé (CC BY-NC 3.0)</option>
-					<option>Attribution - Pas d'utilisation commerciale - Partage à l'identique, 3.0 non transposé (CC BY-NC-SA 3.0)</option>
-					<option>Attribution - Pas d'utilisation commerciale - Pas de modifications, 3.0 non transposé (CC BY-NC-ND 3.0)</option>
-					<option>Open Data Commons Open Database License (ODbL)</option>
+	  			<label>#i18n("search_filter") : </label><input type="search" ng-model="projectfilter" placeholder="Search filter..."/>
+				<label>#i18n("project.license") : </label>
+				<select ng-model="licenseselected" ng-options="l.license for l in licenses">
 				</select>
 			</form>
-		</div> <!-- FIN DIV BAR DE FILTRES -->
-		<div class="span12 row-fluid" style="margin:0px 0px 0px 8%; float:none;">
-			<div class="list-group" id="project-list" ng-init='#foreach ($item in $it) initialize("$esc.javascript($!{item.uri})", "#if ($item.description) $esc.javascript($!{item.description}) #end", "$esc.javascript($!{item.title})", "license", "$esc.javascript($!{item.owner})", "$!date.format("medium", $item.creationDate)", "$!date.format("medium", $item.modificationDate)"); #end'>
-				<ul class="nav nav-stacked">
-					<li ng-repeat="project in projects | filter:projectfilter">
-						<a href="{{ project.uri }}">
-							<div class="span12 list-elem">
-								<span class="span7">
-								 	<img src="${baseUri}/images/Project-img.png" id="img-nav-stacked"><span>{{ project.title }}</span><br>
-								 	<p style="display:inline-block;" class="info-list-title">#i18n("project.description") :</p>
-									<p style="display:inline-block;" class="info-list">{{ project.description }} </p><br>
-									<p style="display:inline-block;" class="info-list-title">#i18n("project.license") :</p>
-									<p style="display:inline-block;" class="info-list"> $licenses[$item.getLicense()].getLabel()</p>
-								</span>
-								<span class="span5 creater-block">
-									<p style="display:inline-block;">Créé par:&nbsp</p>
-									<p style="display:inline-block;">{{ project.owner }}</p><br>
-									<p style="display:inline-block;">#i18n("project.creation_s")</p>
-									<p style="display:inline-block;">{{ project.creation_date }}</p><br>
-									<p style="display:inline-block;">#i18n("project.modification_s") </p>
-									<p style="display:inline-block;">{{ project.modification_date }}</p><br>
-								</span>
-							</div>
-						</a>
-					</li>
-				</ul> 
-				
-				
-				
-				
-				
-				<!-- <ul class="nav nav-stacked">
-					#foreach( $item in $it )
-					<li>
-						<a href="${item.uri}">
-							<div class="span12 list-elem">
-								<span class="span7">
-								 	<img src="${baseUri}/images/Project-img.png" id="img-nav-stacked"><span>$item.title</span><br>
-								 	<p style="display:inline-block;" class="info-list-title">#i18n("project.description") :</p>
-								 	#if ($item.description) 
-										<p style="display:inline-block;" class="info-list">$item.description </p><br>
-									#else
-										<p class="red-message info-list">#i18n("project.description.empty")</p><br>
-									#end
-									<p style="display:inline-block;" class="info-list-title">#i18n("project.liecnse") :</p>
-									<p style="display:inline-block;" class="info-list"> $licenses[$item.getLicense()].getLabel()</p>
-								</span>
-								<span class="span5 creater-block">
-									<p style="display:inline-block;">Créé par:&nbsp</p>
-									<p style="display:inline-block;">$item.owner</p><br>
-									<p style="display:inline-block;">#i18n("project.creation_s")</p>
-									<p style="display:inline-block;">$!date.format("medium", $item.creationDate)</p><br>
-									<p style="display:inline-block;">#i18n("project.modification_s") </p>
-									<p style="display:inline-block;">$!date.format("medium", $item.modificationDate)</p><br>
-								</span>
-							</div>
-						</a>
-					</li>
-					#end
-				</ul>  -->
-			</div>
 		</div>
-			<!-- DIV POPUP FORM -->
-			#set( $to_redirect = "${baseUri}/project")
-			#if( $current )
-				#set( $title_m  = "project.title.modify_project" )
-				#set( $submit = "modify" )
-        		#set( $target = "${it.uri}" )
-			#else
-				#set( $title_m = "project.title.new_project" )
-				#set( $submit = "create" )
-        		#set( $target = "${baseUri}/project" )
-			#end
-			<div class="modal hide pagination-centered fade large" id="createproject">
-			  	<div class="modal-header"> <a class="close" data-dismiss="modal">×</a>
-			    	<h3>Nouveau projet</h3>
-			  	</div>
-			  	<div class="modal-body">
-			    	<form method="get" action="" id="create" class="form-horizontal">
-				  	<div class="control-group">
-				    	<label class="control-label" for="title" ">#i18n("project.name"):</label>
-					    <div class="controls">
-					      <input type="text" id="title" name="title" value="$!esc.html($it.title_m)" placeholder="Nom du projet" autofocus="autofocus">
-					    </div>
-				  	</div>
-				  	<div class="control-group">
-				  		<label class="control-label" for="license">#i18n("project.license"): </label>
-					  	<div class="controls">
-						    <select id="license" name="license">
-								#foreach($li in $licenses)
-								<p>$li.uri</p>
-								<option value="$li.uri" #if($li.uri == $it.license) selected="selected" #end>$esc.html($li.label)</option>
-								#end
-							</select>
-						</div>
-				  	</div>
-				  	<div class="control-group">
-					    <label class="control-label" for="description">#i18n("project.description"): </label>
-					    <div class="controls">
-					      <textarea type="text" id="description" value="$!esc.html($it.description)"></textarea>
-					    </div>
-				  	</div>
-					</form>
-			  	</div>
-				<div class="modal-footer">
-					<button class="btn" data-dismiss="modal" aria-hidden="true">Annuler</a>
-				    <button id="FormSubmit" type="submit" class="btn btn-primary">Créer</a>
-				    <input type="hidden" value="$target" id="target"></input>
-			  	</div>
-			</div>
-			#script_links
-			<script type="text/javascript">
-			$('#FormSubmit').click(function(e){
-				e.preventDefault();
-				
-				var success = false;
-				var target = ($('#target').val());
-				var formValue = ($('#create').val());
-				var description = ($('#description').val());
-				var title = ($('#title').val());
-				var license = ($('#license').val());
-				var toRedirect = "$to_redirect";
-								
-				$.post(target, {"license": license, "description": description, "title": title})
-				.done(function(data, status, xhr) {
-					//console.log(to_redirect); 
-					window.open(xhr.getResponseHeader('Location'));
-				})
-				.fail(function() {
-				alert( "An error occured when trying to create the project." );
-				});
-			});
-			
-			</script>
+		 <!-- FIN DIV BAR DE FILTRES -->
 	</div>
-#end
+	<div class="list-group offset2 row span8" id="project-list"> 
+		<ul class="nav nav-stacked" id="ul-project-list">
+			<li ng-repeat="project in projects | filter:projectfilter | filter:licenseselected">
+				<a href="{{ project.uri }}">
+					<div class="span12 list-elem">
+						<span class="span7">
+						 	<img src="${baseUri}/images/Project-img.png" id="img-nav-stacked"><span>{{ project.title }}</span><br>
+						 	<span class="info-list-title">#i18n("project.description") :</span>
+							<span class="info-list">{{ project.description }} </span><br>
+							<span class="info-list-title">#i18n("project.license") :</span>
+							<span class="info-list"> {{ project.license }}</span>
+						</span>
+						<span class="span5 creater-block">
+							<span>#i18n("project.creation_by"):&nbsp</span>
+							<span>{{ project.owner }}</span><br>
+							<span>#i18n("project.creation_s")</span>
+							<span>{{ project.creation_date }}</span><br>
+							<span>#i18n("project.modification_s") </span>
+							<span>{{ project.modification_date }}</span><br>
+						</span>
+					</div>
+				</a>
+			</li>
+		</ul> 
+	</div>
+	<!-- DIV POPUP FORM -->
+	#set( $to_redirect = "${baseUri}/project")
+	#if( $current )
+		#set( $title_m  = "project.title.modify_project" )
+		#set( $submit = "modify" )
+      		#set( $target = "${it.uri}" )
+	#else
+		#set( $title_m = "project.title.new_project" )
+		#set( $submit = "create" )
+      		#set( $target = "${baseUri}/project" )
+	#end
+	<div class="modal hide pagination-centered fade in" id="createproject">
+	  	<div class="modal-header"> <a class="close" data-dismiss="modal">×</a>
+	    	<h3>#i18n("project.title.new_project")</h3>
+	  	</div>
+	  	<div class="modal-body">
+	    	<form method="get" action="" id="create" class="form-horizontal">
+		  	<div class="control-group">
+		    	<label class="control-label" for="title">#i18n("project.name"):</label>
+			    <div class="controls">
+			      <input type="text" id="title" name="title" value="$!esc.html($it.title_m)" placeholder="Nom du projet" autofocus="autofocus">
+			    </div>
+		  	</div>
+		  	<div class="control-group">
+		  		<label class="control-label" for="license">#i18n("project.license"): </label>
+			  	<div class="controls">
+				    <select id="license" name="license">
+						#foreach ( $li in $licenses )
+							<p>$li.uri</p>
+							<option value="$li.uri" #if($li.uri == $it.license) selected="selected" #end>$esc.html($li.label)</option>
+						#end
+					</select>
+				</div>
+		  	</div>
+		  	<div class="control-group">
+			    <label class="control-label" for="description">#i18n("project.description"): </label>
+			    <div class="controls">
+			      <textarea type="text" id="description" value="$!esc.html($it.description)"></textarea>
+			    </div>
+		  	</div>
+			</form>
+	  	</div>
+		<div class="modal-footer">
+			<button class="btn" data-dismiss="modal" aria-hidden="true">#i18n("cancel")</button>
+		    <button id="FormSubmit" type="submit" class="btn-primary">#i18n("create")</button>
+		    <input type="hidden" value="$target" id="target"></input>
+	  	</div>
+	</div>
+#script_links
+<script type="text/javascript">
+$('#FormSubmit').click(function(e){
+	e.preventDefault();
+	
+	var success = false;
+	var target = ($('#target').val());
+	var formValue = ($('#create').val());
+	var description = ($('#description').val());
+	var title = ($('#title').val());
+	var license = ($('#license').val());
+	var toRedirect = "$to_redirect";							
+	$.post(target, {"license": license, "description": description, "title": title})
+	.done(function(data, status, xhr) { 
+		window.open(xhr.getResponseHeader('Location'));
+	})
+	.fail(function() {
+	alert( "An error occured when trying to create the project." );
+	});
+});
+
+</script>
+</div>
 #h_footer
+#end
 </body>
 </html>

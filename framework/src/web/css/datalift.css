@@ -1,9 +1,11 @@
-
 body {
-  background-color:#FFFFFF;
-  font-family: Lucida Grande, Lucida Sans, Arial, sans-serif;
-  font-size:.9em;
-  overflow-y:scroll;
+	 background-color:#FFFFFF;
+  	font-family: Lucida Grande, Lucida Sans, Arial, sans-serif;
+  	font-size:.9em;
+  	overflow-y: auto;
+	height: 100%;
+	/*top: 68px !important; 65px to make the container go all the way to the bottom of the topbar */
+	padding-top: 5.667em;
 }
 
 .dl-widget-header {
@@ -88,6 +90,7 @@ text-align:center;
 #add_project {
   display:inline-block;
  margin:auto;
+ width: 12em;
 }
 
 #workspace-main-panel {
@@ -111,7 +114,15 @@ text-align:center;
   padding:5px;
 }
 
+#ul-project-list {
+	padding-bottom: 3em !important;
+	margin: 0;
+	margin: 0px 0px 10px 0px !important;
+}
 
+.tab_details {
+	font-size-adjust: .6em;
+}
 
 /* fixing Jquery tabs Problem */
 .ui-helper-clearfix {
@@ -190,32 +201,14 @@ text-align:center;
 }
 
 
-/***************************************************************
-**
-** HEDY CHAIN
-**
-****************************************************************/
 
 
 
-/*
-=== Colors all the span in lightgrey ===
 
-[class*="span"] {
-background-color : lightgrey;
- margin-bottom : 10px;
- border-radius : 5px 5px 5px 5px;
- line-height : 80px;
- text-align : center;
-}*/
 
-body {
-	 background-color:#FFFFFF;
-  font-family: Lucida Grande, Lucida Sans, Arial, sans-serif;
-  font-size:.9em;
-  overflow-y:scroll;
-	padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
-}
+
+
+
 
 h3, h4 {
 	color: #808080;
@@ -234,85 +227,51 @@ a {
   
 }
 
-div.container.txt-bottom  { 
-	margin-top: 10px; 
-	position: absolute; 
-	bottom: 0;
-}
-
-.bleu-datalift {
-	color: #0094D6;
-}
-
-.back-black { background-color: black; }
-
-div.container { width: 100% !important; }
+div.container { min-width: 100% !important; }
 
 span.span2 { 
 	background-color: lightgrey; 
 }
 
 #projectSpaceContainer {
-	/*height: 800px; /**** A changer pour le bootstrap ****/
-	/*background-color: #808080;*/
 	color: #808080;
 }
 
-#module-container {
-	color: white;
-	background-color: #808080;
-	margin: 100px 0 0 265px;
-	height: 600px; /**** height a changer en auto une fois que le contenu definitif sera implementé ****/
-	overflow: auto;
-}
-
 .border3 {
-	-webkit-border-radius: 3px;
-	-moz-border-radius: 3px;
-	border-radius: 3px;
+	-webkit-border-radius: 0.200em;
+	-moz-border-radius: 0.200em;
+	border-radius: 0.200em;
 }
 
 #img-nav-stacked {
-	margin: 0px 8px 0px 5px;
+	margin: 0em 0.533em 0em 0.533em;
 }
 
 #project-list.list-group {
-	position: absolute;
+	position: relative;
 	height: 76%;
-	width: 74%;
 	overflow: auto;
 }
 
-#new-projet-btn {
-	padding-left: 18%;
+.tab-sub-menu {
+	height: 95.5em;
 }
 
-#source-list.list-group {
-	position:absolute;
-	height: 60%;
-	width: 65%;
-	overflow: auto;
-	padding-right: 12px;
+#tab-sub-menu-action {
+	height: 32.5em;
+	width: 100%;
 }
 
-#ontologies-list.list-group {
-	position:absolute;
-	height: 60%;
-	width: 65%;
+.list-group {
+	padding-right:0.800em;
+	height: 30%;
+	width: 100%;
 	overflow: auto;
-	padding-right: 12px;
 }
 
 .history-list {
 	max-height: 500px;
 	overflow: auto;
-}
-
-a.action:hover {
-	background-color: rgba(128, 128, 128, 0.4);
-	-webkit-border-radius: 3px;
-	-moz-border-radius: 3px;
-	border-radius: 3px;
 }
 
 .btn-custom-red {
@@ -343,21 +302,26 @@ padding-top: 1%;
 border-top: solid #808080 1px;
 }
 
+.btnActionAdd {
+	margin: 3em;
+}
+
 #description-btn {
 	border:none;
 }
 
 .actionBtn-v2 {
 padding-left: 8%;
-padding-top: 175%;
 }
 
-p.info-list {
+span.info-list {
 font-size: 11px;
 margin-left: 4%;
+display:inline-block;
 }
 
-p.info-list-title {
+span.info-list-title {
+	display:inline-block;
 	font-weight: bold;
 	margin-left: 4%;
 }
@@ -369,7 +333,7 @@ p.info-list-title {
 
 .list-elem {
 	border-bottom: solid #E5E5E5 1px;
-	margin-top: 4px;
+	padding-top: 1.5%;
 }
 
 .list-elem:hover {
@@ -380,23 +344,12 @@ p.info-list-title {
 }
 
 .projectSpaceContainer {
-max-height: 800px;
-}
-
-#btnActionDiv.span3 {
-	margin-top: 40px;
+min-height: 100%;
 }
 
 [class*="icon-"] {
 	margin-right: 5px !important;
 }
-
-
-/*[class*="span3"] {
-	background-color: white;
-	height: 400px;
-	color: black;
-}*/
 
 #wiki-page.span12 {
 	margin: 0 !important;
@@ -533,13 +486,39 @@ max-height: 800px;
 	color:green;
 }
 
-/*[class*="span8"] {
-	background-color: white;
-	color: black;
-}*/
-
-/*li a {
+.btn {
+	display: inline-block;
+	padding: .267em .800em;
+	margin-bottom: 0px;
+	font-size: .9em;
+	line-height: 1.333em;
+	color: #333;
 	text-align: center;
-}*/
+	text-shadow: 0em .067em .067em rgba(255, 255, 255, 0.75);
+	vertical-align: middle;
+	cursor: pointer;
+	background-color: #F5F5F5;
+	background-image: linear-gradient(to bottom, #FFF, #E6E6E6);
+	background-repeat: repeat-x;
+	border-width: .067em;
+	border-style: solid;
+	-moz-border-top-colors: none;
+	-moz-border-right-colors: none;
+	-moz-border-bottom-colors: none;
+	-moz-border-left-colors: none;
+	border-image: none;
+	border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) #B3B3B3;
+	border-radius: .276em;
+	box-shadow: 0px 1px 0px rgba(255, 255, 255, 0.2) inset, 0px 1px 2px rgba(0, 0, 0, 0.05);
+}
 
+.btn-primary {
+	font-size : .9em;
+	border-radius: .276em;
+}
+
+.modal {
+	left: none;
+	right: none;
+}
 

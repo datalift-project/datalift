@@ -14,59 +14,59 @@
 #end
 
 #macro( h_tetiere )
-<!-- ---------------- TETIERE -------------------- -->
-  	<div class="navbar navbar-fixed-top">
-      <div class="navbar-inner">
-       	<div class="container-fluid">
-      		<a class="brand" href="#"> <img src="${baseUri}/images/logo_datalift.gif" width="37px"></a>
-      		<a class="brand .txt-bottom" href="#">DataLift</a>
-  				<a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-        	</a>
+<!-- ---------------- TETIERE -------------------- -->  #i18n("")
+	<header class="navbar navbar-fixed-top">
+    <div class="navbar-inner">
+     	<div class="container-fluid">  
+    		<a class="brand" href="#"> <img src="${baseUri}/images/logo_datalift.gif" width="37px"></a>
+    		<a class="brand .txt-bottom" href="#">#i18n("title")</a>
+				<a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+      	</a>
+      	<div class="nav-collapse collapse">
         	<ul class="nav pull-right">  
             	<li class="dropdown">
             		<a class="dropdown-toggle" id="drop5" role="button" data-toggle="dropdown" href=""><i class="icon-user"></i>Jean Dupont<b class="caret"></b></a>
             		<ul class="dropdown-menu" role="menu" aria-labelledby="drop5">
-            			<li><a role="menuitem" href="#MonCompte">Mon Compte</a></li>
+            			<li><a role="menuitem" href="#MonCompte">#i18n("header.account")</a></li>
             			<li class="divider"></li>
-            			<li><a role="menuitem" href="#MonCompte"><i class="icon-off"></i>D&eacuteconnexion</a></li>
+            			<li><a role="menuitem" href="#MonCompte"><i class="icon-off"></i>#i18n("header.deconnexion")</a></li>
             		</ul>
             	</li>
         	</ul>
-          	<div class="nac-collapse collapse"></div>
+          	
           	<ul class="nav pull-right menu nav_bar_menu">
               <li id="wiki"><a href="./wikilocal.php">Wiki</a></li>
               <ul class="nav pull-right">  
             	<li class="dropdown">
-            		<a class="dropdown-toggle" id="drop5" role="button" data-toggle="dropdown" href="">Endpoint<b class="caret"></b></a>
+            		<a class="dropdown-toggle" id="drop5" role="button" data-toggle="dropdown" href="">#i18n("header.endpoints")<b class="caret"></b></a>
             		<ul class="dropdown-menu" role="menu" aria-labelledby="drop5">
-            			<li><a role="menuitem" href="${baseUri}/sparql">Endpoint</a></li>
+            			<li><a role="menuitem" href="${baseUri}/sparql">#i18n("header.endpoint")</a></li>
             			<li class="divider"></li>
-            			<li><a role="menuitem" href="${baseUri}/legacy">Legacy</a></li>
+            			<li><a role="menuitem" href="${baseUri}/legacy">#i18n("header.legacy")</a></li>
             		</ul>
             	</li>
         	</ul>
-              <li id="projets"><a href="${baseUri}/project" id="goto_workspace">Projets</a></li>
-              <li id="catalogues"><a href="#catalogues">Catalogues</a></li>
-              <li id="admin"><a href="#admin">Administration</a></li>
+              <li id="projets"><a href="${baseUri}/project">#i18n("header.project")</a></li>
+              <li id="catalogues"><a href="#catalogues">#i18n("header.catalogues")</a></li>
+              <li id="admin"><a href="#admin">#i18n("header.administration")</a></li>
           </div>
       	</div>
-      </div>
+   	</div>
+</header>
     <!-- ---------------- FIN TETIERE ---------------- -->
 #end
 
 #macro (h_footer)
 <!-- ---------------- FOOTER -------------------- -->
-<footer class="navbar navbar-fixed-bottom">
-    <div class="navbar-inner">
-     	<div class="container">	
-	       	<div class="nav-collapse" style="text-align: center;">
-    	   		<a style="color : #0094D6;" href="http://www.datalift.org">DataLift</a>
-		   		<p id="version">Version @app.version@</p>
-        	</div>
-      </div>
+<footer class="footer navbar-fixed-bottom navbar-inner">
+    <div class="">	
+       	<div style="text-align: center;" class="row">
+   	   		<a style="color : #0094D6;" href="http://www.datalift.org">#i18n("title")</a>
+	   		<p id="version">#i18n("footer.version") @app.version@</p>
+       	</div>
 	</div>
 </footer>
 <!-- ---------------- FIN FOOTER -------------------- -->
@@ -104,6 +104,7 @@
 #end
 
 #macro( css_links )
+	
 	<meta http-equiv="content-type" content="text/html;charset=utf-8"/>
 	<link rel="icon" type="image/ico" href="${baseUri}/images/semantic-web.ico"/>
 	<link rel="stylesheet" type="text/css" href="${baseUri}/wro/main.css"/>

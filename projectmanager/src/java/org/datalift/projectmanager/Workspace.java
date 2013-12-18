@@ -2111,10 +2111,7 @@ public class Workspace extends BaseModule
         Collection<Project> projects = this.projectManager.listProjects();
         TemplateModel view = this.newView("workspace.vm", projects);
         view.put("licenses", licenses);
-        // If no project is selected but only one is available, select it.
-        if (projects.size() == 1) {
-            p = projects.iterator().next();
-        }
+        
         // Display selected project.
         if (p != null) {
             view.put("current", p);

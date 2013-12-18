@@ -5,6 +5,7 @@
 	<title>#i18n("workspace.title") - DataLift</title>
 #css_links
 #header_links
+#script_links
 </head>
 <body ng-app="module">
 #h_tetiere
@@ -15,7 +16,7 @@
 		<div class="row-fluid" style="margin-top: 20px;">
 			<!-- DIV HISTOIRIQUE -->
 			<div class="span3 border3">
-				<h4 class="pagination-centered">Historique</h4>
+				<h4 class="pagination-centered">#i18n("records")</h4>
 				<div class="span12" style="border: solid #808080 1px; height: 500px">
 					<div class="history-list" style="padding: 5px; color: #909090;">
 						<p>Ici se trouvera l'historique des projets.</p>
@@ -27,48 +28,47 @@
 			<div class="span9">
 				<!-- LISTE ONGLET -->
 				<ul class="nav nav-tabs" id="tab_details">
-					<li><a href="#consultation">Consultation</a></li>
-					<li><a href="#actions">Actions</a></li>
-					<li><a href="#modify">Modifier</a></li>
+					<li><a href="#consultation">#i18n("action.tab.consult")</a></li>
+					<li class="active"><a href="#actions">#i18n("action.tab")</a></li>
+					<li><a href="#modify">#i18n("Modifier")</a></li>
 				</ul>
 				<!-- FIN LISTE ONGLET -->
 				<!-- DIV CONTENT TAB ONGLETS -->
-				<div class="tab-content" ng-controller="moduleController" ng-init='#foreach ($mod in $canHandle) initialize("$mod.getLabel()", "$mod.getMethod()", "$mod.getPosition()", "$mod.getUri()"); #end'>
+				<div class="tab-content" id="tab-sub-menu-action" ng-controller="moduleController" ng-init='#foreach ($mod in $canHandle) initialize("$mod.getLabel()", "$mod.getMethod()", "$mod.getPosition()", "$mod.getUri()"); #end'>
 					<!-- ONGLET ACTIONS -->
-				  	<div class="tab-pane active" id="actions">			  	
+				  	<div class="tab-pane active" id="actions">
 				  		<div class="alerts span10" id="alert-ban" style="display:none;">
 					  		<div class="alert-message success">
 					  			<a class="close" href="#" data-dismiss="alert">×</a>
 					  			<p><strong>Well done!</strong> you have just convert a csv file into an rdf</p>
 					  		</div>
-					  	</div>
-					  	
+					  	</div>		  	
 					  	<div class="span12" style="display:none_;" id="moduleLevel1">
-				  			<h5>1. Conversion</h5>
+				  			<h5>1. #i18n("action.module.convert")</h5>
 				  			<select style="display:inline-block; margin: 0;" id="moduleLevel1" ng-model="moduleLevel1" ng-options="m.label for m in modulesLevel1"></select>
 				  			<!-- Currently selected: {{ {selected_moduleLevel1:moduleLevel1}  }}  -->
-				  			<a href="#" data-dismiss="modal" class="btn btn-primary" style="display:inline-block" ng-click="moduleRedirectL1('${baseUri}')">Convertir</a>
+				  			<a href="#" data-dismiss="modal" class="btn" style="display:inline-block" ng-click="moduleRedirectL1('${baseUri}')">#i18n("action.button.convert")</a>
 			  			</div>
 			  			
 			  			<div class="span12" style="display:none_;" id="moduleLevel2">
-				  			<h5>2. Publication</h5>
+				  			<h5>2. #i18n("action.module.publication")</h5>
 				  			<select style="display:inline-block; margin: 0;" id="moduleLevel2" ng-model="moduleLevel2" ng-options="m.label for m in modulesLevel2"></select>
 				  			<!-- Currently selected: {{ {selected_moduleLevel2:moduleLevel2}  }}  -->
-				  			<a href="#" data-dismiss="modal" class="btn btn-primary" style="display:inline-block" ng-click="moduleRedirectL2('${baseUri}')">Publier</a>
+				  			<a href="#" data-dismiss="modal" class="btn" style="display:inline-block" ng-click="moduleRedirectL2('${baseUri}')">#i18n("action.button.publication")</a>
 			  			</div>
 			  			
 			  			<div class="span12" style="display:none_;" id="moduleLevel3" >
-				  			<h5>3. Interconnection</h5>
+				  			<h5>3. #i18n("action.module.interconnect")</h5>
 				  			<select style="display:inline-block; margin: 0;" id="moduleLevel3" ng-model="moduleLevel3" ng-options="m.label for m in modulesLevel3"></select>
 				  			<!-- Currently selected: {{ {selected_moduleLevel3:moduleLevel3}  }}  -->
-				  			<a href="#" data-dismiss="modal" class="btn btn-primary" style="display:inline-block" ng-click="moduleRedirectL3('${baseUri}')">Interconnecter</a>
+				  			<a href="#" data-dismiss="modal" class="btn" style="display:inline-block" ng-click="moduleRedirectL3('${baseUri}')">#i18n("action.button.interconnect")</a>
 			  			</div>
 			  			
 			  			<div class="span12" style="display:none_;" id="moduleLevel4" >
-				  			<h5>4. Exploitation</h5>
+				  			<h5>4. #i18n("action.module.exploit")</h5>
 				  			<select style="display:inline-block; margin: 0;" id="moduleLevel4" ng-model="moduleLevel4" ng-options="m.label for m in modulesLevel4"></select>
 				  			<!-- Currently selected: {{ {selected_moduleLevel4:moduleLevel4}  }}  -->
-				  			<a href="#" data-dismiss="modal" class="btn btn-primary" style="display:inline-block" ng-click="moduleRedirectL1L4('${baseUri}')">Exploiter</a>
+				  			<a href="#" data-dismiss="modal" class="btn" style="display:inline-block" ng-click="moduleRedirectL1L4('${baseUri}')">#i18n("action.button.exploit")</a>
 			  			</div>
 
 			  		</div><!-- FIN ONGLET ACTIONS -->

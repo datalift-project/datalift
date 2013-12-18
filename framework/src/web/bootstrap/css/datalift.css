@@ -214,7 +214,7 @@ body {
   font-family: Lucida Grande, Lucida Sans, Arial, sans-serif;
   font-size:.9em;
   overflow-y:scroll;
-	padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+	padding-top: 4.667em; /* 60px to make the container go all the way to the bottom of the topbar */
 }
 
 h3, h4 {
@@ -277,9 +277,8 @@ span.span2 {
 }
 
 #project-list.list-group {
-	position: absolute;
-	height: 76%;
-	width: 74%;
+	position: relative;
+	height: 63%;
 	overflow: auto;
 }
 
@@ -383,9 +382,9 @@ p.info-list-title {
 max-height: 800px;
 }
 
-#btnActionDiv.span3 {
+/*#btnActionDiv.span3 {
 	margin-top: 40px;
-}
+}*/
 
 [class*="icon-"] {
 	margin-right: 5px !important;
@@ -521,6 +520,20 @@ max-height: 800px;
 }
 .alert-message p {
   margin-bottom: 0;
+}
+
+.navbar-search {
+	position: relative;
+	float: left;
+	margin: 0;
+}
+
+.navbar-fixed-top {
+	position: fixed;
+}
+
+.navbar-fixed-bottom {
+	position: fixed;
 }
 
 /*[class*="span8"] {

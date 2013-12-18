@@ -338,9 +338,15 @@
     <copy todir="${build.home}" includeEmptyDirs="false"
                                 preservelastmodified="true">
       <fileset dir="${fwk.web.home}" excludes="**/.*"/>
-      <fileset dir="${web.home}"     excludes="**/.*"/>
+      <fileset dir="${web.home}"     excludes="**/.*,**/*.vm"/>
     </copy>
-    <!-- Copy web application static content and context definition -->
+    <copy todir="${build.home}" encoding="UTF-8" includeEmptyDirs="false"
+                                preservelastmodified="true">
+      <fileset dir="${web.home}"     includes="**/*.vm"/>
+      <filterset refid="webapp.param.filters"/>
+    </copy>
+
+  	<!-- Copy web application static content and context definition -->
     <copy todir="${web-inf.dir}" encoding="UTF-8" preservelastmodified="true">
       <fileset dir="${conf.home}" includes="web.xml,wro.xml"/>
       <filterset>
