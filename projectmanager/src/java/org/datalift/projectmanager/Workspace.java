@@ -2251,11 +2251,16 @@ public class Workspace extends BaseModule
             view.put("license", l.getLabel());
             // Search for modules accepting the selected project.
             Collection<UriDesc> modules = new TreeSet<UriDesc>(
+                    // Sort modules according to position, lower transformation
+                    // steps (i.e. direct mappers to RDF) first.
                     new Comparator<UriDesc>() {
                         @Override
                         public int compare(UriDesc u1, UriDesc u2) {
                             int v = u1.getPosition() - u2.getPosition();
-                            return (v != 0)? v: u1.getLabel().compareToIgnoreCase(u2.getLabel());
+                            // Use module label to disambiguate modules
+                            // requesting the same position in list.
+                            return (v != 0)? v: u1.getLabel()
+                                                  .compareToIgnoreCase(u2.getLabel());
                         }
                     });
             for (ProjectModule m : Configuration.getDefault().getBeans(

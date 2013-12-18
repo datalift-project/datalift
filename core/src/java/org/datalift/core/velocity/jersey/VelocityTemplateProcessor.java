@@ -75,6 +75,7 @@ import org.apache.velocity.tools.generic.DateTool;
 import org.apache.velocity.tools.generic.EscapeTool;
 import org.apache.velocity.tools.generic.FieldTool;
 import org.apache.velocity.tools.generic.LinkTool;
+import org.apache.velocity.tools.view.WebappResourceLoader;
 
 import static org.apache.velocity.app.VelocityEngine.*;
 import static org.apache.velocity.runtime.log.Log4JLogChute.*;
@@ -88,7 +89,7 @@ import org.datalift.fwk.security.SecurityContext;
 import org.datalift.fwk.view.TemplateModel;
 
 import static org.datalift.fwk.util.StringUtils.*;
-import static org.datalift.fwk.util.web.Charsets.*;
+import static org.datalift.fwk.util.web.Charsets.UTF8_CHARSET;
 
 
 /**
@@ -142,7 +143,7 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
     public final static String TEMPLATES_DEFAULT_EXTENSION = ".vm";
     /** The default path for Velocity templates in webapp. */
     public final static String TEMPLATES_WEBAPP_DEFAULT_PATH =
-                                                        "WEB-INF/templates";
+                                                        "/WEB-INF/templates";
 
     protected final static String LOADER_CLASS        = "class";
     protected final static String LOADER_DESC         = "description";
@@ -153,7 +154,7 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
                                                 "modificationCheckInterval";
     protected final static String USER_DIRECTIVES     = "userdirective";
 
-    private final static String FILE_LOADER         = "file";
+    private final static String WEBAPP_LOADER       = "webapp";
     private final static String CLASSPATH_LOADER    = "class";
     private final static String MODULE_LOADER       = "module";
 
@@ -338,7 +339,7 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
     private String getCharset() {
         MediaType m = this.httpContext.getResponse().getMediaType();
         String cs = (m == null)? null: m.getParameters().get("charset");
-        return (cs == null)? UTF_8.name(): cs;
+        return (cs == null)? UTF8_CHARSET: cs;
     }
 
     /**
@@ -425,30 +426,32 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
             // Configure file template loader.
             List<String> fileSources = new LinkedList<String>();
             // Add default template path for web application.
-            fileSources.add(getRealPath(ctx, TEMPLATES_WEBAPP_DEFAULT_PATH));
+            fileSources.add(getAbsolutePath(TEMPLATES_WEBAPP_DEFAULT_PATH));
             // Check for configured template path is specified.
-            String path = getRealPath(ctx,
-                                    ctx.getInitParameter(TEMPLATES_BASE_PATH));
+            String path = ctx.getInitParameter(TEMPLATES_BASE_PATH);
             if (! isBlank(path)) {
-                fileSources.add(path);
+                fileSources.add(getAbsolutePath(path));
             }
             // Add all registered template root paths.
             if (! fileSources.isEmpty()) {
                 // File resource loader is needed.
                 String paths = join(fileSources, CONFIG_ELTS_SEPARATOR);
-                log.debug("Using file template loader for paths: {}", paths);
-                loaders.add(FILE_LOADER);
-                config.setProperty(getPropName(FILE_LOADER, LOADER_PATH), paths);
+                log.debug("Using webapp template loader for paths: {}", paths);
+                loaders.add(WEBAPP_LOADER);
+                config.setProperty(getPropName(WEBAPP_LOADER, LOADER_CLASS),
+                                   WebappResourceLoader.class.getName());
+                config.setProperty(getPropName(WEBAPP_LOADER, LOADER_PATH),
+                                   paths);
                 // Force Unicode BOM detection in template files.
-                config.setProperty(getPropName(FILE_LOADER, LOADER_BOM_CHECK),
+                config.setProperty(getPropName(WEBAPP_LOADER, LOADER_BOM_CHECK),
                                    Boolean.TRUE.toString());
                 // Configure template cache activation.
                 if (updateInterval > 0L) {
                     config.setProperty(
-                            getPropName(FILE_LOADER, LOADER_UPD_INTERVAL),
+                            getPropName(WEBAPP_LOADER, LOADER_UPD_INTERVAL),
                             String.valueOf(updateInterval));
                 }
-                config.setProperty(getPropName(FILE_LOADER, LOADER_CACHE),
+                config.setProperty(getPropName(WEBAPP_LOADER, LOADER_CACHE),
                                         String.valueOf(updateInterval >= 0L));
             }
             // Configure module template loader.
@@ -503,6 +506,8 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
             // Start a new Velocity engine.
             log.trace("Starting Velocity with configuration: {}", config);
             engine = new VelocityEngine(config);
+            // Set web app. context, required to resolve embedded templates.
+            engine.setApplicationAttribute(ServletContext.class.getName(), ctx);
             engine.init();
         }
         catch (Exception e) {
@@ -511,6 +516,13 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
         }
     }
 
+    /**
+     * Builds the Velocity context.
+     * @param  model    the application-provided model.
+     * @param  fields   the Velocity Field tool for accessing class
+     *                  members from the templates.
+     * @return a populated Velocity context.
+     */
     private Map<String,Object> buildContext(Object model, FieldTool fields) {
         Map<String,Object> ctx = new HashMap<String,Object>();
         if (model instanceof Map<?,?>) {
@@ -547,55 +559,35 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
     }
 
     /**
-     * Returns the real paths of the given template paths within the
-     * web application, as provided by the servlet container.
+     * Returns the absolute path corresponding to the specified path.
+     * This method simply ensures that the provided path starts with
+     * the '/' character.
+     * @param  path   the path to make absolute.
      *
-     * @param  ctx     the servlet context of the web application.
-     * @param  paths   the specified template paths as a comma-separated
-     *                 list of paths.
-     * @return the corresponding real template paths or
-     *         <code>null</code> if no path could be resolved.
-
-     * Convert the specified template paths into real paths by resolving
-     * them through the web application container
+     * @return the absolute path.
      */
-    private static String getRealPath(ServletContext ctx, String paths) {
-        String resolvedPath = null;
-
-        if (paths != null) {
-            StringBuilder buf = new StringBuilder();
-            for (String path : paths.split("\\s*,\\s*")) {
-                if (path.length() != 0) {
-                    // Try resolving relative path through webapp context.
-                    String s = ctx.getRealPath(path);
-                    if ((s != null) && (new File(s).canRead())) {
-                        path = s;
-                    }
-                }
-                else {
-                    path = ".";
-                }
-                if ((path != null) && (new File(path).canRead())) {
-                    log.debug("Resolved template file path: {}", path);
-                    buf.append(path).append(", ");
-                }
-                else {
-                    log.warn("Failed to resolved template file path: {}", path);
-                }
-            }
-            if (buf.length() != 0) {
-                buf.setLength(buf.length() - 2);
-                resolvedPath = buf.toString();
-            }
-            // Else: no path could be resolved.
-        }
-        return resolvedPath;
+    private static String getAbsolutePath(String path) {
+        return isSet(path)? ((path.charAt(0) == '/')? path: "/" + path): "/";
     }
 
+    /**
+     * Returns the fully-qualified property name for the specified
+     * Velocity {@link ResourceLoader}.
+     * @param  loader   the name of the resource loader in Velocity
+     *                  configuration.
+     * @param  prop     the (relative) property name.
+     *
+     * @return the fully-qualified property name, prefixed with the
+     *         resource loader name followed by the
+     *         {@link #LOADER_PROPS_PREFIX resource loader marker}.
+     */
     private static String getPropName(String loader, String prop) {
         return loader + LOADER_PROPS_PREFIX + prop;
     }
 
+    /**
+     * Registers the Velocity directives provided by Datalift Core.
+     */
     private static void registerCoreDirectives() {
         directives.add(LoadDirective.class);
         directives.add(I18nDirective.class);

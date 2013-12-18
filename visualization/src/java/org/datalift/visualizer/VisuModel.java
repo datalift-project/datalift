@@ -37,14 +37,28 @@ package org.datalift.visualizer;
 import java.util.LinkedList;
 
 import org.datalift.fwk.project.Project;
-import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.Source.SourceType;
-import org.datalift.fwk.project.TransformedRdfSource;
 import javax.script.*;
+import org.datalift.fwk.Configuration;
+import org.datalift.fwk.i18n.PreferredLocales;
+import org.datalift.fwk.log.Logger;
+import org.datalift.fwk.project.ProjectManager;
+import org.datalift.fwk.project.Source;
+import org.datalift.fwk.project.SparqlSource;
+import org.datalift.fwk.project.TransformedRdfSource;
+import org.datalift.fwk.rdf.Repository;
+import org.openrdf.query.BindingSet;
+import org.openrdf.query.MalformedQueryException;
+import org.openrdf.query.QueryEvaluationException;
+import org.openrdf.query.QueryLanguage;
+import org.openrdf.query.TupleQuery;
+import org.openrdf.query.TupleQueryResult;
+import org.openrdf.repository.RepositoryConnection;
+import org.openrdf.repository.RepositoryException;
 
 
 /**
- * DVIA's backend main class.
+ * Visu module backend main class.
  * To be continued ...
  * Handles DataSets' retrieval and project compatibility check.
  *
@@ -52,10 +66,35 @@ import javax.script.*;
  */
 public class VisuModel extends ModuleModel
 {
+   	//-------------------------------------------------------------------------
+    // Constants
     //-------------------------------------------------------------------------
-    // Constructors
+    
+	/** Binding for the default subject var in SPARQL. */
+    protected static final String SB = "s";
+    
+    /** Binding for the default predicate var in SPARQL. */
+    protected static final String PB = "p";
+    /** Binding for the default object var in SPARQL. */
+    protected static final String OB = "o";
+    
+    /** Default WHERE SPARQL clause to retrieve all classes. */
+    private static final String CLASS_WHERE = "{?" + SB + " a ?" + OB + "}";
+    /** Default WHERE SPARQL clause to retrieve all predicates. */
+    private static final String PREDICATE_WHERE = "{?" + SB + " ?" + PB + " ?" + OB + "}";
+	
+	
+	//-------------------------------------------------------------------------
+    // Class members
     //-------------------------------------------------------------------------
 
+    /** Datalift's internal Sesame {@link Repository repository}. **/
+    protected static final Repository INTERNAL_REPO = Configuration.getDefault().getInternalRepository();
+    /** Datalift's internal Sesame {@link Repository repository} URL. */
+    protected static final String INTERNAL_URL = INTERNAL_REPO.getEndpointUrl();
+    /** Datalift's logging system. */
+    protected static final Logger LOG = Logger.getLogger();
+	
     /**
      * Creates a new VisuModel instance.
      * @param name Name of the module.
@@ -82,17 +121,162 @@ public class VisuModel extends ModuleModel
     /**
      * Retrieves all of the RDF DataSets from a given project's sources.
      */
-    public LinkedList<String> getProjectDataSets(Project proj) {
-        LinkedList<String> ret = new LinkedList<String>();
-        String dataset = null;
-        for (Source src : proj.getSources()) {
-            if (isValidSource(src)) {
-                dataset = src.getUri();
-                ret.add(dataset);
-            }
-        }
-        return ret;
+    /**
+     * Returns all of the URIs (as strings) from the {@link Project project}.
+     * @param proj The project to use.
+     * @return A LinkedList containing source file's URIs as strings.
+     */
+    protected final LinkedList<String> getSourcesURIs(Project proj) {
+    	LinkedList<String> ret = new LinkedList<String>();
+    	
+    	for (Source src : proj.getSources()) {
+    		if (isValidSource(src)) {
+    			ret.add(src.getUri());
+    		}
+    	}
+    	return ret;
     }
+	
+	 //-------------------------------------------------------------------------
+    // Queries management.
+    //-------------------------------------------------------------------------
+    
+    /**
+	 * Tels if the bindings of the results are well-formed.
+	 * @param tqr The result of a SPARQL query.
+	 * @param bind The result one and only binding.
+	 * @return True if the results contains only bind.
+	 * @throws QueryEvaluationException Error while closing the result.
+	 */
+	protected boolean hasCorrectBindingNames(TupleQueryResult tqr, String bind) throws QueryEvaluationException {
+		return tqr.getBindingNames().size() == 1 && tqr.getBindingNames().contains(bind);
+	}
+    
+	/**
+	 * Sends and evaluates a SPARQL select query on the data set, then returns
+	 * the results (which must be one-column only) as a list of Strings.
+	 * @param query The SPARQL query without its prefixes.
+	 * @param bind The result one and only binding.
+	 * @return The query's result as a list of Strings.
+	 */
+    protected LinkedList<String> selectQuery(String query, String bind) {
+		TupleQuery tq;
+		TupleQueryResult tqr;
+		LinkedList<String> ret = new LinkedList<String>();
+		
+		LOG.debug("Processing query: \"{}\"", query);
+		RepositoryConnection cnx = INTERNAL_REPO.newConnection();
+		try {
+			tq = cnx.prepareTupleQuery(QueryLanguage.SPARQL, query);
+			tqr = tq.evaluate();
+			
+			if (!hasCorrectBindingNames(tqr, bind)) {
+				throw new MalformedQueryException("Wrong query result bindings - " + query);
+			}
+			
+			while (tqr.hasNext()) {
+				ret.add(tqr.next().getValue(bind).stringValue());
+			}
+		}
+		catch (MalformedQueryException e) {
+			LOG.fatal("Failed to process query \"{}\":", e, query);
+		} catch (QueryEvaluationException e) {
+			LOG.fatal("Failed to process query \"{}\":", e, query);
+		} catch (RepositoryException e) {
+			LOG.fatal("Failed to process query \"{}\":", e, query);
+		}
+		finally {
+		    try { cnx.close(); } catch (Exception e) { /* Ignore... */ }
+		}
+	    return ret;
+	}
+    
+    /**
+	 * Sends and evaluates a SPARQL select query on the data set, then returns
+	 * the results (which must be two-column only) as a list of lists of Strings.
+	 * @param query The SPARQL query without its prefixes.
+	 * @param stub The predicate used in the query.
+	 * @return The query's result as a list of Strings.
+	 */
+    protected LinkedList<LinkedList<String>> pairSelectQuery(String query, String stub) {
+		TupleQuery tq;
+		TupleQueryResult tqr;
+		BindingSet bs;
+		LinkedList<LinkedList<String>> ret = new LinkedList<LinkedList<String>>();
+		
+		LOG.debug("Processing query: \"{}\"", query);
+		RepositoryConnection cnx = INTERNAL_REPO.newConnection();
+		try {
+			tq = cnx.prepareTupleQuery(QueryLanguage.SPARQL, query);
+			tqr = tq.evaluate();
+			LinkedList<String> tmp;
+			while (tqr.hasNext()) {
+				bs = tqr.next();
+				tmp = new LinkedList<String>();
+				tmp.add(bs.getValue(SB).stringValue());
+				tmp.add(stub);
+				tmp.add(bs.getValue(OB).stringValue());
+				ret.add(tmp);
+			}
+		}
+		catch (MalformedQueryException e) {
+			LOG.fatal("Failed to process query \"{}\":", e, query);
+		} catch (QueryEvaluationException e) {
+			LOG.fatal("Failed to process query \"{}\":", e, query);
+		} catch (RepositoryException e) {
+			LOG.fatal("Failed to process query \"{}\":", e, query);
+		}
+	    return ret;
+	}
+    
+    /**
+     * Writes a query given a bind to retrieve, a context and a WHERE clause.
+     * @param context Context on which the query will be executed.
+     * @param where Constraints given by the query.
+     * @param bind Binding to use to retrieve data.
+     * @return A full query.
+     */
+    protected String writeQuery(String context, String where, String bind) {
+    	String ret = "SELECT DISTINCT ?" + bind
+    			+ (context.isEmpty() ? "" : " FROM <" + context + ">")
+    			+ " WHERE " + where;
+    	return ret;
+    }
+    
+    /**
+     * Retrieves multiple queries results based on a query pattern executed on
+     * multiple contexts.
+     * @param contexts Contexts on which the query will be executed.
+     * @param where Constraints given by the query.
+     * @param bind Binding to use to retrieve data.
+     * @return Results as a LinkedList of Strings.
+     */
+    protected final LinkedList<String> getMultipleResults(LinkedList<String> contexts, String where, String bind) {
+    	LinkedList<String> ret = new LinkedList<String>();
+    	
+    	for (String context : contexts) {
+    		ret.addAll(selectQuery(writeQuery(context, where, bind), bind));
+    	}
+    	return ret;
+    }
+
+    /**
+     * Retrieves all of the classes used inside given contexts.
+     * @param contexts The contexts to use.
+     * @return A LinkedList of all of the classes used inside the contexts.
+     */
+    protected final LinkedList<String> getAllClasses(LinkedList<String> contexts) {
+		return getMultipleResults(contexts, CLASS_WHERE, OB);
+	}
+	
+	/**
+     * Retrieves all of the predicates used inside given contexts.
+     * @param contexts The contexts to use.
+     * @return A LinkedList of all of the predicates used inside the contexts.
+     */
+	protected final LinkedList<String> getAllPredicates(LinkedList<String> contexts) {
+		return getMultipleResults(contexts, PREDICATE_WHERE, PB);
+	}
     
     public void lauchSgvizler(String query, String endpoint, String charType,
                               Integer ChartHeight, Integer ChartWdith)

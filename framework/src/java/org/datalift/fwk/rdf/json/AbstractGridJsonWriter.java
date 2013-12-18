@@ -71,8 +71,8 @@ public abstract class AbstractGridJsonWriter extends AbstractJsonWriter
 
     /** Regex to identify native XML schema data types. */
     private final static Pattern NATIVE_TYPES_PATTERN = Pattern.compile(
-                            "boolean|float|decimal|double|int|" +
-                            ".*[bB]yte|.*[iI]nteger|.*[lL]ong|.*[sS]hort");
+                            "(boolean|float|decimal|double|int|" +
+                            ".*[bB]yte|.*[iI]nteger|.*[lL]ong|.*[sS]hort)$");
 
     //-------------------------------------------------------------------------
     // Instance members
@@ -260,7 +260,7 @@ public abstract class AbstractGridJsonWriter extends AbstractJsonWriter
             Literal l = (Literal)value;
             if ((l.getDatatype() != null) &&
                 (NATIVE_TYPES_PATTERN.matcher(l.getDatatype().getLocalName())
-                                     .matches())) {
+                                     .find())) {
                 this.writer.write(l.getLabel());
             }
             else {
@@ -296,9 +296,19 @@ public abstract class AbstractGridJsonWriter extends AbstractJsonWriter
              (value.startsWith("http://") || (value.startsWith("https://"))))) {
             Object[] args = new Object[] { URLEncoder.encode(value, UTF_8.name()),
                                            Integer.valueOf(type.value) };
-            value = "<a href=\"" + this.urlPattern.format(args) + "\">"
-                                 + ((label != null)? label: value) + "</a>";
+            this.writeLink(this.urlPattern.format(args),
+                           (label != null)? label: value);
         }
-        this.writeString(value);
+        else {
+            this.writeString(value);
+        }
+    }
+
+    private void writeLink(String url, String label) throws IOException {
+        String link = "<a href=\"" + url + "\">"
+                                        + this.escapeHtmlString(label) + "</a>";
+        this.writer.write("\"");
+        this.writer.write(this.escapeJsonString(link));
+        this.writer.write("\"");
     }
 }

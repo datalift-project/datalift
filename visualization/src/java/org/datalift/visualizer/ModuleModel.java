@@ -109,7 +109,7 @@ public abstract class ModuleModel {
      * @param proj The project to use.
      * @return A LinkedList containing source file's URIs as strings.
      */
-    protected final LinkedList<String> getSourcesURIs(Project proj) {
+    protected LinkedList<String> getSourcesURIs(Project proj) {
     	LinkedList<String> ret = new LinkedList<String>();
 
     	for (Source src : proj.getSources()) {

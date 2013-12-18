@@ -21,7 +21,7 @@
         <link rel="stylesheet" href="${moduleUri}/static/css/bootstrap-responsive.css">
         <link rel="stylesheet" href="${moduleUri}/static/css/DT_bootstrap.css">
         <link rel="stylesheet" href="${moduleUri}/static/css/main.css">
-        <link rel="stylesheet" type="text/css" href="http://sgvizler.googlecode.com/svn/www/sgvizler.css" />
+        
         <style>
       body {
         padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
@@ -53,7 +53,7 @@
              <div id="queryarea">
               <pre id="sgvzlr_cPrefix"></pre>
               
-              <textarea id="sgvzlr_cQuery" rows="10" cols="180"></textarea>
+              <textarea id="sgvzlr_cQuery" rows="10" cols="180" style="width: 554px; height: 144px;"></textarea>
               
               <form method="get" id="sgvzlr_formQuery" action="${moduleUri}/visu-sgvizler?project=$esc.url($it.uri)">
 	            
@@ -61,8 +61,8 @@
 	              <!--<p> Endpoint: <input name="endpoint" value="internal endpoint" id="sgvzlr_endpoint" type="text" size="2"/> </p> -->
 	             <p> Width:  <input name="width" id="sgvzlr_strWidth" type="text" size="2"/> 
 	              Height: <input name="height" id="sgvzlr_strHeight" type="text" size="2"/> </p>
-	             <p> Chart Type: <select name="chart" id="sgvzlr_optChart"></select> </p>
-	             <p><a class="btn btn-large btn-primary" id="reset_submit"  value="" href="${baseUri}/project/${it.title}">#i18n('reset.label') </a>
+	             <p> Chart Type: <select name="chart" id="sgvzlr_optChart"></select> <a href="http://code.google.com/p/sgvizler/wiki/DesigningQueries" TARGET="_blank">(#i18n('visu.help.charts' ))></a></p>
+	             <p><a class="btn btn-large btn-primary" id="reset_submit"  value="" href="${baseUri}/project">#i18n('reset.label') </a>
 	             <input type="submit" class="btn btn-large btn-primary" id="query_submit" value="#i18n('submit.query.label')" onclick="sgvizler.ui.submitQuery()"/></p>
 	             
 	          </form>
@@ -70,12 +70,19 @@
 	        </div>
 	         
 	          
-            <!-- <div class="span6">
+             <div class="span6">
                <div class="alert alert-info"> 
-               <div id="sgvzlr_cMessage"></div>
-             </div>
-            <div id="sgvzlr_gchart" style="width:800px; height:400px;"></div>
-           </div> -->
+               <strong>#i18n('section.gaph.list')</strong>
+			   </div> 
+			   <table class="table table-striped table-bordered table-condensed">
+			       #foreach ($source in $sources)
+				   <tr class="info">
+				     <td>$source</td>
+				   </tr>
+				   #end
+             </table>
+            
+           
          </div>
       
         
@@ -121,20 +128,21 @@
            //'validator_query_url':  "http://www.sparql.org/query-validator?languageSyntax=SPARQL&amp;outputFormat=sparql&amp;linenumbers=true&amp;query=",
     
            // Default chart type. 
-           //'chart':                'gLineChart',
+           'chart':                'gTable',
     
            // Default log level. Must be either 0, 1, or 2. 
              'loglevel':             2
                };
-           sgvizler.option.namespace['dbo'] = 'http://dbpedia.org/ontology/';
+           sgvizler.option.namespace['geom'] = 'http://data.ign.fr/ontologies/geometrie#';
     	   sgvizler.option.namespace['rdf'] = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#';
-		   sgvizler.option.namespace['lode'] = 'http://linkedevents.org/ontology/';
-		   sgvizler.option.namespace['event'] = 'http://purl.org/NET/c4dm/event.owl#';
-		   sgvizler.option.namespace['foaf'] = 'http://xmlns.com/foaf/0.1/';
-		   sgvizler.option.namespace['time'] = 'http://www.w3.org/2006/time#';
-		   sgvizler.option.namespace['dc'] = 'http://purl.org/dc/terms/';
+		   sgvizler.option.namespace['rdfs'] = 'http://www.w3.org/2000/01/rdf-schema#';
+		   sgvizler.option.namespace['qb'] = 'http://purl.org/linked-data/cube#';
+		   sgvizler.option.namespace['geofla'] = 'http://data.ign.fr/ontologies/geofla#';
+		   sgvizler.option.namespace['ignfr'] = 'http://data.ign.fr/id/ignf/systemecoordonnees/';
+		   sgvizler.option.namespace['dct'] = 'http://purl.org/dc/terms/';
 		   sgvizler.option.namespace['geo'] = 'http://www.w3.org/2003/01/geo/wgs84_pos#';
-		   sgvizler.option.namespace['dbpedia'] = 'http://fr.dbpedia.org/property/';
+		   sgvizler.option.namespace['owl'] = 'http://www.w3.org/2002/07/owl#';
+		   sgvizler.option.namespace['ignf'] = 'http://data.ign.fr/ontologies/ignf#';
 		   
          //// Your chart drawing preferences. The defaults are listed.
        // See the Google visualization API for available options for

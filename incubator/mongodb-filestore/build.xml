@@ -61,11 +61,13 @@
   <property file="build.properties"/>
 
   <property name="datalift.root" location="${basedir}/.."/>
+  <property file="${datalift.root}/build.properties"/>
 
   <property name="fwk.home" location="${datalift.root}/framework"/>
   <property file="${fwk.home}/build.properties"/>
 
   <property name="core.home" location="${datalift.root}/core"/>
+  <property file="${core.home}/build.properties"/>
 
 
   <!-- ================ File and Directory Names ========================== -->
@@ -90,7 +92,7 @@
    -->
 
   <property name="app.name"             value="mongodb-filestore"/>
-  <property name="app.version"          value="0.1"/>
+  <property name="app.version"          value="1.0"/>
   <property name="app.long.name"
             value="MongoDB GridFS Filestore for Datalift"/>
 

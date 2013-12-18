@@ -379,19 +379,39 @@ public abstract class AbstractJsonWriter
      *         JSON text.
      */
     protected void writeString(String value) throws IOException {
-        // Escape special characters
-        value = StringUtil.gsub("\\", "\\\\", value);
-        value = StringUtil.gsub("\"", "\\\"", value);
-        value = StringUtil.gsub("/", "\\/", value);
-        value = StringUtil.gsub("\b", "\\b", value);
-        value = StringUtil.gsub("\f", "\\f", value);
-        value = StringUtil.gsub("\n", "\\n", value);
-        value = StringUtil.gsub("\r", "\\r", value);
-        value = StringUtil.gsub("\t", "\\t", value);
+        this.writer.write("\"");
+        this.writer.write(this.escapeJsonString(this.escapeHtmlString(value)));
+        this.writer.write("\"");
+    }
 
-        this.writer.write("\"");
-        this.writer.write(value);
-        this.writer.write("\"");
+    /**
+     * Escapes JSON special characters (/, \, \b, \f, \n, \r, \t)
+     * in a string value.
+     * @param  value   the string value.
+     */
+    protected String escapeJsonString(String s) {
+        // Escape special characters
+        s = StringUtil.gsub("\\", "\\\\", s);
+        s = StringUtil.gsub("\"", "\\\"", s);
+        s = StringUtil.gsub("/", "\\/", s);
+        s = StringUtil.gsub("\b", "\\b", s);
+        s = StringUtil.gsub("\f", "\\f", s);
+        s = StringUtil.gsub("\n", "\\n", s);
+        s = StringUtil.gsub("\r", "\\r", s);
+        s = StringUtil.gsub("\t", "\\t", s);
+        return s;
+    }
+
+    /**
+     * Escapes HTML special characters (&, <, >) in a string value.
+     * @param  value   the string value.
+     */
+    protected String escapeHtmlString(String s) {
+        // Escape special characters
+        s = StringUtil.gsub("&", "&amp;", s);
+        s = StringUtil.gsub("<", "&lt;", s);
+        s = StringUtil.gsub(">", "&gt;", s);
+        return s;
     }
 
     /**
