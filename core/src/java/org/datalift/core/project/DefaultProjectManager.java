@@ -800,7 +800,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     	
         Date currentTime = new Date();
 
-        SourceCreationEventImpl evt = new SourceCreationEventImpl(
+        SourceSuppressionEventImpl evt = new SourceSuppressionEventImpl(
         		project.getUri(),
         		project.getDescription(),
         		serializedParam,

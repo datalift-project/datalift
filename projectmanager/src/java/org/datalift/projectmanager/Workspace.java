@@ -1990,7 +1990,7 @@ public class Workspace extends BaseModule
             // Event.
             Map<String, Object> param = new HashMap<String, Object>();
             param.put("srcUri", srcUri);
-            this.projectManager.addSourceCreationEvent(p, param);
+            this.projectManager.addSourceSuppressionEvent(p, param);
             
             // Notify user of successful update, redirecting HTML clients
             // (browsers) to the source tab of the project page.
