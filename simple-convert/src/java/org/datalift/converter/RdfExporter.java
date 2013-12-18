@@ -184,7 +184,7 @@ public class RdfExporter extends BaseConverterModule
                 handleInternalError(e);
             }
             finally {
-                try { cnx.close(); } catch (Exception e) { /* Ignore... */ }
+                Repository.closeQuietly(cnx);
             }
         }
     }

@@ -38,7 +38,9 @@ package org.datalift.core.project;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.Reader;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -61,6 +63,9 @@ import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.Row;
 import org.datalift.fwk.project.SqlQuerySource;
 import org.datalift.fwk.util.CloseableIterator;
+import org.datalift.fwk.util.io.FileUtils;
+
+import static org.datalift.fwk.util.web.Charsets.UTF_8;
 
 
 /**
@@ -227,10 +232,10 @@ public class SqlQuerySourceImpl extends CachingSourceImpl implements SqlQuerySou
     protected synchronized void reloadCache() throws IOException {
         // Release any data held in memory.
         if (this.rowSet != null) {
-            try { this.rowSet.close(); } catch (Exception e) { /* Ignore... */ }
+            this.closeQuietly(this.rowSet);
             this.rowSet = null;
         }
-        // Force recomputation of column names on next access.
+        // Force re-computation of column names on next access.
         this.columns = null;
 
         WebRowSet webRowSet = null;
@@ -251,7 +256,8 @@ public class SqlQuerySourceImpl extends CachingSourceImpl implements SqlQuerySou
             log.debug("Successfully executed query: {}", this.getQuery());
             // Save query results into local cache file.
             File localCache = this.getCacheFile();
-            webRowSet.writeXml(new FileOutputStream(localCache));
+            webRowSet.writeXml(new OutputStreamWriter(
+                                    new FileOutputStream(localCache), UTF_8));
             // Do not close WebRowSet to use it as a shared memory cache.
             // Do not close the output stream: WebRowSet takes care of it.
             log.debug("Query results saved to {}", localCache);
@@ -265,11 +271,7 @@ public class SqlQuerySourceImpl extends CachingSourceImpl implements SqlQuerySou
                                            databaseType));
         }
         catch (SQLException e) {
-            if (webRowSet != null) {
-                try {
-                    webRowSet.close();
-                } catch (Exception e1) { /* Ignore... */ }
-            }
+            this.closeQuietly(webRowSet);
             throw new IOException(e);
         }
     }
@@ -288,6 +290,15 @@ public class SqlQuerySourceImpl extends CachingSourceImpl implements SqlQuerySou
         return super.toString(b);
     }
 
+    protected final void closeQuietly(ResultSet rs) {
+        if (rs != null) {
+            try {
+                rs.close();
+            }
+            catch (Exception e) { /* Ignore... */ }
+        }
+    }
+
     //-------------------------------------------------------------------------
     // Specific implementation
     //-------------------------------------------------------------------------
@@ -299,18 +310,18 @@ public class SqlQuerySourceImpl extends CachingSourceImpl implements SqlQuerySou
     @Override
     protected void finalize() {
         if (this.rowSet != null) {
-            try { this.rowSet.close(); } catch (Exception e) { /* Ignore... */ }
+            this.closeQuietly(this.rowSet);
             this.rowSet = null;
         }
     }
 
     private void init() {
         if (this.columns == null) {
-            InputStream in = null;
+            Reader in = null;
             try {
                 if (this.rowSet == null) {
                     // Read data from local cache file.
-                    in = this.getInputStream();
+                    in = new InputStreamReader(this.getInputStream(), UTF_8);
                     WebRowSet webRowSet = new WebRowSetImpl();
                     webRowSet.readXml(in);
                     // Keep cached data in memory.
@@ -333,10 +344,10 @@ public class SqlQuerySourceImpl extends CachingSourceImpl implements SqlQuerySou
                 throw new TechnicalException(null, e);
             }
             finally {
-                if ((this.rowSet == null) && (in != null)) {
+                if (this.rowSet == null) {
                     // Only close the input stream if it is not being taken
                     // care of by the WebRowSet.
-                    try { in.close(); } catch (Exception e) { /* Ignore... */ }
+                    FileUtils.closeQuietly(in);
                 }
             }
         }
@@ -410,10 +421,7 @@ public class SqlQuerySourceImpl extends CachingSourceImpl implements SqlQuerySou
         public void close() {
             if (! this.closed) {
                 this.closed = true;
-                try {
-                    this.rs.close();
-                }
-                catch (SQLException e) { /* Ignore... */ }
+                closeQuietly(this.rs);
             }
             // Else: Already closed.
         }

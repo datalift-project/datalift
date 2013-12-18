@@ -57,6 +57,7 @@
   <property file="build.properties"/>
 
   <property name="datalift.root" location="${basedir}/../.."/>
+  <property file="${datalift.root}/build.properties"/>
 
   <property name="fwk.home" location="${datalift.root}/framework"/>
   <property file="${fwk.home}/build.properties"/>
@@ -197,8 +198,12 @@
 
   <target name="clean" depends="init"
           description="Deletes build and dist directories">
-    <delete dir="${build.home}"/>
-    <delete dir="${dist.home}"/>
+    <delete includeEmptyDirs="true" quiet="true">
+      <fileset dir="${build.home}" followsymlinks="false"/>
+    </delete>
+    <delete includeEmptyDirs="true" quiet="true">
+      <fileset dir="${dist.home}" followsymlinks="false"/>
+    </delete>
   </target>
 
 

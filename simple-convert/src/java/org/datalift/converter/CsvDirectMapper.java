@@ -447,7 +447,11 @@ public class CsvDirectMapper extends BaseConverterModule
                     }
                     i++;
                 }
-                // Else: Skip rows without identifier.
+                else {
+                    // Skip rows without identifier.
+                    log.warn("Skipped row #{} of {}: no identifier found",
+                             wrap(i), src.getFilePath());
+                }
             }
             cnx.commit();
             duration = System.currentTimeMillis() - t0;
@@ -475,7 +479,7 @@ public class CsvDirectMapper extends BaseConverterModule
             // Commit pending data (including graph removal in case of error).
             try { cnx.commit(); } catch (Exception e) { /* Ignore... */ }
             // Close repository connection.
-            try { cnx.close();  } catch (Exception e) { /* Ignore... */ }
+            Repository.closeQuietly(cnx);
         }
         return mappingCtx.getErrors();
     }

@@ -36,6 +36,7 @@ package org.datalift.visualizer;
 import java.io.ObjectStreamException;
 import java.net.URI;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 
 import javax.ws.rs.Consumes;
@@ -143,14 +144,16 @@ public class VisuController extends ModuleController {
         // Retrieve the current project and its sources.
         Project proj = this.getProject(projectId);
 
-        // Retrieve all the rdf sources of the project
-        // LinkedList<String> datasets = model.getProjectDataSets(proj);
+       LinkedList<String> sourcesURIs = model.getSourcesURIs(proj);
 
         // Display visualization page.
         HashMap<String, Object> args = new HashMap<String, Object>();
         args.put("it", proj);
         args.put("visualizing", this);
-
+        
+		args.put("sources", sourcesURIs);
+        
+		
         return Response.ok(this.newViewable("/sgvizler.vm", args)).build();
     }
 

@@ -305,7 +305,7 @@ public class SqlDirectMapper extends BaseConverterModule
             throw new TechnicalException("sql.conversion.failed", e);
         }
         finally {
-            try { cnx.close(); } catch (Exception e) { /* Ignore */ }
+            Repository.closeQuietly(cnx);
         }
     }
 

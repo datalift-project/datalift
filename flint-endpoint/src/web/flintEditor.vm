@@ -5,12 +5,7 @@
 #load("sparql/resources")
 #load_core_resources
 	<title>#i18n("sparql.query.results") - #i18n("sparql.endpoint.title") - Datalift - test</title>
-<!-- script_links -->
-	<script type="text/javascript" src="${baseUri}/sparql/editor/lib/codemirror.js"></script>
-	<script type="text/javascript" src="${baseUri}/sparql/editor/sparql10querymode_ll1.js"></script>
-	<script type="text/javascript" src="${baseUri}/sparql/editor/sparql11querymode_ll1.js"></script>
-	<script type="text/javascript" src="${baseUri}/sparql/editor/sparql11updatemode_ll1.js"></script>
-	<script type="text/javascript" src="${baseUri}/sparql/editor/flint-editor.js"></script>
+#css_links
 	<link rel="stylesheet" href="${baseUri}/sparql/editor/lib/codemirror.css"/>
 	<link rel="stylesheet" href="${baseUri}/sparql/editor/css/sparqlcolors.css"/>
 	<link rel="stylesheet" href="${baseUri}/sparql/editor/css/docs.css"/>
@@ -25,127 +20,126 @@
 	<div id="flint">
 	</div>
 #h_footer
-<script type="text/javascript">
-jQuery.browser={};(function(){jQuery.browser.msie=false;
+#script_links
+	<script type="text/javascript" src="${baseUri}/sparql/editor/lib/codemirror.js"></script>
+	<script type="text/javascript" src="${baseUri}/sparql/editor/sparql10querymode_ll1.js"></script>
+	<script type="text/javascript" src="${baseUri}/sparql/editor/sparql11querymode_ll1.js"></script>
+	<script type="text/javascript" src="${baseUri}/sparql/editor/sparql11updatemode_ll1.js"></script>
+	<script type="text/javascript" src="${baseUri}/sparql/editor/flint-editor.js"></script>
+
+	<script type="text/javascript">
+		$(document).ready(function() {
 jQuery.browser.version=0;if(navigator.userAgent.match(/MSIE ([0-9]+)\./)){
 jQuery.browser.msie=true;jQuery.browser.version=RegExp.$1;}})();
-	$(document)
-		.ready(
-				function() {
-					$("#goto_workspace").button();
-					var flintConfig = {
-						"interface" : {
-							"toolbar" : true,
-							"menu" : true
-						},
-						"initialQuery" : "SELECT * WHERE {\n   ?s ?p ?o .\n} LIMIT ${max}",
-						"namespaces" : [
-						                #foreach($ns in $namespaces)
-						                {
-						                	"name" : "$esc.javascript(${ns.label})",
-						                	"prefix" : "$esc.javascript(${ns.prefix})",
-						                	"uri" : "${ns.uri}"
-						                },
-						                #end
-						],
-						"defaultEndpointParameters" : {
-							"queryParameters" : {
-								"format" : "output",
-								"query" : "query",
-								"update" : "update"
-							},
-							"selectFormats" : [ {
-								"name" : "RDF/XML",
-								"format" : "sparql",
-								"type" : "application/sparql-results+xml, text/plain; q=0.5"
-							}, {
-								"name" : "HTML",
-								"format" : "html",
-								"type" : "application/json"
-							}, {
-								"name" : "CSV",
-								"format" : "csv",
-								"type" : "text/csv, text/plain; q=0.5"
-							} ],
-							"constructFormats" : [ {
-								"name" : "RDF/XML",
-								"format" : "sparql",
-								"type" : "application/rdf+xml, text/plain; q=0.5"
-							}, {
-								"name" : "HTML",
-								"format" : "html",
-								"type" : "application/json"
-							}, {
-								"name" : "N3/Turtle",
-								"format" : "turtle",
-								"type" : "text/turtle, text/plain; q=0.5"
-							}, {
-								"name" : "NTriples",
-								"format" : "ntriples",
-								"type" : "application/n-triples, text/plain; q=0.5"
-							}, {
-								"name" : "TriG",
-								"format" : "trig",
-								"type" : "application/x-trig, text/plain; q=0.5"
-							}, {
-								"name" : "TriX",
-								"format" : "trix",
-								"type" : "application/trix, text/plain; q=0.5"
-							} ]
-						},
-						"endpoints" : [
-						               #foreach( $item in $repositories )
-						               {
-						            	   "name" : "#i18n($item.label)",
-						            	   "uri" : "${baseUri}/sparql/${item.name}",
-						            	   "modes" : ["sparql11query"],
-						            	   queries:  [
-						            	              #foreach( $q in $queries)
-						            	              { "name" : "$!{q.label}", "description" : "$!{q.description}", "query" : "$esc.javascript($q)" },
-						            	              #end
-						            	              ]
-						               },
-						               #end
-						],
-						"defaultModes" : [ {
-							"name" : "SPARQL 1.0",
-							"mode" : "sparql10"
-						}, {
-							"name" : "SPARQL 1.1 Query",
-							"mode" : "sparql11query"
-						}, {
-							"name" : "SPARQL 1.1 Update",
-							"mode" : "sparql11update"
-						} ]
-					}
+			$("#goto_workspace").button();
+			var flintConfig = {
+				"interface" : {
+					"toolbar" : true,
+					"menu" : true
+				},
+				"initialQuery" : "SELECT * WHERE {\n   ?s ?p ?o .\n} LIMIT ${max}",
+				"namespaces" : [
+#foreach($ns in $namespaces)
+					{
+						"name" : "$esc.javascript(${ns.label})",
+						"prefix" : "$esc.javascript(${ns.prefix})",
+						"uri" : "${ns.uri}"
+					},
+#end
+				],
+				"defaultEndpointParameters" : {
+					"queryParameters" : {
+						"format" : "output",
+						"query" : "query",
+						"update" : "update"
+					},
+					"selectFormats" : [ {
+						"name" : "RDF/XML",
+						"format" : "sparql",
+						"type" : "application/sparql-results+xml, text/plain; q=0.5"
+					}, {
+						"name" : "HTML",
+						"format" : "html",
+						"type" : "application/json"
+					}, {
+						"name" : "CSV",
+						"format" : "csv",
+						"type" : "text/csv, text/plain; q=0.5"
+					} ],
+					"constructFormats" : [ {
+						"name" : "RDF/XML",
+						"format" : "sparql",
+						"type" : "application/rdf+xml, text/plain; q=0.5"
+					}, {
+						"name" : "HTML",
+						"format" : "html",
+						"type" : "application/json"
+					}, {
+						"name" : "N3/Turtle",
+						"format" : "turtle",
+						"type" : "text/turtle, text/plain; q=0.5"
+					}, {
+						"name" : "NTriples",
+						"format" : "ntriples",
+						"type" : "application/n-triples, text/plain; q=0.5"
+					}, {
+						"name" : "TriG",
+						"format" : "trig",
+						"type" : "application/x-trig, text/plain; q=0.5"
+					}, {
+						"name" : "TriX",
+						"format" : "trix",
+						"type" : "application/trix, text/plain; q=0.5"
+					} ]
+				},
+				"endpoints" : [
+#foreach( $item in $repositories )
+			               {
+						"name" : "#i18n($item.label)",
+						"uri" : "${baseUri}/sparql/${item.name}",
+						"modes" : ["sparql11query"],
+						queries:  [
+#foreach( $q in $queries)
+							{ "name" : "$!{q.label}", "description" : "$!{q.description}", "query" : "$esc.javascript($q)" },
+#end
+						]
+					},
+#end
+				],
+				"defaultModes" : [ {
+					"name" : "SPARQL 1.0",
+					"mode" : "sparql10"
+				}, {
+					"name" : "SPARQL 1.1 Query",
+					"mode" : "sparql11query"
+				} ]
+			};
 
-					var flintEd = new FlintEditor("flint",
-							"sparql/editor/images", flintConfig);
-							
-					$("#flint-toolbar").hide();
-					$("#flint-menu").hide();
-					$("#flint-coolbar-modes").hide();		
-					$("#flint-dataset h2").text("#i18n("sparql.repository")");
-					$("#flint-dataset-output-formats h2").text("#i18n("sparql.parameter.format")");
-					$("#flint-tab-1").replaceWith("#i18n("sparql.query.light")")
-					$("#flint-dataset-submit").val("#i18n("sparql.query.execute")");
-					$("#flint-scroll-tabs-left").hide();
-					$("#flint-scroll-tabs-right").hide();
-					$("#flint-title").text("#i18n("sparql.query.full")");
-					$("#flint-results-heading").text("#i18n("sparql.query.results")");
-					$("#flint-sidebar-properties").text("#i18n("sparql.flint.properties")");
-					$("#flint-sidebar-classes").text("#i18n("sparql.flint.classes")");
-					$("#flint-sidebar-prefixes").text("#i18n("sparql.flint.prefixes")");
-					$("#flint-sidebar-samples").text("#i18n("sparql.flint.samples")");
-					$("#flint-dataset").attr("title","#i18n("sparql.tooltip.dataset")");
-					$("#flint-dataset-output-formats").attr("title", "#i18n("sparql.tooltip.output")");
-					$("#flint-dataset-submit").attr("title", "#i18n("sparql.tooltip.submit")");
-					$("#flint-sidebar-sparql").attr("title", "#i18n("sparql.tooltip.sidebar.sparql")");
-					$("#flint-sidebar-properties").attr("title", "#i18n("sparql.tooltip.sidebar.properties")");
-					$("#flint-sidebar-classes").attr("title", "#i18n("sparql.tooltip.sidebar.classes")");
-					$("#flint-sidebar-prefixes").attr("title", "#i18n("sparql.tooltip.sidebar.prefixes")");
-					$("#flint-sidebar-samples").attr("title", "#i18n("sparql.tooltip.sidebar.samples")");
-				});
+			var flintEd = new FlintEditor("flint", "sparql/editor/images", flintConfig);
+			$("#flint-toolbar").hide();
+			$("#flint-menu").hide();
+			$("#flint-coolbar-modes").hide();
+			$("#flint-dataset h2").text("#i18n("sparql.repository")");
+			$("#flint-dataset-output-formats h2").text("#i18n("sparql.parameter.format")");
+			$("#flint-tab-1").replaceWith("#i18n("sparql.query.light")")
+			$("#flint-dataset-submit").val("#i18n("sparql.query.execute")");
+			$("#flint-scroll-tabs-left").hide();
+			$("#flint-scroll-tabs-right").hide();
+			$("#flint-title").text("#i18n("sparql.query.full")");
+			$("#flint-results-heading").text("#i18n("sparql.query.results")");
+			$("#flint-sidebar-properties").text("#i18n("sparql.flint.properties")");
+			$("#flint-sidebar-classes").text("#i18n("sparql.flint.classes")");
+			$("#flint-sidebar-prefixes").text("#i18n("sparql.flint.prefixes")");
+			$("#flint-sidebar-samples").text("#i18n("sparql.flint.samples")");
+			$("#flint-dataset").attr("title","#i18n("sparql.tooltip.dataset")");
+			$("#flint-dataset-output-formats").attr("title", "#i18n("sparql.tooltip.output")");
+			$("#flint-dataset-submit").attr("title", "#i18n("sparql.tooltip.submit")");
+			$("#flint-sidebar-sparql").attr("title", "#i18n("sparql.tooltip.sidebar.sparql")");
+			$("#flint-sidebar-properties").attr("title", "#i18n("sparql.tooltip.sidebar.properties")");
+			$("#flint-sidebar-classes").attr("title", "#i18n("sparql.tooltip.sidebar.classes")");
+			$("#flint-sidebar-prefixes").attr("title", "#i18n("sparql.tooltip.sidebar.prefixes")");
+			$("#flint-sidebar-samples").attr("title", "#i18n("sparql.tooltip.sidebar.samples")");
+		});
 	</script>
 </body>
 </html>

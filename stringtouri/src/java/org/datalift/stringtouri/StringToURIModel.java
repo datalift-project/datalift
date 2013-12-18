@@ -163,21 +163,27 @@ public class StringToURIModel extends InterlinkingModel
      * @param sourcePredicate predicate in source data.
      * @param targetPredicate predicate in target data.
      * @param linkingPredicate predicate of the new triples
+     * @param limit numbers of triples to return
      * @return a list where every element is a list that represents a triple, containing the interlinked triples
      */
-    public final LinkedList<LinkedList<String>> getInterlinkedTriples(Project prj,
+    public final List<LinkedList<String>> getInterlinkedTriples(Project prj,
     		String sourceContext, 
 			String targetContext, 
 			String sourceClass, 
 			String targetClass, 
 			String sourcePredicate, 
 			String targetPredicate,
-			String linkingPredicate){
+			String linkingPredicate,
+			int limit){
     	SesameApp stu = getLinkingApp(prj,sourceContext, targetContext, sourceClass, targetClass, sourcePredicate, targetPredicate, linkingPredicate, targetContext);
     	if(stu==null){
     		throw new TechnicalException("module not available");
     	}
-    	return stu.getOutputAsList();
+    	LinkedList<LinkedList<String>> newTriples = stu.getOutputAsList();
+    	if(limit>newTriples.size()){
+    		limit = newTriples.size();
+    	}
+    	return stu.getOutputAsList().subList(0, limit);
     }
     
     /**
@@ -205,7 +211,8 @@ public class StringToURIModel extends InterlinkingModel
 			String linkingPredicate,
 			String newSourceContext,
 			String newSourceName,
-			String newSourceDescription){
+			String newSourceDescription, 
+			boolean keepTargetTriples){
     	LOG.info("{} is about to interconnect the sources located at {} and {} to put the interlinking result within the context {}", this.moduleName, sourceContext, 
     			targetContext, newSourceContext);
     	SesameApp app = getLinkingApp(proj,sourceContext, targetContext, sourceClass, targetClass, sourcePredicate, targetPredicate, linkingPredicate, targetContext);
@@ -224,8 +231,10 @@ public class StringToURIModel extends InterlinkingModel
 			addTriplesQuery.append("}}; ");
 		}
 		try {
-			Update upCopy = cnx.prepareUpdate(QueryLanguage.SPARQL, copyDsQuery);
-			upCopy.execute();
+			if(keepTargetTriples){
+				Update upCopy = cnx.prepareUpdate(QueryLanguage.SPARQL, copyDsQuery);
+				upCopy.execute();
+			}
 			Update upInsert = cnx.prepareUpdate(QueryLanguage.SPARQL, addTriplesQuery.toString());
 			upInsert.execute();
 			//now link the new graph to a datalift source, so it can be referenced easily
@@ -274,13 +283,12 @@ public class StringToURIModel extends InterlinkingModel
     	if(validateAll(proj, sourceContext, targetContext, sourceClass, targetClass, sourcePredicate, targetPredicate)){
 			try {
 				stu = new SesameApp(INTERNAL_URL, INTERNAL_URL, sourceContext, newContext);
-				
 				if (sourceClass.isEmpty() && targetClass.isEmpty()) {
 					stu.useSimpleLinkage(sourcePredicate, targetPredicate);
 				}else {
 					stu.useTypedLinkage(sourcePredicate, targetPredicate, sourceClass, targetClass);
 				}	
-				stu.useSPARQLOutput(linkingPredicate);
+				stu.useSPARQLOutput(linkingPredicate, true);
 			} catch (RepositoryException e) {
 				LOG.fatal("{} - Update failed:", e, this.moduleName);
 			} catch (MalformedQueryException e) {

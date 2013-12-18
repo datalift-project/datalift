@@ -93,6 +93,9 @@ public class StringToURIController extends InterlinkingController
     /**web service identifier path to save the interlinking result */
     private static final String SAVE_PATH="save";
     
+    /**web service identifier path to get the list of the project of datalift   */
+    private static final String PROJECTS_PATH ="projects";
+    
     
     //-------------------------------------------------------------------------
     // Constructors
@@ -123,17 +126,17 @@ public class StringToURIController extends InterlinkingController
 
         try {           
             // The project can be handled if it has at least two RDF sources.
-            if (model.hasMultipleRDFSources(p, 2)) {
+            if (model.hasMultipleRDFSources(p, 1)) {
             	// link URL, link label
                 uridesc = new UriDesc(this.getName() + "?project=" + p.getUri(), this.label); 
                 
                 if (this.position > 0) {
                     uridesc.setPosition(this.position);
                 }
-                LOG.debug("Project {} can use StringToURI", p.getTitle());
+                LOG.trace("Project {} can use StringToURI", p.getTitle());
             }
             else {
-                LOG.debug("Project {} can not use StringToURI", p.getTitle());
+                LOG.trace("Project {} can not use StringToURI", p.getTitle());
             }
         }
         catch (URISyntaxException e) {
@@ -175,6 +178,7 @@ public class StringToURIController extends InterlinkingController
      * @param targetClass selected target class
      * @param targetPredicate selected target predicate
      * @param linkingPredicate predicate of the new triples
+     * @param max number of rows to display
      * @return the JSON rappresentation of the new triples got by the interlinking module
      * @throws ObjectStreamException 
      */
@@ -189,9 +193,10 @@ public class StringToURIController extends InterlinkingController
     		@QueryParam("datasetTarget") String targetDataSet,
     		@QueryParam("classTarget") String targetClass,
     		@QueryParam("predicateTarget") String targetPredicate,
-    		@QueryParam("predicateLinking") String linkingPredicate) throws ObjectStreamException{
-    	LinkedList<LinkedList<String>> result = model.getInterlinkedTriples(this.getProject(projectId),sourceDataSet, targetDataSet, sourceClass, targetClass, 
-    			sourcePredicate, targetPredicate, linkingPredicate);
+    		@QueryParam("predicateLinking") String linkingPredicate,
+    		@QueryParam("max") int maxRows) throws ObjectStreamException{
+    	List<LinkedList<String>> result = model.getInterlinkedTriples(this.getProject(projectId),sourceDataSet, targetDataSet, sourceClass, targetClass, 
+    			sourcePredicate, targetPredicate, linkingPredicate, maxRows);
     	return this.getOkResponse(this.getJsonTriplesMatrix(result));
     }
     
@@ -277,11 +282,18 @@ public class StringToURIController extends InterlinkingController
     		@QueryParam("predicateLinking") String linkingPredicate,
     		@QueryParam("newSourceContext") String targetContext,
     		@QueryParam("newSourceName") String newSourceName,
-    		@QueryParam("newSourceDescription") String newSourceDescr) throws ObjectStreamException{
+    		@QueryParam("newSourceDescription") String newSourceDescr,
+    		@QueryParam("copyTargetTriples") boolean copyTargetTriples) throws ObjectStreamException{
     	Project prj =this.getProject(projectId);
     	model.saveInterlinkedSource(prj, sourceDataSet, targetDataSet, sourceClass, targetClass, 
-    			sourcePredicate, targetPredicate,linkingPredicate, targetContext,newSourceName, newSourceDescr);
+    			sourcePredicate, targetPredicate,linkingPredicate, targetContext,newSourceName, newSourceDescr, copyTargetTriples);
     	
     }
     
+    @GET
+    @Path(PROJECTS_PATH)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getProjects(){
+    	return Response.ok(this.getJsonProjectList()).build();
+    }
 }

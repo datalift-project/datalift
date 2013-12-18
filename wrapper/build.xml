@@ -31,9 +31,10 @@
   <property file="build.properties"/>
 
   <property name="datalift.root" location="${basedir}/.."/>
+  <property file="${datalift.root}/build.properties"/>
 
   <property name="datalift.wrapper.modules"
-            value="flint-endpoint,projectmanager,simple-convert"/>
+            value="flint-endpoint,projectmanager,simple-convert,database-directmapper,geo-convert,lov/api,lov/catalogue,mapper,virtuoso-connector,allegrograph-connector,stringtouri,silk-interlinker,incubator/ontology-mapper"/>
 
 
   <!-- ================ File and Directory Names ========================== -->
@@ -58,7 +59,7 @@
    -->
 
   <property name="app.name"             value="datalift-wrapper"/>
-  <property name="app.version"          value="0.7.0"/>
+  <property name="app.version"          value="0.7.3"/>
   <property name="app.long.name"        value="${app.name}"/>
 
   <property name="build.home"           location="${basedir}/build"/>
@@ -166,6 +167,21 @@
     <delete dir="${build.home}"/>
   </target>
 
+  <target name="clean-core">
+    <subant target="clean">
+      <filelist dir="${datalift.root}" files="framework,core"/>
+    </subant>
+  </target>
+
+  <target name="clean-modules" depends="clean-core">
+    <subant target="clean">
+      <filelist refid="build.modules"/>
+    </subant>
+  </target>
+
+  <target name="clean-all" depends="clean-modules,clean"
+          description="Cleans all wrapper modules">
+  </target>
 
   <!-- ================ Prepare Target ==================================== -->
 
@@ -247,8 +263,7 @@
           depends="production-deployment,development-deployment">
   </target>
 
-  <target name="prepare-dist"
-          depends="compile,build-core,build-modules,deployment-mode">
+  <target name="prepare-dist" depends="compile,build-modules,deployment-mode">
     <mkdir dir="${dist.home}"/>
     <mkdir dir="${gen.dist.dir}"/>
     <!-- Creates directory for potential native libraries. -->

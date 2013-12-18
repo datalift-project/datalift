@@ -61,6 +61,7 @@
   <property file="build.properties"/>
 
   <property name="datalift.root" location="${basedir}/.."/>
+  <property file="${datalift.root}/build.properties"/>
 
   <property name="fwk.home" location="${datalift.root}/framework"/>
   <property file="${fwk.home}/build.properties"/>
@@ -92,7 +93,7 @@
    -->
 
   <property name="app.name"             value="datalift"/>
-  <property name="app.version"          value="0.7.0"/>
+  <property name="app.version"          value="0.7.3"/>
   <property name="app.path"             value="/${app.name}"/>
   <property name="app.long.name"        value="Datalift"/>
 
@@ -338,15 +339,9 @@
     <copy todir="${build.home}" includeEmptyDirs="false"
                                 preservelastmodified="true">
       <fileset dir="${fwk.web.home}" excludes="**/.*"/>
-      <fileset dir="${web.home}"     excludes="**/.*,**/*.vm"/>
+      <fileset dir="${web.home}"     excludes="**/.*"/>
     </copy>
-    <copy todir="${build.home}" encoding="UTF-8" includeEmptyDirs="false"
-                                preservelastmodified="true">
-      <fileset dir="${web.home}"     includes="**/*.vm"/>
-      <filterset refid="webapp.param.filters"/>
-    </copy>
-
-  	<!-- Copy web application static content and context definition -->
+    <!-- Copy web application static content and context definition -->
     <copy todir="${web-inf.dir}" encoding="UTF-8" preservelastmodified="true">
       <fileset dir="${conf.home}" includes="web.xml,wro.xml"/>
       <filterset>

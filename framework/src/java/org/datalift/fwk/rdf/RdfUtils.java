@@ -46,19 +46,23 @@ import java.util.List;
 
 import javax.ws.rs.core.MediaType;
 
+import org.openrdf.OpenRDFException;
 import org.openrdf.model.Literal;
 import org.openrdf.model.Statement;
 import org.openrdf.model.Value;
 import org.openrdf.model.ValueFactory;
 import org.openrdf.model.impl.ValueFactoryImpl;
 import org.openrdf.query.GraphQuery;
-import org.openrdf.query.QueryLanguage;
+import org.openrdf.query.MalformedQueryException;
 import org.openrdf.query.TupleQueryResultHandler;
+import org.openrdf.query.Update;
 import org.openrdf.query.impl.DatasetImpl;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
 import org.openrdf.rio.ParseErrorListener;
 import org.openrdf.rio.RDFParser;
+
+import static org.openrdf.query.QueryLanguage.SPARQL;
 
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.MediaTypes;
@@ -68,6 +72,7 @@ import org.datalift.fwk.util.StringUtils;
 import org.datalift.fwk.util.UriMapper;
 import org.datalift.fwk.util.io.FileUtils;
 
+import static org.datalift.fwk.util.PrimitiveUtils.*;
 import static org.datalift.fwk.util.StringUtils.isBlank;
 
 
@@ -332,9 +337,9 @@ public final class RdfUtils
         try {
             // Clear target named graph, if any.
             targetGraph = getGraphUri(namedGraph, cnx, true);
-
+            // Load triples, mapping URIs on the fly.
             BatchStatementAppender appender =
-                        new BatchStatementAppender(cnx, targetGraph, mapper);
+                    new MappingBatchStatementAppender(cnx, targetGraph, mapper);
             // Load triples, mapping URIs on the fly.
             // Note: we're using an RDF parser and directly adding statements
             //       because Sesame RepositoryConnection.add(File, ...) is
@@ -345,10 +350,10 @@ public final class RdfUtils
 
             if (log.isDebugEnabled()) {
                 log.debug("Inserted {} RDF triples into {} in {} seconds",
-                          Long.valueOf(appender.getStatementCount()),
+                          wrap(appender.getStatementCount()),
                           (namedGraph != null)? "<" + namedGraph + '>':
                                                 "default graph",
-                          Double.valueOf(appender.getDuration() / 1000.0));
+                          wrap(appender.getDuration() / 1000.0));
             }
         }
         catch (Exception e) {
@@ -368,7 +373,7 @@ public final class RdfUtils
             // Commit pending data (including graph removal in case of error).
             try { cnx.commit(); } catch (Exception e) { /* Ignore... */ }
             // Close repository connection.
-            try { cnx.close();  } catch (Exception e) { /* Ignore... */ }
+            Repository.closeQuietly(cnx);
         }
     }
 
@@ -437,7 +442,7 @@ public final class RdfUtils
             targetGraph = getGraphUri(namedGraph, cnx, clearTargetGraph);
             // Load triples, mapping URIs on the fly.
             BatchStatementAppender appender =
-                        new BatchStatementAppender(cnx, targetGraph, mapper);
+                    new MappingBatchStatementAppender(cnx, targetGraph, mapper);
             appender.startRDF();
             for (Statement stmt : source) {
                 appender.handleStatement(stmt);
@@ -445,8 +450,8 @@ public final class RdfUtils
             appender.endRDF();
 
             log.debug("Inserted {} RDF triples into <{}> in {} seconds",
-                      Long.valueOf(appender.getStatementCount()), namedGraph,
-                      Double.valueOf(appender.getDuration() / 1000.0));
+                      wrap(appender.getStatementCount()), namedGraph,
+                      wrap(appender.getDuration() / 1000.0));
         }
         catch (Exception e) {
             try {
@@ -465,7 +470,7 @@ public final class RdfUtils
             // Commit pending data (including graph removal in case of error).
             try { cnx.commit(); } catch (Exception e) { /* Ignore... */ }
             // Close repository connection.
-            try { cnx.close();  } catch (Exception e) { /* Ignore... */ }
+            Repository.closeQuietly(cnx);
         }
     }
 
@@ -591,35 +596,56 @@ public final class RdfUtils
                 }
             }
             // Apply CONSTRUCT queries to generate and insert triples.
+            int i = 0;
             for (String s : constructQueries) {
+                i++;
                 query = s;
-                GraphQuery q = in.prepareGraphQuery(QueryLanguage.SPARQL,
-                                                    query, baseUri);
-                if (dataset != null) {
-                    q.setDataset(dataset);
+                // Assume query is a CONSTRUCT.
+                try {
+                    GraphQuery q = in.prepareGraphQuery(SPARQL, query, baseUri);
+                    if (dataset != null) {
+                        q.setDataset(dataset);
+                    }
+                    BatchStatementAppender appender =
+                                            new BatchStatementAppender(out, u);
+                    q.evaluate(appender);
+
+                    log.debug("Inserted {} RDF triples into <{}>"
+                              + " in {} seconds for query #{}",
+                              wrap(appender.getStatementCount()), namedGraph,
+                              wrap(appender.getDuration() / 1000.0), wrap(i));
                 }
-                out.add(q.evaluate(), u);
+                catch (OpenRDFException e) {
+                    if ((e instanceof MalformedQueryException) ||
+                        (e.getCause() instanceof MalformedQueryException)) {
+                        // Oops! Not a CONSTRUCT query.
+                        // => Assume INSERT or DELETE (DATA).
+                        Update q = in.prepareUpdate(SPARQL, query, baseUri);
+                        if (dataset != null) {
+                            q.setDataset(dataset);
+                        }
+                        q.execute();
+                    }
+                    else {
+                        throw e;
+                    }
+                }
             }
             query = null;       // No query in error.
         }
         catch (Exception e) {
-            try {
-                // Clear target named graph, if any.
-                if (out != null) {
-                    out.clear(u);
+            // Clear target named graph, if any.
+            if ((clearTargetGraph) && (u != null)) {
+                try {
+                    if (out != null) { out.clear(u); }
                 }
+                catch (Exception e2) { /* Ignore... */ }
             }
-            catch (Exception e2) { /* Ignore... */ }
-
             throw new RdfException(query, e);
         }
         finally {
-            if (in != null) {
-                try { in.close(); } catch (Exception e) { /* Ignore... */ }
-            }
-            if (out != null) {
-                try { out.close();  } catch (Exception e) { /* Ignore... */ }
-            }
+            Repository.closeQuietly(in);
+            Repository.closeQuietly(out);
         }
     }
 
@@ -672,8 +698,7 @@ public final class RdfUtils
 
             for (String s : updateQueries) {
                 query = s;
-                in.prepareUpdate(QueryLanguage.SPARQL, query, baseUri)
-                  .execute();
+                in.prepareUpdate(SPARQL, query, baseUri).execute();
             }
             query = null;       // No query in error.
         }
@@ -681,9 +706,7 @@ public final class RdfUtils
             throw new RdfException(query, e);
         }
         finally {
-            if (in != null) {
-                try { in.close(); } catch (Exception e) { /* Ignore... */ }
-            }
+            Repository.closeQuietly(in);
         }
     }
 
@@ -889,9 +912,7 @@ public final class RdfUtils
             throw new RdfException(String.valueOf(graphName), e);
         }
         finally {
-            if (cnx != null) {
-                try { cnx.close(); } catch (Exception e) { /* Ignore... */ }
-            }
+            Repository.closeQuietly(cnx);
         }
     }
 
@@ -950,12 +971,8 @@ public final class RdfUtils
             throw new RdfException(e);
         }
         finally {
-            if (cnx != null) {
-                try { cnx.close(); } catch (Exception e) { /* Ignore... */ }
-            }
-            if (r != null) {
-                try { r.shutdown(); } catch (Exception e) { /* Ignore... */ }
-            }
+            Repository.closeQuietly(cnx);
+            Repository.shutdownQuietly(r);
         }
     }
 

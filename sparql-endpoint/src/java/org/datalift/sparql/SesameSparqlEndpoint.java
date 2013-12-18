@@ -65,6 +65,7 @@ import org.openrdf.query.BindingSet;
 import org.openrdf.query.BooleanQuery;
 import org.openrdf.query.Dataset;
 import org.openrdf.query.GraphQuery;
+import org.openrdf.query.GraphQueryResult;
 import org.openrdf.query.MalformedQueryException;
 import org.openrdf.query.QueryResult;
 import org.openrdf.query.TupleQuery;
@@ -197,6 +198,11 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
             ResourceType.Graph.value     + "<}";
     private final static String DEF_GRAPH_URI_PARAM = "&default-graph-uri=";
 
+    private final static String QUERY_TRACE_DEFAULT_MSG =
+                            "({}/{}) Returned {} {} from \"{}\" for: {}";
+    private final static String QUERY_TRACE_DATASET_MSG =
+                            "({}/{}) Returned {} {} from \"{}\" for: {} on {}";
+
     //-------------------------------------------------------------------------
     // Instance members
     //-------------------------------------------------------------------------
@@ -308,11 +314,12 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
         Repository repo = this.getTargetRepository(defaultGraphUris);
 
         // Enforce access control policies, if any.
+        String controlledQuery = query;
         if (this.accessController != null) {
             ControlledQuery q = this.accessController.checkQuery(
                                 query, repo, defaultGraphUris, namedGraphUris);
             // Get modified query, enriched with restrictions.
-            query = q.query;
+            controlledQuery = q.query;
             // Override accessed graphs, except for ASK queries for which a
             // Sesame bug leads to "false" results whenever a DataSet is set.
             if (! "ASK".equals(q.queryType)) {
@@ -355,7 +362,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
             MediaType mediaType = responseType.getMediaType();
 
             String result = Boolean.toString(this.executeAskQuery(
-                                                repo, query, baseUri, dataset));
+                                    repo, controlledQuery, baseUri, dataset));
             if ((mediaType.isCompatible(APPLICATION_JSON_TYPE)) ||
                 (mediaType.isCompatible(APPLICATION_RDF_JSON_TYPE)) ||
                 (mediaType.isCompatible(APPLICATION_SPARQL_RESULT_JSON_TYPE))) {
@@ -382,16 +389,16 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                 // Execute query and provide iterator to Velocity template.
                 endOffset = this.getDefaultMaxResults(startOffset, endOffset);
                 model.put("max", wrap(endOffset));
-                model.put("it",  this.executeConstructQuery(repo, query,
-                                                        startOffset, endOffset,
-                                                        baseUri, dataset));
+                model.put("it",  this.executeConstructQuery(repo,
+                                        controlledQuery, startOffset, endOffset,
+                                        baseUri, dataset, query));
                 response = Response.ok(this.newView("constructResult.vm", model));
             }
             else {
-                StreamingOutput out = this.getConstructHandlerOutput(repo, query,
-                                            startOffset, endOffset,
-                                            gridJson, jsonCallback,
-                                            baseUri, dataset, responseType);
+                StreamingOutput out = this.getConstructHandlerOutput(repo,
+                                        controlledQuery, startOffset, endOffset,
+                                        gridJson, jsonCallback, baseUri,
+                                        dataset, responseType, query);
                 response = Response.ok(out, responseType);
             }
         }
@@ -406,16 +413,16 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                 // Execute query and provide iterator to Velocity template.
                 endOffset = this.getDefaultMaxResults(startOffset, endOffset);
                 model.put("max", wrap(endOffset));
-                model.put("it",  this.executeSelectQuery(repo, query,
-                                                        startOffset, endOffset,
-                                                        baseUri, dataset));
+                model.put("it",  this.executeSelectQuery(repo, controlledQuery,
+                                                    startOffset, endOffset,
+                                                    baseUri, dataset, query));
                 response = Response.ok(this.newView("selectResult.vm", model));
             }
             else {
-                StreamingOutput out = this.getSelectHandlerOutput(repo, query,
-                                            startOffset, endOffset,
-                                            gridJson, jsonCallback,
-                                            baseUri, dataset, responseType);
+                StreamingOutput out = this.getSelectHandlerOutput(repo,
+                                        controlledQuery, startOffset, endOffset,
+                                        gridJson, jsonCallback, baseUri,
+                                        dataset, responseType, query);
                 response = Response.ok(out, responseType);
             }
         }
@@ -462,19 +469,27 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
         boolean result = false;
         RepositoryConnection cnx = repository.newConnection();
         try {
+            // Parse query, to validate syntax.
             BooleanQuery q = cnx.prepareBooleanQuery(SPARQL, query, baseUri);
+            // Set the target (restricted) dataset, if any.
             if (dataset != null) {
                 q.setDataset(dataset);
             }
-            q.setMaxQueryTime(this.getMaxQueryDuration());
+            // Limit query duration, if configured.
+            int maxDuration = this.getMaxQueryDuration();
+            if (maxDuration > 0) {
+                q.setMaxQueryTime(maxDuration);
+            }
+            // Set whether inferred triples shall be included in response.
             q.setIncludeInferred(this.getIncludeInferredTriples());
+            // Evaluate query....
             result = q.evaluate();
         }
         catch (OpenRDFException e) {
             this.handleError(query, e);
         }
         finally {
-            try { cnx.close(); } catch (Exception e) { /* Ignore... */ }
+            Repository.closeQuietly(cnx);
         }
         return result;
     }
@@ -482,26 +497,43 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
     private QueryResultIterator<BindingSet> executeSelectQuery(
                                         Repository repository, String query,
                                         int startOffset, int endOffset,
-                                        String baseUri, Dataset dataset) {
+                                        String baseUri, Dataset dataset,
+                                        String userQuery) {
         QueryResultIterator<BindingSet> result = null;
         RepositoryConnection cnx = repository.newConnection();
+        boolean error = true;
         try {
+            // Parse query, to validate syntax.
             TupleQuery q = cnx.prepareTupleQuery(SPARQL, query, baseUri);
+            // Set the target (restricted) dataset, if any.
             if (dataset != null) {
                 q.setDataset(dataset);
             }
-            q.setMaxQueryTime(this.getMaxQueryDuration());
+            // Limit query duration, if configured.
+            int maxDuration = this.getMaxQueryDuration();
+            if (maxDuration > 0) {
+                q.setMaxQueryTime(maxDuration);
+            }
+            // Set whether inferred triples shall be included in response.
             q.setIncludeInferred(this.getIncludeInferredTriples());
+            // Evaluate query....
+            long start = System.currentTimeMillis();
             TupleQueryResult r = q.evaluate();
-            result = new QueryResultIterator<BindingSet>(repository, query,
-                                        startOffset, endOffset,
-                                        r, cnx, r.getBindingNames(), dataset);
+            long evalTime = System.currentTimeMillis() - start;
+            result = new QueryResultIterator<BindingSet>(repository, userQuery,
+                                        startOffset, endOffset, r, cnx,
+                                        r.getBindingNames(), dataset, evalTime);
+            error = false;
         }
         catch (OpenRDFException e) {
-            // Close repository connection.
-            try { cnx.close(); } catch (Exception e2) { /* Ignore... */ }
             // Build plain text error response.
             this.handleError(query, e);
+        }
+        finally {
+            if (error) {
+                // Close repository connection.
+                Repository.closeQuietly(cnx);
+            }
         }
         return result;
     }
@@ -509,25 +541,43 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
     private QueryResultIterator<Statement> executeConstructQuery(
                                         Repository repository, String query,
                                         int startOffset, int endOffset,
-                                        String baseUri, Dataset dataset) {
+                                        String baseUri, Dataset dataset,
+                                        String userQuery) {
         QueryResultIterator<Statement> result = null;
         RepositoryConnection cnx = repository.newConnection();
+        boolean error = true;
         try {
+            // Parse query, to validate syntax.
             GraphQuery q = cnx.prepareGraphQuery(SPARQL, query, baseUri);
+            // Set the target (restricted) dataset, if any.
             if (dataset != null) {
                 q.setDataset(dataset);
             }
-            q.setMaxQueryTime(this.getMaxQueryDuration());
+            // Limit query duration, if configured.
+            int maxDuration = this.getMaxQueryDuration();
+            if (maxDuration > 0) {
+                q.setMaxQueryTime(maxDuration);
+            }
+            // Set whether inferred triples shall be included in response.
             q.setIncludeInferred(this.getIncludeInferredTriples());
-            result = new QueryResultIterator<Statement>(repository, query,
-                                        startOffset, endOffset,
-                                        q.evaluate(), cnx, null, dataset);
+            // Evaluate query....
+            long start = System.currentTimeMillis();
+            GraphQueryResult r = q.evaluate();
+            long evalTime = System.currentTimeMillis() - start;
+            result = new QueryResultIterator<Statement>(repository, userQuery,
+                                        startOffset, endOffset, r, cnx,
+                                        null, dataset, evalTime);
+            error = false;
         }
         catch (OpenRDFException e) {
-            // Close repository connection.
-            try { cnx.close(); } catch (Exception e2) { /* Ignore... */ }
             // Build plain text error response.
             this.handleError(query, e);
+        }
+        finally {
+            if (error) {
+                // Close repository connection.
+                Repository.closeQuietly(cnx);
+            }
         }
         return result;
     }
@@ -537,7 +587,8 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                             final int startOffset, final int endOffset,
                             final boolean gridJson, final String jsonCallback,
                             final String baseUri,
-                            final Dataset dataset, final Variant v) {
+                            final Dataset dataset, final Variant v,
+                            final String userQuery) {
         StreamingOutput handler = null;
 
         MediaType mediaType = v.getMediaType();
@@ -549,7 +600,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
             if (gridJson) {
                 final int max = this.getDefaultMaxResults(startOffset, endOffset);
                 handler = new ConstructStreamingOutput(repository, query,
-                                            startOffset, max, baseUri, dataset)
+                                            startOffset, max, baseUri, dataset, userQuery)
                     {
                         @Override
                         protected RDFHandler newHandler(OutputStream out) {
@@ -560,7 +611,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
             }
             else {
                 handler = new ConstructStreamingOutput(repository, query,
-                                    startOffset, endOffset, baseUri, dataset)
+                                    startOffset, endOffset, baseUri, dataset, userQuery)
                     {
                         @Override
                         protected RDFHandler newHandler(OutputStream out) {
@@ -572,7 +623,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
         else if ((mediaType.isCompatible(TEXT_TURTLE_TYPE)) ||
                  (mediaType.isCompatible(APPLICATION_TURTLE_TYPE))) {
             handler = new ConstructStreamingOutput(repository, query,
-                                    startOffset, endOffset, baseUri, dataset)
+                            startOffset, endOffset, baseUri, dataset, userQuery)
                 {
                     @Override
                     protected RDFHandler newHandler(OutputStream out) {
@@ -584,7 +635,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                  (mediaType.isCompatible(TEXT_RDF_N3_TYPE)) ||
                  (mediaType.isCompatible(APPLICATION_N3_TYPE))) {
             handler = new ConstructStreamingOutput(repository, query,
-                                    startOffset, endOffset, baseUri, dataset)
+                            startOffset, endOffset, baseUri, dataset, userQuery)
                 {
                     @Override
                     protected RDFHandler newHandler(OutputStream out) {
@@ -594,7 +645,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
         }
         else if (mediaType.isCompatible(APPLICATION_NTRIPLES_TYPE)) {
             handler = new ConstructStreamingOutput(repository, query,
-                                    startOffset, endOffset, baseUri, dataset)
+                            startOffset, endOffset, baseUri, dataset, userQuery)
                 {
                     @Override
                     protected RDFHandler newHandler(OutputStream out) {
@@ -604,7 +655,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
         }
         else if (mediaType.isCompatible(APPLICATION_TRIG_TYPE)) {
             handler = new ConstructStreamingOutput(repository, query,
-                                    startOffset, endOffset, baseUri, dataset)
+                            startOffset, endOffset, baseUri, dataset, userQuery)
                 {
                     @Override
                     protected RDFHandler newHandler(OutputStream out) {
@@ -614,7 +665,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
         }
         else if (mediaType.isCompatible(APPLICATION_TRIX_TYPE)) {
             handler = new ConstructStreamingOutput(repository, query,
-                                    startOffset, endOffset, baseUri, dataset)
+                            startOffset, endOffset, baseUri, dataset, userQuery)
                 {
                     @Override
                     protected RDFHandler newHandler(OutputStream out) {
@@ -625,7 +676,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
         else {
             // Assume RDF/XML...
             handler = new ConstructStreamingOutput(repository, query,
-                                    startOffset, endOffset, baseUri, dataset)
+                            startOffset, endOffset, baseUri, dataset, userQuery)
                 {
                     @Override
                     protected RDFHandler newHandler(OutputStream out) {
@@ -641,7 +692,8 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                             final int startOffset, final int endOffset,
                             final boolean gridJson, final String jsonCallback,
                             final String baseUri,
-                            final Dataset dataset, final Variant v) {
+                            final Dataset dataset, final Variant v,
+                            final String userQuery) {
         StreamingOutput handler = null;
 
         MediaType mediaType = v.getMediaType();
@@ -653,7 +705,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                 final MessageFormat linkFormat =
                     this.getDescribeLinkFormat(baseUri, repository, dataset);
                 handler = new SelectStreamingOutput(repository, query,
-                                            startOffset, max, baseUri, dataset)
+                                startOffset, max, baseUri, dataset, userQuery)
                     {
                         @Override
                         protected TupleQueryResultHandler newHandler(OutputStream out) {
@@ -664,7 +716,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
             }
             else {
                 handler = new SelectStreamingOutput(repository, query,
-                                    startOffset, endOffset, baseUri, dataset)
+                            startOffset, endOffset, baseUri, dataset, userQuery)
                     {
                         @Override
                         protected TupleQueryResultHandler newHandler(OutputStream out) {
@@ -677,7 +729,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                  (mediaType.isCompatible(APPLICATION_CSV_TYPE)) ||
                  (mediaType.isCompatible(TEXT_COMMA_SEPARATED_VALUES_TYPE))) {
             handler = new SelectStreamingOutput(repository, query,
-                                    startOffset, endOffset, baseUri, dataset)
+                            startOffset, endOffset, baseUri, dataset, userQuery)
                 {
                     @Override
                     protected TupleQueryResultHandler newHandler(OutputStream out) {
@@ -688,7 +740,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
         else {
             // Assume SPARQL Results/XML...
             handler = new SelectStreamingOutput(repository, query,
-                                    startOffset, endOffset, baseUri, dataset)
+                            startOffset, endOffset, baseUri, dataset, userQuery)
                 {
                     @Override
                     protected TupleQueryResultHandler newHandler(OutputStream out) {
@@ -713,26 +765,36 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
     }
 
     /**
-     * Returns the maximum duration allowed for query execution.
+     * Returns the maximum duration allowed for query execution, read
+     * from Datalift configuration.
      * @return the maximum duration allowed for query execution,
      *         <code>-1</code> if no limit has been defined in
      *         configuration.
      */
     private int getMaxQueryDuration() {
         int maxDuration = -1;
-        String v = Configuration.getDefault()
-                                .getProperty(MAX_QUERY_DURATION_PROPERTY, "-1");
-        try {
-            maxDuration = Integer.parseInt(v);
-        }
-        catch (Exception e) {
-            log.warn("Invalid value for configuration parameter \"{}\": " +
-                     "\"{}\". Integer value expected.",
-                     MAX_QUERY_DURATION_PROPERTY, v);
+        String v = trimToNull(Configuration.getDefault()
+                                    .getProperty(MAX_QUERY_DURATION_PROPERTY));
+        if (v != null) {
+            try {
+                maxDuration = Integer.parseInt(v);
+            }
+            catch (Exception e) {
+                log.warn("Invalid value for configuration parameter \"{}\": " +
+                         "\"{}\". Integer value expected.",
+                         MAX_QUERY_DURATION_PROPERTY, v);
+            }
         }
         return maxDuration;
     }
 
+    /**
+     * Returns whether inferred triples shall be included in the query
+     * responses. The flag is read from Datalift configuration.
+     * @return whether inferred triples shall be included in the query
+     *         responses, <code>true</code> if the flag is not defined
+     *         in configuration.
+     */
     public boolean getIncludeInferredTriples() {
         return this.getBoolean(Configuration.getDefault(),
                                INCLUDE_INFERRED_TRIPLES_PROPERTY, true);
@@ -777,20 +839,24 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
     {
         protected final Repository repository;
         protected final String query;
+        protected final String userQuery;
         protected final int startOffset;
         protected final int endOffset;
         protected final String baseUri;
         protected final Dataset dataset;
+        protected long  evalTime;
 
         public ConstructStreamingOutput(Repository repository, String query,
                                         int startOffset, int endOffset,
-                                        String baseUri, Dataset dataset) {
+                                        String baseUri, Dataset dataset,
+                                        String userQuery) {
             this.repository  = repository;
             this.query       = query;
             this.startOffset = startOffset;
             this.endOffset   = endOffset;
             this.baseUri     = baseUri;
             this.dataset     = dataset;
+            this.userQuery   = userQuery;
         }
 
         @Override
@@ -803,13 +869,15 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                 if (this.dataset != null) {
                     q.setDataset(this.dataset);
                 }
+                long startTime = System.currentTimeMillis();
                 q.evaluate(this.getHandler(out));
+                this.evalTime = System.currentTimeMillis() - startTime;
             }
             catch (OpenRDFException e) {
                 handleError(query, e);
             }
             finally {
-                try { cnx.close(); } catch (Exception e) { /* Ignore... */ }
+                Repository.closeQuietly(cnx);
             }
         }
 
@@ -817,6 +885,12 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
             final RDFHandler handler = this.newHandler(out);
             return new RDFHandlerWrapper(handler) {
                     private int count = 0;
+                    private long startTime;
+                    @Override
+                    public void startRDF() throws RDFHandlerException {
+                        this.startTime = System.currentTimeMillis();
+                        super.startRDF();
+                    }
                     @Override
                     public void handleStatement(Statement st)
                                                 throws RDFHandlerException {
@@ -835,6 +909,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                     @Override
                     public void endRDF() throws RDFHandlerException {
                         super.endRDF();
+                        long sendTime = System.currentTimeMillis() - this.startTime;
                         if (startOffset != -1) {
                             this.count -= startOffset;
                         }
@@ -843,10 +918,14 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                             defGraphs = dataset.getDefaultGraphs();
                         }
                         String msg = ((defGraphs == null) || (defGraphs.isEmpty()))?
-                            "Processed {} statements from \"{}\" for: \n{}":
-                            "Processed {} statements from \"{}\" for: \n{}\n on {}";
-                        log.debug(msg, wrap(this.count), repository.name,
-                                       new QueryDescription(query), defGraphs);
+                                QUERY_TRACE_DEFAULT_MSG: QUERY_TRACE_DATASET_MSG;
+                        QueryDescription desc = (log.isDebugEnabled())?
+                                    new QueryDescription(userQuery, -1, false):
+                                    new QueryDescription(userQuery);
+                        log.info(msg, wrap(evalTime / 1000.0),
+                                      wrap(sendTime / 1000.0),
+                                      wrap(this.count), "statements",
+                                      repository.name, desc, defGraphs);
                     }
                 };
         }
@@ -862,20 +941,24 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
     {
         protected final Repository repository;
         protected final String query;
+        protected final String userQuery;
         protected final int startOffset;
         protected final int endOffset;
         protected final String baseUri;
         protected final Dataset dataset;
+        protected long  evalTime;
 
         public SelectStreamingOutput(Repository repository, String query,
                                      int startOffset, int endOffset,
-                                     String baseUri, Dataset dataset) {
+                                     String baseUri, Dataset dataset,
+                                     String userQuery) {
             this.repository  = repository;
             this.query       = query;
             this.startOffset = startOffset;
             this.endOffset   = endOffset;
             this.baseUri     = baseUri;
             this.dataset     = dataset;
+            this.userQuery   = userQuery;
         }
 
         @Override
@@ -888,13 +971,15 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                 if (this.dataset != null) {
                     q.setDataset(this.dataset);
                 }
+                long startTime = System.currentTimeMillis();
                 q.evaluate(this.getHandler(out));
+                this.evalTime = System.currentTimeMillis() - startTime;
             }
             catch (OpenRDFException e) {
                 handleError(query, e);
             }
             finally {
-                try { cnx.close(); } catch (Exception e) { /* Ignore... */ }
+                Repository.closeQuietly(cnx);
             }
         }
 
@@ -902,9 +987,11 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
             final TupleQueryResultHandler handler = this.newHandler(out);
             return new TupleQueryResultHandler() {
                     private int count = 0;
+                    private long startTime;
                     @Override
                     public void startQueryResult(List<String> bindingNames)
                                     throws TupleQueryResultHandlerException {
+                        this.startTime = System.currentTimeMillis();
                         handler.startQueryResult(bindingNames);
                     }
                     @Override
@@ -926,6 +1013,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                     public void endQueryResult()
                                     throws TupleQueryResultHandlerException {
                         handler.endQueryResult();
+                        long sendTime = System.currentTimeMillis() - this.startTime;
                         if (startOffset != -1) {
                             this.count -= startOffset;
                         }
@@ -934,10 +1022,14 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                             defGraphs = dataset.getDefaultGraphs();
                         }
                         String msg = ((defGraphs == null) || (defGraphs.isEmpty()))?
-                            "Processed {} binding sets from \"{}\" for: \n{}":
-                            "Processed {} binding sets from \"{}\" for: \n{}\n on {}";
-                        log.debug(msg, wrap(this.count), repository.name,
-                                       new QueryDescription(query), defGraphs);
+                                QUERY_TRACE_DEFAULT_MSG: QUERY_TRACE_DATASET_MSG;
+                        QueryDescription desc = (log.isDebugEnabled())?
+                                    new QueryDescription(userQuery, -1, false):
+                                    new QueryDescription(userQuery);
+                        log.info(msg, wrap(evalTime / 1000.0),
+                                      wrap(sendTime / 1000.0),
+                                      wrap(this.count), "binding sets",
+                                      repository.name, desc, defGraphs);
                     }
                 };
         }
@@ -967,12 +1059,15 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
         private RepositoryConnection cnx = null;
         private final List<String> columns;
         private final Dataset dataset;
+        private final long evalTime;
+        private final long startTime;
         private int count = 0;
 
         public QueryResultIterator(Repository repository,
                             String query, int startOffset, int endOffset,
                             QueryResult<T> result, RepositoryConnection cnx,
-                            List<String> columns, Dataset dataset) {
+                            List<String> columns, Dataset dataset,
+                            long evalTime) {
             if (result == null) {
                 throw new IllegalArgumentException("result");
             }
@@ -987,6 +1082,8 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
             this.cnx         = cnx;
             this.columns     = columns;
             this.dataset     = dataset;
+            this.evalTime    = evalTime;
+            this.startTime   = System.currentTimeMillis();
             // Skip first entries to reach requested start offset.
             while ((this.count < this.startOffset) && (this.hasNext())) {
                 this.next();
@@ -1039,15 +1136,8 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
 
         private void close(Throwable t) {
             if (this.cnx != null) {
-                // Close result and repository connection.
-                try {
-                    this.result.close();
-                } catch (Exception e) { /* Ignore... */ }
-                try {
-                    this.cnx.close();
-                } catch (Exception e) { /* Ignore... */ }
-                this.cnx = null;
-
+                // Close result set and repository connection.
+                this.closeConnection();
                 // Check outcome.
                 if (t != null) {
                     log.error("Query processing failed: \"{}\" for: {}",
@@ -1055,6 +1145,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                     throw new RuntimeException(t.getMessage(), t);
                 }
                 else {
+                    long sendTime = System.currentTimeMillis() - this.startTime;
                     if (this.startOffset != -1) {
                         this.count -= this.startOffset;
                     }
@@ -1063,16 +1154,38 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                         defGraphs = dataset.getDefaultGraphs();
                     }
                     String msg = ((defGraphs == null) || (defGraphs.isEmpty()))?
-                            "Processed {} results from \"{}\" for: \n{}":
-                            "Processed {} results from \"{}\" for: \n{} on {}";
-                    log.debug(msg, wrap(this.count), this.repository.name,
-                                   new QueryDescription(query), defGraphs);
+                            QUERY_TRACE_DEFAULT_MSG: QUERY_TRACE_DATASET_MSG;
+                    QueryDescription desc = (log.isDebugEnabled())?
+                                        new QueryDescription(query, -1, false):
+                                        new QueryDescription(query);
+                    log.info(msg, wrap(this.evalTime / 1000.0),
+                                  wrap(sendTime / 1000.0),
+                                  wrap(this.count),
+                                  (this.columns != null)? "binding sets": "statements",
+                                  repository.name, desc, defGraphs);
                 }
             }
+            // Else: already closed.
         }
 
         public List<String> getColumns() {
             return this.columns;
+        }
+
+        private void closeConnection() {
+            if (this.cnx != null) {
+                // Close any pending result set.
+                try {
+                    this.result.close();
+                } catch (Exception e) { /* Ignore... */ }
+                // Close repository connection.
+                Repository.closeQuietly(this.cnx);
+                this.cnx = null;
+            }
+        }
+
+        protected void finalize() {
+            this.closeConnection();
         }
     }
 }

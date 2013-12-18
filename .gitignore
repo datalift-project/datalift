@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 debug.sh
 projectmanager/.settings/
 projectmanager/src/web/test.html
@@ -7,3 +8,58 @@ projectmanager/src/web/test.html
 *~
 build
 dist
+=======
+# Build tools artifacts
+# Ant
+build/
+classes/
+dist/
+build.properties
+# Maven
+target/
+# Gradle
+.gradle
+# SBT
+.history
+
+# IDE artifacts
+# Eclipse
+.classpath
+.externalToolBuilders/
+.metadata/
+.packaging
+.project
+.settings/
+*.jpage
+# IntelliJ IDEA
+.idea
+*.iml
+# NetBeans
+nbproject
+# Apple XCode
+*~.nib
+*.pbxuser
+*.perspective
+*.perspectivev3
+
+# Operating systems specific stuff
+# Mac OS X
+.DS_Store
+.Trash/
+# Windows
+Thumbs.db
+
+# Other tools
+# Nettool debugging HTTP proxy
+.nettool-config.properties
+nettool.keystore
+
+# Misc.
+.*~
+*~
+.#*
+~*
+*.bak
+*.swp
+
+>>>>>>> master

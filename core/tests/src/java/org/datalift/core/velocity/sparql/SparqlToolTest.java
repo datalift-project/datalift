@@ -259,7 +259,7 @@ public class SparqlToolTest
             throw new RuntimeException(e);
         }
         finally {
-            try { cnx.close(); } catch (Exception e) { /* Ignore.. */ }
+            Repository.closeQuietly(cnx);
         }
     }
 

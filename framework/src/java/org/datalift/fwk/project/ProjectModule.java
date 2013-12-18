@@ -216,7 +216,8 @@ public interface ProjectModule extends Module
          *   into RDF data</li>
          *  <li>From 1000 to 9999 for modules transforming RDF data
          *   (ontology alignment, interlinking...)</li>
-         *  <li>Above 10000 for modules publishing data</li>
+         *  <li>Above 10000 for modules publishing or exporting RDF
+         *   data</li>
          * </ul>
          * @param  position   the position as a positive integer.
          */

@@ -69,6 +69,7 @@ import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.util.Env;
 import org.datalift.fwk.util.web.HttpDateFormat;
 
+import static org.datalift.fwk.util.PrimitiveUtils.wrap;
 import static org.datalift.fwk.util.StringUtils.isSet;
 import static org.datalift.fwk.util.web.Charsets.UTF_8;
 
@@ -92,7 +93,9 @@ public final class FileUtils
     //-------------------------------------------------------------------------
 
     /* BZip2 magic numbers. */
-    private static final byte[] BZ2_HEADERS = { 0x42, 0x5a, 0x68 };
+    private final static byte[] BZ2_HEADERS = { 0x42, 0x5a, 0x68 };
+    /* MIME type for contents of unknown type. */
+    private final static String CONTENT_UNKNOWN = "content/unknown";
 
     //-------------------------------------------------------------------------
     // Class members
@@ -160,7 +163,7 @@ public final class FileUtils
             in = getInputStream(in, bufferSize);
         }
         catch (IOException e) {
-            close(in);
+            closeQuietly(in);
             throw e;
         }
         return in;
@@ -294,7 +297,7 @@ public final class FileUtils
                             getExpiration(cnx, System.currentTimeMillis()));
             if (status == 0) {
                 // No error. => Save data locally.
-                log.debug("Downloading data from \"{}\"...", u);
+                log.debug("Downloading data from \"{}\" ({})...", u, info.mimeType);
                 save(cnx.getInputStream(), to);
             }
             else if (status == 304) {
@@ -319,7 +322,7 @@ public final class FileUtils
                 }
                 catch (Exception e) { /* Ignore... */ }
                 finally {
-                    close(r);
+                    closeQuietly(r);
                 }
                 IOException e = new IOException("Failed to connect to \"" +
                                                 u + "\": status=" + status);
@@ -333,14 +336,15 @@ public final class FileUtils
             }
         }
         finally {
-            close(out);
+            closeQuietly(out);
         }
         return info;
     }
 
     /**
      * Reads data from the specified input stream and saves them into
-     * the specified file.
+     * the specified file. The input stream is automatically closed,
+     * regardless whether the operation succeeded.
      * @param  from   the input stream to read the data from.
      * @param  to     the local file to save data to.
      *
@@ -397,17 +401,17 @@ public final class FileUtils
         }
         finally {
             if (closeInput) {
-                close(in);
+                closeQuietly(in);
             }
-            close(out);
+            closeQuietly(out);
             if (copyFailed) {
                 to.delete();
             }
             else {
                 long delay = System.currentTimeMillis() - t0;
                 log.debug("{} MBs of data written to {} in {} seconds",
-                          Double.valueOf((byteCount / 1000) / 1000.0), to,
-                          Double.valueOf(delay / 1000.0));
+                          wrap((byteCount / 1000) / 1000.0), to,
+                          wrap(delay / 1000.0));
             }
         }
     }
@@ -455,8 +459,8 @@ public final class FileUtils
                     copyFailed = false;
                 }
                 finally {
-                    close(in);
-                    close(out);
+                    closeQuietly(in);
+                    closeQuietly(out);
                 }
             }
             else {
@@ -490,8 +494,8 @@ public final class FileUtils
                     byteCount = start;
                 }
                 finally {
-                    close(in);
-                    close(out);
+                    closeQuietly(in);
+                    closeQuietly(out);
                 }
             }
         }
@@ -502,8 +506,8 @@ public final class FileUtils
             else {
                 long delay = System.currentTimeMillis() - t0;
                 log.debug("Copied {} MBs of data from {} to {} in {} seconds",
-                          Double.valueOf((byteCount / 1000) / 1000.0),
-                          from, to, Double.valueOf(delay / 1000.0));
+                          wrap((byteCount / 1000) / 1000.0),
+                          from, to, wrap(delay / 1000.0));
             }
         }
     }
@@ -526,6 +530,20 @@ public final class FileUtils
         // Else: ignore...
     }
 
+    /**
+     * Closes a file or a (byte or character) stream, absorbing errors.
+     * @param  c   the stream to close  or <code>null</code> if the
+     *             stream creation failed.
+     */
+    public final static void closeQuietly(Closeable c) {
+        if (c != null) {
+            try {
+                c.close();
+            }
+            catch (Exception e) { /* Ignore... */ }
+        }
+    }
+
     //-------------------------------------------------------------------------
     // Specific implementation
     //-------------------------------------------------------------------------
@@ -539,8 +557,11 @@ public final class FileUtils
      *         strings.
      */
     private static MediaType parseContentType(String contentType) {
-        return MediaType.valueOf((isSet(contentType))?
-                            contentType: MediaTypes.APPLICATION_OCTET_STREAM);
+        MediaType t = MediaTypes.APPLICATION_OCTET_STREAM_TYPE;
+        if ((isSet(contentType)) && (! CONTENT_UNKNOWN.equals(contentType))) {
+            t = MediaType.valueOf(contentType);
+        }
+        return t;
     }
 
     /**
@@ -577,19 +598,6 @@ public final class FileUtils
             catch (Exception e) { /* Ignore... */ }
         }
         return expiry;
-    }
-
-    /**
-     * Closes a file or a (byte or character) stream, absorbing errors.
-     * @param  c   the stream to close.
-     */
-    private final static void close(Closeable c) {
-        if (c != null) {
-            try {
-                c.close();
-            }
-            catch (Exception e) { /* Ignore... */ }
-        }
     }
 
     /**
@@ -708,10 +716,9 @@ public final class FileUtils
                 long delay = System.currentTimeMillis() - this.startTime;
                 if (delay > 0L) {
                     log.debug("Read {} MBs from {} in {} seconds ({} MB/s)",
-                          Double.valueOf((this.readBytes / 1000L) / 1000.0),
-                          this.file,
-                          Double.valueOf(delay / 1000.0),
-                          Double.valueOf((this.readBytes / delay) / 1000.0));
+                          wrap((this.readBytes / 1000L) / 1000.0),
+                          this.file, wrap(delay / 1000.0),
+                          wrap((this.readBytes / delay) / 1000.0));
                 }
             }
         }
@@ -725,9 +732,8 @@ public final class FileUtils
                 ((this.readBytes - this.lastLog) > this.logThreshold)) {
                 long delay = System.currentTimeMillis() - this.startTime;
                 log.trace("Read {} MBs from {} in {} seconds",
-                          Double.valueOf((this.readBytes / 1000L) / 1000.0),
-                          this.file,
-                          Double.valueOf(delay / 1000.0));
+                          wrap((this.readBytes / 1000L) / 1000.0),
+                          this.file, wrap(delay / 1000.0));
                 this.lastLog = (this.readBytes / this.logThreshold)
                                                         * this.logThreshold;
             }
