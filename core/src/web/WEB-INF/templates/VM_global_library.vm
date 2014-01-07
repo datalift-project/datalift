@@ -112,7 +112,7 @@
 
 #macro( script_links )
 	<!-- JQuery + JQuery UI -->
-	<script language="javascript" src="${baseUri}/js/jquery/jquery.js"></script>
+	<!-- <script language="javascript" src="${baseUri}/js/jquery/jquery.js"></script>  -->
 	<script language="javascript" src="${baseUri}/js/jquery/jquery-ui.js"></script>
 	<!-- JQuery Plugins -->
 	<script language="javascript" src="${baseUri}/js/jquery/jquery.jqGrid.locale-en.js"></script>

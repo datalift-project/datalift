@@ -522,3 +522,6 @@ min-height: 100%;
 	right: none;
 }
 
+.search_label_width {
+	width: 13em;
+}

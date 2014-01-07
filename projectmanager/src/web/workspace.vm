@@ -238,8 +238,9 @@ var currentProject = "";
 		<!-- DIV BAR DE FILTRES --> 
 		<div class="span9 row" style="margin:0 auto; float:none;">
 			<form class="navbar-search form-inline pagination-centered">
-	  			<label>#i18n("search_filter") : </label><input type="search" ng-model="projectfilter" placeholder="Search filter..."/>
-				<label>#i18n("project.license") : </label>
+	  			<label class="search_label_width">#i18n("search_filter") : </label>
+	  			<input type="search" ng-model="projectfilter" placeholder="Search filter..."/>
+				<label class="search_label_width">#i18n("project.license") : </label>
 				<select ng-model="licenseselected" ng-options="l.license for l in licenses">
 				</select>
 			</form>
