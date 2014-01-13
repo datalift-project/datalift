@@ -51,3 +51,6 @@ nettool.keystore
 *.bak
 *.swp
 
+*.ucls
+*\#
+.gitignore
