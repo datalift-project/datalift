@@ -96,6 +96,9 @@ angular.module('OntoMapper', ['ui.bootstrap', 'ui.directives']).
         when('/mapping-project/', {
             templateUrl: '$!{moduleUri}/static/partials/mappingProject.html',
             controller: MappingProjectCtrl}).
+		when('/mapping/', {
+            templateUrl: '$!{moduleUri}/static/partials/mapping_both.html',
+            controller: MappingCtrl}).
         when('/convert/', {
             templateUrl: '$!{moduleUri}/static/partials/convert.html',
             controller: ConvertCtrl}).
@@ -194,6 +197,7 @@ angular.module('OntoMapper', ['ui.bootstrap', 'ui.directives']).
 		</script>
 		<script src="${moduleUri}/static/js/appCtrl.js"></script>
 		<script src="${moduleUri}/static/js/selectSourceCtrl.js"></script>
+		<script src="${moduleUri}/static/js/mappingCtrl.js"></script>
 		<script src="${moduleUri}/static/js/mappingLovCtrl.js"></script>
 		<script src="${moduleUri}/static/js/mappingProjectCtrl.js"></script>
 		<script src="${moduleUri}/static/js/convertCtrl.js"></script>
