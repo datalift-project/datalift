@@ -3,14 +3,9 @@ function SelectSourceCtrl($scope, $location, Shared) {
 
 	$scope.sources = Shared.sources;
 	
-	$scope.goToLov = function() {
+	$scope.goToMap = function() {
 		Shared.selectedSource = $scope.selectedSource;
-		$location.path("/mapping-lov/");
-	}
-	
-	$scope.goToProject = function() {
-		Shared.selectedSource = $scope.selectedSource;
-		$location.path("/mapping-project/");
+		$location.path("/mapping/");
 	}
 	
 	$scope.isSourceSelected = function() {

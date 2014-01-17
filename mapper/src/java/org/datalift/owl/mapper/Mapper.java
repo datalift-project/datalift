@@ -361,6 +361,12 @@ public class Mapper extends BaseModule implements ProjectModule
                 	if (src.endsWith(".n3")) {
                 		fmt = RdfFormat.N3;
                 	}
+                	else if (src.endsWith(".rdf")) {
+                		fmt = RdfFormat.RDF_XML;
+                	}
+                	else if (src.endsWith(".ttl")) {
+                		fmt = RdfFormat.TURTLE;
+                	}
                 	else {
                 		throw new TechnicalException("invalid.remote.mime.type",
                 				info.mimeType);

@@ -1,4 +1,4 @@
-<div class="row">
+ <div class="row">
 	<div class="col-md-4">
 		<div class="panel panel-default">
 			<div class="panel-heading">
@@ -35,59 +35,87 @@
 	<div class="col-md-8">
 		<div class="panel panel-default">
 			<div class="panel-heading">
-				<h3 class="panel-title">Search LOV</h3>
+				<h3 class="panel-title">Search and select a mapping</h3>
 			</div>
 			<div class="panel-body">
-				<div class="input-group">
-					<input type="text" class="form-control"
-						ng-model="searchQuery"
-						value="{{searchQuery}}"
-						placeholder="Search LOV to find a mapping...">
-					<span class="input-group-btn">
-						<button class="btn btn-default" type="button"
-							ng-click="searchLovProperties()">
-							<span class="glyphicon glyphicon-search"></span>
-						</button>
-					</span>
+				<ul id="selectionTabs" class="nav nav-tabs nav-justified">
+					<li class="active" ng-click="selectTab(0)"><a>Search</a></li>
+					<li ng-click="selectTab(1)"><a>Explore</a></li>
+				</ul>
+				<div id="search" class="tab-content" ng-show="isTabSelected(0)">
+					<!-- search bar -->
+					<div class="input-group">
+						<input type="text" class="form-control"
+							ng-model="searchQuery"
+							value="{{searchQuery}}"
+							placeholder="Search LOV to find a mapping...">
+						<span class="input-group-btn">
+							<button class="btn btn-default" type="button"
+								ng-click="searchLovProperties()">
+								<span class="glyphicon glyphicon-search"></span>
+							</button>
+						</span>
+					</div>
+					<!-- results -->
+					<div class="center-content">
+						<img ng-src="{{searchLoaderSrc}}" ng-show="searchingLov"/>
+					</div>
+					<table class="table" ng-show="hasResults()">
+						<thead>
+							<tr>
+								<th>Predicate</th>
+								<th>Vocabulary Space</th>
+								<th>Score</th>
+								<th>Action</th>
+							</tr>
+						</thead>
+						<tfoot>
+							<tr>
+								<td colspan="4" style="margin:0">
+									<div id="pager" ng-show="hasResults()">
+										<pagination
+											boundary-links="true"
+											num-pages="noOfPages()"
+											current-page="currentPage"
+											previous-text="&lsaquo;"
+											next-text="&rsaquo;">
+										</pagination>
+									</div>
+								</td>
+							</tr>
+						</tfoot>
+						<tbody>
+							<tr ng-repeat="result in pageContent()">
+								<td>{{result.uriPrefixed}}</td>
+								<td>{{getFirstVocSpace(result)}}</td>
+								<td>{{result.score}}</td>
+								<td><button class="btn btn-default btn-xs" ng-click="addMapping(result)">Add</button></td>
+							</tr>
+						</tbody>
+					</table>
+					<span ng-show="noResults()">No results</span>
 				</div>
-				<!-- /input-group -->
-				<div class="center-content">
-					<img ng-src="{{searchLoaderSrc}}" ng-show="searchingLov"/>
+				
+				<div id="explore" class="tab-content" ng-show="isTabSelected(1)">
+					<!-- filters -->
+					<div class="form-group">
+						<label for="ontologyFilterInput">Search properties</label>
+						<input type="text" class="form-control" id="ontologyFilterInput" ng-model="ontologyFilter" placeholder="Filter text...">
+					</div>
+
+					<!-- explorer -->
+					<ul>
+						<li ng-repeat="ontology in loadedOntologies">
+							<span ng-click="changeVisibility(ontology.uri)">{{ontology.name}}</span>
+							<ul ng-show="isVisible(ontology.uri)">
+								<li ng-repeat="property in ontology.properties | filter:ontologyFilter">
+									<span>{{property.name}} - {{property.type}} - {{property.desc}}</span>
+								</li>
+							</ul>
+						</li>
+					</ul>
 				</div>
-				<table class="table" ng-show="hasResults()">
-					<thead>
-						<tr>
-							<th>Predicate</th>
-							<th>Vocabulary Space</th>
-							<th>Score</th>
-							<th>Action</th>
-						</tr>
-					</thead>
-					<tfoot>
-						<tr>
-							<td colspan="4" style="margin:0">
-								<div id="pager" ng-show="hasResults()">
-									<pagination
-										boundary-links="true"
-										num-pages="noOfPages()"
-										current-page="currentPage"
-										previous-text="&lsaquo;"
-										next-text="&rsaquo;">
-									</pagination>
-								</div>
-							</td>
-						</tr>
-					</tfoot>
-					<tbody>
-						<tr ng-repeat="result in pageContent()">
-							<td>{{result.uriPrefixed}}</td>
-							<td>{{getFirstVocSpace(result)}}</td>
-							<td>{{result.score}}</td>
-							<td><button class="btn btn-default btn-xs" ng-click="addMapping(result)">Add</button></td>
-						</tr>
-					</tbody>
-				</table>
-				<span ng-show="noResults()">No results</span>
+				
 			</div>
 			<!-- /panel-body -->
 		</div>

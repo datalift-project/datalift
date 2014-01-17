@@ -11,24 +11,13 @@
 	</div>
 </form>
 <button 
-	id="lovButton"
+	id="mapButton"
 	type="button"
 	class="btn btn-default btn-lg pull-right nav-button"
 	ng-disabled="isSourceSelected()"
-	ng-click="goToLov()"
+	ng-click="goToMap()"
 	popover-placement="bottom"
 	popover-trigger="mouseenter"
-	popover="Search Linked Open Vocabularies to map predicates.">
-	Map using LOV search <span class="glyphicon glyphicon-chevron-right"></span>
-</button>
-<button
-	id="projectButton"
-	type="button"
-	class="btn btn-default btn-lg pull-right"
-	ng-disabled="isSourceSelected()"
-	ng-click="goToProject()"
-	popover-placement="bottom"
-	popover-trigger="mouseenter"
-	popover="Use ontologies from the project to map predicates.">
-	Map using project ontologies <span class="glyphicon glyphicon-chevron-right"></span>
+	popover="Search and explore ontologies to map predicates.">
+	Map properties<span class="glyphicon glyphicon-chevron-right"></span>
 </button>
