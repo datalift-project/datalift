@@ -1,6 +1,6 @@
-function SelectSourceCtrl($scope, $location, Shared) {
+function SelectSourceCtrl($scope, $location, $http, Shared) {
 	var self = this;
-
+	
 	$scope.sources = Shared.sources;
 	
 	$scope.goToMap = function() {
@@ -23,5 +23,13 @@ function SelectSourceCtrl($scope, $location, Shared) {
 
 	/* Actions to execute immediately */
 	Shared.broadcastCurrentStep(1);
+	
+	$http.get(Shared.baseUri + '/lov/vocSpaces')
+	.success(function(data, status, headers, config) {
+		Shared.vocSpaces = data;
+	})
+	.error(function(data, status, headers, config) {
+		
+	});
 	
 }

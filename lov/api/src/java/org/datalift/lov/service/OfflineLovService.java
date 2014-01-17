@@ -23,6 +23,7 @@ import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.lov.local.LovLocalService;
 import org.datalift.lov.local.LovLocalVocabularyService;
 import org.datalift.lov.local.LovUtil;
+import org.datalift.lov.local.objects.VocabularySpace;
 import org.datalift.lov.local.objects.vocab.VocabsDictionaryItem;
 
 import static org.datalift.fwk.util.PrimitiveUtils.wrap;
@@ -144,6 +145,12 @@ public class OfflineLovService extends LovService {
 	
 	public boolean isDataLoaded() {
 		return dataLoaded;
+	}
+	
+
+	@Override
+	public String vocSpaces() {
+		return LovUtil.toJSON(vocabsService.getVocabularySpaces(), true);
 	}
 
 	// -------------------------------------------------------------------------

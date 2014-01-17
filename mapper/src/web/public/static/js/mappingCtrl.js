@@ -27,9 +27,12 @@ function MappingCtrl($scope, $location, $http, $timeout, Shared) {
 	$scope.mappings = [];
 	$scope.vocabSummary = {};
 	//
+	$scope.vocSpaces = Shared.vocSpaces;
+	$scope.vocSpaceFilter = "All";
 	$scope.loadingPredicates = true;
 	$scope.searchingLov = false;
 	$scope.isAutoMapping = false;
+	$scope.lovFilteredResults = [];
 	$scope.lovSearchResults = [];
 	$scope.lovSearchCount = 0;
 	$scope.numberOfPredicatesSearched = 0;
@@ -67,11 +70,11 @@ function MappingCtrl($scope, $location, $http, $timeout, Shared) {
 	
 	$scope.selectTab = function(tab) {
 		
-		var oldTab = $scope.currentTab + 1;
-		var newTab = tab + 1;
-		
-		$("#selectionTabs>li:nth-child("+ oldTab +")").removeClass("active");
-		$("#selectionTabs>li:nth-child("+ newTab +")").addClass("active");
+// 		var oldTab = $scope.currentTab + 1;
+// 		var newTab = tab + 1;
+// 		
+// 		$("#selectionTabs>li:nth-child("+ oldTab +")").removeClass("active");
+// 		$("#selectionTabs>li:nth-child("+ newTab +")").addClass("active");
 		
 		$scope.currentTab = tab;
 	}
@@ -97,7 +100,14 @@ function MappingCtrl($scope, $location, $http, $timeout, Shared) {
 			var propArray = [];
 			for (var prop in data.properties) {
 				if (data.properties[prop].type != "ObjectProperty") {
-					propArray.push(data.properties[prop]);
+					propArray.push({
+						uri: prop,
+						type: data.properties[prop].type,
+						name: data.properties[prop].name,
+						desc: data.properties[prop].desc,
+						ranges: data.properties[prop].ranges,
+						domains: data.properties[prop].domains
+					});
 				}
 			}
 			$scope.loadedOntologies.push({
@@ -175,9 +185,11 @@ function MappingCtrl($scope, $location, $http, $timeout, Shared) {
 		$scope.currentPage = 1;
 	}
 	
+	// TODO un bug ici, parfois la mauvaise onto se ferme
 	$scope.changeVisibility = function(uri) {
-		if ($scope.visibleOntologies.indexOf(uri) != -1) {
-			$scope.visibleOntologies.splice($scope.visibleOntologies[$scope.visibleOntologies.indexOf(uri)], 1);
+		var uriIndex = $scope.visibleOntologies.indexOf(uri);
+		if (uriIndex != -1) {
+			$scope.visibleOntologies.splice($scope.visibleOntologies[uriIndex], 1);
 		}
 		else {
 			$scope.visibleOntologies.push(uri);
@@ -191,11 +203,25 @@ function MappingCtrl($scope, $location, $http, $timeout, Shared) {
 	// LOV oriented methods
 	//*************************************************************************
 	$scope.hasResults = function() {
-		return $scope.lovSearchResults.length > 0 && ! $scope.searchingLov;
+		return $scope.lovFilteredResults.length > 0 && ! $scope.searchingLov;
 	}
 	
-	$scope.noResults = function() {
-		return $scope.lovSearchResults.length == 0 && ! $scope.searchingLov;
+	$scope.lovResultsText = function() {
+		if ($scope.lovFilteredResults.length == 0 && ! $scope.searchingLov) {
+			return "No result."
+		}
+		else {
+			return "Results (" + $scope.lovFilteredResults.length + ")";
+		}
+	}
+	
+	$scope.filterLovResults = function() {
+		$scope.lovFilteredResults = [];
+		for (var i = 0 ; i < $scope.lovSearchResults.length ; ++i) {
+			if ($scope.filterByVocSpace($scope.lovSearchResults[i])) {
+				$scope.lovFilteredResults.push($scope.lovSearchResults[i]);
+			}
+		}
 	}
 	
 	$scope.getFirstVocSpace = function(result) {
@@ -205,6 +231,33 @@ function MappingCtrl($scope, $location, $http, $timeout, Shared) {
 		else {
 			return "";
 		}
+	}
+	
+	$scope.setVocSpaceFilter = function(result) {
+		$scope.vocSpaceFilter = $scope.getFirstVocSpace(result);
+	}
+	
+	$scope.filterByVocSpace = function(result) {
+		for (var i = 0; i < result.vocSpaces.length ; ++i) {
+			if (result.vocSpaces[i].label == $scope.vocSpaceFilter) {
+				return true;
+				break;
+			}
+		}
+		return false;
+	}
+	
+	$scope.vocSpaceFiltered = function() {
+		return $scope.vocSpaceFilter != "All";
+	}
+	
+	$scope.resetVocSpaceFilter = function() {
+		$scope.vocSpaceFilter = "All";
+	}
+	
+	$scope.formatLovScore = function(result) {
+		var score = result.score * 100;
+		return score.toFixed(2);
 	}
 	
 	$scope.searchLovClasses = function() {
@@ -219,13 +272,14 @@ function MappingCtrl($scope, $location, $http, $timeout, Shared) {
 		$scope.bullshit = "searching...";
 		$scope.searchingLov = true;
 		$http.get(Shared.baseUri + '/lov/search?q='+ $scope.searchQuery
-				+ "&type=" + type)
+				+ "&type=" + type + "&limit=100")
 			.success(function(data, status, headers, config) {
 				self.testClass();
 				$scope.searchingLov = false;
 				$scope.lovSearchResults = data.results;
 				$scope.lovSearchCount = data.results.length;
 				$scope.currentPage = 1;
+				$scope.filterLovResults();
 			})
 			.error(function(data, status, headers, config) {
 				$scope.searchingLov = false;
@@ -262,6 +316,18 @@ function MappingCtrl($scope, $location, $http, $timeout, Shared) {
 		else {
 			$scope.selectedPredicateId = "";
 		}
+	}
+	
+	$scope.addProjectMapping = function(ontology, property) {
+		// create the target
+		var target = {
+			uri: property.uri,
+			uriPrefixed: property.uri,
+			name: property.name,
+			vocabulary: ontology.uri
+		};
+		
+		$scope.addMapping(target);
 	}
 	
 	self.addMappingToArray = function(predicate, target) {
@@ -319,41 +385,23 @@ function MappingCtrl($scope, $location, $http, $timeout, Shared) {
 	// Pagination
 	//*************************************************************************
 	$scope.noOfPages = function() {
-		return Math.ceil($scope.lovSearchCount / self.pageSize);
+		return Math.ceil($scope.lovFilteredResults.length / self.pageSize);
 	}
 	
 	$scope.pageContent = function() {
-		if ($scope.lovSearchCount == 0) {
+		if ($scope.lovFilteredResults.length == 0) {
 			return [];
 		}
 		
 		var startIndex = ($scope.currentPage - 1) * self.pageSize;
 		var endIndex = startIndex + self.pageSize;
 		
-		if (endIndex > $scope.lovSearchCount) {
-			endIndex = $scope.lovSearchCount;
+		if (endIndex > $scope.lovFilteredResults.length) {
+			endIndex = $scope.lovFilteredResults.length;
 		}
 		
-		return $scope.lovSearchResults.slice(startIndex, endIndex);
+		return $scope.lovFilteredResults.slice(startIndex, endIndex);
 	}
-	
-// 	$scope.noOfPages = function() {
-// 		return Math.ceil($scope.propertiesFound.length / self.pageSize);
-// 	}
-// 	
-// 	$scope.pageContent = function() {
-// 		if ($scope.propertiesFound.length == 0) {
-// 			return [];
-// 		}
-// 		
-// 		var startIndex = ($scope.currentPage - 1) * self.pageSize;
-// 		var endIndex = startIndex + self.pageSize;
-// 		
-// 		if (endIndex > $scope.propertiesFound.length) {
-// 			endIndex = $scope.propertiesFound.length;
-// 		}
-// 		return $scope.propertiesFound.slice(startIndex, endIndex);
-// 	}
 	
 	self.testClass = function() {
 		if ( $('#pager div ul').attr('class') != 'pagination' )
@@ -372,6 +420,10 @@ function MappingCtrl($scope, $location, $http, $timeout, Shared) {
 	
 	$scope.$watch('selectedPredicateId', function(newValue) {
 		$scope.searchQuery = newValue;
+	});
+	
+	$scope.$watch('vocSpaceFilter', function(newValue) {
+		$scope.filterLovResults();
 	});
 	
 	// load project ontologies

@@ -121,6 +121,7 @@ angular.module('OntoMapper', ['ui.bootstrap', 'ui.directives']).
         sharedService.ontologies = ontologies;
         sharedService.currentStep = 1;
         sharedService.mappings = [];
+        sharedService.vocSpaces = [];
         
         sharedService.getMappings = function() {
             return mappings;

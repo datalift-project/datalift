@@ -36,6 +36,7 @@ import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.Response.Status.*;
 import static javax.ws.rs.core.HttpHeaders.*;
 
@@ -84,6 +85,7 @@ import org.datalift.owl.TechnicalException;
 import org.datalift.owl.toolkit.Argument;
 import org.datalift.owl.toolkit.CopyStatementRDFHandler;
 import org.datalift.owl.toolkit.Script;
+import org.datalift.owl.toolkit.ScriptItem;
 import org.datalift.owl.toolkit.SesameSPARQLExecuter;
 import org.datalift.owl.toolkit.Template;
 import org.datalift.owl.toolkit.TemplateRegistry;
@@ -395,7 +397,17 @@ public class Mapper extends BaseModule implements ProjectModule
         return response;
     }
 
-    // Multiple ontology
+//    @GET
+//    @Path("sparqlQuery")
+//    @Produces(APPLICATION_JSON)
+//    public Response getSparqlQuery(@QueryParam("script") String script) {
+//    	Script scriptObject = new Script(script);
+//    	StringBuilder sb = new StringBuilder();
+//    	for(ScriptItem s : scriptObject.getScriptItems()) {
+//    		sb.append(s.toString());
+//    	}
+//    	return Response.ok(sb.toString(), APPLICATION_JSON_UTF8).build();
+//    }
     
 	@POST
 	@Path("execute")
@@ -438,7 +450,7 @@ public class Mapper extends BaseModule implements ProjectModule
 			
 			// Execute script in target graph
 			Script scriptObject = new Script(script);
-			
+
 			SesameSPARQLExecuter executer = new SesameSPARQLExecuter(internal);
 			executer.setDefaultGraphs(Collections.singleton(java.net.URI.create(targetGraph)));
 			executer.setDefaultRemoveGraphs(Collections.singleton(java.net.URI.create(targetGraph)));

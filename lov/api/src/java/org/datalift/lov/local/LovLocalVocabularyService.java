@@ -1,15 +1,23 @@
 package org.datalift.lov.local;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.log.Logger;
+import org.datalift.lov.local.objects.VocabularySpace;
 import org.datalift.lov.local.objects.vocab.VocabsDictionary;
 import org.datalift.lov.local.objects.vocab.VocabsDictionaryItem;
 import org.datalift.lov.local.objects.vocab.VocabularyVersion;
 import org.openrdf.model.Literal;
 import org.openrdf.query.BindingSet;
+import org.openrdf.query.MalformedQueryException;
+import org.openrdf.query.QueryEvaluationException;
 import org.openrdf.query.QueryLanguage;
 import org.openrdf.query.TupleQueryResult;
 import org.openrdf.repository.RepositoryConnection;
+import org.openrdf.repository.RepositoryException;
 
 public class LovLocalVocabularyService {
 
@@ -32,6 +40,48 @@ public class LovLocalVocabularyService {
 	public VocabsDictionary getVocabularies() {
 		loadVocabularies();
 		return vocabsCache;
+	}
+	
+	public List<VocabularySpace> getVocabularySpaces() {
+		List<VocabularySpace> vocSpaces = new ArrayList<VocabularySpace>();
+		
+		StringBuilder query = new StringBuilder();
+		query
+			.append("SELECT DISTINCT ?title ?shortTitle WHERE {")
+			.append("?s a <http://purl.org/vocommons/voaf#VocabularySpace>.")
+			.append("?s <http://purl.org/dc/terms/title> ?title.")
+			.append("?s <http://purl.org/ontology/bibo/shortTitle> ?shortTitle.")
+			.append("}");
+		
+		RepositoryConnection conn = null;
+		try {
+			conn = this.configuration.getInternalRepository().newConnection();
+			TupleQueryResult result = conn.prepareTupleQuery(
+					QueryLanguage.SPARQL, LovConstants.PREFIXES + query.toString())
+					.evaluate();
+			
+			while (result.hasNext()) {
+				BindingSet bindingSet = result.next();
+				String title = ((Literal) bindingSet.getBinding("title").getValue())
+						.getLabel();
+				String shortTitle = ((Literal) bindingSet.getBinding("shortTitle").getValue())
+						.getLabel();
+				vocSpaces.add(new VocabularySpace(title, shortTitle));
+			}
+
+		} catch (QueryEvaluationException e) {
+			log.error("Query evaluation exception : {}", e.getMessage());
+		} catch (RepositoryException e) {
+			log.error("Repository exception : {}", e.getMessage());
+		} catch (MalformedQueryException e) {
+			log.error("Malformed query exception : {}", e.getMessage());
+		} finally {
+			LovUtil.closeQuietly(conn);
+		}
+		
+		Collections.sort(vocSpaces);
+		
+		return vocSpaces;
 	}
 	
 	private void loadVocabularies() {

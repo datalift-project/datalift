@@ -1,8 +1,9 @@
  <div class="row">
 	<div class="col-md-4">
+	
 		<div class="panel panel-default">
 			<div class="panel-heading">
-				<h3 class="panel-title">Select a property</h3>
+				<h3 class="panel-title">Source property</h3>
 			</div>
 			<div class="panel-body list-group">
 				<div ng-show="loadingPredicates">
@@ -27,20 +28,41 @@
 					class="btn btn-default" type="button"
 					ng-click="autoMapping()"
 					ng-disabled="autoMappingDisabled()">
-					<span class="glyphicon glyphicon-cog"> Search all properties</span>
+					<span class="glyphicon glyphicon-cog"></span>Search all properties
 				</button>
 			</div>
 		</div>
+		
+		<div class="panel panel-default">
+			<div class="panel-heading">
+				<h3 class="panel-title">Suggestions</h3>
+			</div>
+			<table class="table">
+				<thead>
+					<tr>
+						<th>For</th>
+						<th>Try</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr ng-repeat="(vocab, used) in vocabSummary">
+						<td>{{vocab}}</td>
+						<td>{{used}}</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+		
 	</div>
 	<div class="col-md-8">
 		<div class="panel panel-default">
 			<div class="panel-heading">
-				<h3 class="panel-title">Search and select a mapping</h3>
+				<h3 class="panel-title">Target property</h3>
 			</div>
 			<div class="panel-body">
 				<ul id="selectionTabs" class="nav nav-tabs nav-justified">
-					<li class="active" ng-click="selectTab(0)"><a>Search</a></li>
-					<li ng-click="selectTab(1)"><a>Explore</a></li>
+					<li ng-class="{active: isTabSelected(0)}" ng-click="selectTab(0)"><a>Search LOV</a></li>
+					<li ng-class="{active: isTabSelected(1)}" ng-click="selectTab(1)"><a>Explore project ontologies</a></li>
 				</ul>
 				<div id="search" class="tab-content" ng-show="isTabSelected(0)">
 					<!-- search bar -->
@@ -56,16 +78,34 @@
 							</button>
 						</span>
 					</div>
+					<!-- filter -->
+					<select
+						ui-select2
+						style="width:33%"
+						ng-model="vocSpaceFilter"
+						data-placeholder="Filter vocabulary space"
+					>
+<!-- 						<option value=""></option> -->
+						<option ng-repeat="vocSpace in vocSpaces" value="{{vocSpace.shortTitle}}">{{vocSpace.title}}</option>
+					</select>
+					<button class="btn btn-default btn-xs" 
+						ng-show="vocSpaceFiltered()" 
+						ng-click="resetVocSpaceFilter()"
+					>
+						<span class="glyphicon glyphicon-remove"></span>
+					</button>
+
 					<!-- results -->
 					<div class="center-content">
 						<img ng-src="{{searchLoaderSrc}}" ng-show="searchingLov"/>
 					</div>
+					<span ng-hide="searchingLov">{{lovResultsText()}}</span>
 					<table class="table" ng-show="hasResults()">
 						<thead>
 							<tr>
 								<th>Predicate</th>
 								<th>Vocabulary Space</th>
-								<th>Score</th>
+								<th>Score ( /100)</th>
 								<th>Action</th>
 							</tr>
 						</thead>
@@ -87,13 +127,12 @@
 						<tbody>
 							<tr ng-repeat="result in pageContent()">
 								<td>{{result.uriPrefixed}}</td>
-								<td>{{getFirstVocSpace(result)}}</td>
-								<td>{{result.score}}</td>
+								<td ng-click="setVocSpaceFilter(result)"><a>{{getFirstVocSpace(result)}}</a></td>
+								<td>{{formatLovScore(result)}}</td>
 								<td><button class="btn btn-default btn-xs" ng-click="addMapping(result)">Add</button></td>
 							</tr>
 						</tbody>
 					</table>
-					<span ng-show="noResults()">No results</span>
 				</div>
 				
 				<div id="explore" class="tab-content" ng-show="isTabSelected(1)">
@@ -104,16 +143,27 @@
 					</div>
 
 					<!-- explorer -->
-					<ul>
-						<li ng-repeat="ontology in loadedOntologies">
-							<span ng-click="changeVisibility(ontology.uri)">{{ontology.name}}</span>
-							<ul ng-show="isVisible(ontology.uri)">
-								<li ng-repeat="property in ontology.properties | filter:ontologyFilter">
-									<span>{{property.name}} - {{property.type}} - {{property.desc}}</span>
-								</li>
-							</ul>
-						</li>
-					</ul>
+					<!-- "item in filtered = (items | filter:filterExpr)" -->
+					<div ng-repeat="ontology in loadedOntologies">
+						<span ng-click="changeVisibility(ontology.uri)">{{ontology.name}} ({{filteredOntology.length}})</span>
+						<ul ng-show="isVisible(ontology.uri)">
+							<li ng-repeat="property in filteredOntology = (ontology.properties | filter:ontologyFilter)">
+								<span
+									tooltip="{{property.desc}}"
+									tooltip-placement="bottom"
+									tooltip-animation="false"
+								>
+									{{property.name}}
+								</span>
+								<button
+									class="btn btn-default btn-xs"
+									ng-click="addProjectMapping(ontology, property)"
+								>
+									<span class="glyphicon glyphicon-plus"></span>
+								</button>
+							</li>
+						</ul>
+					</div>
 				</div>
 				
 			</div>
@@ -149,7 +199,7 @@
 	<div class="col-md-3">
 		<div class="panel panel-default vocab-panel">
 			<div class="panel-heading">
-				<h3 class="panel-title">Vocabularies overview</h3>
+				<h3 class="panel-title">Overview</h3>
 			</div>
 			<table class="table">
 				<thead>

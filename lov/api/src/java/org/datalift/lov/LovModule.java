@@ -190,6 +190,15 @@ public class LovModule extends BaseModule {
 				APPLICATION_JSON_UTF8).build();
 	}
 	
+	@GET
+	@Path("vocSpaces")
+	@Produces(APPLICATION_JSON)
+	public Response vocSpaces() {
+		
+		return Response.ok(lovService.vocSpaces(),
+				APPLICATION_JSON_UTF8).build();
+	}
+	
     /**
      * Traps accesses to module static resources and redirect them
      * toward the default {@link ResourceResolver} for resolution.

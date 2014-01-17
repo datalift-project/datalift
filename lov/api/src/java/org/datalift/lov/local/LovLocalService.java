@@ -33,7 +33,7 @@ public class LovLocalService {
 	public LovLocalService(Configuration configuration) {
 		this.configuration = configuration;
 	}
-
+	
 	public SearchResult search(String searchWords, int offset, int limit,
 			String filter_Type, String filter_Domain, String filter_vocabulary) {
 		
