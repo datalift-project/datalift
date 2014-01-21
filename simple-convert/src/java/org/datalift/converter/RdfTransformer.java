@@ -121,15 +121,20 @@ implements TransformationModule
     public Response convertRdfSource(@FormParam("project") URI projectId,
                                      @FormParam("source") URI sourceId,
                                      @FormParam("dest_title") String destTitle,
+                                     @FormParam("target") URI target,
                                      @FormParam("dest_graph_uri") URI targetGraph,
                                      @FormParam("query[]") List<String> queries,
                                      @FormParam("overwrite") boolean overwrite)
                                                 throws WebApplicationException {
 
+    	if (target == null)
+    		target = targetGraph;
+    	
     	ProcessingTask task = this.getProjectManager().newProcessingTask(
     			this.getTransformationId(),
     			projectId,
-    			sourceId);
+    			sourceId,
+    			target);
     	
     	task.addParam("projectId", projectId);
     	task.addParam("sourceId", sourceId);

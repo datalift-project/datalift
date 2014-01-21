@@ -137,6 +137,8 @@ import org.datalift.fwk.util.io.FileUtils;
 import org.datalift.fwk.util.web.Charsets;
 import org.datalift.fwk.view.TemplateModel;
 import org.datalift.fwk.view.ViewFactory;
+import org.datalift.projectmanager.rss.Entry;
+import org.datalift.projectmanager.rss.Feed;
 
 import static org.datalift.fwk.MediaTypes.*;
 import static org.datalift.fwk.project.SparqlSource.*;
@@ -736,7 +738,7 @@ public class Workspace extends BaseModule
             param.put("lastRow", lastRow);
             param.put("quote", quote);
             
-            this.projectManager.addSourceCreationEvent(p, param);
+            this.projectManager.addSourceCreationEvent(p, sourceUri, param);
 
             // Notify user of successful creation, redirecting HTML clients
             // (browsers) to the source tab of the project page.
@@ -853,7 +855,7 @@ public class Workspace extends BaseModule
             param.put("lastRow", lastRow);
             param.put("quote", quote);
             
-            this.projectManager.addSourceModificationEvent(p, param);
+            this.projectManager.addSourceModificationEvent(p, sourceUri, param);
             
             // Notify user of successful update, redirecting HTML clients
             // (browsers) to the source tab of the project page.
@@ -978,7 +980,7 @@ public class Workspace extends BaseModule
             param.put("sourceUrl", sourceUrl);
             param.put("mimeType", mimeType);
             
-            this.projectManager.addSourceCreationEvent(p, param);
+            this.projectManager.addSourceCreationEvent(p, sourceUri, param);
 
             // Notify user of successful creation, redirecting HTML clients
             // (browsers) to the source tab of the project page.
@@ -1045,7 +1047,7 @@ public class Workspace extends BaseModule
             param.put("mimeType", mimeType);
             param.put("baseUri", baseUri);
             
-            this.projectManager.addSourceModificationEvent(p, param);
+            this.projectManager.addSourceModificationEvent(p, sourceUri, param);
 
             // Notify user of successful update, redirecting HTML clients
             // (browsers) to the source tab of the project page.
@@ -1111,7 +1113,7 @@ public class Workspace extends BaseModule
             param.put("sqlQuery", sqlQuery);
             param.put("cacheDuration", cacheDuration);
             
-            this.projectManager.addSourceCreationEvent(p, param);
+            this.projectManager.addSourceCreationEvent(p, sourceUri, param);
 
             // Notify user of successful creation, redirecting HTML clients
             // (browsers) to the source tab of the project page.
@@ -1182,7 +1184,7 @@ public class Workspace extends BaseModule
             param.put("sqlQuery", sqlQuery);
             param.put("cacheDuration", cacheDuration);
             
-            this.projectManager.addSourceModificationEvent(p, param);
+            this.projectManager.addSourceModificationEvent(p, sourceUri, param);
 
             // Notify user of successful update, redirecting HTML clients
             // (browsers) to the source tab of the project page.
@@ -1252,7 +1254,7 @@ public class Workspace extends BaseModule
             param.put("password", password);
             param.put("cacheDuration", cacheDuration);
             
-            this.projectManager.addSourceCreationEvent(p, param);
+            this.projectManager.addSourceCreationEvent(p, sourceUri, param);
 
             // Notify user of successful creation, redirecting HTML clients
             // (browsers) to the source tab of the project page.
@@ -1332,7 +1334,7 @@ public class Workspace extends BaseModule
             param.put("password", password);
             param.put("cacheDuration", cacheDuration);
             
-            this.projectManager.addSourceModificationEvent(p, param);
+            this.projectManager.addSourceModificationEvent(p, sourceUri, param);
 
             // Notify user of successful update, redirecting HTML clients
             // (browsers) to the source tab of the project page.
@@ -1433,7 +1435,7 @@ public class Workspace extends BaseModule
             param.put("fileDisposition", fileDisposition);
             param.put("sourceUrl", sourceUrl);
             
-            this.projectManager.addSourceCreationEvent(p, param);
+            this.projectManager.addSourceCreationEvent(p, sourceUri, param);
 
             // Notify user of successful creation, redirecting HTML clients
             // (browsers) to the source tab of the project page.
@@ -1486,7 +1488,7 @@ public class Workspace extends BaseModule
             param.put("sourceUri", sourceUri);
             param.put("description", description);
             
-            this.projectManager.addSourceModificationEvent(p, param);
+            this.projectManager.addSourceModificationEvent(p, sourceUri, param);
 
             // Notify user of successful update, redirecting HTML clients
             // (browsers) to the source tab of the project page.
@@ -1581,7 +1583,7 @@ public class Workspace extends BaseModule
             param.put("shxData", shxData);
             param.put("dbfData", dbfData);
             
-            this.projectManager.addSourceCreationEvent(p, param);
+            this.projectManager.addSourceCreationEvent(p, srcUri, param);
             
             // Notify user of successful creation, redirecting HTML clients
             response = this.created(p, srcUri, ProjectTab.Sources)
@@ -1629,7 +1631,7 @@ public class Workspace extends BaseModule
             param.put("sourceUri", sourceUri);
             param.put("description", description);
             
-            this.projectManager.addSourceModificationEvent(p, param);
+            this.projectManager.addSourceModificationEvent(p, sourceUri, param);
 
             // Notify user of successful update, redirecting HTML clients
             // (browsers) to the source tab of the project page.
@@ -1719,7 +1721,7 @@ public class Workspace extends BaseModule
             param.put("gmlDisposition", gmlDisposition);
             param.put("xsdData", xsdData);
             
-            this.projectManager.addSourceCreationEvent(p, param);
+            this.projectManager.addSourceCreationEvent(p, srcUri, param);
 
             // Notify user of successful creation, redirecting HTML clients
             response = this.created(p, srcUri, ProjectTab.Sources)
@@ -1767,7 +1769,7 @@ public class Workspace extends BaseModule
             param.put("sourceUri", sourceUri);
             param.put("description", description);
             
-            this.projectManager.addSourceModificationEvent(p, param);
+            this.projectManager.addSourceModificationEvent(p, sourceUri, param);
 
             // Notify user of successful update, redirecting HTML clients
             // (browsers) to the source tab of the project page.
@@ -1990,7 +1992,7 @@ public class Workspace extends BaseModule
             // Event.
             Map<String, Object> param = new HashMap<String, Object>();
             param.put("srcUri", srcUri);
-            this.projectManager.addSourceSuppressionEvent(p, param);
+            this.projectManager.addSourceSuppressionEvent(p, srcUri, param);
             
             // Notify user of successful update, redirecting HTML clients
             // (browsers) to the source tab of the project page.
@@ -2228,6 +2230,29 @@ public class Workspace extends BaseModule
                                                    uriInfo, request, acceptHdr);
     }
 
+    @GET
+    @Path("atom")
+    public Response getAtomStream() {
+    	Feed feed = new Feed();
+    	feed.setTitle("Datalift atom feed.");
+    	feed.setLink("Link");
+    	feed.setUpdated("Date");
+    	feed.setId("ID");
+    	
+    	Entry e = new Entry();
+    	e.setAuthor("Author");
+    	e.setContent("Content");
+    	e.setId("eID");
+    	e.setTitle("e Title");
+    	e.setUpdated("eDate");
+    	
+    	feed.addEntry(e);
+    	
+    	final String TEMPLATE = "rss/atom.vm";
+        
+        return Response.ok(this.newView(TEMPLATE, feed)).build();
+    }
+    
     //-------------------------------------------------------------------------
     // Specific implementation
     //-------------------------------------------------------------------------

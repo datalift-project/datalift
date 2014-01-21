@@ -88,6 +88,7 @@ import org.datalift.fwk.project.CsvSource.Separator;
 import org.datalift.fwk.rdf.RdfNamespace;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.security.SecurityContext;
+import org.datalift.fwk.util.StringUtils;
 
 import static org.datalift.fwk.util.StringUtils.*;
 
@@ -563,10 +564,9 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     }
 
     /** {@inheritDoc} 
-     * @throws  
      * @throws MalformedURLException */
     @Override
-    public void deleteProject(Project p) {
+    public void deleteProject(Project p) throws URISyntaxException {
         this.checkAvailable();
         // Delete server-side resources attached to sources.
         for (Source s : p.getSources()) {
@@ -592,7 +592,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         		currentTime, 
         		// TODO: get current user
         		p.getWasAttributedTo(), 
-        		p,
+        		null,
         		null)
         		);
 
@@ -624,8 +624,9 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     /**
      * Save a new project.
      * @param p is the new project.
+     * @throws URISyntaxException 
      */
-    private void saveNewProject(Project p) {
+    private void saveNewProject(Project p) throws URISyntaxException {
         this.projectDao.persist(p);
         this.projectDao.persist(new ProvEntity(p.getUri()));
         this.projectDao.persist(
@@ -646,7 +647,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         		currentTime, 
         		currentTime, 
         		p.getWasAttributedTo(), 
-        		p,
+        		null,
         		null)
         		);
 
@@ -662,16 +663,19 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
      * only the modified parameters.
      * @param p is the {@link Project} created by the service.
      * @param existingProject is the {@link Project} already stored.
+     * @throws URISyntaxException 
      */
-    private void saveExistingProject(Project p, Project existingProject) {
+    private void saveExistingProject(Project p, Project existingProject) throws URISyntaxException {
         this.projectDao.save(p);
         
         JsonParam param = new JsonParam();
-        if (!p.getTitle().equals(existingProject.getTitle()))
+        if (!StringUtils.equals(p.getTitle(), existingProject.getTitle()))
         	param.add("titre", p.getTitle());
-        if (!p.getDescription().equals(existingProject.getDescription()))
+        if (!StringUtils.equals(p.getDescription(), 
+        		existingProject.getDescription()))
         	param.add("description", p.getDescription());
-        if (!p.getLicense().equals(existingProject.getLicense()))
+        if (!StringUtils.equals(String.valueOf(p.getLicense()), 
+        		String.valueOf(existingProject.getLicense())))
         	param.add("license", p.getLicense());
 
         String serializedParam = param.save();
@@ -684,7 +688,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         		currentTime, 
         		currentTime, 
         		p.getWasAttributedTo(), 
-        		p,
+        		null,
         		null)
         		);
     }
@@ -731,18 +735,22 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
 	public ProcessingTask newProcessingTask(
 			String transformationId, 
 			URI projectId, 
-			URI sourceId) {
+			URI sourceId,
+			URI target) {
     	return new ProcessingTaskImpl(
     			transformationId, 
     			projectId, 
-    			sourceId);
+    			sourceId,
+    			target);
     }
 
     
-    /** {@inheritDoc} */
+    /** {@inheritDoc} 
+     * @throws URISyntaxException */
     @Override
     public void addSourceCreationEvent(
-    		Project project, Map<String, Object> parameters)
+    		Project project, URI sourceUri, Map<String, Object> parameters) 
+    				throws URISyntaxException
     {
         JsonParam param = new JsonParam();
         param.add(parameters);
@@ -751,23 +759,26 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         Date currentTime = new Date();
 
         SourceCreationEventImpl evt = new SourceCreationEventImpl(
+        		sourceUri,
         		project.getUri(),
         		project.getDescription(),
         		serializedParam,
         		currentTime,
         		currentTime,
         		project.getWasAttributedTo(),
-        		project,
+        		null,
         		null
         		); 
         
         this.saveEvent(evt);
     }
     
-    /** {@inheritDoc} */
+    /** {@inheritDoc} 
+     * @throws URISyntaxException */
     @Override
     public void addSourceModificationEvent(
-    		Project project, Map<String, Object> parameters)
+    		Project project, URI srcUri, Map<String, Object> parameters) 
+    				throws URISyntaxException
     {
         JsonParam param = new JsonParam();
         param.add(parameters);
@@ -776,23 +787,26 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         Date currentTime = new Date();
 
         SourceModificationEventImpl evt = new SourceModificationEventImpl(
+        		srcUri,
         		project.getUri(),
         		project.getDescription(),
         		serializedParam,
         		currentTime,
         		currentTime,
         		project.getWasAttributedTo(),
-        		project,
+        		null,
         		null
         		); 
         
         this.saveEvent(evt);
     }
     
-    /** {@inheritDoc} */
+    /** {@inheritDoc} 
+     * @throws URISyntaxException */
     @Override
     public void addSourceSuppressionEvent(
-    		Project project, Map<String, Object> parameters)
+    		Project project, URI srcUri, Map<String, Object> parameters)
+    				throws URISyntaxException
     {
         JsonParam param = new JsonParam();
         param.add(parameters);
@@ -801,13 +815,14 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         Date currentTime = new Date();
 
         SourceSuppressionEventImpl evt = new SourceSuppressionEventImpl(
+        		srcUri,
         		project.getUri(),
         		project.getDescription(),
         		serializedParam,
         		currentTime,
         		currentTime,
         		project.getWasAttributedTo(),
-        		project,
+        		null,
         		null
         		); 
         

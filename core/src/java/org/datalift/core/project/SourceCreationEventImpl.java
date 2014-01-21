@@ -35,6 +35,8 @@
 
 package org.datalift.core.project;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Date;
 import java.util.UUID;
 
@@ -43,10 +45,12 @@ import javax.persistence.MappedSuperclass;
 
 import org.datalift.fwk.project.Event;
 import org.datalift.fwk.project.Project;
+import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.SourceCreationEvent;
 import org.datalift.fwk.project.User;
 
 import com.clarkparsia.empire.annotation.NamedGraph;
+import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.RdfsClass;
 
 
@@ -63,17 +67,22 @@ import com.clarkparsia.empire.annotation.RdfsClass;
 public class SourceCreationEventImpl extends EventImpl 
 implements SourceCreationEvent {
 
-	/** Instantiate SourceCreationEventImpl */
+	@RdfProperty("prov:generated")
+	private URI generated;
+
+	/** Instantiate SourceCreationEventImpl 
+	 * @throws URISyntaxException */
 	public SourceCreationEventImpl(
+			URI sourceUri,
 			String projectUri,
 			String description,
 			String parameters,
 			Date startedAtTime,
 			Date endedAtTime,
 			User wasAssociatedWith,
-			Project used,
+			Source used,
 			Event wasInformedBy
-	) {
+	) throws URISyntaxException {
 		char lastChar = projectUri.charAt(projectUri.length() - 1);
 		if (lastChar != '#' && lastChar != '/')
 			projectUri += '/';
@@ -86,6 +95,12 @@ implements SourceCreationEvent {
 		this.setWasAssociatedWith(wasAssociatedWith);
 		this.setUsed(used);
 		this.setWasInformedBy(wasInformedBy);
+		this.setTarget(sourceUri);
 	}
 
+	public void setTarget(URI uri) {
+		super.setTarget(uri);
+		this.generated = uri;
+	}
+	
 }

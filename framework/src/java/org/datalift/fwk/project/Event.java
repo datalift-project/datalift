@@ -35,6 +35,7 @@
 
 package org.datalift.fwk.project;
 
+import java.net.URI;
 import java.util.Date;
 
 
@@ -169,4 +170,17 @@ public interface Event {
 	 * @param description
 	 */
 	public void setDescription(String description);
+	
+	/**
+	 * Set which target the event apply on.
+	 * @param target
+	 */
+	public void setTarget(URI target);
+	
+	/**
+	 * Get the target the event apply on.
+	 * @param target
+	 */
+	public URI getTarget();
+
 }

@@ -38,6 +38,7 @@ package org.datalift.fwk.project;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -102,8 +103,9 @@ public interface ProjectManager
      * Removes the specified project from the DataLift internal RDF
      * repository.
      * @param  p   the project to remove.
+     * @throws Exception 
      */
-    public void deleteProject(Project p);
+    public void deleteProject(Project p) throws Exception;
 
     /**
      * Creates a new CSV source object.
@@ -383,30 +385,36 @@ public interface ProjectManager
 	public ProcessingTask newProcessingTask(
 			String transformationId, 
 			URI projectId, 
-			URI sourceId);
+			URI sourceId,
+			URI target);
 
 	/**
 	 * Create and save a new {@link SourceCreationEvent}.
 	 * @param project is the project which own the source.
 	 * @param parameters is a map with all parameters.
+	 * @throws Exception 
 	 */
     public void addSourceCreationEvent(
-    		Project project, Map<String, Object> parameters);
+    		Project project, URI srcUri, Map<String, Object> parameters) 
+    				throws Exception;
 
 	/**
 	 * Create and save a new {@link SourceModificationEvent}.
 	 * @param project is the project which own the source.
 	 * @param parameters is a map with all parameters.
+	 * @throws Exception 
 	 */
     public void addSourceModificationEvent(
-    		Project project, Map<String, Object> parameters);
+    		Project project, URI srcUri, Map<String, Object> parameters) 
+    				throws Exception;
 
 	/**
 	 * Create and save a new {@link SourceSuppressionEvent}.
 	 * @param project is the project which own the source.
 	 * @param parameters is a map with all parameters.
+	 * @throws Exception 
 	 */
     public void addSourceSuppressionEvent(
-    		Project project, Map<String, Object> parameters);
+    		Project project, URI srcUri, Map<String, Object> parameters) throws Exception;
 
 }

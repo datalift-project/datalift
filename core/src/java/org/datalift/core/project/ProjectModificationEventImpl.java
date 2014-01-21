@@ -35,6 +35,8 @@
 
 package org.datalift.core.project;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Date;
 import java.util.UUID;
 
@@ -47,6 +49,7 @@ import org.datalift.fwk.project.ProjectModificationEvent;
 import org.datalift.fwk.project.User;
 
 import com.clarkparsia.empire.annotation.NamedGraph;
+import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.RdfsClass;
 
 
@@ -63,7 +66,8 @@ import com.clarkparsia.empire.annotation.RdfsClass;
 public class ProjectModificationEventImpl extends EventImpl 
 implements ProjectModificationEvent {
 
-	/** Instantiate ProjectModificationEventImpl */
+	/** Instantiate ProjectModificationEventImpl 
+     * @throws URISyntaxException */
 	public ProjectModificationEventImpl(
 			String projectUri,
 			String description,
@@ -73,7 +77,9 @@ implements ProjectModificationEvent {
 			User wasAssociatedWith,
 			Project used,
 			Event wasInformedBy
-	) {
+	) throws URISyntaxException {
+		URI uri = new URI(projectUri);
+
 		char lastChar = projectUri.charAt(projectUri.length() - 1);
 		if (lastChar != '#' && lastChar != '/')
 			projectUri += '/';
@@ -86,6 +92,7 @@ implements ProjectModificationEvent {
 		this.setWasAssociatedWith(wasAssociatedWith);
 		this.setUsed(used);
 		this.setWasInformedBy(wasInformedBy);
+		this.setTarget(uri);
 	}
 
 }

@@ -80,7 +80,9 @@ public class ProcessingTaskImpl extends EventImpl implements ProcessingTask {
 
 	@RdfProperty("datalift:eventStatus")
 	private String eventStatus;
-
+	
+	URI target;
+	
 	JsonParam params = new JsonParam();
 	
 	private static Logger logger = Logger.getLogger(ProcessingTaskImpl.class);
@@ -100,7 +102,8 @@ public class ProcessingTaskImpl extends EventImpl implements ProcessingTask {
 	public ProcessingTaskImpl(
 			String transformationId,
 			URI projectId,
-			URI sourceId)
+			URI sourceId,
+			URI target)
 	{
 		// Set Id.
 		this.setId(projectId.toString() + "/event/" + UUID.randomUUID());
@@ -125,6 +128,8 @@ public class ProcessingTaskImpl extends EventImpl implements ProcessingTask {
 		this.setUsed(src);
 		
 		this.setStartedAtTime(new Date());
+		
+		this.target = target;
 	}
 
 	//-------------------------------------------------------------------------
@@ -155,8 +160,10 @@ public class ProcessingTaskImpl extends EventImpl implements ProcessingTask {
 			/** Ignore, ok variable is set. */
 		}
 			
-		if (ok)
+		if (ok) {
 			this.setEventStatus(EventStatus.COMPLETE);
+			this.setTarget(this.target);
+		}
 		else
 			this.setEventStatus(EventStatus.FAIL);
 

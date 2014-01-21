@@ -35,6 +35,7 @@
 
 package org.datalift.core.project;
 
+import java.net.URI;
 import java.util.Date;
 
 import org.datalift.fwk.project.Entity;
@@ -76,7 +77,8 @@ public class EventImpl extends BaseRdfEntity implements Event {
     private Entity used;
     @RdfProperty("prov:wasInformedBy")
     private Event wasInformedBy;
-
+    @RdfProperty("prov:influenced")
+    private URI influenced;
     //-------------------------------------------------------------------------
     // Event contract support
     //-------------------------------------------------------------------------
@@ -159,18 +161,31 @@ public class EventImpl extends BaseRdfEntity implements Event {
 		this.wasInformedBy = wasInformedBy;
 	}
  
-
+    /** {@inheritDoc} */
 	@Override
 	public String getDescription() {
 		return this.description;
 	}
 
+    /** {@inheritDoc} */
 	@Override
 	public void setDescription(String description) {
 		this.description = description;
 	}
 
-    //-------------------------------------------------------------------------
+    /** {@inheritDoc} */
+	@Override
+	public void setTarget(URI target) {
+		this.influenced = target;
+	}
+	
+    /** {@inheritDoc} */
+	@Override
+	public URI getTarget() {
+		return this.influenced;
+	}
+	
+	//-------------------------------------------------------------------------
     // BaseRdfEntity contract support
     //-------------------------------------------------------------------------
 

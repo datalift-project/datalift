@@ -35,6 +35,8 @@
 
 package org.datalift.core.project;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Date;
 import java.util.UUID;
 
@@ -42,7 +44,7 @@ import javax.persistence.Entity;
 import javax.persistence.MappedSuperclass;
 
 import org.datalift.fwk.project.Event;
-import org.datalift.fwk.project.Project;
+import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.SourceModificationEvent;
 import org.datalift.fwk.project.User;
 
@@ -62,18 +64,20 @@ import com.clarkparsia.empire.annotation.RdfsClass;
 @NamedGraph(type = NamedGraph.NamedGraphType.Static, value="datalift:datalift")
 public class SourceModificationEventImpl extends EventImpl 
 implements SourceModificationEvent {
-
-	/** Instantiate SourceModificationEventImpl */
+    
+    /** Instantiate SourceModificationEventImpl 
+     * @throws URISyntaxException */
 	public SourceModificationEventImpl(
+			URI srcUri,
 			String projectUri,
 			String description,
 			String parameters,
 			Date startedAtTime,
 			Date endedAtTime,
 			User wasAssociatedWith,
-			Project used,
+			Source used,
 			Event wasInformedBy
-	) {
+	) throws URISyntaxException {
 		char lastChar = projectUri.charAt(projectUri.length() - 1);
 		if (lastChar != '#' && lastChar != '/')
 			projectUri += '/';
@@ -86,6 +90,7 @@ implements SourceModificationEvent {
 		this.setWasAssociatedWith(wasAssociatedWith);
 		this.setUsed(used);
 		this.setWasInformedBy(wasInformedBy);
+		this.setTarget(srcUri);
 	}
 
 }

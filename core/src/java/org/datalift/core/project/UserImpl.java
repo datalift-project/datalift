@@ -36,6 +36,7 @@
 package org.datalift.core.project;
 
 import javax.persistence.Entity;
+import javax.persistence.MappedSuperclass;
 
 import org.datalift.fwk.project.User;
 
@@ -51,6 +52,7 @@ import com.clarkparsia.empire.annotation.RdfsClass;
  *
  */
 @Entity
+@MappedSuperclass
 @RdfsClass("datalift:User")
 @NamedGraph(type = NamedGraph.NamedGraphType.Static, value="datalift:datalift")
 public class UserImpl extends BaseRdfEntity implements User {
@@ -119,8 +121,7 @@ public class UserImpl extends BaseRdfEntity implements User {
     /** {@inheritDoc} */
     @Override
 	protected void setId(String id) {
-		// TODO Auto-generated method stub
-		
+        this.uri = id;		
 	}
 	
 }

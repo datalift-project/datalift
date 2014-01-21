@@ -35,6 +35,8 @@
 
 package org.datalift.core.project;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Date;
 import java.util.UUID;
 
@@ -47,6 +49,7 @@ import org.datalift.fwk.project.ProjectSuppressionEvent;
 import org.datalift.fwk.project.User;
 
 import com.clarkparsia.empire.annotation.NamedGraph;
+import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.RdfsClass;
 
 
@@ -63,7 +66,11 @@ import com.clarkparsia.empire.annotation.RdfsClass;
 public class ProjectSuppressionEventImpl extends EventImpl 
 implements ProjectSuppressionEvent {
 
-	/** Instantiate ProjectSuppressionEventImpl */
+	@RdfProperty("prov:invalidated")
+	private URI invalidated;
+
+	/** Instantiate ProjectSuppressionEventImpl 
+	 * @throws URISyntaxException */
 	public ProjectSuppressionEventImpl(
 			String projectUri,
 			String description,
@@ -73,7 +80,9 @@ implements ProjectSuppressionEvent {
 			User wasAssociatedWith,
 			Project used,
 			Event wasInformedBy
-	) {
+	) throws URISyntaxException {
+		URI uri = new URI(projectUri);
+
 		char lastChar = projectUri.charAt(projectUri.length() - 1);
 		if (lastChar != '#' && lastChar != '/')
 			projectUri += '/';
@@ -86,6 +95,12 @@ implements ProjectSuppressionEvent {
 		this.setWasAssociatedWith(wasAssociatedWith);
 		this.setUsed(used);
 		this.setWasInformedBy(wasInformedBy);
+		this.setTarget(uri);
+	}
+
+	public void setTarget(URI uri) {
+		super.setTarget(uri);
+		this.invalidated = uri;
 	}
 
 }

@@ -126,7 +126,8 @@ public class TaskManagerTest {
 	    	ProcessingTaskImpl task = new ProcessingTaskImpl(
 	    			this.getTransformationId(),
 	    			new URI(projectId),
-	    			new URI("http://test.src"));
+	    			new URI("http://test.src"),
+	    			new URI("http://test.target"));
 	    	
 	    	task.addParam("projectId", projectId);
 	    	task.saveParams();
