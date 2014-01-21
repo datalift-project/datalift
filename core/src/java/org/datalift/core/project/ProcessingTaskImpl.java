@@ -65,7 +65,7 @@ import java.util.UUID;
 @Entity
 @MappedSuperclass
 @RdfsClass("datalift:TransformationEvent")
-@NamedGraph(type = NamedGraph.NamedGraphType.Static, value="datalift:datalift")
+//@NamedGraph(type = NamedGraph.NamedGraphType.Static, value="datalift:datalift")
 public class ProcessingTaskImpl extends EventImpl implements ProcessingTask {
 
 	//-------------------------------------------------------------------------

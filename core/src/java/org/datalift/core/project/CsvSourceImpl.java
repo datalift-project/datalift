@@ -48,6 +48,7 @@ import java.util.NoSuchElementException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.persistence.Entity;
+import javax.persistence.MappedSuperclass;
 
 import com.clarkparsia.empire.annotation.NamedGraph;
 import com.clarkparsia.empire.annotation.RdfProperty;
@@ -74,8 +75,9 @@ import static org.datalift.fwk.util.StringUtils.*;
  * @author hdevos
  */
 @Entity
+@MappedSuperclass
 @RdfsClass("datalift:csvSource")
-@NamedGraph(type = NamedGraph.NamedGraphType.Static, value="datalift:datalift")
+//@NamedGraph(type = NamedGraph.NamedGraphType.Static, value="datalift:datalift")
 public class CsvSourceImpl extends BaseFileSource
                            implements CsvSource
 {

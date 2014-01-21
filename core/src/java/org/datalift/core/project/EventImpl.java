@@ -38,6 +38,8 @@ package org.datalift.core.project;
 import java.net.URI;
 import java.util.Date;
 
+import javax.persistence.MappedSuperclass;
+
 import org.datalift.fwk.project.Entity;
 import org.datalift.fwk.project.Event;
 import org.datalift.fwk.project.User;
@@ -53,8 +55,9 @@ import com.clarkparsia.empire.annotation.RdfsClass;
  * @author avalensi
  */
 @javax.persistence.Entity
+@MappedSuperclass
 @RdfsClass("datalift:event")
-@NamedGraph(type = NamedGraph.NamedGraphType.Static, value="datalift:datalift")
+//@NamedGraph(type = NamedGraph.NamedGraphType.Static, value="datalift:datalift")
 public class EventImpl extends BaseRdfEntity implements Event {
 	
 	//-------------------------------------------------------------------------

@@ -87,7 +87,7 @@ import org.datalift.fwk.util.StringUtils;
 @Entity
 @MappedSuperclass
 @RdfsClass("datalift:Project")
-@NamedGraph(type = NamedGraph.NamedGraphType.Static, value="datalift:datalift")
+//@NamedGraph(type = NamedGraph.NamedGraphType.Static, value="datalift:datalift")
 public class ProjectImpl extends BaseRdfEntity implements Project
 {
     //-------------------------------------------------------------------------

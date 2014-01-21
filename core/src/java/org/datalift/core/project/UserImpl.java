@@ -54,7 +54,7 @@ import com.clarkparsia.empire.annotation.RdfsClass;
 @Entity
 @MappedSuperclass
 @RdfsClass("datalift:User")
-@NamedGraph(type = NamedGraph.NamedGraphType.Static, value="datalift:datalift")
+//@NamedGraph(type = NamedGraph.NamedGraphType.Static, value="datalift:datalift")
 public class UserImpl extends BaseRdfEntity implements User {
 
 	//-------------------------------------------------------------------------

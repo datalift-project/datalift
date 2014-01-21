@@ -41,6 +41,7 @@ import java.util.Date;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.ManyToOne;
+import javax.persistence.MappedSuperclass;
 
 import org.datalift.fwk.project.Ontology;
 import org.datalift.fwk.project.Project;
@@ -58,8 +59,9 @@ import com.clarkparsia.empire.annotation.RdfsClass;
  * @author avalensi
  */
 @Entity
+@MappedSuperclass
 @RdfsClass("datalift:Ontology")
-@NamedGraph(type = NamedGraph.NamedGraphType.Static, value="datalift:datalift")
+//@NamedGraph(type = NamedGraph.NamedGraphType.Static, value="datalift:datalift")
 public class OntologyImpl extends BaseRdfEntity implements Ontology
 {
     //-------------------------------------------------------------------------

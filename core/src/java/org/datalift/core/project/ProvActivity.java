@@ -36,6 +36,7 @@
 package org.datalift.core.project;
 
 import javax.persistence.Entity;
+import javax.persistence.MappedSuperclass;
 
 import com.clarkparsia.empire.annotation.NamedGraph;
 import com.clarkparsia.empire.annotation.RdfId;
@@ -45,8 +46,9 @@ import com.clarkparsia.empire.annotation.RdfsClass;
  * Just a marker class to append prov:Activity RDF type.
  */
 @Entity
+@MappedSuperclass
 @RdfsClass("prov:Activity")
-@NamedGraph(type = NamedGraph.NamedGraphType.Static, value="datalift:datalift")
+//@NamedGraph(type = NamedGraph.NamedGraphType.Static, value="datalift:datalift")
 public class ProvActivity extends BaseRdfEntity
 {
     @RdfId

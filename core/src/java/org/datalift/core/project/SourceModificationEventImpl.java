@@ -61,7 +61,7 @@ import com.clarkparsia.empire.annotation.RdfsClass;
 @Entity
 @MappedSuperclass
 @RdfsClass("datalift:SourceModificationEvent")
-@NamedGraph(type = NamedGraph.NamedGraphType.Static, value="datalift:datalift")
+//@NamedGraph(type = NamedGraph.NamedGraphType.Static, value="datalift:datalift")
 public class SourceModificationEventImpl extends EventImpl 
 implements SourceModificationEvent {
     
