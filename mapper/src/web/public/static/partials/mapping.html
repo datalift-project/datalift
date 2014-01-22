@@ -23,13 +23,6 @@
 				<div ng-hide="hasPredicates()">
 					<span>No property to map.</span>
 				</div>
-				<button 
-					style="margin-top:10px"
-					class="btn btn-default" type="button"
-					ng-click="autoMapping()"
-					ng-disabled="autoMappingDisabled()">
-					<span class="glyphicon glyphicon-cog"></span>Search all properties
-				</button>
 			</div>
 		</div>
 		
@@ -37,20 +30,38 @@
 			<div class="panel-heading">
 				<h3 class="panel-title">Suggestions</h3>
 			</div>
-			<table class="table">
+			<div class="center-content" ng-show="suggesting">
+				<img ng-src="{{suggestLoaderSrc}}"/>
+			</div>
+			<table class="table" ng-hide="suggesting">
 				<thead>
 					<tr>
-						<th>For</th>
-						<th>Try</th>
+						<th>Source</th>
+						<th>Target</th>
+						<th></th>
 					</tr>
 				</thead>
 				<tbody>
-					<tr ng-repeat="(vocab, used) in vocabSummary">
-						<td>{{vocab}}</td>
-						<td>{{used}}</td>
+					<tr ng-repeat="suggestion in suggestions"
+							tooltip="{{suggestion.targetVocabulary}}"
+							tooltip-placement="left"
+							tooltip-animation="false">
+						<td>{{suggestion.source}}</td>
+						<td>{{suggestion.targetPrefixed}}</td>
+						<td><button class="btn btn-default btn-xs" ng-click="addSuggestedMapping(suggestion)"  ng-disabled="!hasPredicate(suggestion.sourceUri)">
+							<span class="glyphicon glyphicon-plus"></span>
+						</button></td>
 					</tr>
 				</tbody>
 			</table>
+			<!--button 
+					style="margin-top:10px"
+					class="btn btn-default btn-lg" type="button"
+					ng-click="autoMapping()"
+					ng-hide="suggestDone"
+					ng-disabled="autoMappingDisabled()">
+					<span class="glyphicon glyphicon-cog"></span>
+			</button-->
 		</div>
 		
 	</div>
@@ -61,12 +72,12 @@
 			</div>
 			<div class="panel-body">
 				<ul id="selectionTabs" class="nav nav-tabs nav-justified">
-					<li ng-class="{active: isTabSelected(0)}" ng-click="selectTab(0)"><a>Search LOV</a></li>
-					<li ng-class="{active: isTabSelected(1)}" ng-click="selectTab(1)"><a>Explore project ontologies</a></li>
+					<li ng-class="{pointer: true, active: isTabSelected(0)}" ng-click="selectTab(0)"><a>Search LOV</a></li>
+					<li ng-class="{pointer: true, active: isTabSelected(1)}" ng-click="selectTab(1)"><a>Explore project ontologies</a></li>
 				</ul>
 				<div id="search" class="tab-content" ng-show="isTabSelected(0)">
 					<!-- search bar -->
-					<div class="input-group">
+					<div class="input-group search-bar">
 						<input type="text" class="form-control"
 							ng-model="searchQuery"
 							value="{{searchQuery}}"
@@ -79,21 +90,25 @@
 						</span>
 					</div>
 					<!-- filter -->
-					<select
-						ui-select2
-						style="width:33%"
-						ng-model="vocSpaceFilter"
-						data-placeholder="Filter vocabulary space"
-					>
-<!-- 						<option value=""></option> -->
-						<option ng-repeat="vocSpace in vocSpaces" value="{{vocSpace.shortTitle}}">{{vocSpace.title}}</option>
-					</select>
-					<button class="btn btn-default btn-xs" 
-						ng-show="vocSpaceFiltered()" 
-						ng-click="resetVocSpaceFilter()"
-					>
-						<span class="glyphicon glyphicon-remove"></span>
-					</button>
+					<div class="filter">
+						<label for="vocabularySpaceFilter">Vocabulary space</label>
+						<select
+							id="vocabularySpaceFilter"
+							ui-select2
+							style="width:33%"
+							ng-model="vocSpaceFilter"
+							data-placeholder="Filter vocabulary space"
+						>
+	<!-- 						<option value=""></option> -->
+							<option ng-repeat="vocSpace in vocSpaces" value="{{vocSpace.shortTitle}}">{{vocSpace.title}}</option>
+						</select>
+						<button class="btn btn-default btn-xs" 
+							ng-show="vocSpaceFiltered()" 
+							ng-click="resetVocSpaceFilter()"
+						>
+							<span class="glyphicon glyphicon-remove"></span>
+						</button>
+					</div>
 
 					<!-- results -->
 					<div class="center-content">
@@ -106,7 +121,7 @@
 								<th>Predicate</th>
 								<th>Vocabulary Space</th>
 								<th>Score ( /100)</th>
-								<th>Action</th>
+								<th></th>
 							</tr>
 						</thead>
 						<tfoot>
@@ -115,6 +130,7 @@
 									<div id="pager" ng-show="hasResults()">
 										<pagination
 											boundary-links="true"
+											max-size="10"
 											num-pages="noOfPages()"
 											current-page="currentPage"
 											previous-text="&lsaquo;"
@@ -127,9 +143,9 @@
 						<tbody>
 							<tr ng-repeat="result in pageContent()">
 								<td>{{result.uriPrefixed}}</td>
-								<td ng-click="setVocSpaceFilter(result)"><a>{{getFirstVocSpace(result)}}</a></td>
+								<td ng-click="setVocSpaceFilter(result)"><a class="pointer">{{getFirstVocSpace(result)}}</a></td>
 								<td>{{formatLovScore(result)}}</td>
-								<td><button class="btn btn-default btn-xs" ng-click="addMapping(result)">Add</button></td>
+								<td><button class="btn btn-default btn-xs" ng-click="addMapping(result)"><span class="glyphicon glyphicon-plus"></span></button></td>
 							</tr>
 						</tbody>
 					</table>
@@ -182,14 +198,14 @@
 					<tr>
 						<th>Source</th>
 						<th>Target</th>
-						<th>Action</th>
+						<th></th>
 					</tr>
 				</thead>
 				<tbody>
 					<tr ng-repeat="mapping in mappings">
 						<td>{{mapping.source}}</td>
 						<td>{{mapping.targetPrefixed}}</td>
-						<td><button class="btn btn-danger btn-xs" ng-click="removeMapping(mapping)">Remove</button></td>
+						<td><button class="btn btn-danger btn-xs" ng-click="removeMapping(mapping)"><span class="glyphicon glyphicon-trash"></span></button></td>
 					</tr>
 				</tbody>
 			</table>

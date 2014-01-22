@@ -70,6 +70,7 @@ import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.sparql.SparqlQueries;
 import org.datalift.fwk.util.io.FileUtils;
+import org.datalift.fwk.util.io.FileUtils.DownloadInfo;
 import org.datalift.fwk.util.web.Charsets;
 import org.datalift.fwk.util.web.HttpDateFormat;
 import org.datalift.fwk.view.TemplateModel;
@@ -83,11 +84,13 @@ import org.datalift.owl.OwlParser;
 import org.datalift.owl.OwlProperty;
 import org.datalift.owl.TechnicalException;
 import org.datalift.owl.toolkit.Argument;
+import org.datalift.owl.toolkit.BindingDeclaration;
 import org.datalift.owl.toolkit.CopyStatementRDFHandler;
 import org.datalift.owl.toolkit.Script;
 import org.datalift.owl.toolkit.ScriptItem;
 import org.datalift.owl.toolkit.SesameSPARQLExecuter;
 import org.datalift.owl.toolkit.Template;
+import org.datalift.owl.toolkit.TemplateCallSparqlHelper;
 import org.datalift.owl.toolkit.TemplateRegistry;
 import org.datalift.sparql.query.ConstructQuery;
 import org.datalift.sparql.query.UpdateQuery;
@@ -358,8 +361,9 @@ public class Mapper extends BaseModule implements ProjectModule
                 f.setLastModified((info.expires > 0L)? info.expires: now);
                 // Extract RDF format from MIME type to force file suffix.
                 RdfFormat fmt = RdfFormat.find(info.mimeType);
+
                 if (fmt == null) {
-                	// Got it from lov (but application/octet-stream)
+                	// we probably got it from lov (but application/octet-stream)
                 	if (src.endsWith(".n3")) {
                 		fmt = RdfFormat.N3;
                 	}
@@ -386,6 +390,7 @@ public class Mapper extends BaseModule implements ProjectModule
                 f.deleteOnExit();
             }
             // Parse ontology.
+            log.info("-- parsing ontology {} with path : {}--", f.getName(), f.getPath());
             Ontology o = new OwlParser().parse(f, src);
             // Return JSON representation of OWL ontology.
             response = Response.ok(new OntologyJsonStreamingOutput(o),
@@ -396,20 +401,44 @@ public class Mapper extends BaseModule implements ProjectModule
         }
         return response;
     }
-
-//    @GET
-//    @Path("sparqlQuery")
-//    @Produces(APPLICATION_JSON)
-//    public Response getSparqlQuery(@QueryParam("script") String script) {
-//    	Script scriptObject = new Script(script);
-//    	StringBuilder sb = new StringBuilder();
-//    	for(ScriptItem s : scriptObject.getScriptItems()) {
-//    		sb.append(s.toString());
-//    	}
-//    	return Response.ok(sb.toString(), APPLICATION_JSON_UTF8).build();
-//    }
+    
+    @POST
+    @Path("sparqlQuery")
+    @Consumes(APPLICATION_FORM_URLENCODED)
+    @Produces(APPLICATION_JSON_UTF8)
+    public Response getSparqlQuery(@FormParam("script") String script) {
+    	log.info("Transforming script to sparql query : {} ---", script);
+    	Script scriptObject = new Script(script);
+    	StringBuilder sb = new StringBuilder();
+    	sb.append("[");
+    	
+    	for(ScriptItem item : scriptObject.getScriptItems()) {
+    		sb.append("\"");
+    		TemplateCallSparqlHelper helper = new TemplateCallSparqlHelper(item);
+    		String sparql = helper.getSPARQL();
+    		
+    		for (String binding : helper.getBindings().keySet()) {
+    			sparql = sparql.replace("?" + binding,
+    					"<" + helper.getBindings().get(binding).toString() + ">");
+    		}
+    		
+    		sb.append(sparql);
+    		sb.append("\",");
+    	}
+    	
+    	if (sb.length() > 0) {
+    		sb.deleteCharAt(sb.length() - 1);
+    	}
+    	
+    	sb.append("]");
+    	
+    	return Response
+    			.ok(sb.toString(), APPLICATION_JSON_UTF8)
+    			.build();
+    }
     
 	@POST
+	@Consumes(APPLICATION_FORM_URLENCODED)
 	@Path("execute")
 	public Response executeScript(
 			@FormParam("project") java.net.URI projectId,

@@ -244,7 +244,7 @@ public class OwlParser
             query = "PREFIX owl: <" + OWL.NAMESPACE  + "> " +
                     "PREFIX dc:  <http://purl.org/dc/elements/1.1/> " +
                     "SELECT * WHERE {" +
-                    "  ?uri a owl:Ontology ." +
+                    "  OPTIONAL { ?uri a owl:Ontology . }" +
                     "  OPTIONAL { ?uri dc:title       ?title . }" +
                     "  OPTIONAL { ?uri dc:description ?desc  . } }";
             rs = cnx.prepareTupleQuery(SPARQL, query).evaluate();

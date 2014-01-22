@@ -29,6 +29,10 @@ body {
     text-align: center;
 }
 
+.pointer {
+	cursor: pointer;
+}
+
 /* Wizard */
 .wizard {
 	list-style: none outside none;
@@ -123,10 +127,6 @@ body {
 	margin-top: 20px;
 }
 
-.nav-tabs li.ng-scope {
-	cursor: pointer;
-}
-
 .list-group-item,
 .list-group-item:active,
 .list-group-item:focus {
@@ -137,4 +137,12 @@ body {
 .list-group .active:active,
 .list-group .active:focus {
 	outline: 0;
+}
+
+.search-bar {
+	margin: 10px 0;
+}
+
+.filter {
+	
 }

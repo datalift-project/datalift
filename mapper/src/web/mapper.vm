@@ -93,6 +93,9 @@ angular.module('OntoMapper', ['ui.bootstrap', 'ui.directives']).
 		when('/mapping/', {
             templateUrl: '$!{moduleUri}/static/partials/mapping.html',
             controller: MappingCtrl}).
+        when('/classes/', {
+            templateUrl: '$!{moduleUri}/static/partials/classes.html',
+            controller: ClassesCtrl}).
         when('/convert/', {
             templateUrl: '$!{moduleUri}/static/partials/convert.html',
             controller: ConvertCtrl}).

@@ -10,6 +10,7 @@ function MappingCtrl($scope, $location, $http, $timeout, Shared) {
 
     $scope.barLoaderSrc = Shared.moduleUri + "/static/img/bar_loader.gif";
     $scope.searchLoaderSrc = Shared.moduleUri + "/static/img/search_loader.gif";
+	$scope.suggestLoaderSrc = Shared.moduleUri + "/static/img/loader.gif";
 	
 	 /* 
 	  * TODO rdf:test donne un vocabulaire à "null" dans l'overview
@@ -23,6 +24,10 @@ function MappingCtrl($scope, $location, $http, $timeout, Shared) {
 	$scope.sourcePredicates = [];
 	$scope.sourceTypes = [];
 	//$scope.selectedPredicateId
+	//
+	$scope.suggesting = true;
+	$scope.suggestions = [];
+	$scope.numberOfPredicatesSearched = 0;
 	//
 	$scope.mappings = [];
 	$scope.vocabSummary = {};
@@ -62,6 +67,15 @@ function MappingCtrl($scope, $location, $http, $timeout, Shared) {
 	
 	$scope.hasPredicates = function() {
 		return $scope.sourcePredicates.length > 0;
+	}
+	
+	$scope.hasPredicate = function(predicateUri) {
+		for (var i = 0; i < $scope.sourcePredicates.length ; ++i) {
+			if ($scope.sourcePredicates[i].uri == predicateUri) {
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	$scope.autoMappingDisabled = function() {
@@ -287,8 +301,268 @@ function MappingCtrl($scope, $location, $http, $timeout, Shared) {
 	}
 	
 	//*************************************************************************
-	// Auto search
+	// Auto search / Suggest
 	//*************************************************************************
+	self.addSuggestion = function(predicate, target) {
+		if (predicate != undefined) {
+			$scope.suggestions.push({
+				'sourceId': predicate.name,
+				'source': predicate.name,
+				'sourceUri': predicate.uri,
+				'targetUri': target.uri,
+				'targetPrefixed': target.uriPrefixed,
+				'targetVocabulary': target.vocabulary
+			});
+		}	
+	}
+	
+	self.findMappings = function() {
+		console.log("Finding mappings...");
+//		console.log(JSON.stringify($scope.allLovResults));
+		var sortedVocabularies = self.sortVocabularies($scope.allLovResults);
+		self.createAutoMappings(sortedVocabularies);
+//		self.createMappingsForEachPredicates();
+		return JSON.stringify(sortedVocabularies);
+	}
+	
+	$scope.autoMapping = function() {
+		$scope.isAutoMapping = true;
+		$scope.numberOfPredicatesSearched = 0;
+		$scope.allLovResults = [];
+		self.loadLovPredicates();
+		self.waitForResponse();
+	}
+	
+	self.loadLovPredicates = function() {
+		console.log("Requesting predicates");
+		for (var i = 0 ; i < $scope.sourcePredicates.length ; ++i) {
+			self.requestPredicate(i, $scope.allLovResults);
+		}
+	}
+	
+	self.waitForResponse = function() {
+		console.log("numberOfPredicatesSearched : " + $scope.numberOfPredicatesSearched);
+		if ($scope.numberOfPredicatesSearched < $scope.sourcePredicates.length) {
+			$timeout(self.waitForResponse, 1000);
+		}
+		else {
+			$scope.sortedVocabularies = self.findMappings();
+			$scope.isAutoMapping = false;
+			$scope.suggesting = false;
+		}
+	}
+	
+	self.requestPredicate = function(index, allLovResults) {
+		if (index < $scope.sourcePredicates.length) {
+			$http.get(Shared.baseUri + '/lov/search?q='+ $scope.sourcePredicates[index].name
+					+ "&type=" + "http://www.w3.org/1999/02/22-rdf-syntax-ns%23Property")
+				.success(function(data, status, headers, config) {
+					allLovResults[index] = {};
+					allLovResults[index].results = data.results;
+					allLovResults[index].sourceName = $scope.sourcePredicates[index].name;
+					allLovResults[index].sourceUri = $scope.sourcePredicates[index].uri;
+					++$scope.numberOfPredicatesSearched;
+				})
+				.error(function(data, status, headers, config) {
+					allLovResults[index] = {};
+					++$scope.numberOfPredicatesSearched;
+				});
+		}
+	}
+	
+	self.sortVocabularies = function(lovResults) {
+		console.log("Sorting vocabularies");
+		var vocabList = new VocabList();
+		var vocabularies = [];
+		for (var i = 0 ; i < lovResults.length ; ++i) {
+			vocabList.addVocabulary(lovResults[i]);
+			self.vocabulariesUnion(vocabularies, lovResults[i]);
+		}
+		return vocabularies;
+	}
+	
+	self.vocabulariesUnion = function(vocabularies, lovResults) {
+		for (var i = 0 ; i < lovResults.results.length ; ++i) {
+			var index = self.indexOfVocabulary(vocabularies, lovResults.results[i].vocabulary);
+			// See if the vocabulary is already in our global list
+			if (index != -1) {
+				var predicateAlreadyIn = false;
+				for ( var j = 0 ; j < vocabularies[index].predicates.length ; ++j ) {
+					if (vocabularies[index].predicates[j].uri == lovResults.sourceUri) {
+						predicateAlreadyIn = true;
+						break;
+					}
+				}
+				if ( ! predicateAlreadyIn ) {
+				++vocabularies[index].count;
+				vocabularies[index].score += lovResults.results[i].score;
+				vocabularies[index].predicates.push({
+					"name": lovResults.sourceName,
+					"uri": lovResults.sourceUri,
+					"targetUri": lovResults.results[i].uri,
+					"targetUriPrefixed": lovResults.results[i].uriPrefixed,
+					"score": lovResults.results[i].score
+					});
+				}
+			}
+			else { // new one
+				vocabularies.push({
+//					'uriPrefixed': lovResults.results[i].uriPrefixed,
+//					'uri': lovResults.results[i].uri,
+					'vocabulary': lovResults.results[i].vocabulary,
+					'count': 1,
+					'score': lovResults.results[i].score,
+					'predicates': [{
+						'name': lovResults.sourceName,
+						'uri': lovResults.sourceUri,
+						"targetUri": lovResults.results[i].uri,
+						"targetUriPrefixed": lovResults.results[i].uriPrefixed,
+						"score": lovResults.results[i].score
+					}]
+				});
+			}
+		}
+	}
+	
+	self.indexOfVocabulary = function(vocabularyArray, vocabularyUri) {
+		for (var i = 0 ; i < vocabularyArray.length ; ++i) {
+			if (vocabularyArray[i].vocabulary == vocabularyUri) {
+				return i;
+			}
+		}
+		return -1;
+	}
+	
+	self.createAutoMappings = function(sortedVocabularies) {
+		console.log("Auto mapping starting");
+		var it = 0;
+		var maxIt = $scope.sourcePredicates.length * 3;
+		var suggestedPredicates = 0;
+		while (suggestedPredicates < $scope.sourcePredicates.length && it < maxIt) {
+			var bestIndex = self.findBestVocabularyIndex(sortedVocabularies);
+			if (bestIndex != -1) {
+				for ( var i = 0 ; i < sortedVocabularies[bestIndex].predicates.length ; ++i ) {
+					self.addSuggestion({
+						"name": sortedVocabularies[bestIndex].predicates[i].name,
+						"uri": sortedVocabularies[bestIndex].predicates[i].uri
+					},
+					{
+						"uri": sortedVocabularies[bestIndex].predicates[i].targetUri,
+						"uriPrefixed": sortedVocabularies[bestIndex].predicates[i].targetUriPrefixed,
+						"vocabulary": sortedVocabularies[bestIndex].vocabulary
+					});
+					++suggestedPredicates;
+				}
+			
+				// on copie le tableau sinon problème lors du removePredicatesFromSortedVocabularies
+				var predicatesToRemove = sortedVocabularies[bestIndex].predicates.slice(0);
+				self.removePredicatesFromSortedVocabularies(sortedVocabularies, predicatesToRemove);
+				
+			}
+// 			$scope.selectedPredicateId = "";
+			console.log("End Iteration " + it);
+			++it;
+		}
+	}
+	
+	self.findBestVocabularyIndex = function(sortedVocabularies) {
+		var maxCount = 0;
+		var maxScore = 0;
+		var bestVocabularyIndex = -1;
+		for(var i = 0 ; i < sortedVocabularies.length ; ++i) {
+			var vocab = sortedVocabularies[i];
+			if ( vocab.count > maxCount) {
+				maxCount = vocab.count;
+				maxScore = vocab.score;
+				bestVocabularyIndex = i;
+			}
+			else if ( vocab.count == maxCount ) {
+				if ( vocab.score > maxScore) {
+					maxScore = vocab.score;
+					bestVocabularyIndex = i;
+				}
+			}
+		}
+		return bestVocabularyIndex;
+		
+	}
+	
+	self.removePredicatesFromSortedVocabularies = function(sortedVocabularies, predicatesToRemove) {
+// 		console.log("Removing " + predicatesToRemove.length + " predicates");
+		for (var i = 0 ; i < predicatesToRemove.length ; ++i) {
+			self.removePredicateFromSortedVocabularies(sortedVocabularies, predicatesToRemove[i]);
+		}
+		
+	}
+	
+	self.removePredicateFromSortedVocabularies = function(sortedVocabularies, predicate) {
+		var vocabToRemove = [];
+		
+		for ( var i = 0 ; i < sortedVocabularies.length ; ++i ) {
+			var indexesToRemove = [];
+			var scoreToSubstract = 0;
+			
+			// look for things to remove
+			for (var j = 0 ; j < sortedVocabularies[i].predicates.length ; ++j) {
+				if ( sortedVocabularies[i].predicates[j].uri == predicate.uri ) {
+					indexesToRemove.push(j);
+					scoreToSubstract += predicate.score;
+				}
+			}
+			
+			// clean that up
+			sortedVocabularies[i].score -= scoreToSubstract;
+			for (var j = 0 ; j < indexesToRemove.length ; ++j) {
+				sortedVocabularies[i].predicates.splice(indexesToRemove[j], 1);
+				--sortedVocabularies[i].count;
+			}
+			
+			// remember what vocabulary has become useless
+			if (sortedVocabularies[i].count == 0) {
+				vocabToRemove.push(i);
+			}
+		}
+		// clean vocabularies
+		for (var i = 0 ; i < vocabToRemove.length ; ++i ) {
+			sortedVocabularies.splice(vocabToRemove[i], 1);
+		}
+	}
+	
+	self.findBestVocabularyForPredicate = function(predicate, sortedVocabularies) {
+		var maxCount = 0;
+		var maxScore = 0;
+		var bestVocabulary = {};
+		for(var i = 0 ; i < sortedVocabularies.length ; ++i) {
+			var vocab = sortedVocabularies[i];
+			if ( self.vocabularyContainsPredicate(vocab, predicate) > -1) {
+				if ( vocab.count > maxCount) {
+					maxCount = vocab.count;
+					maxScore = vocab.score;
+					bestVocabulary = vocab;
+				}
+				else if ( vocab.count == maxCount ) {
+					if ( vocab.score > maxScore) {
+						maxScore = vocab.score;
+						bestVocabulary = vocab;
+					}
+				}
+			}
+		}
+		return bestVocabulary;
+	}
+	
+	self.vocabularyContainsPredicate = function(vocabulary, predicate) {
+		for (var i = 0 ; i < vocabulary.predicates.length ; ++i) {
+			if ( vocabulary.predicates[i].uri == predicate.uri ) return i;
+		}
+		return -1;
+	}
+	
+	self.findSolutions = function(possibleMappings) {
+		for (var i = 0 ; i < possibleMappings.length ; ++i) {
+			
+		}
+	}
 	
 	//*************************************************************************
 	// Mappings control
@@ -332,7 +606,7 @@ function MappingCtrl($scope, $location, $http, $timeout, Shared) {
 	
 	self.addMappingToArray = function(predicate, target) {
 		if (predicate != undefined) {
-			console.log("Adding the follow mapping : " + JSON.stringify(predicate) + " - " + JSON.stringify(target));
+// 			console.log("Adding the follow mapping : " + JSON.stringify(predicate) + " - " + JSON.stringify(target));
 			$scope.mappings.push({
 				'sourceId': predicate.name,
 				'source': predicate.name,
@@ -344,6 +618,19 @@ function MappingCtrl($scope, $location, $http, $timeout, Shared) {
 			self.addToVocabularyOverview(target.vocabulary);
 			self.removePredicate(predicate);
 		}
+	}
+	
+	$scope.addSuggestedMapping = function(mapping) {
+		self.addMappingToArray(
+			{
+				'name': mapping.source,
+				'uri': mapping.sourceUri
+			},
+			{
+				'uri': mapping.targetUri,
+				'uriPrefixed': mapping.targetPrefixed,
+				'vocabulary': mapping.targetVocabulary
+			});
 	}
 	
 	$scope.removeMapping = function(mappingToRemove) {
@@ -360,7 +647,16 @@ function MappingCtrl($scope, $location, $http, $timeout, Shared) {
 	}
 	
 	self.removePredicate = function(predicateToRemove) {
-		$scope.sourcePredicates.splice($scope.sourcePredicates.indexOf(predicateToRemove), 1);
+		var indexToRemove = -1;
+		for (var i = 0 ; i < $scope.sourcePredicates.length ; ++i) {
+				if ( $scope.sourcePredicates[i].uri === predicateToRemove.uri ) {
+					indexToRemove = i;
+					break;
+				}
+		}
+		if (indexToRemove != -1) {
+			$scope.sourcePredicates.splice(indexToRemove, 1);
+		}
 	}
 	
 	self.addToVocabularyOverview = function(vocabulary) {
@@ -465,6 +761,7 @@ function MappingCtrl($scope, $location, $http, $timeout, Shared) {
 			// TODO
 		}
 		$scope.loadingPredicates = false;
+		$scope.autoMapping();
 	})
 	.error(function(data, status, headers, config) {
 		Shared.broadcastNotification({

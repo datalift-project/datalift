@@ -318,6 +318,31 @@ function ConvertCtrl($scope, $http, $timeout, Shared) {
 		});
 	}
 	
+	$scope.getSparqlQuery = function() {
+		var script = $scope.classScript + $scope.script;
+	    var url = Shared.baseUri + "/mapper/sparqlQuery";
+		var data = {
+			project: Shared.projectUri,
+			source: Shared.selectedSource,
+			dest_title: $scope.targetSrcName,
+			dest_graph_uri: $scope.targetSrcGraph,
+			script: script
+		};
+	    $http.post(url, data, {
+	    	'headers': {
+	    		"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
+    		},
+    		'transformRequest': self.transformRequest,
+	    })
+    	.success(function(data, status, headers, config) {
+			$scope.sparqlTest = data;
+	    })
+    	.error(function(data, status, headers, config) {
+    	});
+	}
+	
+	//
+	
 	Shared.broadcastCurrentStep(3);
 	
 	// 
