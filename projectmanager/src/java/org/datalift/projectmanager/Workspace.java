@@ -85,8 +85,13 @@ import org.openrdf.model.Literal;
 import org.openrdf.model.Value;
 import org.openrdf.model.vocabulary.RDFS;
 import org.openrdf.query.BindingSet;
+import org.openrdf.query.MalformedQueryException;
+import org.openrdf.query.QueryEvaluationException;
+import org.openrdf.query.QueryLanguage;
+import org.openrdf.query.TupleQueryResult;
 import org.openrdf.query.TupleQueryResultHandlerBase;
 import org.openrdf.repository.RepositoryConnection;
+import org.openrdf.repository.RepositoryException;
 import org.xml.sax.InputSource;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
@@ -2230,9 +2235,71 @@ public class Workspace extends BaseModule
                                                    uriInfo, request, acceptHdr);
     }
 
+    // TODO: In query, replace with a sparql variable.
+    @GET
+    @Path("{id}/source/{srcid}")
+    public Response getProjectAtomStream(
+    		@PathParam("id") String projectId,
+            @PathParam("srcid") String srcId) {
+    	String query = 
+    			"PREFIX prov: <http://www.w3.org/ns/prov#>" +
+    			"PREFIX datalift: <http://www.datalift.org/core#>" +
+    			"SELECT * WHERE {" +
+    			"  ?event a <http://www.w3.org/ns/prov#Activity> ;" +
+    			"         prov:startedAtTime ?time ;" +
+    			"         prov:influenced " + srcId + " ;" +
+    			"         datalift:parameters ?parameters ;" +
+    			"         prov:endedAtTime ?endedAtTime ;" +
+    			"         a ?type . FILTER regex(str(?type), \"Source\")" +
+    			"}";
+    	
+    	Feed feed = new Feed();
+
+    	final String TEMPLATE = "rss/atom.vm";
+        return Response.ok(this.newView(TEMPLATE, feed)).build();
+    }
+    
+    // TODO: In query, replace with a sparql variable.
+    @GET
+    @Path("{id}/atom")
+    public Response getProjectAtomStream(@PathParam("id") String projectId) {
+    	String query = 
+    			"PREFIX prov: <http://www.w3.org/ns/prov#>" +
+    			"PREFIX datalift: <http://www.datalift.org/core#>" +
+    			"SELECT * WHERE {" +
+    			"  ?event a <http://www.w3.org/ns/prov#Activity> ;" +
+    			"         prov:startedAtTime ?time ;" +
+    			"         prov:influenced " + projectId + " ;" +
+    			"         datalift:parameters ?parameters ;" +
+    			"         prov:endedAtTime ?endedAtTime ;" +
+    			"         a ?type . FILTER regex(str(?type), \"Project\")" +
+    			"}";
+
+    	Feed feed = new Feed();
+
+    	final String TEMPLATE = "rss/atom.vm";
+        return Response.ok(this.newView(TEMPLATE, feed)).build();
+    }
+    
     @GET
     @Path("atom")
-    public Response getAtomStream() {
+    public Response getAllAtomStream() {
+    	String query = 
+    			"PREFIX prov: <http://www.w3.org/ns/prov#>" +
+    			"PREFIX datalift: <http://www.datalift.org/core#>" +
+    			"SELECT * WHERE {" +
+    			"  ?event a <http://www.w3.org/ns/prov#Activity> ;" +
+    			"         prov:startedAtTime ?time ;" +
+    			"         prov:influenced ?influenced ;" +
+    			"         datalift:parameters ?parameters ;" +
+    			"         prov:endedAtTime ?endedAtTime ;" +
+    			"         a ?type . FILTER regex(str(?type), \"Event\")" +
+    			"}";
+//    	TupleQueryResult handler = new TupleQueryResult();
+//    	Repository repo = Configuration.getDefault().getInternalRepository();
+//    	repo.select(query, handler);
+
+			
     	Feed feed = new Feed();
     	feed.setTitle("Datalift atom feed.");
     	feed.setLink("Link");
@@ -2249,7 +2316,6 @@ public class Workspace extends BaseModule
     	feed.addEntry(e);
     	
     	final String TEMPLATE = "rss/atom.vm";
-        
         return Response.ok(this.newView(TEMPLATE, feed)).build();
     }
     
