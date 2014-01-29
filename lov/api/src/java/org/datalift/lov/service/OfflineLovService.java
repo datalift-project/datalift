@@ -81,7 +81,13 @@ public class OfflineLovService extends LovService {
 		this.configuration = configuration;
 		localService = new LovLocalService(configuration);
 		vocabsService = new LovLocalVocabularyService(configuration);
-		downloadAggregator();
+		new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				downloadAggregator();
+			}
+		}).start();
 	}
 
 	@Override
@@ -89,7 +95,6 @@ public class OfflineLovService extends LovService {
 		if (params.getQuery().trim().isEmpty()) {
 			return DEFAULT_JSON;
 		}
-
 		String type = params.getType();
 		if (type.trim().isEmpty()) {
 			type = null;
@@ -164,8 +169,8 @@ public class OfflineLovService extends LovService {
 		aggregatorDownloaded = false;
 
 		List<String> files = Arrays.asList(lovData.list());
-		// si le fichier lov_aggregator.rdf n'existe pas, on va le récupérer
-		if ( ! files.contains("lov_aggregator.rdf")) {
+		// si le fichier lov_aggregator.nq n'existe pas, on va le récupérer
+		if ( ! files.contains(NQ_AGGREGATOR)) {
 			// lancement du téléchargement dans un nouveau thread
 			new Thread(new Runnable() {
 
@@ -247,6 +252,7 @@ public class OfflineLovService extends LovService {
 					// TODO : vérifier si une mise à jour est disponible
 			log.info("No need for download. LovAggregator is here !");
 			aggregatorDownloaded = true;
+			convertAggragator();
 			loadDataIntoRepository();
 		}
 	}
