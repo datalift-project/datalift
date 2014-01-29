@@ -5,7 +5,6 @@ function MappingCtrl($scope, $location, $http, $timeout, Shared) {
 	// Static data
 	//*************************************************************************
     self.url_prop = Shared.baseUri + "/sparql?default-graph-uri=internal&query=SELECT DISTINCT ?p WHERE { graph <" + Shared.selectedSource + "> { ?s ?p ?o . }}&max=25";
-    self.url_type = Shared.baseUri + "/sparql?default-graph-uri=internal&query=SELECT DISTINCT ?o WHERE { graph <" + Shared.selectedSource + "> { ?s a ?o . }}&max=25";
 	self.pageSize = 5;
 
     $scope.barLoaderSrc = Shared.moduleUri + "/static/img/bar_loader.gif";
@@ -22,10 +21,8 @@ function MappingCtrl($scope, $location, $http, $timeout, Shared) {
 	//*************************************************************************
 	$scope.mode = "lov";
 	$scope.sourcePredicates = [];
-	$scope.sourceTypes = [];
-	//$scope.selectedPredicateId
 	//
-	$scope.suggesting = true;
+	$scope.suggesting = false;
 	$scope.suggestions = [];
 	$scope.numberOfPredicatesSearched = 0;
 	//
@@ -43,12 +40,15 @@ function MappingCtrl($scope, $location, $http, $timeout, Shared) {
 	$scope.numberOfPredicatesSearched = 0;
 	$scope.allLovResults = [];
 	//
-    $scope.updatingOntology = false;
+	$scope.projectPropertyType = "DatatypeProperty";
+	$scope.ontologyStringFilter = "";
+    $scope.updatingOntologies = false;
+	$scope.ontoRequestSent = 0;
+	$scope.ontoRequestReceived = 0;
     $scope.ontologies = Shared.ontologies;
     $scope.loadedOntology = {};
 	$scope.loadedOntologies = [];
 	$scope.propertiesFound = [];
-	$scope.selectedOntology = {};
 	$scope.visibleOntologies = [];
 	// tabs
 	$scope.currentTab = 0;
@@ -56,13 +56,17 @@ function MappingCtrl($scope, $location, $http, $timeout, Shared) {
 	//*************************************************************************
 	// Common methods
 	//*************************************************************************
-	$scope.goToConvert = function() {
+	self.goTo = function(path) {
 		Shared.mappings = $scope.mappings;
-		$location.path("/convert/");
+// 		Shared.sourceData[Shared.selectedSource].mappings = $scope.mappings;
+		$location.path(path);
+	}
+	$scope.goToClasses = function() {
+		self.goTo("/refine/");
 	}
 	
 	$scope.goToSelect = function() {
-		$location.path("/select/");
+		self.goTo("/select/");
 	}
 	
 	$scope.hasPredicates = function() {
@@ -78,18 +82,18 @@ function MappingCtrl($scope, $location, $http, $timeout, Shared) {
 		return false;
 	}
 	
+	$scope.noPredicateSelected = function() {
+		if ($scope.selectedPredicateId) {
+			return $scope.selectedPredicateId == "";
+		}
+		return true;
+	}
+	
 	$scope.autoMappingDisabled = function() {
 		return $scope.isAutoMapping || $scope.sourcePredicates.length == 0;
 	}
 	
 	$scope.selectTab = function(tab) {
-		
-// 		var oldTab = $scope.currentTab + 1;
-// 		var newTab = tab + 1;
-// 		
-// 		$("#selectionTabs>li:nth-child("+ oldTab +")").removeClass("active");
-// 		$("#selectionTabs>li:nth-child("+ newTab +")").addClass("active");
-		
 		$scope.currentTab = tab;
 	}
 	
@@ -97,32 +101,40 @@ function MappingCtrl($scope, $location, $http, $timeout, Shared) {
 		return $scope.currentTab == tab;
 	}
 	
+	self.getSourceName = function() {
+		for (var i = 0 ; i < Shared.sources.length ; ++i) {
+			if (Shared.sources[i].uri == Shared.selectedSource) {
+				return Shared.sources[i].title; 
+			}
+		}
+		return source;
+	}
+
 	//*************************************************************************
 	// Project oriented methods
 	//*************************************************************************
 	self.loadAllOntologies = function() {
+		// Afficher un loader
+		$scope.updatingOntologies = true;
 		for (var i = 0 ; i < Shared.ontologies.length ; ++i) {
+			++$scope.ontoRequestSent;
 			self.loadOntology(Shared.ontologies[i]);
 		}
 	}
 	
 	self.loadOntology = function(ontology) {
-		// Afficher un loader
-		$scope.updatingOntology = true;
 		$http.get(Shared.baseUri + "/mapper/ontology?src=" + ontology.uri)
 		.success(function(data, status, headers, config) {
 			var propArray = [];
 			for (var prop in data.properties) {
-				if (data.properties[prop].type != "ObjectProperty") {
-					propArray.push({
-						uri: prop,
-						type: data.properties[prop].type,
-						name: data.properties[prop].name,
-						desc: data.properties[prop].desc,
-						ranges: data.properties[prop].ranges,
-						domains: data.properties[prop].domains
-					});
-				}
+				propArray.push({
+					uri: prop,
+					type: data.properties[prop].type,
+					name: data.properties[prop].name,
+					desc: data.properties[prop].desc,
+					ranges: data.properties[prop].ranges,
+					domains: data.properties[prop].domains
+				});
 			}
 			$scope.loadedOntologies.push({
 				uri: ontology.uri,
@@ -130,23 +142,21 @@ function MappingCtrl($scope, $location, $http, $timeout, Shared) {
 				classes: data.classes,
 				properties: propArray
 			});
-			// Retirer le loader
-			$scope.updatingOntology = false;
+			++$scope.ontoRequestReceived;
+			Shared.loadedOntologies = $scope.loadedOntologies;
 		})
 		.error(function(data, status, headers, config) {
 			self.findAlternativeUriFromLov(ontology);
 		});
 	}
 	
-	$scope.updateOntology = function() {
-		self.loadOntology($scope.selectedOntology);
-	}
-	
 	self.findAlternativeUriFromLov = function(ontology) {
 		$http.get(Shared.baseUri + "/lov/vocabs?uri=" + ontology.uri)
 		.success(function(data, status, headers, config) {
 			if (data.hasOwnProperty("lastVersionReviewed")) {
-				self.loadOntologyFromLov(ontology, data.lastVersionReviewed.link);
+				if(data.lastVersionReviewed) {
+					self.loadOntologyFromLov(ontology, data.lastVersionReviewed.link);
+				}
 			}
 		})
 		.error(function(data, status, headers, config) {
@@ -155,7 +165,6 @@ function MappingCtrl($scope, $location, $http, $timeout, Shared) {
 				message: "No alternative URI has been found for " + ontology.title + ".",
 				type: "warning"
     		});
-			$scope.updatingOntology = false;
 		});
 	}
 	
@@ -164,9 +173,14 @@ function MappingCtrl($scope, $location, $http, $timeout, Shared) {
 		.success(function(data, status, headers, config) {
 			var propArray = [];
 			for (var prop in data.properties) {
-				if (data.properties[prop].type != "ObjectProperty") {
-					propArray.push(data.properties[prop]);
-				}
+				propArray.push({
+					uri: prop,
+					type: data.properties[prop].type,
+					name: data.properties[prop].name,
+					desc: data.properties[prop].desc,
+					ranges: data.properties[prop].ranges,
+					domains: data.properties[prop].domains
+				});
 			}
 			$scope.loadedOntologies.push({
 				uri: ontology.uri,
@@ -174,8 +188,8 @@ function MappingCtrl($scope, $location, $http, $timeout, Shared) {
 				classes: data.classes,
 				properties: propArray
 			});
-			// Retirer le loader
-			$scope.updatingOntology = false;
+			++$scope.ontoRequestReceived;
+			Shared.loadedOntologies = $scope.loadedOntologies;
 		})
 		.error(function(data, status, headers, config) {
 			Shared.broadcastNotification({
@@ -183,13 +197,12 @@ function MappingCtrl($scope, $location, $http, $timeout, Shared) {
 				message: "The onology " + ontology.title + " has not been loaded properly.",
 				type: "warning"
     		});
-			$scope.updatingOntology = false;
+			++$scope.ontoRequestReceived;
 		});
 	}
 	
-	$scope.ontologySelected = function() {
-		return ! jQuery.isEmptyObject($scope.selectedOntology) 
-				&& ! $scope.updatingOntology;
+	$scope.ontologiesLoaded = function() {
+		return $scope.ontoRequestReceived >= $scope.ontoRequestSent;
 	}
 	
 	$scope.searchOntologyProperties = function() {
@@ -213,6 +226,41 @@ function MappingCtrl($scope, $location, $http, $timeout, Shared) {
 	$scope.isVisible = function(uri) {
 		return $scope.visibleOntologies.indexOf(uri) != -1;
 	}
+	
+	$scope.ontologyTreeClass = function(uri) {
+		var css = "glyphicon glyphicon-";
+		
+		if ($scope.isVisible(uri)) {
+			css += "folder-open";
+		}
+		else {
+			css += "folder-close";
+		}
+		
+		return css;
+	}
+	
+	$scope.projectPropertiesFilter = function(property) {
+		if (property.type != $scope.projectPropertyType) {
+			return false;
+		}
+		else {
+			if ($scope.ontologyStringFilter.trim() == "") {
+				return true;
+			}
+			var val = $scope.ontologyStringFilter.toLowerCase();
+			if(property.desc) {
+				return property.name.toLowerCase().indexOf(val) != -1
+					|| property.desc.toLowerCase().indexOf(val) != -1
+					|| property.uri.toLowerCase().indexOf(val) != -1;
+			}
+			else {
+				return property.name.toLowerCase().indexOf(val) != -1
+					|| property.uri.toLowerCase().indexOf(val) != -1;
+			}
+		}
+	}
+	
 	//*************************************************************************
 	// LOV oriented methods
 	//*************************************************************************
@@ -326,6 +374,7 @@ function MappingCtrl($scope, $location, $http, $timeout, Shared) {
 	}
 	
 	$scope.autoMapping = function() {
+		$scope.suggesting = true;
 		$scope.isAutoMapping = true;
 		$scope.numberOfPredicatesSearched = 0;
 		$scope.allLovResults = [];
@@ -602,6 +651,7 @@ function MappingCtrl($scope, $location, $http, $timeout, Shared) {
 		};
 		
 		$scope.addMapping(target);
+		
 	}
 	
 	self.addMappingToArray = function(predicate, target) {
@@ -631,6 +681,14 @@ function MappingCtrl($scope, $location, $http, $timeout, Shared) {
 				'uriPrefixed': mapping.targetPrefixed,
 				'vocabulary': mapping.targetVocabulary
 			});
+		
+		// Change selection
+		if ($scope.sourcePredicates.length > 0) {
+			$scope.selectedPredicateId = $scope.sourcePredicates[0].name;
+		}
+		else {
+			$scope.selectedPredicateId = "";
+		}
 	}
 	
 	$scope.removeMapping = function(mappingToRemove) {
@@ -708,11 +766,9 @@ function MappingCtrl($scope, $location, $http, $timeout, Shared) {
 	//*************************************************************************
 	// Actions to execute immediately
 	//*************************************************************************
-	Shared.broadcastCurrentStep(2);
+	$scope.sourceName = self.getSourceName();
 	
-	if(Shared.selectedSource == "") {
-		$scope.goToSelect();
-	}
+	Shared.broadcastCurrentStep(2);
 	
 	$scope.$watch('selectedPredicateId', function(newValue) {
 		$scope.searchQuery = newValue;
@@ -722,75 +778,77 @@ function MappingCtrl($scope, $location, $http, $timeout, Shared) {
 		$scope.filterLovResults();
 	});
 	
-	// load project ontologies
-	self.loadAllOntologies();
+	if(Shared.selectedSource == "") {
+		$scope.goToSelect();
+	}
 	
-	// load source
-	$http.get(self.url_prop) // prédicats
-	.success(function(data, status, headers, config) {
-		var rdf = new RegExp("http://www.w3.org/1999/02/22-rdf-syntax-ns#");
-		var rdfs= new RegExp("http://www.w3.org/2000/01/rdf-schema#");
-		var owl = new RegExp("http://www.w3.org/2002/07/owl#");
-		var prefixMapping = [];
-		for ( var i = 0 ; i < data.results.bindings.length ; ++i) {
-			var p = data.results.bindings[i].p.value;
-			// Substitute well-known prefixes.
-			var name = p.replace(rdf, "rdf:").replace(rdfs, "rdfs:")
-				.replace(owl, "owl:");
-			if (name == p) {
-				// Not a well-known prefix. => Extract namespace
-				var j = Math.max(p.lastIndexOf('#'), p.lastIndexOf('/')) + 1;
-				var ns = p.substring(0, j);
-				name = p.substring(j);
-				// Resolve name conflicts.
-				var k = prefixMapping.indexOf(ns);
-				if (k == -1) {
-					// Namespace not yet known.
-					k = prefixMapping.push(ns) - 1;
-				}
-				if (k != 0) {
-					name = 'ns' + k + ':' + name;
-				}
-//				propertyMap[name] = p;
-			}
-			if(name != "rdf:type") {
-				self.addPredicate(name, p);
-			}
-		}
-		if ($scope.sourcePredicates.length == 0) {
-			// TODO
-		}
+	// Project ontologies
+	if (jQuery.isEmptyObject(Shared.loadedOntologies)) {
+		// load project ontologies
+		self.loadAllOntologies();
+	}
+	else {
+		$scope.loadedOntologies = Shared.loadedOntologies;
+	}
+	
+	if (Shared.sourceData[Shared.selectedSource]) {
+		$scope.suggestions = Shared.sourceData[Shared.selectedSource].suggestions;
+		$scope.sourcePredicates = Shared.sourceData[Shared.selectedSource].properties;
+		$scope.mappings = Shared.sourceData[Shared.selectedSource].mappings;
 		$scope.loadingPredicates = false;
-		$scope.autoMapping();
-	})
-	.error(function(data, status, headers, config) {
-		Shared.broadcastNotification({
-			heading: "Source predicate error",
-			message: "The service returned an error while fetching source predicates.",
-			type: "danger"
+	}
+	else {
+		// load source
+		$http.get(self.url_prop) // prédicats
+		.success(function(data, status, headers, config) {
+			var rdf = new RegExp("http://www.w3.org/1999/02/22-rdf-syntax-ns#");
+			var rdfs= new RegExp("http://www.w3.org/2000/01/rdf-schema#");
+			var owl = new RegExp("http://www.w3.org/2002/07/owl#");
+			var prefixMapping = [];
+			for ( var i = 0 ; i < data.results.bindings.length ; ++i) {
+				var p = data.results.bindings[i].p.value;
+				// Substitute well-known prefixes.
+				var name = p.replace(rdf, "rdf:").replace(rdfs, "rdfs:")
+					.replace(owl, "owl:");
+				if (name == p) {
+					// Not a well-known prefix. => Extract namespace
+					var j = Math.max(p.lastIndexOf('#'), p.lastIndexOf('/')) + 1;
+					var ns = p.substring(0, j);
+					name = p.substring(j);
+					// Resolve name conflicts.
+					var k = prefixMapping.indexOf(ns);
+					if (k == -1) {
+						// Namespace not yet known.
+						k = prefixMapping.push(ns) - 1;
+					}
+					if (k != 0) {
+						name = 'ns' + k + ':' + name;
+					}
+	//				propertyMap[name] = p;
+				}
+				if(name != "rdf:type") {
+					self.addPredicate(name, p);
+				}
+			}
+			if ($scope.sourcePredicates.length == 0) {
+				// TODO
+			}
+			Shared.sourceData[Shared.selectedSource] = {
+				properties: $scope.sourcePredicates,
+				suggestions: $scope.suggestions,
+				mappings: $scope.mappings
+			}
+			
+			$scope.loadingPredicates = false;
+			$scope.autoMapping();
+		})
+		.error(function(data, status, headers, config) {
+			Shared.broadcastNotification({
+				heading: "Source predicate error",
+				message: "The service returned an error while fetching source predicates.",
+				type: "danger"
+			});
 		});
-	});
-	
-	$http.get(self.url_type) // types
-	.success(function(data, status, headers, config) {
-		for (  var i = 0 ; i < data.results.bindings.length ; ++i) {
-			var o = data.results.bindings[i].o.value;
-			var j = Math.max(o.lastIndexOf('#'), o.lastIndexOf('/')) + 1;
-			var ns = o.substring(0, j);
-			var name = o.substring(j);
-			$scope.sourceTypes.push(name);
-			// push new mapping ?
-		}
+	}
 		
-		if ( $scope.sourceTypes.lenghth > 0 ) {
-			// TODO
-		}
-	})
-	.error(function(data, status, headers, config) {
-		Shared.broadcastNotification({
-			heading: "Source type error",
-			message: "The service returned an error while fetching source types.",
-			type: "danger"
-		});
-	});
 }

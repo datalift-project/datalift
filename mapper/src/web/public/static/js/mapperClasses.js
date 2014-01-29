@@ -1,3 +1,54 @@
+function MappingObject(id){
+	var self = this;
+	
+	//*************************************************************************
+	// Data bindings
+	//*************************************************************************
+	self.id = id;
+	self.name = "Resource " + id;
+	self.uriFormat = "";
+	self.currentClasses = [];
+	self.classes = [];
+	self.mappedProperties = [];
+	self.objectProperties = [];
+	self.datatypeProperties = [];
+	
+	//*************************************************************************
+	// Data bindings
+	//*************************************************************************
+	self.addMappedProperty = function(mappedProperty) {
+		self.mappedProperties.push(mappedProperty);
+	}
+	
+	self.removeMappedProperty = function(mappedProperty) {
+		self.mappedProperties.splice(self.mappedProperties.indexOf(mappedProperty), 1);
+	}
+	
+	self.addClass = function(objectClass) {
+		self.classes.push(objectClass);
+	}
+	
+	self.removeClass = function(objectClass) {
+		self.classes.splice(self.classes.indexOf(objectClass), 1);
+	}
+	
+	self.addObjectProperty = function(objectProperty) {
+		self.objectProperties.push(objectProperty);
+	}
+	
+	self.removeObjectProperty = function(objectProperty) {
+		self.objectProperties.splice(self.objectProperties.indexOf(objectProperty), 1);
+	}
+	
+	self.addDatatypeProperty = function(datatypeProperty) {
+		self.datatypeProperties.push(datatypeProperty);
+	}
+	
+	self.removeDatatypeProperty = function(datatypeProperty) {
+		self.datatypeProperties.splice(self.datatypeProperties.indexOf(datatypeProperty), 1);
+	}
+}
+
 function VocabSummary(vocabulary) {
 	var self = this;
 	

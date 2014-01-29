@@ -1,0 +1,138 @@
+<div class="center-content" ng-show="loading">
+	<p>{{loaderTxt}}</p>
+	<img ng-src="{{loaderSrc}}"/>
+</div> 
+<div ng-hide="loading">
+	
+	<div ng-repeat="o in objects">
+		<div class="row">
+			<div class="col-md-6">
+				<div class="panel panel-default">
+					<div class="panel-heading">
+						<h3 class="panel-title">Resource {{o.id}}</h3>
+					</div>
+					<div class="panel-body">
+						Classes
+						<div class="object-classes"
+							ng-repeat="c in o.classes">
+							<span class="label label-info">
+								{{c}} &times;
+							</span>
+						</div>
+						<hr>
+						<div class="droppable"
+							data-drop="true"
+							data-jqyoui-options="{activeClass:'droppable-active'}"
+							ng-model="o.mappedProperties"
+							jqyoui-droppable="{multiple:true, onDrop:'checkClasses()'}">
+							Properties 
+							<button type="button" class="btn btn-default" 
+								ng-click="setObjectPropertyPanel(o.id)">
+								<span class="glyphicon glyphicon-plus"></span>
+							</button>
+							<div class="object-mappings"
+								ng-repeat="m in o.mappedProperties"
+								data-drag="true"
+								data-jqyoui-options="{revert: 'invalid', containment: 'document', cursor:'move'}"
+								ng-model="o.mappedProperties"
+								jqyoui-draggable="{index: {{$index}}}">
+								{{m.source}} - {{m.targetPrefixed}}
+							</div>
+						</div>
+						<hr>
+						<div class="object-objectProperties"
+							ng-repeat="p in o.objectProperties">
+							{{p.predicate}}
+							{{getObject(p.target).name}}
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-6" ng-show="isEditing(o.id)">
+				<!-- Classe -->
+				<!-- Datatype property -->
+				<!-- Object property -->
+				<div class="panel panel-default">
+					<div class="panel-heading">
+						<h3 class="panel-title">
+							New object property for object {{o.id}}
+							<span class="pull-right pointer"
+								ng-click="setObjectPropertyPanel(-1)">
+								&times;
+							</span>
+						</h3>
+					</div>
+					<div class="panel-body">
+						<div>
+							<!-- filters -->
+							<div class="form-group">
+								<label for="ontologyFilterInput">Search properties</label>
+								<input
+									type="text"
+									class="form-control"
+									id="ontologyFilterInput"
+									ng-model="ontologyStringFilter.value"
+									placeholder="Filter text">
+							</div>
+
+							<!-- explorer -->
+							<!-- "item in filtered = (items | filter:filterExpr)" -->
+							<div 
+								class="ontologyTree"
+								ng-repeat="ontology in loadedOntologies">
+								<span ng-class="ontologyTreeClass(ontology.uri)"></span>
+								<span ng-click="changeVisibility(ontology.uri)">
+									{{ontology.name}} ({{filteredOntology.length}})
+								</span>
+								<div class="ontologyTree-content"
+									ng-show="isVisible(ontology.uri)">
+									<table class="table">
+										<tr 
+											tooltip="{{property.desc}}"
+											tooltip-placement="bottom"
+											tooltip-animation="false"
+											ng-click="selectObjectProperty(property)"
+											ng-class="{'ontologyTree-selectable': true, 'node-selected': isObjectPropertySelected(property)}"
+											ng-repeat="property in filteredOntology = (ontology.propertiesArray | filter:objectPropertiesFilter)">
+											<td>{{property.name}}</td>
+										</tr>
+									</table>
+								</div>
+							</div>
+						</div>
+						
+						<div>
+							<label for="selectTargetObject">Target object</label>
+							<select
+								id="selectTargetObject"
+								class=""
+								ng-model="targetObject.id"
+								ng-options="obj.id as obj.name for obj in objects">
+								<option value="">New object</option>
+							</select>
+						</div>
+						<div>
+								<button
+									type="button"
+									class="btn btn-default"
+									ng-click="setObjectPropertyPanel(-1)">
+									Close
+								</button>
+								<button
+									type="button"
+									class="btn btn-primary"
+									ng-click="addObjectProperty()">
+									Add
+								</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<button type="button" class="btn btn-primary btn-lg pull-right"
+		ng-click="goToConvert()">
+		Convert <span class="glyphicon glyphicon-chevron-right"></span>
+	</button>	
+</div>

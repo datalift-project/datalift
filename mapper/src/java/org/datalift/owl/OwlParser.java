@@ -5,9 +5,12 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import org.datalift.fwk.log.Logger;
 import org.openrdf.OpenRDFException;
 import org.openrdf.model.Literal;
 import org.openrdf.model.URI;
@@ -30,9 +33,11 @@ import org.openrdf.sail.memory.MemoryStore;
 import static org.openrdf.query.QueryLanguage.SPARQL;
 
 
-public class OwlParser
-{
-    private final static AnnotationProperty RDFS_LABEL =
+public class OwlParser {
+	
+	private final static Logger log = Logger.getLogger();
+	
+	private final static AnnotationProperty RDFS_LABEL =
             new AnnotationProperty(RDFS.LABEL.stringValue(), "rdfs:label",
                                    "Human-readable version of a resource's name");
     private final static AnnotationProperty RDFS_COMMENT =
@@ -44,6 +49,9 @@ public class OwlParser
     private final static AnnotationProperty RDFS_ISDEFINEDBY =
             new AnnotationProperty(RDFS.ISDEFINEDBY.stringValue(), "rdfs:isDefinedBy",
                                    "Resource defining the subject resource");
+    
+    private final static String OWL_THING = "http://www.w3.org/2002/07/owl#Thing";
+    private final static String RDFS_LITERAL = "http://www.w3.org/2000/01/rdf-schema#Literal";
 
     public OwlParser() {
         super();
@@ -184,11 +192,13 @@ public class OwlParser
                     "  OPTIONAL { ?uri rdfs:domain  ?domain . }" +
                     "  OPTIONAL { ?uri rdfs:range   ?range .  } }";
             rs = cnx.prepareTupleQuery(SPARQL, query).evaluate();
+            final List<String> hasClassRange = new ArrayList<String>();
             while (rs.hasNext()) {
                 BindingSet bs = rs.next();
                 String uri = v(bs, "uri");
                 if (uri != null) {
-                    OwlProperty p = properties.get(uri);
+                    OwlProperty p = null;
+                    OwlProperty pOld = properties.get(uri);
                     String name = v(bs, "name");
                     String desc = v(bs, "desc");
                     OwlClass c = classes.get(v(bs, "domain"));
@@ -206,16 +216,37 @@ public class OwlParser
                         }
                         else {
                             // RDF Property. => Check range.
-                            if ((range != null) &&
-                                (! range.stringValue().startsWith(
-                                                        XMLSchema.NAMESPACE))) {
+							if ((range != null)
+									&& ( ! range.stringValue().startsWith(
+											XMLSchema.NAMESPACE))
+									&& ( ! range.stringValue().equalsIgnoreCase(
+											OWL_THING))
+									&& ( ! range.stringValue().equalsIgnoreCase(
+											RDFS_LITERAL))) {
                                 p = new ObjectProperty(uri, name, desc);
+                            	hasClassRange.add(uri);
                             }
                         }
                         if (p == null) {
                             p = new DatatypeProperty(uri, name, desc);
                         }
-                        properties.put(uri, p);
+                        boolean isDatatype = p instanceof DatatypeProperty;
+                        if (pOld == null) {
+                        		properties.put(uri, p);
+                        }
+                        else {
+                        	if (hasClassRange.contains(uri)) {
+                        		if (p instanceof ObjectProperty) {
+                    				properties.put(uri, p);
+                    			}
+                        		
+                        	}
+                        	else {
+                        		if (isDatatype) {
+                        			properties.put(uri, p);
+                        		}
+                        	}
+                        }
                     }
                     if (c != null) {
                         c.property(p);

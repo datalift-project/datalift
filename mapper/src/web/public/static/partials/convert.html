@@ -2,49 +2,7 @@
 	<p>{{loaderTxt}}</p>
 	<img ng-src="{{loaderSrc}}"/>
 </div>
-<div class="row" ng-hide="hideForm()">
-	<div class="col-md-6">
-		<div class="panel panel-default">
-			<div class="panel-heading">
-				<h3 class="panel-title">Property mappings summary</h3>
-			</div>
-			<table class="table">
-				<thead>
-					<tr>
-						<th>Source</th>
-						<th>Target</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr ng-repeat="mapping in propertyMappings">
-						<td>{{mapping.source}}</td>
-						<td>{{mapping.targetPrefixed}}</td>
-					</tr>
-				</tbody>
-			</table>
-		</div>
-	</div>
-	<div class="col-md-6">
-		<div class="panel panel-default">
-			<div class="panel-heading">
-				<h3 class="panel-title">Type mappings summary</h3>
-			</div>
-			<table class="table">
-				<thead>
-					<tr>
-						<th>Source</th>
-						<th>Target</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr ng-repeat="mapping in classMappings">
-						<td>{{mapping.sourceClass}}</td>
-						<td>{{mapping.targetClass}}</td>
-					</tr>
-				</tbody>
-			</table>
-		</div>
-	</div>
+<div id="graph-visualization" ng-hide="hideForm()">
 </div>
 <h4 class="col-md-10 col-md-offset-2" ng-hide="hideForm()">A new source file will be created</h4>
 <form class="form-horizontal" role="form" ng-hide="hideForm()">
@@ -91,12 +49,12 @@
 </div>
 
 <!-- Modal for sparql query -->
-<div class="modal fade" id="sparqlModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+<div class="modal fade" id="sparqlModal" tabindex="-1" role="dialog" aria-labelledby="sparqlModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-        <h4 class="modal-title" id="myModalLabel">SPARQL</h4>
+        <h4 class="modal-title" id="sparqlModalLabel">SPARQL</h4>
       </div>
       <div class="modal-body">
 		<div ng-repeat="query in sparqlTest">{{query}}</div>

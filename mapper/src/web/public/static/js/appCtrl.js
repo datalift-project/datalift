@@ -1,4 +1,4 @@
-function AppCtrl($scope, Shared) {
+function AppCtrl($scope, $location, Shared) {
 
 	var self = this;
 
@@ -7,11 +7,14 @@ function AppCtrl($scope, Shared) {
 	$scope.steps = [
 		{"num": 1,
 		 "name": "Select",
-		 "link": "#/select-source"},
+		 "link": "#/select"},
 		{"num": 2,
-		 "name": "Map",
-		 "link": "#/mapping-lov"},
+		 "name": "Match",
+		 "link": "#/map"},
 		{"num": 3,
+		 "name": "Refine",
+		 "link": "#/refine"},
+		{"num": 4,
 		 "name": "Convert",
 		 "link": "#/convert"}
 	];

@@ -1,23 +1,27 @@
-<form class="data-selection" role="form">
-	<div ng-class="selectSourceClass()">
-		<label for="selectSource">Select source to map</label>
-		<select
-			id="selectSource"
-			class="form-control input-lg"
-			ng-model="selectedSource"
-			ng-options="s.uri as s.title for s in sources">
-			<option value="">-- Choose source --</option>
-		</select>
+<form class="form-horizontal" class="data-selection" role="form">
+	<div class="form-group" ng-class="selectSourceClass()">
+		<label for="selectSource" class="control-label">Source</label>
+		<div>
+			<select
+				id="selectSource"
+				class="form-control input-lg"
+				ng-model="selectedSource"
+				ng-change="sourceChanged()"
+				ng-options="s.uri as s.title for s in sources">
+				<option value="">-- Choose source --</option>
+			</select>
+			<span class="help-block"></span>
+		</div>
 	</div>
 </form>
 <button 
 	id="mapButton"
 	type="button"
 	class="btn btn-default btn-lg pull-right nav-button"
-	ng-disabled="isSourceSelected()"
+	ng-disabled="isFormInvalid()"
 	ng-click="goToMap()"
 	popover-placement="bottom"
 	popover-trigger="mouseenter"
-	popover="Search and explore ontologies to map predicates.">
-	Map properties<span class="glyphicon glyphicon-chevron-right"></span>
+	popover="Search LOV and ontologies to match properties.">
+	Match<span class="glyphicon glyphicon-chevron-right"></span>
 </button>

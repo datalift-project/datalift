@@ -3,7 +3,7 @@
 	
 		<div class="panel panel-default">
 			<div class="panel-heading">
-				<h3 class="panel-title">Source property</h3>
+				<h3 class="panel-title">Source properties ({{sourceName}})</h3>
 			</div>
 			<div class="panel-body list-group">
 				<div ng-show="loadingPredicates">
@@ -14,21 +14,20 @@
 						ui-select2
 						style="width:100%"
 						ng-model="selectedPredicateId"
-						data-placeholder="Select a predicate"
-					>
+						data-placeholder="Select a property to map">
 						<option value=""></option>
 						<option ng-repeat="predicate in sourcePredicates | orderBy:name" value="{{predicate.name}}">{{predicate.name}}</option>
 					</select>
 				</div>
 				<div ng-hide="hasPredicates()">
-					<span>No property to map.</span>
+					<span ng-hide="loadingPredicates">No property to map.</span>
 				</div>
 			</div>
 		</div>
 		
 		<div class="panel panel-default">
 			<div class="panel-heading">
-				<h3 class="panel-title">Suggestions</h3>
+				<h3 class="panel-title">Suggested matches</h3>
 			</div>
 			<div class="center-content" ng-show="suggesting">
 				<img ng-src="{{suggestLoaderSrc}}"/>
@@ -72,8 +71,8 @@
 			</div>
 			<div class="panel-body">
 				<ul id="selectionTabs" class="nav nav-tabs nav-justified">
-					<li ng-class="{pointer: true, active: isTabSelected(0)}" ng-click="selectTab(0)"><a>Search LOV</a></li>
-					<li ng-class="{pointer: true, active: isTabSelected(1)}" ng-click="selectTab(1)"><a>Explore project ontologies</a></li>
+					<li ng-class="{pointer: true, active: isTabSelected(0)}" ng-click="selectTab(0)"><a>Match to LOV</a></li>
+					<li ng-class="{pointer: true, active: isTabSelected(1)}" ng-click="selectTab(1)"><a>Match to project ontologies</a></li>
 				</ul>
 				<div id="search" class="tab-content" ng-show="isTabSelected(0)">
 					<!-- search bar -->
@@ -81,7 +80,7 @@
 						<input type="text" class="form-control"
 							ng-model="searchQuery"
 							value="{{searchQuery}}"
-							placeholder="Search LOV to find a mapping...">
+							placeholder="Search LOV to find a match">
 						<span class="input-group-btn">
 							<button class="btn btn-default" type="button"
 								ng-click="searchLovProperties()">
@@ -99,7 +98,6 @@
 							ng-model="vocSpaceFilter"
 							data-placeholder="Filter vocabulary space"
 						>
-	<!-- 						<option value=""></option> -->
 							<option ng-repeat="vocSpace in vocSpaces" value="{{vocSpace.shortTitle}}">{{vocSpace.title}}</option>
 						</select>
 						<button class="btn btn-default btn-xs" 
@@ -154,31 +152,55 @@
 				<div id="explore" class="tab-content" ng-show="isTabSelected(1)">
 					<!-- filters -->
 					<div class="form-group">
-						<label for="ontologyFilterInput">Search properties</label>
-						<input type="text" class="form-control" id="ontologyFilterInput" ng-model="ontologyFilter" placeholder="Filter text...">
+						<input
+							type="text"
+							class="form-control search-bar"
+							id="ontologyFilterInput"
+							ng-model="ontologyStringFilter"
+							placeholder="Filter ontologies to find a match">
+						<input
+							id="projectDatatypeRadio"
+							type="radio"
+							ng-model="projectPropertyType"
+							value="DatatypeProperty">
+						<label for="projectDatatypeRadio"> Datatype properties</label>
+						<input
+							id="projectObjectRadio"
+							type="radio"
+							ng-model="projectPropertyType"
+							value="ObjectProperty">
+						<label for="projectObjectRadio"> Object properties</label>
 					</div>
 
 					<!-- explorer -->
 					<!-- "item in filtered = (items | filter:filterExpr)" -->
-					<div ng-repeat="ontology in loadedOntologies">
-						<span ng-click="changeVisibility(ontology.uri)">{{ontology.name}} ({{filteredOntology.length}})</span>
-						<ul ng-show="isVisible(ontology.uri)">
-							<li ng-repeat="property in filteredOntology = (ontology.properties | filter:ontologyFilter)">
-								<span
-									tooltip="{{property.desc}}"
+					<div
+						class="ontologyTree"
+						ng-repeat="ontology in loadedOntologies">
+						<span ng-class="ontologyTreeClass(ontology.uri)"></span>
+						<span ng-click="changeVisibility(ontology.uri)">
+							{{ontology.name}} ({{filteredOntology.length}})
+						</span>
+						<div class="ontologyTree-content"
+							ng-show="isVisible(ontology.uri)">
+							<table class="table">
+								<tr tooltip="{{property.desc}}"
 									tooltip-placement="bottom"
 									tooltip-animation="false"
-								>
-									{{property.name}}
-								</span>
-								<button
-									class="btn btn-default btn-xs"
-									ng-click="addProjectMapping(ontology, property)"
-								>
-									<span class="glyphicon glyphicon-plus"></span>
-								</button>
-							</li>
-						</ul>
+									ng-repeat="property in filteredOntology = (ontology.properties | filter:projectPropertiesFilter)">
+									<td>{{property.name}}</td>
+									<td>
+										<button
+											class="btn btn-default btn-xs"
+											ng-click="addProjectMapping(ontology, property)"
+											ng-disabled="noPredicateSelected()"
+										>
+											<span class="glyphicon glyphicon-plus"></span>
+										</button>
+									</td>
+								</tr>
+							</table>
+						</div>
 					</div>
 				</div>
 				
@@ -191,7 +213,7 @@
 	<div class="col-md-9">
 		<div class="panel panel-default">
 			<div class="panel-heading">
-				<h3 class="panel-title">Current mappings</h3>
+				<h3 class="panel-title">Selected matches</h3>
 			</div>
 			<table class="table">
 				<thead>
@@ -215,7 +237,7 @@
 	<div class="col-md-3">
 		<div class="panel panel-default vocab-panel">
 			<div class="panel-heading">
-				<h3 class="panel-title">Overview</h3>
+				<h3 class="panel-title">Match statistics</h3>
 			</div>
 			<table class="table">
 				<thead>
@@ -234,8 +256,8 @@
 		</div>
 		<!-- panel -->
 		<button type="button" class="btn btn-primary btn-lg pull-right"
-			ng-click="goToConvert()">
-			Convert <span class="glyphicon glyphicon-chevron-right"></span>
+			ng-click="goToClasses()">
+			Refine <span class="glyphicon glyphicon-chevron-right"></span>
 		</button>
 	</div>
 	<!-- col-md-3 -->

@@ -12,8 +12,10 @@
 		<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css" media="screen">
 		<!-- Optional theme -->
 		<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-theme.min.css" media="screen">
-		<link rel="stylesheet" href="${moduleUri}/static/lib/select2/select2.css"/>
+		<link rel="stylesheet" href="${moduleUri}/static/lib/jquery-ui/css/ui-lightness/jquery-ui-1.10.4.custom.min.css">
+		<link rel="stylesheet" href="${moduleUri}/static/lib/select2/select2.css">
 		<link rel="stylesheet" href="${moduleUri}/static/lib/angularui/css/angular-ui.css">
+		<link rel="stylesheet" href="${moduleUri}/static/lib/vis/vis.css">
 		<link rel="stylesheet" href="${moduleUri}/static/css/datalift.css">
 		<link rel="stylesheet" href="${moduleUri}/static/css/mapper.css">
 
@@ -38,7 +40,7 @@
             <a class="navbar-brand" href="#" style="padding: 5px;">
                 <img width="26px" src="${moduleUri}/static/img/datalift-logo.png">
             </a>
-            <a class="navbar-brand" href="#">DataLift - Data2ontology</a>
+            <a class="navbar-brand" href="#">DataLift - Data2Ontology</a>
       </div>
         <ul class="nav navbar-nav navbar-right">
           <li><a href="${it.uri}">Projects</a></li>
@@ -79,27 +81,30 @@
 		<script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
 		<!-- AngularJS -->
 		<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular.min.js"></script>
+		<script src="${moduleUri}/static/lib/jquery-ui/jquery-ui-1.10.4.custom.min.js"></script>
 		<script src="${moduleUri}/static/lib/select2/select2-3.2.min.js"></script>
 		<script src="${moduleUri}/static/lib/angularui/js/angular-ui.js"></script>
+		<script src="${moduleUri}/static/lib/angular-dragdrop/angular-dragdrop.min.js"></script>
 		<script src="${moduleUri}/static/lib/ui-bootstrap/ui-bootstrap-tpls-0.5.0.min.js"></script>
+		<script src="${moduleUri}/static/lib/vis/vis.min.js"></script>
 		<script src="${moduleUri}/static/js/mapperClasses.js"></script>
 		<script>
-angular.module('OntoMapper', ['ui.bootstrap', 'ui.directives']).
+angular.module('OntoMapper', ['ui.bootstrap', 'ui.directives', 'ngDragDrop']).
     config(['$routeProvider', function($routeProvider) {
     $routeProvider.
-        when('/select-source', {
+        when('/select', {
             templateUrl: '$!{moduleUri}/static/partials/select-source.html',
             controller: SelectSourceCtrl}).
-		when('/mapping/', {
+		when('/map', {
             templateUrl: '$!{moduleUri}/static/partials/mapping.html',
             controller: MappingCtrl}).
-        when('/classes/', {
-            templateUrl: '$!{moduleUri}/static/partials/classes.html',
-            controller: ClassesCtrl}).
-        when('/convert/', {
+        when('/refine', {
+            templateUrl: '$!{moduleUri}/static/partials/refine.html',
+            controller: RefineCtrl}).
+        when('/convert', {
             templateUrl: '$!{moduleUri}/static/partials/convert.html',
             controller: ConvertCtrl}).
-        otherwise({redirectTo: '/select-source'});
+        otherwise({redirectTo: '/select'});
 }]).
     service('Shared', function($rootScope) {
         var sharedService = {};
@@ -109,7 +114,13 @@ angular.module('OntoMapper', ['ui.bootstrap', 'ui.directives']).
                 { uri:"$esc.javascript($!{s.targetGraph})",
                 title:"$esc.javascript($!{s.title})" },#end
         #end ];
-              var ontologies = [
+        
+        var projectSourcesName = [
+        #foreach( $s in $it.sources )
+                "$esc.javascript($!{s.title})",
+        #end ];
+        
+		var ontologies = [
         #foreach( $o in $it.ontologies )
                 { uri:"$esc.javascript($!{o.source})",
                 title:"$esc.javascript($!{o.title})" },
@@ -120,11 +131,15 @@ angular.module('OntoMapper', ['ui.bootstrap', 'ui.directives']).
         sharedService.projectUri = "$!{it.uri}";
         sharedService.moduleUri = "$!{moduleUri}";
         sharedService.sources = sources;
+        sharedService.projectSourcesName = projectSourcesName;
         sharedService.selectedSource = "";
         sharedService.ontologies = ontologies;
         sharedService.currentStep = 1;
         sharedService.mappings = [];
         sharedService.vocSpaces = [];
+        sharedService.loadedOntologies = [];
+        sharedService.sourceData = {};
+        sharedService.objects = [];
         
         sharedService.getMappings = function() {
             return mappings;
@@ -196,6 +211,7 @@ angular.module('OntoMapper', ['ui.bootstrap', 'ui.directives']).
 		<script src="${moduleUri}/static/js/appCtrl.js"></script>
 		<script src="${moduleUri}/static/js/selectSourceCtrl.js"></script>
 		<script src="${moduleUri}/static/js/mappingCtrl.js"></script>
+		<script src="${moduleUri}/static/js/refineCtrl.js"></script>
 		<script src="${moduleUri}/static/js/convertCtrl.js"></script>
 	</body>
 </html>

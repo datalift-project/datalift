@@ -30,7 +30,12 @@ body {
 }
 
 .pointer {
+	cursor: hand;
 	cursor: pointer;
+}
+
+.bold {
+	font-weight: bold;
 }
 
 /* Wizard */
@@ -41,7 +46,7 @@ body {
 }
 
 .wizard li {
-	width: 32%;
+	width: 24%;
 	float: left;
 	display: block;
 	height: 50px;
@@ -113,6 +118,35 @@ body {
 	color: #333333;
 }
 
+/* Ontology Tree */
+.ontologyTree > .ontologyTree-content {
+	max-height: 200px;
+	overflow: auto;
+}
+
+.ontologyTree-open {
+	
+}
+
+.ontologyTree-close {
+	
+}
+
+.ontologyTree > span {
+	font-weight: bold;
+	cursor: hand;
+	cursor: pointer;
+}
+
+.ontologyTree .ontologyTree-selectable {
+	cursor: hand;
+	cursor: pointer;
+}
+
+.node-selected {
+	background-color: #5CB85C;
+}
+
 /* Select view */
 .data-selection {
 	margin-bottom: 40px;
@@ -145,4 +179,23 @@ body {
 
 .filter {
 	
+}
+
+/* Refine view */
+.droppable {
+	border: 2px solid #FFFFFF;
+}
+.droppable-active {
+	border: 2px dashed #999999;
+}
+.object-mappings {
+	margin: 5px 20px;
+	padding: 5px;
+	cursor: move;
+	border: 1px dotted #CCCCCC;
+}
+
+/* Graph */
+#graph-visualization {
+
 }
