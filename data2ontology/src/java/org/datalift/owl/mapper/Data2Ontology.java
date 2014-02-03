@@ -100,15 +100,15 @@ import static org.datalift.fwk.project.Source.SourceType.TransformedRdfSource;
 import static org.datalift.fwk.util.StringUtils.*;
 
 
-@Path(Mapper.MODULE_NAME)
-public class Mapper extends BaseModule implements ProjectModule
+@Path(Data2Ontology.MODULE_NAME)
+public class Data2Ontology extends BaseModule implements ProjectModule
 {
     //-------------------------------------------------------------------------
     // Constants
     //-------------------------------------------------------------------------
 
     /** The name of this module in the DataLift configuration. */
-    public final static String MODULE_NAME = "mapper";
+    public final static String MODULE_NAME = "data2ontology";
     /** The module position in the project view. */
     private final static int MODULE_POSITION = 1500;
     /** Base name of the resource bundle for converter GUI. */
@@ -139,7 +139,7 @@ public class Mapper extends BaseModule implements ProjectModule
     //-------------------------------------------------------------------------
 
     /** Default constructor. */
-    public Mapper() {
+    public Data2Ontology() {
         super(MODULE_NAME);
     }
 

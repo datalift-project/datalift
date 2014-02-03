@@ -26,7 +26,7 @@
   set to the current working directory.
 -->
 
-<project name="datalift-mapper" default="dist" basedir=".">
+<project name="datalift-data2ontology" default="dist" basedir=".">
 
   <!-- ================ Property Definitions ============================== -->
 
@@ -91,10 +91,10 @@
                         Defaults to "dist".
    -->
 
-  <property name="app.name"             value="mapper"/>
+  <property name="app.name"             value="data2ontology"/>
   <property name="app.version"          value="0.1"/>
   <property name="app.path"             value="/${app.name}"/>
-  <property name="app.long.name"        value="Mapper"/>
+  <property name="app.long.name"        value="Data2Ontology"/>
 
   <property name="build.home"           location="${basedir}/build"/>
   <property name="dist.home"            location="${basedir}/dist"/>
@@ -310,7 +310,7 @@
     <jar jarfile="${jar.path}">
       <fileset dir="${classes.dir}"/>
       <service type="org.datalift.fwk.Module">
-        <provider classname="org.datalift.owl.mapper.Mapper"/>
+        <provider classname="org.datalift.owl.mapper.Data2Ontology"/>
       </service>
     </jar>
   </target>
