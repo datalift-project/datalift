@@ -57,7 +57,16 @@ import static org.apache.log4j.Level.*;
  */
 public final class JulToLog4jHandler extends Handler
 {
+    //-------------------------------------------------------------------------
+    // Instance members
+    //-------------------------------------------------------------------------
+
+    /** The current Log4J configuration. */
     private final LoggerRepository loggerRepository;
+
+    //-------------------------------------------------------------------------
+    // Constructors
+    //-------------------------------------------------------------------------
 
     private JulToLog4jHandler(LoggerRepository loggerRepository) {
         super();
@@ -68,6 +77,11 @@ public final class JulToLog4jHandler extends Handler
         this.loggerRepository = loggerRepository;
     }
 
+    //-------------------------------------------------------------------------
+    // Handler contract support
+    //-------------------------------------------------------------------------
+
+    /** {@inheritDoc} */
     @Override
     public void publish(LogRecord record) {
         Logger l = this.getLogger(record);
@@ -75,6 +89,7 @@ public final class JulToLog4jHandler extends Handler
               this.getMessage(record), record.getThrown());
     }
 
+    /** {@inheritDoc} */
     @Override
     public boolean isLoggable(LogRecord record) {
         boolean loggable = this.getLogger(record).isEnabledFor(
@@ -82,20 +97,27 @@ public final class JulToLog4jHandler extends Handler
         return (loggable)? super.isLoggable(record): false;
     }
 
+    /** {@inheritDoc} */
     @Override
     public Level getLevel() {
         return Level.ALL;
     }
 
+    /** {@inheritDoc} */
     @Override
     public void flush() {
         // Nothing to do.
     }
 
+    /** {@inheritDoc} */
     @Override
     public void close() {
         // Nothing to do.
     }
+
+    //-------------------------------------------------------------------------
+    // Specific implementation
+    //-------------------------------------------------------------------------
 
     private Logger getLogger(LogRecord record) {
         return this.loggerRepository.getLogger(record.getLoggerName());
@@ -103,7 +125,7 @@ public final class JulToLog4jHandler extends Handler
 
     private String getMessage(LogRecord record) {
         String message = record.getMessage();
-        // Format message
+        // Format message.
         try {
             Object parameters[] = record.getParameters();
             if ((parameters != null) && (parameters.length != 0)) {
@@ -117,42 +139,57 @@ public final class JulToLog4jHandler extends Handler
 
     private Priority getLevel(LogRecord record) {
         Level level = record.getLevel();
+
+        Priority p = OFF;
         if (Level.SEVERE == level) {
-            return ERROR;
+            p = ERROR;
         }
         else if (Level.WARNING == level) {
-            return WARN;
+            p = WARN;
         }
         else if ((Level.INFO == level) || (Level.CONFIG == level)) {
-            return INFO;
+            p = INFO;
         }
         else if (Level.FINE == level) {
-            return DEBUG;
+            p = DEBUG;
         }
         else if ((Level.FINER == level) || (Level.FINEST == level)) {
-            return TRACE;
+            p = TRACE;
         }
         else if (Level.ALL == level) {
-            return ALL;
+            p = ALL;
         }
-        return OFF;
+        return p;
     }
 
+    //-------------------------------------------------------------------------
+    // Static utility methods
+    //-------------------------------------------------------------------------
+
+    /**
+     * Installs a java.util.logging to Log4J handler for the specified
+     * Log4J configuration.
+     * @param  loggerRepository   the Log4J configuration.
+     */
     public static void install(LoggerRepository loggerRepository) {
         java.util.logging.Logger rootLogger =
                                     LogManager.getLogManager().getLogger("");
-        // Remove old handlers
+        // Remove old handlers.
         for (Handler handler : rootLogger.getHandlers()) {
             rootLogger.removeHandler(handler);
         }
-        // Add our own handler
+        // Add our own handler.
         rootLogger.addHandler(new JulToLog4jHandler(loggerRepository));
     }
 
+    /**
+     * Removes any java.util.logging to Log4J handler from the
+     * current {@link LogManager#getLogManager() JUL loggers}.
+     */
     public static void uninstall() {
         java.util.logging.Logger rootLogger =
                                     LogManager.getLogManager().getLogger("");
-        // Remove our handlers
+        // Remove our handlers.
         for (Handler handler : rootLogger.getHandlers()) {
             if (handler instanceof JulToLog4jHandler) {
                 rootLogger.removeHandler(handler);

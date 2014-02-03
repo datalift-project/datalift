@@ -102,6 +102,7 @@ public final class Log4JLogService extends LogService
     //-------------------------------------------------------------------------
 
     /** {@inheritDoc} */
+    @Override
     public Logger getLogger(String name) {
         if ((name == null) || (name.length() == 0)) {
             throw new IllegalArgumentException("name");

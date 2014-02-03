@@ -226,7 +226,7 @@ public class DOMConfigurator2 extends DOMConfigurator
                                             "http://jakarta.apache.org/log4j/";
     /**
      * Name of the system property to set to request XML validation
-     * of the Log4J configuration
+     * of the Log4J configuration.
      */
     public final static String VALIDATE_CONFIGURATION_KEY =
                                             "log4j.validateConfiguration";
@@ -318,6 +318,7 @@ public class DOMConfigurator2 extends DOMConfigurator
     //-------------------------------------------------------------------------
 
     /** {@inheritDoc} */
+    @Override
     public final void doConfigure(final URL url, LoggerRepository repository) {
         if (url == null) {
             throw new IllegalArgumentException("url");
@@ -1424,6 +1425,7 @@ public class DOMConfigurator2 extends DOMConfigurator
         }
 
         /** {@inheritDoc} */
+        @Override
         public InputSource resolveEntity(String publicId, String systemId)
                                             throws SAXException, IOException {
             if ((systemId == null) || (systemId.length() == 0)) {

@@ -48,7 +48,15 @@ import org.datalift.fwk.Configuration;
  */
 public abstract class ViewFactory
 {
+    //-------------------------------------------------------------------------
+    // Instance members
+    //-------------------------------------------------------------------------
+
     private static ViewFactory provider = null;
+
+    //-------------------------------------------------------------------------
+    // ViewFactory contract definition
+    //-------------------------------------------------------------------------
 
     /**
      * Returns a new template model for web service response rendering.
