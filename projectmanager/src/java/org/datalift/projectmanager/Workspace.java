@@ -741,6 +741,23 @@ public class Workspace extends BaseModule
     }
 
     @POST
+    @Path("{id}/source/{srcid}/notes")
+    public Response uploadNotes(
+    		@PathParam("id") String projectId,
+    		@PathParam("srcid") String sourceId,
+    		@FormParam("uploadNotes") String uploadNotes,
+    		@FormParam("source_uri") URI sourceUri,
+    		@Context UriInfo uriInfo)
+    {	
+    	Project p = this.loadProject(uriInfo, projectId);
+        Source s = this.loadSource(p, sourceUri, Source.class);
+        s.setNotes(uploadNotes);
+        this.projectManager.saveProject(p);
+        
+    	return Response.ok().build();
+    }
+    
+    @POST
     @Path("checksourceuri")
     public Response checkFileSource(
                     @FormParam("project_uri") URI projectUri,

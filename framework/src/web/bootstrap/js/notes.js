@@ -5,7 +5,7 @@ $(document).ready(function()
         var block_pos = $("#notes").position();
         //console.log(block_pos);
         if (block_pos.left == 0)
-          $("#notes").animate({left : "-595px"}, 1000, 'easeInOutBack');
+          $("#notes").animate({left : "-775px"}, 1000, 'easeInOutBack');
         else 
           $("#notes").animate({left : "0px"}, 1000, 'easeInOutBack');
 

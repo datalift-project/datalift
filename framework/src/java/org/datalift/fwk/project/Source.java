@@ -133,6 +133,18 @@ public interface Source
      * @return the owning project.
      */
     public Project getProject();
+    
+    /**
+     * Returns a String which contain all the notes took for a Source
+     * @return the string with the notes.
+     */
+    public String getNotes();
+    
+    /**
+     * Sets the String with the notes that a user takes for a source.
+     * @param  notes   the String that contains the note.
+     */
+    public void setNotes(String notes);
 
     /**
      * Deletes all resources associated to this source (uploaded files,

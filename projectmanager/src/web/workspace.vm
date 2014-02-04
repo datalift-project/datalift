@@ -39,10 +39,10 @@
 			<div class="span9">
 				<!-- LISTE ONGLET -->
 				<ul class="nav nav-tabs tab_details">
-					<li><a href="#suivi">#i18n("tab.name.monitoring")</a></li>
-					<li><a href="#description">#i18n("tab.name.description")</a></li>
-					<li class="active"><a href="#sources">#i18n("tab.name.data")</a></li>
-					<li><a href="#vocabulaires">#i18n("tab.name.vocabulary")</a></li>
+					<li><a href="#suivi" data-toggle="tab">#i18n("tab.name.monitoring")</a></li>
+					<li><a href="#description" data-toggle="tab">#i18n("tab.name.description")</a></li>
+					<li class="active"><a href="#sources" data-toggle="tab">#i18n("tab.name.data")</a></li>
+					<li><a href="#vocabulaires" data-toggle="tab">#i18n("tab.name.vocabulary")</a></li>
 				</ul>
 				<!-- FIN LISTE ONGLET -->
 				<!-- DIV CONTENT TAB ONGLETS -->
@@ -65,13 +65,13 @@
 						<p style="display:inline-block;">#i18n("project.modification_s")</p>
 						<p style="display:inline-block;">{{curProj.modification_date}}</p><br/>
 						<div class="span12 actionBtn" id="description-btn">
-							<a class="btn" id="popoverRemove" class="action btn" data-content="Supprimez le projet sélectionné" 
-								rel="popover" data-placement="top" data-trigger="hover"href="#createproject" data-toggle="modal">#i18n("modify")
-							</a>
+							<button id="popoverRemove" class="btn btn-custom-blue" 
+								rel="popover" data-placement="top" data-trigger="hover"href="#modifyproject" data-toggle="modal">#i18n("modify")
+							</button>
 							
-							<a class="btn" id="popoverRemove" class="action btn btn-custom-red" data-content="Supprimez le projet sélectionné" 
+							<button id="popoverRemove" class="action btn btn-custom-red" data-content="Supprimez le projet sélectionné" 
 								rel="popover" data-placement="top" data-trigger="hover" href="#deleteProject" data-toggle="modal">#i18n("delete")
-							</a>
+							</button>
 						</div>
 				  	</div>
 				  	<!-- FIN ONGLET DESCRIPTION -->
@@ -90,11 +90,11 @@
 								</li>
 							#end
 						</div>
-						<div class="btnActionAdd">
-							<a href="{{curProj.uri}}/srcupload" role="button" class="btn">
-								<img src="${baseUri}/images/icon-add.png">#i18n("source.button.add")
+						
+							<a href="{{curProj.uri}}/srcupload" role="button" class="btn" style="margin-top: 1em;">
+								<img src="${baseUri}/images/icon-add.png" class="icon">#i18n("source.button.add")
 							</a>
-						</div>
+						
 				  	</div>
 				  	<!-- FIN ONGLET SOURCES -->
 				  	<!-- ONGLET ONTOLOGIES -->
@@ -125,7 +125,7 @@
 		</div>
 	</div>
 
-	<!-- DIV POPUP REMOVE PROJECT 
+	<!-- DIV POPUP REMOVE PROJECT -->
 	
 	<form method="post" action="${current.uri}?_method=DELETE" class="form_formated" name="delete_project">
 		<input type="hidden"  id="delete" value="#i18n("delete")"/>
@@ -139,25 +139,102 @@
 		   	<p>Etes-vous sûr de vouloir supprimer l'integralité du projet ?</p>
 	 	</div>
 		<div class="modal-footer">
-			<a href="#" class="btn" data-dismiss="modal">Annuler</a>
-	    	<a href="./index.php" data-dismiss="modal" onclick="document.forms['delete_project'].submit();  return false;" class="btn btn-primary">Supprimer</a>
+			<button href="#" class="btn btn-custom-blue" data-dismiss="modal">Annuler</button>
+	    	<button class="btn btn-custom-red" data-dismiss="modal" onclick="document.forms['delete_project'].submit();  return false;">Supprimer</button>
 	  	</div>
 	</div>
-	 FIN DIV POPUP REMOVE PROJECT -->
-	<!-- DIV POPUP MODIFY PROJECT -->
+	<!-- FIN DIV POPUP REMOVE PROJECT -->
+	<!-- DIV POPUP MODIFY PROJECT 
 	<div class="modal hide pagination-centered fade" id="modifyProject">
 	  	<div class="modal-header"> <a class="close" data-dismiss="modal">×</a>
 		    <h3>Modifier</h3>
 	  	</div>
 		<div class="modal-body">
-		   	<p>Modification du projet <?php echo '"'.$_GET["projectid"].'"';?></p>
+		   	<span>Modification du projet <p class="brand">{{curProj.title}}</p></span>
 	 	</div>
 		<div class="modal-footer">
-			<a href="#" class="btn" data-dismiss="modal">Annuler</a>
-	    	<a href="${current.uri}/modify" data-dismiss="modal" class="btn btn-primary">#i18n("modify")</a>
+			<button class="btn btn-custom-grey" data-dismiss="modal">Annuler</button>
+	    	<button href="${current.uri}/modify" class="btn btn-custom-blue">#i18n("modify")</button>
 	  	</div>
 	</div>
-	<!-- FIN DIV POPUP MODIFY PROJECT -->
+	 FIN DIV POPUP MODIFY PROJECT -->
+	 
+	 <!-- MODIFY PROJECT -->
+	#set( $to_redirect = "${baseUri}/project/$")
+	#if( $current )
+		#set( $title_m  = "project.title.modify_project" )
+		#set( $submit = "modify" )
+      	#set( $target = "$current.uri" )
+	#else
+		#set( $title_m = "project.title.new_project" )
+		#set( $submit = "create" )
+      	#set( $target = "${baseUri}/project" )
+	#end
+	<div class="modal hide pagination-centered fade in" id="modifyproject">
+	  	<div class="modal-header"> <a class="close" data-dismiss="modal">×</a>
+	    	<h3>#i18n("project.title.mofidy_project")</h3>
+	  	</div>
+	  	<div class="modal-body">
+	    	<form method="get" action="" id="create" class="form-horizontal">
+		  	<div class="control-group">
+		    	<label class="control-label" for="title">#i18n("project.name"):</label>
+			    <div class="controls">
+			      <input type="text" id="title" name="title" value="$!esc.html($it.title_m)" placeholder="$current.title" autofocus="autofocus">
+			    </div>
+		  	</div>
+		  	<div class="control-group">
+		  		<label class="control-label" for="license">#i18n("project.license"): </label>
+			  	<div class="controls">
+				    <select id="license" name="license">
+						#foreach ( $li in $licenses )
+							<p>$li.uri</p>
+							<option value="$li.uri" #if($li.uri == $current.license) selected="selected" #end>$esc.html($li.label)</option>
+						#end
+					</select>
+				</div>
+		  	</div>
+		  	<div class="control-group">
+			    <label class="control-label" for="description">#i18n("project.description"): </label>
+			    <div class="controls">
+			      <textarea type="text" id="description" value="$!esc.html($it.description)" placeholder="$current.description"></textarea>
+			    </div>
+		  	</div>
+			</form>
+	  	</div>
+		<div class="modal-footer">
+			<button class="btn btn-custom-grey" data-dismiss="modal" aria-hidden="true">#i18n("cancel")</button>
+		    <button id="FormSubmit" type="submit" class="btn btn-custom-blue">#i18n("create")</button>
+		    <input type="hidden" value="$target" id="target"></input>
+	  	</div>
+	</div>
+#script_links
+<script type="text/javascript">
+$('#FormSubmit').click(function(e){
+	e.preventDefault();
+	
+	var success = false;
+	var target = ($('#target').val());
+	var formValue = ($('#create').val());
+	var description = ($('#description').val());
+	var title = ($('#title').val());
+	var license = ($('#license').val());
+	var toRedirect = "$to_redirect";							
+	$.post(target, {"license": license, "description": description, "title": title})
+	.done(function(data, status, xhr) {
+		window.open("$target");
+	})
+	.fail(function() {
+	alert( "An error occured when trying to create the project." );
+	});
+});
+
+</script>	 
+<!-- MODIFY PROJECT -->
+	 
+	 
+	 
+	 
+	 
 	<!-- DIV POPUP MODIFY SOURCE -->
 	<div class="modal hide pagination-centered fade" id="modifySource">
 	  	<div class="modal-header"> <a class="close" data-dismiss="modal">×</a>
@@ -167,8 +244,8 @@
 		   	<p>Modification d'un jeux de données</p>
 	 	</div>
 		<div class="modal-footer">
-			<a href="#" class="btn" data-dismiss="modal">Annuler</a>
-	    	<a href="./index.php" data-dismiss="modal" class="btn btn-primary">Modifier</a>
+			<button class="btn btn-custom-grey" data-dismiss="modal">Annuler</button>
+	    	<button data-dismiss="modal" class="btn btn-custom-blue">Modifier</button>
 	  	</div>
 	</div>
 	<!-- FIN DIV POPUP MODIFY ONTOLOGIE -->
@@ -231,16 +308,16 @@ var currentProject = "";
 	<div class="span12 row-fluid" style="margin:0 auto; float:none;">
 		<div class="span3 row" id="btnActionDiv">
 			<div id="new-projet-btn">
-				<a id="add_project" href="#createproject" role="button" class="btn" data-toggle="modal"><img style="margin-right: 4px;" src="${baseUri}/images/icon-add.png">#i18n("project.title.new_project")</a>
+				<button id="add_project" href="#createproject" role="button" class="btn" data-toggle="modal"><img class="icon" src="${baseUri}/images/icon-add.png">#i18n("project.title.new_project")</button>
 			</div>
 		</div>
 		
 		<!-- DIV BAR DE FILTRES --> 
 		<div class="span9 row" style="margin:0 auto; float:none;">
 			<form class="navbar-search form-inline pagination-centered">
-	  			<label class="search_label_width">#i18n("search_filter") : </label>
+	  			<label class="search_label_width">#i18n("search_filter")</label>
 	  			<input type="search" ng-model="projectfilter" placeholder="Search filter..."/>
-				<label class="search_label_width">#i18n("project.license") : </label>
+				<label class="search_label_width">#i18n("project.license")</label>
 				<select ng-model="licenseselected" ng-options="l.license for l in licenses">
 				</select>
 			</form>
@@ -277,11 +354,11 @@ var currentProject = "";
 	#if( $current )
 		#set( $title_m  = "project.title.modify_project" )
 		#set( $submit = "modify" )
-      		#set( $target = "${it.uri}" )
+      	#set( $target = "${it.uri}" )
 	#else
 		#set( $title_m = "project.title.new_project" )
 		#set( $submit = "create" )
-      		#set( $target = "${baseUri}/project" )
+      	#set( $target = "${baseUri}/project" )
 	#end
 	<div class="modal hide pagination-centered fade in" id="createproject">
 	  	<div class="modal-header"> <a class="close" data-dismiss="modal">×</a>
@@ -315,8 +392,8 @@ var currentProject = "";
 			</form>
 	  	</div>
 		<div class="modal-footer">
-			<button class="btn" data-dismiss="modal" aria-hidden="true">#i18n("cancel")</button>
-		    <button id="FormSubmit" type="submit" class="btn-primary">#i18n("create")</button>
+			<button class="btn btn-custom-grey" data-dismiss="modal" aria-hidden="true">#i18n("cancel")</button>
+		    <button id="FormSubmit" type="submit" class="btn btn-custom-blue">#i18n("create")</button>
 		    <input type="hidden" value="$target" id="target"></input>
 	  	</div>
 	</div>

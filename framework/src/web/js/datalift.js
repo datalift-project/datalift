@@ -73,17 +73,6 @@ $( document ).ready(function( $ ) {
 });
 
 
-$( document ).ready(function( $ ) {
-  $('#project_list a').click(function (e) {
-    e.preventDefault();
-    $(this).tab('show');
-  });
-  
-  var anchor = window.location.hash;
-   if (anchor.length > 0)
-    $('#project_list a[href="' + anchor + '"]').tab('show');
-});
-
 
 
 

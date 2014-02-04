@@ -74,6 +74,8 @@ public abstract class BaseSource extends BaseRdfEntity implements Source
     private Date creationDate;
     @RdfProperty("dc:creator")
     private String operator;
+    @RdfProperty("datalift:notes")
+    private String notes;
 
     private transient final SourceType type;
 

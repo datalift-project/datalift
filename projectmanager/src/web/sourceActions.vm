@@ -6,9 +6,14 @@
 #css_links
 #header_links
 #script_links
+
+#module_note_css_links
+#module_note_js_scripts
+
 </head>
-<body ng-app="module">
+<body ng-app="module" ng-controller="moduleController">
 #h_tetiere
+#module_note
 <!-- ---------------- SOURCE SPACE -------------------- -->
 <div class="container-fluid" id="projectSpaceContainer">
 	<div class="span12 row-fluid">
@@ -34,7 +39,7 @@
 				</ul>
 				<!-- FIN LISTE ONGLET -->
 				<!-- DIV CONTENT TAB ONGLETS -->
-				<div class="tab-content" id="tab-sub-menu-action" ng-controller="moduleController" ng-init='#foreach ($mod in $canHandle) initialize("$mod.getLabel()", "$mod.getMethod()", "$mod.getPosition()", "$mod.getUri()"); #end'>
+				<div class="tab-content" id="tab-sub-menu-action" ng-init='#foreach ($mod in $canHandle) initialize("$mod.getLabel()", "$mod.getMethod()", "$mod.getPosition()", "$mod.getUri()"); #end'>
 					<!-- ONGLET ACTIONS -->
 				  	<div class="tab-pane active" id="actions">
 				  		<div class="alerts span10" id="alert-ban" style="display:none;">

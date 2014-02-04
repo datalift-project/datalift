@@ -56,7 +56,6 @@ app.controller('projectController', function ($scope, $http){
 });
 
 
-
 ///////////////////////////
 // APP MODULE CONTROLLER //
 ///////////////////////////
@@ -190,5 +189,10 @@ app.controller('moduleController', function ($scope, $location, $http) {
 					alert("An error occured during the execution of the module.");
 				});
 			}
+	}
+	
+	$scope.testNotemodule = function()
+	{
+		alert(toto);
 	}
 });

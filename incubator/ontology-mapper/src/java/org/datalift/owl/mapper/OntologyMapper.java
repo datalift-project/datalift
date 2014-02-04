@@ -182,7 +182,10 @@ public class OntologyMapper extends BaseModule implements ProjectModule
     // ProjectModule contract support
     //-------------------------------------------------------------------------
 
-    /** {@inheritDoc} */
+    /** 
+     * {@inheritDoc} 
+     * @deprecated
+     */
     @Override
     public UriDesc canHandle(Project p) {
         UriDesc projectPage = null;
@@ -211,6 +214,33 @@ public class OntologyMapper extends BaseModule implements ProjectModule
         return projectPage;
     }
 
+    /** {@inheritDoc} */
+    @Override
+    public UriDesc canHandle(Source s) {
+        UriDesc projectPage = null;
+        try {
+        	if (s.getType() == TransformedRdfSource) {
+                try {
+                    String label = PreferredLocales.get()
+                                .getBundle(GUI_RESOURCES_BUNDLE, this)
+                                .getString("ontology.mapper.button");
+
+                    projectPage = new UriDesc(
+                                    this.getName() + "?project=" + s.getUri(),
+                                    HttpMethod.GET, label);
+                    projectPage.setPosition(MODULE_POSITION);
+                }
+                catch (Exception e) {
+                    throw new TechnicalException(e);
+                }
+            }
+        }
+        catch (Exception e) {
+            log.fatal("Failed to check status of project {}: {}", e,
+                                                s.getUri(), e.getMessage());
+        }
+        return projectPage;
+    }
     //-------------------------------------------------------------------------
     // Web services
     //-------------------------------------------------------------------------
