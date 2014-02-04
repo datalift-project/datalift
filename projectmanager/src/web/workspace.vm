@@ -17,7 +17,7 @@
 <script type="text/javascript">
 	var allProjects = "";
 	var allLicenses = "";
-	var currentProject = { uri : "$!esc.javascript($current.uri)", description: "$!esc.javascript($current.description)",  title : "$esc.javascript($!{current.title})", license : "$!esc.javascript($licenses[$current.getLicense()].getLabel())", owner : "$esc.javascript($!{current.owner})", creation_date : "$!date.format('medium', $current.creationDate)", modification_date :  "$!date.format('medium', $current.modificationDate)" };
+	var currentProject = { uri : "$!esc.javascript($current.uri)", description: "$!esc.javascript($current.description)",  title : "$!esc.javascript($!{current.title})", license : "$!esc.javascript($licenses[$current.getLicense()].getLabel())", owner : "$!esc.javascript($!{current.owner})", creation_date : "$!date.format('medium', $current.creationDate)", modification_date :  "$!date.format('medium', $current.modificationDate)" };
 	
 </script>
 	<!-- ---------------- EDIT PROJECT -------------------- -->
@@ -179,7 +179,7 @@
 		  	<div class="control-group">
 		    	<label class="control-label" for="title">#i18n("project.name"):</label>
 			    <div class="controls">
-			      <input type="text" id="title" name="title" value="$!esc.html($it.title_m)" placeholder="$current.title" autofocus="autofocus">
+			      <input type="text" id="title" name="title" value="$!esc.html($it.title_m)" placeholder="$!current.title" autofocus="autofocus">
 			    </div>
 		  	</div>
 		  	<div class="control-group">
@@ -188,7 +188,7 @@
 				    <select id="license" name="license">
 						#foreach ( $li in $licenses )
 							<p>$li.uri</p>
-							<option value="$li.uri" #if($li.uri == $current.license) selected="selected" #end>$esc.html($li.label)</option>
+							<option value="$li.uri" #if($li.uri == $current.license) selected="selected" #end>$!esc.html($li.label)</option>
 						#end
 					</select>
 				</div>
@@ -196,7 +196,7 @@
 		  	<div class="control-group">
 			    <label class="control-label" for="description">#i18n("project.description"): </label>
 			    <div class="controls">
-			      <textarea type="text" id="description" value="$!esc.html($it.description)" placeholder="$current.description"></textarea>
+			      <textarea type="text" id="description" value="$!esc.html($it.description)" placeholder="$!current.description"></textarea>
 			    </div>
 		  	</div>
 			</form>
