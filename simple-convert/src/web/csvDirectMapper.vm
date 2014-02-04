@@ -5,10 +5,12 @@
 #load("csvdirectmapper/resources")
 #load_core_resources
 	<title>#i18n("csvdirectmapper.title") - DataLift</title>
+#header_links
 #css_links
+
 </head>
 <body>
-#banner
+#h_tetiere
 <div class="ui-widget-content converter_main" id="workspace">
 	<h3 class="ui-widget-header dl-widget-header">#i18n("csvdirectmapper.title") - #i18n("project.label") $esc.html($it.title)</h3>
 
@@ -50,7 +52,7 @@
 		<input type="submit" id="source_submit" value="#i18n('submit.label')"/>
 	</form>
 </div>
-
+#h_footer
 #script_links
 <script type="text/javascript">
 	$(function() {

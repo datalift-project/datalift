@@ -771,6 +771,23 @@ public class Workspace extends BaseModule
     }
 
     @POST
+    @Path("{id}/source/{srcid}/notes")
+    public Response uploadNotes(
+    		@PathParam("id") String projectId,
+    		@PathParam("srcid") String sourceId,
+    		@FormParam("uploadNotes") String uploadNotes,
+    		@FormParam("source_uri") URI sourceUri,
+    		@Context UriInfo uriInfo)
+    {	
+    	Project p = this.loadProject(uriInfo, projectId);
+        Source s = this.loadSource(p, sourceUri, Source.class);
+        s.setNotes(uploadNotes);
+        this.projectManager.saveProject(p);
+        
+    	return Response.ok().build();
+    }
+    
+    @POST
     @Path("checksourceuri")
     public Response checkFileSource(
                     @FormParam("project_uri") URI projectUri,
@@ -2478,16 +2495,73 @@ public class Workspace extends BaseModule
     //-------------------------------------------------------------------------
     // Specific implementation
     //-------------------------------------------------------------------------
+    
+    
+	@GET
+    @Path("{id}/applicable")
+    public Response getApplicableModules(@PathParam("id") String projectId,
+    								  @QueryParam("source") String sourceId,
+    								  @Context UriInfo uriInfo)
+    {
+    	// Populate view with project list.
+        Collection<Project> projects = this.projectManager.listProjects();
+    	TemplateModel view = this.newView("sourceActions.vm", projects);
+    	Collection<UriDesc> modules = new TreeSet<UriDesc>(
+                new Comparator<UriDesc>() {
+                    @Override
+                    public int compare(UriDesc u1, UriDesc u2) {
+                        int v = u1.getPosition() - u2.getPosition();
+                        return (v != 0)? v: u1.getLabel().compareToIgnoreCase(u2.getLabel());
+                    }
+                });
+        Project p = this.loadProject(uriInfo, projectId);
+        Source s = p.getSource(p.getUri() + "/source/" + sourceId);
+        if (s == null) {
+            // Not found.
+            this.sendError(NOT_ACCEPTABLE, null);
+        }
+    	for (ProjectModule m : Configuration.getDefault().getBeans(ProjectModule.class))
+    	{
+    		try 
+    		{
+    			log.info("module:" + m.getClass());
+    			UriDesc modulePage = m.canHandle(s);
+    			if (modulePage != null)
+    			{
+    				modules.add(modulePage);
+    			}
+    		}
+    		catch (Exception e)
+    		{
+    			 TechnicalException error = new TechnicalException(
+                 "module.internal.error", e,
+                 m.getName(), e.getMessage());
+    			 log.error(error.getMessage(), e);
+    			 // Ignore module error...
+    		}
+    		
+    	}
+    	view.put("canHandle", modules);
+    	view.put("curProject", p);
+    	view.put("curSource", s);
 
+    	ResponseBuilder response = Response.ok(view).type(TEXT_HTML_UTF8);
+    	 // Force page revalidation.
+        CacheControl cc = new CacheControl();
+        cc.setPrivate(true);
+        cc.setMustRevalidate(true);
+        response.cacheControl(cc);
+        
+    	return response.build();
+    }
+    
     private ResponseBuilder displayIndexPage(ResponseBuilder response,
                                              Project p) {
     	// Populate view with project list.
         Collection<Project> projects = this.projectManager.listProjects();
         TemplateModel view = this.newView("workspace.vm", projects);
-        // If no project is selected but only one is available, select it.
-        if (projects.size() == 1) {
-            p = projects.iterator().next();
-        }
+        view.put("licenses", licenses);
+        
         // Display selected project.
         if (p != null) {
             view.put("current", p);

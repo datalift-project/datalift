@@ -65,7 +65,7 @@ public class DbDirectMapperController extends ModuleController {
      * one database source
      */
     @Override
-	public boolean canHandle(Source s){
+	public boolean accept(Source s){
         if (s == null) {
             throw new IllegalArgumentException("s");
         }

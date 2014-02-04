@@ -53,6 +53,8 @@ import org.datalift.fwk.Module;
 public interface ProjectModule extends Module
 {
     /**
+     * @deprecated
+     * 
      * Returns whether this module applies to the specified project,
      * i.e. the project current state allows data manipulation (e.g.
      * transformation, conversion, data completion...) by this module.
@@ -63,6 +65,18 @@ public interface ProjectModule extends Module
      *         module can not handle the project in its current state.
      */
     public abstract UriDesc canHandle(Project p);
+    
+    /**
+     * Returns whether this module applies to the specified source,í
+     * i.e. the project current state allows data manipulation (e.g.
+     * transformation, conversion, data completion...) by this module.
+     * @param  s   a data-lifting source.
+     *
+     * @return the description of the module entry page applicable to
+     *         the specified project or <code>null</code> if this
+     *         module can not handle the project in its current state.
+     */
+    public abstract UriDesc canHandle(Source s);
 
     /**
      * The HTTP methods supported for accessing the module entry pages.

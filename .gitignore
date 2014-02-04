@@ -1,3 +1,14 @@
+<<<<<<< HEAD
+debug.sh
+projectmanager/.settings/
+projectmanager/src/web/test.html
+*.classpath
+*.project
+*.metadata
+*~
+build
+dist
+=======
 # Build tools artifacts
 # Ant
 build/

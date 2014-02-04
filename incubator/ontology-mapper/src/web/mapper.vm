@@ -12,15 +12,17 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 
   <link rel="stylesheet" href="${moduleUri}/static/css/bootstrap.css">
-  <!-- style>
+  <style>
     body {
+    	background-color: #FF0000 !important;
       padding-top: 60px;
       padding-bottom: 40px;
     }
+    
     .sidebar-nav {
       padding: 9px 0;
     }
-  </style -->
+  </style>
   <link rel="stylesheet" href="${moduleUri}/static/css/bootstrap-responsive.css">
   <link rel="stylesheet" href="${moduleUri}/static/css/datalift.css">
 

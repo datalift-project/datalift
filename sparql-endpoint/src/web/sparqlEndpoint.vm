@@ -1,14 +1,14 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html>
+<html>
 <head>
 #load("sparql/resources")
 #load_core_resources
 	<title>#i18n("sparql.query.results") - #i18n("sparql.endpoint.title") - DataLift</title>
-#css_links
+#header_links
+#script_links
 </head>
 <body>
-#banner
+#h_tetiere
 	<div style="position:absolute;top:15px;right:15px;">
 #if( ${securityCtx.userAuthenticated} )
 		<a href="${baseUri}/project" id="goto_workspace" class="button">#i18n("project.workspace.link")</a>
@@ -16,7 +16,7 @@
 	</div>
 	<div id="content" class="ui-widget-content dl-main-panel">
 		<h3 class="ui-widget-header dl-widget-header">#i18n("sparql.query.full")</h3>
-		<div class="dl-panel">
+		<div class="dl-panel" style="display: inline-block;">
 		    <form id="query_form" action="${baseUri}/sparql" method="get">
 #if( ${repositories.size()} > 1 )
 			<div class="dl-form-elt">
@@ -73,12 +73,13 @@
 			#i18n("grid.search.column.label") <select id="searchColumn"></select>
 		</div>
 	</div>
-#footer
-	<div style="text-align:right;font-style:italic;font-size:0.8em">
-		<span style="color:gray">Version @full.app.version@</span>
-	</div>
+#h_footer
+<!--
+<div style="text-align:right;font-style:italic;font-size:0.8em">
+	<span style="color:gray">Version @full.app.version@</span>
+</div>
+ -->
 
-#script_links
 	<script type="text/javascript">
 		var searchData = new Array();
 		var responsePtr;

@@ -72,6 +72,7 @@ public class License extends BaseLocalizedItem
         return this.uri;
     }
 
+    
     /** {@inheritDoc} */
     @Override
     public String toString() {

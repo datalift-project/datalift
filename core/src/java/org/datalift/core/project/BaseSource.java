@@ -76,6 +76,8 @@ public abstract class BaseSource extends BaseRdfEntity implements Source
     private Date creationDate;
     @RdfProperty("dcterms:creator")
     private String operator;
+    @RdfProperty("datalift:notes")
+    private String notes;
 	@RdfProperty("prov:wasAttributedTo")
     private User wasAttributedTo;
     @RdfProperty("prov:wasDerivedFrom")
@@ -245,6 +247,18 @@ public abstract class BaseSource extends BaseRdfEntity implements Source
 		this.wasGeneratedBy = wasGeneratedBy;
 	}
 
+    /** {@inheritDoc} */
+    @Override
+    public String getNotes() {
+		return this.notes;
+	}
+    
+    /** {@inheritDoc} */
+    @Override
+    public void setNotes(String notes) {
+    	this.notes = notes;
+	}
+    
     //-------------------------------------------------------------------------
     // BaseRdfEntity contract support
     //-------------------------------------------------------------------------

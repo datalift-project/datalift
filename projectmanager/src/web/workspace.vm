@@ -1,378 +1,426 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
 <head>
 #load("project/resources")
 #load_core_resources
 	<title>#i18n("workspace.title") - DataLift</title>
 #css_links
+#header_links
 </head>
-<body>
-#banner
-<div style="position:absolute;top:15px;right:15px;">
-	<a href="${baseUri}/sparql" id="goto_sparql" class="button">#i18n("sparql.endpoint.link")</a>
-</div>
-<div id="workspace" class="ui-widget-content">
-#if( $current )
-	<h3 class="ui-widget-header dl-widget-header">#i18n("project") $!esc.html($current.title)</h3>
-#else
-	<h3 class="ui-widget-header dl-widget-header">#i18n("workspace.title")</h3>
-#end
-	<div id="projects_panel" class="ui-widget-content">
-		<div id="project_scroll">
-			<h3 class="ui-widget-header dl-widget-header">#i18n("project.title.available")</h3>
-#foreach( $item in $it )
-			<a class="ui-state-default dl-project-button" onclick="makeFocus(this);" href="${item.uri}">$!esc.html($item.title)</a><br />
-#end
+<body ng-app="project">
+#h_tetiere
 
-		</div>
-			<a href="${baseUri}/project/add" id="add_project" class="button">#i18n("project.title.new_project")</a>
-	</div>
 
-	<div id="workspace-main-panel" class="ui-widget-content">
-#if( $current )
-		<div id="tabs" style="margin:0;">
-			<ul>
-				<li><a onclick="historyPush('${current.uri}#description');" href="#description">#i18n("project.title.description")</a></li>
-				<li><a onclick="historyPush('${current.uri}#source');" href="#source">#i18n("project.title.sources")</a></li>
-				<li><a onclick="historyPush('${current.uri}#ontology');" href="#ontology">#i18n("project.title.ontology")</a></li>
-			</ul>
+<!-- IF CURRENT IS LOADED -->
+#if($current)
 
-			<div id="description"><p>
-				#i18n("project.description"): $!esc.html($current.description)<br />
-				#i18n("project.license"): <a href="$!current.getLicense()">$!esc.html($license)</a><br />
-				#i18n("project.modification_s") $!date.format("medium", $current.modificationDate)<br />
-				#i18n("project.creation_s") $!date.format("medium", $current.creationDate) #i18n("project.owner_s") $!esc.html($current.owner)</p>
-#if( !${canHandle.isEmpty()} )
-				<div id="module_can_handle">
-					<p>#i18n("project.module_available")</p>
-					<ol id="selectable_module">
-#foreach( $page in $canHandle )
-#set( $pageUrl = $page.getUrl(${baseUri}) )
-#if( $page.method.name() == "GET" )
-						<li><a href="${pageUrl}" class="button projectmodule_button">${page.label}</a></li>
-#else
-						<li><form method="post" action="${pageUrl}"><input type="submit" class="projectmodule_button" value="${page.label}"/></form></li>
-#end
-#end
-					</ol>
-				</div>
-#end
-				<p><br /></p>
-				<form method="post" action="${current.uri}?_method=DELETE" class="form_formated">
-					<a href="${current.uri}/modify" class="button">#i18n("modify")</a>
-					<div style="display:none;">
-						<div id="dialog-confirm"><p>#i18n("source.dialog.dialog_box.source_text")</p></div>
+<script type="text/javascript">
+	var allProjects = "";
+	var allLicenses = "";
+	var currentProject = { uri : "$!esc.javascript($current.uri)", description: "$!esc.javascript($current.description)",  title : "$esc.javascript($!{current.title})", license : "$!esc.javascript($licenses[$current.getLicense()].getLabel())", owner : "$esc.javascript($!{current.owner})", creation_date : "$!date.format('medium', $current.creationDate)", modification_date :  "$!date.format('medium', $current.modificationDate)" };
+	
+</script>
+	<!-- ---------------- EDIT PROJECT -------------------- -->
+<div class="container-fluid" id="projectSpaceContainer" ng-controller="projectController">
+	<div class="span12 row-fluid">
+		<h3 class="text-center">{{curProj.title}}</h3>
+		<div class="row-fluid" style="margin-top: 20px;">
+			<!-- DIV HISTOIRIQUE -->
+			<div class="span3 border3">
+				<h4 class="pagination-centered">#i18n("records")</h4>
+				<div class="span12" style="border: solid #808080 1px; height: 500px">
+					<div class="history-list" style="padding: 5px; color: #909090;">
+						<p>Ici se trouvera l'historique des projets.</p>
 					</div>
-					<input type="submit" id="delete" value="#i18n("delete")"/>
-				</form>
+				</div>
 			</div>
-
-			<div id="source">
-				<form class="grid_form">
-					<table id="selectable_sources">
-						<tr><td/></tr>
-					</table>
-					<div id="selectable_sources_toolbar"></div>
-				</form>
+			<!-- FIN DIV HISTOIRIQUE -->
+			<!-- DIV CONTENT TAB ONGLET CONTAINER -->
+			<div class="span9">
+				<!-- LISTE ONGLET -->
+				<ul class="nav nav-tabs tab_details">
+					<li><a href="#suivi" data-toggle="tab">#i18n("tab.name.monitoring")</a></li>
+					<li><a href="#description" data-toggle="tab">#i18n("tab.name.description")</a></li>
+					<li class="active"><a href="#sources" data-toggle="tab">#i18n("tab.name.data")</a></li>
+					<li><a href="#vocabulaires" data-toggle="tab">#i18n("tab.name.vocabulary")</a></li>
+				</ul>
+				<!-- FIN LISTE ONGLET -->
+				<!-- DIV CONTENT TAB ONGLETS -->
+				<div class="tab-content">
+					<!-- ONGLET SUIVI -->
+					<div class="tab-pane" id="suivi">
+						<p>#i18n("tab.subtitle.monitoring")</p>
+						<p class="red-message">Ici se trouvera l'historique du projet {{curProj.title}}</p>
+					</div>
+					<!-- FIN ONGLET SUIVI -->
+					<!-- ONGLET DESCRIPTION -->
+					<div class="tab-pane" id="description" style="height: 500px;">
+				  		<p>#i18n("project.description") : </p>
+				  		<p>{{curProj.description}}</p>
+			  			<p>#i18n("project.license") : </p><p>{{curProj.license}} </p><br/>
+						<p style="display:inline-block;">Créé par:&nbsp</p>
+						<p style="display:inline-block;">{{curProj.owner}}</p><br/>
+						<p style="display:inline-block;">#i18n("project.creation_s") :</p>
+						<p style="display:inline-block;">{{curProj.creation_date}}</p><br/>
+						<p style="display:inline-block;">#i18n("project.modification_s")</p>
+						<p style="display:inline-block;">{{curProj.modification_date}}</p><br/>
+						<div class="span12 actionBtn" id="description-btn">
+							<button id="popoverRemove" class="btn btn-custom-blue" 
+								rel="popover" data-placement="top" data-trigger="hover"href="#modifyproject" data-toggle="modal">#i18n("modify")
+							</button>
+							
+							<button id="popoverRemove" class="action btn btn-custom-red" data-content="Supprimez le projet sélectionné" 
+								rel="popover" data-placement="top" data-trigger="hover" href="#deleteProject" data-toggle="modal">#i18n("delete")
+							</button>
+						</div>
+				  	</div>
+				  	<!-- FIN ONGLET DESCRIPTION -->
+				  	<!-- ONGLET SOURCES -->
+				  	<div class="tab-pane active tab-sub-menu" id="sources">
+						<div class="list-group">
+							#foreach ($curSource in $current.getSources())
+								<li class="divider-group-list row-fluid">
+									<a href="#" ng-click="applicableModules('$current.uri', '$curSource.uri')">$curSource.title</a>
+									<a href="#deleteSource" role="button" class="pull-right" data-toggle="modal" style="display: inline-block">
+										<img src="${baseUri}/images/icon-delete.png" ng-click="deleteSource('$current.uri', '${curSource.uri}', '${baseUri}')">
+									</a>
+									<a href="#modifySource" role"button" class="pull-right" data-toggle="modal" style="display: inline-block; margin-right: 20px;">
+										<img src="${baseUri}/images/icon-edit.png">
+									</a>
+								</li>
+							#end
+						</div>
+						
+							<a href="{{curProj.uri}}/srcupload" role="button" class="btn" style="margin-top: 1em;">
+								<img src="${baseUri}/images/icon-add.png" class="icon">#i18n("source.button.add")
+							</a>
+						
+				  	</div>
+				  	<!-- FIN ONGLET SOURCES -->
+				  	<!-- ONGLET ONTOLOGIES -->
+				  	<div class="tab-pane tab-sub-menu" id="vocabulaires">
+						<div class="list-group" style="max-height: 100px:">
+						#foreach ($curOnto in $current.getOntologies())
+							<li class="divider-group-list row-fluid">
+								<a href="${curOnto.title}">$curOnto.title</a>	
+								<a href="#deleteOnto" role="button" class="pull-right" data-toggle="modal" style="display: inline-block" ng-click="deleteOntology('$current.uri', '$curOnto.title')">
+									<img src="${baseUri}/images/icon-delete.png">
+								</a>
+							</li>
+						#end
+						</div>
+						<div class="actionBtn-v2">
+						<a href="#addOntologie" role="button" class="btn" data-toggle="modal">
+							<img src="${baseUri}/images/icon-add.png">
+							#i18n("ontology.button.add")
+						</a>
+						</div>
+				  	
+				  	</div>
+				  	<!-- FIN ONGLET ONTOLOGIES -->
+			  	</div>
+			  	<!-- FIN DIV CONTENT TAB ONGLETS -->
 			</div>
-
-			<div id="ontology">
-				<form class="grid_form">
-					<table id="selectable_ontologies">
-						<tr><td/></tr>
-					</table>
-					<div id="selectable_ontologies_toolbar"></div>
-				</form>
-			</div>
+			<!-- FIN DIV CONTENT TAB ONGLETS CONTAINER -->
 		</div>
-#else
-		<p style='text-align:center'>
-			#i18n("welcome")
-		</p>
-#end
 	</div>
-</div>
-#footer
 
+	<!-- DIV POPUP REMOVE PROJECT -->
+	
+	<form method="post" action="${current.uri}?_method=DELETE" class="form_formated" name="delete_project">
+		<input type="hidden"  id="delete" value="#i18n("delete")"/>
+	</form>
+	
+	<div class="modal hide pagination-centered fade" id="deleteProject">
+	  	<div class="modal-header"> <a class="close" data-dismiss="modal">×</a>
+		    <h3>Supprimer</h3>
+	  	</div>
+		<div class="modal-body">
+		   	<p>Etes-vous sûr de vouloir supprimer l'integralité du projet ?</p>
+	 	</div>
+		<div class="modal-footer">
+			<button href="#" class="btn btn-custom-blue" data-dismiss="modal">Annuler</button>
+	    	<button class="btn btn-custom-red" data-dismiss="modal" onclick="document.forms['delete_project'].submit();  return false;">Supprimer</button>
+	  	</div>
+	</div>
+	<!-- FIN DIV POPUP REMOVE PROJECT -->
+	<!-- DIV POPUP MODIFY PROJECT 
+	<div class="modal hide pagination-centered fade" id="modifyProject">
+	  	<div class="modal-header"> <a class="close" data-dismiss="modal">×</a>
+		    <h3>Modifier</h3>
+	  	</div>
+		<div class="modal-body">
+		   	<span>Modification du projet <p class="brand">{{curProj.title}}</p></span>
+	 	</div>
+		<div class="modal-footer">
+			<button class="btn btn-custom-grey" data-dismiss="modal">Annuler</button>
+	    	<button href="${current.uri}/modify" class="btn btn-custom-blue">#i18n("modify")</button>
+	  	</div>
+	</div>
+	 FIN DIV POPUP MODIFY PROJECT -->
+	 
+	 <!-- MODIFY PROJECT -->
+	#set( $to_redirect = "${baseUri}/project/$")
+	#if( $current )
+		#set( $title_m  = "project.title.modify_project" )
+		#set( $submit = "modify" )
+      	#set( $target = "$current.uri" )
+	#else
+		#set( $title_m = "project.title.new_project" )
+		#set( $submit = "create" )
+      	#set( $target = "${baseUri}/project" )
+	#end
+	<div class="modal hide pagination-centered fade in" id="modifyproject">
+	  	<div class="modal-header"> <a class="close" data-dismiss="modal">×</a>
+	    	<h3>#i18n("project.title.mofidy_project")</h3>
+	  	</div>
+	  	<div class="modal-body">
+	    	<form method="get" action="" id="create" class="form-horizontal">
+		  	<div class="control-group">
+		    	<label class="control-label" for="title">#i18n("project.name"):</label>
+			    <div class="controls">
+			      <input type="text" id="title" name="title" value="$!esc.html($it.title_m)" placeholder="$current.title" autofocus="autofocus">
+			    </div>
+		  	</div>
+		  	<div class="control-group">
+		  		<label class="control-label" for="license">#i18n("project.license"): </label>
+			  	<div class="controls">
+				    <select id="license" name="license">
+						#foreach ( $li in $licenses )
+							<p>$li.uri</p>
+							<option value="$li.uri" #if($li.uri == $current.license) selected="selected" #end>$esc.html($li.label)</option>
+						#end
+					</select>
+				</div>
+		  	</div>
+		  	<div class="control-group">
+			    <label class="control-label" for="description">#i18n("project.description"): </label>
+			    <div class="controls">
+			      <textarea type="text" id="description" value="$!esc.html($it.description)" placeholder="$current.description"></textarea>
+			    </div>
+		  	</div>
+			</form>
+	  	</div>
+		<div class="modal-footer">
+			<button class="btn btn-custom-grey" data-dismiss="modal" aria-hidden="true">#i18n("cancel")</button>
+		    <button id="FormSubmit" type="submit" class="btn btn-custom-blue">#i18n("create")</button>
+		    <input type="hidden" value="$target" id="target"></input>
+	  	</div>
+	</div>
 #script_links
 <script type="text/javascript">
-#if( $current )
-	var currentProject = "$current.uri";
-#end
-	$(function() {
-		$("input:submit, .button").button();
-		$("#goto_sparql").button();
-		$("#tabs").tabs();
-
-		var currentForm;
-		$("#delete").click(function() {
-			$("#dialog-confirm").dialog({
-            			resizable: false,
-            			modal: true,
-            			autoOpen: false,
-				title: "#i18n('source.dialog.dialog_box.title')",
-            			buttons: {
-                			'#i18n("source.dialog.confirmation_button")': function() {
-                    				currentForm.submit();
-						$(this).dialog('close');
-                			},
-                			'#i18n("source.dialog.cancel_button")': function() {
-                 				$(this).dialog('close');
-      					}
-            			}
-        		});
-			currentForm = $(this).closest('form');
-			$("#dialog-confirm").text("#i18n("source.dialog.dialog_box.project_text")");
-			$("#dialog-confirm").dialog('open');
-			return false;
-		});
-		
-		if (typeof(currentProject) != 'undefined') {
-			makeFocus(currentProject);
-			if (window.location.hash == "")
-				History.replaceState(null, null, window.location.href + "#description");
-		}
-
-		$(window).bind('popstate', function() {
-			if (typeof(currentProject) != 'undefined') {
-				if (History.getHash() == "")
-					$("#tabs").tabs('select', "#description");
-				else {
-					$("#tabs").tabs('select', "#"+History.getHash());
-				}
-			}
-		});
-
-		loadGridSources();
-		loadGridOntologies();
-
-		$(window).bind('resize', function() {
-			$("#selectable_sources").setGridWidth($("#tabs").width() - 30);
-			$("#selectable_ontologies").setGridWidth($("#tabs").width() - 30);
-		}).trigger('resize');
-
-		$(".delete").click(function(e) {
-			e.preventDefault();
-			alert("test click");
-		});
+$('#FormSubmit').click(function(e){
+	e.preventDefault();
+	
+	var success = false;
+	var target = ($('#target').val());
+	var formValue = ($('#create').val());
+	var description = ($('#description').val());
+	var title = ($('#title').val());
+	var license = ($('#license').val());
+	var toRedirect = "$to_redirect";							
+	$.post(target, {"license": license, "description": description, "title": title})
+	.done(function(data, status, xhr) {
+		window.open("$target");
+	})
+	.fail(function() {
+	alert( "An error occured when trying to create the project." );
 	});
+});
 
-	function makeFocus(projectUrl) {
-		var buttons = $(".dl-project-button");
-		for (var i=0; i < buttons.length; i++) {
-			if (buttons[i].href == projectUrl)
-				$(buttons[i]).addClass("ui-state-focus");
-			else
-				$(buttons[i]).removeClass("ui-state-focus");
-		}
-	}
+</script>	 
+<!-- MODIFY PROJECT -->
+	 
+	 
+	 
+	 
+	 
+	<!-- DIV POPUP MODIFY SOURCE -->
+	<div class="modal hide pagination-centered fade" id="modifySource">
+	  	<div class="modal-header"> <a class="close" data-dismiss="modal">×</a>
+		    <h3>Modifier</h3>
+	  	</div>
+		<div class="modal-body">
+		   	<p>Modification d'un jeux de données</p>
+	 	</div>
+		<div class="modal-footer">
+			<button class="btn btn-custom-grey" data-dismiss="modal">Annuler</button>
+	    	<button data-dismiss="modal" class="btn btn-custom-blue">Modifier</button>
+	  	</div>
+	</div>
+	<!-- FIN DIV POPUP MODIFY ONTOLOGIE -->
+	
+	<!-- DIV POPUP AJOUTER UNE NOUVELLE ONTOLOGIE -->
+	<div class="modal hide pagination-centered fade large" id="addOntologie">
+	  	<div class="modal-header"> <a class="close" data-dismiss="modal">×</a>
+	    	<h3>Nouvelle Ontologie</h3>
+	  	</div>
+	  	<div class="modal-body">
+	    	<p>Ajouter une nouvelle ontologie</p>
+	    	<input type="text" id="ontology-title" name="title" placeholder="Nom de l'ontologie" autofocus>
+	    	<input type="text" id="ontology-cource-url" name="source-url" placeholder="Url de l'ontologie">
+	  	</div>
+	  	<div class="modal-footer">
+		    <a href="#" class="btn" data-dismiss="modal">Annuler</a>
+		    <button class="btn btn-primary" ng-click="uploadOntology('$current.uri')">Créer</button>
+	  	</div>
+	</div>
+	<!-- FIN DIV POPUP AJOUTER UNE NOUVELLE ONTOLOGIE -->
+	
+	<!-- DIV POPUP SUPPRIMER UNE ONTOLOGIE -->
+	<div class="modal hide pagination-centered fade large" id="deleteOntologie">
+	  	<div class="modal-header"> <a class="close" data-dismiss="modal">×</a>
+	    	<h3>Supprimer</h3>
+	  	</div>
+	  	<div class="modal-body">
+	    	<p>Etes-vous sûr de vouloir supprimer ce vocabulaire ?</p>
+	  	</div>
+	  	<div class="modal-footer">
+		    <a href="#" class="btn" data-dismiss="modal">Annuler</a>
+		    <a href="#" data-dismiss="modal" class="btn btn-primary btn-custom-red">Supprimer</a>
+	  	</div>
+	</div>
+	<!-- FIN DIV POPUP AJOUTER UNE NOUVELLE ONTOLOGIE -->
+<!-- ---------------- FIN EDIT PROJECT -------------------- -->
+</div>
+#h_footer
+#else
+<!-- ---------------- PROJECT SAPCE -------------------- -->
+<!-- if CURRENT IS NOT LOADED  --> 
 
-	function ajaxRequest(reqUrl) {
-		jQuery.ajax({
-			beforeSend: function(req) {
-				req.setRequestHeader("Accept", "text/html");
-			},
-			url: reqUrl,
-			type:"GET",
-			success: successfulQuery,
-			error: unsuccessfulQuery
-		});
-	}
-
-	function successfulQuery(response) {
-		$("#workspace-main-panel").empty();
-		$("#workspace-main-panel").append(response);
-	}
-
-	function unsuccessfulQuery(XMLHttpRequest) {
-		alert("An error occured when trying to get project description.");
-	}
-
-	function loadGridSources() {
-		/* Sources */
-		jQuery("#selectable_sources").jqGrid({
-			datatype: "local",
-			colNames:['#i18n("project.p_uri")','#i18n("project.p_title")','#i18n("project.p_others")'],
-			colModel:[
-				{name:'uri',index:'uri', sorttype:"text"},
-				{name:'title',index:'title', sorttype:"text"},
-				{name:'infos',index:'infos', sorttype:"text"} ],
-			caption: "",
-			rowNum:10, rowList:[10,20,30], pager: '#selectable_sources_toolbar',
-			gridview: true,
-			height: 250
-		});
-
-		var mydata = [
-#foreach($curSrc in $current.getSources())
-		{
-			uri:   "$curSrc.uri",
-			title: "<a href='$curSrc.uri'>$esc.javascript($curSrc.title)</a>",
-	#if( $curSrc.getType() == $field.CsvSource )
-		#set( $sep = "csv.source.${curSrc.separator}.separator" )
-			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.javascript($curSrc.description)<br />#end#i18n('project.upload_source.file'): <a href='${baseUri}/${curSrc.filePath}'>$!esc.javascript($curSrc.filePath)</a><br />#if( $curSrc.sourceUrl )#i18n('project.upload_source.src_url'): <a href='${curSrc.sourceUrl}'>$!esc.javascript($curSrc.sourceUrl)</a><br />#end#i18n('project.source.csv.separator'): #i18n(${sep}),&nbsp;#i18n('project.source.csv.title.present'): #i18n("boolean.${curSrc.hasTitleRow()}")<br />#i18n('project.upload_source.created'): $!date.format('medium', $curSrc.creationDate)"
-	#elseif( $curSrc.getType() == $field.RdfFileSource )
-			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.javascript($curSrc.description)<br />#end#i18n('project.upload_source.file'): <a href='${baseUri}/${curSrc.filePath}'>$!esc.javascript($curSrc.filePath)</a><br />#if( $curSrc.sourceUrl )#i18n('project.upload_source.src_url'): <a href='${curSrc.sourceUrl}'>$!esc.javascript($curSrc.sourceUrl)</a><br />#end#i18n('project.upload_rdf_format'): $!esc.javascript($curSrc.mimeType)<br />#i18n('project.upload_source.created'): $!date.format('medium', $curSrc.creationDate)"
-	#elseif( $curSrc.getType() == $field.SqlQuerySource )
-			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.javascript($curSrc.description)<br />#end#i18n('project.upload_db.source_url'): $!esc.javascript($curSrc.connectionUrl)<br />#i18n('project.upload_source.cache_duration'): $!esc.javascript($curSrc.cacheDuration)<br />#i18n('project.upload_source.cache_update'): $!date.format('medium', $curSrc.lastCacheUpdate)"
-	#elseif( $curSrc.getType() == $field.SqlDatabaseSource )
-			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.javascript($curSrc.description)<br />#end#i18n('project.upload_db.source_url'): $!esc.javascript($curSrc.connectionUrl)<br />#i18n('project.upload_source.tables_numb'): $!esc.javascript($curSrc.tableCount)"
-	#elseif( $curSrc.getType() == $field.TransformedRdfSource )
-			title: "<a href='${baseUri}/sparql/describe?uri=$esc.url(${curSrc.uri})&type=Graph&default-graph-uri=internal'>$esc.javascript($curSrc.title)</a>",
-			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.javascript($curSrc.description)<br />#end#i18n('project.upload_source.graph'): $!esc.javascript($curSrc.targetGraph.toString())<br />#i18n('project.upload_source.parent'): $!esc.javascript($curSrc.parent.title)<br />#i18n('project.upload_source.created'): $!date.format('medium', $curSrc.creationDate)"
-	#elseif( $curSrc.getType() == $field.SparqlSource )
-			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.javascript($curSrc.description)<br />#end#i18n('project.upload_sparql.connection_url'): $!esc.javascript($curSrc.endpointUrl)<br />#i18n('project.upload_source.cache_duration'): $!esc.javascript($curSrc.cacheDuration)<br /> #i18n('project.upload_source.cache_update'): $!date.format('medium', $curSrc.lastCacheUpdate)"
-	#elseif( $curSrc.getType() == $field.XmlSource )
-			title: "<a href='${baseUri}/${curSrc.filePath}'>$esc.javascript($curSrc.title)</a>",
-			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.javascript($curSrc.description)<br />#end#i18n('project.upload_source.file'): <a href='${baseUri}/${curSrc.filePath}'>$!esc.javascript($curSrc.filePath)</a><br />#if( $curSrc.sourceUrl )#i18n('project.upload_source.src_url'): <a href='${curSrc.sourceUrl}'>$!esc.javascript($curSrc.sourceUrl)</a><br />#end#i18n('project.upload_source.created'): $!date.format('medium', $curSrc.creationDate)"
-	#elseif( $curSrc.getType() == $field.ShpSource )
-			title: "<a href='${baseUri}/${curSrc.filePath}'>$esc.javascript($curSrc.title)</a>",
-			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.javascript($curSrc.description)<br />#end#i18n('project.upload_source.file'): $!esc.javascript($curSrc.filePath)<br />#i18n('project.upload_source.created'): $!date.format('medium', $curSrc.creationDate)"
-	#elseif( $curSrc.getType() == $field.GmlSource )
-			title: "<a href='${baseUri}/${curSrc.filePath}'>$esc.javascript($curSrc.title)</a>",
-			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.javascript($curSrc.description)<br />#end#i18n('project.upload_source.file'): $!esc.javascript($curSrc.filePath)<br />#i18n('project.upload_source.created'): $!date.format('medium', $curSrc.creationDate)"
+<script type="text/javascript">
+var currentProject = "";
+	var allProjects = [
+#foreach ($item in $it)
+       { uri : "$esc.javascript($!{item.uri})", description : "$!esc.javascript($item.description)", title : "$esc.javascript($!{item.title})", license : "$!esc.javascript($licenses[$item.getLicense()].getLabel())", owner :  "$esc.javascript($!{item.owner})", creation_date : "$!date.format('medium', $item.creationDate)", modification_date : "$!date.format('medium', $item.modificationDate)" },
+       				#end];
+	 
+	
+	var  allLicenses = [];
+	allLicenses.push({license : ""});
+	#foreach ($li in $licenses)
+		allLicenses.push({ license : "$!esc.javascript($li.label)"});
 	#end
-		},
-#end
-		];
-
-		for(var i=0;i<=mydata.length;i++) {
-			jQuery("#selectable_sources").jqGrid('addRowData',i+1,mydata[i]);
-		}
-
-		jQuery("#selectable_sources").jqGrid('navGrid', '#selectable_sources_toolbar',
-			{edit:false,add:false,del:false, refresh:false, search:false}).navButtonAdd(
-			'#selectable_sources_toolbar',
-			{
-			caption:"",
-			buttonicon:"ui-icon-plus",
-			onClickButton:function(){
-				window.location = currentProject + "/srcupload"
-			}
-		}).navButtonAdd(
-			'#selectable_sources_toolbar',
-			{
-			caption:"",
-			buttonicon:"ui-icon-pencil",
-			onClickButton:function(){
-				var id = jQuery("#selectable_sources").getGridParam('selrow');
-				if (id) {
-					var ret = jQuery("#selectable_sources").getRowData(id);
-					window.location = currentProject + "/source/modify?uri=" + ret.uri;
-				}
-				else {
-					alert('#i18n("project.msg.select_row")');
-				}
-			}
-		}).navButtonAdd(
-			'#selectable_sources_toolbar',
-			{
-			caption:"",
-			buttonicon:"ui-icon-trash",
-			onClickButton:function() {
-				var id = jQuery("#selectable_sources").getGridParam('selrow');
-				if (id) {
-					$("#dialog-confirm").dialog({
-            					resizable: false,
-            					modal: true,
-            					autoOpen: true,
-						title: "#i18n('source.dialog.dialog_box.title')",
-            					buttons: {
-                					'#i18n("source.dialog.confirmation_button")': function() {
-                    						$(this).dialog('close');
-                    						var ret = jQuery("#selectable_sources").getRowData(id);
-								window.location = currentProject + "/source/delete?uri=" + ret.uri;
-                					},
-                					'#i18n("source.dialog.cancel_button")': function() {
-                    						$(this).dialog('close');
-                					}
-            					}
-        				});
-        			}
-				else {
-					alert('#i18n("project.msg.select_row")');
-				}
-			}
-		});
-
-		jQuery("#selectable_sources").jqGrid('hideCol',["uri"]);
-	}
-
-	function loadGridOntologies() {
-		/* Ontologies */
-		jQuery("#selectable_ontologies").jqGrid({
-			datatype: "local",
-			colNames:['#i18n("project.p_uri")','#i18n("project.p_title")','#i18n("project.p_source")',"#i18n("project.p_dateSubmitted")", '#i18n("project.p_operator")'],
-			colModel:[
-				{name:'uri',index:'uri', sorttype:"text",editable:true,editoptions:{size:10}},
-				{name:'title',index:'title', sorttype:"text",editable:true,editoptions:{size:50}},
-				{name:'source',index:'source', sorttype:"text",editable:true,editoptions:{size:50}},
-				{name:'dateSubmitted',index:'dateSubmitted', sorttype:"text",editable:true,editoptions:{size:50}},
-				{name:'operator',index:'operator', sorttype:"text",editable:true,editoptions:{size:50}} ],
-			caption: "",
-			rowNum: 10,
-			rowList: [10,20,30],
-			pager: '#selectable_ontologies_toolbar',
-			gridview: true,
-			height: 250
-		});
-
-		var mydataOntology = [
-#foreach( $curOnto in $current.getOntologies() )
-		{
-			uri:"$!esc.javascript($curOnto.uri)",
-			title:"$!esc.javascript($curOnto.title)",
-			source:"$!esc.javascript($curOnto.source)",
-			dateSubmitted:"$!date.format('medium', $curOnto.dateSubmitted)",
-			operator:"$!esc.javascript($curOnto.operator)"
-		},
-#end
-		];
-		for(var i=0; i<=mydataOntology.length; i++) {
-			jQuery("#selectable_ontologies").jqGrid('addRowData',i+1,mydataOntology[i]);
-		}
-		jQuery("#selectable_ontologies")
-			.jqGrid('navGrid', '#selectable_ontologies_toolbar',
-				{ edit:false,add:false,del:false, refresh:false, search:false,
-			}).navButtonAdd(
-			'#selectable_ontologies_toolbar',
-			{
-				caption:"",
-				buttonicon:"ui-icon-plus",
-				onClickButton:function() {
-					window.location = currentProject + "/ontologyupload"
-				}
-			}).navButtonAdd('#selectable_ontologies_toolbar',
-				{caption:"",
-				buttonicon:"ui-icon-pencil",
-				onClickButton:function(){
-					var id = jQuery("#selectable_ontologies").getGridParam('selrow');
-					if(id){
-						var ret = jQuery("#selectable_ontologies").getRowData(id);
-						window.location = currentProject + "/ontology/"+ret.title+"/modify";
-					} else {
-						alert('#i18n("project.msg.select_row")');
-					}
-				}
-			}).navButtonAdd(
-			'#selectable_ontologies_toolbar',
-			{
-			caption:"",
-			buttonicon:"ui-icon-trash",
-			onClickButton:function() {
-				var id = jQuery("#selectable_ontologies").getGridParam('selrow');
-				if (id) {
-					var ret = jQuery("#selectable_ontologies").getRowData(id);
-					window.location = currentProject + "/ontology/"+ret.title+"/delete";
-				}
-				else {
-					alert('#i18n("project.msg.select_row")');
-				}
-			}
-		});
-		jQuery("#selectable_ontologies").jqGrid('hideCol',["uri"]);
-	}
+	
 </script>
+
+<div class="span12 row-fluid projectSpaceContainer" ng-controller="projectController">
+	<div class="span12 row-fluid" style="margin:0 auto; float:none;">
+		<div class="span3 row" id="btnActionDiv">
+			<div id="new-projet-btn">
+				<button id="add_project" href="#createproject" role="button" class="btn" data-toggle="modal"><img class="icon" src="${baseUri}/images/icon-add.png">#i18n("project.title.new_project")</button>
+			</div>
+		</div>
+		
+		<!-- DIV BAR DE FILTRES --> 
+		<div class="span9 row" style="margin:0 auto; float:none;">
+			<form class="navbar-search form-inline pagination-centered">
+	  			<label class="search_label_width">#i18n("search_filter")</label>
+	  			<input type="search" ng-model="projectfilter" placeholder="Search filter..."/>
+				<label class="search_label_width">#i18n("project.license")</label>
+				<select ng-model="licenseselected" ng-options="l.license for l in licenses">
+				</select>
+			</form>
+		</div>
+		 <!-- FIN DIV BAR DE FILTRES -->
+	</div>
+	<div class="list-group offset2 row span8" id="project-list"> 
+		<ul class="nav nav-stacked" id="ul-project-list">
+			<li ng-repeat="project in projects | filter:projectfilter | filter:licenseselected">
+				<a href="{{ project.uri }}">
+					<div class="span12 list-elem">
+						<span class="span7">
+						 	<img src="${baseUri}/images/Project-img.png" id="img-nav-stacked"><span>{{ project.title }}</span><br>
+						 	<span class="info-list-title">#i18n("project.description") :</span>
+							<span class="info-list">{{ project.description }} </span><br>
+							<span class="info-list-title">#i18n("project.license") :</span>
+							<span class="info-list"> {{ project.license }}</span>
+						</span>
+						<span class="span5 creater-block">
+							<span>#i18n("project.creation_by"):&nbsp</span>
+							<span>{{ project.owner }}</span><br>
+							<span>#i18n("project.creation_s")</span>
+							<span>{{ project.creation_date }}</span><br>
+							<span>#i18n("project.modification_s") </span>
+							<span>{{ project.modification_date }}</span><br>
+						</span>
+					</div>
+				</a>
+			</li>
+		</ul> 
+	</div>
+	<!-- DIV POPUP FORM -->
+	#set( $to_redirect = "${baseUri}/project")
+	#if( $current )
+		#set( $title_m  = "project.title.modify_project" )
+		#set( $submit = "modify" )
+      	#set( $target = "${it.uri}" )
+	#else
+		#set( $title_m = "project.title.new_project" )
+		#set( $submit = "create" )
+      	#set( $target = "${baseUri}/project" )
+	#end
+	<div class="modal hide pagination-centered fade in" id="createproject">
+	  	<div class="modal-header"> <a class="close" data-dismiss="modal">×</a>
+	    	<h3>#i18n("project.title.new_project")</h3>
+	  	</div>
+	  	<div class="modal-body">
+	    	<form method="get" action="" id="create" class="form-horizontal">
+		  	<div class="control-group">
+		    	<label class="control-label" for="title">#i18n("project.name"):</label>
+			    <div class="controls">
+			      <input type="text" id="title" name="title" value="$!esc.html($it.title_m)" placeholder="Nom du projet" autofocus="autofocus">
+			    </div>
+		  	</div>
+		  	<div class="control-group">
+		  		<label class="control-label" for="license">#i18n("project.license"): </label>
+			  	<div class="controls">
+				    <select id="license" name="license">
+						#foreach ( $li in $licenses )
+							<p>$li.uri</p>
+							<option value="$li.uri" #if($li.uri == $it.license) selected="selected" #end>$esc.html($li.label)</option>
+						#end
+					</select>
+				</div>
+		  	</div>
+		  	<div class="control-group">
+			    <label class="control-label" for="description">#i18n("project.description"): </label>
+			    <div class="controls">
+			      <textarea type="text" id="description" value="$!esc.html($it.description)"></textarea>
+			    </div>
+		  	</div>
+			</form>
+	  	</div>
+		<div class="modal-footer">
+			<button class="btn btn-custom-grey" data-dismiss="modal" aria-hidden="true">#i18n("cancel")</button>
+		    <button id="FormSubmit" type="submit" class="btn btn-custom-blue">#i18n("create")</button>
+		    <input type="hidden" value="$target" id="target"></input>
+	  	</div>
+	</div>
+#script_links
+<script type="text/javascript">
+$('#FormSubmit').click(function(e){
+	e.preventDefault();
+	
+	var success = false;
+	var target = ($('#target').val());
+	var formValue = ($('#create').val());
+	var description = ($('#description').val());
+	var title = ($('#title').val());
+	var license = ($('#license').val());
+	var toRedirect = "$to_redirect";							
+	$.post(target, {"license": license, "description": description, "title": title})
+	.done(function(data, status, xhr) { 
+		window.open(xhr.getResponseHeader('Location'));
+	})
+	.fail(function() {
+	alert( "An error occured when trying to create the project." );
+	});
+});
+
+</script>
+</div>
+#h_footer
+#end
 </body>
 </html>

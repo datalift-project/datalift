@@ -1,0 +1,102 @@
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+#load("project/resources")
+#load_core_resources
+	<title>#i18n("workspace.title") - DataLift</title>
+#css_links
+#header_links
+#script_links
+
+#module_note_css_links
+#module_note_js_scripts
+
+</head>
+<body ng-app="module" ng-controller="moduleController">
+#h_tetiere
+#module_note
+<!-- ---------------- SOURCE SPACE -------------------- -->
+<div class="container-fluid" id="projectSpaceContainer">
+	<div class="span12 row-fluid">
+		<h3 class="text-center" id="sourceName">$curSource.title</h3>
+		<div class="row-fluid" style="margin-top: 20px;">
+			<!-- DIV HISTOIRIQUE -->
+			<div class="span3 border3">
+				<h4 class="pagination-centered">#i18n("records")</h4>
+				<div class="span12" style="border: solid #808080 1px; height: 500px">
+					<div class="history-list" style="padding: 5px; color: #909090;">
+						<p>Ici se trouvera l'historique des projets.</p>
+					</div>
+				</div>
+			</div>
+			<!-- FIN DIV HISTOIRIQUE -->
+			<!-- DIV CONTENT TAB ONGLET CONTAINER -->
+			<div class="span9">
+				<!-- LISTE ONGLET -->
+				<ul class="nav nav-tabs" id="tab_details">
+					<li><a href="#consultation">#i18n("action.tab.consult")</a></li>
+					<li class="active"><a href="#actions">#i18n("action.tab")</a></li>
+					<li><a href="#modify">#i18n("Modifier")</a></li>
+				</ul>
+				<!-- FIN LISTE ONGLET -->
+				<!-- DIV CONTENT TAB ONGLETS -->
+				<div class="tab-content" id="tab-sub-menu-action" ng-init='#foreach ($mod in $canHandle) initialize("$mod.getLabel()", "$mod.getMethod()", "$mod.getPosition()", "$mod.getUri()"); #end'>
+					<!-- ONGLET ACTIONS -->
+				  	<div class="tab-pane active" id="actions">
+				  		<div class="alerts span10" id="alert-ban" style="display:none;">
+					  		<div class="alert-message success">
+					  			<a class="close" href="#" data-dismiss="alert">×</a>
+					  			<p><strong>Well done!</strong> you have just convert a csv file into an rdf</p>
+					  		</div>
+					  	</div>		  	
+					  	<div class="span12" style="display:none_;" id="moduleLevel1">
+				  			<h5>1. #i18n("action.module.convert")</h5>
+				  			<select style="display:inline-block; margin: 0;" id="moduleLevel1" ng-model="moduleLevel1" ng-options="m.label for m in modulesLevel1"></select>
+				  			<!-- Currently selected: {{ {selected_moduleLevel1:moduleLevel1}  }}  -->
+				  			<a href="#" data-dismiss="modal" class="btn" style="display:inline-block" ng-click="moduleRedirectL1('${baseUri}')">#i18n("action.button.convert")</a>
+			  			</div>
+			  			
+			  			<div class="span12" style="display:none_;" id="moduleLevel2">
+				  			<h5>2. #i18n("action.module.publication")</h5>
+				  			<select style="display:inline-block; margin: 0;" id="moduleLevel2" ng-model="moduleLevel2" ng-options="m.label for m in modulesLevel2"></select>
+				  			<!-- Currently selected: {{ {selected_moduleLevel2:moduleLevel2}  }}  -->
+				  			<a href="#" data-dismiss="modal" class="btn" style="display:inline-block" ng-click="moduleRedirectL2('${baseUri}')">#i18n("action.button.publication")</a>
+			  			</div>
+			  			
+			  			<div class="span12" style="display:none_;" id="moduleLevel3" >
+				  			<h5>3. #i18n("action.module.interconnect")</h5>
+				  			<select style="display:inline-block; margin: 0;" id="moduleLevel3" ng-model="moduleLevel3" ng-options="m.label for m in modulesLevel3"></select>
+				  			<!-- Currently selected: {{ {selected_moduleLevel3:moduleLevel3}  }}  -->
+				  			<a href="#" data-dismiss="modal" class="btn" style="display:inline-block" ng-click="moduleRedirectL3('${baseUri}')">#i18n("action.button.interconnect")</a>
+			  			</div>
+			  			
+			  			<div class="span12" style="display:none_;" id="moduleLevel4" >
+				  			<h5>4. #i18n("action.module.exploit")</h5>
+				  			<select style="display:inline-block; margin: 0;" id="moduleLevel4" ng-model="moduleLevel4" ng-options="m.label for m in modulesLevel4"></select>
+				  			<!-- Currently selected: {{ {selected_moduleLevel4:moduleLevel4}  }}  -->
+				  			<a href="#" data-dismiss="modal" class="btn" style="display:inline-block" ng-click="moduleRedirectL1L4('${baseUri}')">#i18n("action.button.exploit")</a>
+			  			</div>
+
+			  		</div><!-- FIN ONGLET ACTIONS -->
+
+				  	<!-- ONGLET CONSULTATION -->
+				  	<div class="tab-pane" id="consultation">
+				  		<div class="span12 row" style="margin:0 auto; float:none;">
+				  			<p>Ici l'utilisateur pourra consulter la source</p>
+						</div>
+				  	</div>
+				  	<!-- FIN ONGLET CONSULTATION -->
+				  	<!-- ONGLET MODIFIY -->
+					<div class="tab-pane" id="modify">
+						<p>Ici se trouvera l'espace de modification de la source.</p>
+					</div>
+					<!-- FIN ONGLET MODIFY -->
+		  		</div><!-- FIN DIV CONTENT TAB ONGLETS -->
+			 </div> 	
+		</div><!-- FIN DIV CONTENT TAB ONGLETS CONTAINER -->
+	</div>
+</div>
+</div> <!-- ---------------- FIN PROJECT SPACE -------------------- -->
+
+#h_footer
+</body>
+</html>

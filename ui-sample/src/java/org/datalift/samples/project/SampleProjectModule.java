@@ -54,6 +54,7 @@ import org.datalift.fwk.ResourceResolver;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectModule;
+import org.datalift.fwk.project.Source;
 
 
 /**
@@ -90,7 +91,10 @@ public class SampleProjectModule extends BaseModule implements ProjectModule
     // ProjectModule contract support
     //-------------------------------------------------------------------------
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}  
+     * @deprecated
+     */
     @Override
     public UriDesc canHandle(Project p) {
         try {
@@ -104,6 +108,23 @@ public class SampleProjectModule extends BaseModule implements ProjectModule
             throw new RuntimeException(e);
         }
     }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+	public UriDesc canHandle(Source s) {
+		try {
+            UriDesc desc = new UriDesc(this.getName() + "/java-guy.jpg",
+                                       "Sample Project Module");
+            desc.setPosition(1000);
+            return desc;
+        }
+        catch (Exception e) {
+            log.fatal("Uh?", e);
+            throw new RuntimeException(e);
+        }
+	}
 
     //-------------------------------------------------------------------------
     // Web services
@@ -127,4 +148,6 @@ public class SampleProjectModule extends BaseModule implements ProjectModule
                             .resolveModuleResource(this.getName(),
                                                    uriInfo, request, acceptHdr);
     }
+
+	
 }
