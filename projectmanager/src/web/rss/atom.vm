@@ -1,0 +1,15 @@
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <title>$it.title</title>
+    <link href="$it.link" rel="alternate" type="text/html"/>
+    <updated>$it.updated</updated>
+    <id>$it.id</id>
+    #foreach( $entry in $it.entries )
+        <entry>
+            <title>$entry.title</title>
+            <id>$entry.id</id>
+            <updated>$entry.updated</updated>
+            <author><name>$entry.author</name></author>
+            <content>$entry.content</content>
+        </entry>
+    #end 
+</feed>
