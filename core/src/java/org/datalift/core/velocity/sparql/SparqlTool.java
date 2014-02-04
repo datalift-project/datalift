@@ -47,6 +47,8 @@ import java.util.Map.Entry;
 
 import org.apache.velocity.tools.config.DefaultKey;
 import org.openrdf.OpenRDFException;
+import org.openrdf.model.BNode;
+import org.openrdf.model.Literal;
 import org.openrdf.model.Resource;
 import org.openrdf.model.Statement;
 import org.openrdf.model.Value;
@@ -97,12 +99,33 @@ import static org.datalift.fwk.util.StringUtils.*;
 @DefaultKey("sparql")
 public final class SparqlTool
 {
+    //-------------------------------------------------------------------------
+    // Constants
+    //-------------------------------------------------------------------------
+
+    private final static String HTTP_URL_PREFIX         = "http://";
+    private final static String HTTPS_URL_PREFIX        = "https://";
+
+    //-------------------------------------------------------------------------
+    // Class members
+    //-------------------------------------------------------------------------
+
     private final static Logger log = Logger.getLogger();
+
+    //-------------------------------------------------------------------------
+    // Instance members
+    //-------------------------------------------------------------------------
 
     private final Configuration cfg;
     private final AccessController accessController;
     private final Map<String,URI> prefixes = new LinkedHashMap<String,URI>();
     private final Map<String,Value> bindings = new HashMap<String,Value>();
+    private final Map<String,String> queryPrefixes =
+                                                new HashMap<String,String>();
+
+    //-------------------------------------------------------------------------
+    // Constructors
+    //-------------------------------------------------------------------------
 
     public SparqlTool() {
         this.cfg = Configuration.getDefault();
@@ -110,6 +133,10 @@ public final class SparqlTool
                                     this.cfg.getBeans(AccessController.class);
         this.accessController = (! acs.isEmpty())? acs.iterator().next(): null;
     }
+
+    //-------------------------------------------------------------------------
+    // SparqlTool contract definition
+    //-------------------------------------------------------------------------
 
     /**
      * Registers a namespace prefix
@@ -222,6 +249,229 @@ public final class SparqlTool
     }
 
     /**
+     * Executes the specified SELECT query against Datalift
+     * {@link Configuration#getDefaultRepository() default RDF store}.
+     * @param  query   the SELECT query.
+     *
+     * @return the query result as an iterator on the matched bindings.
+     * @throws RdfQueryException if any error occurred executing the
+     *         query or processing the result.
+     *
+     * @see    #select(String, String)
+     */
+    public Iterator<Map<String,Value>> select(String query) {
+        return this.select(this.cfg.getDefaultRepository(), query);
+    }
+
+    /**
+     * Executes the specified SELECT query against the specified
+     * Datalift RDF store.
+     * @param  repository   the name of the RDF store to query, as
+     *                      specified in Datalift configuration.
+     * @param  query        the SELECT query.
+     *
+     * @return the query result as an iterator on the matched bindings.
+     * @throws RdfQueryException if any error occurred executing the
+     *         query or processing the result.
+     */
+    public Iterator<Map<String,Value>> select(String repository, String query) {
+        return this.select(this.cfg.getRepository(repository), query);
+    }
+
+    /**
+     * Executes the specified CONSTRUCT (or DESCRIBE) query against
+     * Datalift
+     * {@link Configuration#getDefaultRepository() default RDF store}.
+     * @param  query   the CONSTRUCT (or DESCRIBE) query.
+     *
+     * @return the query result as a {@link Statement} iterator.
+     * @throws RdfQueryException if any error occurred executing the
+     *         query or processing the result.
+     *
+     * @see    #construct(String, String)
+     */
+    public Iterator<Statement> construct(String query) {
+        return this.construct(this.cfg.getDefaultRepository(), query);
+    }
+
+    /**
+     * Executes the specified CONSTRUCT (or DESCRIBE) query against
+     * the specified Datalift RDF store.
+     * @param  repository   the name of the RDF store to query, as
+     *                      specified in Datalift configuration.
+     * @param  query        the CONSTRUCT (or DESCRIBE) query.
+     *
+     * @return the query result as a {@link Statement} iterator.
+     * @throws RdfQueryException if any error occurred executing the
+     *         query or processing the result.
+     */
+    public Iterator<Statement> construct(String repository, String query) {
+        return this.construct(this.cfg.getRepository(repository), query);
+    }
+
+    /**
+     * Executes a DESCRIBE query for the specified RDF resource against
+     * Datalift
+     * {@link Configuration#getDefaultRepository() default RDF store}.
+     * @param  uri   the URI of the RDF resource to retrieve.
+     *
+     * @return the query result as a {@link DescribeResult} object.
+     * @throws RdfQueryException if any error occurred executing the
+     *         query or processing the result.
+     *
+     * @see    #describe(String, String)
+     */
+    public DescribeResult describe(Object uri) {
+       return this.describe(this.cfg.getDefaultRepository(), uri); 
+    }
+
+    /**
+     * Executes a DESCRIBE query for the specified RDF resource against
+     * the specified Datalift RDF store.
+     * @param  repository   the name of the RDF store to query, as
+     *                      specified in Datalift configuration.
+     * @param  uri          the URI of the RDF resource to retrieve.
+     *
+     * @return the query result as a {@link DescribeResult} object.
+     * @throws RdfQueryException if any error occurred executing the
+     *         query or processing the result.
+     */
+    public DescribeResult describe(String repository, Object uri) {
+        return this.describe(this.cfg.getRepository(repository), uri);
+    }
+
+    /**
+     * Returns whether the specified RDF value is a RDF resource (blank
+     * node or URI).
+     * @param  v   a RDF value.
+     *
+     * @return <code>true</code> if the RDF value is a blank node or
+     *         URI; <code>false</code> otherwise.
+     */
+    public boolean isResource(Value v) {
+        return (v instanceof Resource);
+    }
+
+    /**
+     * Returns whether the specified RDF value is a blank node.
+     * @param  v   a RDF value.
+     *
+     * @return <code>true</code> if the RDF value is a blank node;
+     *         <code>false</code> otherwise.
+     */
+    public boolean isBNode(Value v) {
+        return (v instanceof BNode);
+    }
+
+    /**
+     * Returns whether the specified RDF value is a literal
+     * @param  v   a RDF value.
+     *
+     * @return <code>true</code> if the RDF value is a literal;
+     *         <code>false</code> otherwise.
+     */
+    public boolean isLiteral(Value v) {
+        return (v instanceof Literal);
+    }
+
+    /**
+     * Returns whether the specified RDF value is a literal of a native
+     * data type (boolean, byte, decimal, double, float, integer, long
+     * or short).
+     * @param  v   a RDF value.
+     *
+     * @return <code>true</code> if the
+     *         {@link Literal#getDatatype() XML schema data type} of the
+     *         literal value is regarded as native; <code>false</code>
+     *         otherwise.
+     */
+    public boolean isNative(Value v) {
+        return RdfUtils.isNative(v);
+    }
+
+    /**
+     * Returns whether the specified RDF value is a URL, i.e. a URI the
+     * scheme of which is either "<code>http</code>" or
+     * "<code>https</code>".
+     * @param  v   a RDF value.
+     *
+     * @return <code>true</code> if the RDF value is a URL;
+     *         <code>false</code> otherwise.
+     */
+    public boolean isUrl(Value v) {
+        boolean url = false;
+        if (v instanceof org.openrdf.model.URI) {
+            String u = v.toString();
+            url = (u.startsWith(HTTP_URL_PREFIX)) ||
+                  (u.startsWith(HTTPS_URL_PREFIX));
+        }
+        return url;
+    }
+
+    /**
+     * Attempts to resolve the namespace into prefix in the specified
+     * URI.
+     * @param  v   a RDF value.
+     *
+     * @return a string representation of the RDF value with the
+     *         namespace resolved into a prefix if the RDF value is a
+     *         URI and a prefix for the namespace has been declared
+     *         in the query or as a well-known prefix in the RDF
+     *         repository.
+     */
+    public String resolveNamespace(Value v) {
+        if (v instanceof org.openrdf.model.URI) {
+            org.openrdf.model.URI u = (org.openrdf.model.URI)v;
+            String prefix = this.queryPrefixes.get(u.getNamespace());
+            if (prefix != null) {
+                return prefix + ":" + u.getLocalName();
+            }
+        }
+        return (v != null)? v.toString(): "";
+    }
+
+    /**
+     * Returns a string representation of the specified RDF value.
+     * <p>
+     * This method handles the following cases:</p>
+     * <dl>
+     *  <dt>URIs</dt>
+     *  <dd>the URI value with known prefixes resolved</dd>
+     *  <dt>{@link #isBNode(Value) Blank nodes}</dt>
+     *  <dd>the blank node id. prefixed with "<code>_:</code>"</dd>
+     *  <dt>{@link #isNative(Value) Native literal values}</dt>
+     *  <dd>the value</dd>
+     *  <dt>String values</dt>
+     *  <dd>the value enclosed in double quotes, followed by the
+     *      language tag, if any</dd>
+     *   are displayed
+     * directly, string literals are 
+     * @param  v   a RDF value.
+     *
+     * @return
+     */
+    public String toString(Value v) {
+        String s = "";
+        if (v instanceof org.openrdf.model.URI) {
+            s = resolveNamespace(v);
+        }
+        else if (v instanceof BNode) {
+            s = "_:" + v.stringValue();
+        }
+        else if (v instanceof Literal) {
+            s = (isNative(v))? ((Literal)v).getLabel(): v.toString();
+        }
+        else if (v != null) {
+            s = v.stringValue();
+        }
+        return s;
+    }
+
+    //-------------------------------------------------------------------------
+    // Specific implementation
+    //-------------------------------------------------------------------------
+
+    /**
      * Executes the specified ASK query against the specified Datalift
      * RDF store.
      * @param  repository   the Datalift RDF store to query.
@@ -260,36 +510,6 @@ public final class SparqlTool
         finally {
             Repository.closeQuietly(cnx);
         }
-    }
-
-    /**
-     * Executes the specified SELECT query against Datalift
-     * {@link Configuration#getDefaultRepository() default RDF store}.
-     * @param  query   the SELECT query.
-     *
-     * @return the query result as an iterator on the matched bindings.
-     * @throws RdfQueryException if any error occurred executing the
-     *         query or processing the result.
-     *
-     * @see    #select(String, String)
-     */
-    public Iterator<Map<String,Value>> select(String query) {
-        return this.select(this.cfg.getDefaultRepository(), query);
-    }
-
-    /**
-     * Executes the specified SELECT query against the specified
-     * Datalift RDF store.
-     * @param  repository   the name of the RDF store to query, as
-     *                      specified in Datalift configuration.
-     * @param  query        the SELECT query.
-     *
-     * @return the query result as an iterator on the matched bindings.
-     * @throws RdfQueryException if any error occurred executing the
-     *         query or processing the result.
-     */
-    public Iterator<Map<String,Value>> select(String repository, String query) {
-        return this.select(this.cfg.getRepository(repository), query);
     }
 
     /**
@@ -338,37 +558,6 @@ public final class SparqlTool
 
     /**
      * Executes the specified CONSTRUCT (or DESCRIBE) query against
-     * Datalift
-     * {@link Configuration#getDefaultRepository() default RDF store}.
-     * @param  query   the CONSTRUCT (or DESCRIBE) query.
-     *
-     * @return the query result as a {@link Statement} iterator.
-     * @throws RdfQueryException if any error occurred executing the
-     *         query or processing the result.
-     *
-     * @see    #construct(String, String)
-     */
-    public Iterator<Statement> construct(String query) {
-        return this.construct(this.cfg.getDefaultRepository(), query);
-    }
-
-    /**
-     * Executes the specified CONSTRUCT (or DESCRIBE) query against
-     * the specified Datalift RDF store.
-     * @param  repository   the name of the RDF store to query, as
-     *                      specified in Datalift configuration.
-     * @param  query        the CONSTRUCT (or DESCRIBE) query.
-     *
-     * @return the query result as a {@link Statement} iterator.
-     * @throws RdfQueryException if any error occurred executing the
-     *         query or processing the result.
-     */
-    public Iterator<Statement> construct(String repository, String query) {
-        return this.construct(this.cfg.getRepository(repository), query);
-    }
-
-    /**
-     * Executes the specified CONSTRUCT (or DESCRIBE) query against
      * the specified Datalift RDF store.
      * @param  repository   the Datalift RDF store to query.
      * @param  query        the CONSTRUCT (or DESCRIBE) query.
@@ -408,37 +597,6 @@ public final class SparqlTool
         }
         // Do not close connection until results have been read:
         // StatementIterator takes care of it.
-    }
-
-    /**
-     * Executes a DESCRIBE query for the specified RDF resource against
-     * Datalift
-     * {@link Configuration#getDefaultRepository() default RDF store}.
-     * @param  uri   the URI of the RDF resource to retrieve.
-     *
-     * @return the query result as a {@link DescribeResult} object.
-     * @throws RdfQueryException if any error occurred executing the
-     *         query or processing the result.
-     *
-     * @see    #describe(String, String)
-     */
-    public DescribeResult describe(Object uri) {
-       return this.describe(this.cfg.getDefaultRepository(), uri); 
-    }
-
-    /**
-     * Executes a DESCRIBE query for the specified RDF resource against
-     * the specified Datalift RDF store.
-     * @param  repository   the name of the RDF store to query, as
-     *                      specified in Datalift configuration.
-     * @param  uri          the URI of the RDF resource to retrieve.
-     *
-     * @return the query result as a {@link DescribeResult} object.
-     * @throws RdfQueryException if any error occurred executing the
-     *         query or processing the result.
-     */
-    public DescribeResult describe(String repository, Object uri) {
-        return this.describe(this.cfg.getRepository(repository), uri);
     }
 
     /**
@@ -601,10 +759,28 @@ public final class SparqlTool
     }
 
     /**
+     * Registers the namespace prefix mappings used by a SPARQL query
+     * result.
+     * @param  result   the CONSTRUCT or DESCRIBE SPARQL query result.
+     */
+    private void registerNamespaceMappings(GraphQueryResult result) {
+        // Clear previous mappings.
+        this.queryPrefixes.clear();
+        // Register namespace prefix mappings for this query.
+        Map<String,String> prefixes = result.getNamespaces();
+        if (prefixes != null) {
+            for (Map.Entry<String,String> e : prefixes.entrySet()) {
+                // Namespace URI -> prefix.
+                this.queryPrefixes.put(e.getValue(), e.getKey());
+            }
+        }
+    }
+
+    /**
      * Closes the specified query result iterator, in a fail-safe way.
      * @param  r   the query result to close.
      */
-    private static <T> void closeQuietly(QueryResult<T> r) {
+    private <T> void closeQuietly(QueryResult<T> r) {
         if (r != null) {
             try { r.close(); } catch (Exception e) { /* Ignore... */ }
         }
@@ -614,8 +790,9 @@ public final class SparqlTool
     /**
      * An iterator on the results of a SELECT SPARQL query.
      */
-    private final static class SelectResultIterator
-                                        implements Iterator<Map<String,Value>> {
+    private final class SelectResultIterator
+                                        implements Iterator<Map<String,Value>>
+    {
         private final RepositoryConnection cnx;
         private final TupleQueryResult result;
 
@@ -674,7 +851,7 @@ public final class SparqlTool
      * An iterator on a set of RDF statements, such as the results of
      * a CONSTRUCT or DESCRIBE SPARQL query.
      */
-    private final static class StatementIterator implements Iterator<Statement>
+    private final class StatementIterator implements Iterator<Statement>
     {
         private final RepositoryConnection cnx;
         private final GraphQueryResult result;
@@ -690,6 +867,8 @@ public final class SparqlTool
                                  GraphQueryResult result) {
             this.cnx = cnx;
             this.result = result;
+            // Register namespace prefix mappings for this query.
+            registerNamespaceMappings(result);
         }
 
         /** {@inheritDoc} */
@@ -763,6 +942,9 @@ public final class SparqlTool
                                         throws QueryEvaluationException {
             this(uri, new HashMap<String,SparqlTool.DescribeResult>());
             try {
+                // Register namespace prefix mappings for this query.
+                registerNamespaceMappings(result);
+                // Parse results.
                 URIImpl u = new URIImpl(uri);
                 for (; result.hasNext(); ) {
                     Statement s = result.next();

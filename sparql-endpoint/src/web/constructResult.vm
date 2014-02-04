@@ -50,23 +50,23 @@
 				<tbody>
 #foreach( $item in $it )
 					<tr>
-#set( $u = $!{item.subject.toString()} )
-#if( ${u.startsWith("http://")} || ${u.startsWith("https://")} )
-						<td><a href="${baseUri}/sparql/describe?uri=$esc.url($u)&type=Resource${graphContext}">$esc.html($u)</a></td>
+#set( $u = $!{item.subject} )
+#if( $sparql.isUrl($u) )
+						<td><a href="${baseUri}/sparql/describe?uri=$esc.url($u)&type=Resource${graphContext}">$esc.html($sparql.toString($u))</a></td>
 #else
-						<td>$esc.html($!{item.subject})</td>
+						<td>$esc.html($sparql.toString($u))</td>
 #end
-#set( $u = $!{item.predicate.toString()} )
-#if( ${u.startsWith("http://")} || ${u.startsWith("https://")} )
-						<td><a href="${baseUri}/sparql/describe?uri=$esc.url($u)&type=Predicate${graphContext}">$esc.html($u)</a></td>
+#set( $u = $!{item.predicate} )
+#if( $sparql.isUrl($u) )
+						<td><a href="${baseUri}/sparql/describe?uri=$esc.url($u)&type=Predicate${graphContext}">$esc.html($sparql.toString($u))</a></td>
 #else
-						<td>$esc.html($!{item.predicate})</td>
+						<td>$esc.html($sparql.toString($u))</td>
 #end
-#set( $u = $!{item.object.toString()} )
-#if( ${u.startsWith("http://")} || ${u.startsWith("https://")} )
-						<td><a href="${baseUri}/sparql/describe?uri=$esc.url($u)${graphContext}">$esc.html($u)</a></td>
+#set( $u = $!{item.object} )
+#if( $sparql.isUrl($u) )
+						<td><a href="${baseUri}/sparql/describe?uri=$esc.url($u)${graphContext}">$esc.html($sparql.toString($u))</a></td>
 #else
-						<td>$esc.html($!{item.object})</td>
+						<td>$esc.html($sparql.toString($u))</td>
 #end
 					</tr>
 #end
