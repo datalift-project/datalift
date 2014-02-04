@@ -17,7 +17,7 @@
 <script type="text/javascript">
 	var allProjects = "";
 	var allLicenses = "";
-	var currentProject = { uri : "$!esc.javascript($current.uri)", description: "$!esc.javascript($current.description)",  title : "$!esc.javascript($!{current.title})", license : "$!esc.javascript($licenses[$current.getLicense()].getLabel())", owner : "$!esc.javascript($!{current.owner})", creation_date : "$!date.format('medium', $current.creationDate)", modification_date :  "$!date.format('medium', $current.modificationDate)" };
+	var currentProject = { uri : "$!esc.javascript($current.uri)", description: "$!esc.javascript($current.description)",  title : "$!esc.javascript($!{current.title})", license : "$!esc.javascript($licenses[$current.getLicense()].getLabel())", creation_date : "$!date.format('medium', $current.creationDate)", modification_date :  "$!date.format('medium', $current.modificationDate)" };
 	
 </script>
 	<!-- ---------------- EDIT PROJECT -------------------- -->
@@ -58,9 +58,9 @@
 				  		<p>#i18n("project.description") : </p>
 				  		<p>{{curProj.description}}</p>
 			  			<p>#i18n("project.license") : </p><p>{{curProj.license}} </p><br/>
-						<p style="display:inline-block;">Créé par:&nbsp</p>
-						<p style="display:inline-block;">{{curProj.owner}}</p><br/>
-						<p style="display:inline-block;">#i18n("project.creation_s") :</p>
+						<!--<p style="display:inline-block;">Créé par:&nbsp</p>
+						<p style="display:inline-block;">{{curProj.owner}}</p><br/> -->
+						<p style="display:inline-block;">#i18n("project.creation_s")</p>
 						<p style="display:inline-block;">{{curProj.creation_date}}</p><br/>
 						<p style="display:inline-block;">#i18n("project.modification_s")</p>
 						<p style="display:inline-block;">{{curProj.modification_date}}</p><br/>
@@ -84,7 +84,7 @@
 									<a href="#deleteSource" role="button" class="pull-right" data-toggle="modal" style="display: inline-block">
 										<img src="${baseUri}/images/icon-delete.png" ng-click="deleteSource('$current.uri', '${curSource.uri}', '${baseUri}')">
 									</a>
-									<a href="#modifySource" role"button" class="pull-right" data-toggle="modal" style="display: inline-block; margin-right: 20px;">
+									<a href="$curSource.uri" class="pull-right" style="display: inline-block; margin-right: 20px;">
 										<img src="${baseUri}/images/icon-edit.png">
 									</a>
 								</li>
@@ -179,7 +179,7 @@
 		  	<div class="control-group">
 		    	<label class="control-label" for="title">#i18n("project.name"):</label>
 			    <div class="controls">
-			      <input type="text" id="title" name="title" value="$!esc.html($it.title_m)" placeholder="$!current.title" autofocus="autofocus">
+			      <input type="text" id="title" name="title" placeholder="$!current.title" autofocus="autofocus">
 			    </div>
 		  	</div>
 		  	<div class="control-group">
@@ -196,14 +196,14 @@
 		  	<div class="control-group">
 			    <label class="control-label" for="description">#i18n("project.description"): </label>
 			    <div class="controls">
-			      <textarea type="text" id="description" value="$!esc.html($it.description)" placeholder="$!current.description"></textarea>
+			      <textarea type="text" id="modify_description" placeholder="$!current.description"></textarea>
 			    </div>
 		  	</div>
 			</form>
 	  	</div>
 		<div class="modal-footer">
 			<button class="btn btn-custom-grey" data-dismiss="modal" aria-hidden="true">#i18n("cancel")</button>
-		    <button id="FormSubmit" type="submit" class="btn btn-custom-blue">#i18n("create")</button>
+		    <button id="FormSubmit" type="submit" class="btn btn-custom-blue">#i18n("modify")</button>
 		    <input type="hidden" value="$target" id="target"></input>
 	  	</div>
 	</div>
@@ -215,10 +215,11 @@ $('#FormSubmit').click(function(e){
 	var success = false;
 	var target = ($('#target').val());
 	var formValue = ($('#create').val());
-	var description = ($('#description').val());
+	var description = ($('#modify_description').val());
 	var title = ($('#title').val());
 	var license = ($('#license').val());
-	var toRedirect = "$to_redirect";							
+	var toRedirect = "$to_redirect";	
+	console.log(description);
 	$.post(target, {"license": license, "description": description, "title": title})
 	.done(function(data, status, xhr) {
 		window.open("$target");
@@ -292,7 +293,7 @@ $('#FormSubmit').click(function(e){
 var currentProject = "";
 	var allProjects = [
 #foreach ($item in $it)
-       { uri : "$esc.javascript($!{item.uri})", description : "$!esc.javascript($item.description)", title : "$esc.javascript($!{item.title})", license : "$!esc.javascript($licenses[$item.getLicense()].getLabel())", owner :  "$esc.javascript($!{item.owner})", creation_date : "$!date.format('medium', $item.creationDate)", modification_date : "$!date.format('medium', $item.modificationDate)" },
+       { uri : "$esc.javascript($!{item.uri})", description : "$!esc.javascript($item.description)", title : "$esc.javascript($!{item.title})", license : "$!esc.javascript($licenses[$item.getLicense()].getLabel())", owner :  "$esc.javascript($item.owner)", creation_date : "$!date.format('medium', $item.creationDate)", modification_date : "$!date.format('medium', $item.modificationDate)" },
        				#end];
 	 
 	
