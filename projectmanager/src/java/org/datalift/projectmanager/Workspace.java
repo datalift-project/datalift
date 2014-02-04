@@ -51,6 +51,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -85,13 +86,10 @@ import org.openrdf.model.Literal;
 import org.openrdf.model.Value;
 import org.openrdf.model.vocabulary.RDFS;
 import org.openrdf.query.BindingSet;
-import org.openrdf.query.MalformedQueryException;
-import org.openrdf.query.QueryEvaluationException;
-import org.openrdf.query.QueryLanguage;
+import org.openrdf.query.TupleQuery;
 import org.openrdf.query.TupleQueryResult;
 import org.openrdf.query.TupleQueryResultHandlerBase;
 import org.openrdf.repository.RepositoryConnection;
-import org.openrdf.repository.RepositoryException;
 import org.xml.sax.InputSource;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
@@ -149,6 +147,7 @@ import static org.datalift.fwk.MediaTypes.*;
 import static org.datalift.fwk.project.SparqlSource.*;
 import static org.datalift.fwk.util.PrimitiveUtils.wrap;
 import static org.datalift.fwk.util.StringUtils.*;
+import static org.openrdf.query.QueryLanguage.SPARQL;
 
 
 /**
@@ -2237,7 +2236,7 @@ public class Workspace extends BaseModule
 
     // TODO: In query, replace with a sparql variable.
     @GET
-    @Path("{id}/source/{srcid}")
+    @Path("{id}/source/{srcid}/atom")
     public Response getProjectAtomStream(
     		@PathParam("id") String projectId,
             @PathParam("srcid") String srcId) {
@@ -2275,14 +2274,100 @@ public class Workspace extends BaseModule
     			"         a ?type . FILTER regex(str(?type), \"Project\")" +
     			"}";
 
-    	Feed feed = new Feed();
+    	final RepositoryConnection cnx = Configuration.getDefault()
+    			.getInternalRepository()
+    			.newConnection();
 
+    	final TupleQueryResult result;
+		try {
+			TupleQuery q = cnx.prepareTupleQuery(SPARQL, query);
+			result = q.evaluate();
+		}
+		catch (Exception e) {
+			log.error("Error executing SPARQL query \"{}\"", e, query);
+			Repository.closeQuietly(cnx);
+			throw new RuntimeException(e);
+		}
+
+        Iterator<Entry> entryIt = new Iterator<Entry>()
+        {
+            /** {@inheritDoc} */
+            @Override
+            public boolean hasNext() {
+                boolean hasNext = false;
+                try {
+                    hasNext = result.hasNext();
+                    if (! hasNext) {
+                        this.finalize();
+                    }
+                }
+                catch (Exception e) {
+                    log.error("Unexpected error while browsing result", e);
+                }
+                return hasNext;
+            }
+
+            /** {@inheritDoc} */
+            @Override
+            public Entry next() {
+               Entry e = new Entry();
+               BindingSet bs;
+               try {
+            	   bs = result.next();
+
+            	   Value v = bs.getValue("author");
+            	   if (v != null) {
+            		   e.setAuthor(v.stringValue());
+            	   }
+            	   v = bs.getValue("content");
+            	   if (v != null) {
+            		   e.setContent(v.stringValue());
+            	   }
+            	   v = bs.getValue("id");
+            	   if (v != null) {
+            		   e.setId(v.stringValue());
+            	   }
+            	   v = bs.getValue("title");
+            	   if (v != null) {
+            		   e.setTitle(v.stringValue());
+            	   }
+            	   v = bs.getValue("updated");
+            	   if (v != null) {
+            		   e.setUpdated(v.stringValue());
+            	   }
+               } catch (Exception e1) {
+            	   log.error("Unexpected error while browsing result", e1);
+               }
+               return e;
+           }
+
+           /** {@inheritDoc} */
+           @Override
+           public void remove() {
+               throw new UnsupportedOperationException();
+           }
+           
+           /** {@inheritDoc} */
+           @Override
+           protected void finalize() {
+               Repository.closeQuietly(cnx);
+           }
+        };
+			
+    	Feed feed = new Feed();
+    	feed.setTitle("Datalift atom feed.");
+    	feed.setLink("Link");
+    	feed.setUpdated("Date");
+    	feed.setId("ID");
+    	
+    	feed.setEntries(entryIt);
+    	
     	final String TEMPLATE = "rss/atom.vm";
         return Response.ok(this.newView(TEMPLATE, feed)).build();
     }
     
     @GET
-    @Path("atom")
+    @Path("/atom")
     public Response getAllAtomStream() {
     	String query = 
     			"PREFIX prov: <http://www.w3.org/ns/prov#>" +
@@ -2295,10 +2380,86 @@ public class Workspace extends BaseModule
     			"         prov:endedAtTime ?endedAtTime ;" +
     			"         a ?type . FILTER regex(str(?type), \"Event\")" +
     			"}";
-//    	TupleQueryResult handler = new TupleQueryResult();
-//    	Repository repo = Configuration.getDefault().getInternalRepository();
-//    	repo.select(query, handler);
+        
+    	final RepositoryConnection cnx = Configuration.getDefault()
+    			.getInternalRepository()
+    			.newConnection();
 
+    	final TupleQueryResult result;
+		try {
+			TupleQuery q = cnx.prepareTupleQuery(SPARQL, query);
+			result = q.evaluate();
+		}
+		catch (Exception e) {
+			log.error("Error executing SPARQL query \"{}\"", e, query);
+			Repository.closeQuietly(cnx);
+			throw new RuntimeException(e);
+		}
+
+        Iterator<Entry> entryIt = new Iterator<Entry>()
+        {
+            /** {@inheritDoc} */
+            @Override
+            public boolean hasNext() {
+                boolean hasNext = false;
+                try {
+                    hasNext = result.hasNext();
+                    if (! hasNext) {
+                        this.finalize();
+                    }
+                }
+                catch (Exception e) {
+                    log.error("Unexpected error while browsing result", e);
+                }
+                return hasNext;
+            }
+
+            /** {@inheritDoc} */
+            @Override
+            public Entry next() {
+               Entry e = new Entry();
+               BindingSet bs;
+               try {
+            	   bs = result.next();
+
+            	   Value v = bs.getValue("author");
+            	   if (v != null) {
+            		   e.setAuthor(v.stringValue());
+            	   }
+            	   v = bs.getValue("content");
+            	   if (v != null) {
+            		   e.setContent(v.stringValue());
+            	   }
+            	   v = bs.getValue("id");
+            	   if (v != null) {
+            		   e.setId(v.stringValue());
+            	   }
+            	   v = bs.getValue("title");
+            	   if (v != null) {
+            		   e.setTitle(v.stringValue());
+            	   }
+            	   v = bs.getValue("updated");
+            	   if (v != null) {
+            		   e.setUpdated(v.stringValue());
+            	   }
+               } catch (Exception e1) {
+            	   log.error("Unexpected error while browsing result", e1);
+               }
+               return e;
+           }
+
+           /** {@inheritDoc} */
+           @Override
+           public void remove() {
+               throw new UnsupportedOperationException();
+           }
+           
+           /** {@inheritDoc} */
+           @Override
+           protected void finalize() {
+               Repository.closeQuietly(cnx);
+           }
+        };
 			
     	Feed feed = new Feed();
     	feed.setTitle("Datalift atom feed.");
@@ -2306,18 +2467,13 @@ public class Workspace extends BaseModule
     	feed.setUpdated("Date");
     	feed.setId("ID");
     	
-    	Entry e = new Entry();
-    	e.setAuthor("Author");
-    	e.setContent("Content");
-    	e.setId("eID");
-    	e.setTitle("e Title");
-    	e.setUpdated("eDate");
-    	
-    	feed.addEntry(e);
+    	feed.setEntries(entryIt);
     	
     	final String TEMPLATE = "rss/atom.vm";
         return Response.ok(this.newView(TEMPLATE, feed)).build();
-    }
+        
+        
+    }     
     
     //-------------------------------------------------------------------------
     // Specific implementation
