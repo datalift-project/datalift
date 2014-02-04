@@ -2323,15 +2323,15 @@ public class Workspace extends BaseModule
             	   if (v != null) {
             		   e.setContent(v.stringValue());
             	   }
-            	   v = bs.getValue("id");
+            	   v = bs.getValue("event");
             	   if (v != null) {
             		   e.setId(v.stringValue());
             	   }
-            	   v = bs.getValue("title");
+            	   v = bs.getValue("event");
             	   if (v != null) {
             		   e.setTitle(v.stringValue());
             	   }
-            	   v = bs.getValue("updated");
+            	   v = bs.getValue("endedAtTime");
             	   if (v != null) {
             		   e.setUpdated(v.stringValue());
             	   }
