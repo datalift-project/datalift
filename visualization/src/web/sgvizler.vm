@@ -33,7 +33,7 @@
     </head>
     <body>
         #banner
-        #if( ${securityCtx.userAuthenticated} )
+        #if( ${securityCtx.principal} )
 	   <div style="position:absolute;top:15px;right:15px;">
 		<a class="btn btn-large btn-primary" href="${baseUri}/project" id="goto_workspace" >#i18n("project.workspace.link")</a>
 	   </div>

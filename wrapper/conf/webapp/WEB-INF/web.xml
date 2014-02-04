@@ -65,6 +65,19 @@
     <url-pattern>/*</url-pattern>
   </filter-mapping>
 
+  <!-- Request context extraction filter -->
+  <filter>
+    <filter-name>RequestContextFilter</filter-name>
+    <filter-class>
+      org.datalift.core.util.web.RequestContextFilter
+    </filter-class>
+  </filter>
+  <!-- Apply request context filter to all resources -->
+  <filter-mapping>
+    <filter-name>RequestContextFilter</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
+
   <!-- Log context initialization and clean-up filter -->
   <filter>
     <filter-name>LogContextFilter</filter-name>

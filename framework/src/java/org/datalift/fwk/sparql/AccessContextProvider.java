@@ -32,50 +32,24 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 
-package org.datalift.core.security;
+package org.datalift.fwk.sparql;
 
 
-import org.datalift.fwk.security.SecurityContext;
+import java.util.Map;
+
+import org.datalift.fwk.rdf.Repository;
 
 
-/**
- * An implementation of {@link SecurityContext} applicable for running
- * DataLift in single-user mode. The principal is the user login and
- * the user is granted all accesses.
- *
- * @author lbihanic
- */
-public class LocalUserSecurityContext extends SecurityContext
+public interface AccessContextProvider
 {
-    //-------------------------------------------------------------------------
-    // SecurityContext contract support
-    //-------------------------------------------------------------------------
-
     /**
-     * {@inheritDoc}
-     * @return the login name of the user running the local JVM.
+     * Populates the context object to be used by the
+     * {@link AccessController} to evaluate the access control
+     * policies.
+     * @param  context   the access context, possibly already partially
+     *                   populated by other access control providers.
+     * @param  target    the RDF repository being-queried.
      */
-    @Override
-    public String getPrincipal() {
-        return System.getProperty("user.name");
-    }
-
-    /**
-     * {@inheritDoc}
-     * @return <code>false</code> always as no actual authentication
-     *         has been performed.
-     */
-    @Override
-    public boolean isAuthenticated() {
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     * @return <code>true</code> always.
-     */
-    @Override
-    public boolean hasRole(String role) {
-        return true;                            // Local user is almighty!
-    }
+    public void populateContext(Map<String,Object> context,
+                                Repository repository);
 }

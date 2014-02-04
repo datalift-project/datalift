@@ -11,7 +11,7 @@
 	<link rel="stylesheet" href="${baseUri}/sparql/editor/css/docs.css"/>
 </head>
 <body>
-#if( ${securityCtx.userAuthenticated} )
+#if( ${securityCtx.principal} )
 	<a href="${baseUri}/project" id="goto_workspace" class="button" style="position:absolute;top:15px;right:15px;">#i18n("project.workspace.link")</a>
 #end
 #banner
