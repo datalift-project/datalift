@@ -98,7 +98,7 @@ public class LogServletContextListener implements ServletContextListener
      * application initialization parameters.
      * @param  ctx   the web application context.
      *
-     * @return a Properties objet to be used as logging system
+     * @return a Properties object to be used as logging system
      *         configuration.
      */
     protected final Properties getConfiguration(ServletContext ctx) {

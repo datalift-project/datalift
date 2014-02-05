@@ -65,7 +65,7 @@ public interface TemplateModel extends Map<String,Object>
 
     /** The context key for the default application model object. */
     public final static String MODEL_KEY = "it";
-    /** The context key for filed classes. */
+    /** The context key for field classes. */
     public final static String FIELD_CLASSES_KEY =
                             TemplateModel.class.getName() + ".fieldClasses";
 

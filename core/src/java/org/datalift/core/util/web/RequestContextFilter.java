@@ -32,50 +32,54 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 
-package org.datalift.core.security;
+package org.datalift.core.util.web;
 
 
-import org.datalift.fwk.security.SecurityContext;
+import java.io.IOException;
+
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.datalift.fwk.util.web.RequestContext;
 
 
-/**
- * An implementation of {@link SecurityContext} applicable for running
- * DataLift in single-user mode. The principal is the user login and
- * the user is granted all accesses.
- *
- * @author lbihanic
- */
-public class LocalUserSecurityContext extends SecurityContext
+public class RequestContextFilter implements Filter
 {
-    //-------------------------------------------------------------------------
-    // SecurityContext contract support
-    //-------------------------------------------------------------------------
-
-    /**
-     * {@inheritDoc}
-     * @return the login name of the user running the local JVM.
-     */
+    /** {@inheritDoc} */
     @Override
-    public String getPrincipal() {
-        return System.getProperty("user.name");
+    public void init(FilterConfig filterConfig) {
+        // NOP
     }
 
-    /**
-     * {@inheritDoc}
-     * @return <code>false</code> always as no actual authentication
-     *         has been performed.
-     */
-    @Override
-    public boolean isAuthenticated() {
-        return false;
+    /** {@inheritDoc} */
+    public void destroy() {
+        // NOP
     }
 
-    /**
-     * {@inheritDoc}
-     * @return <code>true</code> always.
-     */
+    /** {@inheritDoc} */
     @Override
-    public boolean hasRole(String role) {
-        return true;                            // Local user is almighty!
+    public void doFilter(ServletRequest request,
+                         ServletResponse response, FilterChain chain)
+                                        throws IOException, ServletException {
+        // Populate request context with the current HTTP request and response.
+        HttpServletRequest  req = null;
+        HttpServletResponse rsp = null;
+        if (request instanceof HttpServletRequest) {
+            req = (HttpServletRequest)request;
+        }
+        if (response instanceof HttpServletResponse) {
+            rsp = (HttpServletResponse)response;
+        }
+        RequestContext.set(req, rsp);
+        // Propagate request.
+        chain.doFilter(request, response);
+        // Reset request context.
+        RequestContext.reset();
     }
 }

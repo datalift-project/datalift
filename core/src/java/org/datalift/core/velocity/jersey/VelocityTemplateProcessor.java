@@ -501,8 +501,10 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
                                     isBlank(encoding)? UTF8_CHARSET: encoding);
             // Configure custom Directives for Velocity.
             registerCoreDirectives();
-            config.setProperty(USER_DIRECTIVES,
-                               join(directives, ",").replace("class ", ""));
+            if (! directives.isEmpty()) {
+                config.setProperty(USER_DIRECTIVES,
+                                   join(directives, ",").replace("class ", ""));
+            }
             // Start a new Velocity engine.
             log.trace("Starting Velocity with configuration: {}", config);
             engine = new VelocityEngine(config);

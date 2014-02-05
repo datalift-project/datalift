@@ -42,7 +42,6 @@ import java.net.URLEncoder;
 import java.text.MessageFormat;
 import java.util.Iterator;
 import java.util.List;
-import java.util.regex.Pattern;
 
 import org.openrdf.model.BNode;
 import org.openrdf.model.Literal;
@@ -51,6 +50,8 @@ import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.openrdf.query.BindingSet;
 
+
+import static org.datalift.fwk.rdf.RdfUtils.isNative;
 import static org.datalift.fwk.rdf.json.AbstractJsonWriter.ResourceType.*;
 import static org.datalift.fwk.util.web.Charsets.UTF_8;
 
@@ -65,15 +66,6 @@ import static org.datalift.fwk.util.web.Charsets.UTF_8;
  */
 public abstract class AbstractGridJsonWriter extends AbstractJsonWriter
 {
-    //-------------------------------------------------------------------------
-    // Constants
-    //-------------------------------------------------------------------------
-
-    /** Regex to identify native XML schema data types. */
-    private final static Pattern NATIVE_TYPES_PATTERN = Pattern.compile(
-                            "(boolean|float|decimal|double|int|" +
-                            ".*[bB]yte|.*[iI]nteger|.*[lL]ong|.*[sS]hort)$");
-
     //-------------------------------------------------------------------------
     // Instance members
     //-------------------------------------------------------------------------
@@ -253,22 +245,19 @@ public abstract class AbstractGridJsonWriter extends AbstractJsonWriter
      */
     private final void writeValueSimple(Value value, ResourceType type)
                                                             throws IOException {
-        if (value instanceof BNode) {
+        if (value instanceof URI) {
+            this.writeValue((URI)value, type);
+        }
+        else if (value instanceof BNode) {
             this.writeValue("_:" + value.stringValue(), type);
         }
         else if (value instanceof Literal) {
-            Literal l = (Literal)value;
-            if ((l.getDatatype() != null) &&
-                (NATIVE_TYPES_PATTERN.matcher(l.getDatatype().getLocalName())
-                                     .find())) {
-                this.writer.write(l.getLabel());
+            if (isNative(value)) {
+                this.writer.write(((Literal)value).getLabel());
             }
             else {
-                this.writeValue(l.toString(), type);
+                this.writeValue(value.toString(), type);
             }
-        }
-        else if (value instanceof URI) {
-            this.writeValue((URI)value, type);
         }
         else {
             this.writeValue((value != null)? value.stringValue(): "", type);
