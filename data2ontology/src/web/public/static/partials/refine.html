@@ -3,7 +3,10 @@
 	<img ng-src="{{loaderSrc}}"/>
 </div> 
 <div ng-hide="loading">
-	
+	<div class="well well-sm" style="margin-top: 80px;">
+		<div>You can create new resources by adding a new object property.</div>
+		<div>You can drag and drop matches between resources.</div>
+	</div>
 	<div ng-repeat="o in objects">
 		<div class="row">
 			<div class="col-md-6">
@@ -16,7 +19,7 @@
 						<div class="object-classes"
 							ng-repeat="c in o.classes">
 							<span class="label label-info">
-								{{c}} &times;
+								{{c}}
 							</span>
 						</div>
 						<hr>
@@ -25,11 +28,7 @@
 							data-jqyoui-options="{activeClass:'droppable-active'}"
 							ng-model="o.mappedProperties"
 							jqyoui-droppable="{multiple:true, onDrop:'checkClasses()'}">
-							Properties 
-							<button type="button" class="btn btn-default" 
-								ng-click="setObjectPropertyPanel(o.id)">
-								<span class="glyphicon glyphicon-plus"></span>
-							</button>
+							Matches
 							<div class="object-mappings"
 								ng-repeat="m in o.mappedProperties"
 								data-drag="true"
@@ -39,25 +38,35 @@
 								{{m.source}} - {{m.targetPrefixed}}
 							</div>
 						</div>
-						<hr>
-						<div class="object-objectProperties"
-							ng-repeat="p in o.objectProperties">
-							{{p.predicate}}
-							{{getObject(p.target).name}}
+						<div>
+							Datatype properties
+							<button type="button" class="btn btn-link" 
+								ng-click="setPropertyPanel(o.id, 'DatatypeProperty')">Add datatype property</button>
+							<div class="object-objectProperties"
+								ng-repeat="p in o.datatypeProperties">
+								{{p.property.name}} - {{p.value}}
+							</div>
+						</div>
+						<div>
+							Object properties
+							<button type="button" class="btn btn-link" 
+								ng-click="setPropertyPanel(o.id, 'ObjectProperty')">Add object property</button>
+							<div class="object-objectProperties"
+								ng-repeat="p in o.objectProperties">
+								{{p.predicate}} - {{getObject(p.targetId).name}}
+							</div>
 						</div>
 					</div>
 				</div>
 			</div>
 			<div class="col-md-6" ng-show="isEditing(o.id)">
-				<!-- Classe -->
-				<!-- Datatype property -->
-				<!-- Object property -->
+				<!-- Object & Datatype property -->
 				<div class="panel panel-default">
 					<div class="panel-heading">
 						<h3 class="panel-title">
-							New object property for object {{o.id}}
+							New {{editingType}} for resource {{o.id}}
 							<span class="pull-right pointer"
-								ng-click="setObjectPropertyPanel(-1)">
+								ng-click="setPropertyPanel(-1, '')">
 								&times;
 							</span>
 						</h3>
@@ -100,8 +109,20 @@
 								</div>
 							</div>
 						</div>
+						<!-- Datatype properties -->
+						<div class="form-group"
+							ng-show="isEditingType('DatatypeProperty')">
+							<label for="inputTargetValue">Value</label>
+							<input
+								id="inputTargetValue"
+								type="text"
+								class="form-control"
+								placeholder="Literal value for the selected datatype property"
+								ng-model="targetObject.value">
+						</div>
 						
-						<div>
+						<!-- Object properties -->
+						<div ng-show="isEditingType('ObjectProperty')">
 							<label for="selectTargetObject">Target object</label>
 							<select
 								id="selectTargetObject"
@@ -112,18 +133,26 @@
 							</select>
 						</div>
 						<div>
-								<button
-									type="button"
-									class="btn btn-default"
-									ng-click="setObjectPropertyPanel(-1)">
-									Close
-								</button>
-								<button
-									type="button"
-									class="btn btn-primary"
-									ng-click="addObjectProperty()">
-									Add
-								</button>
+							<button
+								type="button"
+								class="btn btn-default"
+								ng-click="setPropertyPanel(-1, '')">
+								Close
+							</button>
+							<button
+								type="button"
+								class="btn btn-primary"
+								ng-show="isEditingType('DatatypeProperty')"
+								ng-click="addDatatypeProperty()">
+								Add
+							</button>
+							<button
+								type="button"
+								class="btn btn-primary"
+								ng-show="isEditingType('ObjectProperty')"
+								ng-click="addObjectProperty()">
+								Add
+							</button>
 						</div>
 					</div>
 				</div>

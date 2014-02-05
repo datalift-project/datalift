@@ -188,6 +188,11 @@ body {
 .droppable-active {
 	border: 2px dashed #999999;
 }
+
+.object-classes {
+	margin: 5px;
+}
+
 .object-mappings {
 	margin: 5px 20px;
 	padding: 5px;
@@ -198,4 +203,8 @@ body {
 /* Graph */
 #graph-visualization {
 
+}
+
+canvas {
+	border: 1px solid #CCCCCC;
 }

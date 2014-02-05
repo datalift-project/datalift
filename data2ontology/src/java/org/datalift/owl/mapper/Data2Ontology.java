@@ -1,5 +1,19 @@
 package org.datalift.owl.mapper;
 
+import static javax.ws.rs.core.HttpHeaders.ACCEPT;
+import static javax.ws.rs.core.HttpHeaders.IF_MODIFIED_SINCE;
+import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
+import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
+import static javax.ws.rs.core.MediaType.APPLICATION_XHTML_XML;
+import static javax.ws.rs.core.MediaType.TEXT_HTML;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static org.datalift.fwk.MediaTypes.APPLICATION_JSON_UTF8;
+import static org.datalift.fwk.MediaTypes.TEXT_HTML_UTF8;
+import static org.datalift.fwk.project.Source.SourceType.TransformedRdfSource;
+import static org.datalift.fwk.util.StringUtils.isSet;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -10,7 +24,6 @@ import java.lang.reflect.Type;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -31,32 +44,12 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.UriInfo;
-import javax.ws.rs.core.Response.ResponseBuilder;
-
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static javax.ws.rs.core.Response.Status.*;
-import static javax.ws.rs.core.HttpHeaders.*;
-
-import org.openrdf.model.Resource;
-import org.openrdf.model.URI;
-import org.openrdf.model.impl.URIImpl;
-import org.openrdf.model.vocabulary.RDF;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
-import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
 
 import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
-import org.datalift.fwk.MediaTypes;
 import org.datalift.fwk.ResourceResolver;
 import org.datalift.fwk.i18n.PreferredLocales;
 import org.datalift.fwk.log.Logger;
@@ -70,7 +63,6 @@ import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.sparql.SparqlQueries;
 import org.datalift.fwk.util.io.FileUtils;
-import org.datalift.fwk.util.io.FileUtils.DownloadInfo;
 import org.datalift.fwk.util.web.Charsets;
 import org.datalift.fwk.util.web.HttpDateFormat;
 import org.datalift.fwk.view.TemplateModel;
@@ -83,21 +75,19 @@ import org.datalift.owl.OwlObject;
 import org.datalift.owl.OwlParser;
 import org.datalift.owl.OwlProperty;
 import org.datalift.owl.TechnicalException;
-import org.datalift.owl.toolkit.Argument;
-import org.datalift.owl.toolkit.BindingDeclaration;
-import org.datalift.owl.toolkit.CopyStatementRDFHandler;
-import org.datalift.owl.toolkit.Script;
-import org.datalift.owl.toolkit.ScriptItem;
-import org.datalift.owl.toolkit.SesameSPARQLExecuter;
-import org.datalift.owl.toolkit.Template;
-import org.datalift.owl.toolkit.TemplateCallSparqlHelper;
-import org.datalift.owl.toolkit.TemplateRegistry;
-import org.datalift.sparql.query.ConstructQuery;
 import org.datalift.sparql.query.UpdateQuery;
+import org.openrdf.model.Resource;
+import org.openrdf.model.URI;
+import org.openrdf.model.vocabulary.RDF;
 
-import static org.datalift.fwk.MediaTypes.*;
-import static org.datalift.fwk.project.Source.SourceType.TransformedRdfSource;
-import static org.datalift.fwk.util.StringUtils.*;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
 
 
 @Path(Data2Ontology.MODULE_NAME)
@@ -162,110 +152,6 @@ public class Data2Ontology extends BaseModule implements ProjectModule
 		org.openrdf.repository.Repository repository = internal.getNativeRepository();
 		this.labelFetcher = new LabelFetcher(this.queries, repository);
 		
-		// register templates
-		// TemplateRegistry.registerPackage("org.datalift.owl.mapper");
-//		Template moveTypeTemplate = new Template();
-//		moveTypeTemplate.setName("MOVE_CLASS");
-//		moveTypeTemplate.setDisplayName("Translate class to another");
-//		moveTypeTemplate.setBody("DELETE { ?s a ?source } INSERT { ?s a ?target } WHERE { ?s a ?source }");
-//		
-//		Argument sourceParam = new Argument();
-//		sourceParam.setVarName("source");
-//		sourceParam.setDisplayName("Source type");
-//		sourceParam.setMandatory(true);
-//		sourceParam.setOrder(0);
-//		moveTypeTemplate.addArgument(sourceParam);
-//		
-//		Argument targetParam = new Argument();
-//		targetParam.setVarName("target");
-//		targetParam.setDisplayName("Target type");
-//		targetParam.setMandatory(true);
-//		targetParam.setOrder(1);
-//		moveTypeTemplate.addArgument(targetParam);
-//		
-//		TemplateRegistry.register(moveTypeTemplate);
-		
-		Template addTypeByPredicateTemplate = new Template();
-		addTypeByPredicateTemplate.setName("ADD_CLASS_BY_PRED");
-		addTypeByPredicateTemplate.setDisplayName("Add class based on another, selection based on predicate");
-		addTypeByPredicateTemplate.setBody("INSERT { ?s a ?target } WHERE { ?s ?predicate ?o. ?s a ?source. }");
-		
-		Argument predicateParam = new Argument();
-		predicateParam.setVarName("predicate");
-		predicateParam.setDisplayName("Source predicate");
-		predicateParam.setMandatory(true);
-		predicateParam.setOrder(0);
-		addTypeByPredicateTemplate.addArgument(predicateParam);
-		
-		Argument sourceParam1 = new Argument();
-		sourceParam1.setVarName("source");
-		sourceParam1.setDisplayName("Source type");
-		sourceParam1.setMandatory(true);
-		sourceParam1.setOrder(1);
-		addTypeByPredicateTemplate.addArgument(sourceParam1);
-		
-		Argument targetParam1 = new Argument();
-		targetParam1.setVarName("target");
-		targetParam1.setDisplayName("Target type");
-		targetParam1.setMandatory(true);
-		targetParam1.setOrder(2);
-		addTypeByPredicateTemplate.addArgument(targetParam1);
-		
-		Template addTypeTemplate = new Template();
-		addTypeTemplate.setName("ADD_CLASS");
-		addTypeTemplate.setDisplayName("Add class based on another");
-		addTypeTemplate.setBody("INSERT { ?s a ?target } WHERE { ?s a ?source }");
-		
-		Argument sourceParam = new Argument();
-		sourceParam.setVarName("source");
-		sourceParam.setDisplayName("Source type");
-		sourceParam.setMandatory(true);
-		sourceParam.setOrder(0);
-		addTypeTemplate.addArgument(sourceParam);
-		
-		Argument targetParam = new Argument();
-		targetParam.setVarName("target");
-		targetParam.setDisplayName("Target type");
-		targetParam.setMandatory(true);
-		targetParam.setOrder(1);
-		addTypeTemplate.addArgument(targetParam);
-		
-		TemplateRegistry.register(addTypeTemplate);
-		
-		Template deleteTypeTemplate = new Template();
-		deleteTypeTemplate.setName("DELETE_CLASS");
-		deleteTypeTemplate.setDisplayName("Delete a class");
-		deleteTypeTemplate.setBody("DELETE { ?s a ?source } WHERE { ?s a ?source }");
-		
-		Argument sourceDeleteParam = new Argument();
-		sourceDeleteParam.setVarName("source");
-		sourceDeleteParam.setDisplayName("Source type");
-		sourceDeleteParam.setMandatory(true);
-		sourceDeleteParam.setOrder(0);
-		deleteTypeTemplate.addArgument(sourceParam);
-		
-		TemplateRegistry.register(deleteTypeTemplate);
-		
-		Template movePredicateTemplate = new Template();
-		movePredicateTemplate.setName("MOVE_PREDICATE");
-		movePredicateTemplate.setDisplayName("Translate predicate to another");
-		movePredicateTemplate.setBody("DELETE { ?s ?source ?o } INSERT { ?s ?target ?o } WHERE { ?s ?source ?o }");
-		
-		Argument sourcePredicateParam = new Argument();
-		sourcePredicateParam.setVarName("source");
-		sourcePredicateParam.setDisplayName("Source type");
-		sourcePredicateParam.setMandatory(true);
-		sourcePredicateParam.setOrder(0);
-		movePredicateTemplate.addArgument(sourcePredicateParam);
-		
-		Argument targetPredicateParam = new Argument();
-		targetPredicateParam.setVarName("target");
-		targetPredicateParam.setDisplayName("Target type");
-		targetPredicateParam.setMandatory(true);
-		targetPredicateParam.setOrder(1);
-		movePredicateTemplate.addArgument(targetPredicateParam);
-		
-		TemplateRegistry.register(movePredicateTemplate);
     }
 
     //-------------------------------------------------------------------------
@@ -313,7 +199,7 @@ public class Data2Ontology extends BaseModule implements ProjectModule
             // Retrieve project.
             Project p = this.getProject(projectId);
             // Display conversion configuration page.
-            TemplateModel view = this.newView("mapper.vm", p);
+            TemplateModel view = this.newView("data2ontology.vm", p);
             view.put("srcType", TransformedRdfSource);
             response = Response.ok(view, TEXT_HTML_UTF8).build();
         }
@@ -403,136 +289,19 @@ public class Data2Ontology extends BaseModule implements ProjectModule
     }
     
     @POST
-    @Path("sparqlQuery")
-    @Consumes(APPLICATION_FORM_URLENCODED)
-    @Produces(APPLICATION_JSON_UTF8)
-    public Response getSparqlQuery(@FormParam("script") String script) {
-    	log.info("Transforming script to sparql query : {} ---", script);
-    	Script scriptObject = new Script(script);
-    	StringBuilder sb = new StringBuilder();
-    	sb.append("[");
-    	
-    	for(ScriptItem item : scriptObject.getScriptItems()) {
-    		sb.append("\"");
-    		TemplateCallSparqlHelper helper = new TemplateCallSparqlHelper(item);
-    		String sparql = helper.getSPARQL();
-    		
-    		for (String binding : helper.getBindings().keySet()) {
-    			sparql = sparql.replace("?" + binding,
-    					"<" + helper.getBindings().get(binding).toString() + ">");
-    		}
-    		
-    		sb.append(sparql);
-    		sb.append("\",");
-    	}
-    	
-    	if (sb.length() > 0) {
-    		sb.deleteCharAt(sb.length() - 1);
-    	}
-    	
-    	sb.append("]");
-    	
-    	return Response
-    			.ok(sb.toString(), APPLICATION_JSON_UTF8)
-    			.build();
-    }
-    
-	@POST
-	@Consumes(APPLICATION_FORM_URLENCODED)
-	@Path("execute")
-	public Response executeScript(
-			@FormParam("project") java.net.URI projectId,
-			@FormParam("source") java.net.URI sourceId,
-			@FormParam("dest_title") String destTitle,
-			@FormParam("dest_graph_uri") String targetGraph,
-			@FormParam("script") String script)
-					throws WebApplicationException {
-
-		log.debug("RDF-Transform executing script '"+script+"'" +
-						" on project '"+projectId+"'," +
-								" source '"+sourceId+"'," +
-										" to target '"+targetGraph+"'" +
-												" with title '"+destTitle+"'");
-		
-		org.openrdf.repository.Repository internal = Configuration.getDefault().getInternalRepository().getNativeRepository();
-		try {
-			if ((script == null) || (script.equals(""))) {
-				log.error("Missing script parameter.");
-				throw new WebApplicationException(
-						Response.status(Status.BAD_REQUEST)
-						.type(MediaTypes.TEXT_PLAIN_TYPE)
-						.entity("Missing script parameter.").build()
-						);
-			}
-			// Retrieve project.
-			Project p = this.getProject(projectId);
-
-			// clear target graph
-			log.trace("Clearing target graph...");
-			internal.getConnection().remove((Resource)null, null, null, internal.getValueFactory().createURI(targetGraph));
-			
-			// copy data into new graph and apply transforms on it ?
-			log.trace("Copy original source...");
-			CopyStatementRDFHandler copyHandler = new CopyStatementRDFHandler(internal);
-			copyHandler.setTargetGraphs(Collections.singleton(java.net.URI.create(targetGraph)));
-			internal.getConnection().export(copyHandler, internal.getValueFactory().createURI(sourceId.toString()));
-			
-			// Execute script in target graph
-			Script scriptObject = new Script(script);
-
-			SesameSPARQLExecuter executer = new SesameSPARQLExecuter(internal);
-			executer.setDefaultGraphs(Collections.singleton(java.net.URI.create(targetGraph)));
-			executer.setDefaultRemoveGraphs(Collections.singleton(java.net.URI.create(targetGraph)));
-			executer.setDefaultInsertGraph(java.net.URI.create(targetGraph));
-			log.trace("Executing script...");
-			scriptObject.execute(executer,null);
-			
-			// Register new transformed RDF source.
-			TransformedRdfSource in = (TransformedRdfSource)p.getSource(sourceId);
-
-			log.trace("Registering source");
-			addResultSource(p, in, destTitle, java.net.URI.create(targetGraph));
-		}
-		catch (Exception e) {
-			e.printStackTrace();
-			try {
-				internal.getConnection().clear(internal.getValueFactory().createURI(targetGraph.toString()));
-			}
-			catch (Exception e1) { e1.printStackTrace(); }
-
-			return Response.status(INTERNAL_SERVER_ERROR).build();
-		}
-		return Response.ok().build();
-	}
-	
-    // Single ontology
-    
-    @POST
     @Consumes(APPLICATION_FORM_URLENCODED)
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
-    public Response getExecuteMapping(
+    @Path("execute")
+    public Response executeConstruct(
                                 @FormParam("project") java.net.URI project,
-                                @FormParam("sourceGraph") URIImpl sourceGraph,
+                                @FormParam("sourceGraph") java.net.URI sourceGraph,
                                 @FormParam("targetName") String targetName,
-                                @FormParam("targetGraph") URIImpl targetGraph,
-                                @FormParam("ontology") String ontologyJson,
-                                @FormParam("mapping") String mappingJson)
+                                @FormParam("targetGraph") String targetGraph,
+                                @FormParam("query") String query)
                                                 throws WebApplicationException {
         Response response = null;
         try {
             boolean createSource = true;
-            if (targetGraph == null) {
-                createSource = false;
-                targetGraph = sourceGraph;
-            }
-            Gson gson = new Gson();
-            OntologyDesc o = gson.fromJson(ontologyJson, OntologyDesc.class);
-            MappingDesc  m = gson.fromJson(mappingJson, MappingDesc.class);
-            UpdateQuery query = new ConstructQuery();
-            URI ontologyNs = query.uri(m.types.get(0));
-            query.prefix(urlify(o.name), ontologyNs.getNamespace());
-            Resource node = query.variable(m.name);
-            this.mapNode(query, m, node, node, sourceGraph);
 
             // Retrieve project and input source (to check they exist!).
             String srcId = sourceGraph.toString();
@@ -549,7 +318,7 @@ public class Data2Ontology extends BaseModule implements ProjectModule
             java.net.URI ctx = java.net.URI.create(targetGraph.toString());
             Repository internal = Configuration.getDefault()
                                                .getInternalRepository();
-            String construct = query.toString();
+            String construct = query;
             log.debug("Applying mapping from {} to {}, query:\n{}",
                                                 sourceGraph, ctx, construct);
             RdfUtils.convert(internal, Arrays.asList(construct),
@@ -557,7 +326,7 @@ public class Data2Ontology extends BaseModule implements ProjectModule
             Source out = in;
             if (createSource) {
                 // Register new transformed RDF source.
-                out = this.addResultSource(p, in, targetName, targetGraph);
+                out = this.addResultSource(p, in, targetName, java.net.URI.create(targetGraph));
             }
             // Display project source tab, including the newly created source.
             response = this.displayMappingResult(out, createSource).build();
@@ -566,34 +335,6 @@ public class Data2Ontology extends BaseModule implements ProjectModule
             // ???
         }
         return response;
-    }
-
-    @POST
-    @Path("preview")
-    @Consumes(APPLICATION_FORM_URLENCODED)
-    @Produces(TEXT_PLAIN)
-    public String getSparqlPreview(
-                                @FormParam("sourceGraph") URIImpl sourceGraph,
-                                @FormParam("ontology") String ontologyJson,
-                                @FormParam("mapping") String mappingJson)
-                                                throws WebApplicationException {
-        String preview = "";
-        try {
-            Gson gson = new Gson();
-            OntologyDesc o = gson.fromJson(ontologyJson, OntologyDesc.class);
-            MappingDesc  m = gson.fromJson(mappingJson, MappingDesc.class);
-            UpdateQuery query = new ConstructQuery();
-            URI ontologyNs = query.uri(m.types.get(0));
-            query.prefix(urlify(o.name), ontologyNs.getNamespace());
-            Resource node = query.variable(m.name);
-            preview = this.mapNode(query, m, node, node, sourceGraph)
-                          .toString();
-        }
-        catch (Exception e) {
-            log.fatal(e.getMessage(), e);
-            // And return empty preview.
-        }
-        return preview;
     }
 
     /**

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html xmlns:ng="http://angularjs.org" ng-app="OntoMapper">
 	<head>
-#load("mapper/resources")
+#load("data2ontology/resources")
 #load_core_resources
-#set( $moduleUri = "$baseUri/mapper" )
+#set( $moduleUri = "$baseUri/data2ontology" )
 		<title>#i18n("ontology.mapper.title") - Datalift</title>
 		<meta name="description" content="#i18n('ontology.mapper.description')">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -42,6 +42,12 @@
             </a>
             <a class="navbar-brand" href="#">DataLift - Data2Ontology</a>
       </div>
+		<form class="navbar-form navbar-left">
+			<div class="form-group">
+				<p class="form-control-static">Last LOV update : 03/02/2014</p>
+			</div>
+			<button class="btn btn-xs btn-default">Update</button>
+		</form>
         <ul class="nav navbar-nav navbar-right">
           <li><a href="${it.uri}">Projects</a></li>
           <!--li ng-click="displayNotifications()">
@@ -71,7 +77,7 @@
     </div>
     <nav class="navbar navbar-default navbar-fixed-bottom">
         <p class="navbar-text">
-            #i18n("footer.more_info") <a href="http://www.datalift.org/">http://www.datalift.org/</a>
+            #i18n("footer.more_info") <a href="http://www.datalift.org/">http://www.datalift.org</a>
         </p>
     </nav>
 
@@ -95,7 +101,7 @@ angular.module('OntoMapper', ['ui.bootstrap', 'ui.directives', 'ngDragDrop']).
         when('/select', {
             templateUrl: '$!{moduleUri}/static/partials/select-source.html',
             controller: SelectSourceCtrl}).
-		when('/map', {
+		when('/match', {
             templateUrl: '$!{moduleUri}/static/partials/mapping.html',
             controller: MappingCtrl}).
         when('/refine', {

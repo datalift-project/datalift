@@ -123,7 +123,7 @@ function MappingCtrl($scope, $location, $http, $timeout, Shared) {
 	}
 	
 	self.loadOntology = function(ontology) {
-		$http.get(Shared.baseUri + "/mapper/ontology?src=" + ontology.uri)
+		$http.get(Shared.moduleUri + "/ontology?src=" + ontology.uri)
 		.success(function(data, status, headers, config) {
 			var propArray = [];
 			for (var prop in data.properties) {
@@ -169,7 +169,7 @@ function MappingCtrl($scope, $location, $http, $timeout, Shared) {
 	}
 	
 	self.loadOntologyFromLov = function(ontology, altUri) {
-		$http.get(Shared.baseUri + "/mapper/ontology?src=" + altUri)
+		$http.get(Shared.moduleUri + "/ontology?src=" + altUri)
 		.success(function(data, status, headers, config) {
 			var propArray = [];
 			for (var prop in data.properties) {
@@ -277,11 +277,75 @@ function MappingCtrl($scope, $location, $http, $timeout, Shared) {
 		}
 	}
 	
-	$scope.filterLovResults = function() {
+	self.filterByType = function(result) {
+		var isDatatype = false;
+		var isObject = false;
+		var isProperty = false;
+		
+		for (var i = 0 ; i < result.types.length ; ++i) {
+			if (result.types[i].uriPrefixed == "owl:DatatypeProperty") {
+				isDatatype = true;
+			}
+			if (result.types[i].uriPrefixed == "owl:ObjectProperty") {
+				isObject = true;
+			}
+			if (result.types[i].uriPrefixed == "rdf:Property") {
+				isProperty = true;
+			}
+		}
+		
+		return isDatatype || (isProperty && ! isObject);
+		
+	}
+	
+	$scope.filterByType = function(result) {
+		var isDatatype = false;
+		var isObject = false;
+		var isProperty = false;
+		
+		for (var i = 0 ; i < result.types.length ; ++i) {
+			if (result.types[i].uriPrefixed == "owl:DatatypeProperty") {
+				isDatatype = true;
+			}
+			if (result.types[i].uriPrefixed == "owl:ObjectProperty") {
+				isObject = true;
+			}
+			if (result.types[i].uriPrefixed == "rdf:Property") {
+				isProperty = true;
+			}
+		}
+		
+		return isDatatype || (isProperty && ! isObject);
+		
+	}
+	
+	$scope.filterByVocSpace = function(result) {
+		for (var i = 0 ; i < result.vocSpaces.length ; ++i) {
+			if (result.vocSpaces[i].label == $scope.vocSpaceFilter) {
+				return true;
+				break;
+			}
+		}
+		return false;
+	}
+	
+	self.filterLovResults = function(results) {
+		var lovFilteredResults = [];
+		for (var i = 0 ; i < results.length ; ++i) {
+			if (self.filterByType(results[i])) {
+				lovFilteredResults.push(results[i]);
+			}
+		}
+		return lovFilteredResults;
+	}
+	
+	$scope.filterLovResultsWithVocSpace = function() {
 		$scope.lovFilteredResults = [];
 		for (var i = 0 ; i < $scope.lovSearchResults.length ; ++i) {
-			if ($scope.filterByVocSpace($scope.lovSearchResults[i])) {
-				$scope.lovFilteredResults.push($scope.lovSearchResults[i]);
+			if ($scope.filterByType($scope.lovSearchResults[i])) {
+				if ($scope.filterByVocSpace($scope.lovSearchResults[i])) {
+					$scope.lovFilteredResults.push($scope.lovSearchResults[i]);
+				}
 			}
 		}
 	}
@@ -299,15 +363,6 @@ function MappingCtrl($scope, $location, $http, $timeout, Shared) {
 		$scope.vocSpaceFilter = $scope.getFirstVocSpace(result);
 	}
 	
-	$scope.filterByVocSpace = function(result) {
-		for (var i = 0; i < result.vocSpaces.length ; ++i) {
-			if (result.vocSpaces[i].label == $scope.vocSpaceFilter) {
-				return true;
-				break;
-			}
-		}
-		return false;
-	}
 	
 	$scope.vocSpaceFiltered = function() {
 		return $scope.vocSpaceFilter != "All";
@@ -341,7 +396,7 @@ function MappingCtrl($scope, $location, $http, $timeout, Shared) {
 				$scope.lovSearchResults = data.results;
 				$scope.lovSearchCount = data.results.length;
 				$scope.currentPage = 1;
-				$scope.filterLovResults();
+				$scope.filterLovResultsWithVocSpace();
 			})
 			.error(function(data, status, headers, config) {
 				$scope.searchingLov = false;
@@ -407,7 +462,7 @@ function MappingCtrl($scope, $location, $http, $timeout, Shared) {
 					+ "&type=" + "http://www.w3.org/1999/02/22-rdf-syntax-ns%23Property")
 				.success(function(data, status, headers, config) {
 					allLovResults[index] = {};
-					allLovResults[index].results = data.results;
+					allLovResults[index].results = self.filterLovResults(data.results);
 					allLovResults[index].sourceName = $scope.sourcePredicates[index].name;
 					allLovResults[index].sourceUri = $scope.sourcePredicates[index].uri;
 					++$scope.numberOfPredicatesSearched;
@@ -775,7 +830,7 @@ function MappingCtrl($scope, $location, $http, $timeout, Shared) {
 	});
 	
 	$scope.$watch('vocSpaceFilter', function(newValue) {
-		$scope.filterLovResults();
+		$scope.filterLovResultsWithVocSpace();
 	});
 	
 	if(Shared.selectedSource == "") {

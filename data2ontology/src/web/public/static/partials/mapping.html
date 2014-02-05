@@ -1,4 +1,4 @@
- <div class="row">
+<div class="row">
 	<div class="col-md-4">
 	
 		<div class="panel panel-default">
@@ -14,13 +14,13 @@
 						ui-select2
 						style="width:100%"
 						ng-model="selectedPredicateId"
-						data-placeholder="Select a property to map">
+						data-placeholder="Select a property to match">
 						<option value=""></option>
 						<option ng-repeat="predicate in sourcePredicates | orderBy:name" value="{{predicate.name}}">{{predicate.name}}</option>
 					</select>
 				</div>
 				<div ng-hide="hasPredicates()">
-					<span ng-hide="loadingPredicates">No property to map.</span>
+					<span ng-hide="loadingPredicates">No property to match.</span>
 				</div>
 			</div>
 		</div>
@@ -80,7 +80,7 @@
 						<input type="text" class="form-control"
 							ng-model="searchQuery"
 							value="{{searchQuery}}"
-							placeholder="Search LOV to find a match">
+							placeholder="Find a LOV match">
 						<span class="input-group-btn">
 							<button class="btn btn-default" type="button"
 								ng-click="searchLovProperties()">
@@ -157,7 +157,7 @@
 							class="form-control search-bar"
 							id="ontologyFilterInput"
 							ng-model="ontologyStringFilter"
-							placeholder="Filter ontologies to find a match">
+							placeholder="Find an ontology match">
 						<input
 							id="projectDatatypeRadio"
 							type="radio"
@@ -242,8 +242,8 @@
 			<table class="table">
 				<thead>
 					<tr>
-						<th>Name</th>
-						<th>Used</th>
+						<th>Ontology</th>
+						<th>Matches</th>
 					</tr>
 				</thead>
 				<tbody>

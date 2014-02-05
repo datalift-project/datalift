@@ -10,7 +10,7 @@ function AppCtrl($scope, $location, Shared) {
 		 "link": "#/select"},
 		{"num": 2,
 		 "name": "Match",
-		 "link": "#/map"},
+		 "link": "#/match"},
 		{"num": 3,
 		 "name": "Refine",
 		 "link": "#/refine"},

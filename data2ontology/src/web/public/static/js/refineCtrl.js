@@ -33,8 +33,9 @@ function RefineCtrl($scope, $location, $http, $timeout, Shared) {
 	$scope.visibleOntologies = [];
 	// il faut gérer la valeur dans un object car on la modifie dans un autre scope.
 	$scope.ontologyStringFilter = {value: ""};
-	$scope.targetObject = {id: ""};
+	$scope.targetObject = {id: "", value: ""};
 	$scope.firstObjectAdded = true;
+	$scope.editingType = "";
 	
 	//*************************************************************************
 	// Methods
@@ -48,7 +49,7 @@ function RefineCtrl($scope, $location, $http, $timeout, Shared) {
 		console.log("check classes");
 	}
 	//*************************************************************************
-	// Objects
+	// Objects & Edition panel
 	//*************************************************************************
 	$scope.createObject = function() {
 		var obj = new MappingObject($scope.objectNextId);
@@ -84,10 +85,16 @@ function RefineCtrl($scope, $location, $http, $timeout, Shared) {
 		return $scope.objectEditing == id;
 	}
 	
-	$scope.setObjectPropertyPanel = function(id) {
+	$scope.isEditingType = function(type) {
+		return $scope.editingType == type;
+	}
+	
+	$scope.setPropertyPanel = function(id, type) {
 		$scope.objectEditing = id;
+		$scope.editingType = type;
 		$scope.selectedObjectProperty = {};
 		$scope.targetObject.id = "";
+		$scope.targetObject.value = "";
 	}
 	
 	$scope.selectObjectProperty = function(property) {
@@ -96,6 +103,18 @@ function RefineCtrl($scope, $location, $http, $timeout, Shared) {
 	
 	$scope.isObjectPropertySelected = function(property) {
 		return $scope.selectedObjectProperty == property;
+	}
+	
+	$scope.addDatatypeProperty = function() {
+		var sourceObject = $scope.getObject($scope.objectEditing);
+		
+		sourceObject.addDatatypeProperty({
+			property: $scope.selectedObjectProperty,
+			value: $scope.targetObject.value
+		});
+		
+		$scope.setPropertyPanel(-1, "");
+		
 	}
 	
 	$scope.addObjectProperty = function() {
@@ -123,7 +142,7 @@ function RefineCtrl($scope, $location, $http, $timeout, Shared) {
 			targetId: targetObject.id
 		});
 		
-		$scope.setObjectPropertyPanel(-1);
+		$scope.setPropertyPanel(-1, "");
 		
 		if ($scope.firstObjectAdded) {
 			$scope.firstObjectAdded = false;
@@ -148,7 +167,7 @@ function RefineCtrl($scope, $location, $http, $timeout, Shared) {
 	$scope.filterObjectProperties = function(ontology) {
 		var filteredProperties = [];
 		for (var prop in ontology.properties) {
-			if (ontology.properties[prop].type == "ObjectProperty") {
+			if (ontology.properties[prop].type == $scope.editingType) {
 				filteredProperties.push({
 					uri: prop,
 					type: ontology.properties[prop].type,
@@ -162,7 +181,7 @@ function RefineCtrl($scope, $location, $http, $timeout, Shared) {
 		return filteredProperties;
 	}
 	$scope.objectPropertiesFilter = function(property) {
-		if (property.type != "ObjectProperty") {
+		if (property.type != $scope.editingType) {
 			return false;
 		}
 		else {
@@ -244,7 +263,7 @@ function RefineCtrl($scope, $location, $http, $timeout, Shared) {
 	}
 	
 	self.loadOntology = function(ontology) {
-		$http.get(Shared.baseUri + "/mapper/ontology?src=" + ontology)
+		$http.get(Shared.moduleUri + "/ontology?src=" + ontology)
 		.success(function(data, status, headers, config) {
 			var propArray = [];
 			for (var prop in data.properties) {
@@ -290,7 +309,7 @@ function RefineCtrl($scope, $location, $http, $timeout, Shared) {
 	}
 	
 	self.loadOntologyFromLov = function(ontology, altUri) {
-		$http.get(Shared.baseUri + "/mapper/ontology?src=" + altUri)
+		$http.get(Shared.moduleUri + "/ontology?src=" + altUri)
 		.success(function(data, status, headers, config) {
 			$scope.loadedOntologies[ontology] = data;
 			++$scope.ontologiesReceived;
