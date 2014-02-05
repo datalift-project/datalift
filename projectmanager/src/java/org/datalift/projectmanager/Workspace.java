@@ -46,6 +46,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.text.DateFormat;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
@@ -2278,18 +2279,24 @@ public class Workspace extends BaseModule
     // TODO: In query, replace with a sparql variable.
     @GET
     @Path("{id}/atom")
-    public Response getProjectAtomStream(@PathParam("id") String projectId) {
+    public Response getProjectAtomStream(
+    		@PathParam("id") String projectId,
+    		@Context UriInfo uriInfo) {
+    	Project p = this.loadProject(uriInfo, projectId);
+    	String projectUri = p.getUri().toString();
+    	
     	String query = 
-    			"PREFIX prov: <http://www.w3.org/ns/prov#>" +
-    			"PREFIX datalift: <http://www.datalift.org/core#>" +
-    			"SELECT * WHERE {" +
-    			"  ?event a <http://www.w3.org/ns/prov#Activity> ;" +
-    			"         prov:startedAtTime ?time ;" +
-    			"         prov:influenced " + projectId + " ;" +
-    			"         datalift:parameters ?parameters ;" +
-    			"         prov:endedAtTime ?endedAtTime ;" +
+    			"PREFIX prov: <http://www.w3.org/ns/prov#>\n" +
+    			"PREFIX datalift: <http://www.datalift.org/core#>\n" +
+    			"SELECT * WHERE {\n" +
+    			"  ?event a <http://www.w3.org/ns/prov#Activity> ;\n" +
+    			"         prov:startedAtTime ?time ;\n" +
+    			"         prov:influenced <" + projectUri + "> ;\n" +
+    			"         datalift:parameters ?parameters ;\n" +
+    			"         prov:endedAtTime ?endedAtTime ;\n" +
+    			//"         prov:wasAssociatedWith ?user ;\n" +
     			"         a ?type . FILTER regex(str(?type), \"Project\")" +
-    			"}";
+    			"} ORDER BY DESC(?endedAtTime)";
 
     	final RepositoryConnection cnx = Configuration.getDefault()
     			.getInternalRepository()
@@ -2329,10 +2336,11 @@ public class Workspace extends BaseModule
             public Entry next() {
                Entry e = new Entry();
                BindingSet bs;
+               
                try {
             	   bs = result.next();
 
-            	   Value v = bs.getValue("author");
+            	   Value v = bs.getValue("user");
             	   if (v != null) {
             		   e.setAuthor(v.stringValue());
             	   }
@@ -2344,8 +2352,9 @@ public class Workspace extends BaseModule
             	   if (v != null) {
             		   e.setId(v.stringValue());
             	   }
-            	   v = bs.getValue("event");
+            	   v = bs.getValue("type");
             	   if (v != null) {
+            		   
             		   e.setTitle(v.stringValue());
             	   }
             	   v = bs.getValue("endedAtTime");
@@ -2372,10 +2381,10 @@ public class Workspace extends BaseModule
         };
 			
     	Feed feed = new Feed();
-    	feed.setTitle("Datalift atom feed.");
-    	feed.setLink("Link");
+    	feed.setTitle("Datalift project \"" + projectId + "\" feed");
+    	feed.setLink(projectUri);
+    	feed.setId(projectUri);
     	feed.setUpdated("Date");
-    	feed.setId("ID");
     	
     	feed.setEntries(entryIt);
     	
