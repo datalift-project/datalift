@@ -1,0 +1,72 @@
+<div class="modal-header">  
+	<h4>New Policy </h4>  
+</div>  
+<div class="modal-body">
+	    <ul class="breadcrumb">
+		    <li class="text-info">Targets & privileges<span class="divider">/</span></li>
+		    <li class="active">User<span class="divider">/</span></li>
+		    <li class="active">Env #time<span class="divider">/</span></li>
+		    <li class="active">Env #location<span class="divider">/</span></li>
+		    <li class="active">Env #miscellaneous<span class="divider">/</span></li>
+		    <li class="active">Device</li>
+	    </ul>
+<!-- 	<div class="progress progress-info"> -->
+<!-- 		<div class="bar" style="width: 35%"> Name, targets and privileges /</div> -->
+<!-- 		<p style="padding-left:10px;font-size: 12px;"> User / Environment - time / Environment - location / Device</p> -->
+<!-- 	</div> -->
+    <form class="form-horizontal" id="formNewPolicy">
+		<div id="nameCtrlGrp" class="control-group">
+			<label class="control-label" for="inputName">Name</label>
+			<div class="controls">
+				<input type="text" id="inputName" class="input-xlarge"
+					placeholder="Type the name of the policy" 
+					value="<%= wizard.get('name') ? wizard.get('name') : '' %>" tabindex="1">
+				<span class="help-inline" id="errorText"></span>
+			</div>
+		</div>
+		<div class="control-group">
+			<label class="control-label" for="target">Target</label>
+			<div class="controls">
+				<div id="target"></div>
+<!-- 				<input type="text" id="target"  -->
+<!-- 					placeholder="Type or click on the folder icon"  -->
+<!-- 					value="<%= wizard.get('target') ? wizard.get('target') : '' %>"> -->
+				<a id="selectTargetBtn" href="#selectTarget" class="btn" data-toggle-wizard="tooltip" 
+					title="Browse the <%= backend == 'sparql' ? 'named graphs available in the dataset' : 'available resources' %>" tabindex="2"><i class="icoblue-folder"></i></a>
+<!--     			<a id="newTargetBtn" href="#newTarget" class="btn" data-toggle="modal"><i class="icoblue-add"></i></a> -->
+			</div>
+		</div>
+		<div class="control-group">
+			<label class="control-label" for="target">Privileges</label>
+			<div class="controls">
+				<div class="btn-group" data-toggle="buttons-checkbox">
+<!-- 				added pre-wrap to tooltip inside text to deal with some bugs (text exceeded tooltip) -->
+				    <button type="button" id="rModal" class="btn" data-toggle-wizard="tooltip"
+				    	title="Allow to read data from 
+the target <%= backend == 'sparql' ? 'named graph': 'resource' %>" tabindex="3">Read<i class="icoblue-page"></i></button>
+				    <button type="button" id="uModal" class="btn" data-toggle-wizard="tooltip"
+				    	title="Allow to modify data in
+the target <%= backend == 'sparql' ? 'named graph': 'resource' %>" tabindex="4">Update<i class="icoblue-pencil"></i></button>
+				    <button type="button" id="cModal" class="btn" data-toggle-wizard="tooltip"
+				    	title="Allow to add data in
+the target <%= backend == 'sparql' ? 'named graph': 'resource' %>" tabindex="5">Create<i class="icoblue-add_page"></i></button>
+				    <button type="button" id="dModal" class="btn" data-toggle-wizard="tooltip"
+				    	title="Allow to 
+remove data 
+from the target <%= backend == 'sparql' ? 'named graph': 'resource' %>" tabindex="6">Delete<i class="icoblue-delete_page"></i></button>
+			    </div>
+			</div>
+			<br>
+			<br>
+			<br>
+			<br>
+			<br>
+		</div>
+    </form>
+</div>  
+<div class="modal-footer"> 					
+	<a href="#" class="btn disabled" tabindex="7">&lt</a>  
+	<a href="#" class="btn" id="newPolicyNext" tabindex="8">&gt</a>
+	<a href="#" class="btn" id="newPolicyCancel" tabindex="9">Cancel</a>
+	<a href="#" class="btn" id="newPolicyFinish" tabindex="10">Finish</a>  
+</div>

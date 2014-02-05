@@ -1,0 +1,15 @@
+<ul class="breadcrumb">
+	 <li class="active"><a id="userDim" href="#">User</a><span class="divider">/</span></li>
+	 <li ><a id="timeDim" href="#">Env #time</a><span class="divider">/</span></li>
+	 <li ><a id="outdoorDim" href="#">Env #location</a><span class="divider">/</span></li>
+	 <li ><a id="envDim" href="#">Env #miscellaneous</a><span class="divider">/</span></li>
+	 <li><a id="devDim" href="#">Device</a></li>
+<%if (!ctx) {%>
+ 	 <li class="pull-right">
+ 	 	<a href="#" title="Delete this access condition from this policy" data-toggle-dim="tooltip">
+ 	 		<i class="icoblue-waste ac-del"></i>
+ 	 	</a>
+ 	 </li>
+<%}%>
+</ul>
+<div id="dim-view<%= acCnt %>"></div>

@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Shi3ldPolicyManager</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <!-- Le styles -->
+    <link href="public/bootstrap/css/bootstrap-jqueryui.css" rel="stylesheet">
+    <link href="public/stylesheets/custom-theme/jquery-ui-1.10.0.custom.css" rel="stylesheet">
+    <style type="text/css">
+      body {
+        padding-top: 60px;
+        padding-bottom: 40px;
+      }
+      .sidebar-nav {
+        padding: 9px 0;
+      }
+
+      @media (max-width: 980px) {
+        /* Enable use of floated navbar text */
+        .navbar-text.pull-right {
+          float: none;
+          padding-left: 5px;
+          padding-right: 5px;
+        }
+      }
+    /*customization for big text area*/
+ 		html,body,.container-fluid { 
+       		height: 95%;  
+        }
+        .tab-content,.tab-pane{
+        	height: 95%;
+        } 
+		.fit-container{
+			width: 100%;
+			height: 100%;  
+			-webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
+			-moz-box-sizing: border-box;    /* Firefox, other Gecko */
+			box-sizing: border-box;         /* IE 8+ */
+		}
+	</style>
+    <link href="assets/bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
+
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="../assets/js/html5shiv.js"></script>
+    <![endif]-->
+
+    <!-- Fav and touch icons -->
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="twitter-bootstrap-37d0a30/docs/assets/ico/apple-touch-icon-144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="twitter-bootstrap-37d0a30/docs/assets/ico/apple-touch-icon-114-precomposed.png">
+      <link rel="apple-touch-icon-precomposed" sizes="72x72" href="twitter-bootstrap-37d0a30/docs/assets/ico/apple-touch-icon-72-precomposed.png">
+                    <link rel="apple-touch-icon-precomposed" href="twitter-bootstrap-37d0a30/docs/assets/ico/apple-touch-icon-57-precomposed.png">
+                                   <link rel="shortcut icon" href="twitter-bootstrap-37d0a30/docs/assets/ico/favicon.png">
+  	<!-- customized icon css-->
+  	<link href="public/stylesheets/myIco16.css" rel="stylesheet">
+	
+     <script src="https://maps.googleapis.com/maps/api/js?sensor=false"></script>
+    	
+	<!-- jquery -->
+	<script type="text/javascript" src="public/javascripts/lib/jquery-ui-1.10.3.custom/js/jquery-1.9.1.js"></script>
+	<script src="public/bootstrap/js/bootstrap.js"></script>
+	<script type="text/javascript" src="public/javascripts/lib/jquery-ui-1.10.3.custom/js/jquery-ui-1.10.3.custom.js"></script>
+	
+<!-- 	<script src="bootstrap-typeahead.min.js"></script> -->
+		<script src="public/javascripts/lib/jquery.ui.addresspicker.js"></script>
+	<script src="public/javascripts/lib/jquery-wm/main.js"></script>	
+	
+	<!-- flint sparql editor -->
+	<script type="text/javascript" src="assets/sparql/lib/codemirror.js">//</script>
+	<script type="text/javascript" src="assets/sparql/sparql10querymode_ll1.js">//</script>
+	<script type="text/javascript" src="assets/sparql/sparql11querymode_ll1.js">//</script>
+	<script type="text/javascript" src="assets/sparql/sparql11updatemode_ll1.js">//</script>
+	<script type="text/javascript" src="assets/sparql/flint-editor.js">//</script>
+	<link rel="stylesheet" href="assets/sparql/lib/codemirror.css"/>
+	<link rel="stylesheet" href="assets/sparql/css/sparqlcolors.css"/>
+	<link rel="stylesheet" href="assets/sparql/css/docs.css"/>
+	
+	<!-- js general initialization -->
+	<script type="text/javascript" src="assets/js/init-local.js"></script>
+	
+  </head>
+
+  <body>
+
+    <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container-fluid">
+          <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="brand" href="#">SHI3LD Policy Manager</a>
+          <div class="nav-collapse collapse">
+          	<ul class="nav pull-right">
+              <li><a href="#about"><i class="ico16-settings"></i></a></li>
+              <li><a href="#contact"><i class="ico16-question_mark"></i></a></li>
+              <li class="divider-vertical"></li>
+              <li><p class="navbar-text pull-right">
+              	Logged in as <a href="#" class="navbar-link">Username</a>
+              </p></li>
+             <li><a href="#contact"><i class="icon-off icon-white"></i></a></li>
+            </ul>
+            <ul class="nav">
+              <li><a data-toggle="modal" href="#newPolicy"><i class="ico16-page"></i></a></li>
+              <li><a href="#contact" ><i class="ico16-folder"></i></a></li>
+              <li><a href="#contact" id="savePolicy"><i class="ico16-save"></i></a></li>
+            </ul>
+          </div><!--/.nav-collapse -->
+        </div>
+      </div>
+    </div>
+	
+    <div class="container-fluid">
+		  <ul class="nav nav-tabs">
+		  	<li class="active"><a href="#tab1" data-toggle="tab">Design</a></li>
+		  	<li ><a id="editTab" href="#tab2" data-toggle="tab">Text</a></li>
+		  </ul>
+		  <div class="tab-content">
+		  	<div class="tab-pane active" id="tab1">
+		  					  	</div>
+		  	<div class="tab-pane " id="tab2">
+		  		<div id="flint-test">
+				</div>
+		 	</div>
+		</div>
+		<hr>
+	    <footer>
+	      <p>&copy; INRIA 2013</p>
+	    </footer>
+		<!--new policy modals-->
+		<div id="newPolicy" class="modal hide fade in" style="display: none; ">
+			<div class="modal-header">  
+				<a class="close" data-dismiss="modal">×</a>  
+					<h3>New Policy</h3>  
+				</div>  
+				<div class="modal-body">  
+				    <form class="form-horizontal">
+						<div class="control-group">
+							<label class="control-label" for="inputName">name</label>
+							<div class="controls">
+								<input type="text" id="inputName" placeholder="">
+							</div>
+						</div>
+						<div class="control-group">
+							<label class="control-label" for="inputDS">Dataset</label>
+							<div class="controls">
+								<input type="text" id="inputDS" placeholder="">
+							</div>
+						</div>
+						<div class="control-group">
+							<label class="control-label" for="inputGraph">Graph</label>
+							<div class="controls">
+								<input type="text" id="inputGraph" placeholder="">
+							</div>
+						</div>
+						<div class="control-group">
+							<div class="controls">
+								<a href="#browse" class="btn" data-toggle="modal"><i class="ico16-folder"></i></a>
+				    			<a href="#newGraph" class="btn" data-toggle="modal"><i class="ico16-add"></i></a>
+							</div>
+				    	</div>
+				    </form>
+				</div>  
+				<div class="modal-footer"> 					
+					<a href="#" class="btn disabled">&lt</a>  
+					<a href="#newPolicyChooseType" class="btn" data-toggle="modal" data-dismiss="modal">&gt</a>
+					<a href="#" class="btn" data-dismiss="modal">Close</a>
+					<a href="#" class="btn disabled">Finish</a>  
+				</div> 
+		</div>
+		<div id="browse" class="modal hide fade in" style="display: none; ">
+			<div class="modal-header">  
+				<a class="close" data-dismiss="modal">×</a>  
+					<h3>New Policy - browse datasets</h3>  
+				</div>  
+				<div class="modal-body">
+					<form class="form-horizontal" action="">
+						<div class="control-group">
+							<label class="control-label" for="pageSize">Email</label>
+							<div class="controls">
+								<select id="pageSize" class="input-small">
+									<option>1</option>
+									<option>2</option>
+									<option>3</option>
+									<option>4</option>
+									<option>5</option>
+								</select>
+							</div>
+						</div>
+						<select multiple="multiple" class="input-xxlarge">
+							<option>1</option>
+							<option>2</option>
+							<option>3</option>
+							<option>4</option>
+							<option>5</option>
+							<option title="file:///C:/Documents%20and%20Settings/ivaglian/Desktop/thesis/shi3ld/shi3ld_gui_project/implementation/shi3ld-policy-manager/trunk/WebContent/index.html#contact">
+								file:///C:/Documents%20and%20Settings/ivaglian/Desktop/thesis/shi3ld/shi3ld_gui_project/implementation/shi3ld-policy-manager/trunk/WebContent/index.html#contact
+							</option>
+						</select>
+					</form>
+				</div>  
+				<div class="modal-footer"> 					
+					<a href="#" class="btn" data-dismiss="modal" onclick="fillDatasetTxt">Select</a>
+					<a href="#" class="btn" data-dismiss="modal">Cancel</a>  
+				</div> 
+		</div>
+		<div id="newGraph" class="modal hide fade in" style="display: none; ">
+			<div class="modal-header">  
+				<a class="close" data-dismiss="modal">×</a>  
+					<h3>New Policy - new named graph</h3>  
+				</div>  
+				<div class="modal-body">  
+				    <table id="graphFilter" class="table table-bordered table-striped" style="clear: both">
+                <tbody> 
+                    <tr>         
+                        <th width="30%">Subject</th>
+                        <th width="30%">Predicate</th>
+                        <th width="30%">Object</th>
+                    </tr>
+                    <tr>         
+                        <td><b class="click" style="display: inline">Click to edit</b></td>
+                        <td><b class="click" style="display: inline">Click to edit</b></td>
+                        <td><b class="click" style="display: inline">Click to edit</b></td>
+                    </tr>  
+                    
+                </tbody>
+            </table>
+				</div>  
+				<div class="modal-footer"> 					
+					<a href="#" class="btn disabled">&lt</a>  
+					<a href="#newPolicy2" class="btn" data-toggle="modal" data-dismiss="modal">&gt</a>
+					<a href="#" class="btn" data-dismiss="modal">Close</a>
+					<a href="#" class="btn disabled">Finish</a>  
+				</div> 
+		</div>
+		<div id="newPolicyChooseType" class="modal hide fade in" style="display: none; ">
+			<div class="modal-header">  
+				<a class="close" data-dismiss="modal">×</a>  
+					<h3>New Policy - Choose the type</h3>  
+				</div>  
+				<div class="modal-body">
+					<p>Select what type of policy do you want:</p>  
+			        <ul class="thumbnails">
+			        	<li class="span1">
+						    <a href="#" class="thumbnail">
+						    	<img src="img/blank.png" height="128" width="128" alt="user">
+						    </a>
+					    </li>
+					    <li class="span1">
+						    <a href="#" class="thumbnail">
+						    	<img src="img/user_template.png" height="128" width="128" alt="user">
+						    </a>
+					    </li>
+					    <li class="span1">
+						    <a href="#" class="thumbnail">
+						    	<img src="img/dev_template.png" height="128" width="128" alt="device">
+						    </a>
+					    </li>
+					    <li class="span1">
+						    <a href="#" class="thumbnail">
+						    	<img src="img/time_template.png" height="128" width="128" alt="time">
+						    </a>
+					    </li>
+					    <li class="span1">
+						    <a href="#" class="thumbnail">
+						    <img src="img/outdoor_template.png" height="128" width="128" alt="outdoor location">
+						    </a>
+					    </li>
+					    <li class="span1">
+						    <a href="#" class="thumbnail">
+						    	<img src="img/indoor_template.png" height="128" width="128" alt="indoor location">
+						    </a>
+					    </li>					    
+				    </ul>
+				</div>  
+				<div class="modal-footer">  					
+					<a href="#newPolicy" class="btn" data-toggle="modal" data-dismiss="modal">&lt</a>  
+					<a href="#newPolicyUsrConstraint" class="btn" data-toggle="modal" data-dismiss="modal">&gt</a>
+					<a href="#" class="btn" data-dismiss="modal">Close</a>
+					<a href="#" class="btn" onclick="createPolicy">Finish</a>  
+				</div> 
+		</div>
+		<div id="newPolicyUsrConstraint" class="modal hide fade in" style="display: none; ">
+			<div class="modal-header">  
+				<a class="close" data-dismiss="modal">×</a>  
+					<h3>New Policy</h3>  
+				</div>  
+				<div class="modal-body">  
+			        <ul class="thumbnails">
+					    <li class="span1">
+						    <a href="#" class="thumbnail">
+						    	<img src="img/user_template.png" height="128" width="128" alt="user">
+						    </a>
+					    </li>
+					    <li class="span1">
+						    <a href="#" class="thumbnail">
+						    	<img src="img/dev_template.png" height="128" width="128" alt="device">
+						    </a>
+					    </li>
+					    <li class="span1">
+						    <a href="#" class="thumbnail">
+						    	<img src="img/time_template.png" height="128" width="128" alt="time">
+						    </a>
+					    </li>
+					    <li class="span1">
+						    <a href="#" class="thumbnail">
+						    <img src="img/outdoor_template.png" height="128" width="128" alt="outdoor location">
+						    </a>
+					    </li>
+					    <li class="span1">
+						    <a href="#" class="thumbnail">
+						    	<img src="img/indoor_template.png" height="128" width="128" alt="indoor location">
+						    </a>
+					    </li>					    
+				    </ul>
+				</div>  
+				<div class="modal-footer">  					
+					<a href="#newPolicy" class="btn" data-toggle="modal" data-dismiss="modal">&lt</a>  
+					<a href="#newPolicy3" class="btn" data-toggle="modal" data-dismiss="modal">&gt</a>
+					<a href="#" class="btn" data-dismiss="modal">Close</a>
+					<a href="#" class="btn" onclick="createPolicy">Finish</a>  
+				</div> 
+		</div>	 
+    </div><!--/.fluid-container-->
+
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="assets/bootstrap/js/bootstrap.min.js"></script>
+
+  </body>
+</html>

@@ -1,0 +1,492 @@
+SELECT *
+WHERE{
+ GRAPH <http://example.org/policies>{ 
+  ?s ?p ?o 
+ }
+}
+
+ASK {GRAPH <http://example.org/policies> {<http://example.org/shi3ld/ap1-DEL> ?p ?o}}
+
+
+Prefix foaf: <http://xmlns.com/foaf/0.1/>
+INSERT DATA {
+ GRAPH <http://example.org/policies>{ 
+  <http://a.a.it> foaf:name "alice" 
+ }
+}
+
+
+SELECT ?g
+WHERE{
+ GRAPH ?g{ 
+  ?s ?p ?o
+ }
+}
+
+
+-------------------------------------------------------------------
+TEST WITH FUSEKI
+
+
+
+SELECT *
+WHERE {GRAPH ?g {?s ?p ?o} }
+
+
+
+- get named graph with label
+
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+SELECT DISTINCT ?g ?label
+WHERE {
+ GRAPH ?g {?s ?p ?o} 
+ OPTIONAL { ?g rdfs:label ?label}
+}
+
+
+- insert label
+
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+insert data
+{<http://example.org/policies> rdfs:label "policy graph"} 
+
+
+- insert data in a graph `
+
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+INSERT DATA
+{ GRAPH <http://example.org/lucaDoc> {
+    <http://example.org/s> <http://example.org/p> <http://example.org/o>.
+    <http://example.org/lucaDoc> rdfs:label "documents of luca"
+}
+ GRAPH <http://example.org/sereDoc> {
+    <http://example.org/s> <http://example.org/p> <http://example.org/o>.
+    <http://example.org/sereDoc> rdfs:label "documents of serena"
+}
+GRAPH <http://example.org/target1> {
+    <http://example.org/s> <http://example.org/p> <http://example.org/o>.
+}
+GRAPH <http://example.org/target2> {
+    <http://example.org/s> <http://example.org/p> <http://example.org/o>.
+    <http://example.org/target2> rdfs:label "target2"
+}
+GRAPH <http://example.org/myPictures> {
+    <http://example.org/s> <http://example.org/p> <http://example.org/o>.
+    <http://example.org/myPictures> rdfs:label "my pictures named graph"
+}
+GRAPH <http://example.org/fabienPubblications> {
+    <http://example.org/s> <http://example.org/p> <http://example.org/o>.
+    <http://example.org/s1> <http://example.org/p1> <http://example.org/o1>.
+    <http://example.org/s2> <http://example.org/p2> <http://example.org/o2>.
+    <http://example.org/fabienPubblications> rdfs:label "pubblications of fabien"
+}
+GRAPH <http://example.org/namedGraphWithNoLabel> {
+    <http://example.org/s> <http://example.org/p> <http://example.org/o>.
+    <http://example.org/s1> <http://example.org/p1> <http://example.org/o1>.
+    <http://example.org/s2> <http://example.org/p2> <http://example.org/o2>.
+}
+GRAPH <http://example.org/namedGraphWithLongLabel> {
+    <http://example.org/s> <http://example.org/p> <http://example.org/o>.
+    <http://example.org/s1> <http://example.org/p1> <http://example.org/o1>.
+    <http://example.org/s2> <http://example.org/p2> <http://example.org/o2>.
+    <http://example.org/namedGraphWithLongLabel> rdfs:label "very very very very very very very very long label"
+}
+GRAPH <http://example.org/namedGraphWith10triples> {
+    <http://example.org/s> <http://example.org/p> <http://example.org/o>.
+    <http://example.org/s1> <http://example.org/p1> <http://example.org/o1>.
+    <http://example.org/s2> <http://example.org/p2> <http://example.org/o2>.
+    <http://example.org/s3> <http://example.org/p3> <http://example.org/o3>.
+    <http://example.org/s4> <http://example.org/p4> <http://example.org/o4>.
+    <http://example.org/s5> <http://example.org/p5> <http://example.org/o5>.
+    <http://example.org/s6> <http://example.org/p6> <http://example.org/o6>.
+    <http://example.org/s7> <http://example.org/p7> <http://example.org/o7>.
+    <http://example.org/s8> <http://example.org/p8> <http://example.org/o8>.
+    <http://example.org/namedGraphWith10triples> rdfs:label "named graph with 10 triples"
+}
+GRAPH <http://example.org/namedGraphWith1triples> {
+    <http://example.org/s> <http://example.org/p> <http://example.org/o>.
+}
+}
+
+t1
+
+INSERT DATA
+{ GRAPH <http://example.org/target1> {
+    <http://example.org/s> <http://example.org/p> <http://example.org/o>.
+}
+}
+
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+insert data
+{GRAPH <http://example.org/target1> {<http://example.org/target1> rdfs:label "target1"}}
+
+t2
+
+INSERT DATA
+{ GRAPH <http://example.org/target2> {
+    <http://example.org/s> <http://example.org/p> <http://example.org/o>.
+    <http://example.org/target1> rdfs:label "target1"
+}
+}
+
+
+2 target 1 e 2, t1 has label t2 no. 
+
+get targets
+
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+SELECT DISTINCT ?g ?label
+WHERE {
+ GRAPH ?g {?s ?p ?o OPTIONAL { ?g rdfs:label ?label}} 
+ FILTER(! (?g = <http://example.org/policies>))
+}
+
+get targets with count
+
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+SELECT DISTINCT ?g ?label (COUNT (*) AS ?cnt)
+WHERE {
+ GRAPH ?g {?s ?p ?o OPTIONAL { ?g rdfs:label ?label} } 
+ FILTER(! (?g = <http://example.org/policies>))
+}
+GROUP BY ?g ?label
+ORDER BY ?label ?g
+
+overwrite a named graph
+
+drop graph <http://example.org/shi3ld/books>;
+insert {graph <http://example.org/shi3ld/books> {?s ?p "J.K. Rowling"} }
+where { ?s ?p "J.K. Rowling" }
+
+
+ac name check
+
+
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX s4ac: <http://ns.inria.fr/s4ac/v2#>
+
+SELECT ?s
+WHERE{
+ GRAPH <http://example.org/policies>{ 
+  ?s rdf:type s4ac:AccessCondition
+  FILTER((?s = <http://example.org/shi3ld/ac>) || (?s = <http://example.org/shi3ld/ac2>))
+ }
+}
+
+
+policy header paginated
+
+PREFIX s4ac: <http://ns.inria.fr/s4ac/v2#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+SELECT ?policyUri ?label ?target ?privilege
+WHERE {
+   GRAPH <http://example.org/policies> {
+    ?policyUri rdf:type s4ac:AccessPolicy .
+    OPTIONAL{?policyUri rdfs:label ?label .}
+    OPTIONAL { ?policyUri s4ac:appliesTo ?target . }
+    OPTIONAL { ?policyUri s4ac:hasAccessPrivilege ?privilege . }
+    {
+      SELECT ?policyUri
+      WHERE{
+        GRAPH <http://example.org/policies>{
+          ?policyUri rdf:type s4ac:AccessPolicy .
+        }
+      }
+      ORDER BY ?policyUri
+      LIMIT 10 OFFSET 0
+    }
+   }
+}
+
+
+
+
+load policy
+
+PREFIX : <http://example.org/shi3ld/>
+PREFIX s4ac: <http://ns.inria.fr/s4ac/v2#>
+PREFIX prissma: <http://ns.inria.fr/prissma/v2#>
+PREFIX hard: <http://www.w3.org/2007/uwa/context/hardware.owl#>
+PREFIX dcn: <http://www.w3.org/2007/uwa/context/deliverycontext.owl#>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX common: <http://www.w3.org/2007/uwa/context/common.owl#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX ao: <http://purl.org/ontology/ao/core#>
+PREFIX soft: <http://www.w3.org/2007/uwa/context/software.owl#>
+PREFIX geo: <http://www.w3.org/2003/01/geo/wgs84_pos#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>INSERT DATA
+{ GRAPH <http://example.org/policies>{
+
+:p1 rdf:type s4ac:AccessPolicy.
+:p1 rdfs:label "p1".
+:p1 s4ac:appliesTo <http://example.org/target1>.
+:p1 s4ac:appliesTo <http://example.org/target2>.
+:p1 s4ac:hasAccessConditionSet :p1-ACS.
+:p1-ACS rdf:type s4ac:ConjunctiveAccessConditionSet.
+:p1 s4ac:hasAccessPrivilege s4ac:Read.
+:p1 s4ac:hasAccessPrivilege s4ac:Create.
+
+:p2 rdf:type s4ac:AccessPolicy.
+:p2 rdfs:label "p2".
+:p2 s4ac:appliesTo <http://example.org/target1>.
+:p2 s4ac:hasAccessConditionSet :p2-ACS.
+:p2-ACS rdf:type s4ac:ConjunctiveAccessConditionSet.
+:p2 s4ac:hasAccessPrivilege s4ac:Read.
+
+:p3 rdf:type s4ac:AccessPolicy.
+:p3 s4ac:appliesTo <http://example.org/target2>.
+:p3 s4ac:hasAccessConditionSet :p3-ACS.
+:p3-ACS rdf:type s4ac:ConjunctiveAccessConditionSet.
+:p3 s4ac:hasAccessPrivilege s4ac:Read.
+:p3 s4ac:hasAccessPrivilege s4ac:Update.
+
+:p4 rdf:type s4ac:AccessPolicy.
+:p4 rdfs:label "p4".
+:p4 s4ac:appliesTo <http://example.org/target1>.
+:p4 s4ac:hasAccessConditionSet :p4-ACS.
+:p4-ACS rdf:type s4ac:ConjunctiveAccessConditionSet.
+
+:p5 rdf:type s4ac:AccessPolicy.
+:p5 rdfs:label "p5".
+:p5 s4ac:hasAccessConditionSet :p5-ACS.
+:p5-ACS rdf:type s4ac:ConjunctiveAccessConditionSet.
+
+:p6 rdf:type s4ac:AccessPolicy.
+
+
+:p7 rdf:type s4ac:AccessPolicy.
+:p7 s4ac:hasAccessPrivilege s4ac:Delete.
+:p7 s4ac:hasAccessPrivilege s4ac:Update.
+
+:p8 rdf:type s4ac:AccessPolicy.
+:p8 s4ac:hasAccessPrivilege s4ac:Delete.
+:p8 s4ac:hasAccessPrivilege s4ac:Update.
+:p8 s4ac:hasAccessPrivilege s4ac:Create.
+:p8 s4ac:hasAccessPrivilege s4ac:Read.
+
+:myDocumentsPolicy rdf:type s4ac:AccessPolicy;
+	rdfs:label "policy applied to my documents".
+
+:serenaDocumentsPolicy rdf:type s4ac:AccessPolicy;
+	rdfs:label "policy on serena documents".
+
+:lucaFoafPOlicy rdf:type s4ac:AccessPolicy;
+	rdfs:label "luca foaf policy".
+:myFoafPolicy rdf:type s4ac:AccessPolicy.
+:serenaFoafPolicy rdf:type s4ac:AccessPolicy.
+:fabienArticlesPolicy rdf:type s4ac:AccessPolicy.
+:myPicturesPolicy rdf:type s4ac:AccessPolicy.
+:fabienPicturesPolicy rdf:type s4ac:AccessPolicy.
+:testPolicy rdf:type s4ac:AccessPolicy.
+:examplePolicy rdf:type s4ac:AccessPolicy.
+:policyTemplateUser rdf:type s4ac:AccessPolicy.
+:policyTemplateRead rdf:type s4ac:AccessPolicy.
+:policyTemplateRead s4ac:hasAccessPrivilege s4ac:Read.
+:policyTemplateCreate rdf:type s4ac:AccessPolicy.
+:policyTemplateCreate s4ac:hasAccessPrivilege s4ac:Create.
+:policyTemplateUpdate rdf:type s4ac:AccessPolicy.
+:policyTemplateUpdate s4ac:hasAccessPrivilege s4ac:Update.
+:policyTemplateRead rdf:type s4ac:AccessPolicy.
+:policyTemplateDelete s4ac:hasAccessPrivilege s4ac:Delete.
+
+}
+}
+
+get a policy
+
+PREFIX : <http://example.org/shi3ld/>
+PREFIX s4ac: <http://ns.inria.fr/s4ac/v2#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+CONSTRUCT {
+:p7 rdf:type s4ac:AccessPolicy.
+:p7 rdfs:label ?label.
+:p7 s4ac:appliesTo ?target.
+:p7 s4ac:hasAccessPrivilege ?privilege.
+:p7 s4ac:hasAccessConditionSet ?acs.
+
+?acs rdf:type ?acsType.
+?acs s4ac:hasAccessCondition ?ac.
+?ac rdf:type ?acType.
+?ac rdfs:label ?acLabel.
+?ac s4ac:hasQueryAsk ?query.
+}
+WHERE { GRAPH <http://example.org/policies> {
+:p7 rdf:type s4ac:AccessPolicy.
+OPTIONAL {:p7 rdfs:label ?label.}
+OPTIONAL {:p7 s4ac:appliesTo ?target.}
+OPTIONAL {:p7 s4ac:hasAccessPrivilege ?privilege.}
+OPTIONAL {:p7 s4ac:hasAccessConditionSet ?acs.}
+OPTIONAL {
+   :p7 s4ac:hasAccessConditionSet ?acs.       
+   ?acs rdf:type ?acsType.
+}
+OPTIONAL {
+  :p7 s4ac:hasAccessConditionSet ?acs.       
+   ?acs rdf:type ?acsType.
+  ?acs s4ac:hasAccessCondition ?ac.
+}
+OPTIONAL {
+  :p7 s4ac:hasAccessConditionSet ?acs.       
+   ?acs rdf:type ?acsType.
+  ?acs s4ac:hasAccessCondition ?ac.
+  OPTIONAL{?ac rdf:type ?acType.}
+  OPTIONAL{?ac rdfs:label ?acLabel.}
+  OPTIONAL{?ac s4ac:hasQueryAsk ?query.}
+  }
+}
+}
+
+//alternative tested but seems not solve order problem
+//(tested before solve bug in ac retieving ie before
+//3 optional inside last optional- the one for ac-)
+PREFIX : <http://example.org/shi3ld/>
+PREFIX s4ac: <http://ns.inria.fr/s4ac/v2#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+CONSTRUCT {
+?p rdf:type s4ac:AccessPolicy.
+?p rdfs:label ?label.
+?p s4ac:appliesTo ?target.
+?p s4ac:hasAccessPrivilege ?privilege.
+?p s4ac:hasAccessConditionSet ?acs.
+
+?acs rdf:type ?acsType.
+?acs s4ac:hasAccessCondition ?ac.
+
+?ac s4ac:hasQueryAsk ?query.
+}
+WHERE { GRAPH <http://example.org/policies> {
+?p rdf:type s4ac:AccessPolicy.
+FILTER(?p = :ap1-POST)
+OPTIONAL {?p rdfs:label ?label.}
+OPTIONAL {?p s4ac:appliesTo ?target.}
+OPTIONAL {?p s4ac:hasAccessPrivilege ?privilege.}
+OPTIONAL {?p s4ac:hasAccessConditionSet ?acs.}
+OPTIONAL {
+   ?p s4ac:hasAccessConditionSet ?acs.       
+   ?acs rdf:type ?acsType.
+}
+OPTIONAL {
+  ?p s4ac:hasAccessConditionSet ?acs.       
+   ?acs rdf:type ?acsType.
+  ?acs s4ac:hasAccessCondition ?ac.
+}
+OPTIONAL {
+  ?p s4ac:hasAccessConditionSet ?acs.       
+   ?acs rdf:type ?acsType.
+  ?acs s4ac:hasAccessCondition ?ac.
+  ?ac s4ac:hasQueryAsk ?query.
+  OPTIONAL{?ac rdf:type ?acType.}
+  OPTIONAL{?ac rdfs:label ?acLabel.}
+  OPTIONAL{?ac s4ac:hasQueryAsk ?query.}
+}
+}
+}ORDER BY DESC(?p) DESC(?acs) DESC(?ac)  
+
+
+
+insert a complete policy
+
+prefix hard: <http://www.w3.org/2007/uwa/context/hardware.owl#>
+prefix dcn: <http://www.w3.org/2007/uwa/context/deliverycontext.owl#>
+prefix foaf: <http://xmlns.com/foaf/0.1/>
+prefix common: <http://www.w3.org/2007/uwa/context/common.owl#>
+prefix xsd: <http://www.w3.org/2001/XMLSchema#>
+prefix ao: <http://purl.org/ontology/ao/core#>
+prefix soft: <http://www.w3.org/2007/uwa/context/software.owl#>
+prefix geo: <http://www.w3.org/2003/01/geo/wgs84_pos#>
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX s4ac: <http://ns.inria.fr/s4ac/v2#>
+PREFIX : <http://example.org/shi3ld/>
+
+INSERT DATA{
+graph <http://example.org/policies> {
+:ap1-POST rdf:type s4ac:AccessPolicy;
+	 s4ac:appliesTo <http://example/data/luca.ttl>;
+	 s4ac:hasAccessPrivilege s4ac:Create;
+	 s4ac:hasAccessConditionSet :acs1.
+
+:acs1 rdf:type s4ac:AccessConditionSet;
+	  rdf:type s4ac:ConjunctiveAccessConditionSet;
+	 s4ac:hasAccessCondition :ac1-1.
+
+:ac1-1 a s4ac:AccessCondition;
+	 s4ac:hasQueryAsk	
+"""PREFIX prissma: <http://ns.inria.fr/prissma/v2#>
+	PREFIX hard: <http://www.w3.org/2007/uwa/context/hardware.owl#>
+	PREFIX dcn: <http://www.w3.org/2007/uwa/context/deliverycontext.owl#>
+	PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+	PREFIX common: <http://www.w3.org/2007/uwa/context/common.owl#>
+	PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+	PREFIX geo: <http://www.w3.org/2003/01/geo/wgs84_pos#>
+	PREFIX ao: <http://purl.org/ontology/ao/core#>
+
+	ASK {?context a prissma:Context;
+	 prissma:environment ?env.
+	?env prissma:currentPOI ?poi.
+	?poi prissma:poiCategory <http://dbpedia.org/resource/Research_Facility>;
+	 prissma:poiLabel <http://dbpedia.org/resource/INRIA>.}"""
+}
+}
+
+update a policy
+
+PREFIX s4ac: <http://ns.inria.fr/s4ac/v2#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX : <http://example.org/shi3ld/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+DELETE{
+  graph<http://example.org/policies> {
+    <http://example.org/shi3ld/p1> ?p ?o.
+    <http://example.org/shi3ld/p1> s4ac:hasAccessConditionSet ?acs.
+    ?acs ?p1 ?o1.
+    :AC-340 ?p3 ?o3
+  }
+}
+INSERT {
+  graph<http://example.org/policies> {
+   :p1 rdf:type s4ac:AccessPolicy.
+:p1 rdfs:label "p1".
+:p1 s4ac:appliesTo :books.
+:p1 s4ac:appliesTo :booksRowling.
+
+:p1 s4ac:hasAccessConditionSet :p1-ACS.
+:p1 s4ac:hasAccessPrivilege s4ac:Create.
+:p1 s4ac:hasAccessPrivilege s4ac:Delete.
+:p1-ACS rdf:type s4ac:ConjunctiveAccessConditionSet.
+:p1-ACS s4ac:hasAccessCondition :AC-340.
+:AC-340 rdf:type s4ac:AccessCondition.
+:AC-340 rdfs:label "AC 340".
+:AC-340 s4ac:hasQueryAsk "ciao vaaale".
+  }
+}
+WHERE {
+graph <http://example.org/policies>{
+ <http://example.org/shi3ld/p1> ?p ?o.
+ OPTIONAL {
+ 	<http://example.org/shi3ld/p1> s4ac:hasAccessConditionSet ?acs.
+ 	?acs ?p1 ?o1.
+ }
+ 
+ OPTIONAL {
+    :AC-340 ?p3 ?o3.
+ }
+}
+}
+
+
+public static final String sesameServer = "http://localhost:8080/openrdf-sesame";
+	public static final String baseUri = "http://localhost:8080/shi3ld";
+	public static final String liftedRep = "berlin-test";
+	public static final String secureRep = "berlin-test";//"shi3ld";
+	public static final String dataRep = "test-policies";//"data";
+	public static final String internalRep = "test";//"internal";

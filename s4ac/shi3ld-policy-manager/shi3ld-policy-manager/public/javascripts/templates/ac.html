@@ -1,0 +1,27 @@
+<div class="modal-header">  
+	<a class="close" data-dismiss="modal">×</a>  
+	<h4><%= wizard == true ? 'New Policy - Access condition' : 'New Access Condition' %></h4>  
+</div>  
+<div class="modal-body">
+	<form class="form-horizontal">
+		<div class="control-group" id="txtAcCtrlGrp">
+			<label class="control-label" for="txtDev">access condition name</label>
+			<div class="controls">
+				<input type="text" id="acName" placeholder="">
+				<span class="help-inline" id="errorTextAc"></span>
+			</div>
+		</div>
+	</form>				
+</div>  
+<div class="modal-footer">
+	<%if (wizard == true) {%>  					
+		<a href="#" class="btn" id="acModalPrev">&lt</a>  
+		<a href="#" class="btn <%= ((disabled) && (disabled == 'true')) ? ' disabled' : ''%>" id="acModalNext">&gt</a>
+		<a href="#" class="btn" id="acModalFinish">Finish</a>
+		<a href="#" class="btn" id="acModalCancel">Close</a>
+	<%} else {%>
+		<a href="#" class="btn" id="acModalOk">Ok</a>
+		<a href="#" class="btn" id="acModalCancel">Cancel</a>
+	<%}%>
+		  
+</div>

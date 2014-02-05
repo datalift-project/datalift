@@ -1,0 +1,35 @@
+<div class="navbar navbar-inverse">
+      <div class="navbar-inner">
+        <div class="container-fluid">
+          <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <div class="nav-collapse collapse">
+<% if (type == 'policy') { %>          	
+          	<ul class="nav pull-right">
+               <li><a href="#" id="savePolicy"><i class="icoblue-save"></i></a></li>
+<!--                 <li><a href="#contact" id="closePolicy"><i class="ico16-delete"></i></a></li> -->
+            </ul>
+<%}%>
+            <ul class="nav">
+               <li><a href="#" id="<%= type == 'policy' ? 'policyNameGui' : 'contextLabel' %>" style="font-size: medium;color:#ffffff"><%= type == 'policy' ? '' : 'Context Definition' %></a></li>
+            </ul>    
+          </div><!--/.nav-collapse -->
+        </div>
+      </div>
+</div>
+<ul class="nav nav-tabs">
+  	<li id="designTab"class="active"><a href="#tab1" data-toggle="tab" onclick="return false;"><%= type == 'policy' ? 'Policy' : 'Context' %> Design</a></li>
+  	<li ><a id="editTab" href="#tab2" data-toggle="tab" onclick="return false;"><%= type == 'policy' ? 'Policy' : 'Context' %> Text</a></li>
+</ul>
+<div class="tab-content">
+  	<div class="tab-pane active" id="tab1">
+  	
+  	</div>
+  	<div class="tab-pane " id="tab2">
+  		<div id="flint-test">
+		</div>
+ 	</div>
+</div>

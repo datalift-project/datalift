@@ -1,0 +1,47 @@
+<%if (wizard == true) {%>  
+<div class="modal-header">  
+	<h4><%= wizard == true ? name : 'Add user dimension' %></h4>
+</div>  
+<div class="modal-body">
+		<ul class="breadcrumb">
+		    <li class="text-info">Targets & privileges<span class="divider">/</span></li>
+		    <li class="text-info">User<span class="divider">/</span></li>
+		    <li class="active">Environment #time<span class="divider">/</span></li>
+		    <li class="active">Environment #location<span class="divider">/</span></li>
+		    <li class="active">Device</li>
+	    </ul>
+<%}%>
+	<form>
+		<div class="control-group" id="txtUserCtrlGrp<%= wizard == true ? '-wiz' : '' %>" >
+			<label class="control-label" for="txtUser<%= wizard == true ? '-wiz' : '' %>" >Access will be granted to users with the following properties:</label>
+			<div class="controls">
+					<div id="txtUser<%= wizard == true ? '-wiz' : '' %>"></div>
+					<span class="help-inline" id="errorTextUser<%= wizard == true ? '-wiz' : '' %>"></span>
+			</div>
+			<br>
+			<div class="alert alert-info">
+		    	Insert one or more pairs <em><strong>property: value</strong></em><h6>Examples</h6> Collegue Of: "Alice" 
+		    	<br>Friend Of: http://example.org/Bob
+		    	<br>age: "24"
+		    </div>
+		</div>
+	</form>	
+	<br>
+	<br>
+<%if (wizard == true) {%>  								
+</div>  
+<div class="modal-footer">  					
+<!-- 	<%if (wizard == true) {%>  					 -->
+		<a href="#" class="btn" id="userModalPrev">&lt</a>  
+		<a href="#" class="btn<%= disabled == 'true' ? ' disabled' : ''%>" id="userModalNext" >&gt</a>
+		<a href="#" class="btn" id="userModalCancel">Cancel</a>
+		<a href="#" class="btn" id="userModalFinish">Finish</a>  
+<!-- 	<%} else {%> -->
+<!-- 		<a href="#" class="btn" id="userModalOk">Ok</a> -->
+<!-- 		<a href="#" class="btn" id="userModalCancel">Cancel</a> -->
+<!-- 	<%}%> -->
+</div>
+<%}%>
+<!-- <li class="active disabled"><a href="#" disabled>User dimension</a></li> -->
+<!-- 					<span class="help-inline" id="userModalHelper">Insert a condition on the user</span><br/> -->
+<!-- 					<a id="#listOfUsrProp" href="#">For the complete list of properties referred to the user click here</a> -->

@@ -1,0 +1,76 @@
+<td><%= policyHeaderCnt + 1 %></td>
+<%
+	var txt;
+	if (policyHeader.get('label')) {
+		txt = policyHeader.get('label');
+	} else {
+		txt = policyHeader.get('uri')
+	}
+  	if (txt.length > 60) {
+  		if (txt == policyHeader.get('label')) {
+  			txt = txt.substr(0, 60) + '...';
+  		} else {
+  			txt = '...' + txt.substr(txt.length - 60, 60);
+  		}
+  	}
+%>
+<td>
+	<a href="#" data-toggle-policyheaderpage-<%= policyHeaderOffset %>="tooltip" title="<%= policyHeader.get('uri') %>"><%= txt %></a>
+</td>
+<%
+	var title;
+	var targets = policyHeader.get('targets');
+	var txtTarget;
+	if (targets.length == 0) {
+		txtTarget = '';	
+	}else if (targets.length == 1) {
+		if (targets[0].label) {
+			targets[0].label.length > 50 ? txtTarget = targets[0].label.substr(0, 50) + '...' : txtTarget = targets[0].label;
+		} else {
+			targets[0].uri.length > 50 ? txtTarget = '...' + targets[0].uri.substr(targets[0].uri.length - 50, 50) : txtTarget = targets[0].uri;
+		}
+		title = targets[0].uri;
+	} else {
+		txtTarget = targets.length + (backend == 'sparql' ? ' named graphs' : ' resources');
+		title = "";
+		_.each(targets, function (target) {
+			title += (target.uri + "\n");
+		});
+	}
+	
+%>
+<td >
+	<a href="#" data-toggle-policyheaderpage-<%= policyHeaderOffset %>="tooltip" title="<%= title %>"><%= txtTarget %></a>
+</td>
+<%
+    var privileges = policyHeader.get('privileges');
+    var html = "";
+	_.each(privileges, function (privilege) {
+		switch (privilege) {
+			case "http://ns.inria.fr/s4ac/v2#Read":
+				html += "<a><i class=\"icoblue-page\"></i></a>";
+				break;
+			case "http://ns.inria.fr/s4ac/v2#Create":
+				html += "<a><i class=\"icoblue-add_page\"></i></a>";
+				break;
+			case "http://ns.inria.fr/s4ac/v2#Delete":
+				html += "<a><i class=\"icoblue-delete_page\"></i></a>";
+				break;
+			case "http://ns.inria.fr/s4ac/v2#Update":
+				html += "<a><i class=\"icoblue-pencil\"></i></a>";
+				break;
+		}
+	});
+	
+	
+%>
+<td ><%= html %></td>
+
+<% if (type == 'workspace') {%>
+	<td>
+		<a href="#" data-toggle-policyheaderpage-<%= policyHeaderOffset %>="tooltip" title="Delete this policy"><i class="icoblue-waste"></i></a>
+		<a href="#" data-toggle-policyheaderpage-<%= policyHeaderOffset %>="tooltip" title="Test this policy"><i class="icoblue-checked"></i></a>
+	</td>
+<% } else { %>
+	<td><input class="togglePolicySelection" type="checkbox" href="#" data-toggle-policyheaderpage-<%= policyHeaderOffset %>="tooltip" title="Test this policy"></input></td>
+<% } %>

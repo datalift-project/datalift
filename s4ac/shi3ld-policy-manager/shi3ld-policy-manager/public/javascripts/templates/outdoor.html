@@ -1,0 +1,66 @@
+<%if (wizard == true) {%> 
+<div class="modal-header">  
+	<h4><%= name %> </h4> 
+</div>  
+<div class="modal-body"> 
+		<ul class="breadcrumb">
+		    <li class="text-info">Targets & privileges<span class="divider">/</span></li>
+		    <li class="text-info">User<span class="divider">/</span></li>
+		    <li class="text-info">Env #time<span class="divider">/</span></li>
+		    <li class="text-info">Env #location<span class="divider">/</span></li>
+		    <li class="active">Env #miscellaneous<span class="divider">/</span></li>
+		    <li class="active">Device</li>
+	    </ul>
+<%}%>
+   	
+   	<label>Data accessible within the area: </label>
+   	
+	 <div class="demo">
+	 
+	 	<div class='clearfix'>
+		  	<div class='input input-positioned'>
+		  		<form action="">
+		  				<div class="control-group">
+							<label class="control-label" for="addresspicker_map<%= wizard == true ? '-wiz' : '' %>">Address or latitude, longitude pair </label>
+							<div class="controls">
+								<input id="addresspicker_map<%= wizard == true ? '-wiz' : '' %>" 
+									placeholder="Type here or click on the map" >
+							</div>
+						</div>
+						<div class="control-group">
+							<label class="control-label" for="radiusTxt<%= wizard == true ? '-wiz' : '' %>">Radius [meters] </label>
+							<div class="controls">
+								<input id="radiusTxt<%= wizard == true ? '-wiz' : '' %>" class="ui-autocomplete-input"
+									placeholder="Type a number or click on the map" >
+							</div>
+						</div>
+						<div class="alert alert-info">
+					    	<h6>Example</h6> 2004 Route des Lucioles, <br>06560 Sophia Antipolis, <br>France <br>
+					    	<br> 43.6162401, 7.06794420
+					    </div>
+						
+		  		</form>						
+		    </div>
+	
+	    	<div class='map-wrapper'>
+	    		<div class="row-fluid">
+			      <div id="map_canvas<%= wizard == true ? '-wiz' : '' %>" class="google-maps"style="width:300px;height:300px;"></div>
+			  	</div>
+	    	</div>
+	  </div>
+	</div>
+<%if (wizard == true) {%>
+</div>  
+<div class="modal-footer"> 					
+	
+<!-- 	<%if (wizard == true) {%>			 -->
+		<a href="#" class="btn" id="outdoorModalPrev">&lt</a>  
+		<a href="#" class="btn<%= disabled == 'true' ? ' disabled' : '' %>" id="outdoorModalNext">&gt</a>
+		<a href="#" class="btn" id="outdoorModalCancel">Cancel</a>
+		<a href="#" class="btn" id="outdoorModalFinish">Finish</a> 
+<!-- 	<%} else {%> -->
+<!-- 		<a href="#" class="btn" id="outdoorModalOk">Ok</a> -->
+<!-- 		<a href="#" class="btn" id="outdoorModalCancel">Cancel</a> -->
+<!-- 		<%}%>  					 -->
+</div> 
+<%}%>  

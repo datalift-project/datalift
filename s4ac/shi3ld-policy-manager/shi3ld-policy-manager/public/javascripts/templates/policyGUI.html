@@ -1,0 +1,57 @@
+<div id="targets" class="row-fluid">	
+						</div>
+						<button id="browseTargetGui"class="btn btn-inverse"><i class="icoblue-folder"></i></button>
+						<hr>
+		  				<div class="row-fluid">	
+				  			<div class="well sidebar-nav">
+						          	<ul class="nav nav-list">
+						          		<li class="nav-header">Privileges</li>
+						          		<li class="nav">
+						          			<div class="btn-group" data-toggle="buttons-checkbox">
+											    <button type="button" id="r" class="privilegesBtn btn <%= privileges['read']  ? 'btn-info active' : 'btn-inverse'%>">Read<i class="icoblue-page"></i></button>
+											    <button type="button" id="u" class="privilegesBtn btn <%= privileges['update'] ? 'btn-info active' : 'btn-inverse'%>">Update<i class="icoblue-pencil"></i></button>
+											    <button type="button" id="c" class="privilegesBtn btn <%= privileges['create'] ? 'btn-info active' : 'btn-inverse'%>">Create<i class="icoblue-add_page"></i></button>
+											    <button type="button" id="d" class="privilegesBtn btn <%= privileges['delete'] ? 'btn-info active' : 'btn-inverse'%>">Delete<i class="icoblue-delete_page"></i></button>
+										    </div>
+										</li>
+              						</ul>
+						    </div>				 	  
+			  			</div>
+			  			<hr>
+		  				<div class="row-fluid">		  					
+						          <div class="well sidebar-nav">
+						          	<ul  class="nav nav-list">
+							          	
+							          	<li class="nav-header">
+								          	Access condition set
+										</li>
+										<li class="nav">
+								        	<form class="form-inline">
+									          	Enforce
+									          	<select id="acsType" class="input-small">
+													<option <%= acsType == 'all' ? 'selected': ''%>>ALL</option>
+													<option <%= acsType == 'any' ? 'selected': ''%>>ANY</option>
+												</select>
+												of the following conditions:
+												<div class="btn-group pull-right">
+													<button type="button" id="addAC" class="btn btn-inverse">
+													    Add access condition
+													</button>
+												</div>
+											</form>  	
+										</li>
+							          	<li class="nav">
+							          		<div class="tabbable tabs-left" style="background-color:#ffffff;border:1px solid rgba(0, 0, 0, 0.1);border-radius:6px 6px 6px 6px;">
+<!-- 								          		policyGui does not know the # of acs -> put the signal of no policy and remove it at first ac render -->
+								          		<div id="noAcs" class="hero-unit inset embossed" style="padding-left:12%">
+													<h2>The policy has no access conditions</h2>
+												</div>
+								          		<ul id="acList" class="nav nav-tabs">
+												</ul>
+												<div id="ac-content" class="tab-content">	
+												</div>												
+		              						</div>
+	              						</li>
+              						</ul>
+						          </div>					 	  
+			  			</div>

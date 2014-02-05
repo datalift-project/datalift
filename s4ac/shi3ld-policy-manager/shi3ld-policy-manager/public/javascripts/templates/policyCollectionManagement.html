@@ -1,0 +1,31 @@
+<div id="policyList"></div>
+<% if (type == 'workspace') {%>
+	<div id="policyPanel"></div>
+<% } else { %>
+	<div class="alert alert-warning">
+		<strong>Warning</strong> Every time you change policy to test click on <em>Initialize test dataset</em> button to make changes effective
+	</div>
+	<button id="initDSBtn" class="btn btn-large btn-inverse" type="button" 
+		data-loading-text="Initializing dataset to test...">
+			Initialize test dataset
+	</button>
+	<div class="alert alert-info">
+		<p>To simulate an access to the triple store: 
+	<ul>
+		<li>Type the client query</li>
+		<li>Add context data</li>
+		<li>Click on Run test button</li>
+	</ul>
+		<br>
+		<strong>Test dataset</strong> contains a 1-triple copy of all named graphs.</p>
+	</div>
+	<label class="control-label" for="queryDiv">Define the client query:</label>
+	<div id="testQuery"></div>
+	<div id="contextPanel"></div>
+	<button id="runTestBtn" class="btn btn-large btn-inverse" type="button" 
+		data-loading-text="Initializing dataset to test..."
+		data-running-text="Running ...">
+			Run test
+	</button>
+	<div id="testResult"></div>
+<% } %>

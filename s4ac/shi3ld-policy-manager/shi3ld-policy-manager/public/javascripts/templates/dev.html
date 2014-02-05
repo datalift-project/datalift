@@ -1,0 +1,45 @@
+<%if (wizard == true) {%>
+<div class="modal-header">  
+	<h4><%= name %> </h4> 
+</div>  
+<div class="modal-body">
+		<ul class="breadcrumb">
+		    <li class="text-info">Targets & privileges<span class="divider">/</span></li>
+		    <li class="text-info">User<span class="divider">/</span></li>
+		    <li class="text-info">Environment #time<span class="divider">/</span></li>
+		    <li class="text-info">Environment #location<span class="divider">/</span></li>
+		    <li class="text-info">Device</li>
+	    </ul>
+<%}%>
+	<form>
+		<div class="control-group" id="txtDevCtrlGrp<%= wizard == true ? '-wiz' : '' %>">
+			<label class="control-label" for="txtDev<%= wizard == true ? '-wiz' : '' %>">Device conditions:</label>
+			<div class="controls">
+				<div id="txtDev<%= wizard == true ? '-wiz' : '' %>"></div>
+				<span class="help-inline" id="errorTextDev<%= wizard == true ? '-wiz' : '' %>"></span>
+			</div>
+			<br>
+			<div class="alert alert-info">
+		    	Insert one or more pairs <em><strong>property: value</strong></em><h6>Examples</h6> Operating System: "ios" 
+		    	<br>Device Hardware: http://example.org/galaxy-s-iii
+		    	<br>Character Rows: "10"
+		    </div>
+		</div>
+	</form>
+	<br>
+	<br>
+<%if (wizard == true) {%> 				
+</div> 
+<div class="modal-footer">
+	<%if (wizard == true) {%>  					
+		<a href="#" class="btn" id="devModalPrev">&lt</a>  
+		<a href="#" class="btn disabled" id="devModalNext">&gt</a>
+		<a href="#" class="btn" id="devModalCancel">Cancel</a>
+		<a href="#" class="btn" id="devModalFinish">Finish</a>
+	<%} else {%>
+		<a href="#" class="btn" id="devModalOk">Ok</a>
+		<a href="#" class="btn" id="devModalCancel">Cancel</a>
+	<%}%>  					
+	  
+</div>
+<%}%> 

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>Step 6: Outputting Information</title>
+	
+	<!-- Le styles -->
+    <link href="public/bootstrap/css/bootstrap.css" rel="stylesheet">
+    <link href="public/stylesheets/custom-theme/jquery-ui-1.10.0.custom.css" rel="stylesheet">
+<!--     <link href="demo.css" rel="stylesheet"> -->
+    <style type="text/css">
+      #map-canvas {
+        height: 500px;
+      }
+      .popover {
+    z-index: 2060 !important;
+}
+    </style>
+<body>  
+<div class="container">  
+<h2>Example of creating Modal with Twitter Bootstrap</h2>  
+<div class="well">  
+<a href="#modal" class="btn btn-danger" data-toggle="modal">hover for popover</a>  
+</div>  
+</div> 
+<div id="modal" class="modal hide fade in" style="display: none; ">
+			<div class="modal-header">  
+				<a class="close" data-dismiss="modal">×</a>  
+					<h3>New Policy</h3>  
+				</div>  
+				<div class="modal-body">
+					<br><br><br><a href="#" id="example" class="btn btn-danger" rel="popover" data-content="It's so simple to create a tooltop for my website!" data-original-title="Twitter Bootstrap Popover">hover for popover</a>  
+				</div>  <br><br><br><br>
+				<div class="modal-footer">  					
+					<a href="#newPolicy" class="btn" data-toggle="modal" data-dismiss="modal">&lt</a>  
+					<a href="#newPolicy3" class="btn" data-toggle="modal" data-dismiss="modal">&gt</a>
+					<a href="#" class="btn" data-dismiss="modal">Close</a>
+					<a href="#" class="btn" onclick="createPolicy">Finish</a>  
+				</div> 
+		</div>	  
+<script type="text/javascript" src="public/javascripts/lib/jquery-ui-1.10.3.custom/js/jquery-1.9.1.js"></script>
+<script src="public/bootstrap/js/bootstrap.js"></script>  
+<script src="/twitter-bootstrap/twitter-bootstrap-v2/js/bootstrap-popover.js"></script>  
+<script>  
+$(function ()  
+{ 
+var html = "<form class=\"inline\"><input type=\"text\" placeholder=\"Uri\"></input>" +
+						"<input type=\"text\" placeholder=\"Label\"></input>" +
+						"<button>cancel</button>" +
+						"<button>ok</button></form>";
+$("#example").popover({html:true, content: html, placement: "left" });  
+});  
+</script>  
+  </body>
+</html>

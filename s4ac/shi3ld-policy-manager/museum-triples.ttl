@@ -1,0 +1,27 @@
+@prefix : <http://museum.example.org/data/>.
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix dc: <http://purl.org/dc/elements/1.1/> .
+
+
+:painting1 a :Painting.
+:painting1 rdfs:label "The Garden of Delights".
+:painting1 dc:creator "Bosch".
+:painting2 a :Painting.
+:painting2 rdfs:label "Persistence of Memory".
+:painting2 dc:creator "Dali".
+:painting3 a :Painting.
+:painting3 rdfs:label "The Kiss".
+:painting3 dc:creator "klimt".
+:painting4 a :Painting.
+:painting4 rdfs:label "Nimphee".
+:painting4 dc:creator "Renoir".
+
+
+
+
+
+:empl1 a :Employee.
+:empl2 a :Employee.
+:empl3 a :Employee.
+:empl4 a :Employee.
+:empl5 a :Employee.
