@@ -2257,21 +2257,30 @@ public class Workspace extends BaseModule
     @Path("{id}/source/{srcid}/feed")
     public Response getProjectAtomStream(
     		@PathParam("id") String projectId,
-            @PathParam("srcid") String srcId) {
-    	String query = 
-    			"PREFIX prov: <http://www.w3.org/ns/prov#>" +
-    			"PREFIX datalift: <http://www.datalift.org/core#>" +
-    			"SELECT * WHERE {" +
-    			"  ?event a <http://www.w3.org/ns/prov#Activity> ;" +
-    			"         prov:startedAtTime ?time ;" +
-    			"         prov:influenced " + srcId + " ;" +
-    			"         datalift:parameters ?parameters ;" +
-    			"         prov:endedAtTime ?endedAtTime ;" +
-    			"         a ?type . FILTER regex(str(?type), \"Source\")" +
-    			"}";
+            @PathParam("srcid") String srcId,
+            @Context UriInfo uriInfo) {
+    	String path = uriInfo.getAbsolutePath().toString();
+    	String srcUri = path.substring(0, path.length() - 5);
     	
-    	Feed feed = new Feed();
-
+    	String query = 
+    			"PREFIX prov: <http://www.w3.org/ns/prov#>\n" +
+    			"PREFIX datalift: <http://www.datalift.org/core#>\n" +
+    			"SELECT * WHERE {\n" +
+    			"  ?event a <http://www.w3.org/ns/prov#Activity> ;\n" +
+    			"         prov:startedAtTime ?time ;\n" +
+    			"         prov:influenced <" + srcUri + "> ;\n" +
+    			"         datalift:parameters ?parameters ;\n" +
+    			"         prov:endedAtTime ?endedAtTime ;\n" +
+    			"         prov:wasAssociatedWith ?user ;\n" +
+    			"         a ?type . FILTER regex(str(?type), \"Source\")\n" +
+    			"} ORDER BY DESC(?endedAtTime)";
+    	
+    	Feed feed = this.generateFeedEntries(query);
+    	feed.setTitle("Datalift source \"" + srcId + "\" feed");
+    	feed.setLink(srcUri);
+    	feed.setId(srcUri);
+    	feed.setUpdated("Date");
+    	
     	final String TEMPLATE = "rss/atom.vm";
         return Response.ok(this.newView(TEMPLATE, feed)).build();
     }
@@ -2298,6 +2307,43 @@ public class Workspace extends BaseModule
     			"         a ?type . FILTER regex(str(?type), \"Project\")" +
     			"} ORDER BY DESC(?endedAtTime)";
 
+    	Feed feed = this.generateFeedEntries(query);
+    	feed.setTitle("Datalift project \"" + projectId + "\" feed");
+    	feed.setLink(projectUri);
+    	feed.setId(projectUri);
+    	feed.setUpdated("Date");
+    	
+    	final String TEMPLATE = "rss/atom.vm";
+        return Response.ok(this.newView(TEMPLATE, feed)).build();
+    }
+    
+    @GET
+    @Path("/feed")
+    public Response getAllAtomStream() {
+    	String query = 
+    			"PREFIX prov: <http://www.w3.org/ns/prov#>" +
+    			"PREFIX datalift: <http://www.datalift.org/core#>" +
+    			"SELECT * WHERE {" +
+    			"  ?event a <http://www.w3.org/ns/prov#Activity> ;" +
+    			"         prov:startedAtTime ?time ;" +
+    			"         prov:influenced ?influenced ;" +
+    			"         datalift:parameters ?parameters ;" +
+    			"         prov:endedAtTime ?endedAtTime ;" +
+    			"         a ?type . FILTER regex(str(?type), \"Event\")" +
+    			"}";
+        
+
+    	Feed feed = this.generateFeedEntries(query);
+    	//TODO
+    	
+    	final String TEMPLATE = "rss/atom.vm";
+        return Response.ok(this.newView(TEMPLATE, feed)).build();
+        
+        
+    }     
+    
+    
+    private Feed generateFeedEntries(String query) {
     	final RepositoryConnection cnx = Configuration.getDefault()
     			.getInternalRepository()
     			.newConnection();
@@ -2380,125 +2426,10 @@ public class Workspace extends BaseModule
         };
 			
     	Feed feed = new Feed();
-    	feed.setTitle("Datalift project \"" + projectId + "\" feed");
-    	feed.setLink(projectUri);
-    	feed.setId(projectUri);
-    	feed.setUpdated("Date");
-    	
     	feed.setEntries(entryIt);
-    	
-    	final String TEMPLATE = "rss/atom.vm";
-        return Response.ok(this.newView(TEMPLATE, feed)).build();
+
+    	return feed;
     }
-    
-    @GET
-    @Path("/feed")
-    public Response getAllAtomStream() {
-    	String query = 
-    			"PREFIX prov: <http://www.w3.org/ns/prov#>" +
-    			"PREFIX datalift: <http://www.datalift.org/core#>" +
-    			"SELECT * WHERE {" +
-    			"  ?event a <http://www.w3.org/ns/prov#Activity> ;" +
-    			"         prov:startedAtTime ?time ;" +
-    			"         prov:influenced ?influenced ;" +
-    			"         datalift:parameters ?parameters ;" +
-    			"         prov:endedAtTime ?endedAtTime ;" +
-    			"         a ?type . FILTER regex(str(?type), \"Event\")" +
-    			"}";
-        
-    	final RepositoryConnection cnx = Configuration.getDefault()
-    			.getInternalRepository()
-    			.newConnection();
-
-    	final TupleQueryResult result;
-		try {
-			TupleQuery q = cnx.prepareTupleQuery(SPARQL, query);
-			result = q.evaluate();
-		}
-		catch (Exception e) {
-			log.error("Error executing SPARQL query \"{}\"", e, query);
-			Repository.closeQuietly(cnx);
-			throw new RuntimeException(e);
-		}
-
-        Iterator<Entry> entryIt = new Iterator<Entry>()
-        {
-            /** {@inheritDoc} */
-            @Override
-            public boolean hasNext() {
-                boolean hasNext = false;
-                try {
-                    hasNext = result.hasNext();
-                    if (! hasNext) {
-                        this.finalize();
-                    }
-                }
-                catch (Exception e) {
-                    log.error("Unexpected error while browsing result", e);
-                }
-                return hasNext;
-            }
-
-            /** {@inheritDoc} */
-            @Override
-            public Entry next() {
-               Entry e = new Entry();
-               BindingSet bs;
-               try {
-            	   bs = result.next();
-
-            	   Value v = bs.getValue("author");
-            	   if (v != null) {
-            		   e.setAuthor(v.stringValue());
-            	   }
-            	   v = bs.getValue("content");
-            	   if (v != null) {
-            		   e.setContent(v.stringValue());
-            	   }
-            	   v = bs.getValue("id");
-            	   if (v != null) {
-            		   e.setId(v.stringValue());
-            	   }
-            	   v = bs.getValue("title");
-            	   if (v != null) {
-            		   e.setTitle(v.stringValue());
-            	   }
-            	   v = bs.getValue("updated");
-            	   if (v != null) {
-            		   e.setUpdated(v.stringValue());
-            	   }
-               } catch (Exception e1) {
-            	   log.error("Unexpected error while browsing result", e1);
-               }
-               return e;
-           }
-
-           /** {@inheritDoc} */
-           @Override
-           public void remove() {
-               throw new UnsupportedOperationException();
-           }
-           
-           /** {@inheritDoc} */
-           @Override
-           protected void finalize() {
-               Repository.closeQuietly(cnx);
-           }
-        };
-			
-    	Feed feed = new Feed();
-    	feed.setTitle("Datalift atom feed.");
-    	feed.setLink("Link");
-    	feed.setUpdated("Date");
-    	feed.setId("ID");
-    	
-    	feed.setEntries(entryIt);
-    	
-    	final String TEMPLATE = "rss/atom.vm";
-        return Response.ok(this.newView(TEMPLATE, feed)).build();
-        
-        
-    }     
     
     //-------------------------------------------------------------------------
     // Specific implementation
