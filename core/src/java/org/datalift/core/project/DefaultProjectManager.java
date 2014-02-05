@@ -591,7 +591,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         		currentTime, 
         		currentTime, 
         		// TODO: get current user
-        		p.getWasAttributedTo(), 
+        		new UserImpl(SecurityContext.getUserPrincipal()), 
         		null,
         		null)
         		);
@@ -646,7 +646,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         		serializedParam, 
         		currentTime, 
         		currentTime, 
-        		p.getWasAttributedTo(), 
+        		new UserImpl(SecurityContext.getUserPrincipal()), 
         		null,
         		null)
         		);
@@ -687,7 +687,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         		serializedParam, 
         		currentTime, 
         		currentTime, 
-        		p.getWasAttributedTo(), 
+        		new UserImpl(SecurityContext.getUserPrincipal()), 
         		null,
         		null)
         		);
@@ -765,7 +765,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         		serializedParam,
         		currentTime,
         		currentTime,
-        		project.getWasAttributedTo(),
+        		new UserImpl(SecurityContext.getUserPrincipal()),
         		null,
         		null
         		); 
@@ -793,7 +793,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         		serializedParam,
         		currentTime,
         		currentTime,
-        		project.getWasAttributedTo(),
+        		new UserImpl(SecurityContext.getUserPrincipal()),
         		null,
         		null
         		); 
@@ -821,7 +821,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         		serializedParam,
         		currentTime,
         		currentTime,
-        		project.getWasAttributedTo(),
+        		new UserImpl(SecurityContext.getUserPrincipal()),
         		null,
         		null
         		); 

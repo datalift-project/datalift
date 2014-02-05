@@ -2254,7 +2254,7 @@ public class Workspace extends BaseModule
 
     // TODO: In query, replace with a sparql variable.
     @GET
-    @Path("{id}/source/{srcid}/atom")
+    @Path("{id}/source/{srcid}/feed")
     public Response getProjectAtomStream(
     		@PathParam("id") String projectId,
             @PathParam("srcid") String srcId) {
@@ -2278,7 +2278,7 @@ public class Workspace extends BaseModule
     
     // TODO: In query, replace with a sparql variable.
     @GET
-    @Path("{id}/atom")
+    @Path("{id}/feed")
     public Response getProjectAtomStream(
     		@PathParam("id") String projectId,
     		@Context UriInfo uriInfo) {
@@ -2294,7 +2294,7 @@ public class Workspace extends BaseModule
     			"         prov:influenced <" + projectUri + "> ;\n" +
     			"         datalift:parameters ?parameters ;\n" +
     			"         prov:endedAtTime ?endedAtTime ;\n" +
-    			//"         prov:wasAssociatedWith ?user ;\n" +
+    			"         prov:wasAssociatedWith ?user ;\n" +
     			"         a ?type . FILTER regex(str(?type), \"Project\")" +
     			"} ORDER BY DESC(?endedAtTime)";
 
@@ -2312,7 +2312,7 @@ public class Workspace extends BaseModule
 			Repository.closeQuietly(cnx);
 			throw new RuntimeException(e);
 		}
-
+		
         Iterator<Entry> entryIt = new Iterator<Entry>()
         {
             /** {@inheritDoc} */
@@ -2344,7 +2344,7 @@ public class Workspace extends BaseModule
             	   if (v != null) {
             		   e.setAuthor(v.stringValue());
             	   }
-            	   v = bs.getValue("content");
+            	   v = bs.getValue("parameters");
             	   if (v != null) {
             		   e.setContent(v.stringValue());
             	   }
@@ -2354,12 +2354,11 @@ public class Workspace extends BaseModule
             	   }
             	   v = bs.getValue("type");
             	   if (v != null) {
-            		   
             		   e.setTitle(v.stringValue());
             	   }
             	   v = bs.getValue("endedAtTime");
             	   if (v != null) {
-            		   e.setUpdated(v.stringValue());
+            		   e.setUpdated(((Literal) v).calendarValue().toString());
             	   }
                } catch (Exception e1) {
             	   log.error("Unexpected error while browsing result", e1);
@@ -2393,7 +2392,7 @@ public class Workspace extends BaseModule
     }
     
     @GET
-    @Path("/atom")
+    @Path("/feed")
     public Response getAllAtomStream() {
     	String query = 
     			"PREFIX prov: <http://www.w3.org/ns/prov#>" +
