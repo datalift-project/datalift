@@ -71,8 +71,8 @@ public abstract class AbstractGridJsonWriter extends AbstractJsonWriter
 
     /** Regex to identify native XML schema data types. */
     private final static Pattern NATIVE_TYPES_PATTERN = Pattern.compile(
-                            "boolean|float|decimal|double|int|" +
-                            ".*[bB]yte|.*[iI]nteger|.*[lL]ong|.*[sS]hort");
+                            "(boolean|float|decimal|double|int|" +
+                            ".*[bB]yte|.*[iI]nteger|.*[lL]ong|.*[sS]hort)$");
 
     //-------------------------------------------------------------------------
     // Instance members
@@ -260,11 +260,20 @@ public abstract class AbstractGridJsonWriter extends AbstractJsonWriter
             Literal l = (Literal)value;
             if ((l.getDatatype() != null) &&
                 (NATIVE_TYPES_PATTERN.matcher(l.getDatatype().getLocalName())
-                                     .matches())) {
+                                     .find())) {
                 this.writer.write(l.getLabel());
             }
             else {
-                this.writeValue(l.toString(), type);
+                String label = l.getLabel();
+                StringBuilder b = new StringBuilder(label.length() * 2);
+                b.append('"').append(label).append('"');
+                if (l.getLanguage() != null) {
+                    b.append('@').append(l.getLanguage());
+                }
+                if (l.getDatatype() != null) {
+                    b.append("^^&lt;").append(l.getDatatype()).append("&gt;");
+                }
+                this.writeValue(b.toString(), type);
             }
         }
         else if (value instanceof URI) {
