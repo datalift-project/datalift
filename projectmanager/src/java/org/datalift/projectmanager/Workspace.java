@@ -104,6 +104,7 @@ import com.sun.jersey.multipart.FormDataParam;
 import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.FileStore;
+import org.datalift.fwk.MediaTypes;
 import org.datalift.fwk.ResourceResolver;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.CachingSource;
@@ -2285,12 +2286,17 @@ public class Workspace extends BaseModule
         return Response.ok(this.newView(TEMPLATE, feed)).build();
     }
     
-    // TODO: In query, replace with a sparql variable.
     @GET
+    @Produces(APPLICATION_ATOM)
     @Path("{id}/feed")
     public Response getProjectAtomStream(
     		@PathParam("id") String projectId,
     		@Context UriInfo uriInfo) {
+    	Feed feed = projectFeed(projectId, uriInfo);
+        return Response.ok(this.newView("rss/atom.vm", feed)).build();
+    }
+    
+    public Feed projectFeed(String projectId, UriInfo uriInfo) {
     	Project p = this.loadProject(uriInfo, projectId);
     	String projectUri = p.getUri().toString();
     	
@@ -2313,8 +2319,7 @@ public class Workspace extends BaseModule
     	feed.setId(projectUri);
     	feed.setUpdated("Date");
     	
-    	final String TEMPLATE = "rss/atom.vm";
-        return Response.ok(this.newView(TEMPLATE, feed)).build();
+    	return feed;
     }
     
     @GET

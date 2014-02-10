@@ -67,7 +67,7 @@ public interface ProjectModule extends Module
     public abstract UriDesc canHandle(Project p);
     
     /**
-     * Returns whether this module applies to the specified source,í
+     * Returns whether this module applies to the specified source,
      * i.e. the project current state allows data manipulation (e.g.
      * transformation, conversion, data completion...) by this module.
      * @param  s   a data-lifting source.

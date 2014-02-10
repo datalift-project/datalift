@@ -170,6 +170,8 @@ public class MediaTypes extends MediaType
     /** application/rdf+json; charset=utf-8 */
     public final static String APPLICATION_RDF_JSON_UTF8 =
                                             APPLICATION_RDF_JSON + UTF8_ENCODED;
+    
+    public final static String APPLICATION_ATOM = "application/atom+xml";
 
     /** The supported RDF MIME type names. */ 
     private final static Collection<String> RDF_TYPES =
