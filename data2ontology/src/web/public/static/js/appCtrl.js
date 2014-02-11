@@ -1,6 +1,10 @@
-function AppCtrl($scope, $location, Shared) {
+function AppCtrl($scope, $location, $http, $timeout, Shared) {
 
 	var self = this;
+	self.lovUrl =  Shared.baseUri + "/lov/";
+	
+	$scope.lastLovUpdate = "";
+	$scope.updating = false;
 
 	// ------
 	// Steps
@@ -31,6 +35,20 @@ function AppCtrl($scope, $location, Shared) {
 			return "step-active";
 		}
 		return "step-done";
+	}
+	
+	$scope.updateLov = function() {
+		$scope.updating = true;
+		$scope.lastLovUpdate = "Please wait... This could take a minute or two.";
+		$http.get(self.lovUrl + "update")
+		.success(function(data, status, headers, config) {
+			$scope.lastLovUpdate = data.date;
+			$scope.updating = false;
+		})
+		.error(function(data, status, headers, config) {
+			$scope.updating = false;
+			$scope.lastLovUpdate = "";
+		});
 	}
 	
 	// --------------
@@ -65,5 +83,15 @@ function AppCtrl($scope, $location, Shared) {
 		$scope.notifications.splice($scope.notifications.indexOf(notification), 1);
 		--$scope.hotNotifications;
 	}
+	
+	//
+	$timeout(function() {
+		$http.get(self.lovUrl + "lastLovUpdate")
+		.success(function(data, status, headers, config) {
+			$scope.lastLovUpdate = data.date;
+		})
+		.error(function(data, status, headers, config) {
+		});
+	});
 
 }

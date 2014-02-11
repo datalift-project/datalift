@@ -44,9 +44,9 @@
       </div>
 		<form class="navbar-form navbar-left">
 			<div class="form-group">
-				<p class="form-control-static">Last LOV update : 03/02/2014</p>
+				<p class="form-control-static">Last LOV update : {{lastLovUpdate}}</p>
 			</div>
-			<button class="btn btn-xs btn-default">Update</button>
+			<button class="btn btn-xs btn-default" ng-click="updateLov()" ng-hide="updating">Update</button>
 		</form>
         <ul class="nav navbar-nav navbar-right">
           <li><a href="${it.uri}">Projects</a></li>

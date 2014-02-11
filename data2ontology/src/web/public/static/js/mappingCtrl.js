@@ -61,7 +61,21 @@ function MappingCtrl($scope, $location, $http, $timeout, Shared) {
 // 		Shared.sourceData[Shared.selectedSource].mappings = $scope.mappings;
 		$location.path(path);
 	}
-	$scope.goToClasses = function() {
+	$scope.goToRefine = function() {
+		while ($scope.sourcePredicates.length > 0) {
+			var predicate = $scope.sourcePredicates[0];
+			var i = Math.max(predicate.uri.lastIndexOf('#'), predicate.uri.lastIndexOf('/')) + 1;
+			var prefixed = "source:" + predicate.uri.substring(i);
+			$scope.mappings.push({
+				'sourceId': predicate.name,
+				'source': predicate.name,
+				'sourceUri': predicate.uri,
+				'targetUri': predicate.uri,
+				'targetPrefixed': prefixed,
+				'targetVocabulary': Shared.selectedSource
+			});
+			self.removePredicate(predicate);
+		}
 		self.goTo("/refine/");
 	}
 	
@@ -420,7 +434,7 @@ function MappingCtrl($scope, $location, $http, $timeout, Shared) {
 	}
 	
 	self.findMappings = function() {
-		console.log("Finding mappings...");
+// 		console.log("Finding mappings...");
 //		console.log(JSON.stringify($scope.allLovResults));
 		var sortedVocabularies = self.sortVocabularies($scope.allLovResults);
 		self.createAutoMappings(sortedVocabularies);
@@ -438,14 +452,14 @@ function MappingCtrl($scope, $location, $http, $timeout, Shared) {
 	}
 	
 	self.loadLovPredicates = function() {
-		console.log("Requesting predicates");
+// 		console.log("Requesting predicates");
 		for (var i = 0 ; i < $scope.sourcePredicates.length ; ++i) {
 			self.requestPredicate(i, $scope.allLovResults);
 		}
 	}
 	
 	self.waitForResponse = function() {
-		console.log("numberOfPredicatesSearched : " + $scope.numberOfPredicatesSearched);
+// 		console.log("numberOfPredicatesSearched : " + $scope.numberOfPredicatesSearched);
 		if ($scope.numberOfPredicatesSearched < $scope.sourcePredicates.length) {
 			$timeout(self.waitForResponse, 1000);
 		}
@@ -475,7 +489,7 @@ function MappingCtrl($scope, $location, $http, $timeout, Shared) {
 	}
 	
 	self.sortVocabularies = function(lovResults) {
-		console.log("Sorting vocabularies");
+// 		console.log("Sorting vocabularies");
 		var vocabList = new VocabList();
 		var vocabularies = [];
 		for (var i = 0 ; i < lovResults.length ; ++i) {
@@ -538,7 +552,7 @@ function MappingCtrl($scope, $location, $http, $timeout, Shared) {
 	}
 	
 	self.createAutoMappings = function(sortedVocabularies) {
-		console.log("Auto mapping starting");
+// 		console.log("Auto mapping starting");
 		var it = 0;
 		var maxIt = $scope.sourcePredicates.length * 3;
 		var suggestedPredicates = 0;
@@ -564,7 +578,7 @@ function MappingCtrl($scope, $location, $http, $timeout, Shared) {
 				
 			}
 // 			$scope.selectedPredicateId = "";
-			console.log("End Iteration " + it);
+// 			console.log("End Iteration " + it);
 			++it;
 		}
 	}

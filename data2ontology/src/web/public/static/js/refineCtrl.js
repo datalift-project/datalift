@@ -238,7 +238,9 @@ function RefineCtrl($scope, $location, $http, $timeout, Shared) {
 		for( var i = 0 ; i < Shared.mappings.length ; ++i ) {
 // 			console.log("mapping " + i + " : " + JSON.stringify(Shared.mappings[i]));
 			if(ontoToSearch.indexOf(Shared.mappings[i].targetVocabulary) == -1) {
-				ontoToSearch.push(Shared.mappings[i].targetVocabulary);
+				if(Shared.mappings[i].targetVocabulary != Shared.selectedSource) {
+					ontoToSearch.push(Shared.mappings[i].targetVocabulary);
+				}
 			}
 		}
 		

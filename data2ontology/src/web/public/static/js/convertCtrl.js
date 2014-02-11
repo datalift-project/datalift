@@ -34,6 +34,11 @@ function ConvertCtrl($scope, $http, $timeout, Shared) {
 	//*************************************************************************
 	// Graph visusalization
 	//*************************************************************************
+	self.createLabelFromUri = function(uri) {
+		var i = Math.max(uri.lastIndexOf('#'), uri.lastIndexOf('/')) + 1;
+		return uri.substring(i);
+	}
+	
 	self.convertModelToGraph = function() {
 		var obj = $scope.objects;
 		
@@ -55,7 +60,7 @@ function ConvertCtrl($scope, $http, $timeout, Shared) {
 				
 				self.nodes.push({
 					id: currentClassId,
-					label: obj[i].classes[j].substr(obj[i].classes[j].lastIndexOf('#') + 1)
+					label: self.createLabelFromUri(obj[i].classes[j])
 				});
 				self.edges.push({
 					from: currentNodeId,
@@ -111,7 +116,7 @@ function ConvertCtrl($scope, $http, $timeout, Shared) {
 				self.edges.push({
 					from: currentNodeId,
 					to: targetId,
-					label: obj[i].objectProperties[j].predicate,
+					label: self.createLabelFromUri(obj[i].objectProperties[j].predicate),
 					size: 2
 				});
 			}
