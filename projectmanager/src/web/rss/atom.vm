@@ -7,6 +7,7 @@
         <entry>
             <title>$entry.title</title>
             <id>$entry.id</id>
+            <link href="$entry.link" />
             <updated>$entry.updated</updated>
             <author><name>$entry.author</name></author>
             <content>$entry.content</content>

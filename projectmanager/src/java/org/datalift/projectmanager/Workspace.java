@@ -2252,14 +2252,22 @@ public class Workspace extends BaseModule
                             .resolveModuleResource(this.getName(),
                                                    uriInfo, request, acceptHdr);
     }
-
-    // TODO: In query, replace with a sparql variable.
+    
     @GET
+    @Produces(APPLICATION_ATOM)
     @Path("{id}/source/{srcid}/feed")
-    public Response getProjectAtomStream(
+    public Response getSourceAtomStream(
     		@PathParam("id") String projectId,
-            @PathParam("srcid") String srcId,
-            @Context UriInfo uriInfo) {
+    		@PathParam("srcid") String srcId,
+    		@Context UriInfo uriInfo) {
+    	Feed feed = sourceFeed(projectId, srcId, uriInfo);
+        return Response.ok(this.newView("rss/atom.vm", feed)).build();
+    }
+
+    private Feed sourceFeed(
+    		String projectId,
+            String srcId,
+            UriInfo uriInfo) {
     	String path = uriInfo.getAbsolutePath().toString();
     	String srcUri = path.substring(0, path.length() - 5);
     	
@@ -2282,8 +2290,7 @@ public class Workspace extends BaseModule
     	feed.setId(srcUri);
     	feed.setUpdated("Date");
     	
-    	final String TEMPLATE = "rss/atom.vm";
-        return Response.ok(this.newView(TEMPLATE, feed)).build();
+    	return feed;
     }
     
     @GET
@@ -2296,7 +2303,7 @@ public class Workspace extends BaseModule
         return Response.ok(this.newView("rss/atom.vm", feed)).build();
     }
     
-    public Feed projectFeed(String projectId, UriInfo uriInfo) {
+    private Feed projectFeed(String projectId, UriInfo uriInfo) {
     	Project p = this.loadProject(uriInfo, projectId);
     	String projectUri = p.getUri().toString();
     	
@@ -2323,8 +2330,14 @@ public class Workspace extends BaseModule
     }
     
     @GET
+    @Produces(APPLICATION_ATOM)
     @Path("/feed")
-    public Response getAllAtomStream() {
+    public Response getSourceAtomStream() {
+    	Feed feed = allFeed();
+        return Response.ok(this.newView("rss/atom.vm", feed)).build();
+    }
+    
+    private Feed allFeed() {
     	String query = 
     			"PREFIX prov: <http://www.w3.org/ns/prov#>" +
     			"PREFIX datalift: <http://www.datalift.org/core#>" +
@@ -2339,12 +2352,11 @@ public class Workspace extends BaseModule
         
 
     	Feed feed = this.generateFeedEntries(query);
-    	//TODO
+    	feed.setTitle("Datalift feed");
+    	feed.setUpdated("Date");
+    	// TODO
     	
-    	final String TEMPLATE = "rss/atom.vm";
-        return Response.ok(this.newView(TEMPLATE, feed)).build();
-        
-        
+    	return feed;
     }     
     
     
@@ -2405,12 +2417,28 @@ public class Workspace extends BaseModule
             	   }
             	   v = bs.getValue("type");
             	   if (v != null) {
-            		   e.setTitle(v.stringValue());
+            		   e.setLink(v.stringValue());
             	   }
             	   v = bs.getValue("endedAtTime");
             	   if (v != null) {
             		   e.setUpdated(((Literal) v).calendarValue().toString());
             	   }
+            	   v = bs.getValue("influenced");
+            	   if (v != null) {
+            		   e.setInfluenced(v.stringValue());
+            	   }
+            	   
+            	   String link = e.getLink();
+            	   StringBuilder title = new StringBuilder();
+            	   title.append(link.substring(link.indexOf("#") + 1));
+            	   
+            	   // If we are in feed all
+            	   String influenced = e.getInfluenced();
+            	   if (influenced != null) {
+            		   title.append(": ").append(influenced);
+            	   }
+            	   
+            	   e.setTitle(title.toString());
                } catch (Exception e1) {
             	   log.error("Unexpected error while browsing result", e1);
                }
