@@ -17,7 +17,7 @@
 <!-- ---------------- TETIERE -------------------- -->  #i18n("")
 	<header class="navbar navbar-fixed-top">
     <div class="navbar-inner">
-     	<div class="container-fluid">  
+     	<div class="container-fluid" style="margin-left: 1em">  
     		<a class="brand" href="#"> <img src="${baseUri}/images/logo_datalift.gif" width="37px"></a>
     		<a class="brand .txt-bottom" href="#">#i18n("title")</a>
 				<a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
@@ -38,7 +38,7 @@
         	</ul>
           	
           	<ul class="nav pull-right menu nav_bar_menu">
-              <li id="wiki"><a href="./wikilocal.php">Wiki</a></li>
+              <li id="wiki"><a href="http://datalift.org/wiki/index.php/" target="_blank">Wiki</a></li>
               <ul class="nav pull-right">  
             	<li class="dropdown">
             		<a class="dropdown-toggle" id="drop5" role="button" data-toggle="dropdown" href="">#i18n("header.endpoints")<b class="caret"></b></a>
@@ -220,6 +220,7 @@
     <script src="${baseUri}/js/angular-sanitize.min.js"></script>
     <script src="${baseUri}/js/angular-scenario.js"></script>
     <script src="${baseUri}/js/controllers.js"></script>
+    
 #end
 
 #macro( css_links )
@@ -234,6 +235,7 @@
 	<script language="javascript" src="${baseUri}/js/jquery/jquery.min.js"></script>
 	<script language="javascript" src="${baseUri}/js/jquery/jquery-ui.js"></script>
 	<script src="${baseUri}/js/jquery-migrate-1.0.0.js"></script>
+	<script src="${baseUri}/js/jfeed/build/dist/jquery.jfeed.pack.js"></script>
 	<!-- JQuery Plugins -->
 	<script language="javascript" src="${baseUri}/js/jquery/jquery.jqGrid.locale-en.js"></script>
 	<script language="javascript" src="${baseUri}/js/jquery/jquery.jqGrid.js"></script>

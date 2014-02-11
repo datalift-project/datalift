@@ -200,16 +200,6 @@ text-align:center;
   display:none;
 }
 
-
-
-
-
-
-
-
-
-
-
 h3, h4 {
 	color: #808080;
 	font-family: Lucida Grande, Lucida Sans, Arial, sans-serif;
@@ -245,6 +235,11 @@ span.span2 {
 
 #img-nav-stacked {
 	margin: 0em 0.533em 0em 0.533em;
+}
+
+#new-projet-btn {
+    text-align: center;
+    padding-left: 0 !important;
 }
 
 #project-list.list-group {
@@ -564,6 +559,8 @@ min-height: 100%;
 .modal {
 	left: none;
 	right: none;
+	width: 55em;
+	margin-left: -28em;
 }
 
 .search_label_width {

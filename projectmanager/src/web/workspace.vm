@@ -29,8 +29,14 @@
 			<div class="span3 border3">
 				<h4 class="pagination-centered">#i18n("records")</h4>
 				<div class="span12" style="border: solid #808080 1px; height: 500px">
-					<div class="history-list" style="padding: 5px; color: #909090;">
-						<p>Ici se trouvera l'historique des projets.</p>
+					<div class="history-list" id=rss_feed style="color: #909090;">
+						<!-- <p>Ici se trouvera l'historique des projets.</p> -->
+						<!-- <h4>{{rssFeedTitle}}</h4>
+						<ul>
+							<li ng-repeat="rssItem in rssItems">
+								<p>"{{rssItem.name}}"</p>
+							</li>
+						</ul>  -->
 					</div>
 				</div>
 			</div>
@@ -79,6 +85,7 @@
 				  	<div class="tab-pane active tab-sub-menu" id="sources">
 						<div class="list-group">
 							#foreach ($curSource in $current.getSources())
+							
 								<li class="divider-group-list row-fluid">
 									<a href="#" ng-click="applicableModules('$current.uri', '$curSource.uri')">$curSource.title</a>
 									<a href="#deleteSource" role="button" class="pull-right" data-toggle="modal" style="display: inline-block">
@@ -88,6 +95,7 @@
 										<img src="${baseUri}/images/icon-edit.png">
 									</a>
 								</li>
+							
 							#end
 						</div>
 						
@@ -101,20 +109,22 @@
 				  	<div class="tab-pane tab-sub-menu" id="vocabulaires">
 						<div class="list-group" style="max-height: 100px:">
 						#foreach ($curOnto in $current.getOntologies())
-							<li class="divider-group-list row-fluid">
-								<a href="${curOnto.title}">$curOnto.title</a>	
-								<a href="#deleteOnto" role="button" class="pull-right" data-toggle="modal" style="display: inline-block" ng-click="deleteOntology('$current.uri', '$curOnto.title')">
-									<img src="${baseUri}/images/icon-delete.png">
-								</a>
-							</li>
+							<ul>
+								<li class="divider-group-list row-fluid">
+									<a href="${curOnto.title}">$curOnto.title</a>	
+									<a href="#deleteOnto" role="button" class="pull-right" data-toggle="modal" style="display: inline-block" ng-click="deleteOntology('$current.uri', '$curOnto.title')">
+										<img src="${baseUri}/images/icon-delete.png">
+									</a>
+								</li>
+							</ul>
 						#end
 						</div>
-						<div class="actionBtn-v2">
-						<a href="#addOntologie" role="button" class="btn" data-toggle="modal">
+						
+						<a href="{{curProj.uri}}/ontologyupload" role="button" class="btn">
 							<img src="${baseUri}/images/icon-add.png">
 							#i18n("ontology.button.add")
 						</a>
-						</div>
+						
 				  	
 				  	</div>
 				  	<!-- FIN ONGLET ONTOLOGIES -->
@@ -133,14 +143,14 @@
 	
 	<div class="modal hide pagination-centered fade" id="deleteProject">
 	  	<div class="modal-header"> <a class="close" data-dismiss="modal">×</a>
-		    <h3>Supprimer</h3>
+		    <h3>#i18n("delete")</h3>
 	  	</div>
 		<div class="modal-body">
-		   	<p>Etes-vous sûr de vouloir supprimer l'integralité du projet ?</p>
+		   	<p>#i18n("project.message.delete_project")</p>
 	 	</div>
 		<div class="modal-footer">
-			<button href="#" class="btn btn-custom-blue" data-dismiss="modal">Annuler</button>
-	    	<button class="btn btn-custom-red" data-dismiss="modal" onclick="document.forms['delete_project'].submit();  return false;">Supprimer</button>
+			<button href="#" class="btn btn-custom-blue" data-dismiss="modal">#i18n("cancel")</button>
+	    	<button class="btn btn-custom-red" data-dismiss="modal" onclick="document.forms['delete_project'].submit();  return false;">#i18n("delete")</button>
 	  	</div>
 	</div>
 	<!-- FIN DIV POPUP REMOVE PROJECT -->
@@ -179,13 +189,13 @@
 		  	<div class="control-group">
 		    	<label class="control-label" for="title">#i18n("project.name"):</label>
 			    <div class="controls">
-			      <input type="text" id="title" name="title" placeholder="$!current.title" autofocus="autofocus">
+			      <input onkeyup="change(this);" style="width: 36em;" type="text" id="title" name="title" placeholder="$!current.title" autofocus="autofocus">
 			    </div>
 		  	</div>
 		  	<div class="control-group">
 		  		<label class="control-label" for="license">#i18n("project.license"): </label>
 			  	<div class="controls">
-				    <select id="license" name="license">
+				    <select id="license" name="license" style="width: 37em;">
 						#foreach ( $li in $licenses )
 							<p>$li.uri</p>
 							<option value="$li.uri" #if($li.uri == $current.license) selected="selected" #end>$!esc.html($li.label)</option>
@@ -196,7 +206,7 @@
 		  	<div class="control-group">
 			    <label class="control-label" for="description">#i18n("project.description"): </label>
 			    <div class="controls">
-			      <textarea type="text" id="modify_description" placeholder="$!current.description"></textarea>
+			      <textarea cols=100 rows=13 style="width: 36em;" type="text" id="modify_description" placeholder="$!current.description"></textarea>
 			    </div>
 		  	</div>
 			</form>
@@ -222,13 +232,21 @@ $('#FormSubmit').click(function(e){
 	console.log(description);
 	$.post(target, {"license": license, "description": description, "title": title})
 	.done(function(data, status, xhr) {
-		window.open("$target");
+		window.open("$target", '_self',false);
 	})
 	.fail(function() {
 	alert( "An error occured when trying to create the project." );
 	});
 });
-
+function change (el) {
+	var max_len = 60;
+	if (el.value.length > max_len) {
+		el.value = el.value.substr(0, max_len);
+		}
+	document.getElementById('char_cnt').innerHTML = el.value.length;
+	document.getElementById('chars_left').innerHTML = max_len - el.value.length;
+	return true;
+	}
 </script>	 
 <!-- MODIFY PROJECT -->
 	 
@@ -285,6 +303,54 @@ $('#FormSubmit').click(function(e){
 <!-- ---------------- FIN EDIT PROJECT -------------------- -->
 </div>
 #h_footer
+<script type="text/javascript">
+jQuery(function() {
+
+    jQuery.getFeed({
+        url: currentProject.uri+'/feed',
+        success: function(feed) {
+        
+            jQuery('#rss_feed').append('<h4 class="pagination-centered">'
+            + feed.title
+            + '</h4>');
+            
+            var html = '';
+            
+            for(var i = 0; i < feed.items.length && i < 5; i++) {
+            
+                var item = feed.items[i];
+                
+                html += '</br></br><a href="'
+                + item.link
+                + '">'
+                + item.title
+                + '</a>';
+                
+                html += '<div class="updated">'
+                + item.id
+                + '</div>';
+                
+				var rssJSONparse = jQuery.parseJSON(item.description);
+                console.log(rssJSONparse);
+                
+                for (j = 0 ; j < rssJSONparse.length ; j++)
+                	{
+                		html += '<div class="updated">'
+                		+ rssJSONparse[j].name;
+                		+ '</div> </br>';
+                		
+                		html += '<div class="updated">'
+                    		+ rssJSONparse[j].value;
+                    		+ '</div></br>';
+                	}
+            }
+            
+            jQuery('#rss_feed').append(html);
+        }    
+    });
+});
+
+</script> 
 #else
 <!-- ---------------- PROJECT SAPCE -------------------- -->
 <!-- if CURRENT IS NOT LOADED  --> 
@@ -338,8 +404,8 @@ var currentProject = "";
 							<span class="info-list"> {{ project.license }}</span>
 						</span>
 						<span class="span5 creater-block">
-							<span>#i18n("project.creation_by"):&nbsp</span>
-							<span>{{ project.owner }}</span><br>
+							<!-- <span>#i18n("project.creation_by"):&nbsp</span>
+							<span>{{ project.owner }}</span><br>  -->
 							<span>#i18n("project.creation_s")</span>
 							<span>{{ project.creation_date }}</span><br>
 							<span>#i18n("project.modification_s") </span>
@@ -370,13 +436,13 @@ var currentProject = "";
 		  	<div class="control-group">
 		    	<label class="control-label" for="title">#i18n("project.name"):</label>
 			    <div class="controls">
-			      <input type="text" id="title" name="title" value="$!esc.html($it.title_m)" placeholder="Nom du projet" autofocus="autofocus">
+			      <input onkeyup="change(this);" style="width: 36em;" type="text" id="title" name="title" value="$!esc.html($it.title_m)" placeholder="Nom du projet" autofocus="autofocus">
 			    </div>
 		  	</div>
 		  	<div class="control-group">
 		  		<label class="control-label" for="license">#i18n("project.license"): </label>
 			  	<div class="controls">
-				    <select id="license" name="license">
+				    <select id="license" name="license" style="width: 37em;">
 						#foreach ( $li in $licenses )
 							<p>$li.uri</p>
 							<option value="$li.uri" #if($li.uri == $it.license) selected="selected" #end>$esc.html($li.label)</option>
@@ -387,7 +453,7 @@ var currentProject = "";
 		  	<div class="control-group">
 			    <label class="control-label" for="description">#i18n("project.description"): </label>
 			    <div class="controls">
-			      <textarea type="text" id="description" value="$!esc.html($it.description)"></textarea>
+			      <textarea cols=100 rows=13 style="width: 36em;" type="text" id="description" value="$!esc.html($it.description)"></textarea>
 			    </div>
 		  	</div>
 			</form>
@@ -412,12 +478,22 @@ $('#FormSubmit').click(function(e){
 	var toRedirect = "$to_redirect";							
 	$.post(target, {"license": license, "description": description, "title": title})
 	.done(function(data, status, xhr) { 
-		window.open(xhr.getResponseHeader('Location'));
+		window.open(xhr.getResponseHeader('Location'), '_self',false);
 	})
-	.fail(function() {
-	alert( "An error occured when trying to create the project." );
+	.fail(function(data, status, xhr) {
+		alert(data.responseText);
 	});
 });
+
+function change (el) {
+	var max_len = 60;
+	if (el.value.length > max_len) {
+		el.value = el.value.substr(0, max_len);
+		}
+	document.getElementById('char_cnt').innerHTML = el.value.length;
+	document.getElementById('chars_left').innerHTML = max_len - el.value.length;
+	return true;
+	}
 
 </script>
 </div>
