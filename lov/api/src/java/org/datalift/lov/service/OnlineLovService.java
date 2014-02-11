@@ -100,5 +100,11 @@ public class OnlineLovService extends LovService {
 		// TODO Auto-generated method stub
 		
 	}
+
+	@Override
+	public String vocSpaces() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 		
 }

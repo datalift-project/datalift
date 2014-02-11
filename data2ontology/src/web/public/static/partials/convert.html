@@ -1,0 +1,74 @@
+<div class="center-content" ng-show="loading">
+	<p>{{loaderTxt}}</p>
+	<img ng-src="{{loaderSrc}}"/>
+</div>
+<div id="graph-visualization" ng-hide="hideForm()">
+</div>
+<h4 class="col-md-10 col-md-offset-2" ng-hide="hideForm()">A new source file will be created</h4>
+<form class="form-horizontal" role="form" ng-hide="hideForm()">
+  <div ng-class="targetNameClass()">
+    <label for="targetSrcName" class="col-md-2 control-label">Name</label>
+    <div class="col-md-10">
+      <input
+      	type="text"
+      	class="form-control"
+      	id="TargetSrcName"
+      	placeholder="Enter new source name"
+      	ng-model="targetSrcName"
+      	ng-change="nameChanged()">
+      	<span class="help-block">{{nameMsg}}</span>
+    </div>
+  </div>
+  <div ng-class="targetGraphClass()">
+    <label for="targetSrcGraph" class="col-md-2 control-label">Graph</label>
+    <div class="col-md-10">
+      <input
+      	type="text"
+      	class="form-control"
+      	id="targetSrcGraph"
+      	placeholder="Enter new source graph"
+      	ng-model="targetSrcGraph"
+      	ng-change="graphChanged()">
+	    <span class="help-block">{{graphMsg}}</span>
+    </div>
+  </div>
+  <div class="form-group">
+    <div class="col-md-offset-2 col-md-10">
+		<button class="btn btn-default btn-lg"
+			data-toggle="modal"
+			data-target="#sparqlModal">View SPARQL
+		</button>
+		<button type="button"
+			class="btn btn-primary btn-lg"
+			ng-disabled="isFormInvalid()"
+			ng-click="execute()">Convert !
+		</button>
+    </div>
+  </div>
+</form>
+<div>
+	<span>{{message}}</span>
+	<a
+		class="btn btn-primary"
+		ng-href="{{projectLink}}"
+		ng-show="successfulConversion">Go back to project</a>
+</div>
+
+<!-- Modal for sparql query -->
+<div class="modal fade" id="sparqlModal" tabindex="-1" role="dialog" aria-labelledby="sparqlModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="sparqlModalLabel">SPARQL</h4>
+      </div>
+      <div class="modal-body">
+		<textarea class="form-control" ng-model="sparqlConstruct" rows="{{nbRow}}"></textarea>
+      </div>
+      <div class="modal-footer">
+		<button type="button" class="btn btn-default" ng-click="revertSparql()">Revert</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->

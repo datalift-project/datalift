@@ -13,4 +13,5 @@ public abstract class LovService
 	public abstract String search(SearchQueryParam params);
 	public abstract String check(CheckQueryParam params);
 	public abstract String vocabs();
+	public abstract String vocSpaces();
 }

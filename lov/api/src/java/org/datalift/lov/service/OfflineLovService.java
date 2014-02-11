@@ -23,6 +23,7 @@ import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.lov.local.LovLocalService;
 import org.datalift.lov.local.LovLocalVocabularyService;
 import org.datalift.lov.local.LovUtil;
+import org.datalift.lov.local.objects.VocabularySpace;
 import org.datalift.lov.local.objects.vocab.VocabsDictionaryItem;
 
 import static org.datalift.fwk.util.PrimitiveUtils.wrap;
@@ -80,7 +81,13 @@ public class OfflineLovService extends LovService {
 		this.configuration = configuration;
 		localService = new LovLocalService(configuration);
 		vocabsService = new LovLocalVocabularyService(configuration);
-		downloadAggregator();
+		new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				downloadAggregator();
+			}
+		}).start();
 	}
 
 	@Override
@@ -88,7 +95,6 @@ public class OfflineLovService extends LovService {
 		if (params.getQuery().trim().isEmpty()) {
 			return DEFAULT_JSON;
 		}
-
 		String type = params.getType();
 		if (type.trim().isEmpty()) {
 			type = null;
@@ -145,6 +151,12 @@ public class OfflineLovService extends LovService {
 	public boolean isDataLoaded() {
 		return dataLoaded;
 	}
+	
+
+	@Override
+	public String vocSpaces() {
+		return LovUtil.toJSON(vocabsService.getVocabularySpaces(), true);
+	}
 
 	// -------------------------------------------------------------------------
 
@@ -157,8 +169,8 @@ public class OfflineLovService extends LovService {
 		aggregatorDownloaded = false;
 
 		List<String> files = Arrays.asList(lovData.list());
-		// si le fichier lov_aggregator.rdf n'existe pas, on va le récupérer
-		if ( ! files.contains("lov_aggregator.rdf")) {
+		// si le fichier lov_aggregator.nq n'existe pas, on va le récupérer
+		if ( ! files.contains(NQ_AGGREGATOR)) {
 			// lancement du téléchargement dans un nouveau thread
 			new Thread(new Runnable() {
 
@@ -240,6 +252,7 @@ public class OfflineLovService extends LovService {
 					// TODO : vérifier si une mise à jour est disponible
 			log.info("No need for download. LovAggregator is here !");
 			aggregatorDownloaded = true;
+			convertAggragator();
 			loadDataIntoRepository();
 		}
 	}
