@@ -61,7 +61,6 @@ import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.rdf.RdfFormat;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
-import org.datalift.fwk.sparql.SparqlQueries;
 import org.datalift.fwk.util.io.FileUtils;
 import org.datalift.fwk.util.web.Charsets;
 import org.datalift.fwk.util.web.HttpDateFormat;
@@ -119,11 +118,6 @@ public class Data2Ontology extends BaseModule implements ProjectModule
     /** The DataLift project manager. */
     protected ProjectManager projectManager = null;
     
-    /** The SPARQL queries used by this module */
-	private SparqlQueries queries;
-	
-    protected LabelFetcher labelFetcher;
-
     //-------------------------------------------------------------------------
     // Constructors
     //-------------------------------------------------------------------------
@@ -146,12 +140,6 @@ public class Data2Ontology extends BaseModule implements ProjectModule
         if (this.projectManager == null) {
             throw new TechnicalException("project.manager.not.available");
         }
-        
-		// create label fetcher and keep it in session
-		Repository internal = Configuration.getDefault().getInternalRepository();
-		org.openrdf.repository.Repository repository = internal.getNativeRepository();
-		this.labelFetcher = new LabelFetcher(this.queries, repository);
-		
     }
 
     //-------------------------------------------------------------------------

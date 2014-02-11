@@ -44,7 +44,9 @@
 								ng-click="setPropertyPanel(o.id, 'DatatypeProperty')">Add datatype property</button>
 							<div class="object-objectProperties"
 								ng-repeat="p in o.datatypeProperties">
-								{{p.property.name}} - {{p.value}}
+								{{p.property.name}} - {{p.value}} -
+								<span class="pointer"
+								ng-click="">&times;</span>
 							</div>
 						</div>
 						<div>
