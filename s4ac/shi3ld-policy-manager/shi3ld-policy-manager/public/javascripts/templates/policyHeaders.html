@@ -1,0 +1,18 @@
+<div class="alert alert-info">
+<% if (type == 'workspace') {%>
+	To start click on a policy in the list or create a new policy
+<% } else { %>
+	Select policies to test then click on <em>Initialize dataset</em> button
+<% } %>
+</div>
+<p>
+	<strong>Available policies:</strong>
+<% if (type == 'workspace') {%>
+	<a id="newPolicyBarBtn" href="#policyWorkspace" 
+		data-toggle-headers="tooltip" data-placement="bottom" title="Create a new policy" 
+		class="btn btn-inverse pull-right">
+			<i class="icoblue-page gray-out"></i>
+	</a>
+<% } %>
+</p>
+<div id="pagination"></div>

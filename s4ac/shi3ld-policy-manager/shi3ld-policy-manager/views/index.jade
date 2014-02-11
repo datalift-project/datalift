@@ -1,0 +1,176 @@
+!!! 5
+html(lang='en')
+  head
+    meta(charset='utf-8')
+    title Shi3ldPolicyManager
+    meta(name='viewport', content='width=device-width, initial-scale=1.0')
+    meta(name='description', content='')
+    meta(name='author', content='')
+    //Le styles 
+    link(href='bootstrap/css/bootstrap-jqueryui.css', rel='stylesheet')
+    //jquery-ui css hacked to use bootstrap-icon
+    link(href='bootstrap/css/bootstrap-icon.css', rel='stylesheet')
+    link(href='javascripts/lib/magicsuggest/magicsuggest-1.3.0.css', rel='stylesheet')
+    style(type='text/css')
+      body {
+      padding-top: 60px;
+      padding-bottom: 40px;
+      background-image:url('images/ravenna.png');
+      }
+      .container {
+      background-color:#ffffff;
+      }
+      .sidebar-nav {
+      padding: 9px 0;
+      }
+      @media (max-width: 980px) {
+      /* Enable use of floated navbar text */
+      .navbar-text.pull-right {
+      float: none;
+      padding-left: 5px;
+      padding-right: 5px;
+      }
+      }
+      /*customization for big text area*/
+      html,body,.container-fluid {
+      height: 95%;
+      }
+      .tab-content,.tab-pane{
+      height: 95%;
+      }
+      .fit-container{
+      width: 100%;
+      height: 100%;
+      -webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
+      -moz-box-sizing: border-box;    /* Firefox, other Gecko */
+      box-sizing: border-box;         /* IE 8+ */
+      }
+      .tooltip-inner {
+      white-space:pre-wrap;
+      }
+      #map {
+      border: 1px solid #DDD; 
+      width:300px;
+      height: 300px;
+      margin: 10px 10px 10px 10px;
+      -webkit-box-shadow: #AAA 0px 0px 15px;
+      }
+      .input {
+      float:left;  
+      }
+      .input-positioned
+      {
+      padding: 5px 5px 0 0;
+      }
+      .container {
+      border: 1px solid rgba(0, 0, 0, 0.5);
+      border-radius: 6px 6px 6px 6px;
+      padding: 5px 5px 5px 5px
+      }
+      .inset { text-shadow:#fff 0px 1px 0, #000 0 -1px 0;}
+      .embossed { 
+        line-height:2em; 
+        font-size:5em;
+        font-weight:bold; 
+        color:#B0AEAF;
+        background-image:url('images/ravenna.png');
+        text-align: center;
+      }
+      .alert-text-center{
+        text-align: center;
+      }
+      /*selector to make it take higher priority so can be moved in custom css without worry about precedencies*/ 	 
+      body .modal-wizard { 	 
+        /* new custom width */ 	 
+        width: 650px; 	 
+        /* must be half of the width, minus scrollbar on the left (30px) */ 	 
+        margin-left: -325px; 	 
+      }
+             
+    link(href='bootstrap/css/bootstrap-responsive.css', rel='stylesheet')
+    link(href='datepicker/css/datepicker.css', rel='stylesheet')
+    link(href='bootstrap-timepicker/css/bootstrap-timepicker.css', rel='stylesheet')
+    //customized icon css
+    link(href='stylesheets/icoblue.css', rel='stylesheet')
+    link(rel='stylesheet', href='sparql/lib/codemirror.css')
+    link(rel='stylesheet', href='sparql/css/sparqlcolors.css')
+    link(rel='stylesheet', href='sparql/css/docs.css')
+  body
+    #policyManagerApp.container
+      .navbar.navbar-inverse.navbar-fixed-top
+        .navbar-inner
+          .container-fluid
+            button.btn.btn-navbar(type='button', data-toggle='collapse', data-target='.nav-collapse')
+              span.icon-bar
+              span.icon-bar
+              span.icon-bar
+            a.brand(href='#') 
+              | SHI3LD 
+              i.icoblue-security_warning
+              em Policy Manager             
+            .nav-collapse.collapse
+              ul.nav.pull-right
+                ///li 
+                  a(href='#settings') 
+                    i.icoblue-settings.gray-out
+                li
+                  a(href='#about', data-toggle="modal")
+                    i.icoblue-question_mark.gray-out
+                li.divider-vertical
+                li.navbar-text.pull-right
+                  p
+                    a.navbar-link(href='#') #{usr}
+                li
+                  a(href='#logout')
+                    i.icon-off.icon-white
+              ul.nav
+                li
+                  a#policyWorkspaceBarBtn(href='#policyWorkspace', data-toggle='tooltip', data-placement='bottom', title='#{policyWorkspaceTooltip}')
+                    i.icoblue-page_full.gray-out
+                li
+                  a#testPoliciesBarBtn(href='#test-policies', data-toggle='tooltip', data-placement='bottom', title='#{testPoliciesTooltip}')
+                    i.icoblue-checked.gray-out
+      #page
+      hr
+      footer
+       p INRIA 2013
+      //div.span2
+      #wizard
+       #newPolicy.modal.modal-wizard.hide.fade.in(data-backdrop='static', data-keyboard='false', style='display: none;')
+       #browseTargets.modal.modal-wizard.hide.fade.in(data-backdrop='static', data-keyboard='false', style='display: none;')
+       #outdoorModal.modal.modal-wizard.hide.fade.in(data-backdrop='static', data-keyboard='false', style='display: none;')
+       #timeModal.modal.modal-wizard.hide.fade.in(data-backdrop='static', data-keyboard='false', style='display: none;')
+       #userModal.modal.modal-wizard.hide.fade.in(data-backdrop='static', data-keyboard='false', style='display: none;')
+       #devModal.modal.modal-wizard.hide.fade.in(data-backdrop='static', data-keyboard='false', style='display: none;')
+       #envModal.modal.modal-wizard.hide.fade.in(data-backdrop='static', data-keyboard='false', style='display: none;')
+       #newGraph.modal.modal-wizard.hide.fade.in(data-backdrop='static', data-keyboard='false', style='display: none;')
+      #spinner.modal.hide.fade.in.progress.progress-striped.active(data-backdrop='static', data-keyboard='false', style='display: none;')
+        .bar(style="width: 100%")
+      #nameConflictModal.modal.hide.fade.in(style='display: none;')
+      #about.modal.hide.fade.in(style='display: none;')
+        .modal-header
+          a.close(href='#', data-dismiss='modal', aria-hidden='true') &times
+          h4 Shi3ld Policy Manager
+        .modal-body
+          strong version 
+          | 2.0
+          br
+          strong authors 
+          | Luca Costabello, Iacopo Vagliano, Serena Villata and Fabien Gandon
+          br
+          strong team 
+          a(href='http://wimmics.inria.fr/', target='_blank') wimmics
+          br
+          strong organization 
+          a(href='http://www.inria.fr/centre/sophia/', target='_blank') INRIA 
+          | / 
+          a(href='http://www.i3s.unice.fr', target='_blank') I3S
+          br
+          br
+          | It is a web application to help RDF - SPARQL dataset administrator in managing
+          | policies for 
+          a(href='http://wimmics.inria.fr/projects/shi3ld/', target='_blank') Shi3ld 
+          | framework
+      // /.fluid-container
+    // Le javascript
+    script(data-main='javascripts/main', src='javascripts/lib/require/require.js')

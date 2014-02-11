@@ -1,0 +1,72 @@
+<%if (wizard == true) {%> 
+<div class="modal-header">  
+	<h4><%= name %>  </h4>
+</div>  
+<div class="modal-body">
+		<ul class="breadcrumb">
+		    <li class="text-info">Targets & privileges<span class="divider">/</span></li>
+		    <li class="text-info">User<span class="divider">/</span></li>
+		    <li class="text-info">Env #time<span class="divider">/</span></li>
+		    <li class="active">Env #location<span class="divider">/</span></li>
+		    <li class="active">Env #miscellaneous<span class="divider">/</span></li>
+		    <li class="active">Device</li>
+	    </ul>
+<%}%>
+   	
+   	<p>Data accessible for the following time period: </p>
+   	
+   	<div class="row-fluid">
+   		
+   		
+		<div class="span6">
+			<h6>From </h6>    
+			<div class="input-append date" id="dp1<%= wizard == true ? '-wiz' : '' %>" data-date="<%= date %>" data-date-format="<%= dateFormat %>">
+	    		<input id="dp1Txt<%= wizard == true ? '-wiz' : '' %>" class="input-small" size="16" type="text" placeholder="<%= dateFormat %>" tabindex="31"> 
+	    		<span class="add-on"><i class="icoblue-calendar"></i></span>
+	    	</div>
+	    	<div class="input-append bootstrap-timepicker">
+				<input id="tp1Txt<%= wizard == true ? '-wiz' : '' %>" type="text" class="input-small" placeholder="<%= timeFormat %>" tabindex="32">
+				<span class="add-on"><i class="icoblue-clock"></i></span>
+			</div>
+	   	</div>
+	   	
+    	<div class="span6">		
+	    	<h6>to</h6>
+	    	<div class="input-append date" id="dp2<%= wizard == true ? '-wiz' : ''%>" data-date="<%= date %>" data-date-format="<%= dateFormat %>">
+   				<input id="dp2Txt<%= wizard == true ? '-wiz' : '' %>" class="input-small" size="16" type="text" placeholder="<%= dateFormat %>" tabindex="33">
+   				<span class="add-on"><i class="icoblue-calendar"></i></span>
+   			</div>	
+			<div class="input-append bootstrap-timepicker">
+				<input id="tp2Txt<%= wizard == true ? '-wiz' : '' %>" type="text" class="input-small" placeholder="<%= timeFormat %>" tabindex="34">
+				<span class="add-on"><i class="icoblue-clock"></i></span>
+
+			</div>    	
+		</div>
+		
+	</div>
+	<br>
+	<br>
+	<div class="control-group">
+		<div class="controls">
+			<button id="timeModalSetNow<%= wizard == true ? '-wiz' : '' %>" class="btn" data-toggle-timeModal="tooltip"
+			    	title="Fill the fields with current date and time" tabindex="35">Set Current</button>
+		</div> 
+	</div>		
+	<br>
+	<br>
+	<br>
+<%if (wizard == true) {%>  					 
+</div>
+	<div class="modal-footer">
+<!-- 		<%if (wizard == true) {%>  				 -->
+			<a href="#" class="btn" id="timeModalPrev">&lt</a>  
+			<a href="#" class="btn<%= disabled == 'true' ? ' disabled' : ''%>" id="timeModalNext" data-dismiss="modal">&gt</a>
+			<a href="#" class="btn" id="timeModalCancel">Cancel</a>
+			<a href="#" class="btn" id="timeModalFinish">Finish</a>
+<!-- 		<%} else {%> -->
+<!-- 			<a href="#" class="btn" id="timeModalOk">Ok</a> -->
+<!-- 			<a href="#" class="btn" id="timeModalCancel">Cancel</a> -->
+<!-- 		<%}%>  					 -->
+		  
+	</div>
+<%}%>

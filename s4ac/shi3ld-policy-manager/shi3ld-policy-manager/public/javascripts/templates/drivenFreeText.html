@@ -1,0 +1,57 @@
+<%if (wizard == true) {%>  
+<div class="modal-header">  
+	<h4><%= wizard == true ? name : 'Add user dimension' %></h4>
+</div>  
+<div class="modal-body">
+		<ul class="breadcrumb">
+		    <li class="text-info">Targets & privileges<span class="divider">/</span></li>
+		    <li class="text-info">User<span class="divider">/</span></li>
+		    <li class="<%= type != 'user' ? 'text-info' : 'active'%>">Env #time<span class="divider">/</span></li>
+		    <li class="<%= type != 'user' ? 'text-info' : 'active'%>">Env #location<span class="divider">/</span></li>
+		    <li class="<%= type != 'user' ? 'text-info' : 'active'%>">Env #miscellaneous<span class="divider">/</span></li>
+		    <li class="<%= type == 'dev' ? 'text-info' : 'active'%>">Device</li>
+	    </ul>
+<%}%>
+	<form>
+		<div class="control-group" id="<%= type %>TxtCtrlGrp<%= wizard == true ? '-wiz' : '' %>" >
+			<label class="control-label" for="<%= type %>Txt<%= wizard == true ? '-wiz' : '' %>" >
+<%if (type == 'user') {%>  				
+		    	Access will be granted to users with the following properties:
+<%} else if (type == 'dev') {%>  
+				Access will be granted to devices with the following properties:
+<%} else {%>  
+				Other environment properties:
+<%}%>
+			</label>
+			<div class="controls">
+					<div id="<%= type %>Txt<%= wizard == true ? '-wiz' : '' %>"></div>
+					<span class="help-inline" id="<%= type %>ErrorText<%= wizard == true ? '-wiz' : '' %>"></span>
+			</div>
+			<br>
+			<div class="alert alert-info">
+<%if (type == 'user') {%>  				
+		    	Insert one or more pairs <em><strong>property: value</strong></em><h6>Examples</h6> Friend Of: http://example.org/Bob 
+		    	<br>name: "Alice"
+		    	<br>age: "24"
+<%} else if (type == 'dev') {%>  
+				Insert one or more pairs <em><strong>property: value</strong></em><h6>Examples</h6> Operating System: "ios" 
+		    	<br>Device Hardware: http://example.org/galaxy-s-iii
+		    	<br>Character Rows: "10"
+<%} else {%>  
+				Insert one or more pairs <em><strong>property: value</strong></em><h6>Examples</h6> poiLabel: http://dbpedia.org/resource/INRIA
+		    	<br>has activity: working
+<%}%>		    					
+		    </div>
+		</div>
+	</form>	
+	<br>
+	<br>
+<%if (wizard == true) {%>  								
+</div>  
+<div class="modal-footer">  					
+		<a href="#" class="btn" id="<%= type %>ModalPrev">&lt</a>  
+		<a href="#" class="btn<%= type == 'dev' ? ' disabled' : ''%>" id="<%= type %>ModalNext" >&gt</a>
+		<a href="#" class="btn" id="<%= type %>ModalCancel">Cancel</a>
+		<a href="#" class="btn" id="<%= type %>ModalFinish">Finish</a>  
+</div>
+<%}%>

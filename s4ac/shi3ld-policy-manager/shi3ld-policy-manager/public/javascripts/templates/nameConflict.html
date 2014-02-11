@@ -1,0 +1,36 @@
+<div class="modal-body">
+	<div id="nameConflictAlert" class="alert alert-block" >  
+	  <h4 class="alert-heading">Warning!</h4>  
+	  <p>
+	  <%
+	  	var txt;
+	  	type == 'nameConflict' ? (txt = 'policy') : (txt = 'named graph');
+	  	if (type.search('nameConflict') != -1) {
+	  		txt = 'A ' + txt + ' with same URI already exist. Do you want to overwrite it?' ;
+	  	} else if (type == 'confirmCancel') {
+	  		txt = 'Cancel current policy creation?'
+	  	} else if (type == 'confirmPolicyDeletion') {
+	  		txt = 'Permanently delete the policy?'
+	  	} else {
+	  		txt = 'The current policy is not saved. Do you want to save?' 
+	  	}
+	  %>
+	  <%= txt %>
+	  </p>
+	</div>
+</div>  
+<div class="modal-footer">
+	<%if (
+		(type == 'nameConflict') 
+		|| (type == 'nameConflictTarget') 
+		|| (type == 'confirmCancel')
+		|| (type == 'confirmPolicyDeletion')		
+	){%>
+		<a id="nameConflictAlertYes" class="btn btn-warning " href="#">Yes</a>
+		<a id="nameConflictAlertNo" class="btn " href="#">No</a>
+	<%} else {%>
+		<a id="saveAlertYes" class="btn btn-warning" href="#">Yes</a>
+		<a id="saveAlertNo" class="btn " href="#">No</a>
+		<a id="saveAlertCancel" class="btn " href="#">Cancel</a>
+	<%}%>
+</div> 

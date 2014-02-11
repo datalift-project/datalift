@@ -43,6 +43,7 @@ import java.net.URL;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import javax.ws.rs.core.MediaType;
 
@@ -96,6 +97,15 @@ import static org.datalift.fwk.util.StringUtils.isBlank;
  */
 public final class RdfUtils
 {
+    //-------------------------------------------------------------------------
+    // Constants
+    //-------------------------------------------------------------------------
+
+    /** Regex to identify native XML schema data types. */
+    private final static Pattern NATIVE_TYPES_PATTERN = Pattern.compile(
+                            "(boolean|float|decimal|double|int|" +
+                            ".*[bB]yte|.*[iI]nteger|.*[lL]ong|.*[sS]hort)$");
+
     //-------------------------------------------------------------------------
     // Class members
     //-------------------------------------------------------------------------
@@ -1042,6 +1052,28 @@ public final class RdfUtils
             throw new UnsupportedOperationException(o.getClass().getName());
         }
         return v;
+    }
+
+    /**
+     * Returns whether the specified RDF value is a literal of a native
+     * data type (boolean, byte, decimal, double, float, integer, long
+     * or short).
+     * @param  v   a RDF value.
+     *
+     * @return <code>true</code> if the
+     *         {@link Literal#getDatatype() XML schema data type} of the
+     *         literal value is regarded as native; <code>false</code>
+     *         otherwise.
+     */
+    public static boolean isNative(Value v) {
+        boolean nativeType = false;
+        if (v instanceof Literal) {
+            org.openrdf.model.URI dataType = ((Literal)v).getDatatype();
+            nativeType = (dataType != null) &&
+                         (NATIVE_TYPES_PATTERN.matcher(dataType.getLocalName())
+                                              .find());
+        }
+        return nativeType;
     }
 
     //-------------------------------------------------------------------------

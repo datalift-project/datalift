@@ -1,0 +1,38 @@
+<%
+var style = "";
+if (!target.get('tripleCnt')){
+	target.set({tripleCnt: "unknown"});
+} else {
+	var txtCnt = target.get('tripleCnt');
+	if (txtCnt > 1000000) {
+		txtCnt = "roughly " + String(Math.floor(txtCnt / 1000000)) + "M";
+	} else if (txtCnt > 10000) {
+		txtCnt = "roughly " + String(Math.floor(txtCnt / 1000)) + "K";
+	}	
+}
+//may be already set to unknown
+if (target.get('tripleCnt') == "unknown") {
+	style = "class='text-error'";
+}
+%>	
+	<td <%= style%>><%= targetCnt + 1 %></td>
+	<td>
+		<a href="#" data-toggle-targetPage-<%= targetOffset %>="tooltip" 
+			title="<%= target.get('uri') %>" <%= style%>>
+				<%
+					var txt = "";
+					if (!target.get('label')) {
+						target.get('uri').length > 40 ? (txt  = '...' + target.get('uri').substr(target.get('uri').length - 40, 40)) : (txt = target.get('uri'))
+					} else if (target.get('label').length > 40){
+						txt = target.get('label').substr(0, 40) + "...";
+					} else {
+						txt = target.get('label');
+					}
+				%>				
+				<%= txt %>
+		</a>
+	</td>
+	<td <%= style%>><%= test == true ? '1' : target.get('tripleCnt') %></td>
+<% if ((!wizard) && (!test) ) { %>
+	<td><i class="icoblue-waste target-del"></i></td>
+<% } %>

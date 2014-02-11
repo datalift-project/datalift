@@ -1,0 +1,102 @@
+[class^="ico16-"],
+[class*=" ico16-"] {
+display: inline-block;
+width: 17px;
+height: 16px;
+*margin-right: .3em;
+line-height: 14px;
+vertical-align: text-top;
+background-image: url("../images/ico16.png");
+background-position: 14px 14px;
+background-repeat: no-repeat;
+}
+[class^="ico16-"]:last-child,
+[class*=" ico16-"]:last-child {
+*margin-left: 0;
+}
+.ico16-add{ background-position: 0 0; width: 16px; height: 16px; } 
+.ico16-address_book{ background-position: -21px 0; width: 16px; height: 16px; } 
+.ico16-attachment{ background-position: -42px 0; width: 16px; height: 16px; } 
+.ico16-back{ background-position: -63px 0; width: 16px; height: 16px; } 
+.ico16-block{ background-position: -84px 0; width: 16px; height: 16px; } 
+.ico16-briefcase{ background-position: -105px 0; width: 16px; height: 16px; } 
+.ico16-business_user{ background-position: -126px 0; width: 16px; height: 16px; } 
+.ico16-calculator{ background-position: -147px 0; width: 16px; height: 16px; } 
+.ico16-calendar{ background-position: -168px 0; width: 16px; height: 16px; } 
+.ico16-camcorder{ background-position: -189px 0; width: 16px; height: 16px; } 
+.ico16-card_game_icon{ background-position: -210px 0; width: 16px; height: 16px; } 
+.ico16-chalk_board{ background-position: -231px 0; width: 16px; height: 16px; } 
+.ico16-chart{ background-position: -252px 0; width: 16px; height: 16px; } 
+.ico16-chart_pie{ background-position: -273px 0; width: 16px; height: 16px; } 
+.ico16-check_mark{ background-position: -294px 0; width: 16px; height: 16px; } 
+.ico16-checked{ background-position: -315px 0; width: 16px; height: 16px; } 
+.ico16-clock{ background-position: -336px 0; width: 16px; height: 16px; } 
+.ico16-cloud{ background-position: -357px 0; width: 16px; height: 16px; } 
+.ico16-cloud_download{ background-position: -378px 0; width: 16px; height: 16px; } 
+.ico16-cloud_upload{ background-position: -399px 0; width: 16px; height: 16px; } 
+.ico16-comment{ background-position: -420px 0; width: 16px; height: 16px; } 
+.ico16-comments{ background-position: -441px 0; width: 16px; height: 16px; } 
+.ico16-credit_card{ background-position: -462px 0; width: 16px; height: 16px; } 
+.ico16-cut{ background-position: -483px 0; width: 16px; height: 16px; } 
+.ico16-database{ background-position: -504px 0; width: 16px; height: 16px; } 
+.ico16-delete{ background-position: -525px 0; width: 16px; height: 16px; } 
+.ico16-directions{ background-position: -546px 0; width: 16px; height: 16px; } 
+.ico16-dislike{ background-position: -567px 0; width: 16px; height: 16px; } 
+.ico16-download{ background-position: -588px 0; width: 16px; height: 16px; } 
+.ico16-edit_page{ background-position: -609px 0; width: 16px; height: 16px; } 
+.ico16-exclamination_mark{ background-position: -630px 0; width: 16px; height: 16px; } 
+.ico16-favorite{ background-position: -651px 0; width: 16px; height: 16px; } 
+.ico16-favourite_place{ background-position: -672px 0; width: 16px; height: 16px; } 
+.ico16-filter{ background-position: -693px 0; width: 16px; height: 16px; } 
+.ico16-first_aid{ background-position: -714px 0; width: 16px; height: 16px; } 
+.ico16-flag{ background-position: -735px 0; width: 16px; height: 16px; } 
+.ico16-folder{ background-position: -756px 0; width: 16px; height: 16px; } 
+.ico16-history{ background-position: -777px 0; width: 16px; height: 16px; } 
+.ico16-home{ background-position: -798px 0; width: 16px; height: 16px; } 
+.ico16-id_card{ background-position: -819px 0; width: 16px; height: 16px; } 
+.ico16-info{ background-position: -840px 0; width: 16px; height: 16px; } 
+.ico16-key{ background-position: -861px 0; width: 16px; height: 16px; } 
+.ico16-lightbulb{ background-position: -882px 0; width: 16px; height: 16px; } 
+.ico16-like{ background-position: -903px 0; width: 16px; height: 16px; } 
+.ico16-link{ background-position: -924px 0; width: 16px; height: 16px; } 
+.ico16-lock{ background-position: -945px 0; width: 16px; height: 16px; } 
+.ico16-magic_wand{ background-position: -966px 0; width: 16px; height: 16px; } 
+.ico16-mail{ background-position: -987px 0; width: 16px; height: 16px; } 
+.ico16-map_pin{ background-position: -1008px 0; width: 16px; height: 16px; } 
+.ico16-monitor{ background-position: -1029px 0; width: 16px; height: 16px; } 
+.ico16-network{ background-position: -1050px 0; width: 16px; height: 16px; } 
+.ico16-next{ background-position: -1071px 0; width: 16px; height: 16px; } 
+.ico16-not_available{ background-position: -1092px 0; width: 16px; height: 16px; } 
+.ico16-notes{ background-position: -1113px 0; width: 16px; height: 16px; } 
+.ico16-page{ background-position: -1134px 0; width: 16px; height: 16px; } 
+.ico16-page_full{ background-position: -1155px 0; width: 16px; height: 16px; } 
+.ico16-pencil{ background-position: -1176px 0; width: 16px; height: 16px; } 
+.ico16-phone_book{ background-position: -1197px 0; width: 16px; height: 16px; } 
+.ico16-protection{ background-position: -1218px 0; width: 16px; height: 16px; } 
+.ico16-question_mark{ background-position: -1239px 0; width: 16px; height: 16px; } 
+.ico16-refresh{ background-position: -1260px 0; width: 16px; height: 16px; } 
+.ico16-route{ background-position: -1281px 0; width: 16px; height: 16px; } 
+.ico16-save{ background-position: -1302px 0; width: 16px; height: 16px; } 
+.ico16-search{ background-position: -1323px 0; width: 16px; height: 16px; } 
+.ico16-security{ background-position: -1344px 0; width: 16px; height: 16px; } 
+.ico16-security_warning{ background-position: -1365px 0; width: 16px; height: 16px; } 
+.ico16-settings{ background-position: -1386px 0; width: 16px; height: 16px; } 
+.ico16-smart_phone{ background-position: -1407px 0; width: 16px; height: 16px; } 
+.ico16-speedometer{ background-position: -1428px 0; width: 16px; height: 16px; } 
+.ico16-star{ background-position: -1449px 0; width: 16px; height: 16px; } 
+.ico16-support{ background-position: -1470px 0; width: 16px; height: 16px; } 
+.ico16-tag{ background-position: -1491px 0; width: 16px; height: 16px; } 
+.ico16-target{ background-position: -1512px 0; width: 16px; height: 16px; } 
+.ico16-text_page{ background-position: -1533px 0; width: 16px; height: 16px; } 
+.ico16-tools{ background-position: -1554px 0; width: 16px; height: 16px; } 
+.ico16-unlock{ background-position: -1575px 0; width: 16px; height: 16px; } 
+.ico16-upload{ background-position: -1596px 0; width: 16px; height: 16px; } 
+.ico16-upload_page{ background-position: -1617px 0; width: 16px; height: 16px; } 
+.ico16-user{ background-position: -1638px 0; width: 16px; height: 16px; } 
+.ico16-user_comment{ background-position: -1659px 0; width: 16px; height: 16px; } 
+.ico16-users{ background-position: -1680px 0; width: 16px; height: 16px; } 
+.ico16-warning{ background-position: -1701px 0; width: 16px; height: 16px; } 
+.ico16-waste{ background-position: -1722px 0; width: 16px; height: 16px; } 
+.ico16-world{ background-position: -1743px 0; width: 16px; height: 16px; } 
+.ico16-zoom_in{ background-position: -1764px 0; width: 16px; height: 16px; } 
+.ico16-zoom_out{ background-position: -1785px 0; width: 16px; height: 16px; } 

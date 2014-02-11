@@ -1,0 +1,41 @@
+<%if (wizard == true) {%>  
+<!--Browse targets original title -->
+<div class="modal-header">  
+
+	<h4>Browse named graphs </h4>  
+</div>  
+<div class="modal-body">
+	<form class="form" action="">
+		<div class="control-group">
+			<label class="control-label" >
+				Select one of the following 
+				<a title="Learn more" 
+					href="<%= backend == 'sparql' ? 'http://www.w3.org/2004/03/trix/' : 'http://www.w3.org/TR/ldp/#terminology'%>"
+					target="_blank" data-toggle-seltarget="tooltip">
+				<%= backend == 'sparql' ? 'named graphs' : 'resources'%></a>:
+				<%= backend == 'sparql' ? 
+				'<a id="addGraph" href="#" title="Define a new named graph" class="btn pull-right" data-toggle-seltarget-sx="tooltip"><i class="icoblue-add-blue"></i></a>' 
+				: '' %>				
+			</label>
+			<br>
+<%}%>
+			<div id="targetPage<%= wizard == true ? '' : '-GUI'%>" class="controls">
+<!-- 					<table id="targetTable" class="table table-striped table-hover table-condensed">	 -->
+<!-- 						<tr><th>#</th><th><%= backend == 'sparql' ? 'Named graphs' : 'resources'%></th><th>Number of triples</th></tr>					 -->
+<!-- 					</table> -->
+<%if (wizard != true) {%>
+					<p><%= test == true ? '' : 'Applies to:' %><p>
+					<div id="noTarget-GUI" class="hero-unit inset embossed"><h2>No <%= backend == 'sparql' ? 'named graphs' : 'resources' %> for the policy</h2></div>
+<%}%> 					
+					<div id="pagination-target<%= wizard == true ? '' : '-GUI'%>">
+      				</div>
+			</div>
+<%if (wizard == true) {%>  
+		</div>
+	</form>
+</div>  
+<div class="modal-footer"> 					
+	<a id="cancelBtn" href="#" class="btn" >Cancel</a>
+	<a id="selectBtn" href="#" class="btn" >Select</a>  
+</div>
+<%}%> 

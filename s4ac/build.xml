@@ -292,6 +292,8 @@
       <fileset dir="${classes.dir}"/>
       <service type="org.datalift.fwk.Module">
         <provider classname="org.datalift.s4ac.services.S4acAccessController"/>
+        <provider classname="org.datalift.s4ac.services.SecurityAccessContextProvider"/>
+        <provider classname="org.datalift.s4ac.services.SparqlAccessContextProvider"/>
       </service>
     </jar>
   </target>

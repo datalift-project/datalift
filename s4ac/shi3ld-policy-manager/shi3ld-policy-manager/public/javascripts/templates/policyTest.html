@@ -1,0 +1,21 @@
+<div id="policyList"></div>
+<div class="alert alert-warning">
+	<strong>Warning</strong> Every time you change policy to test, and click on <em>Initialize test dataset</em> button to make changes effective
+</div>
+<button id="initDSBtn" class="btn btn-large btn-inverse" type="button" 
+	data-loading-text="Initializing dataset to test..."
+	data-running-text="Running ...">
+		Initialize test dataset
+</button>
+<div class="alert alert-info">
+	<strong>To simulate an access to the triple store:</strong> type the query, define the context, then click on <em>Run test</em> button
+</div>
+<label class="control-label" for="queryDiv">Define the query to be submitted:</label>
+<div id="testQuery"></div>
+<div id="contextPanel"></div>
+<button id="runTestBtn" class="btn btn-large btn-inverse" type="button" 
+	data-loading-text="Initializing dataset to test..."
+	data-running-text="Running ...">
+		Run test
+</button>
+<div id="testResult"></div>

@@ -1,0 +1,73 @@
+<div class="modal-header">  
+	<h4>User properties</h4>
+</div>  
+<div class="modal-body">
+<!-- 	<table class="table table-striped table-hover"> -->
+<!-- 		<tr><th>Property label</th><th>Prefix</th><th>Local name</th><th>Uri</th></tr> -->
+<!-- 		<% _.each(targets, function(target) { %>  -->
+<!-- 	            <tr class="highlight" id="<%= i %>"> -->
+<!-- 	            	<td> -->
+<!-- 	            		<a href="#" data-toggle-seltarget="tooltip"  -->
+<!-- 	            			title="<%= target.get('uri') %>"> -->
+<!-- 	            				<%= target.get('label') ? target.get('label') : target.get('uri') %> -->
+<!-- 	            		</a> -->
+<!-- 	            	</td> -->
+<!-- 	            	<td ><%= target.get('tripleCnt') %></td> -->
+<!-- 	            </tr> -->
+<!-- 			<% }); %> -->
+		
+<!-- 	</table> -->
+	<div class="row-fluid">
+
+	    <div class="pagination span8">
+	      <ul>
+	        <% _.each (pageSet, function (p) { %>
+	        <% if (currentPage == p) { %>
+	          <li class="active"><span><%= p %></span></li>
+	        <% } else { %>
+	          <li><a href="#" class="page"><%= p %></a></li>
+	        <% } %>
+	        <% }); %>
+	      </ul>
+	    </div>
+	
+	    <div class="pagination span4">
+	      <ul>
+	        <% if (currentPage > firstPage) { %>
+	          <li><a href="#" class="serverprevious">Previous</a></li>
+	        <% }else{ %>
+	          <li><span>Previous</span></li>
+	        <% }%>
+	        <% if (currentPage < totalPages) { %>
+	          <li><a href="#" class="servernext">Next</a></li>
+	        <% } else { %>
+	          <li><span>Next</span></li>
+	        <% } %>
+	        <% if (firstPage != currentPage) { %>
+	          <li><a href="#" class="serverfirst">First</a></li>
+	        <% } else { %>
+	          <li><span>First</span></li>
+	        <% } %>
+	        <% if (totalPages != currentPage) { %>
+	          <li><a href="#" class="serverlast">Last</a></li>
+	        <% } else { %>
+	          <li><span>Last</span></li>
+	        <% } %>
+	      </ul>
+	    </div>
+	
+	  </div>
+	
+	  <span class="cell serverhowmany"> Show <a href="#"
+	    class="selected">18</a> | <a href="#" class="">9</a> | <a href="#" class="">12</a> per page
+	  </span>
+	
+	  <span class="divider">/</span>
+	
+	  <span class="cell first records">
+	    Page: <span class="label"><%= currentPage %></span> of <span class="label"><%= totalPages %></span> shown
+	  </span>			
+</div>  
+<div class="modal-footer">  					
+		<a href="#" class="btn" id="userModalFinish">Close</a>  
+</div>

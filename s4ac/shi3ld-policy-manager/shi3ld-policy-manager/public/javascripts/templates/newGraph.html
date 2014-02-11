@@ -1,0 +1,30 @@
+<div class="modal-header">  
+	<h4>Define new named graph </h4>  
+</div>  
+<div class="modal-body">
+	<div id="nameCtrlGrpNG" class="control-group">
+		<label class="control-label" for="inputGName">Label</label>
+		<div class="controls">
+			<input type="text" id="inputGName" class="input-xlarge"
+				placeholder="Type the name of the named graph" >
+			<span class="help-inline" id="errorTextNG"></span>
+		</div>
+	</div>
+	<label class="control-label" for="queryDiv">Define the named graph content:</label>
+    <div id="queryDiv"></div>
+    <div class="alert alert-info">
+    	Insert <strong><a title="Learn more" 
+					href="http://www.w3.org/TR/sparql11-query/#GraphPattern"
+					target="_blank" data-toggle-newgraph="tooltip"
+					style="text-decoration: underline;">graph patterns</a></strong> (without filters) only
+    	<br ><strong>Example</strong> SELECT * WHERE {?s ?p ?o; rdfs:label "A label".}
+    </div>
+    <br>
+    <table id="previewTab"class="table-condensed table-striped"></table>
+	<p id="triplesCnt"></p><button type="button" id="preview" class="btn pull-right" data-toggle-newgraph="tooltip"
+    	title="show named graph content" data-loading-text="Loading...">Preview</button>   
+</div>  
+<div class="modal-footer"> 					
+	<a href="#" class="btn" id="newGraphCancel">Cancel</a>
+	<button type="button" class="btn" data-loading-text="Loading..." id="newGraphFinish">Create</button> 
+</div>

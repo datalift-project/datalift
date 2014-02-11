@@ -41,7 +41,7 @@ import java.util.ServiceLoader;
 
 /**
  * An abstract class that defines the contract for log service
- * implementations.</p>
+ * implementations.
  * <p>
  * A <code>LogService</code> implementation acts as a factory for
  * a specific {@link Logger} implementation. Concrete subclasses
@@ -188,6 +188,15 @@ public abstract class LogService
         return instance;
     }
 
+    /**
+     * Selects and configures a log service from the configured
+     * implementations and properties.
+     * @param  props   the properties to configure the log service.
+     *
+     * @return a log service.
+     * @throws IllegalStateException if no suitable log service
+     *         implementation was found.
+     */
     public static LogService selectAndConfigure(Properties props) {
         for (LogService s : ServiceLoader.load(LogService.class)) {
             try {

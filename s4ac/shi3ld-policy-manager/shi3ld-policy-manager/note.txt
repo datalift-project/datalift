@@ -1,0 +1,83 @@
+IMPLEMENTATION GENERAL ISSUE
+
+*gsp in fuseki managed as sparql endpt (change uri and change op). in others?
+*consider how to check settings in config file properly set (all param needed available)
+	->eg namedGraphUri set
+	->eg one of sparql,ldp gsp interface set
+*consider what can be checked at service start up and what later
+ so to avoid problems at run time (eg if there is no policy graph!) 
+	-> eg interface uri initialization at start-up? (eg in fuseki part yes anfd part no)
+	-> eg that namedGraphUri set correspond to an existing graph?
+
+FLINT 
+
+hacked to remove useless part (commented) and changed id of DOM element (in a wayy that depend on flint div container)
+so that is possible have more flint editors on same page. hacked also docs.css since based on selectors (make it based on class)
+and commented useless part.
+
+REQUIRE JS AND BACKBONE BOOTSTRAPPING
+
+now fire an ajax call since complicated trick to have data bootstrapped with the page when using require js
+in particular may be useful have the list of policies bootstrapped since to be show at the beginning
+(at least 1st page, whole collection may not be feasible!)
+
+I18N
+use a /languages route that generate template for backbone in the proper language (exploiting app.render() of express).
+It also update config file (ie update settings obj) with the language set.
+So template generated only when language changed.
+
+
+BOOTSTRAP 
+may be dowloaded again customized to fit proj needs and to customize something (eg background colors etc)
+now GUI has no no responsive pages (only fluid design)
+
+compatibility prob between <pre> bootstrap style and codemirror (cursor doesn't go to EOL) -> hacked bootstrap css (commented pre style problematic statement)
+
+SPARQL.CSS (FLINTEDITOR) hacked
+removed cursor text on whole document (html{cursor:text;}) and set only on codemirror div (.CodeMirror{cursor:text;})
+
+DATEPICKER hacked 
+css (problem in z-index with bootstrap modal)
+
+JQUERY UI BOOTSTRAP 
+hacked css (problem in z-index with bootstrap modal)
+
+JQUERY UI ADDRESSPICKER 
+1) added updateMap() function to solve problem of the map not centered in a modal 
+2) changed reverseCode at true by default to update lat and lon with marker position changes
+(1/07)
+3) added functions to manage radius, and modified address picker object (added a prop to refer to distance widget obj)
+
+BOOTSTRAP JQUERY UI hacked (addedd tooltip from bootstrap)
+
+FILTER IN ASK QUERY 
+prob { FILTER(?v ...) } not allowed according to sparql semantic: there must be 
+at least a triple with ?v inside brackets, ie { ...?v... FILTER(?v ...) }
+
+solution used at now:
+//the triple "?consumer rdf:type foaf:Person." reapeted both inside than outside
+//UNION branch if there is a union or 2 times in case of no union.
+
+//ie possible query generated are like
+//ask{?consumer a foaf:Person. ?consumer a foaf:Person. FILTER(?consumer = <http://ex.org/a>) ...}
+//or
+//ask{
+//{?consumer a foaf:Person. ?consumer a foaf:Person. FILTER(?consumer = <http://ex.org/a>)}
+//UNION
+//{...}
+//}
+//ask query like those TESTED WITH FUSEKI ONLY and they works
+
+in add if more is and isNot used in and generate something like that still not so clear solution
+{ ...  
+?consumer rdf:type foaf:Person.
+FILTER ((?consumer = <x> ))
+?consumer rdf:type foaf:Person.
+FILTER ()
+...}
+ALLOWED by sparql grammar, from pt of view of sparql semantic they are in and (ie equivalent to FILTER ( (?consumer = <x> ) && (!(?consumer = <k> )) ) )  
+cfr - http://answers.semanticweb.com/questions/2494/can-you-have-more-then-one-filter-clause-in-a-sparql-block
+
+
+POSSIBLE OPTIMIZATIONS
+- use a instead of rdf:type is shorter and not require rdf prefix (at least with fuseki)

@@ -11,7 +11,7 @@
 #banner
 	<div style="position:absolute;top:15px;right:15px;">
 		<a href="${baseUri}/sparql" id="goto_sparql" class="button">#i18n("sparql.endpoint.link")</a>
-#if( ${securityCtx.userAuthenticated} )
+#if( ${securityCtx.principal} )
 		<a href="${baseUri}/project" id="goto_workspace" class="button">#i18n("project.workspace.link")</a>
 #end
 	</div>
@@ -29,11 +29,11 @@
 					<tr>
 	#foreach( $c in $it.Columns )
 		#set( $value = false ) ## Preset local variable to force next assignment in all cases.
-		#set( $value = $!{item.getValue($c).toString()} )
-		#if( ${value.startsWith("http://")} || ${value.startsWith("https://")} )
-						<td><a href="${baseUri}/sparql/describe?uri=$esc.url($value)&default-graph-uri=$!esc.url($repository)">$esc.html(${value})</a></td>
+		#set( $value = $!{item.getValue($c)} )
+		#if( $sparql.isUrl($value) )
+						<td><a href="${baseUri}/sparql/describe?uri=$esc.url($value)&default-graph-uri=$!esc.url($repository)">$esc.html($sparql.toString($value))</a></td>
 		#else
-						<td>$esc.html(${value})</td>
+						<td>$esc.html($sparql.toString($value))</td>
 		#end
 	#end
 					</tr>
