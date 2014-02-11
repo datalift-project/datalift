@@ -430,7 +430,7 @@ public class Workspace extends BaseModule
                 }
             }
             if (modified) {
-                this.projectManager.saveProject(p);
+                this.projectManager.saveProject(p, true);
             }
             response = this.redirect(p, null).build();
         }

@@ -10,7 +10,7 @@
             <link href="$entry.link" />
             <updated>$entry.updated</updated>
             <author><name>$entry.author</name></author>
-            <content>$entry.content</content>
+            <content type="application/atom+xml">$entry.content</content>
         </entry>
     #end 
 </feed>

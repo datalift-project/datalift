@@ -94,10 +94,19 @@ public interface ProjectManager
 
     /**
      * Marks the specified project for being persisted into permanent
-     * storage.
+     * storage. Do not generate a ProjectModificationEvent.
      * @param  p   the project to save or update in the RDF store.
      */
     public void saveProject(Project p);
+
+    /**
+     * Marks the specified project for being persisted into permanent
+     * storage. If createEvent is true and the project already exist, it 
+     * generates a ProjectModificationEvent.
+     * @param  p            the project to save or update in the RDF store.
+     * @param  createEvent  generate a ProjectModificationEvent if true
+     */
+	public void saveProject(Project p, Boolean createEvent);
 
     /**
      * Removes the specified project from the DataLift internal RDF
@@ -416,5 +425,6 @@ public interface ProjectManager
 	 */
     public void addSourceSuppressionEvent(
     		Project project, URI srcUri, Map<String, Object> parameters) throws Exception;
+
 
 }

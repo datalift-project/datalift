@@ -602,6 +602,12 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     /** {@inheritDoc} */
     @Override
     public void saveProject(Project p) {
+    	this.saveProject(p, false);
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public void saveProject(Project p, Boolean createEvent) {
         this.checkAvailable();
         if (p == null) {
             throw new IllegalArgumentException("p");
@@ -613,7 +619,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
             if (existingProject == null)
             	this.saveNewProject(p);
             else
-            	this.saveExistingProject(p, existingProject);
+            	this.saveExistingProject(p, existingProject, createEvent);
             log.debug("Project <{}> saved to RDF store", p.getUri());
         }
         catch (Exception e) {
@@ -665,8 +671,14 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
      * @param existingProject is the {@link Project} already stored.
      * @throws URISyntaxException 
      */
-    private void saveExistingProject(Project p, Project existingProject) throws URISyntaxException {
+    private void saveExistingProject(
+    		Project p, 
+    		Project existingProject, 
+    		Boolean createEvent) throws URISyntaxException {
         this.projectDao.save(p);
+        
+        if (createEvent == false)
+        	return;
         
         JsonParam param = new JsonParam();
         if (!StringUtils.equals(p.getTitle(), existingProject.getTitle()))
