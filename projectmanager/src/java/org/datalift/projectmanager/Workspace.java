@@ -2277,11 +2277,12 @@ public class Workspace extends BaseModule
     			"SELECT * WHERE {\n" +
     			"  ?event a <http://www.w3.org/ns/prov#Activity> ;\n" +
     			"         prov:startedAtTime ?time ;\n" +
-    			"         prov:influenced <" + srcUri + "> ;\n" +
+    			"         prov:influenced ?influenced ;\n" +
     			"         datalift:parameters ?parameters ;\n" +
     			"         prov:endedAtTime ?endedAtTime ;\n" +
     			"         prov:wasAssociatedWith ?user ;\n" +
-    			"         a ?type . FILTER regex(str(?type), \"Source\")\n" +
+    			"         a ?type . FILTER(?influenced=<" + srcUri + ">)\n" +
+    			"                   FILTER regex(str(?type), \"Source\")\n" +
     			"} ORDER BY DESC(?endedAtTime)";
     	
     	Feed feed = this.generateFeedEntries(query);
@@ -2313,11 +2314,12 @@ public class Workspace extends BaseModule
     			"SELECT * WHERE {\n" +
     			"  ?event a <http://www.w3.org/ns/prov#Activity> ;\n" +
     			"         prov:startedAtTime ?time ;\n" +
-    			"         prov:influenced <" + projectUri + "> ;\n" +
+    			"         prov:influenced ?influenced ;\n" +
     			"         datalift:parameters ?parameters ;\n" +
     			"         prov:endedAtTime ?endedAtTime ;\n" +
     			"         prov:wasAssociatedWith ?user ;\n" +
-    			"         a ?type . FILTER regex(str(?type), \"Project\")" +
+    			"         a ?type . FILTER(?influenced=<" + projectUri + ">)\n" +
+    			"                   FILTER regex(str(?type), \"Project\")\n" +
     			"} ORDER BY DESC(?endedAtTime)";
 
     	Feed feed = this.generateFeedEntries(query);
@@ -2331,7 +2333,7 @@ public class Workspace extends BaseModule
     
     @GET
     @Produces(APPLICATION_ATOM)
-    @Path("/feed")
+    @Path("feed")
     public Response getSourceAtomStream() {
     	Feed feed = allFeed();
         return Response.ok(this.newView("rss/atom.vm", feed)).build();
@@ -2347,14 +2349,16 @@ public class Workspace extends BaseModule
     			"         prov:influenced ?influenced ;" +
     			"         datalift:parameters ?parameters ;" +
     			"         prov:endedAtTime ?endedAtTime ;" +
+    			"         prov:wasAssociatedWith ?user ;\n" +
     			"         a ?type . FILTER regex(str(?type), \"Event\")" +
     			"}";
         
 
     	Feed feed = this.generateFeedEntries(query);
     	feed.setTitle("Datalift feed");
+    	//feed.setLink(projectUri);
+    	//feed.setId(projectUri);
     	feed.setUpdated("Date");
-    	// TODO
     	
     	return feed;
     }     
@@ -2430,9 +2434,19 @@ public class Workspace extends BaseModule
             	   
             	   String link = e.getLink();
             	   StringBuilder title = new StringBuilder();
-            	   title.append(link.substring(link.indexOf("#") + 1));
             	   
-            	   // If we are in feed all
+            	   String uncamelcased = 
+            			   link.substring(link.indexOf("#") + 1)
+            			   .replaceAll(
+            			      String.format("%s|%s|%s",
+            			         "(?<=[A-Z])(?=[A-Z][a-z])",
+            			         "(?<=[^A-Z])(?=[A-Z])",
+            			         "(?<=[A-Za-z])(?=[^A-Za-z])"
+            			      ),
+            			      " ");
+            	   
+            	   title.append(uncamelcased);
+            	   
             	   String influenced = e.getInfluenced();
             	   if (influenced != null) {
             		   title.append(": ").append(influenced);
@@ -2457,7 +2471,7 @@ public class Workspace extends BaseModule
                Repository.closeQuietly(cnx);
            }
         };
-			
+
     	Feed feed = new Feed();
     	feed.setEntries(entryIt);
 
