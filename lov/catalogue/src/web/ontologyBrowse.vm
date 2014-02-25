@@ -8,10 +8,11 @@
 #set( $title = "LOV Catalogue" )
 	<title>#i18n($title) - DataLift</title>
 #css_links
+#header_links
 <link rel="stylesheet" href="${moduleUri}/static/css/ontologyBrowse.css">
 </head>
 <body>
-#banner
+#h_tetiere
   <div id="content" class="ui-widget-content dl-main-panel">
     <h3 class="ui-widget-header dl-widget-header">#i18n("$title")</h3>
   </div>
@@ -51,7 +52,7 @@
 <!--
 <a href="javascript:sendForm();" class="ui-button ui-state-default ui-corner-all ui-button-text-only submitbt">Submit</a> <a href="javascript:refresh();" class="ui-button ui-state-default ui-corner-all ui-button-text-only submitbt">Refresh</a>
 -->
-#footer
+#h_footer
 
 <script language="javascript" src="${moduleUri}/static/js/libs/jquery.js"></script>
 <script language="javascript" src="${moduleUri}/static/js/libs/jquery.dataTables.min.js"></script>

@@ -2556,6 +2556,8 @@ public class Workspace extends BaseModule
                 l = new License(p.getLicense(), null);  // Unknown license.
             }
             view.put("license", l.getLabel());
+            Collection<Ontology> ontologies = this.projectManager.getOntologies(p);
+            view.put("ontologies", ontologies);
             // Search for modules accepting the selected project.
             Collection<UriDesc> modules = new TreeSet<UriDesc>(
                     // Sort modules according to position, lower transformation

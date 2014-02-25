@@ -515,7 +515,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         
         StringBuilder query = new StringBuilder();
         query.append("select distinct ?result where {");
-        query.append("?result a datalift:ontology;");
+        query.append("?result a datalift:Ontology;");
         query.append("datalift:project <");
         query.append(project.getUri().toString());
         query.append("> }");

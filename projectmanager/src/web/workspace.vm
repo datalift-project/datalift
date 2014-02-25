@@ -11,10 +11,19 @@
 #h_tetiere
 
 
-<!-- IF CURRENT IS LOADED -->
-#if($current)
 
+#if($current)
+<!-- IF CURRENT IS LOADED -->
 <script type="text/javascript">
+$(document).ready(function() {
+	var hostLane = window.location.protocol + "//" + window.location.host + window.location.pathname;
+	var pathArray = window.location.pathname.split( '/' );
+	var pathLane = '<a href="' + window.location.protocol + "//" + window.location.host + "/" + pathArray[1] + '">' + pathArray[1] + ' >> </a>';
+	pathLane += '<a href="' + hostLane + '">' + pathArray[2] + ' >> </a>';
+	
+	console.log(pathLane);
+	jQuery('#gangway').append(pathLane);
+});
 	var allProjects = "";
 	var allLicenses = "";
 	var currentProject = { uri : "$!esc.javascript($current.uri)", description: "$!esc.javascript($current.description)",  title : "$!esc.javascript($!{current.title})", license : "$!esc.javascript($licenses[$current.getLicense()].getLabel())", creation_date : "$!date.format('medium', $current.creationDate)", modification_date :  "$!date.format('medium', $current.modificationDate)" };
@@ -24,6 +33,7 @@
 <div class="container-fluid" id="projectSpaceContainer" ng-controller="projectController">
 	<div class="span12 row-fluid">
 		<h3 class="text-center">{{curProj.title}}</h3>
+		<span id="gangway"></span>
 		<div class="row-fluid" style="margin-top: 20px;">
 			<!-- DIV HISTOIRIQUE -->
 			<div class="span3 border3">
@@ -47,7 +57,7 @@
 				<ul class="nav nav-tabs tab_details">
 					<li><a href="#suivi" data-toggle="tab">#i18n("tab.name.monitoring")</a></li>
 					<li><a href="#description" data-toggle="tab">#i18n("tab.name.description")</a></li>
-					<li class="active"><a href="#sources" data-toggle="tab">#i18n("tab.name.data")</a></li>
+					<li><a href="#sources" data-toggle="tab">#i18n("tab.name.data")</a></li>
 					<li><a href="#vocabulaires" data-toggle="tab">#i18n("tab.name.vocabulary")</a></li>
 				</ul>
 				<!-- FIN LISTE ONGLET -->
@@ -92,7 +102,7 @@
 										<img src="${baseUri}/images/icon-delete.png" ng-click="deleteSource('$current.uri', '${curSource.uri}', '${baseUri}')">
 									</a>
 									<a href="$curSource.uri" class="pull-right" style="display: inline-block; margin-right: 20px;">
-										<img src="${baseUri}/images/icon-edit.png">
+										<img src="${baseUri}/images/icon-magnifier.png">
 									</a>
 								</li>
 							
@@ -108,15 +118,13 @@
 				  	<!-- ONGLET ONTOLOGIES -->
 				  	<div class="tab-pane tab-sub-menu" id="vocabulaires">
 						<div class="list-group" style="max-height: 100px:">
-						#foreach ($curOnto in $current.getOntologies())
-							<ul>
+						#foreach ($curOnto in $ontologies)
 								<li class="divider-group-list row-fluid">
 									<a href="${curOnto.title}">$curOnto.title</a>	
 									<a href="#deleteOnto" role="button" class="pull-right" data-toggle="modal" style="display: inline-block" ng-click="deleteOntology('$current.uri', '$curOnto.title')">
 										<img src="${baseUri}/images/icon-delete.png">
 									</a>
 								</li>
-							</ul>
 						#end
 						</div>
 						
@@ -134,7 +142,7 @@
 			<!-- FIN DIV CONTENT TAB ONGLETS CONTAINER -->
 		</div>
 	</div>
-
+	
 	<!-- DIV POPUP REMOVE PROJECT -->
 	
 	<form method="post" action="${current.uri}?_method=DELETE" class="form_formated" name="delete_project">
@@ -304,50 +312,55 @@ function change (el) {
 </div>
 #h_footer
 <script type="text/javascript">
-jQuery(function() {
-
-    jQuery.getFeed({
-        url: currentProject.uri+'/feed',
-        success: function(feed) {
-        
-            jQuery('#rss_feed').append('<h4 class="pagination-centered">'
-            + feed.title
-            + '</h4>');
-            
-            var html = '';
-            
-            for(var i = 0; i < feed.items.length && i < 5; i++) {
-            
-                var item = feed.items[i];
-                
-                html += '</br></br><a href="'
-                + item.link
-                + '">'
-                + item.title
-                + '</a>';
-                
-                html += '<div class="updated">'
-                + item.id
-                + '</div>';
-                
-				var rssJSONparse = jQuery.parseJSON(item.description);
-                console.log(rssJSONparse);
-                
-                for (j = 0 ; j < rssJSONparse.length ; j++)
-                	{
-                		html += '<div class="updated">'
-                		+ rssJSONparse[j].name;
-                		+ '</div> </br>';
-                		
-                		html += '<div class="updated">'
-                    		+ rssJSONparse[j].value;
-                    		+ '</div></br>';
-                	}
-            }
-            
-            jQuery('#rss_feed').append(html);
-        }    
-    });
+$( document ).ready(function() {
+	
+	jQuery(function() {
+	    jQuery.getFeed({
+	        url: currentProject.uri+'/feed',
+	        success: function(feed) {
+	        
+	            jQuery('#rss_feed').append('<h4 class="pagination-centered">'
+	            + feed.title
+	            + '</h4>');
+	            
+	            var html = '';
+	            
+	            for(var i = 0; i < feed.items.length && i < 5; i++) {
+	            
+	                var item = feed.items[i];
+	                
+	                html += '</br></br><a href="'
+	                + item.link
+	                + '">'
+	                + item.title
+	                + '</a>';
+	                
+	                html += '<div class="updated">'
+	                + item.id
+	                + '</div>';
+	                
+					var rssJSONparse = jQuery.parseJSON(item.description);
+	                console.log(rssJSONparse);
+	                
+	                for (j = 0 ; j < rssJSONparse.length ; j++)
+	                	{
+	                		html += '<div class="updated">'
+	                		+ rssJSONparse[j].name;
+	                		+ '</div> </br>';
+	                		
+	                		html += '<div class="updated">'
+	                    		+ rssJSONparse[j].value;
+	                    		+ '</div></br>';
+	                	}
+	            }
+	            
+	            jQuery('#rss_feed').append(html);
+	        }    
+	    });
+	});
+	
+	
+	
 });
 
 </script> 
@@ -356,7 +369,7 @@ jQuery(function() {
 <!-- if CURRENT IS NOT LOADED  --> 
 
 <script type="text/javascript">
-var currentProject = "";
+	var currentProject = "";
 	var allProjects = [
 #foreach ($item in $it)
        { uri : "$esc.javascript($!{item.uri})", description : "$!esc.javascript($item.description)", title : "$esc.javascript($!{item.title})", license : "$!esc.javascript($licenses[$item.getLicense()].getLabel())", owner :  "$esc.javascript($item.owner)", creation_date : "$!date.format('medium', $item.creationDate)", modification_date : "$!date.format('medium', $item.modificationDate)" },
@@ -378,7 +391,6 @@ var currentProject = "";
 				<button id="add_project" href="#createproject" role="button" class="btn" data-toggle="modal"><img class="icon" src="${baseUri}/images/icon-add.png">#i18n("project.title.new_project")</button>
 			</div>
 		</div>
-		
 		<!-- DIV BAR DE FILTRES --> 
 		<div class="span9 row" style="margin:0 auto; float:none;">
 			<form class="navbar-search form-inline pagination-centered">
@@ -399,7 +411,7 @@ var currentProject = "";
 						<span class="span7">
 						 	<img src="${baseUri}/images/Project-img.png" id="img-nav-stacked"><span>{{ project.title }}</span><br>
 						 	<span class="info-list-title">#i18n("project.description") :</span>
-							<span class="info-list">{{ project.description }} </span><br>
+							<span class="info-list">{{ project.description | limitTo:3 }} </span><br>
 							<span class="info-list-title">#i18n("project.license") :</span>
 							<span class="info-list"> {{ project.license }}</span>
 						</span>

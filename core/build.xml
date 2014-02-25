@@ -340,6 +340,10 @@
                                 preservelastmodified="true">
       <fileset dir="${fwk.web.home}" excludes="**/.*"/>
       <fileset dir="${web.home}"     excludes="**/.*"/>
+    	<filterset>
+    		<filterset refid="webapp.param.filters"/>
+    		<filter token="app.version" value="${app.version}"/>
+    	</filterset>
     </copy>
     <!-- Copy web application static content and context definition -->
     <copy todir="${web-inf.dir}" encoding="UTF-8" preservelastmodified="true">

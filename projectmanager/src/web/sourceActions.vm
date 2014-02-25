@@ -15,9 +15,23 @@
 #h_tetiere
 #module_note
 <!-- ---------------- SOURCE SPACE -------------------- -->
+<script type="text/javascript">
+$(document).ready(function() {
+	var hostLane = window.location.protocol + "//" + window.location.host + window.location.pathname;
+	var pathArray = window.location.pathname.split( '/' );
+	var searchLane = window.location.search;
+	var pathLane = '<a href="' + window.location.protocol + "//" + window.location.host + "/" + pathArray[1] + '">' + pathArray[1] + ' >> </a>';
+	pathLane += '<a href="' + window.location.protocol + "//" + window.location.host + "/" + pathArray[1] + "/" + pathArray[2] + '">' + pathArray[2] + ' >> </a>';
+	pathLane += '<a href="' + hostLane + window.location.search + '">' + searchLane.substr(searchLane.lastIndexOf('=') + 1) + ' >> </a>';
+	console.log(pathLane);
+	console.log(window.location.search);
+	jQuery('#gangway').append(pathLane);
+});
+</script>
 <div class="container-fluid" id="projectSpaceContainer">
 	<div class="span12 row-fluid">
 		<h3 class="text-center" id="sourceName">$curSource.title</h3>
+		<span id="gangway"></span>
 		<div class="row-fluid" style="margin-top: 20px;">
 			<!-- DIV HISTOIRIQUE -->
 			<div class="span3 border3">

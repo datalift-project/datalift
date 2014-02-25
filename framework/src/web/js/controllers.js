@@ -12,7 +12,7 @@ app.controller('projectController', function ($scope, $http){
 	$scope.projects = allProjects;
 	$scope.licenses = allLicenses;
 	$scope.curProj = currentProject;
-	$scope.limitToDescription = 3
+	$scope.limitToDescription = 3;
 	
 	$scope.getRssFeed = function()
 	{
@@ -91,7 +91,8 @@ app.controller('projectController', function ($scope, $http){
 	
 	$scope.deleteOntology = function(projectId, ontoTitle)
 	{
-		window.location = projectId + "/ontology/" + ontoTitle + "/delete";
+		console.log (projectId + "/ontology/" + ontoTitle + "/delete");
+		//window.location = projectId + "/ontology/" + ontoTitle + "/delete";
 	}
 	
 	
