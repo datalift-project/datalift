@@ -8,6 +8,10 @@ body {
 	padding-top: 5.667em;
 }
 
+ul, li {
+    list-style-type: none;
+}
+
 .dl-widget-header {
   text-align:center;
   margin:0;

@@ -91,8 +91,8 @@ app.controller('projectController', function ($scope, $http){
 	
 	$scope.deleteOntology = function(projectId, ontoTitle)
 	{
-		console.log (projectId + "/ontology/" + ontoTitle + "/delete");
-		//window.location = projectId + "/ontology/" + ontoTitle + "/delete";
+		
+		window.location = projectId + "/ontology/" + ontoTitle + "/delete";
 	}
 	
 	

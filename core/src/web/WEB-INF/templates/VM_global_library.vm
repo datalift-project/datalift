@@ -48,9 +48,17 @@
             			<li><a role="menuitem" href="${baseUri}/legacy">#i18n("header.legacy")</a></li>
             		</ul>
             	</li>
-        	</ul>
+       		</ul>
               <li id="projets"><a href="${baseUri}/project">#i18n("header.project")</a></li>
-              <li id="catalogues"><a href="http://lov.okfn.org/dataset/lov" target="_blank">#i18n("header.catalogues")</a></li>
+              <!-- <li id="catalogues"><a href="http://lov.okfn.org/dataset/lov" target="_blank">#i18n("header.catalogues")</a></li> -->
+              <li class="dropdown">
+            		<a class="dropdown-toggle" id="drop5" role="button" data-toggle="dropdown" href="">#i18n("header.catalogues")<b class="caret"></b></a>
+            		<ul class="dropdown-menu" role="menu" aria-labelledby="drop5">
+            			<li><a role="menuitem" href="http://lov.okfn.org/dataset/lov" target="_blank">Lov</a></li>
+            			<!-- <li class="divider"></li>
+            			<li><a role="menuitem" href="[target]">[name]</a></li>  -->
+            		</ul>
+            	</li>
               <li id="admin"><a href="#admin">#i18n("header.administration")</a></li>
           </div>
       	</div>
