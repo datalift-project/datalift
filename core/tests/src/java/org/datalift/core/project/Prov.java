@@ -60,8 +60,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-
-// TODO: test DefaultProjectManager.newProject
+// TODO: -The testProjectSave function do not works because we have to create 
+//       "tests/files/" folder.
+//       -Rename this file (Prov.java) to ProvTest.java
 
 public class Prov {
     private final static String RDF_STORE = "internal";
@@ -136,9 +137,7 @@ public class Prov {
 		CsvSource csv2 = (CsvSource) project2.getSource(csvURI);
 		User user2 = project.getWasAttributedTo();
 		List<Ontology> ontologies = pm.getOntologies(project2);
-		
-//		System.out.println(ontologies.get(0).getTitle());
-		
+				
 		assertEquals("PROV: Project: The title is wrong.", 
 				project2.getTitle(), projectTitle);
 		assertEquals("PROV: Project: The license is wrong.", 
@@ -209,30 +208,4 @@ public class Prov {
 		if (project != null)
 			pm.deleteProject(project);
 	}
-	
-//	private void removeDataliftGraph() {
-//		EntityManager m = f.createEntityManager();
-//		Query q = m.createQuery(
-//				"select distinct ?result where { " +
-//				"?result a empire:Event ; dcterms:subject ??bo . }");
-//	}
-	
-//	@Test
-//	public void testProv() throws Exception {
-//		DefaultProjectManager pm = initProjectManager();
-//		
-//		// Create a project and a CSV source
-//		URI projectURI = new URI("http://projects.fr/myproject");
-//		URI licenseURI = 
-//				new URI("http://creativecommons.org/licenses/by-nc-sa/3.0/");
-//		URI csvURI = new URI("http://datalift.fr/test");
-//		Project project = pm.newProject(projectURI, "Title", 
-//				"Desc.", licenseURI);
-//		CsvSource csv = pm.newCsvSource(project, csvURI, "CSV Title", 
-//				"Kiosque: prov test", "tests/files/file", ',');
-//		
-//		// Save it
-//		project.add(csv);
-//		pm.saveProject(project);
-//	}
 }
