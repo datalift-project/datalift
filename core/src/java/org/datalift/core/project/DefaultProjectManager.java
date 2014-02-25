@@ -515,7 +515,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         
         StringBuilder query = new StringBuilder();
         query.append("select distinct ?result where {");
-        query.append("?result a datalift:ontology;");
+        query.append("?result a datalift:Ontology;");
         query.append("datalift:project <");
         query.append(project.getUri().toString());
         query.append("> }");
@@ -525,6 +525,17 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
 						query.toString(), Ontology.class);
         
         return ontologies;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public Ontology getOntology(Project project, String title) {
+    	Collection<Ontology> ontologies = this.getOntologies(project);
+    	for (Ontology o : ontologies) {
+    		if (o.getTitle().equals(title))
+    			return o;
+    	}
+    	return null;
     }
 
     /** {@inheritDoc} */

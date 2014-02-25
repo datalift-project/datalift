@@ -2144,13 +2144,13 @@ public class Workspace extends BaseModule
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
             Project p = this.loadProject(projectUri);
             // Search for requested ontology in project.
-            Ontology ontology = p.getOntology(ontologyTitle);
-            if (ontology == null) {
+            Ontology o = this.projectManager.getOntology(p, ontologyTitle);
+            if (o == null) {
                 // Not found.
                 this.sendError(NOT_FOUND, null);
             }
             TemplateModel view = this.newView("projectOntoUpload.vm", p);
-            view.put("current", ontology);
+            view.put("current", o);
             response = Response.ok(view, TEXT_HTML).build();
         }
         catch (Exception e) {
@@ -2173,14 +2173,14 @@ public class Workspace extends BaseModule
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
             Project p = this.loadProject(projectUri);
             // Search for requested ontology in project.
-            Ontology ontology = p.getOntology(currentOntologyTitle);
-            if (ontology == null) {
+            Ontology o = this.projectManager.getOntology(p, currentOntologyTitle);
+            if (o == null) {
                 // Not found.
                 this.sendError(NOT_FOUND, null);
             }
             // Update ontology data.
-            ontology.setTitle(title);
-            ontology.setSource(source);
+            o.setTitle(title);
+            o.setSource(source);
             // Save updated ontology.
             this.projectManager.saveProject(p);
             // Notify user of successful update, redirecting HTML clients
@@ -2207,7 +2207,7 @@ public class Workspace extends BaseModule
             // Retrieve ontology.
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
             Project p = this.loadProject(projectUri);
-            Ontology o = p.getOntology(ontologyTitle);
+            Ontology o = this.projectManager.getOntology(p, ontologyTitle);
             if (o == null) {
                 // Not found.
                 this.sendError(NOT_FOUND, ontologyTitle);
