@@ -347,7 +347,14 @@ public interface ProjectManager
      * Get the collection of ontologies owned by a project.
      * @param  project    the owning project.
      */
-	List<Ontology> getOntologies(Project project);
+	public List<Ontology> getOntologies(Project project);
+
+    /**
+     * Get an ontology owned by a project.
+     * @param  project    the owning project.
+     * @param  title      the ontology title.
+     */
+    public Ontology getOntology(Project project, String title);
 
 	/**
      * Builds the path to the project directory or to the specified

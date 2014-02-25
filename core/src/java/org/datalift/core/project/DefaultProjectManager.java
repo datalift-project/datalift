@@ -526,6 +526,17 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         
         return ontologies;
     }
+    
+    /** {@inheritDoc} */
+    @Override
+    public Ontology getOntology(Project project, String title) {
+    	Collection<Ontology> ontologies = this.getOntologies(project);
+    	for (Ontology o : ontologies) {
+    		if (o.getTitle().equals(title))
+    			return o;
+    	}
+    	return null;
+    }
 
     /** {@inheritDoc} */
     @Override

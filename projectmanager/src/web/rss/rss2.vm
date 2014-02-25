@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<rss version="2.0">
+   <channel>
+      <title>$it.title</title>
+      <link>$it.link</link>
+      <lastBuildDate>$it.updated</lastBuildDate>
+      <description>$it.id</description>
+
+        #foreach( $entry in $it.entries )
+            <item>
+                <title>$entry.title</title>
+                <id>$entry.id</id>
+                <link>$entry.link"</link>
+                <pubDate>$entry.updated</pubDate>
+                <author><name>$entry.author</name></author>
+                <description>$entry.content</description>
+            </item>
+        #end 
+
+   </channel>
+</rss>

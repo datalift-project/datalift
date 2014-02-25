@@ -2144,13 +2144,13 @@ public class Workspace extends BaseModule
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
             Project p = this.loadProject(projectUri);
             // Search for requested ontology in project.
-            Ontology ontology = p.getOntology(ontologyTitle);
-            if (ontology == null) {
+            Ontology o = this.projectManager.getOntology(p, ontologyTitle);
+            if (o == null) {
                 // Not found.
                 this.sendError(NOT_FOUND, null);
             }
             TemplateModel view = this.newView("projectOntoUpload.vm", p);
-            view.put("current", ontology);
+            view.put("current", o);
             response = Response.ok(view, TEXT_HTML).build();
         }
         catch (Exception e) {
@@ -2173,14 +2173,14 @@ public class Workspace extends BaseModule
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
             Project p = this.loadProject(projectUri);
             // Search for requested ontology in project.
-            Ontology ontology = p.getOntology(currentOntologyTitle);
-            if (ontology == null) {
+            Ontology o = this.projectManager.getOntology(p, currentOntologyTitle);
+            if (o == null) {
                 // Not found.
                 this.sendError(NOT_FOUND, null);
             }
             // Update ontology data.
-            ontology.setTitle(title);
-            ontology.setSource(source);
+            o.setTitle(title);
+            o.setSource(source);
             // Save updated ontology.
             this.projectManager.saveProject(p);
             // Notify user of successful update, redirecting HTML clients
@@ -2207,7 +2207,7 @@ public class Workspace extends BaseModule
             // Retrieve ontology.
             URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
             Project p = this.loadProject(projectUri);
-            Ontology o = p.getOntology(ontologyTitle);
+            Ontology o = this.projectManager.getOntology(p, ontologyTitle);
             if (o == null) {
                 // Not found.
                 this.sendError(NOT_FOUND, ontologyTitle);
@@ -2264,6 +2264,17 @@ public class Workspace extends BaseModule
         return Response.ok(this.newView("rss/atom.vm", feed)).build();
     }
 
+    @GET
+    @Produces(APPLICATION_RSS)
+    @Path("{id}/source/{srcid}/feed")
+    public Response getSourceRssStream(
+    		@PathParam("id") String projectId,
+    		@PathParam("srcid") String srcId,
+    		@Context UriInfo uriInfo) {
+    	Feed feed = sourceFeed(projectId, srcId, uriInfo);
+        return Response.ok(this.newView("rss/rss2.vm", feed)).build();
+    }
+    
     private Feed sourceFeed(
     		String projectId,
             String srcId,
@@ -2304,6 +2315,16 @@ public class Workspace extends BaseModule
         return Response.ok(this.newView("rss/atom.vm", feed)).build();
     }
     
+    @GET
+    @Produces(APPLICATION_RSS)
+    @Path("{id}/feed")
+    public Response getProjectRssStream(
+    		@PathParam("id") String projectId,
+    		@Context UriInfo uriInfo) {
+    	Feed feed = projectFeed(projectId, uriInfo);
+        return Response.ok(this.newView("rss/rss2.vm", feed)).build();
+    }
+    
     private Feed projectFeed(String projectId, UriInfo uriInfo) {
     	Project p = this.loadProject(uriInfo, projectId);
     	String projectUri = p.getUri().toString();
@@ -2337,6 +2358,14 @@ public class Workspace extends BaseModule
     public Response getSourceAtomStream() {
     	Feed feed = allFeed();
         return Response.ok(this.newView("rss/atom.vm", feed)).build();
+    }
+    
+    @GET
+    @Produces(APPLICATION_RSS)
+    @Path("feed")
+    public Response getSourceRssStream() {
+    	Feed feed = allFeed();
+        return Response.ok(this.newView("rss/rss2.vm", feed)).build();
     }
     
     private Feed allFeed() {
