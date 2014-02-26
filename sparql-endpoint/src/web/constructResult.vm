@@ -10,9 +10,10 @@
 	<title>#i18n("sparql.query.results") - #i18n("sparql.endpoint.title") - DataLift</title>
 #end
 #css_links
+#header_links
 </head>
 <body>
-#banner
+#h_tetiere
 	<div style="position:absolute;top:15px;right:15px;">
 		<a href="${baseUri}/sparql" id="goto_sparql" class="button">#i18n("sparql.endpoint.link")</a>
 #if( ${securityCtx.userAuthenticated} )
@@ -84,7 +85,7 @@
 			</select>
 		</div>
 	</div>
-#footer
+#h_footer
 
 #script_links
 	<script type="text/javascript">

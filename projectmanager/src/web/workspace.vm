@@ -27,43 +27,38 @@ $(document).ready(function() {
 	pathLane += '<a href="' + hostLane + '">' + pathArray[2] + ' >> </a>';
 	jQuery('#gangway').append(pathLane);
 	
-	
+	//flux rss parsing function
 	jQuery(function() {
 	    jQuery.getFeed({
+	    	//url = url to catch le flux
 	        url: currentProject.uri+'/feed',
 	        success: function(feed) {
-	        
-	            jQuery('#rss_feed').append('<h4 class="pagination-centered">'
+	            jQuery('#rss_feed').append('<span style="font-size: 1.5em; color: 808080;" class="pagination-centered">'
 	            + feed.title
-	            + '</h4>');
+	            + '</span>');
 	            
 	            var html = '';
-	            
 	            for(var i = 0; i < feed.items.length && i < 5; i++) {
-	            
 	                var item = feed.items[i];
+	                var update = new Date(item.updated);
+	                var rssJSONparse = jQuery.parseJSON(item.description);
 	                
-	                html += '</br></br><a href="'
-	                + item.link
-	                + '">'
-	                + item.title
-	                + '</a>';
+	                console.log(item.link);	
+	                html += '</br></br><span style="color: #BE188A;">'
+	                		+ item.title
+	                		+ '</span>';
+             		html += '<div class="updated"><span>'
+              				+ update.toString()
+              				+'</span</div>';
 	                
-	                html += '<div class="updated">'
-	                + item.id
-	                + '</div>';
-	                
-					var rssJSONparse = jQuery.parseJSON(item.description);
-	                
+					
 	                for (j = 0 ; j < rssJSONparse.length ; j++)
 	                	{
-	                		html += '<div class="updated">'
-	                		+ rssJSONparse[j].name;
-	                		+ '</div> </br>';
-	                		
-	                		html += '<div class="updated">'
-	                    		+ rssJSONparse[j].value;
-	                    		+ '</div></br>';
+	                		html += '<div class="updated"><span">'
+	                		+ rssJSONparse[j].name
+	                		+"&nbsp;"
+                    		+ rssJSONparse[j].value
+                    		+ '</span</div></br>';
 	                	}
 	            }
 	            
@@ -84,15 +79,7 @@ $(document).ready(function() {
 			<div class="span3 border3">
 				<h4 class="pagination-centered">#i18n("records")</h4>
 				<div class="span12" style="border: solid #808080 1px; height: 500px">
-					<div class="history-list" id=rss_feed style="color: #909090;">
-						<!-- <p>Ici se trouvera l'historique des projets.</p> -->
-						<!-- <h4>{{rssFeedTitle}}</h4>
-						<ul>
-							<li ng-repeat="rssItem in rssItems">
-								<p>"{{rssItem.name}}"</p>
-							</li>
-						</ul>  -->
-					</div>
+					<div class="history-list" id=rss_feed style="color: #909090; font-size : .7em;"></div>
 				</div>
 			</div>
 			<!-- FIN DIV HISTOIRIQUE -->
@@ -103,7 +90,6 @@ $(document).ready(function() {
 			<div class="span9">
 				<!-- LISTE ONGLET -->
 				<ul class="nav nav-tabs tab_details">
-					<li><a href="#suivi-tab" data-toggle="tab">#i18n("tab.name.monitoring")</a></li>
 					<li><a href="#description-tab" data-toggle="tab">#i18n("tab.name.description")</a></li>
 					<li class="active"><a href="#sources-tab" data-toggle="tab">#i18n("tab.name.data")</a></li>
 					<li><a href="#ontologies-tab" data-toggle="tab">#i18n("tab.name.vocabulary")</a></li>
@@ -111,19 +97,11 @@ $(document).ready(function() {
 				<!-- FIN LISTE ONGLET -->
 				<!-- DIV CONTENT TAB ONGLETS -->
 				<div class="tab-content">
-					<!-- ONGLET SUIVI -->
-					<div class="tab-pane" id="suivi-tab">
-						<p>#i18n("tab.subtitle.monitoring")</p>
-						<p class="red-message">Ici se trouvera l'historique du projet {{curProj.title}}</p>
-					</div>
-					<!-- FIN ONGLET SUIVI -->
 					<!-- ONGLET DESCRIPTION -->
 					<div class="tab-pane" id="description-tab" style="height: 500px;">
 				  		<p>#i18n("project.description") : </p>
 				  		<p>{{curProj.description}}</p>
 			  			<p>#i18n("project.license") : </p><p>{{curProj.license}} </p><br/>
-						<!--<p style="display:inline-block;">Créé par:&nbsp</p>
-						<p style="display:inline-block;">{{curProj.owner}}</p><br/> -->
 						<p style="display:inline-block;">#i18n("project.creation_s")</p>
 						<p style="display:inline-block;">{{curProj.creation_date}}</p><br/>
 						<p style="display:inline-block;">#i18n("project.modification_s")</p>
@@ -143,7 +121,6 @@ $(document).ready(function() {
 				  	<div class="tab-pane active tab-sub-menu" id="sources-tab">
 						<div class="list-group">
 							#foreach ($curSource in $current.getSources())
-							
 								<li class="divider-group-list row-fluid">
 									<a href="#" ng-click="applicableModules('$current.uri', '$curSource.uri')">$curSource.title</a>
 									<a href="#deleteSource" role="button" class="pull-right" data-toggle="modal" style="display: inline-block">
@@ -153,7 +130,6 @@ $(document).ready(function() {
 										<img src="${baseUri}/images/icon-magnifier.png">
 									</a>
 								</li>
-							
 							#end
 						</div>
 						
@@ -208,23 +184,7 @@ $(document).ready(function() {
 			<button href="#" class="btn btn-custom-blue" data-dismiss="modal">#i18n("cancel")</button>
 	    	<button class="btn btn-custom-red" data-dismiss="modal" onclick="document.forms['delete_project'].submit();  return false;">#i18n("delete")</button>
 	  	</div>
-	</div>
-	<!-- FIN DIV POPUP REMOVE PROJECT -->
-	<!-- DIV POPUP MODIFY PROJECT 
-	<div class="modal hide pagination-centered fade" id="modifyProject">
-	  	<div class="modal-header"> <a class="close" data-dismiss="modal">×</a>
-		    <h3>Modifier</h3>
-	  	</div>
-		<div class="modal-body">
-		   	<span>Modification du projet <p class="brand">{{curProj.title}}</p></span>
-	 	</div>
-		<div class="modal-footer">
-			<button class="btn btn-custom-grey" data-dismiss="modal">Annuler</button>
-	    	<button href="${current.uri}/modify" class="btn btn-custom-blue">#i18n("modify")</button>
-	  	</div>
-	</div>
-	 FIN DIV POPUP MODIFY PROJECT -->
-	 
+	</div> 
 	 <!-- MODIFY PROJECT -->
 	#set( $to_redirect = "${baseUri}/project/$")
 	#if( $current )
@@ -303,58 +263,7 @@ function change (el) {
 	return true;
 	}
 </script>	 
-<!-- MODIFY PROJECT -->
 	 
-	 
-	 
-	 
-	 
-	<!-- DIV POPUP MODIFY SOURCE -->
-	<div class="modal hide pagination-centered fade" id="modifySource">
-	  	<div class="modal-header"> <a class="close" data-dismiss="modal">×</a>
-		    <h3>Modifier</h3>
-	  	</div>
-		<div class="modal-body">
-		   	<p>Modification d'un jeux de données</p>
-	 	</div>
-		<div class="modal-footer">
-			<button class="btn btn-custom-grey" data-dismiss="modal">Annuler</button>
-	    	<button data-dismiss="modal" class="btn btn-custom-blue">Modifier</button>
-	  	</div>
-	</div>
-	<!-- FIN DIV POPUP MODIFY ONTOLOGIE -->
-	
-	<!-- DIV POPUP AJOUTER UNE NOUVELLE ONTOLOGIE -->
-	<div class="modal hide pagination-centered fade large" id="addOntologie">
-	  	<div class="modal-header"> <a class="close" data-dismiss="modal">×</a>
-	    	<h3>Nouvelle Ontologie</h3>
-	  	</div>
-	  	<div class="modal-body">
-	    	<p>Ajouter une nouvelle ontologie</p>
-	    	<input type="text" id="ontology-title" name="title" placeholder="Nom de l'ontologie" autofocus>
-	    	<input type="text" id="ontology-cource-url" name="source-url" placeholder="Url de l'ontologie">
-	  	</div>
-	  	<div class="modal-footer">
-		    <a href="#" class="btn" data-dismiss="modal">Annuler</a>
-		    <button class="btn btn-primary" ng-click="uploadOntology('$current.uri')">Créer</button>
-	  	</div>
-	</div>
-	<!-- FIN DIV POPUP AJOUTER UNE NOUVELLE ONTOLOGIE -->
-	
-	<!-- DIV POPUP SUPPRIMER UNE ONTOLOGIE -->
-	<div class="modal hide pagination-centered fade large" id="deleteOntologie">
-	  	<div class="modal-header"> <a class="close" data-dismiss="modal">×</a>
-	    	<h3>Supprimer</h3>
-	  	</div>
-	  	<div class="modal-body">
-	    	<p>Etes-vous sûr de vouloir supprimer ce vocabulaire ?</p>
-	  	</div>
-	  	<div class="modal-footer">
-		    <a href="#" class="btn" data-dismiss="modal">Annuler</a>
-		    <a href="#" data-dismiss="modal" class="btn btn-primary btn-custom-red">Supprimer</a>
-	  	</div>
-	</div>
-	<!-- FIN DIV POPUP AJOUTER UNE NOUVELLE ONTOLOGIE -->
 <!-- ---------------- FIN EDIT PROJECT -------------------- -->
 </div>
 #h_footer
@@ -410,8 +319,6 @@ function change (el) {
 							<span class="info-list"> {{ project.license }}</span>
 						</span>
 						<span class="span5 creater-block">
-							<!-- <span>#i18n("project.creation_by"):&nbsp</span>
-							<span>{{ project.owner }}</span><br>  -->
 							<span>#i18n("project.creation_s")</span>
 							<span>{{ project.creation_date }}</span><br>
 							<span>#i18n("project.modification_s") </span>

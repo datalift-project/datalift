@@ -12,6 +12,11 @@ ul, li {
     list-style-type: none;
 }
 
+.ui-widget-content {
+	margin-bottom: 3.7em;
+    overflow: auto;
+	}
+
 .dl-widget-header {
   text-align:center;
   margin:0;
@@ -575,3 +580,14 @@ min-height: 100%;
 #gangway {
 	font-size : .7em;
 }
+
+/*All id begining by "moduleLevel*" will applicate the following style*/
+[id*="moduleLevel"] {
+	width: 30em;
+	display:inline-block; 
+	margin: 0;
+}
+
+
+
+

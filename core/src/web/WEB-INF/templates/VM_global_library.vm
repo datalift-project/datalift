@@ -43,7 +43,7 @@
             	<li class="dropdown">
             		<a class="dropdown-toggle" id="drop5" role="button" data-toggle="dropdown" href="">#i18n("header.endpoints")<b class="caret"></b></a>
             		<ul class="dropdown-menu" role="menu" aria-labelledby="drop5">
-            			<li><a role="menuitem" href="${baseUri}/sparql">#i18n("header.endpoint")</a></li>
+            			<li><a role="menuitem" href="${baseUri}/sparql">#i18n("header.sparql")</a></li>
             			<li class="divider"></li>
             			<li><a role="menuitem" href="${baseUri}/legacy">#i18n("header.legacy")</a></li>
             		</ul>
@@ -245,8 +245,8 @@
 	<script src="${baseUri}/js/jquery-migrate-1.0.0.js"></script>
 	<script src="${baseUri}/js/jfeed/build/dist/jquery.jfeed.pack.js"></script>
 	<!-- JQuery Plugins -->
-	<script language="javascript" src="${baseUri}/js/jquery/jquery.jqGrid.locale-en.js"></script>
-	<script language="javascript" src="${baseUri}/js/jquery/jquery.jqGrid.js"></script>
+	<script language="javascript" src="${baseUri}/js/jquery/grid.locale-en.js"></script>
+	<script language="javascript" src="${baseUri}/js/jquery/jquery.jqGrid.min.js"></script>
 	<script language="javascript" src="${baseUri}/js/jquery/jquery.history.js"></script>
 	<!-- Datalift common javascript -->
 	<script language="javascript" src="${baseUri}/js/common.js"></script>

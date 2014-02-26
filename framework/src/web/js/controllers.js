@@ -14,54 +14,6 @@ app.controller('projectController', function ($scope, $http){
 	$scope.curProj = currentProject;
 	$scope.limitToDescription = 3;
 	
-	$scope.getRssFeed = function()
-	{
-		$scope.rssItems = '';
-		jQuery(function() {
-		
-		    jQuery.getFeed({
-		        url: currentProject.uri+'/feed',
-		        success: function(feed) {
-		        	//console.log(feed);
-		        	$scope.rssFeedTitle = feed.title;
-		            /*jQuery('#rss_feed').append('<h4 class="pagination-centered">'
-		            + feed.title
-		            + '</h4>');
-		            
-		            var html = '';*/
-		            
-		            for(var i = 0; i < feed.items.length && i < 5; i++) {
-		            
-		                var item = feed.items[i];
-		                
-		                
-	                	//$scope.rssItems += item.description;
-	                	//console.log($scope.rssItems);
-		                
-		                /*html += '<a href="'
-		                + item.link
-		                + '">'
-		                + item.title
-		                + '</a>';
-		                
-		                html += '<div class="updated">'
-		                + item.id
-		                + '</div>';
-		                
-		                html += '<div class="updated">'
-		                    + item.description
-		                    + '</div>';*/
-		            }
-		            
-		            //jQuery('#rss_feed').append(html);*/
-		            //console.log($scope.rssItems);
-		        }    
-		    });
-		    
-		});
-		console.log("rssFeedTitle = "+ $scope.rssFeedTitle);
-	}
-	
 	
 	$scope.deleteSource = function(projectId, sourceUri, baseUri) 
 	{	
@@ -233,11 +185,4 @@ app.controller('moduleController', function ($scope, $location, $http) {
 				});
 			}
 	}
-	
-	/*
-	**$scope.testNotemodule = function()
-	**{
-	**	alert(toto);
-	**}
-	*/
 });

@@ -7,26 +7,10 @@
 #header_links
 #script_links
 
-#module_note_css_links
-#module_note_js_scripts
-
 </head>
 <body ng-app="module" ng-controller="moduleController">
 #h_tetiere
 <!-- ---------------- SOURCE SPACE -------------------- -->
-<script type="text/javascript">
-$(document).ready(function() {
-	var hostLane = window.location.protocol + "//" + window.location.host + window.location.pathname;
-	var pathArray = window.location.pathname.split( '/' );
-	var searchLane = window.location.search;
-	var pathLane = '<a href="' + window.location.protocol + "//" + window.location.host + "/" + pathArray[1] + '">' + pathArray[1] + ' >> </a>';
-	pathLane += '<a href="' + window.location.protocol + "//" + window.location.host + "/" + pathArray[1] + "/" + pathArray[2] + '">' + pathArray[2] + ' >> </a>';
-	pathLane += '<a href="' + hostLane + window.location.search + '">' + searchLane.substr(searchLane.lastIndexOf('=') + 1) + ' >> </a>';
-	console.log(pathLane);
-	console.log(window.location.search);
-	jQuery('#gangway').append(pathLane);
-});
-</script>
 <div class="container-fluid" id="projectSpaceContainer">
 	<div class="span12 row-fluid">
 		<h3 class="text-center" id="sourceName">$curSource.title</h3>
@@ -36,9 +20,9 @@ $(document).ready(function() {
 			<div class="span3 border3">
 				<h4 class="pagination-centered">#i18n("records")</h4>
 				<div class="span12" style="border: solid #808080 1px; height: 500px">
-					<div class="history-list" style="padding: 5px; color: #909090;">
-						<p>Ici se trouvera l'historique des projets.</p>
-					</div>
+					<!-- RSS FEED -->
+					<div id="rss_feed" class="history-list" style="padding: 5px; color: #909090; font-size : .7em;"></div>
+					<!-- FIN RSS FEED -->
 				</div>
 			</div>
 			<!-- FIN DIV HISTOIRIQUE -->
@@ -61,31 +45,27 @@ $(document).ready(function() {
 					  			<p><strong>Well done!</strong> you have just convert a csv file into an rdf</p>
 					  		</div>
 					  	</div>		  	
-					  	<div class="span12" style="display:none_;" id="moduleLevel1">
+					  	<div class="span12">
 				  			<h5>1. #i18n("action.module.convert")</h5>
-				  			<select style="display:inline-block; margin: 0;" id="moduleLevel1" ng-model="moduleLevel1" ng-options="m.label for m in modulesLevel1"></select>
-				  			<!-- Currently selected: {{ {selected_moduleLevel1:moduleLevel1}  }}  -->
+				  			<select id="moduleLevel1" ng-model="moduleLevel1" ng-options="m.label for m in modulesLevel1"></select>
 				  			<a href="#" data-dismiss="modal" class="btn" style="display:inline-block" ng-click="moduleRedirectL1('${baseUri}')">#i18n("action.button.convert")</a>
 			  			</div>
 			  			
-			  			<div class="span12" style="display:none_;" id="moduleLevel2">
+			  			<div class="span12">
 				  			<h5>2. #i18n("action.module.publication")</h5>
-				  			<select style="display:inline-block; margin: 0;" id="moduleLevel2" ng-model="moduleLevel2" ng-options="m.label for m in modulesLevel2"></select>
-				  			<!-- Currently selected: {{ {selected_moduleLevel2:moduleLevel2}  }}  -->
+				  			<select id="moduleLevel2" ng-model="moduleLevel2" ng-options="m.label for m in modulesLevel2"></select>
 				  			<a href="#" data-dismiss="modal" class="btn" style="display:inline-block" ng-click="moduleRedirectL2('${baseUri}')">#i18n("action.button.publication")</a>
 			  			</div>
 			  			
-			  			<div class="span12" style="display:none_;" id="moduleLevel3" >
+			  			<div class="span12">
 				  			<h5>3. #i18n("action.module.interconnect")</h5>
-				  			<select style="display:inline-block; margin: 0;" id="moduleLevel3" ng-model="moduleLevel3" ng-options="m.label for m in modulesLevel3"></select>
-				  			<!-- Currently selected: {{ {selected_moduleLevel3:moduleLevel3}  }}  -->
+				  			<select id="moduleLevel3" ng-model="moduleLevel3" ng-options="m.label for m in modulesLevel3"></select>
 				  			<a href="#" data-dismiss="modal" class="btn" style="display:inline-block" ng-click="moduleRedirectL3('${baseUri}')">#i18n("action.button.interconnect")</a>
 			  			</div>
 			  			
-			  			<div class="span12" style="display:none_;" id="moduleLevel4" >
+			  			<div class="span12">
 				  			<h5>4. #i18n("action.module.exploit")</h5>
-				  			<select style="display:inline-block; margin: 0;" id="moduleLevel4" ng-model="moduleLevel4" ng-options="m.label for m in modulesLevel4"></select>
-				  			<!-- Currently selected: {{ {selected_moduleLevel4:moduleLevel4}  }}  -->
+				  			<select id="moduleLevel4" ng-model="moduleLevel4" ng-options="m.label for m in modulesLevel4"></select>
 				  			<a href="#" data-dismiss="modal" class="btn" style="display:inline-block" ng-click="moduleRedirectL1L4('${baseUri}')">#i18n("action.button.exploit")</a>
 			  			</div>
 
@@ -111,5 +91,46 @@ $(document).ready(function() {
 </div> <!-- ---------------- FIN PROJECT SPACE -------------------- -->
 
 #h_footer
+<script type="text/javascript">
+$(document).ready(function() {
+	var hostLane = window.location.protocol + "//" + window.location.host + window.location.pathname;
+	var pathArray = window.location.pathname.split( '/' );
+	var searchLane = window.location.search;
+	var pathLane = '<a href="' + window.location.protocol + "//" + window.location.host + "/" + pathArray[1] + '">' + pathArray[1] + ' >> </a>';
+	pathLane += '<a href="' + window.location.protocol + "//" + window.location.host + "/" + pathArray[1] + "/" + pathArray[2] + '">' + pathArray[2] + ' >> </a>';
+	pathLane += '<a href="' + hostLane + window.location.search + '">' + searchLane.substr(searchLane.lastIndexOf('=') + 1) + ' >> </a>';
+	console.log(pathLane);
+	console.log(window.location.search);
+	jQuery('#gangway').append(pathLane);
+	
+	//flux rss parsing function
+	jQuery(function() {
+	    jQuery.getFeed({
+	    	//url = url to catch le flux
+	        url: "$curSource.uri"+'/feed',
+	        success: function(feed) {
+	            jQuery('#rss_feed').append('<span style="font-size: 1.5em; color: 808080;" class="pagination-centered">'
+	            + feed.title
+	            + '</span>');
+	            
+	            var html = '';   
+	            for(var i = 0; i < feed.items.length && i < 5; i++) {
+	                var item = feed.items[i];
+	                var update = new Date(item.updated);
+	                
+	                html += '</br></br><span style="color: #BE188A;">'
+	                		+ item.title
+	                		+ '</span>';
+	                html += '<div class="updated"><span>'
+                			+ update.toString()
+                			+'</span</div>';
+	            }
+	            
+	            jQuery('#rss_feed').append(html);
+	        }    
+	    });
+	});
+});
+</script>
 </body>
 </html>

@@ -17,7 +17,7 @@
 #css_links
 </head>
 <body>
-#banner
+#h_tetiere
 	<div style="position:absolute;top:15px;right:15px;">
 		<a href="${baseUri}/sparql" id="goto_sparql" class="button">#i18n("sparql.endpoint.link")</a>
 		<a href="${baseUri}/project" id="goto_workspace" class="button">#i18n("project.workspace.link")</a>
@@ -43,7 +43,7 @@
 			</form>
 		</div>
 	</div>
-#footer
+#H_footer
 
 #script_links
 	<script type="text/javascript">

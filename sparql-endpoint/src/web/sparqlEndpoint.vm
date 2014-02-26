@@ -181,16 +181,16 @@
 			}
 			responsePtr = response;
 			// initialize search select
-			var options = $('#searchColumn').attr('options');
-			options.length = 0;
-			options[options.length] = new Option("#i18n("grid.search.column.option.all")", "all", true, true);
+			
+			//options.length = 0;
+			$('#searchColumn').append(new Option("#i18n("grid.search.column.option.all")", "all", true, true));
 			// generating Column Model for jqGrid
 			var myColModel = [];
 			for (var i = 0; i < response.head.length; i++ ) {
 				myColModel[i] = [];
 				myColModel[i].name = response.head[i];
 				// add row to search select
-				options[options.length] = new Option(response.head[i], response.head[i], false, false);
+				$('#searchColumn').append(new Option(response.head[i], response.head[i], false, false));
 			}
 			$("#table_results").GridUnload();
 			// initializing jqGrid
