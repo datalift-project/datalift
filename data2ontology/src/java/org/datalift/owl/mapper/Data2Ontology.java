@@ -217,7 +217,9 @@ public class Data2Ontology extends BaseModule implements ProjectModule
             File f = new File(Configuration.getDefault().getTempStorage(),
                               MODULE_NAME + '/' + path);
             long now = System.currentTimeMillis();
-            if ((! f.exists()) || (f.lastModified() < now)) {
+            
+            // || (f.lastModified() < now) retiré temporairement
+            if ((! f.exists())) {
                 // Compute HTTP Accept header.
                 Map<String,String> headers = new HashMap<String,String>();
                 headers.put(ACCEPT, this.getRdfAcceptHeader());
