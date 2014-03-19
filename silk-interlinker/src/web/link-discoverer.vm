@@ -81,8 +81,8 @@
         
 
         <ul class="nav nav-tabs">
-            <li class="active"><a href="#newConf" data-toggle="tab">Create a new configuration</a></li>
-            <li><a href="#upload" data-toggle="tab">Run a configuration file</a></li>
+            <li class="active"><a href="#newConf" data-toggle="tab">#i18n("silk.tab_name.new")</a></li>
+            <li><a href="#upload" data-toggle="tab">#i18n("silk.tab_name.run")</a></li>
         </ul>
 
         <div class="tab-content fuelux">
