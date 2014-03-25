@@ -134,8 +134,6 @@ angular.module("predicateChooserApp.controllers",[])
 	       			var previewUrl = $scope.moduleUrl + "/preview"; 
 	       			var linkingParams = getLinkingParams();
 	       			linkingParams.max = MAX_PREVIEW_ROWS_TO_DISPLAY;
-	       			console.log(previewUrl);
-	       			console.log(linkingParams);
 	       			$http({
 	    				url: previewUrl, 
 	    				method: "GET",
