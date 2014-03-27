@@ -21,8 +21,8 @@
     <link href="${moduleUri}/static/lib/bootstrap/css/bootstrap.css" rel="stylesheet">
     <script src="${moduleUri}/static/lib/bootstrap/js/bootstrap.js"></script>
     <!--Select2-->
-	<link href="http://ivaynberg.github.com/select2/select2-3.2/select2.css" rel="stylesheet"/>
-    <script src="http://ivaynberg.github.com/select2/select2-3.2/select2.js"></script>
+	<link href="${moduleUri}/static/lib/select2/css/select2.css" rel="stylesheet"/>
+    <script src="${moduleUri}/static/lib/select2/js/select2.js"></script>
     <!--FluelUX-->
     <link href="${moduleUri}/static/lib/fuelux/css/fuelux.css" rel="stylesheet" />
     <link href="${moduleUri}/static/lib/fuelux/css/fuelux-responsive.css" rel="stylesheet" />
