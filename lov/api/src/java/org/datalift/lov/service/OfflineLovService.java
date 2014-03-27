@@ -13,9 +13,17 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -26,12 +34,10 @@ import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.lov.local.LovLocalService;
 import org.datalift.lov.local.LovLocalVocabularyService;
 import org.datalift.lov.local.LovUtil;
-import org.datalift.lov.local.objects.VocabularySpace;
 import org.datalift.lov.local.objects.vocab.VocabsDictionaryItem;
 
 import static org.datalift.fwk.util.PrimitiveUtils.wrap;
 
-import org.openrdf.OpenRDFException;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
 import org.semanticweb.yars.nx.Node;
@@ -41,9 +47,9 @@ import org.semanticweb.yars.nx.parser.NxParser;
 /**
  * Service implementation that performs local request to get its results.
  * Handles the lov_aggregator download and updates.
- * 
+ *
  * @author freddy
- * 
+ *
  */
 public class OfflineLovService extends LovService {
 
@@ -78,7 +84,7 @@ public class OfflineLovService extends LovService {
 
 	/** If an update is required*/
 	private boolean updating;
-	
+
 	/** Last lov update */
 	private Date lastLovUpdate = null;
 
@@ -92,14 +98,31 @@ public class OfflineLovService extends LovService {
 		this.configuration = configuration;
 		localService = new LovLocalService(configuration);
 		vocabsService = new LovLocalVocabularyService(configuration);
-		new Thread(new Runnable() {
 
-			@Override
-			public void run() {
-				downloadAggregator();
-			}
+        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
+                @Override
+                public Thread newThread(Runnable runnable) {
+                   Thread thread = Executors.defaultThreadFactory().newThread(runnable);
+                   thread.setDaemon(true);
+                   thread.setName("Lov initialization thread");
+                   return thread;
+                }
+        });
 
-		}).start();
+        Runnable runnable = new Runnable() {
+
+            @Override
+            public void run() {
+                if (downloadAggregator()) {
+                    extractZippedAggregator();
+                    convertAggregator();
+                    loadDataIntoRepository();
+                }
+            }
+        };
+
+        executor.schedule(runnable, 10, TimeUnit.SECONDS);
+        executor.shutdown();
 	}
 
 	@Override
@@ -193,23 +216,18 @@ public class OfflineLovService extends LovService {
 		}
 
 		updating = true;
-		
+
 		dataLoaded = false;
 		downloadAggregator();
-		while (!aggregatorDownloaded || !dataLoaded) {
-			try {
-				Thread.sleep(800);
-
-			} catch (InterruptedException e) {
-				log.warn("Interrupted thread.");
-			}
-		}
+        convertAggregator();
+        extractZippedAggregator();
+        loadDataIntoRepository();
 	}
 
 	// -------------------------------------------------------------------------
 
-	private void downloadAggregator() {
-
+	private boolean downloadAggregator() {
+        boolean ret = false;
 		lovData = new File(configuration.getTempStorage(), "lov/data");
 		if (!lovData.exists()) {
 			lovData.mkdirs();
@@ -218,12 +236,22 @@ public class OfflineLovService extends LovService {
 
 		List<String> files = Arrays.asList(lovData.list());
 		// si le fichier lov_aggregator.nq n'existe pas, on va le récupérer
-		if (!files.contains(ZIPPED_AGGREGATOR)) {
+		if ( ! files.contains(ZIPPED_AGGREGATOR)) {
 			// lancement du téléchargement dans un nouveau thread
-			new Thread(new Runnable() {
+            ExecutorService executor = Executors.newSingleThreadExecutor(new ThreadFactory() {
+                @Override
+                public Thread newThread(Runnable runnable) {
+                   Thread thread = Executors.defaultThreadFactory().newThread(runnable);
+                   thread.setDaemon(true);
+                   thread.setName("Lov downloader thread");
+                   return thread;
+                }
+            });
 
-				@Override
-				public void run() {
+            Callable<Boolean> callable = new Callable<Boolean>() {
+
+                @Override
+                public Boolean call() throws Exception {
 					log.info("Downloading file from http://lov.okfn.org/dataset/lov/agg/"
 							+ ZIPPED_AGGREGATOR);
 					try {
@@ -234,27 +262,6 @@ public class OfflineLovService extends LovService {
 						URL lovUrl = new URL(
 								"http://lov.okfn.org/dataset/lov/agg/"
 										+ ZIPPED_AGGREGATOR);
-
-						// // instanciation de buffers pour la lecture et
-						// // l'ecriture du fichier
-						// BufferedReader in = new BufferedReader(
-						// new InputStreamReader(lovUrl.openStream()));
-						// FileWriter fw = new FileWriter(lovData
-						// .getAbsolutePath() + "/" + ZIPPED_AGGREGATOR);
-						// BufferedWriter out = new BufferedWriter(fw);
-						//
-						// // ecriture
-						// String inputLine;
-						// while ((inputLine = in.readLine()) != null) {
-						// // pretraitement pour encoder le debut des balises
-						// // "xh:"
-						// // (sinon pb chargement repository)
-						// // inputLine = inputLine.replaceAll("<xh:",
-						// // "&lt;xh:");
-						// // inputLine = inputLine.replaceAll("</xh:",
-						// // "&lt;/xh:");
-						// out.write(inputLine + '\n');
-						// }
 
 						URLConnection conn = lovUrl.openConnection();
 						conn.setDoOutput(true);
@@ -277,37 +284,45 @@ public class OfflineLovService extends LovService {
 
 						long estimatedTime = ((System.currentTimeMillis() - startTime) / 1000);
 
-						log.info("File downloaded in about {} s.",
+						log.info("File downloaded in {} s.",
 								wrap(estimatedTime));
-						extractZippedAggregator();
-						convertAggragator();
 						new File(lovData, NQ_AGGREGATOR).delete();
-						aggregatorDownloaded = true;
-						if (!dataLoading) {
-							loadDataIntoRepository();
-						}
+                        aggregatorDownloaded = true;
+                        return true;
 
 					} catch (IOException e) {
-						log.error("Download error.");
-						e.printStackTrace();
+						log.error("Download error : " + e.getMessage());
+                        return false;
 					}
-
 				}
-
-			}).start();
-		} else { // on a déjà le fichier, on charge le lov
+			};
+            Future<Boolean> future = executor.submit(callable);
+            try {
+                ret = future.get();
+            }
+            catch (InterruptedException e) {
+                log.error("Download has been interrupted.");
+                ret = false;
+            }
+            catch (ExecutionException e) {
+                log.error("Execution problem : " + e.getMessage());
+                ret = false;
+            }
+            executor.shutdown();
+		}
+        else { // on a déjà le fichier, on charge le lov
 					// TODO : vérifier si une mise à jour est disponible
 			lastLovUpdate = new Date(
 					new File(lovData, ZIPPED_AGGREGATOR).lastModified());
 			log.info("No need for download. LovAggregator is here !");
+            ret = true;
 			aggregatorDownloaded = true;
-			convertAggragator();
-			loadDataIntoRepository();
 		}
+        return ret;
 	}
 
 	// load data of lov into a dedicated named graph
-	private void loadDataIntoRepository() {
+	private void loadDataIntoRepository() throws RuntimeException {
 
 		// TODO vérifier la vitesse de chargement des données (mettre dans un
 		// autre thread ?)
@@ -323,35 +338,34 @@ public class OfflineLovService extends LovService {
 		dataLoading = true;
 
 		URI lovContextURI = URI.create(LOV_CONTEXT);
-		
+
 		try {
 			if(updating) {
 				RdfUtils.clearGraph(this.configuration.getInternalRepository(), lovContextURI);
 			}
-			
+
 			RepositoryConnection conn = this.configuration.getInternalRepository().newConnection();
 			org.openrdf.model.URI ctx = null;
 			long repositorySize = 0;
 			ctx = conn.getValueFactory().createURI(LOV_CONTEXT);
 			repositorySize = conn.size(ctx);
-			
-			
-			if (repositorySize == 0L) {
+
+            if (repositorySize == 0L) {
 				File lov = new File(lovData, N3_AGGREGATOR);
 				log.info("Loading LOV data ({}) into repository...", lov);
 				long startTime = System.currentTimeMillis();
-				
+
 				RdfUtils.upload(lov, this.configuration.getInternalRepository(), lovContextURI);
 				// conn.add(lov, null, RDFFormat.N3, ctx);
 				double loadTime = (System.currentTimeMillis() - startTime) / 1000.0;
 				log.info("LOV data ({}) successfully loaded in {} s. Offline service is ready.",
 				         lov, wrap(loadTime));
-				
+
 				lastLovUpdate = new Date();
 			}
 		}
 		catch (RdfException e) {
-			throw new RuntimeException(e);
+            log.error("Cannot parse aggregator, please contact a LOV administrator. Error message : {}", e.getMessage());
 		} catch (RepositoryException e) {
 			throw new RuntimeException(e);
 		}
@@ -410,7 +424,7 @@ public class OfflineLovService extends LovService {
 
 	}
 
-	private void convertAggragator() {
+	private void convertAggregator() {
 
 		log.trace("Converting {} to {}.", NQ_AGGREGATOR, N3_AGGREGATOR);
 
