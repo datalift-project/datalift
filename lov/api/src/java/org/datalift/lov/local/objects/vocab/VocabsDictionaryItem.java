@@ -28,12 +28,18 @@ public class VocabsDictionaryItem implements JSONSerializable {
 		this.prefix = prefix;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if (o instanceof VocabsDictionaryItem) {
 			if (((VocabsDictionaryItem) o).getUri().equals(this.getUri()))
 				return true;
 		}
 		return false;
+	}
+
+	@Override
+	public int hashCode() {
+	    return (this.getUri() != null)? this.getUri().hashCode(): 0;
 	}
 
 	public String getUri() {

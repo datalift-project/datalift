@@ -39,14 +39,8 @@ import java.util.LinkedList;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.Source.SourceType;
 import javax.script.*;
-import org.datalift.fwk.Configuration;
-import org.datalift.fwk.i18n.PreferredLocales;
-import org.datalift.fwk.log.Logger;
-import org.datalift.fwk.project.ProjectManager;
 import org.datalift.fwk.project.Source;
-import org.datalift.fwk.project.SparqlSource;
 import org.datalift.fwk.project.TransformedRdfSource;
-import org.datalift.fwk.rdf.Repository;
 import org.openrdf.query.BindingSet;
 import org.openrdf.query.MalformedQueryException;
 import org.openrdf.query.QueryEvaluationException;
@@ -66,11 +60,11 @@ import org.openrdf.repository.RepositoryException;
  */
 public class VisuModel extends ModuleModel
 {
-   	//-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
     // Constants
     //-------------------------------------------------------------------------
     
-	/** Binding for the default subject var in SPARQL. */
+    /** Binding for the default subject var in SPARQL. */
     protected static final String SB = "s";
     
     /** Binding for the default predicate var in SPARQL. */
@@ -84,17 +78,10 @@ public class VisuModel extends ModuleModel
     private static final String PREDICATE_WHERE = "{?" + SB + " ?" + PB + " ?" + OB + "}";
 	
 	
-	//-------------------------------------------------------------------------
-    // Class members
+    //-------------------------------------------------------------------------
+    // Constructors
     //-------------------------------------------------------------------------
 
-    /** Datalift's internal Sesame {@link Repository repository}. **/
-    protected static final Repository INTERNAL_REPO = Configuration.getDefault().getInternalRepository();
-    /** Datalift's internal Sesame {@link Repository repository} URL. */
-    protected static final String INTERNAL_URL = INTERNAL_REPO.getEndpointUrl();
-    /** Datalift's logging system. */
-    protected static final Logger LOG = Logger.getLogger();
-	
     /**
      * Creates a new VisuModel instance.
      * @param name Name of the module.
