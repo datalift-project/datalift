@@ -177,6 +177,7 @@ public class OfflineLovService extends LovService {
 
 			} catch (InterruptedException e) {
 				log.warn("Interrupted thread.");
+				break;
 			}
 		}
 		loadDataIntoRepository();
