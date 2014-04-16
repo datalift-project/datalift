@@ -36,7 +36,7 @@
   <!-- ================ File and Directory Names ========================== -->
 
   <property name="datalift.default.modules"
-            value="framework,core,sparql-endpoint,flint-endpoint,s4ac,projectmanager,simple-convert,database-directmapper,geo-convert,lov/api,lov/catalogue,mapper,virtuoso-connector,allegrograph-connector,stringtouri,silk-interlinker"/>
+            value="framework,core,sparql-endpoint,flint-endpoint,s4ac,projectmanager,simple-convert,database-directmapper,geo-convert,lov/api,lov/catalogue,data2ontology,virtuoso-connector,allegrograph-connector,stringtouri,silk-interlinker,geo-convert"/>
 
   <property name="app.name"             value="${ant.project.name}"/>
   <property name="app.version"          value="0.7.3"/>
