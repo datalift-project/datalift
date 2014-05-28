@@ -60,12 +60,6 @@ public abstract class TechnicalException extends RuntimeException
 
     protected final static String DEFAULT_BUNDLE_NAME = "/error-messages";
 
-    //-------------------------------------------------------------------------
-    // Class members
-    //-------------------------------------------------------------------------
-
-    private final static Logger log = Logger.getLogger();
-
     //------------------------------------------------------------------------
     // Instance members definition
     //------------------------------------------------------------------------
@@ -333,13 +327,15 @@ public abstract class TechnicalException extends RuntimeException
                 }
                 catch (MissingResourceException e) {
                     /* Ignore... */
-                    log.trace("Failed to resolve key \"{}\" in bundle \"{}\"",
-                              key, bundleName);
+                    Logger.getLogger().trace(
+                                "Failed to resolve key \"{}\" in bundle \"{}\"",
+                                key, bundleName);
                 }
             }
             catch (MissingResourceException e) {
-                log.error("Resource bundle \"{}\" not found ({})", e,
-                          bundleName, e.getMessage());
+                Logger.getLogger().error(
+                                "Resource bundle \"{}\" not found ({})", e,
+                                bundleName, e.getMessage());
                 format = null;
             }
         }
@@ -374,13 +370,15 @@ public abstract class TechnicalException extends RuntimeException
                 }
                 catch (MissingResourceException e) {
                     /* Ignore... */
-                    log.trace("Failed to resolve key \"{}\" in bundle \"{}\"",
-                              key, bundleName);
+                    Logger.getLogger().trace(
+                                "Failed to resolve key \"{}\" in bundle \"{}\"",
+                                key, bundleName);
                 }
             }
             catch (MissingResourceException e) {
-                log.error("Resource bundle \"{}\" not found ({})", e,
-                          bundleName, e.getMessage());
+                Logger.getLogger().error(
+                                "Resource bundle \"{}\" not found ({})", e,
+                                bundleName, e.getMessage());
                 format = null;
             }
         }
