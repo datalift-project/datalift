@@ -44,11 +44,12 @@
       </array>
       <key>VMOptions</key>
       <array>
-        <string>-Djava.library.path=$JAVAROOT/lib:$USER_HOME/Library/Application Support/DataLift/lib</string>
         <string>-Xms256M</string>
         <string>-Xmx1024M</string>
         <string>-Xverify:none</string>
         <string>-Xshare:off</string>
+        <string>-Djava.library.path=$JAVAROOT/lib:$USER_HOME/Library/Application Support/DataLift/lib</string>
+        <string>-Dsun.net.inetaddr.ttl=60</string>
       </array>
       <key>WorkingDirectory</key>
       <string>$APP_PACKAGE/Contents/Resources</string>
