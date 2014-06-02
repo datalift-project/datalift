@@ -76,8 +76,8 @@ public class LovLocalService {
 				SearchParams params = new SearchParams();
 				searchResult.setParams(params);
 				params.setWeightRatioSearchWordsInLabels(1);
-				params.setWeightScoreNbMainLabel(new Float(0.5));
-				params.setWeightLodNbOcc(new Float(0.7));
+				params.setWeightScoreNbMainLabel(0.5f);
+				params.setWeightLodNbOcc(0.7f);
 				
 				StringBuilder query = new StringBuilder();
 
@@ -518,69 +518,6 @@ public class LovLocalService {
 		}
 		return occur;
 	}
-
-	private int getMaxFromMap(Map<String, String> map) {
-		int max = 0;
-		for (Entry<String, String> entry : map.entrySet()) {
-			int value = Integer.parseInt(entry.getValue());
-			if (value > max)
-				max = value;
-		}
-		return max;
-	}
-
-	//
-	// private Map<String, String> fetchLOVNbOccMetrics() throws
-	// FileNotFoundException, IOException{
-	// Map<String, String> res = new HashMap<String, String>();
-	// //on ajoute la métrique concernant LOV
-	// String strLine;
-	// URL fstreamLOVMetrics = new
-	// URL("http://lov.okfn.org/dataset/lov/stats/elementsMetricsOccAndVocabNb.csv");
-	// // Get the object of DataInputStream
-	// BufferedReader brLOVMetrics = new BufferedReader(new
-	// InputStreamReader(fstreamLOVMetrics.openStream()));
-	// //Read File Line By Line
-	// while ((strLine = brLOVMetrics.readLine()) != null) {
-	// String split[] = strLine.split(";");
-	// res.put(split[0], split[3]);
-	// }
-	// return res;
-	// }
-	// private Map<String, String> fetchLOVNbVocMetrics() throws
-	// FileNotFoundException, IOException{
-	// Map<String, String> res = new HashMap<String, String>();
-	// //on ajoute la métrique concernant LOV
-	// String strLine;
-	// URL fstreamLOVMetrics = new
-	// URL("http://lov.okfn.org/dataset/lov/stats/elementsMetricsOccAndVocabNb.csv");
-	// // Get the object of DataInputStream
-	// BufferedReader brLOVMetrics = new BufferedReader(new
-	// InputStreamReader(fstreamLOVMetrics.openStream()));
-	// //Read File Line By Line
-	// while ((strLine = brLOVMetrics.readLine()) != null) {
-	// String split[] = strLine.split(";");
-	// res.put(split[0], split[4]);
-	// }
-	// return res;
-	// }
-	// private Map<String, String> fetchLODNbOccMetrics() throws
-	// FileNotFoundException, IOException{
-	// Map<String, String> res = new HashMap<String, String>();
-	// //on ajoute la métrique concernant LOV
-	// String strLine;
-	// URL fstreamLOVMetrics = new
-	// URL("http://lov.okfn.org/dataset/lov/stats/elementsMetricsOccInLOD.csv");
-	// // Get the object of DataInputStream
-	// BufferedReader brLOVMetrics = new BufferedReader(new
-	// InputStreamReader(fstreamLOVMetrics.openStream()));
-	// //Read File Line By Line
-	// while ((strLine = brLOVMetrics.readLine()) != null) {
-	// String split[] = strLine.split(";");
-	// res.put(split[0], split[4]);
-	// }
-	// return res;
-	// }
 
 	private String addLangToValue(String value, String lang) {
 		if (lang != null && !lang.equals("null")) {

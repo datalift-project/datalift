@@ -191,8 +191,8 @@ public class LovModule extends BaseModule {
 	public Response lovState() {
 
 		OfflineLovService service = (OfflineLovService) lovService;
-		Boolean loaded = service.isDataLoaded();
-		String response = "{ \"loaded\": " + loaded.toString() + "}";
+		boolean loaded = service.isDataLoaded();
+		String response = "{ \"loaded\": " + loaded + "}";
 
 		return Response.ok(response, APPLICATION_JSON_UTF8).build();
 	}

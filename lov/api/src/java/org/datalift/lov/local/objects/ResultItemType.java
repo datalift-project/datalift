@@ -23,6 +23,7 @@ public class ResultItemType implements JSONSerializable {
 		this.uriPrefixed = uriPrefixed;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if (o instanceof ResultItemType) {
 			if (((ResultItemType) o).getUri().equals(this.getUri()))
@@ -30,7 +31,12 @@ public class ResultItemType implements JSONSerializable {
 		}
 		return false;
 	}
-	
+
+	@Override
+	public int hashCode() {
+	    return (this.getUri() != null)? this.getUri().hashCode(): 0;
+	}
+
 	@Override
 	public String toJSON() {
 		StringBuilder jsonResult = new StringBuilder();

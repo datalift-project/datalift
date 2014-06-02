@@ -34,7 +34,7 @@
   <property file="${datalift.root}/build.properties"/>
 
   <property name="datalift.wrapper.modules"
-            value="flint-endpoint,projectmanager,simple-convert,database-directmapper,geo-convert,lov/api,lov/catalogue,mapper,virtuoso-connector,allegrograph-connector,stringtouri,silk-interlinker,incubator/ontology-mapper"/>
+            value="flint-endpoint,projectmanager,simple-convert,database-directmapper,geo-convert,lov/api,lov/catalogue,data2ontology,virtuoso-connector,allegrograph-connector,stringtouri,silk-interlinker,incubator/ontology-mapper"/>
 
 
   <!-- ================ File and Directory Names ========================== -->
@@ -59,7 +59,7 @@
    -->
 
   <property name="app.name"             value="datalift-wrapper"/>
-  <property name="app.version"          value="0.7.3"/>
+  <property name="app.version"          value="0.7.7"/>
   <property name="app.long.name"        value="${app.name}"/>
 
   <property name="build.home"           location="${basedir}/build"/>
@@ -78,17 +78,16 @@
   <property name="runtime.conf"         location="${conf.home}/runtime"/>
   <property name="webapp.conf"          location="${conf.home}/webapp"/>
 
-  <property name="mac.app.name"         value="Datalift.app"/>
+  <property name="linux.conf"           location="${conf.home}/linux"/>
   <property name="mac.conf"             location="${conf.home}/mac"/>
+  <property name="windows.conf"         location="${conf.home}/windows"/>
+
+  <property name="def.app.name"         value="Datalift"/>
+  <property name="def.dist.dir"
+            location="${dist.home}/${def.app.name}"/>
+  <property name="mac.app.name"         value="Datalift.app"/>
   <property name="mac.dist.dir"
             location="${dist.home}/${mac.app.name}"/>
-
-  <property name="windows.app.name"     value="Datalift"/>
-  <property name="windows.conf"         location="${conf.home}/windows"/>
-  <property name="windows.dist.dir"
-            location="${dist.home}/${windows.app.name}"/>
-
-  <property name="linux.conf"           location="${conf.home}/linux"/>
 
   <property name="core.home"            location="${datalift.root}/core"/>
   <property name="datalift.war.name"    value="datalift.war"/>
@@ -339,11 +338,6 @@
         deployement.
    -->
 
-  <target name="dist-gen" depends="prepare-dist"
-                      description="Builds a generic binary distribution">
-    <!-- To be completed: create a tar.gz with a datalift shell-script. -->
-  </target>
-
   <target name="dist-mac" depends="prepare-dist"
                       description="Builds a Mac OS X binary distribution">
     <mkdir dir="${mac.dist.dir}"/>
@@ -365,25 +359,25 @@
     </move>
   </target>
 
-  <target name="dist-windows" depends="prepare-dist"
-                      description="Builds a Windows executable">
-    <mkdir dir="${windows.dist.dir}"/>
+  <target name="dist-def" depends="prepare-dist"
+                      description="Builds a generic binary distribution">
+    <mkdir dir="${def.dist.dir}"/>
     <!-- Copy Windows application excutable and Linux start-up script-->
-    <copy todir="${windows.dist.dir}" preservelastmodified="true">
+    <copy todir="${def.dist.dir}" preservelastmodified="true">
       <fileset dir="${windows.conf}"/>
       <fileset dir="${linux.conf}"/>
     </copy>
     <!-- Make sure shell-script are executable -->
     <chmod perm="ugo+rx" type="file">
-      <fileset dir="${windows.dist.dir}" includes="**/*.sh"/>
+      <fileset dir="${def.dist.dir}" includes="**/*.sh"/>
     </chmod>
      <!-- Copy Datalift Java application -->
-    <copy todir="${windows.dist.dir}" preservelastmodified="true">
+    <copy todir="${def.dist.dir}" preservelastmodified="true">
       <fileset dir="${gen.dist.dir}"/>
     </copy>
   </target>
 
-  <target name="dist" depends="dist-gen, dist-mac, dist-windows"
+  <target name="dist" depends="dist-def"
                       description="Creates a binary distribution">
   </target>
 
