@@ -13,10 +13,8 @@
 					<select
 						ui-select2
 						style="width:100%"
-						ng-model="selectedPredicateId"
-						data-placeholder="Select a property to match">
-						<option value=""></option>
-						<option ng-repeat="predicate in sourcePredicates | orderBy:name" value="{{predicate.name}}">{{predicate.name}}</option>
+						ng-model="selectedPredicateId">
+						<option ng-repeat="predicate in sourcePredicates | orderBy:['name']" value="{{predicate.name}}">{{predicate.name}}</option>
 					</select>
 				</div>
 				<div ng-hide="hasPredicates()">
@@ -187,7 +185,7 @@
 								<tr tooltip="{{property.desc}}"
 									tooltip-placement="bottom"
 									tooltip-animation="false"
-									ng-repeat="property in filteredOntology = (ontology.properties | filter:projectPropertiesFilter)">
+									ng-repeat="property in filteredOntology = (ontology.properties | filter:projectPropertiesFilter | orderBy:['name'])">
 									<td>{{property.name}}</td>
 									<td>
 										<button
