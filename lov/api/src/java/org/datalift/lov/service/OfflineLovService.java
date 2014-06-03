@@ -217,11 +217,11 @@ public class OfflineLovService extends LovService {
 		}
 
 		updating = true;
-
 		dataLoaded = false;
+        
 		downloadAggregator();
-        convertAggregator();
         extractZippedAggregator();
+        convertAggregator();
         loadDataIntoRepository();
 	}
 

@@ -865,6 +865,7 @@ function MappingCtrl($scope, $location, $http, $timeout, Shared) {
 		$scope.sourcePredicates = Shared.sourceData[Shared.selectedSource].properties;
 		$scope.mappings = Shared.sourceData[Shared.selectedSource].mappings;
 		$scope.loadingPredicates = false;
+		$scope.selectedPredicateId = $scope.sourcePredicates[0].name;
 	}
 	else {
 		// load source
@@ -907,6 +908,7 @@ function MappingCtrl($scope, $location, $http, $timeout, Shared) {
 				suggestions: $scope.suggestions,
 				mappings: $scope.mappings
 			}
+			$scope.selectedPredicateId = $scope.sourcePredicates[0].name;
 			
 			$scope.loadingPredicates = false;
 			$scope.autoMapping();

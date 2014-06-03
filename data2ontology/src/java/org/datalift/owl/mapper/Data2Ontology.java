@@ -117,7 +117,7 @@ public class Data2Ontology extends BaseModule implements ProjectModule
 
     /** The DataLift project manager. */
     protected ProjectManager projectManager = null;
-    
+
     //-------------------------------------------------------------------------
     // Constructors
     //-------------------------------------------------------------------------
@@ -150,9 +150,8 @@ public class Data2Ontology extends BaseModule implements ProjectModule
     @Override
     public UriDesc canHandle(Project p) {
         UriDesc projectPage = null;
-        try {//TODO retirer la contrainte du projet sur les ontologies non présentent
-            if ((! p.getOntologies().isEmpty()) &&
-                (this.findSource(p, false) != null)) {
+        try {
+            if ((this.findSource(p, false) != null)) {
                 try {
                     String label = PreferredLocales.get()
                                 .getBundle(GUI_RESOURCES_BUNDLE, this)
@@ -217,7 +216,7 @@ public class Data2Ontology extends BaseModule implements ProjectModule
             File f = new File(Configuration.getDefault().getTempStorage(),
                               MODULE_NAME + '/' + path);
             long now = System.currentTimeMillis();
-            
+
             if ((! f.exists()) || (f.lastModified() < now)) {
                 // Compute HTTP Accept header.
                 Map<String,String> headers = new HashMap<String,String>();
@@ -230,7 +229,7 @@ public class Data2Ontology extends BaseModule implements ProjectModule
                 f.getParentFile().mkdirs();
                 // Retrieve file from source URL.
                 log.trace("--- info url ---: {}, file: {}, headers: {}", u, f, headers);
-                
+
                 FileUtils.DownloadInfo info = FileUtils.save(u, null, headers, f);
                 log.trace("--- info ---: {}", info);
                 f.setLastModified((info.expires > 0L)? info.expires: now);
@@ -276,10 +275,10 @@ public class Data2Ontology extends BaseModule implements ProjectModule
         }
         return response;
     }
-    
+
     @POST
     @Consumes(APPLICATION_FORM_URLENCODED)
-    @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
+    @Produces(APPLICATION_JSON)
     @Path("execute")
     public Response executeConstruct(
                                 @FormParam("project") java.net.URI project,
@@ -318,10 +317,14 @@ public class Data2Ontology extends BaseModule implements ProjectModule
                 out = this.addResultSource(p, in, targetName, java.net.URI.create(targetGraph));
             }
             // Display project source tab, including the newly created source.
-            response = this.displayMappingResult(out, createSource).build();
+//            response = this.displayMappingResult(out, createSource).build();
+            response = Response.ok("{"
+                + "\"uri\": \"" + targetGraph + "\", "
+                + "\"title\": \"" + targetName + "\""
+                + "}", APPLICATION_JSON_UTF8).build();
         }
         catch (Exception e) {
-            // ???
+            this.handleInternalError(e);
         }
         return response;
     }
@@ -414,7 +417,7 @@ public class Data2Ontology extends BaseModule implements ProjectModule
         this.projectManager.saveProject(p);
         return newSrc;
     }
-    
+
     private TransformedRdfSource addResultSource(Project p, Source parent,
 									            String name, java.net.URI uri)
 									                     throws IOException {
@@ -608,7 +611,7 @@ public class Data2Ontology extends BaseModule implements ProjectModule
         public String name;
         public String uri;
     }
-    
+
     public final static class MappingDesc
     {
         public String name;

@@ -218,6 +218,7 @@ function ConvertCtrl($scope, $http, $timeout, Shared) {
 	    	$scope.loading = false;
 	    	$scope.message = "Conversion successful.";
 	    	$scope.successfulConversion = true;
+			Shared.sources.push(data);
 	    })
     	.error(function(data, status, headers, config) {
     		Shared.broadcastNotification({
