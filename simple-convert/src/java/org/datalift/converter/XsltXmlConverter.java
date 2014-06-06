@@ -69,6 +69,7 @@ import org.datalift.fwk.rdf.rio.rdfxml.RDFXMLParser;
 
 import static org.datalift.fwk.MediaTypes.*;
 import static org.datalift.fwk.util.PrimitiveUtils.wrap;
+import static org.datalift.fwk.util.StringUtils.isBlank;
 
 
 /**
@@ -125,7 +126,7 @@ public class XsltXmlConverter extends BaseConverterModule
 
     @POST
     @Consumes(APPLICATION_FORM_URLENCODED)
-    public Response mapCsvData(@FormParam("project") URI projectId,
+    public Response mapXmlData(@FormParam("project") URI projectId,
                                @FormParam("source") URI sourceId,
                                @FormParam("dest_title") String destTitle,
                                @FormParam("dest_graph_uri") URI targetGraph,
@@ -182,11 +183,16 @@ public class XsltXmlConverter extends BaseConverterModule
             RDFXMLParser rdfParser = (RDFXMLParser)
                                 (RdfUtils.newRdfParser(RdfFormat.RDF_XML));
             rdfParser.setRDFHandler(appender);
+            // Input XML document.
+            StreamSource xmlSrc = new StreamSource(src.getInputStream());
+            if (! isBlank(src.getSourceUrl())) {
+                // Set the source URL to resolve DTDs, if any.
+                xmlSrc.setSystemId(src.getSourceUrl());
+            }
             // Apply XSL transformation to build RDF XML from XML data.
             Transformer t = this.newTransformer(null);
             t.setParameter("BaseURI", xmlBaseUri);
-            t.transform(new StreamSource(src.getInputStream()),
-                        rdfParser.getSAXResult(rdfBaseUri));
+            t.transform(xmlSrc, rdfParser.getSAXResult(rdfBaseUri));
 
             log.debug("Inserted {} RDF triples into <{}> in {} seconds",
                       wrap(appender.getStatementCount()), targetGraph,

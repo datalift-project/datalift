@@ -1246,29 +1246,29 @@ public class Workspace extends BaseModule
         }
         Response response = null;
 
-        String fileName = null;
         URL fileUrl = null;
         File localFile = null;
+        String fileName = this.toFileName(fileDisposition.getFileName());
         if (! isBlank(sourceUrl)) {
-            // Not uploaded data. => A file URL must be provided.
             try {
                 fileUrl = new URL(sourceUrl);
-                fileName = this.extractFileName(fileUrl, "xml");
-                // Reset input stream to force downloading data from URL.
-                fileData = null;
             }
             catch (Exception e) {
-                // Conversion of source base URI to URL failed.
                 log.error("Failed to parse URL {}", e, sourceUrl);
                 this.throwInvalidParamError("file_url",
                                     sourceUrl + " (" + e.getMessage() + ')');
             }
-        }
-        else {
-            fileName = this.toFileName(fileDisposition.getFileName());
             if (isBlank(fileName)) {
-                this.throwInvalidParamError("source", null);
+                // No data uploaded. => Extract local file name from source URL.
+                fileName = this.extractFileName(fileUrl, "xml");
+                // Reset input stream to force downloading data from source URL.
+                fileData = null;
             }
+            // Else: Read data from uploaded file but preserve source URL
+            //       to resolve external dependencies (such as DTDs).
+        }
+        else if (isBlank(fileName)) {
+            this.throwInvalidParamError("source", null);
         }
         // Else: File data have been uploaded.
 
@@ -1296,11 +1296,16 @@ public class Workspace extends BaseModule
             // Parse XML file content to validate well-formedness.
             try {
                 SAXParserFactory spf = SAXParserFactory.newInstance();
-                spf.setValidating(false);
                 spf.setNamespaceAware(true);
+                spf.setValidating(false);   // Prevent DTD or schema validation.
                 XMLReader parser = spf.newSAXParser().getXMLReader();
                 parser.setContentHandler(new DefaultHandler());
-                parser.parse(new InputSource(src.getInputStream()));
+                InputSource is = new InputSource(src.getInputStream());
+                if (! isBlank(src.getSourceUrl())) {
+                    // Set the source URL to resolve DTDs, if any.
+                    is.setSystemId(src.getSourceUrl());
+                }
+                parser.parse(is);
             }
             catch (Exception e) {
                 throw new IOException("Invalid or empty source data", e);
@@ -1318,7 +1323,8 @@ public class Workspace extends BaseModule
             String src = (fileData != null)? fileName:
                         (fileUrl != null)? fileUrl.toString(): "file_url";
             log.fatal("Failed to save source data from {}", e, src);
-            this.throwInvalidParamError(src, e.getLocalizedMessage());
+            Throwable error = (e.getCause() != null)? e.getCause(): e;
+            this.throwInvalidParamError(src, error.getLocalizedMessage());
         }
         catch (Exception e) {
             deleteFiles = true;
