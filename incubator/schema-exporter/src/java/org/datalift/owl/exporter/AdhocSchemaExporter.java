@@ -72,8 +72,10 @@ public class AdhocSchemaExporter extends BaseModule
     static {
         contentTypes = new LinkedList<Variant>();
         for (RdfFormat r : RdfFormat.values()) {
-            for (MediaType mimeType : r.getMimeTypes()) {
-                contentTypes.add(new Variant(mimeType, null, null));
+            if (r.canOutput()) {
+                for (MediaType mimeType : r.getMimeTypes()) {
+                    contentTypes.add(new Variant(mimeType, null, null));
+                }
             }
         }
     }
@@ -105,7 +107,7 @@ public class AdhocSchemaExporter extends BaseModule
             }
         }
         else {
-            r = SecurityContext.isUserAuthenticated()?
+            r = (isSet(SecurityContext.getUserPrincipal()))?
                         cfg.getInternalRepository() : cfg.getDataRepository();
         }
         if (! r.ask("ASK { GRAPH <" + namedGraph + "> { ?s ?p ?o . } }")) {
