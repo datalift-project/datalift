@@ -297,6 +297,12 @@ public class Workspace extends BaseModule
                                 @FormParam("license") URI license,
                                 @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
+        if (! isSet(title)) {
+            this.throwInvalidParamError("title", title);
+        }
+        if (license == null) {
+            this.throwInvalidParamError("license", license);
+        }
         Response response = null;
 
         URI projectId = this.newProjectId(uriInfo.getBaseUri(), title);
