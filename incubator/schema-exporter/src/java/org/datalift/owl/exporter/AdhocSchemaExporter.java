@@ -181,6 +181,13 @@ public class AdhocSchemaExporter extends BaseModule
                     classes.add(u);
                 }
                 rs.close();
+                // Check that at least one RDF type has been found in graph.
+                if (classes.isEmpty()) {
+                    String msg = "No RDF type found in graph <"
+                                                            + namedGraph + '>';
+                    log.error(msg);
+                    sendError(BAD_REQUEST, msg);
+                }
                 // Extract ontology data.
                 URI ontology = new URIImpl(ns.substring(0, ns.length() - 1));
                 this.writeComment("Ontology: "+ ontology.getLocalName());
@@ -266,8 +273,11 @@ public class AdhocSchemaExporter extends BaseModule
                 }
                 this.endDocument();
             }
+            catch (WebApplicationException e) {
+                throw e;
+            }
             catch (IOException e) {
-                log.fatal("IO error while exporting schema for {}", e,
+                log.fatal("I/O error while exporting schema for {}", e,
                           namedGraph);
                 throw e;
             }
