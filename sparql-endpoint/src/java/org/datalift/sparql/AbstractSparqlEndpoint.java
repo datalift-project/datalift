@@ -149,6 +149,13 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                                             "sparql.predefined.queries.file";
     /** The default queries file, embedded in module JAR. */
     private final static String DEFAULT_QUERIES_FILE = "predefined-queries.ttl";
+    /**
+     * The (optional) configuration property indicating whether
+     * named graphs shall be served in priority to resources in case
+     * the same URI exists describing both.
+     */
+    public final static String PREFER_GRAPHS_PROPERTY =
+                                            "sparql.serve.graphs.first";
 
     /** The name of the default template for the endpoint welcome page. */
     protected final static String DEFAULT_WELCOME_TEMPLATE =
@@ -226,6 +233,11 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     private final String welcomeTemplate;
     /** Whether Concise Bounded Description queries should be used. */
     private boolean useCdb;
+    /**
+     * Whether to serve graphs instead of resources when the same URI
+     * is used for both.
+     */
+    private boolean serveGraphsFirst;
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -268,6 +280,9 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         // Check whether Concise Bounded Description is to be used.
         this.useCdb = this.getBoolean(configuration,
                                                 CBD_SUPPORT_PROPERTY, false);
+        // Check whether graphs shall be served first.
+        this.serveGraphsFirst = this.getBoolean(configuration,
+                                                PREFER_GRAPHS_PROPERTY, false);
         // Load predefined SPARQL queries.
         this.predefinedQueries = Collections.unmodifiableList(
                                     this.loadPredefinedQueries(configuration));
@@ -1043,14 +1058,10 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                     @Override
                     public void handleSolution(BindingSet b) {
                         if (nodeType == null) {
-                            if (b.hasBinding("s")) {
-                                nodeType = Resource;
-                            }
-                            else if (b.hasBinding("p")) {
+                            // Only consider predicates, types or values if the
+                            // URI doesn't match a resource or a named graph.
+                            if (b.hasBinding("p")) {
                                 nodeType = Predicate;
-                            }
-                            else if (b.hasBinding("g")) {
-                                nodeType = Graph;
                             }
                             else if (b.hasBinding("t")) {
                                 nodeType = RdfType;
@@ -1059,7 +1070,17 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                                 nodeType = Value;
                             }
                         }
-                        // Else: Already set. => Ignore...
+                        // Resources and named graphs take precedence.
+                        if (b.hasBinding("s")) {
+                            if ((nodeType != Graph) || (! serveGraphsFirst)) {
+                                nodeType = Resource;
+                            }
+                        }
+                        if (b.hasBinding("g")) {
+                            if ((nodeType != Resource) || (serveGraphsFirst)) {
+                                nodeType = Graph;
+                            }
+                        }
                     }
                     @Override
                     public ElementType getResult() {
