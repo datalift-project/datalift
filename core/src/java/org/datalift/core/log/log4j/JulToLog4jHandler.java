@@ -68,6 +68,12 @@ public final class JulToLog4jHandler extends Handler
     // Constructors
     //-------------------------------------------------------------------------
 
+    /**
+     * Creates a java.util.logging to Log4J handler.
+     *
+     * @param  loggerRepository   the Log4J configuration to delegate
+     *                            logging to.
+     */
     private JulToLog4jHandler(LoggerRepository loggerRepository) {
         super();
 
@@ -100,6 +106,7 @@ public final class JulToLog4jHandler extends Handler
     /** {@inheritDoc} */
     @Override
     public Level getLevel() {
+        // Let Log4J do the actual level filtering.
         return Level.ALL;
     }
 
@@ -127,7 +134,7 @@ public final class JulToLog4jHandler extends Handler
         String message = record.getMessage();
         // Format message.
         try {
-            Object parameters[] = record.getParameters();
+            Object[] parameters = record.getParameters();
             if ((parameters != null) && (parameters.length != 0)) {
                 message = MessageFormat.format(message, parameters);
             }

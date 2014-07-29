@@ -78,8 +78,10 @@ public final class Log4JLogService extends LogService
     // Class members
     //-------------------------------------------------------------------------
 
+    /** Promoted level for DEBUG. */
     public final static PromotedLevel PROMOTED_DEBUG =
                                 new PromotedLevel(Level.DEBUG_INT, "DEBUG");
+    /** Promoted level for TRACE. */
     public final static PromotedLevel PROMOTED_TRACE =
                                 new PromotedLevel(Level.TRACE_INT, "TRACE");
 
@@ -159,6 +161,10 @@ public final class Log4JLogService extends LogService
     /** {@inheritDoc} */
     @Override
     public void init(Properties props) {
+        if (props == null) {
+            // No configuration data available. => Default to system props.
+            props = new Properties(System.getProperties());
+        }
         // Try to install a specific logger factory.
         try {
             Hierarchy h = new Hierarchy(new RootLogger(Level.DEBUG));
@@ -229,7 +235,7 @@ public final class Log4JLogService extends LogService
         private final String FQCN = LoggerImpl.class.getName();
         /** The wrapped Log4J Logger object. */
         private final org.apache.log4j.Logger proxied;
-        /** The resurce bundle associated to the wrapped logger. */
+        /** The resource bundle associated to the wrapped logger. */
         private final ResourceBundle msgBundle;
 
         /**
