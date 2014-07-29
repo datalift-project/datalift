@@ -70,7 +70,7 @@ public abstract class TechnicalException extends RuntimeException
      * specified as a string directly containing the message format
      * or text.
      */
-    private String messageCode = null;
+    private final String messageCode;
     /** The message arguments, if any. */
     private transient Object[] messageArgs = null;
 
@@ -83,6 +83,7 @@ public abstract class TechnicalException extends RuntimeException
      */
     protected TechnicalException() {
         super();
+        this.messageCode = null;
     }
 
     /**
@@ -93,6 +94,7 @@ public abstract class TechnicalException extends RuntimeException
      */
     protected TechnicalException(Throwable cause) {
         super(cause);
+        this.messageCode = null;
     }
 
     /**
@@ -224,8 +226,10 @@ public abstract class TechnicalException extends RuntimeException
      * @return a formatted detail message.
      */
     protected String getMessage(Locale locale) {
+        // return "[" + this.getMessageCode() + "] " + this.formatMessage(...);
         return this.formatMessage(
-                            this.getMessageFormat(this.messageCode, locale));
+                        this.getMessageFormat(this.getMessageCode(), locale),
+                        locale);
     }
 
     /**
@@ -240,8 +244,10 @@ public abstract class TechnicalException extends RuntimeException
         if (locales == null) {
             locales = PreferredLocales.get();
         }
+        // return "[" + this.getMessageCode() + "] " + this.formatMessage(...);
         return this.formatMessage(
-                            this.getMessageFormat(this.messageCode, locales));
+                        this.getMessageFormat(this.getMessageCode(), locales),
+                        locales.get(0));
     }
 
     /**
@@ -250,10 +256,11 @@ public abstract class TechnicalException extends RuntimeException
      * @param  format   the format for the detailed message, compliant
      *                  with the grammar defined by
      *                  {@link MessageFormat}.
+     * @param  locale   the target locale.
      *
      * @return a formatted detail message.
      */
-    protected String formatMessage(String format) {
+    protected String formatMessage(String format, Locale locale) {
         String message = null;
 
         if (this.messageCode != null) {
@@ -263,7 +270,8 @@ public abstract class TechnicalException extends RuntimeException
                 if (args != null) {
                     // Arguments are provided. => Format message.
                     try {
-                        message = MessageFormat.format(format, args);
+                        message = new MessageFormat(format,
+                                                    locale).format(args);
                     }
                     catch (Exception e) { /* Ignore... */ }
                 }
@@ -319,14 +327,18 @@ public abstract class TechnicalException extends RuntimeException
                 locale = Locale.getDefault();
             }
             try {
-                ClassLoader cl = this.getClass().getClassLoader();
+                ClassLoader cl = Thread.currentThread().getContextClassLoader();
+                if (cl == null) {
+                    cl = this.getClass().getClassLoader();
+                }
                 ResourceBundle bundle = ResourceBundle.getBundle(
                                                         bundleName, locale, cl);
                 try {
                     format = bundle.getString(key);
                 }
                 catch (MissingResourceException e) {
-                    /* Ignore... */
+                    // Ignore: a message format may have been directly
+                    // provided, if no localization is needed.
                     Logger.getLogger().trace(
                                 "Failed to resolve key \"{}\" in bundle \"{}\"",
                                 key, bundleName);
@@ -334,7 +346,7 @@ public abstract class TechnicalException extends RuntimeException
             }
             catch (MissingResourceException e) {
                 Logger.getLogger().error(
-                                "Resource bundle \"{}\" not found ({})", e,
+                                "Resource bundle \"{}\" not found ({})",
                                 bundleName, e.getMessage());
                 format = null;
             }
@@ -369,7 +381,8 @@ public abstract class TechnicalException extends RuntimeException
                     format = bundle.getString(key);
                 }
                 catch (MissingResourceException e) {
-                    /* Ignore... */
+                    // Ignore: a message format may have been directly
+                    // provided, if no localization is needed.
                     Logger.getLogger().trace(
                                 "Failed to resolve key \"{}\" in bundle \"{}\"",
                                 key, bundleName);
@@ -377,7 +390,7 @@ public abstract class TechnicalException extends RuntimeException
             }
             catch (MissingResourceException e) {
                 Logger.getLogger().error(
-                                "Resource bundle \"{}\" not found ({})", e,
+                                "Resource bundle \"{}\" not found ({})",
                                 bundleName, e.getMessage());
                 format = null;
             }

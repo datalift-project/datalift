@@ -158,6 +158,9 @@ public final class PreferredLocales extends AbstractList<Locale>
      *         specified base name can be found.
      */
     public ResourceBundle getBundle(String baseName, Object owner) {
+        if (owner == null) {
+            throw new IllegalArgumentException("owner");
+        }
         return this.getBundle(baseName, owner.getClass());
     }
 
@@ -175,16 +178,15 @@ public final class PreferredLocales extends AbstractList<Locale>
      *         specified base name can be found.
      */
     public ResourceBundle getBundle(String baseName, Class<?> owner) {
-        try {
-            return ResourceBundle.getBundle(baseName, this.locales.get(0),
-                                            owner.getClassLoader(),
-                                            this.getBundleControl());
+        if (! isSet(baseName)) {
+            throw new IllegalArgumentException("baseName");
         }
-        catch (MissingResourceException e) {
-            log.fatal("Failed to resolved bundle \"{}\" for locales {}",
-                                                        baseName, this.locales);
-            throw e;
+        if (owner == null) {
+            throw new IllegalArgumentException("owner");
         }
+        // Use a ResourceBundle control to scan all locales.
+        return ResourceBundle.getBundle(baseName, this.locales.get(0),
+                            owner.getClassLoader(), this.getBundleControl());
     }
 
     /**
