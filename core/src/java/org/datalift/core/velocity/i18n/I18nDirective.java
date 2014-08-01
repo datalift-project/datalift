@@ -58,6 +58,8 @@ import org.datalift.fwk.log.Logger;
  * translation {@link LoadDirective loaded from resource bundles}
  * based on the user's preferred locales retrieved from the HTTP
  * <code>Accept-Language</code> header sent by the Web browser.
+ * 
+ * @deprecated Replaced by the more versatile {@link I18nTool}.
  *
  * @author lbihanic
  */
@@ -75,7 +77,7 @@ public class I18nDirective extends Directive
 
     /**
      * {@inheritDoc}
-     * @return The name of this directive: "<code>i18n</code>".
+     * @return the name of this directive: "<code>i18n</code>".
      */
     public String getName() {
         return "i18n";
@@ -83,7 +85,7 @@ public class I18nDirective extends Directive
 
     /**
      * {@inheritDoc}
-     * @return The directive type: {@link #LINE}.
+     * @return the directive type: {@link #LINE}.
      */
     public int getType() {
         return LINE;
@@ -104,7 +106,8 @@ public class I18nDirective extends Directive
                                ParseErrorException, MethodInvocationException {
         String key = String.valueOf(node.jjtGetChild(0).value(context));
         // Get bundles from context.
-        BundleList b = (BundleList)(context.get(BundleList.KEY));
+        I18nTool i18n = (I18nTool)(context.get(I18nTool.KEY));
+        BundleList b = (i18n != null)? i18n.getBundles(): null;
         if (b != null) {
             // Get value from bundles
             String msg = b.getValue(key);

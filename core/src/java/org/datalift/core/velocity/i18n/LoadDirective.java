@@ -90,7 +90,7 @@ public class LoadDirective extends Directive
 
     /**
      * {@inheritDoc}
-     * @return The name of this directive: "<code>load</code>".
+     * @return the name of this directive: "<code>load</code>".
      */
     @Override
     public String getName() {
@@ -99,7 +99,7 @@ public class LoadDirective extends Directive
 
     /**
      * {@inheritDoc}
-     * @return The directive type: {@link #LINE}.
+     * @return the directive type: {@link #LINE}.
      */
     @Override
     public int getType() {
@@ -117,10 +117,12 @@ public class LoadDirective extends Directive
         // Reverse locale list to get least wanted locales first.
         Collections.reverse(locales);
         // Get existing bundle list, to add new bundles.
-        BundleList bundles = (BundleList)(context.get(BundleList.KEY));
+        I18nTool i18n = (I18nTool)(context.get(I18nTool.KEY));
+        BundleList bundles = (i18n != null)? i18n.getBundles(): null;
         if (bundles == null) {
-            bundles = new BundleList();
-            context.put(BundleList.KEY, bundles);
+            log.warn("Directive #{}() ignored: " +
+                     " no I18nTool available in context", this.getName());
+            return false;
         }
 
         // Load requested bundles to add them to the bundle list. The first
@@ -130,39 +132,7 @@ public class LoadDirective extends Directive
         for (int i=0; i<node.jjtGetNumChildren(); i++) {
             String name = String.valueOf(node.jjtGetChild(i).value(context));
 
-            Bundle b = null;
-            for (Locale locale : locales) {
-                // Build properties resource bundle name for locale.
-                StringBuilder buf = new StringBuilder(name);
-                if (locale != Locale.ROOT) {
-                    buf.append('_').append(locale);
-                }
-                String propName = buf.append(".properties").toString();
-
-                Properties props = bundleCache.get(propName);
-                if (props == null) {
-                    // Load resource bundle.
-                    if (this.rsvc.getLoaderNameForResource(propName) != null) {
-                        try {
-                            // Force encoding as requested by Java Properties.
-                            Object o = this.rsvc.getContent(propName,
-                                                        "ISO-8859-1").getData();
-                            Properties p = new Properties();
-                            p.load(new StringReader((String)o));
-                            props = p;
-                            bundleCache.put(propName, p);
-                        }
-                        catch (Exception e) {
-                            log.error("Failed to load resource bundle {}", e,
-                                      propName);
-                        }
-                    }
-                    // Else: Properties resource bundle not found. => Ignore...
-                }
-                if (props != null) {
-                    b = BundleList.newBundle(props, b);
-                }
-            }
+            Bundle b = this.findBundles(name, locales);
             if (b != null) {
                 bundles.add(b);
             }
@@ -171,5 +141,52 @@ public class LoadDirective extends Directive
             }
         }
         return true;
+    }
+
+    /**
+     * Retrieves versions of the specified bundle for the specified
+     * locales.
+     * @param  name      the bundle name.
+     * @param  locales   the locales for which a version of the bundle
+     *                   is expected.
+     *
+     * @return a (chain of) bundle or <code>null</code> if no version
+     *         of the specified bundle was found for any locale.
+     */
+    private Bundle findBundles(String name, List<Locale> locales) {
+        Bundle b = null;
+        for (Locale locale : locales) {
+            // Build properties resource bundle name for locale.
+            StringBuilder buf = new StringBuilder(name);
+            if (locale != Locale.ROOT) {
+                buf.append('_').append(locale);
+            }
+            String propName = buf.append(".properties").toString();
+
+            Properties props = bundleCache.get(propName);
+            if ((props == null) &&
+                (this.rsvc.getLoaderNameForResource(propName) != null)) {
+                // Load resource bundle.
+                try {
+                    // Force encoding as requested by Java Properties.
+                    Object o = this.rsvc.getContent(propName,
+                                                    "ISO-8859-1").getData();
+                    Properties p = new Properties();
+                    p.load(new StringReader((String)o));
+                    props = p;
+                    bundleCache.put(propName, p);
+                }
+                catch (Exception e) {
+                    log.error("Failed to load resource bundle {}", e,
+                              propName);
+                }
+            }
+            // Else: Properties resource bundle not found. => Ignore...
+
+            if (props != null) {
+                b = BundleList.newBundle(props, b);
+            }
+        }
+        return b;
     }
 }

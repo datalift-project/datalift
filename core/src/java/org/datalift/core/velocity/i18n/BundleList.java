@@ -42,14 +42,40 @@ import java.util.Properties;
 
 /* package */ final class BundleList
 {
-    public final static String KEY = BundleList.class.getName();
+    //-------------------------------------------------------------------------
+    // Instance members
+    //-------------------------------------------------------------------------
 
     private final List<Bundle> bundles = new LinkedList<Bundle>();
 
+    //-------------------------------------------------------------------------
+    // BundleList contract definition
+    //-------------------------------------------------------------------------
+
+    /**
+     * Adds a bundle to this bundle list.
+     * @param  properties   the bundle to add.
+     */
     public void add(Bundle properties) {
         this.bundles.add(properties);
     }
 
+    /**
+     * Checks if this list contains at least no element.
+     * @return <code>true</code> if this list contains no element.
+     */
+    public boolean isEmpty() {
+        return this.bundles.isEmpty();
+    }
+
+    /**
+     * Retrieves the value associated to the specified key from
+     * the registered bundles.
+     * @param  key   the resource key.
+     *
+     * @return the value associated to the key or the key itself if
+     *         no entry was found.
+     */
     public String getValue(String key) {
         String value = key;
         for (Bundle b : this.bundles) {
@@ -62,15 +88,46 @@ import java.util.Properties;
         return value;
     }
 
+    /**
+     * Creates a new bundle.
+     * @param  values   the bundle values.
+     * @param  parent   the parent bundle.
+     *
+     * @return the new bundle.
+     */
     public static Bundle newBundle(Properties values, Bundle parent) {
         return new BundleImpl(values, parent);
     }
 
+    //-------------------------------------------------------------------------
+    // Bundle contract definition
+    //-------------------------------------------------------------------------
+
+    /**
+     * Bundle interface.
+     */
     public static interface Bundle
     {
+        /**
+         * Return the value associated to the specified key from
+         * this bundle. If the key is not present in this bundle, the
+         * request is forwarded to the parent bundle, if any.
+         * @param  key   the resource key.
+         *
+         * @return the value associated to the key or <code>null</code>
+         *         if the key was not found in this bundle or its
+         *         parents.
+         */
         public String get(String key);
     }
 
+    //-------------------------------------------------------------------------
+    // Bundle contract support
+    //-------------------------------------------------------------------------
+
+    /**
+     * Default Bundle implementation.
+     */
     private final static class BundleImpl implements Bundle
     {
         private final Properties values;
