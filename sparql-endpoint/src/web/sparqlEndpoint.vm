@@ -123,36 +123,53 @@
 			$("#query").keyup(function() {
 				queryUpdate();
 			});
+			$("#query_form").keydown(function(e) {
+				if (e.keyCode == 13 && (e.metaKey || e.ctrlKey)) {
+					$("#query_form").submit();
+				}
+			});
 
 			$("#query_form").submit(function(e) {
+				// Switch to POST for large queries
+				var query = $("#query").val();
+				var method = (query.length > 1900)? "post": "get";
+
 				var fmt = $("input[name=format]:checked").val();
 				$("#format_save").val(fmt);
-				var requestUrl = $("#query_form").attr("action")
-							+ "?" + $("#query").serialize();
-#if( ${repositories.size()} > 1 )
-				requestUrl += "&" + $("#default-graph-uri").serialize();
-#end
-				var maxResults = $("#max").val();
-				if (! isNaN(maxResults)) {
-					requestUrl += "&max=" + parseInt(maxResults);
-				}
 				if (fmt.match(/json/)) {
+					// Use async. call to fill result table
 					// Prevent the navigator from sending the form
 					e.preventDefault();
-					// Use async. call to fill result table
+					// Format request
+					var formData = {
+						query: query,
+						grid: 'true'
+					};
+#if( ${repositories.size()} > 1 )
+					formData['default-graph-uri'] = $("#default-graph-uri").val();
+#end
+					var maxResults = parseInt($("#max").val());
+					if (! isNaN(maxResults)) {
+						formData['max'] = maxResults;
+					}
 					jQuery.ajax({
 						beforeSend: function(req) {
 							req.setRequestHeader("Accept", fmt);
 						},
-						type: "GET",
+						type: method,
 						cache: false,
-						url: requestUrl + "&grid=true",
+						url: $("#query_form").attr("action"),
+						data: formData,
 						dataType: "json",
 						success: successfulQuery,
-						error: unsuccessfulQuery,
+						error: unsuccessfulQuery
 					});
 				}
-				// Else: let the browser send the form request.
+				else {
+					// Set form method according to query length.
+					$("#query_form").attr("method", method);
+					// And let the browser handle form submission event.
+				}
 			});
 		});
 
