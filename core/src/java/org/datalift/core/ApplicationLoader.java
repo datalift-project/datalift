@@ -50,7 +50,6 @@ import javax.ws.rs.core.UriBuilder;
 import org.datalift.core.log.TimerContext;
 import org.datalift.core.project.DefaultProjectManager;
 import org.datalift.core.velocity.jersey.VelocityTemplateProcessor;
-import org.datalift.core.velocity.jersey.VelocityViewFactory;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.LifeCycle;
 import org.datalift.fwk.Module;
@@ -59,7 +58,6 @@ import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.log.web.LogServletContextListener;
 import org.datalift.fwk.project.ProjectManager;
 import org.datalift.fwk.util.DefaultUriBuilder;
-import org.datalift.fwk.view.ViewFactory;
 
 import static org.datalift.core.DefaultConfiguration.DATALIFT_HOME;
 import static org.datalift.core.log.LogContext.*;
@@ -229,10 +227,6 @@ public class ApplicationLoader extends LogServletContextListener
             this.loadModules(cfg);
             // Initialize and register default resources if no custom
             // implementations are provided by third-party packages.
-            if (cfg.getBeans(ViewFactory.class).isEmpty()) {
-                // Add default view factory.
-                cfg.registerBean(new VelocityViewFactory());
-            }
             if (cfg.getBeans(UriBuilder.class).isEmpty()) {
                 // Add default URI building policy.
                 cfg.registerBean(new DefaultUriBuilder());

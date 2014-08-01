@@ -35,7 +35,11 @@
 package org.datalift.fwk.view;
 
 
-import org.datalift.fwk.Configuration;
+import java.util.Iterator;
+import java.util.ServiceConfigurationError;
+import java.util.ServiceLoader;
+
+import org.datalift.fwk.log.Logger;
 
 
 /**
@@ -91,10 +95,7 @@ public abstract class ViewFactory
      * @return a new template view.
      */
     public static TemplateModel newView(String templateName, Object model) {
-        if (provider == null) {
-            provider = Configuration.getDefault().getBean(ViewFactory.class);
-        }
-        return provider.createView(templateName, model);
+        return getInstance().createView(templateName, model);
     }
 
     /**
@@ -108,4 +109,55 @@ public abstract class ViewFactory
      */
     abstract protected TemplateModel createView(String templateName,
                                                 Object model);
+
+    // -------------------------------------------------------------------------
+    // Factory methods
+    // -------------------------------------------------------------------------
+
+    /**
+     * Returns an instance of the configured <code>ViewFactory</code>.
+     * <p>
+     * This method uses the {@link ServiceLoader JAR service provider} mechanism
+     * to discover the ViewFactory implementation. The implementation selected
+     * is the first listed in the first file named
+     * <code>META-INF/services/org.datalift.fwk.view.ViewFactory</code>
+     * found in the classpath.
+     * </p>
+     *
+     * @return an instance of <code>ViewFactory</code>.
+     */
+    public static ViewFactory getInstance() {
+        if (provider == null) {
+            // Retrieve webapp class loader.
+            ClassLoader cl = Thread.currentThread().getContextClassLoader();
+            if (cl == null) {
+                cl = ViewFactory.class.getClassLoader();
+            }
+            // Make a fault-tolerant loading of available view factories.
+            Iterator<ViewFactory> i = ServiceLoader.load(ViewFactory.class, cl)
+                                                   .iterator();
+            boolean hasNext = false;
+            do {
+                try {
+                    hasNext = i.hasNext();
+                    if (hasNext) {
+                        provider = i.next(); // May fail!
+                        hasNext = false;
+                    }
+                }
+                catch (ServiceConfigurationError e) {
+                    Logger.getLogger().error(
+                            "Failed to load configured {} implementation", e,
+                            ViewFactory.class.getSimpleName());
+                }
+            }
+            while (hasNext);
+
+            if (provider == null) {
+                throw new IllegalStateException(
+                        "No provider found for " + ViewFactory.class.getName());
+            }
+        }
+        return provider;
+    }
 }
