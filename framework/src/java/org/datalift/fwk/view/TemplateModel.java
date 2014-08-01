@@ -65,6 +65,15 @@ public interface TemplateModel extends Map<String,Object>
 
     /** The context key for the default application model object. */
     public final static String MODEL_KEY = "it";
+    /** The context/parameter key to specify the page layout to apply. */
+    public final static String LAYOUT_KEY = "layout";
+    /**
+     * The context key that will hold the content of the screen.
+     * <p>
+     * This key (<code>$screen_content</code>) must be present in the
+     * layout template for the current screen to be rendered.</p>
+     */
+    public final static String SCREEN_CONTENT_KEY = "screen_content";
     /** The context key for field classes. */
     public final static String FIELD_CLASSES_KEY =
                             TemplateModel.class.getName() + ".fieldClasses";
@@ -96,12 +105,16 @@ public interface TemplateModel extends Map<String,Object>
     /**
      * Registers a class to make its constants (static fields)
      * directly available in the template.
+     * @param  clazz   the class the static fields of which shall be
+     *                 made available.
      */
     public void registerFieldsFor(Class<?> clazz);
 
     /**
      * Returns the classes the static fields of which shall be
      * made available to the template.
+     * @return the list of classes the static fields of which are
+     *         exposed.
      */
     public Collection<Class<?>> getFieldClasses();
 }

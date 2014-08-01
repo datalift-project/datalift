@@ -41,6 +41,7 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.StringWriter;
 import java.io.Writer;
 import java.util.Collection;
 import java.util.HashMap;
@@ -81,6 +82,7 @@ import static org.apache.velocity.app.VelocityEngine.*;
 import static org.apache.velocity.runtime.log.Log4JLogChute.*;
 
 import org.datalift.core.velocity.i18n.I18nDirective;
+import org.datalift.core.velocity.i18n.I18nTool;
 import org.datalift.core.velocity.i18n.LoadDirective;
 import org.datalift.core.velocity.sparql.SparqlTool;
 import org.datalift.fwk.i18n.PreferredLocales;
@@ -108,8 +110,10 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
 
     /** The default context key for the application model object. */
     public final static String CTX_MODEL            = TemplateModel.MODEL_KEY;
+    /** The context key for internationalization tool. */
+    public final static String CTX_I18N_TOOL        = I18nTool.KEY;
     /** The context key for Velocity Escape tool. */
-    public final static String CTX_ESCAPE_TOOL      = "esc";
+    public final static String CTX_ESCAPE_TOOL      = EscapeTool.DEFAULT_KEY;
     /** The context key for Velocity Link tool. */
     public final static String CTX_LINK_TOOL        = "link";
     /** The context key for Velocity Date tool. */
@@ -276,33 +280,41 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
             log.trace("Merging template {} with context {}", t.getName(), ctx);
             // Add predefined variable for base URI.
             UriInfo uriInfo = this.httpContext.getUriInfo();
-            if (! ctx.containsKey(CTX_BASE_URI)) {
-                String baseUri = uriInfo.getBaseUri().toString();
-                if (baseUri.endsWith("/")) {
-                    baseUri = baseUri.substring(0, baseUri.length() - 1);
+            if (uriInfo != null) {
+                if (! ctx.containsKey(CTX_BASE_URI)) {
+                    String baseUri = uriInfo.getBaseUri().toString();
+                    if (baseUri.endsWith("/")) {
+                        baseUri = baseUri.substring(0, baseUri.length() - 1);
+                    }
+                    ctx.put(CTX_BASE_URI, baseUri);
                 }
-                ctx.put(CTX_BASE_URI, baseUri);
+                if (! ctx.containsKey(CTX_URI_INFO)) {
+                    ctx.put(CTX_URI_INFO, uriInfo);
+                }
             }
             // Add predefined variables, the JSP way.
-            if (! ctx.containsKey(CTX_HTTP_REQUEST)) {
-                ctx.put(CTX_HTTP_REQUEST, this.httpContext.getRequest());
-            }
-            if (! ctx.containsKey(CTX_HTTP_RESPONSE)) {
-                ctx.put(CTX_HTTP_RESPONSE, this.httpContext.getResponse());
-            }
-            if (! ctx.containsKey(CTX_URI_INFO)) {
-                ctx.put(CTX_URI_INFO, uriInfo);
+            if (this.httpContext != null) {
+                if (! ctx.containsKey(CTX_HTTP_REQUEST)) {
+                    ctx.put(CTX_HTTP_REQUEST, this.httpContext.getRequest());
+                }
+                if (! ctx.containsKey(CTX_HTTP_RESPONSE)) {
+                    ctx.put(CTX_HTTP_RESPONSE, this.httpContext.getResponse());
+                }
             }
             if (! ctx.containsKey(CTX_SECURITY_CONTEXT)) {
                 ctx.put(CTX_SECURITY_CONTEXT, SecurityContext.getContext());
             }
+            // Add internationalization tool.
+            ctx.put(CTX_I18N_TOOL, new I18nTool());
             // Add Velocity tools: escaping, date, link, field, sparql...
             ctx.put(CTX_ESCAPE_TOOL, new EscapeTool());
             ctx.put(CTX_LINK_TOOL, new LinkTool());
             if (! ctx.containsKey(CTX_DATE_TOOL)) {
                 DateTool dateTool = new DateTool();
+                // Format dates according to the user's preferred locale.
                 Map<String, Object> config = new HashMap<String, Object>();
-                config.put(ToolContext.LOCALE_KEY, PreferredLocales.get().get(0));
+                config.put(ToolContext.LOCALE_KEY,
+                                                PreferredLocales.get().get(0));
                 dateTool.configure(config);
                 ctx.put(CTX_DATE_TOOL, dateTool);
             }
@@ -312,11 +324,31 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
             if (! ctx.containsKey(CTX_SPARQL_TOOL)) {
                 ctx.put(CTX_SPARQL_TOOL, new SparqlTool());
             }
-            // Apply Velocity template, using encoding from in HTTP request.
+            VelocityContext context = new VelocityContext(ctx);
+            // Prepare writing into HTTP response.
+            out.flush();
             Writer w = new OutputStreamWriter(out, this.getCharset());
-            t.merge(new VelocityContext(ctx), w);
+            // Execute a two-pass rendering to support layouts.
+            // 1st pass: render page template.
+            StringWriter buf = new StringWriter(4096);
+            t.merge(context, buf);
+            String screen = buf.toString();
+            // Check for layout, after merging the screen template so the
+            // template can overrule any layout set in the model.
+            final Object layout = context.get(TemplateModel.LAYOUT_KEY);
+            if (layout != null) {
+                String srcTemplateName = t.getName();
+                t = resolve(layout.toString());
+                context.put(TemplateModel.SCREEN_CONTENT_KEY, screen);
+                t.merge(context, w);
+                log.trace("Completed rendering template {} with layout {}",
+                          srcTemplateName, t.getName());
+            }
+            else {
+                w.write(screen);
+                log.trace("Completed rendering template {}", t.getName());
+            }
             w.flush();
-            log.trace("Completed rendering template {}", t.getName());
         }
         catch (Exception e) {
             log.error("Error merging template \"{}\": {}", e,
@@ -364,6 +396,10 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
         modulePaths.put(name, path);
     }
 
+    /**
+     * Register a Velocity language supplementary directive.
+     * @param  directive   the directive to register.
+     */
     public static void addDirective(Class<? extends Directive> directive) {
         if (directive == null) {
             throw new IllegalArgumentException("directive");
@@ -508,8 +544,11 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
             // Start a new Velocity engine.
             log.trace("Starting Velocity with configuration: {}", config);
             engine = new VelocityEngine(config);
-            // Set web app. context, required to resolve embedded templates.
-            engine.setApplicationAttribute(ServletContext.class.getName(), ctx);
+            if (ctx != null) {
+                // Set web app. context, required to resolve embedded templates.
+                engine.setApplicationAttribute(
+                                        ServletContext.class.getName(), ctx);
+            }
             engine.init();
         }
         catch (Exception e) {
@@ -591,7 +630,7 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
      * Registers the Velocity directives provided by Datalift Core.
      */
     private static void registerCoreDirectives() {
-        directives.add(LoadDirective.class);
-        directives.add(I18nDirective.class);
+        addDirective(LoadDirective.class);
+        addDirective(I18nDirective.class);
     }
 }
