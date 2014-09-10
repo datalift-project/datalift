@@ -54,7 +54,7 @@
 		<p><label class="control-label" for="file_url">#i18n("project.upload_source.file_url")*: </label>
 		<input type="text" class="control-input" placeholder="http://..." id="file_url" name="file_url" title="#i18n("project.source.tooltip.url")" /></p>
 		<p><label class="control-label" for="file_name">#i18n("project.upload_source.name")*: </label>
-		<input type="text" id="csv_name" class="control-input" placeholder="#i18n("project.source.placeholder.file_name")" name="file_name" title="#i18n("project.upload_source.file_name")" /></p>
+		<input type="text" id="csv_name" class="control-input" placeholder="#i18n("project.source.placeholder.file_name")" name="file_name" title="#i18n("project.source.placeholder.file_name")" /></p>
 #else
 		<input type="hidden" name="current_source" value="$current.uri"/>
 		<p>#i18n("project.source.csv.update"): <a href="$current.uri">$esc.html($current.title)</a>#if( $current.sourceUrl ) (#i18n('project.update_source.src_url'): <a href='${current.sourceUrl}'>$!esc.html($current.sourceUrl)</a>)#end</p>
@@ -105,7 +105,7 @@
 		<p><label class="control-label" for="file_url">#i18n("project.upload_source.file_url"): </label>
 		<input type="text" class="control-input" placeholder= "http://..." id="file_url" name="file_url" title="#i18n("project.source.tooltip.url")" /></p>
 		<p><label class="control-label" for="file_name">#i18n("project.upload_source.name")*: </label>
-		<input type="text" id="rdf_name" class="control-input" placeholder="#i18n("project.source.placeholder.file_name")" name="file_name" title="#i18n("project.upload_source.file_name")" /></p>
+		<input type="text" id="rdf_name" class="control-input" placeholder="#i18n("project.source.placeholder.file_name")" name="file_name" title="#i18n("project.source.placeholder.file_name")" /></p>
 #else
 		<input type="hidden" id="current_source" name="current_source" value="$current.uri"/>
 		<p>#i18n("project.update_rdf"): <a href="$current.uri">$esc.html($current.title)</a>#if( $current.sourceUrl ) (#i18n('project.update_source.src_url'): <a href='${current.sourceUrl}'>$!esc.html($current.sourceUrl)</a>)#end</p>
@@ -195,7 +195,7 @@
 		<p><label class="control-label" for="file_url">#i18n("project.upload_source.file_url"): </label></p>
 		<input type="text" class="control-input" placeholder= "http://..." id="file_url" name="file_url"/></p>
 		<p><label class="control-label" for="file_name">#i18n("project.upload_source.name")*: </label>
-		<input type="text" id="xml_name" class="control-input" placeholder="#i18n("project.source.placeholder.file_name")" name="file_name" title="#i18n("project.upload_source.file_name")" /></p>
+		<input type="text" id="xml_name" class="control-input" placeholder="#i18n("project.source.placeholder.file_name")" name="file_name" title="#i18n("project.source.placeholder.file_name")" /></p>
 #else
 		<input type="hidden" name="current_source" value="$current.uri"/>
 		<p>#i18n("project.update_xml"): <a href="$current.uri">$esc.html($current.title)</a>#if( $current.sourceUrl ) (#i18n('project.update_source.src_url'): <a href='${current.sourceUrl}'>$!esc.html($current.sourceUrl)</a>)#end</p>
