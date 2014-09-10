@@ -144,27 +144,21 @@ public final class JulToLog4jHandler extends Handler
         return message;
     }
 
-    private Priority getLevel(LogRecord record) {
-        Level level = record.getLevel();
+    private Priority getLevel(final LogRecord record) {
+        final int level = record.getLevel().intValue();
 
-        Priority p = OFF;
-        if (Level.SEVERE == level) {
+        Priority p = TRACE;
+        if (level >= Level.SEVERE.intValue()) {
             p = ERROR;
         }
-        else if (Level.WARNING == level) {
+        else if (level >= Level.WARNING.intValue()) {
             p = WARN;
         }
-        else if ((Level.INFO == level) || (Level.CONFIG == level)) {
+        else if (level >= Level.CONFIG.intValue()) {
             p = INFO;
         }
-        else if (Level.FINE == level) {
+        else if (level >= Level.FINE.intValue()) {
             p = DEBUG;
-        }
-        else if ((Level.FINER == level) || (Level.FINEST == level)) {
-            p = TRACE;
-        }
-        else if (Level.ALL == level) {
-            p = ALL;
         }
         return p;
     }
