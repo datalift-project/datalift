@@ -89,7 +89,7 @@ public class SuffixContentNegotiationFilter extends UriConnegFilter
      * <p>
      * and all the media types defined in {@link RdfFormat}...</p>
      */
-    public final static  Map<String, MediaType> DEFAULT_MEDIA_EXTENSIONS;
+    public final static Map<String, MediaType> DEFAULT_MEDIA_EXTENSIONS;
     /**
      * The default language extension mappings.
      * <ul>
@@ -105,12 +105,13 @@ public class SuffixContentNegotiationFilter extends UriConnegFilter
 
     /** The generic media extension mappings, as a raw array. */
     private final static String[][] DEFAULT_MEDIA_MAPPINGS = new String[][] {
-            { "html", TEXT_HTML },
+            // { "html", TEXT_HTML },
             { "xml",  APPLICATION_XML },
             { "json", APPLICATION_JSON },
             { "csv",  TEXT_CSV },
-            { "atom", APPLICATION_ATOM_XML },
-            { "svg",  APPLICATION_SVG_XML } };
+            // { "atom", APPLICATION_ATOM_XML },
+            // { "svg",  APPLICATION_SVG_XML },
+        };
     /** The default language extension mappings, as a raw array. */
     private final static String[][] DEFAULT_LANGUAGE_MAPPINGS = new String[][] {
             { "en", "en" }, { "fr", "fr" }, { "de", "de" },
