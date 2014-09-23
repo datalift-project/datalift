@@ -75,24 +75,27 @@ public class SparqlAccessContextProvider extends BaseModule
         // Retrieve the security repository
         this.s4ac = configuration.getBean(S4acAccessController.class);
         Repository securityRepository = s4ac.getSecurityRepository();
-        // Extract access control context building queries.
-        RepositoryConnection cnx = null;
-        try {
-            this.queries.clear();
-            cnx = securityRepository.newConnection();
-            TupleQueryResult result =
+        if (securityRepository != null) {
+            // S4AC access control is active.
+            // => Extract access control context building queries.
+            RepositoryConnection cnx = null;
+            try {
+                this.queries.clear();
+                cnx = securityRepository.newConnection();
+                TupleQueryResult result =
                         cnx.prepareTupleQuery(SPARQL, CONTEXT_QUERIES_QUERY)
                            .evaluate();
-            while (result.hasNext()) {
-                BindingSet bs = result.next();
-                Value r = bs.getValue("r");
-                this.queries.add(
-                        new QueryDesc(bs.getValue("q").stringValue(),
-                                      (r != null)? r.stringValue(): null));
+                while (result.hasNext()) {
+                    BindingSet bs = result.next();
+                    Value r = bs.getValue("r");
+                    this.queries.add(
+                            new QueryDesc(bs.getValue("q").stringValue(),
+                                          (r != null)? r.stringValue(): null));
+                }
             }
-        }
-        catch (Exception e) {
-            throw new TechnicalException(e);
+            catch (Exception e) {
+                throw new TechnicalException(e);
+            }
         }
     }
 
