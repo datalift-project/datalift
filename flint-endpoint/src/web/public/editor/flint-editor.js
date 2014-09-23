@@ -135,10 +135,12 @@ function FlintEditor(container, imagesPath, config) {
 			$('#' + container).append("<div id='flint-status'>...</div>");
 		};
 
-		this.updateStatus = function() {
-			$('#flint-status').text(
-					"Line: " + (line + 1) + "; Position: " + (position + 1)
-							+ "; Query is " + queryValid);
+		this.updateStatus = function(msg) {
+			if (! msg) {
+				msg = "Line: " + (line + 1) + "; Position: " + (position + 1)
+							+ "; Query is " + queryValid;
+			}
+			$('#flint-status').text(msg);
 		};
 	}
 
@@ -1643,7 +1645,7 @@ function FlintEditor(container, imagesPath, config) {
 							.ajax({
 								url : datasetItem.uri,
 								data : paramsData,
-								type : 'post',
+								type : 'get',
 								headers : {
 									"Accept" : "application/sparql-results+json"
 								},
@@ -1665,8 +1667,8 @@ function FlintEditor(container, imagesPath, config) {
 										displayPrefixes();
 									}
 									if (datasetItem.properties.results.bindings.length == 1000) {
-										window
-												.alert("The maximum number of properties has been reached - 1000");
+										flint.getStatusArea().updateStatus(
+												"The maximum number of properties has been reached - 1000");
 									}
 
 								}
@@ -1705,7 +1707,7 @@ function FlintEditor(container, imagesPath, config) {
 							.ajax({
 								url : datasetItem.uri,
 								data : paramsData,
-								type : 'post',
+								type : 'get',
 								headers : {
 									"Accept" : "application/sparql-results+json"
 								},
@@ -1727,8 +1729,8 @@ function FlintEditor(container, imagesPath, config) {
 										displayPrefixes();
 									}
 									if (datasetItem.classes.results.bindings.length == 1000) {
-										window
-												.alert("The maximum number of classes has been reached - 1000");
+										flint.getStatusArea().updateStatus(
+												"The maximum number of classes has been reached - 1000");
 									}
 								}
 							});
