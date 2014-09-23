@@ -354,8 +354,14 @@ public final class Wrapper
         System.out.println("DataLift server started on port " +
                                                 Integer.valueOf(httpPort));
         // Open new browser window on user's display.
-        BareBonesBrowserLaunch.openUrl(
+        try {
+            BareBonesBrowserLaunch.openUrl(
                     "http://" + LOCALHOST + ':' + httpPort + '/' + welcomePage);
+        }
+        catch (IOException e) {
+            // No web browser found. => Continue in headless mode...
+            System.err.println("WARNING: " + e.getLocalizedMessage());
+        }
         // Wait for server termination.
         httpServer.join();
         System.exit(0);
