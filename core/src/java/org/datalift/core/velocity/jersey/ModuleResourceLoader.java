@@ -149,8 +149,8 @@ public class ModuleResourceLoader extends ResourceLoader
         // Resolve module loader from template path.
         ResourceDesc desc = new ResourceDesc(source);
         if (desc.loader != null) {
-            if (log.isDebugEnabled()) {
-                log.debug("ModuleResourceLoader: Resolving '" + desc.path
+            if (log.isTraceEnabled()) {
+                log.trace("ModuleResourceLoader: Resolving '" + desc.path
                           + "' for module '" + desc.module + '\'');
             }
             // Loader found. => Read template data.
