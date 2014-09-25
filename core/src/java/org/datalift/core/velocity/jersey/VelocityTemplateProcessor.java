@@ -444,18 +444,19 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
                 String s = ctx.getInitParameter(TEMPLATES_CACHE_DURATION);
                 if (s != null) {
                     updateInterval = Long.parseLong(s);
-                    if (log.isDebugEnabled()) {
-                        if (updateInterval < 0L) {
-                            log.debug("Disabling template file cache");
-                        }
-                        else if (updateInterval > 0L) {
-                            log.debug("Template update check interval: {} seconds",
-                                      Long.valueOf(updateInterval));
-                        }
-                    }
                 }
             }
             catch (Exception e) { /* Ignore... */ }
+
+            if (log.isDebugEnabled()) {
+                if (updateInterval < 0L) {
+                    log.debug("Disabling template file cache");
+                }
+                else if (updateInterval > 0L) {
+                    log.debug("Template update check interval: {} seconds",
+                              Long.valueOf(updateInterval));
+                }
+            }
 
             // Build the list of template loaders.
             List<String> loaders = new LinkedList<String>();
