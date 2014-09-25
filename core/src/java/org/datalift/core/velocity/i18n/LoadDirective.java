@@ -162,26 +162,31 @@ public class LoadDirective extends Directive
                 buf.append('_').append(locale);
             }
             String propName = buf.append(".properties").toString();
-
+            // Check cache for known (but potentially non existent) bundles.
             Properties props = bundleCache.get(propName);
-            if ((props == null) &&
-                (this.rsvc.getLoaderNameForResource(propName) != null)) {
-                // Load resource bundle.
-                try {
-                    // Force encoding as requested by Java Properties.
-                    Object o = this.rsvc.getContent(propName,
-                                                    "ISO-8859-1").getData();
-                    Properties p = new Properties();
-                    p.load(new StringReader((String)o));
-                    props = p;
-                    bundleCache.put(propName, p);
+            if (! bundleCache.containsKey(propName)) {
+                // Not known in cache.
+                // => Load bundle using Velocity resource loaders.
+                if (this.rsvc.getLoaderNameForResource(propName) != null) {
+                    // Resource bundle exists. => Load it.
+                    try {
+                        // Force encoding as requested by Java Properties.
+                        Object o = this.rsvc.getContent(propName,
+                                                        "ISO-8859-1").getData();
+                        Properties p = new Properties();
+                        p.load(new StringReader((String)o));
+                        props = p;
+                    }
+                    catch (Exception e) {
+                        log.error("Failed to load resource bundle {}", e,
+                                  propName);
+                    }
                 }
-                catch (Exception e) {
-                    log.error("Failed to load resource bundle {}", e,
-                              propName);
-                }
+                // Else: Properties resource bundle not found. => Ignore...
+
+                // Register bundle in cache, whether it was found or not.
+                bundleCache.put(propName, props);
             }
-            // Else: Properties resource bundle not found. => Ignore...
 
             if (props != null) {
                 b = BundleList.newBundle(props, b);
