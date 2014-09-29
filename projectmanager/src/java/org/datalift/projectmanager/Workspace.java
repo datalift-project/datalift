@@ -2290,10 +2290,47 @@ public class Workspace extends BaseModule
     private String getProjectFilePath(String projectId, String fileName) {
         StringBuilder buf = new StringBuilder(80);
         buf.append(REL_PROJECT_PATH).append(projectId);
-        if (isSet(fileName)) {
-            buf.append('/').append(fileName);
+        String path = null;
+        if (! isSet(fileName)) {
+            // Return project public storage directory.
+            path = buf.toString();
         }
-        return buf.toString();
+        else {
+            // File name provided. => Check that it does not already exist.
+            FileStore fs = this.getFileStore();
+            buf.append('/');
+            int lg = buf.length();
+            buf.append(fileName);
+            path = buf.toString();
+            if (fs.exists(path)) {
+                // File already exists. => Try to build a unique file name.
+                String suffix = "";
+                String baseName = fileName;
+                int n = fileName.lastIndexOf('.');
+                if (n > 0) {
+                    suffix = fileName.substring(n);
+                    baseName = fileName.substring(0, n);
+                }
+                // <baseName>.<suffix> -> <baseName>-<n>.<suffix>.
+                n = 1;
+                final int MAX = 1000;           // Max unique id = 999.
+                do {
+                    buf.setLength(lg);
+                    buf.append(baseName).append('-')
+                                        .append(n++).append(suffix);
+                    path = buf.toString();
+                }
+                while ((fs.exists(path)) && (n < MAX));
+                if (n == MAX) {
+                    // Too many attempts. Give up!
+                    buf.setLength(lg);
+                    throw new TechnicalException("file.create.error",
+                                            buf.append(fileName).toString());
+                }
+                // Else: Found a valid file name.
+            }
+        }
+        return path;
     }
 
     private String getSourceId(URI projectUri, String sourceName) {
