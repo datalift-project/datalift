@@ -98,7 +98,7 @@
 						"name" : "#i18n($item.label)",
 						"uri" : "${baseUri}/sparql/${item.name}",
 						"modes" : ["sparql11query"],
-						queries:  [
+						"queries" : [
 #foreach( $q in $queries)
 							{ "name" : "$!{q.label}", "description" : "$!{q.description}", "query" : "$esc.javascript($q)" },
 #end

@@ -40,10 +40,13 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.net.URI;
+import java.text.Collator;
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -88,6 +91,7 @@ import org.openrdf.query.TupleQueryResultHandlerBase;
 import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.i18n.BaseLocalizedItem;
+import org.datalift.fwk.i18n.PreferredLocales;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.rdf.BaseTupleQueryResultMapper;
 import org.datalift.fwk.rdf.ElementType;
@@ -210,11 +214,12 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                     "PREFIX rdfs: <" + RDFS.uri + ">\n" +
                     "PREFIX dcterms: <" + DC_Terms.uri + ">\n" +
                     "PREFIX datalift: <" + DataLift.uri + ">\n" +
-                    "SELECT ?s ?label ?query ?description WHERE { " +
+                    "SELECT ?s ?label ?query ?position ?description WHERE { " +
                         "?s a datalift:SparqlQuery ; " +
                         "   rdfs:label ?label ; rdf:value ?query . " +
-                        "OPTIONAL { ?s dcterms:description ?description . } " +
-                    "} ORDER BY ?s";
+                        "OPTIONAL { ?s datalift:position ?position . " +
+                        "           FILTER(isNumeric(?position)) } " +
+                        "OPTIONAL { ?s dcterms:description ?description . } }";
 
     //-------------------------------------------------------------------------
     // Class members
@@ -849,10 +854,14 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         boolean userAuthenticated = (SecurityContext.getUserPrincipal() != null);
         Collection<Repository> c = Configuration.getDefault()
                                         .getRepositories(! userAuthenticated);
+        // Sort predefined queries by position first and label second.
+        List<PredefinedQuery> queries =
+                            new ArrayList<PredefinedQuery>(predefinedQueries);
+        Collections.sort(queries, new PredefinedQueryComparator());
         // Create and populate view template.
         TemplateModel view = this.newView(template, null);
         view.put("repositories", c);
-        view.put("queries", predefinedQueries);
+        view.put("queries", queries);
         view.put("namespaces", RdfNamespace.values());
         view.put("max", wrap(this.getDefaultMaxResults()));
         ResponseBuilder response = Response.ok(view, TEXT_HTML_UTF8);
@@ -1139,6 +1148,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                 new TupleQueryResultHandlerBase() {
                     private Value currentId = null;
                     private String query;
+                    private int position = Integer.MAX_VALUE;
                     private Map<String,String> labels =
                                                 new HashMap<String,String>();
                     private Map<String,String> descriptions =
@@ -1157,6 +1167,10 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                         if (v != null) {
                             this.labels.put(v.getLanguage(), v.getLabel());
                         }
+                        v  = (Literal)(b.getValue("position"));
+                        if (v != null) {
+                            this.position = v.intValue();
+                        }
                         v  = (Literal)(b.getValue("description"));
                         if (v != null) {
                             this.descriptions.put(v.getLanguage(), v.getLabel());
@@ -1172,12 +1186,15 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                         if ((isSet(this.query)) && (! this.labels.isEmpty())) {
                             // Create and register new query.
                             PredefinedQuery q = new PredefinedQuery(
-                                    this.query, this.labels, this.descriptions);
+                                                this.query,  this.position,
+                                                this.labels, this.descriptions);
                             queries.add(q);
                             log.trace("Registered predefined SPARQL query \"{}\": {}",
                                       q.getLabel(), q.query);
-                            this.labels.clear();
                             this.query = null;
+                            this.position = Integer.MAX_VALUE;
+                            this.labels.clear();
+                            this.descriptions.clear();
                         }
                         // Else: Ignore...
                     }
@@ -1359,15 +1376,18 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     public final static class PredefinedQuery extends BaseLocalizedItem
     {
         private final static String DESCRIPTION_LABEL = "description";
+        public final int position;
         public final String query;
 
-        public PredefinedQuery(String query, Map<String,String> labels,
+        public PredefinedQuery(String query, int position,
+                                             Map<String,String> labels,
                                              Map<String,String> descriptions) {
             super(labels);
             if (isBlank(query)) {
                 throw new IllegalArgumentException("query");
             }
             this.query = query;
+            this.position = position;
             this.setLabels(DESCRIPTION_LABEL, descriptions);
         }
 
@@ -1384,6 +1404,31 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
          */
         public String getDescription() {
             return this.getTypeLabel(DESCRIPTION_LABEL);
+        }
+    }
+
+    //-------------------------------------------------------------------------
+    // PredefinedQueryComparator nested class
+    //-------------------------------------------------------------------------
+
+    private final static class PredefinedQueryComparator
+                                        implements Comparator<PredefinedQuery>
+    {
+        private final Collator collator = Collator.getInstance(
+                                                PreferredLocales.get().get(0));
+
+        public PredefinedQueryComparator() {
+            super();
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public int compare(PredefinedQuery o1, PredefinedQuery o2) {
+            int d = o1.position - o2.position;
+            if (d == 0) {
+                d = this.collator.compare(o1.getLabel(), o2.getLabel());
+            }
+            return d;
         }
     }
 }
