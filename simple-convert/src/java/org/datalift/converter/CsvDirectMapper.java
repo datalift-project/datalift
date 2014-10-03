@@ -784,7 +784,8 @@ public class CsvDirectMapper extends BaseConverterModule
         }
 
         public Mapping getMapping(int column) {
-            return this.mappings[column];
+            Mapping m = this.mappings[column];
+            return (m != null)? m: Mapping.String;
         }
 
         public boolean hasBooleanValues() {
