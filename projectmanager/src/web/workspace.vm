@@ -195,9 +195,9 @@
 			datatype: "local",
 			colNames:['#i18n("project.p_uri")','#i18n("project.p_title")','#i18n("project.p_others")'],
 			colModel:[
-				{name:'uri',index:'uri', sorttype:"text"},
-				{name:'title',index:'title', sorttype:"text"},
-				{name:'infos',index:'infos', sorttype:"text"} ],
+				{name:'uri',   index:'uri',   sorttype:"text"},
+				{name:'title', index:'title', sorttype:"text"},
+				{name:'infos', index:'infos', sorttype:"text"} ],
 			caption: "",
 			rowNum:10, rowList:[10,20,30], pager: '#selectable_sources_toolbar',
 			gridview: true,
@@ -207,11 +207,11 @@
 		var mydata = [
 #foreach($curSrc in $current.getSources())
 		{
-			uri:   "$curSrc.uri",
-			title: "<a href='$curSrc.uri'>$esc.javascript($curSrc.title)</a>",
+			uri:   "$!esc.javascript($curSrc.uri)",
+			title: "<a href='$!esc.javascript($curSrc.uri)'>$curSrc.title</a>",
 	#if( $curSrc.getType() == $field.CsvSource )
 		#set( $sep = "csv.source.${curSrc.separator}.separator" )
-			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.javascript($curSrc.description)<br />#end#i18n('project.upload_source.file'): <a href='${baseUri}/${curSrc.filePath}'>$!esc.javascript($curSrc.filePath)</a><br />#if( $curSrc.sourceUrl )#i18n('project.upload_source.src_url'): <a href='${curSrc.sourceUrl}'>$!esc.javascript($curSrc.sourceUrl)</a><br />#end#i18n('project.source.csv.separator'): #i18n(${sep}),&nbsp;#i18n('project.source.csv.title.present'): #i18n("boolean.${curSrc.hasTitleRow()}")<br />#i18n('project.upload_source.created'): $!date.format('medium', $curSrc.creationDate)"
+			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.javascript($curSrc.description)<br />#end#i18n('project.upload_source.file'): <a href='${baseUri}/$!esc.javascript(${curSrc.filePath})'>$!esc.javascript($curSrc.filePath)</a><br />#if( $curSrc.sourceUrl )#i18n('project.upload_source.src_url'): <a href='$!esc.javascript(${curSrc.sourceUrl})'>$!esc.javascript($curSrc.sourceUrl)</a><br />#end#i18n('project.source.csv.separator'): #i18n(${sep}),&nbsp;#i18n('project.source.csv.title.present'): #i18n("boolean.${curSrc.hasTitleRow()}")<br />#i18n('project.upload_source.created'): $!date.format('medium', $curSrc.creationDate)"
 	#elseif( $curSrc.getType() == $field.RdfFileSource )
 			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.javascript($curSrc.description)<br />#end#i18n('project.upload_source.file'): <a href='${baseUri}/${curSrc.filePath}'>$!esc.javascript($curSrc.filePath)</a><br />#if( $curSrc.sourceUrl )#i18n('project.upload_source.src_url'): <a href='${curSrc.sourceUrl}'>$!esc.javascript($curSrc.sourceUrl)</a><br />#end#i18n('project.upload_rdf_format'): $!esc.javascript($curSrc.mimeType)<br />#i18n('project.upload_source.created'): $!date.format('medium', $curSrc.creationDate)"
 	#elseif( $curSrc.getType() == $field.SqlQuerySource )
@@ -259,7 +259,7 @@
 				var id = jQuery("#selectable_sources").getGridParam('selrow');
 				if (id) {
 					var ret = jQuery("#selectable_sources").getRowData(id);
-					window.location = currentProject + "/source/modify?uri=" + ret.uri;
+					window.location = currentProject + "/source/modify?uri=" + encodeURIComponent(ret.uri);
 				}
 				else {
 					alert('#i18n("project.msg.select_row")');
@@ -282,7 +282,7 @@
                 					'#i18n("source.dialog.confirmation_button")': function() {
                     						$(this).dialog('close');
                     						var ret = jQuery("#selectable_sources").getRowData(id);
-								window.location = currentProject + "/source/delete?uri=" + ret.uri;
+								window.location = currentProject + "/source/delete?uri=" + encodeURIComponent(ret.uri);
                 					},
                 					'#i18n("source.dialog.cancel_button")': function() {
                     						$(this).dialog('close');
@@ -305,11 +305,11 @@
 			datatype: "local",
 			colNames:['#i18n("project.p_uri")','#i18n("project.p_title")','#i18n("project.p_source")',"#i18n("project.p_dateSubmitted")", '#i18n("project.p_operator")'],
 			colModel:[
-				{name:'uri',index:'uri', sorttype:"text",editable:true,editoptions:{size:10}},
-				{name:'title',index:'title', sorttype:"text",editable:true,editoptions:{size:50}},
-				{name:'source',index:'source', sorttype:"text",editable:true,editoptions:{size:50}},
-				{name:'dateSubmitted',index:'dateSubmitted', sorttype:"text",editable:true,editoptions:{size:50}},
-				{name:'operator',index:'operator', sorttype:"text",editable:true,editoptions:{size:50}} ],
+				{name:'uri',index:'uri',sorttype:"text",editable:true,editoptions:{size:10}},
+				{name:'title',index:'title',sorttype:"text",editable:true,editoptions:{size:50}},
+				{name:'source',index:'source',sorttype:"text",editable:true,editoptions:{size:50}},
+				{name:'dateSubmitted',index:'dateSubmitted',sorttype:"text",editable:true,editoptions:{size:50}},
+				{name:'operator',index:'operator',sorttype:"text",editable:true,editoptions:{size:50}} ],
 			caption: "",
 			rowNum: 10,
 			rowList: [10,20,30],
