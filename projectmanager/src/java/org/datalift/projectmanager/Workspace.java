@@ -360,7 +360,7 @@ public class Workspace extends BaseModule
             Project p = null;
             if (id != null) {
                 // Retrieve project.
-                p = this.loadProject(this.newProjectId(uriInfo.getBaseUri(), id));
+                p = this.loadProject(this.getProjectId(uriInfo.getBaseUri(), id));
             }
             // Else: new project.
 
@@ -402,7 +402,7 @@ public class Workspace extends BaseModule
                     @Context UriInfo uriInfo) throws WebApplicationException {
         Response response = null;
         try {
-            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), id);
+            URI projectUri = this.getProjectId(uriInfo.getBaseUri(), id);
             Project p = this.loadProject(projectUri);
 
             boolean modified = false;
@@ -449,7 +449,7 @@ public class Workspace extends BaseModule
 
         URI uri = null;
         try {
-            uri = this.newProjectId(uriInfo.getBaseUri(), id);
+            uri = this.getProjectId(uriInfo.getBaseUri(), id);
             this.projectManager.deleteProject(this.loadProject(uri));
             // Remove project namespace prefix, if any.
             this.removeNamespacePrefix(id, uri.toString());
@@ -557,8 +557,8 @@ public class Workspace extends BaseModule
         try {
             URI srcUri = null;
             if (isSet(srcId)) {
-                srcUri = new URI(this.getSourceId(
-                    this.newProjectId(uriInfo.getBaseUri(), id), srcId));
+                URI projectId = this.getProjectId(uriInfo.getBaseUri(), id);
+                srcUri = new URI(this.getSourceId(projectId.toString(), srcId));
             }
             response = this.getSourceUriModifyPage(id, srcUri, uriInfo);
         }
@@ -576,7 +576,7 @@ public class Workspace extends BaseModule
                                            @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
         Response response = null;
-        URI prjUri = this.newProjectId(uriInfo.getBaseUri(), id);
+        URI prjUri = this.getProjectId(uriInfo.getBaseUri(), id);
         Project p = null;
         try {
             p = this.loadProject(prjUri);
@@ -673,10 +673,10 @@ public class Workspace extends BaseModule
         boolean deleteFiles = false;
         try {
             // Build object URIs from request path.
-            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
+            URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
             URI sourceUri = new URI(projectUri.getScheme(), null,
                                     projectUri.getHost(), projectUri.getPort(),
-                                    this.getSourceId(projectUri.getPath(), srcName),
+                                    this.newSourceId(projectUri.getPath(), srcName),
                                     null, null);
             // Retrieve project.
             Project p = this.loadProject(projectUri);
@@ -762,7 +762,7 @@ public class Workspace extends BaseModule
             // Build object URIs from request path.
             URI sourceUri = new URI(projectUri.getScheme(), null,
                     projectUri.getHost(), projectUri.getPort(),
-                    this.getSourceId(projectUri.getPath(), fileName),
+                    this.newSourceId(projectUri.getPath(), fileName),
                     null, null);
             // Check that no resource with the specified URI already exists.
             Map<String,Object> bindings = new HashMap<String,Object>();
@@ -898,10 +898,10 @@ public class Workspace extends BaseModule
         boolean deleteFiles = false;
         try {
             // Build object URIs from request path.
-            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
+            URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
             URI sourceUri = new URI(projectUri.getScheme(), null,
                                     projectUri.getHost(), projectUri.getPort(),
-                                    this.getSourceId(projectUri.getPath(), srcName),
+                                    this.newSourceId(projectUri.getPath(), srcName),
                                     null, null);
             // Retrieve project.
             Project p = this.loadProject(projectUri);
@@ -1021,10 +1021,10 @@ public class Workspace extends BaseModule
             log.debug("Processing SQL source creation request for \"{}\"",
                       title);
             // Build object URIs from request path.
-            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
+            URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
             URI sourceUri = new URI(projectUri.getScheme(), null,
                                     projectUri.getHost(), projectUri.getPort(),
-                                    this.getSourceId(projectUri.getPath(), title),
+                                    this.newSourceId(projectUri.getPath(), title),
                                     null, null);
             // Retrieve project.
             Project p = this.loadProject(projectUri);
@@ -1137,10 +1137,10 @@ public class Workspace extends BaseModule
             log.debug("Processing SPARQL source creation request for \"{}\"",
                       title);
             // Build object URIs from request path.
-            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
+            URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
             URI sourceUri = new URI(projectUri.getScheme(), null,
                                     projectUri.getHost(), projectUri.getPort(),
-                                    this.getSourceId(projectUri.getPath(), title),
+                                    this.newSourceId(projectUri.getPath(), title),
                                     null, null);
             // Retrieve project.
             Project p = this.loadProject(projectUri);
@@ -1282,10 +1282,10 @@ public class Workspace extends BaseModule
         boolean deleteFiles = false;
         try {
             // Build object URIs from request path.
-            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
+            URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
             URI sourceUri = new URI(projectUri.getScheme(), null,
                                     projectUri.getHost(), projectUri.getPort(),
-                                    this.getSourceId(projectUri.getPath(), srcName),
+                                    this.newSourceId(projectUri.getPath(), srcName),
                                     null, null);
             // Retrieve project.
             Project p = this.loadProject(projectUri);
@@ -1418,7 +1418,7 @@ public class Workspace extends BaseModule
         boolean deleteFiles = false;
         try {
             // Retrieve project.
-            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
+            URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
             Project p = this.loadProject(projectUri);
 
             String[] paths = new String[4];
@@ -1441,7 +1441,7 @@ public class Workspace extends BaseModule
             // Build object URIs from request path.
             URI srcUri = new URI(projectUri.getScheme(), null,
                                     projectUri.getHost(), projectUri.getPort(),
-                                    this.getSourceId(projectUri.getPath(), fileNames[0]),
+                                    this.newSourceId(projectUri.getPath(), fileNames[0]),
                                     null, null);
             // Initialize & persist new source.
             this.projectManager.newShpSource(p, srcUri, title,
@@ -1538,7 +1538,7 @@ public class Workspace extends BaseModule
         boolean deleteFiles = false;
         try {
             // Retrieve project.
-            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
+            URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
             Project p = this.loadProject(projectUri);
 
             String[] paths = new String[2];
@@ -1561,7 +1561,7 @@ public class Workspace extends BaseModule
             // Build object URIs from request path.
             URI srcUri = new URI(projectUri.getScheme(), null,
                                     projectUri.getHost(), projectUri.getPort(),
-                                    this.getSourceId(projectUri.getPath(), fileNames[0]),
+                                    this.newSourceId(projectUri.getPath(), fileNames[0]),
                                     null, null);
             // Initialize & persist new source.
             this.projectManager.newGmlSource(p, srcUri, title,
@@ -1625,7 +1625,7 @@ public class Workspace extends BaseModule
                                   @Context UriInfo uriInfo,
                                   @Context Request request)
                                                 throws WebApplicationException {
-        String filePath = this.getProjectFilePath(projectId, fileName);
+        String filePath = this.getProjectFilePath(projectId, fileName, false);
         Response response = Configuration.getDefault()
                                     .getBean(ResourceResolver.class)
                                     .resolveStaticResource(filePath, request);
@@ -1644,7 +1644,7 @@ public class Workspace extends BaseModule
                                                 throws WebApplicationException {
         ResponseBuilder response = null;
         try {
-            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
+            URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
             Project p = this.loadProject(projectUri);
             // Check data freshness HTTP headers (If-Modified-Since & ETags)
             Date lastModified = p.getModificationDate();
@@ -1814,7 +1814,7 @@ public class Workspace extends BaseModule
             // Retrieve source.
             // As we can't infer the source type (CSV, SPARQL...), we have
             // to load the whole project and search it using its URI.
-            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
+            URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
             Project p = this.loadProject(projectUri);
             // Search for requested source in project.
             Source s = p.getSource(srcUri);
@@ -1850,7 +1850,7 @@ public class Workspace extends BaseModule
         Response response = null;
         try {
             // Check that projects exists in internal data store.
-            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
+            URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
             Project p = this.loadProject(projectUri);
             // Search for requested source in project.
             URI u = uriInfo.getAbsolutePath();
@@ -1885,7 +1885,7 @@ public class Workspace extends BaseModule
                                                 throws WebApplicationException {
         Response response = null;
         try {
-            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
+            URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
             Project p = this.loadProject(projectUri);
             
             TemplateModel view = this.newView("projectOntoUpload.vm", p);
@@ -1920,7 +1920,7 @@ public class Workspace extends BaseModule
         Response response = null;
         try {
             // Retrieve project.
-            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
+            URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
             Project p = this.loadProject(projectUri);
             // Add ontology to project.
             p.addOntology(this.projectManager.newOntology(p,
@@ -1948,7 +1948,7 @@ public class Workspace extends BaseModule
         Response response = null;
         try {
             // Retrieve project.
-            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
+            URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
             Project p = this.loadProject(projectUri);
             // Search for requested ontology in project.
             Ontology ontology = p.getOntology(ontologyTitle);
@@ -1977,7 +1977,7 @@ public class Workspace extends BaseModule
         Response response = null;
         try {
             // Retrieve project.
-            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
+            URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
             Project p = this.loadProject(projectUri);
             // Search for requested ontology in project.
             Ontology ontology = p.getOntology(currentOntologyTitle);
@@ -2012,7 +2012,7 @@ public class Workspace extends BaseModule
         Response response = null;
         try {
             // Retrieve ontology.
-            URI projectUri = this.newProjectId(uriInfo.getBaseUri(), projectId);
+            URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
             Project p = this.loadProject(projectUri);
             Ontology o = p.getOntology(ontologyTitle);
             if (o == null) {
@@ -2143,7 +2143,7 @@ public class Workspace extends BaseModule
 
     private Project loadProject(UriInfo uriInfo, String id)
                                                 throws WebApplicationException {
-        return this.loadProject(this.newProjectId(uriInfo.getBaseUri(), id));
+        return this.loadProject(this.getProjectId(uriInfo.getBaseUri(), id));
     }
 
     private Project loadProject(URI uri) throws WebApplicationException {
@@ -2269,6 +2269,10 @@ public class Workspace extends BaseModule
         }
     }
 
+    private URI getProjectId(URI baseUri, String projectId) {
+        return URI.create(baseUri.toString() + REL_PROJECT_PATH + projectId);
+    }
+
     private URI newProjectId(URI baseUri, String name) {
         final UriBuilder uriBuilder = Configuration.getDefault()
                                                    .getBean(UriBuilder.class);
@@ -2280,7 +2284,20 @@ public class Workspace extends BaseModule
         catch (Exception e) {
             this.throwInvalidParamError("id", name);
         }
-        return u;
+        return u.normalize();
+    }
+
+    private String getSourceId(String projectUri, String sourceId) {
+        // return this.newSourceId(projectUri, sourceId);
+        return URI.create(projectUri + SOURCE_PATH + sourceId).toString();
+    }
+
+    private String newSourceId(String projectUri, String sourceName) {
+        final UriBuilder uriBuilder = Configuration.getDefault()
+                                                   .getBean(UriBuilder.class);
+        return URI.create(projectUri + SOURCE_PATH +
+                          uriBuilder.urlify(sourceName, ElementType.Resource))
+                  .normalize().toString();
     }
 
     private void deleteFileStorage(File file) {
@@ -2288,6 +2305,11 @@ public class Workspace extends BaseModule
     }
 
     private String getProjectFilePath(String projectId, String fileName) {
+        return this.getProjectFilePath(projectId, fileName, true);
+    }
+
+    private String getProjectFilePath(String projectId, String fileName,
+                                      boolean buildUniqueFileName) {
         StringBuilder buf = new StringBuilder(80);
         buf.append(REL_PROJECT_PATH).append(projectId);
         String path = null;
@@ -2302,7 +2324,7 @@ public class Workspace extends BaseModule
             int lg = buf.length();
             buf.append(fileName);
             path = buf.toString();
-            if (fs.exists(path)) {
+            if ((buildUniqueFileName) && (fs.exists(path))) {
                 // File already exists. => Try to build a unique file name.
                 String suffix = "";
                 String baseName = fileName;
@@ -2331,17 +2353,6 @@ public class Workspace extends BaseModule
             }
         }
         return path;
-    }
-
-    private String getSourceId(URI projectUri, String sourceName) {
-        return this.getSourceId(projectUri.toString(), sourceName);
-    }
-
-    private String getSourceId(String projectUri, String sourceName) {
-        final UriBuilder uriBuilder = Configuration.getDefault()
-                                                   .getBean(UriBuilder.class);
-        return projectUri + SOURCE_PATH
-                          + uriBuilder.urlify(sourceName, ElementType.Resource);
     }
 
     private String extractFileName(URL url, String suffix) {
