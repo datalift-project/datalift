@@ -484,7 +484,7 @@ public class Workspace extends BaseModule
                                                 throws WebApplicationException {
         ResponseBuilder response = null;
 
-        URI uri = uriInfo.getAbsolutePath();
+        URI uri = this.getAbsolutePath(uriInfo);
         try {
             Project p = this.loadProject(uri);
             // Check data freshness HTTP headers (If-Modified-Since & ETags)
@@ -526,7 +526,7 @@ public class Workspace extends BaseModule
                                     @HeaderParam(ACCEPT) String acceptHdr)
                                                 throws WebApplicationException {
         // Check that projects exists in internal data store.
-        URI uri = uriInfo.getAbsolutePath();
+        URI uri = this.getAbsolutePath(uriInfo);
         this.loadProject(uri);
         // Forward request for project RDF description to the SPARQL endpoint.
         Configuration cfg = Configuration.getDefault();
@@ -1675,7 +1675,7 @@ public class Workspace extends BaseModule
         try {
             // Search for requested source in project.
             Project p = this.loadProject(uriInfo, projectId);
-            Source src = p.getSource(uriInfo.getAbsolutePath());
+            Source src = p.getSource(this.getAbsolutePath(uriInfo));
             if (src == null) {
                 // Not found.
                 this.sendError(NOT_FOUND, null);
@@ -1853,7 +1853,7 @@ public class Workspace extends BaseModule
             URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
             Project p = this.loadProject(projectUri);
             // Search for requested source in project.
-            URI u = uriInfo.getAbsolutePath();
+            URI u = this.getAbsolutePath(uriInfo);
             Source src = p.getSource(u);
             if (src == null) {
                 // Not found.
@@ -2267,6 +2267,23 @@ public class Workspace extends BaseModule
                 try { in.close(); } catch (Exception e) { /* Ignore... */ }
             }
         }
+    }
+
+    /**
+     * A workaround to an incorrect implementation of
+     * {@link UriInfo#getAbsolutePath()} in Jersey 1.x: Opposite to
+     * what's described in JAX-RS UriInfo javadoc, Jersey
+     * implementation does not decode the escape sequences.
+     * @param  uriInfo   the UriInfo object to query for request
+     *                   absolute path.
+     * @return the absolute path of the request with all escape
+     *         sequences decoded.
+     */
+    private URI getAbsolutePath(UriInfo uriInfo) {
+        // Opposite to what's described in JAX-RS UriInfo javadoc, Jersey
+        // implementation does not decode the escape sequences.
+        // => Let's explicitly request escape sequence decoding.
+        return uriInfo.getBaseUri().resolve(uriInfo.getPath(true));
     }
 
     private URI getProjectId(URI baseUri, String projectId) {
