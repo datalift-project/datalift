@@ -24,7 +24,7 @@
 				#set( $count = $count + 1 )
 			#end
 		#end
-			<option value="${curSrc.uri}" name="${curSrc.title}" count="$count">$esc.html($curSrc.title)</option>
+			<option value="$esc.html(${curSrc.uri})" name="$esc.html(${curSrc.title})" count="$count">$esc.html($curSrc.title)</option>
 	#end
 #end
 		</select></p>
@@ -62,14 +62,15 @@
 
 		$("#source_submit").button();
 
-		$("#source").change(function(){
+		$("#source").change(function() {
 			$("#source option:selected").each(function () {
 				$("#dest_title").attr("value", $(this).attr("name") + " - (RDF #" + $(this).attr("count") + ")");
-				$("#dest_graph_uri").attr("value", $(this).attr("value") + "-rdf-" + $(this).attr("count"));
-				$("#base_uri").attr("value", $(this).attr("value") + "-rdf-" + $(this).attr("count"));
+				$("#dest_graph_uri").attr("value", $(this).attr("value") + encodeURIComponent("-rdf-" + $(this).attr("count")));
+				$("#base_uri").attr("value", $(this).attr("value") + encodeURIComponent("-rdf-" + $(this).attr("count")));
+				var targetUrl = $(this).attr("value") + "/columnNames";
 				jQuery.ajax({
 					type: "GET",
-					url: $(this).attr("value") + "/columnNames",
+					url: encodeURI(targetUrl),
 					dataType: "json",
 					success: handleSourceColumnResponse
 				});
