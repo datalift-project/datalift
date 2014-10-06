@@ -195,7 +195,7 @@ public class CsvDirectMapper extends BaseConverterModule
 
     /**
      * <i>[Resource method]</i> Displays the module welcome page.
-     * @param  projectId   the URI of the datalifting project.
+     * @param  projectId   the URI of the data-lifting project.
      *
      * @return a JAX-RS response with the page template and parameters.
      */
@@ -209,7 +209,7 @@ public class CsvDirectMapper extends BaseConverterModule
      * <i>[Resource method]</i> Converts the data of the specified CSV
      * source into RDF triples, loads them in the internal store and
      * creates a new associated RDF source.
-     * @param  projectId     the URI of the datalifting project.
+     * @param  projectId     the URI of the data-lifting project.
      * @param  sourceId      the URI of the source to convert.
      * @param  destTitle     the name of the RDF source to hold the
      *                       converted data.
@@ -269,6 +269,10 @@ public class CsvDirectMapper extends BaseConverterModule
             Project p = this.getProject(projectId.toUri("project"));
             // Load input source.
             CsvSource in = (CsvSource)(p.getSource(sourceId.toUri("source")));
+            if (in == null) {
+                throw new ObjectNotFoundException("project.source.not.found",
+                                                  projectId, sourceId);
+            }
             // Load datatype mapping for each column.
             Mapping[] typeMappings = new Mapping[params.size()];
             for (String k : params.keySet()) {
