@@ -62,6 +62,15 @@ public class UriParam
      */
     public UriParam(String v) {
         super();
+        // Ensure all escape sequences are properly decoded back to Unicode.
+//        if ((v != null) && (v.indexOf('%') != -1)) {
+//            try {
+//                v = URLDecoder.decode(v, Charsets.UTF8_CHARSET);
+//            }
+//            catch (Exception e) {
+//                // Can't happen: UTF-8 charset is supported by all JVMs.
+//            }
+//        }
         this.v = v;
     }
 

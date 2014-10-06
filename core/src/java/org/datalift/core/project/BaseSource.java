@@ -35,6 +35,7 @@
 package org.datalift.core.project;
 
 
+import java.net.URLDecoder;
 import java.util.Date;
 
 import javax.persistence.MappedSuperclass;
@@ -45,6 +46,7 @@ import com.clarkparsia.empire.annotation.RdfProperty;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.Source;
 import org.datalift.fwk.util.StringUtils;
+import org.datalift.fwk.util.web.Charsets;
 
 
 /**
@@ -206,7 +208,17 @@ public abstract class BaseSource extends BaseRdfEntity implements Source
     /** {@inheritDoc} */
     @Override
     protected void setId(String id) {
-        this.uri = id;
+        // Somewhere between Empire and Sesame, the object id. URIs get
+        // escaped (the non-Latin unicode characters are replaced by
+        // escape sequences: %...). We need to fix that when reading these
+        // URIs from the triple store and installing them as object id.
+        try {
+            this.uri = URLDecoder.decode(id, Charsets.UTF8_CHARSET);
+        }
+        catch (Exception e) {
+            // Can't happen: UTF-8 charset is supported by all JVMs.
+            this.uri = id;
+        }
     }
 
     //-------------------------------------------------------------------------
