@@ -207,8 +207,7 @@
       <param-name>com.sun.jersey.spi.container.ContainerRequestFilters</param-name>
       <param-value>
         com.sun.jersey.api.container.filter.GZIPContentEncodingFilter;
-        com.sun.jersey.api.container.filter.PostReplaceFilter;
-        org.datalift.core.util.web.jersey.SuffixContentNegotiationFilter
+        com.sun.jersey.api.container.filter.PostReplaceFilter
       </param-value>
     </init-param>
     <init-param>
