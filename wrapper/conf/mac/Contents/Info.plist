@@ -45,8 +45,8 @@
       <key>VMOptions</key>
       <array>
         <string>-Xms256M</string>
-        <string>-Xmx1024M</string>
-        <string>-Xverify:none</string>
+        <string>-Xmx3G</string>
+        <string>-Xverify:all</string>
         <string>-Xshare:off</string>
         <string>-Djava.library.path=$JAVAROOT/lib:$USER_HOME/Library/Application Support/DataLift/lib</string>
         <string>-Dsun.net.inetaddr.ttl=60</string>
