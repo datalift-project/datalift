@@ -37,18 +37,60 @@ import org.openrdf.model.URI;
 import org.openrdf.model.ValueFactory;
 import org.openrdf.model.impl.ValueFactoryImpl;
 
-public class GeoSPARQL {
+public class Geometrie {
 
-	public static String NS = "http://www.opengis.net/ont/geosparql#";
+	public static String NS = "http://data.ign.fr/def/geometrie#";
 
-	public static URI ASWKT;
+	// Classes
+	public static URI MULTIPOLYGON;
+	public static URI MULTILINESTRING;
+	public static URI MULTIPOINT;
+	public static URI POLYGON;
+	public static URI LINESTRING;
+	public static URI LINEARRING;
+	public static URI LINE;
+	public static URI POINT;
 
-	public static URI ASGML;
+	// Properties
+	public static URI GEOMETRIE;
+	public static URI SYSTCOORD;
+	public static URI POLYGONMEMBER;
+	public static URI EXTERIOR;
+	public static URI INTERIOR;
+	public static URI LINESTRINGMEMBER;
+	public static URI POINTMEMBER;
+	public static URI POINTS;
+	public static URI POINTSLIST;
+	public static URI FIRSTANDLAST;
+	public static URI COORDX;
+	public static URI COORDY;
 
 	static {
-		ValueFactory vf = ValueFactoryImpl.getInstance(); 
-		ASWKT = vf.createURI(NS, "asWKT");
-		ASGML = vf.createURI(NS, "asGML");
-	}
 
+		ValueFactory vf = ValueFactoryImpl.getInstance();
+
+		// Classes
+		MULTIPOLYGON = vf.createURI(NS, "MultiPolygon");
+		MULTILINESTRING = vf.createURI(NS, "MultiLineString");
+		MULTIPOINT = vf.createURI(NS, "MultiPoint");
+		POLYGON = vf.createURI(NS, "Polygon");
+		LINESTRING = vf.createURI(NS, "LineString");
+		LINEARRING = vf.createURI(NS, "LinearRing");
+		LINE = vf.createURI(NS, "Line");
+		POINT = vf.createURI(NS, "Point");
+
+		// Properties
+		GEOMETRIE = vf.createURI(NS, "geometry");
+		SYSTCOORD = vf.createURI(NS, "crs");
+		POLYGONMEMBER = vf.createURI(NS, "polygonMember");
+		EXTERIOR = vf.createURI(NS, "exterior");
+		INTERIOR = vf.createURI(NS, "interior");
+		LINESTRINGMEMBER = vf.createURI(NS, "lineStringMember");
+		POINTMEMBER = vf.createURI(NS, "pointMember");
+		POINTS = vf.createURI(NS, "points");
+		POINTSLIST = vf.createURI(NS, "PointsList");
+		FIRSTANDLAST = vf.createURI(NS, "firstAndLast");
+		COORDX = vf.createURI(NS, "coordX");
+		COORDY = vf.createURI(NS, "coordY");
+	}
 }

@@ -36,7 +36,7 @@
   <!-- ================ File and Directory Names ========================== -->
 
   <property name="datalift.default.modules"
-            value="framework,core,sparql-endpoint,flint-endpoint,s4ac,projectmanager,simple-convert,database-directmapper,geo-convert,lov/api,lov/catalogue,data2ontology,virtuoso-connector,allegrograph-connector,stringtouri,silk-interlinker,geo-convert"/>
+            value="framework,core,sparql-endpoint,flint-endpoint,s4ac,projectmanager,simple-convert,database-directmapper,geomrdf,lov/api,lov/catalogue,data2ontology,virtuoso-connector,allegrograph-connector,stringtouri,silk-interlinker"/>
 
   <property name="app.name"             value="${ant.project.name}"/>
   <property name="app.version"          value="0.7.8"/>
@@ -139,7 +139,7 @@
           includes="**/*.java" excludes="com/**"/>
       <fileset dir="${basedir}/projectmanager/src/java"  includes="**/*.java"/>
       <fileset dir="${basedir}/simple-convert/src/java"  includes="**/*.java"/>
-      <fileset dir="${basedir}/geo-convert/src/java"  includes="**/*.java"/>
+      <fileset dir="${basedir}/geomrdf/src/java"  includes="**/*.java"/>
       <fileset dir="${basedir}/sparql-endpoint/src/java" includes="**/*.java"/>
       <fileset dir="${basedir}/allegrograph-connector/src/java"
           includes="**/*.java"/>

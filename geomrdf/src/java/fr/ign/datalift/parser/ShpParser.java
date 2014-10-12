@@ -56,7 +56,7 @@ public class ShpParser {
 
 	static Logger log = Logger.getLogger(ShpParser.class.getName());
 
-	public ShpParser (String shpFilepath, boolean wgs84){
+	public ShpParser(String shpFilepath, boolean wgs84){
 		this.shpFilepath = shpFilepath;
 		this.shpFile = new File(shpFilepath);
 		if (!wgs84) {
@@ -67,6 +67,13 @@ public class ShpParser {
 			this.featureSource = reproject.featureSource;
 		}
 	}
+
+	public ShpParser(String shpFilepath){
+		this.shpFilepath = shpFilepath;
+		this.shpFile = new File(shpFilepath);
+		this.featureSource = readShpAndDbfFile();
+	}
+
 
 	public SimpleFeatureSource readShpAndDbfFile() {
 		SimpleFeatureSource featureSource = null;

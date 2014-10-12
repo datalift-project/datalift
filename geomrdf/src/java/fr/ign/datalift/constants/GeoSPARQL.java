@@ -31,8 +31,27 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 
-package fr.ign.datalift.model;
+package fr.ign.datalift.constants;
 
-public class GeometryProperty extends FeatureProperty {
-    // Marker interface
+import org.openrdf.model.URI;
+import org.openrdf.model.ValueFactory;
+import org.openrdf.model.impl.ValueFactoryImpl;
+
+public class GeoSPARQL {
+
+	public static String NS = "http://www.opengis.net/ont/geosparql#";
+
+	public static URI ASWKT;
+
+	public static URI ASGML;
+	
+	public static URI WKTLITERAL;
+
+	static {
+		ValueFactory vf = ValueFactoryImpl.getInstance(); 
+		ASWKT = vf.createURI(NS, "asWKT");
+		ASGML = vf.createURI(NS, "asGML");
+		WKTLITERAL = vf.createURI(NS, "wktLiteral");
+	}
+
 }

@@ -74,16 +74,13 @@ import static javax.ws.rs.core.MediaType.TEXT_HTML;
 import static org.datalift.fwk.rdf.ElementType.RdfType;
 import static org.datalift.fwk.util.StringUtils.*;
 
-import org.openrdf.model.BNode;
 import org.openrdf.model.Statement;
 import org.openrdf.model.ValueFactory;
 import org.openrdf.model.vocabulary.RDF;
-import org.openrdf.model.vocabulary.RDFS;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
 
-import fr.ign.datalift.constants.GeoSPARQL;
-import fr.ign.datalift.constants.Geometrie;
+import fr.ign.datalift.constants.CRS;
 import fr.ign.datalift.model.AbstractFeature;
 import fr.ign.datalift.model.FeatureProperty;
 import fr.ign.datalift.model.GeometryProperty;
@@ -179,10 +176,10 @@ public class ShptoRdf extends BaseConverterModule
 			// Convert SHP data and load generated RDF triples.
 			Features_Parser parser = new Features_Parser();
 			if (Crs.valueOf(crs).getValue().equals("EPSG:4326")) {
-				parser.parseSHP(inShpFile.getCanonicalPath(), true);
+				parser.parseSHP(inShpFile.getCanonicalPath(), true, Crs.valueOf(crs).getValue());
 			}
 			else if (Crs.valueOf(crs).getValue().equals("none")) {
-				parser.parseSHP(inShpFile.getCanonicalPath(), false);
+				parser.parseSHP(inShpFile.getCanonicalPath(), false, "");
 			}
 			this.convertToRDF(src, parser.readFeatureCollection(), parser.crs, 
 					Configuration.getDefault().getInternalRepository(),
@@ -265,8 +262,12 @@ public class ShptoRdf extends BaseConverterModule
 			List<Statement> aboutAttributes = new ArrayList<Statement>();
 			List<Statement> aboutGeometry = new ArrayList<Statement>();
 
+			if (crs != null) CRS.setCrsValue(crs);
+
 			// serialize a featureCollection into RDF
 			int count = 0;
+			CreateGeoStatement cgs = new CreateGeoStatement();
+
 			for (int i = 0; i < featureList.size(); i++) {
 				count = i + 1;
 				org.openrdf.model.URI feature = vf.createURI(sbjUri + count);
@@ -282,27 +283,12 @@ public class ShptoRdf extends BaseConverterModule
 
 					if (fp instanceof GeometryProperty) {
 
-						org.openrdf.model.URI geomFeature = vf.createURI(sbjUri, this.cleanUpString(fp.getType()) + "_" + count);
+						GeometryProperty gp = (GeometryProperty)fp;
+						String geoType = gp.getType();
+						org.openrdf.model.URI geomFeature = vf.createURI(sbjUri, geoType + "_" + count);
 
-						statement = vf.createStatement(feature, Geometrie.GEOMETRIE, geomFeature);
-						aboutAttributes.add(statement);
-
-						statement = vf.createStatement(geomFeature, RDF.TYPE, Geometrie.GEOMETRIE);
-						aboutGeometry.add(statement);
-
-						statement = vf.createStatement(geomFeature, RDF.TYPE,  vf.createURI(Geometrie.NS, fp.getType()));
-						aboutGeometry.add(statement);
-
-						BNode systcoord = vf.createBNode();
-						if (crs != null) {
-							statement = vf.createStatement(systcoord, RDFS.LABEL, vf.createLiteral(crs));
-							aboutGeometry.add(statement);
-						}
-						statement = vf.createStatement(geomFeature, Geometrie.SYSTCOORD, systcoord);
-						aboutGeometry.add(statement);
-
-						statement = vf.createStatement(geomFeature, GeoSPARQL.ASWKT, vf.createLiteral(fp.getValue()));
-						aboutGeometry.add(statement);
+						cgs.createStatement(gp, vf, feature, geomFeature, geoType, crs);
+						aboutGeometry = cgs.aboutGeometry;
 
 					} else {
 						if (fp.getType() != null){
@@ -407,4 +393,5 @@ public class ShptoRdf extends BaseConverterModule
 			str = str.substring(str.lastIndexOf(':') + 1);
 		return WordUtils.capitalizeFully(str, new char[] { ' ' }).replaceAll(" ", "").trim();
 	}
+
 }

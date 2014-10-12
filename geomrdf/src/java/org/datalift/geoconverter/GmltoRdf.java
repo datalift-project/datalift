@@ -59,6 +59,7 @@ import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectModule;
 import org.datalift.fwk.project.GmlSource;
 import org.datalift.fwk.project.Source;
+import org.datalift.fwk.project.ShpSource.Crs;
 import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
@@ -66,6 +67,7 @@ import org.datalift.fwk.rdf.UriCachingValueFactory;
 import org.datalift.fwk.util.Env;
 import org.datalift.fwk.util.UriBuilder;
 import org.datalift.fwk.util.io.FileUtils;
+import org.datalift.fwk.view.TemplateModel;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_XHTML_XML;
 import static javax.ws.rs.core.MediaType.TEXT_HTML;
@@ -132,7 +134,13 @@ public class GmltoRdf extends BaseConverterModule
 	@GET
 	@Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
 	public Response getIndexPage(@QueryParam("project") URI projectId) {
-		return this.newProjectView("gmltoRdf.vm", projectId);
+		// Retrieve project.
+		Project p = this.getProject(projectId);
+		// Display conversion configuration page.
+		TemplateModel view = this.newView("gmltoRdf.vm", p);
+		view.put("converter", this);
+		view.put("crs", Crs.values());
+		return Response.ok(view).build();
 	}
 
 	@POST
@@ -143,7 +151,8 @@ public class GmltoRdf extends BaseConverterModule
 			@FormParam("dest_title") String destTitle,
 			@FormParam("dest_graph_uri") URI targetGraph,
 			@FormParam("base_uri") URI baseUri,
-			@FormParam("dest_type") String targetType)
+			@FormParam("dest_type") String targetType,
+			@FormParam("crs") String crs)
 					throws WebApplicationException {
 
 		Response response = null;
@@ -165,8 +174,12 @@ public class GmltoRdf extends BaseConverterModule
 
 			// Convert GML data and load generated RDF triples.
 			Features_Parser parser = new Features_Parser();
-			parser.parseGML(inGmlFile.getCanonicalPath());
-
+			if (Crs.valueOf(crs).getValue().equals("EPSG:4326")) {
+				parser.parseGML(inGmlFile.getCanonicalPath(), true, Crs.valueOf(crs).getValue());
+			}
+			else if (Crs.valueOf(crs).getValue().equals("none")) {
+				parser.parseGML(inGmlFile.getCanonicalPath(), false, "");
+			}
 			this.convertToRDF(src, parser.readFeatureCollection(), parser.crs, 
 					parser.asGmlList, Configuration.getDefault().getInternalRepository(),
 					targetGraph, baseUri, targetType);
@@ -250,6 +263,8 @@ public class GmltoRdf extends BaseConverterModule
 
 			// serialize a featureCollection into RDF
 			int count = 0;
+			CreateGeoStatement cgs = new CreateGeoStatement();
+
 			for (int i = 0; i < featureList.size(); i++) {
 				count = i + 1;
 				org.openrdf.model.URI feature = vf.createURI(sbjUri + count);
@@ -265,27 +280,12 @@ public class GmltoRdf extends BaseConverterModule
 
 					if (fp instanceof GeometryProperty) {
 
-						org.openrdf.model.URI geomFeature = vf.createURI(sbjUri, this.cleanUpString(fp.getType()) + "_" + count);
+						GeometryProperty gp = (GeometryProperty)fp;
+						String geoType = gp.getType();
+						org.openrdf.model.URI geomFeature = vf.createURI(sbjUri, geoType + "_" + count);
 
-						statement = vf.createStatement(feature, Geometrie.GEOMETRIE, geomFeature);
-						aboutAttributes.add(statement);
-
-						statement = vf.createStatement(geomFeature, RDF.TYPE, Geometrie.GEOMETRIE);
-						aboutGeometry.add(statement);
-
-						statement = vf.createStatement(geomFeature, RDF.TYPE,  vf.createURI(Geometrie.NS, fp.getType()));
-						aboutGeometry.add(statement);
-
-						BNode systcoord = vf.createBNode();
-						if (crs != null) {
-							statement = vf.createStatement(systcoord, RDFS.LABEL, vf.createLiteral(crs));
-							aboutGeometry.add(statement);
-						}
-						statement = vf.createStatement(geomFeature, Geometrie.SYSTCOORD, systcoord);
-						aboutGeometry.add(statement);
-
-						statement = vf.createStatement(geomFeature, GeoSPARQL.ASWKT, vf.createLiteral(fp.getValue()));
-						aboutGeometry.add(statement);
+						cgs.createStatement(gp, vf, feature, geomFeature, geoType, crs);
+						aboutGeometry = cgs.aboutGeometry;
 
 						if (asGmlList != null) {
 							statement = vf.createStatement(geomFeature, GeoSPARQL.ASGML, vf.createLiteral(asGmlList.get(j)));
