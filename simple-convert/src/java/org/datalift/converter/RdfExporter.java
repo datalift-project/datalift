@@ -84,6 +84,9 @@ public class RdfExporter extends BaseConverterModule
     /** The name of this module in the DataLift configuration. */
     public final static String MODULE_NAME = "rdfexporter";
 
+    /* Web service parameter names. */
+    private final static String TARGET_FMT_PARAM        = "mime_type";
+
     //-------------------------------------------------------------------------
     // Class members
     //-------------------------------------------------------------------------
@@ -105,7 +108,7 @@ public class RdfExporter extends BaseConverterModule
 
     @GET
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
-    public Response getIndexPage(@QueryParam("project") URI projectId) {
+    public Response getIndexPage(@QueryParam(PROJECT_ID_PARAM) URI projectId) {
         // Retrieve project.
         Project p = this.getProject(projectId);
         // Display conversion configuration page.
@@ -117,9 +120,10 @@ public class RdfExporter extends BaseConverterModule
 
     @POST
     @Consumes(APPLICATION_FORM_URLENCODED)
-    public Response exportRdfSource(@FormParam("project") URI projectId,
-                                    @FormParam("source") URI sourceId,
-                                    @FormParam("mime_type") String mimeType)
+    public Response exportRdfSource(
+                            @FormParam(PROJECT_ID_PARAM) URI projectId,
+                            @FormParam(SOURCE_ID_PARAM)  URI sourceId,
+                            @FormParam(TARGET_FMT_PARAM) String mimeType)
                                                 throws WebApplicationException {
         Response response = null;
 
@@ -128,14 +132,15 @@ public class RdfExporter extends BaseConverterModule
         try {
             RdfFormat rdfType = RdfFormat.get(mimeType);
             if (rdfType == null) {
-                this.throwInvalidParamError("mime_type", mimeType);
+                this.throwInvalidParamError(TARGET_FMT_PARAM, mimeType);
             }
             // Retrieve source.
             Project p = this.getProject(projectId);
             TransformedRdfSource s = (TransformedRdfSource)
                                                         (p.getSource(sourceId));
             if (s == null) {
-                this.throwInvalidParamError("source", sourceId);
+                throw new ObjectNotFoundException("project.source.not.found",
+                                                  projectId, sourceId);
             }
             // Build default file name for downloaded data.
             String name = this.getTerminalName(s.getUri())

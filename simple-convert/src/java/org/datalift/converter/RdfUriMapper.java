@@ -104,24 +104,22 @@ public class RdfUriMapper extends BaseConverterModule
 
     @GET
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
-    public Response getIndexPage(@QueryParam("project") URI projectId) {
+    public Response getIndexPage(@QueryParam(PROJECT_ID_PARAM) URI projectId) {
         return this.newProjectView("uriMapper.vm", projectId);
     }
 
     @POST
     @Consumes(APPLICATION_FORM_URLENCODED)
     public Response loadRdfData(
-                    @FormParam("project") URI projectId,
-                    @FormParam("source") URI sourceId,
-                    @FormParam("dest_title") String destTitle,
-                    @FormParam("dest_graph_uri") URI targetGraph,
-                    @FormParam("src_pattern") String uriPattern,
-                    @FormParam("dst_pattern") String uriReplacement)
+                    @FormParam(PROJECT_ID_PARAM) URI projectId,
+                    @FormParam(SOURCE_ID_PARAM)  URI sourceId,
+                    @FormParam(TARGET_SRC_NAME)  String destTitle,
+                    @FormParam(GRAPH_URI_PARAM)  URI targetGraph,
+                    @FormParam("src_pattern")    String uriPattern,
+                    @FormParam("dst_pattern")    String uriReplacement)
                                                 throws WebApplicationException {
         Response response = null;
         try {
-            log.debug("Mapping URIs from \"{}\" into graph \"{}\"",
-                                                        sourceId, targetGraph);
             if (isBlank(targetGraph.toString())) {
                 targetGraph = null;
             }
@@ -141,17 +139,24 @@ public class RdfUriMapper extends BaseConverterModule
             // Load input source.
             TransformedRdfSource in =
                                 (TransformedRdfSource)(p.getSource(sourceId));
+            if (in == null) {
+                throw new ObjectNotFoundException("project.source.not.found",
+                                                  projectId, sourceId);
+            }
             // Copy triples from the input source to the target named graph,
             // mapping URIs on the fly...
             Repository internal = Configuration.getDefault()
                                                .getInternalRepository();
+            log.debug("Mapping URIs from \"{}\" into graph \"{}\"",
+                                                        sourceId, targetGraph);
             RdfUtils.upload(in, internal, targetGraph, mapper);
             // Register new transformed RDF source.
             Source out = this.addResultSource(p, in, destTitle, targetGraph);
             // Display project source tab, including the newly created source.
             response = this.created(out).build();
 
-            log.info("RDF data successfully copied into \"{}\"", targetGraph);
+            log.info("RDF data successfully mapped from \"{}\" to \"{}\"",
+                                                        sourceId, targetGraph);
         }
         catch (Exception e) {
             this.handleInternalError(e);

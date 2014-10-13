@@ -174,6 +174,9 @@ public class CsvDirectMapper extends BaseConverterModule
     private final static Pattern SEPARATORS_PATTERN =
                                             Pattern.compile("[\\s\\u00a0,]+");
 
+    /* Web service parameter names. */
+    private final static String DATE_FORMAT_PARAM       = "date_format";
+
     //-------------------------------------------------------------------------
     // Class members
     //-------------------------------------------------------------------------
@@ -201,7 +204,7 @@ public class CsvDirectMapper extends BaseConverterModule
      */
     @GET
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
-    public Response getIndexPage(@QueryParam("project") URI projectId) {
+    public Response getIndexPage(@QueryParam(PROJECT_ID_PARAM) URI projectId) {
         return this.newProjectView("csvDirectMapper.vm", projectId);
     }
 
@@ -239,36 +242,41 @@ public class CsvDirectMapper extends BaseConverterModule
     @POST
     @Consumes(APPLICATION_FORM_URLENCODED)
     public Response mapCsvData(
-                    @FormParam("project") UriParam projectId,
-                    @FormParam("source") UriParam sourceId,
-                    @FormParam("dest_title") String destTitle,
-                    @FormParam("dest_graph_uri") UriParam targetGraphParam,
-                    @FormParam("base_uri") UriParam baseUriParam,
-                    @FormParam("true_values") String trueValues,
-                    @FormParam("date_format") String dateFormat,
-                    @FormParam("key_column") @DefaultValue("-1") int keyColumn,
-                    @FormParam("dest_type") String targetType,
-                    MultivaluedMap<String,String> params)
+                @FormParam(PROJECT_ID_PARAM) UriParam projectId,
+                @FormParam(SOURCE_ID_PARAM) UriParam sourceId,
+                @FormParam(TARGET_SRC_NAME) String destTitle,
+                @FormParam(GRAPH_URI_PARAM) UriParam targetGraphParam,
+                @FormParam(BASE_URI_PARAM) UriParam baseUriParam,
+                @FormParam("true_values") String trueValues,
+                @FormParam(DATE_FORMAT_PARAM) String dateFormat,
+                @FormParam(KEY_COLUMN_PARAM) @DefaultValue("-1") int keyColumn,
+                @FormParam("dest_type") String targetType,
+                MultivaluedMap<String,String> params)
                                                 throws WebApplicationException {
         // Note: There a bug in Jersey that cause the MultivalueMap to be
         //       empty unless at least one @FormParm annotation is present.
         // See: http://jersey.576304.n2.nabble.com/POST-parameters-not-injected-via-MultivaluedMap-td6434341.html
 
         if (projectId == null) {
-            this.throwInvalidParamError("project", null);
+            this.throwInvalidParamError(PROJECT_ID_PARAM, null);
         }
         if (sourceId == null) {
-            this.throwInvalidParamError("source", null);
+            this.throwInvalidParamError(SOURCE_ID_PARAM, null);
         }
         if (targetGraphParam == null) {
-            this.throwInvalidParamError("dest_graph_uri", null);
+            this.throwInvalidParamError(GRAPH_URI_PARAM, null);
+        }
+        if (baseUriParam == null) {
+            this.throwInvalidParamError(BASE_URI_PARAM, null);
         }
         Response response = null;
+
         try {
             // Retrieve project.
-            Project p = this.getProject(projectId.toUri("project"));
+            Project p = this.getProject(projectId.toUri(PROJECT_ID_PARAM));
             // Load input source.
-            CsvSource in = (CsvSource)(p.getSource(sourceId.toUri("source")));
+            CsvSource in = (CsvSource)
+                            (p.getSource(sourceId.toUri(SOURCE_ID_PARAM)));
             if (in == null) {
                 throw new ObjectNotFoundException("project.source.not.found",
                                                   projectId, sourceId);
@@ -290,17 +298,24 @@ public class CsvDirectMapper extends BaseConverterModule
                 }
                 // Else: Ignore, not a column type mapping description.
             }
+            URI baseUri = UriParam.valueOf(baseUriParam, BASE_URI_PARAM);
+            // Extract target named graph. It shall NOT conflict with
+            // existing objects (sources, projects) otherwise it would not
+            // be accessible afterwards (e.g. display, removal...).
+            URI targetGraph = targetGraphParam.toUri(GRAPH_URI_PARAM);
+            this.checkUriConflict(targetGraph, GRAPH_URI_PARAM);
+            // Extract column mapping configuration.
             MappingDesc desc = null;
             try {
                 desc = new MappingDesc(typeMappings, keyColumn,
                                                      trueValues, dateFormat);
             }
             catch (IllegalArgumentException e) {
-                this.throwInvalidParamError("date_format", dateFormat);
+                this.throwInvalidParamError(DATE_FORMAT_PARAM, dateFormat);
             }
-            URI targetGraph = targetGraphParam.toUri("dest_graph_uri");
-            URI baseUri     = UriParam.valueOf(baseUriParam, "base_uri");
             // Convert CSV data and load generated RDF triples.
+            log.debug("Mapping CSV data from \"{}\" into graph \"{}\"",
+                                                        sourceId, targetGraph);
             Collection<MappingError> errors = this.convert(in,
                              Configuration.getDefault().getInternalRepository(),
                              targetGraph, baseUri, targetType, desc);
@@ -315,6 +330,9 @@ public class CsvDirectMapper extends BaseConverterModule
             Source out = this.addResultSource(p, in, destTitle, targetGraph);
             // Display project source tab, including the newly created source.
             response = this.created(out).build();
+
+            log.info("CSV data from \"{}\" successfully mapped to \"{}\"",
+                                                        sourceId, targetGraph);
         }
         catch (Exception e) {
             this.handleInternalError(e);

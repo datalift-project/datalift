@@ -57,6 +57,7 @@ import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
+import org.datalift.fwk.util.web.UriParam;
 
 import static org.datalift.fwk.MediaTypes.*;
 import static org.datalift.fwk.util.StringUtils.isBlank;
@@ -95,24 +96,44 @@ public class RdfTransformer extends BaseConverterModule
 
     @GET
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
-    public Response getIndexPage(@QueryParam("project") URI projectId) {
+    public Response getIndexPage(@QueryParam(PROJECT_ID_PARAM) URI projectId) {
         return this.newProjectView("constructQueries.vm", projectId);
     }
 
     @POST
     @Consumes(APPLICATION_FORM_URLENCODED)
-    public Response convertRdfSource(@FormParam("project") URI projectId,
-                                     @FormParam("source") URI sourceId,
-                                     @FormParam("dest_title") String destTitle,
-                                     @FormParam("dest_graph_uri") URI targetGraph,
-                                     @FormParam("query[]") List<String> queries,
-                                     @FormParam("overwrite") boolean overwrite)
+    public Response convertRdfSource(
+                        @FormParam(PROJECT_ID_PARAM) UriParam projectId,
+                        @FormParam(SOURCE_ID_PARAM)  UriParam sourceId,
+                        @FormParam(TARGET_SRC_NAME)  String destTitle,
+                        @FormParam(GRAPH_URI_PARAM)  UriParam targetGraphParam,
+                        @FormParam("query[]") List<String> queries,
+                        @FormParam(OVERWRITE_GRAPH_PARAM) boolean overwrite)
                                                 throws WebApplicationException {
+        if (projectId == null) {
+            this.throwInvalidParamError(PROJECT_ID_PARAM, null);
+        }
+        if (sourceId == null) {
+            this.throwInvalidParamError(SOURCE_ID_PARAM, null);
+        }
+        if (targetGraphParam == null) {
+            this.throwInvalidParamError(GRAPH_URI_PARAM, null);
+        }
         Response response = null;
 
+        URI targetGraph = targetGraphParam.toUri(GRAPH_URI_PARAM);
         Repository internal = Configuration.getDefault()
                                            .getInternalRepository();
+        boolean graphUpdated = false;
         try {
+            // Retrieve project and source.
+            Project p = this.getProject(projectId.toUri(PROJECT_ID_PARAM));
+            TransformedRdfSource in = (TransformedRdfSource)
+                                (p.getSource(sourceId.toUri(SOURCE_ID_PARAM)));
+            if (in == null) {
+                throw new ObjectNotFoundException("project.source.not.found",
+                                                  projectId, sourceId);
+            }
             // Clean the query list to remove empty entries.
             if (queries != null) {
                 List<String> l = new LinkedList<String>();
@@ -123,15 +144,16 @@ public class RdfTransformer extends BaseConverterModule
                 }
                 queries = l;
             }
+            // Check target named graph. It shall NOT conflict with
+            // existing objects (sources, projects) otherwise it would not
+            // be accessible afterwards (e.g. display, removal...).
+            this.checkUriConflict(targetGraph, GRAPH_URI_PARAM);
             // Check that at least one query is present.
             if ((queries == null) || (queries.size() == 0)) {
-                this.throwInvalidParamError("queries", null);
+                this.throwInvalidParamError("query", null);
             }
-            // Retrieve project and source.
-            Project p = this.getProject(projectId);
-            TransformedRdfSource in =
-                                (TransformedRdfSource)p.getSource(sourceId);
             // Execute SPARQL Construct queries.
+            graphUpdated = true;
             RdfUtils.convert(internal, queries, internal, targetGraph,
                                        overwrite, URI.create(in.getUri()));
             // Register new transformed RDF source.
@@ -140,11 +162,12 @@ public class RdfTransformer extends BaseConverterModule
             response = this.created(out).build();
         }
         catch (Exception e) {
-            try {
-                RdfUtils.clearGraph(internal, targetGraph);
+            if (graphUpdated) {
+                try {
+                    RdfUtils.clearGraph(internal, targetGraph);
+                }
+                catch (Exception e1) { /* Ignore... */ }
             }
-            catch (Exception e1) { /* Ignore... */ }
-
             this.handleInternalError(e);
         }
         return response;

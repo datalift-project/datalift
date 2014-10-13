@@ -97,20 +97,20 @@ public class SimplePublisher extends BaseConverterModule
 
     @GET
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
-    public Response getIndexPage(@QueryParam("project") URI projectId) {
+    public Response getIndexPage(@QueryParam(PROJECT_ID_PARAM) URI projectId) {
         return this.newProjectView("publisher.vm", projectId);
     }
 
     @POST
     @Consumes(APPLICATION_FORM_URLENCODED)
     public Response publishRdfSource(
-                                @FormParam("project") URI projectId,
-                                @FormParam("source") URI sourceId,
-                                @FormParam("dest_graph_uri") URI targetGraph,
-                                @FormParam("overwrite") boolean overwrite,
-                                @Context UriInfo uriInfo,
-                                @Context Request request,
-                                @HeaderParam(ACCEPT) String acceptHdr)
+                        @FormParam(PROJECT_ID_PARAM) URI projectId,
+                        @FormParam(SOURCE_ID_PARAM)  URI sourceId,
+                        @FormParam(GRAPH_URI_PARAM)  URI targetGraph,
+                        @FormParam(OVERWRITE_GRAPH_PARAM) boolean overwrite,
+                        @Context UriInfo uriInfo,
+                        @Context Request request,
+                        @HeaderParam(ACCEPT) String acceptHdr)
                                                 throws WebApplicationException {
         Response response = null;
         try {
@@ -119,6 +119,10 @@ public class SimplePublisher extends BaseConverterModule
             // Load input source.
             TransformedRdfSource in =
                                 (TransformedRdfSource)(p.getSource(sourceId));
+            if (in == null) {
+                throw new ObjectNotFoundException("project.source.not.found",
+                                                  projectId, sourceId);
+            }
             if (targetGraph == null) {
                 // Get the source (CSV, RDF/XML, database...) at the origin of the
                 // transformations and use its name as target named graph.

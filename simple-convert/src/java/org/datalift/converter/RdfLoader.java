@@ -61,8 +61,8 @@ import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.util.RegexUriMapper;
 import org.datalift.fwk.util.StringUtils;
 import org.datalift.fwk.util.UriMapper;
+import org.datalift.fwk.util.web.UriParam;
 
-import static org.datalift.fwk.util.StringUtils.*;
 import static org.datalift.fwk.MediaTypes.*;
 
 
@@ -105,29 +105,46 @@ public class RdfLoader extends BaseConverterModule
 
     @GET
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
-    public Response getIndexPage(@QueryParam("project") URI projectId) {
+    public Response getIndexPage(@QueryParam(PROJECT_ID_PARAM) URI projectId) {
         return this.newProjectView("rdfLoader.vm", projectId);
     }
 
     @POST
     @Consumes(APPLICATION_FORM_URLENCODED)
     public Response loadRdfData(
-                    @FormParam("project") URI projectId,
-                    @FormParam("source") URI sourceId,
-                    @FormParam("dest_title") String destTitle,
-                    @FormParam("dest_graph_uri") URI targetGraph,
+                    @FormParam(PROJECT_ID_PARAM) UriParam projectId,
+                    @FormParam(SOURCE_ID_PARAM) UriParam sourceId,
+                    @FormParam(TARGET_SRC_NAME) String destTitle,
+                    @FormParam(GRAPH_URI_PARAM) UriParam targetGraphParam,
                     @FormParam("uri_translation_src") String uriPattern,
                     @FormParam("uri_translation_dest") String uriReplacement)
                                                 throws WebApplicationException {
+        if (projectId == null) {
+            this.throwInvalidParamError(PROJECT_ID_PARAM, null);
+        }
+        if (sourceId == null) {
+            this.throwInvalidParamError(SOURCE_ID_PARAM, null);
+        }
         Response response = null;
+
         try {
-            log.debug("Loading RDF data from \"{}\" into graph \"{}\"",
-                                                        sourceId, targetGraph);
-            if (isBlank(targetGraph.toString())) {
-                targetGraph = null;
-            }
             // Retrieve project.
-            Project p = this.getProject(projectId);
+            Project p = this.getProject(projectId.toUri(PROJECT_ID_PARAM));
+            // Load input source.
+            RdfSource in = (RdfSource)
+                            (p.getSource(sourceId.toUri(SOURCE_ID_PARAM)));
+            if (in == null) {
+                throw new ObjectNotFoundException("project.source.not.found",
+                                                  projectId, sourceId);
+            }
+            URI targetGraph = null;
+            if (targetGraphParam != null) {
+                // Extract target named graph. It shall NOT conflict with
+                // existing objects (sources, projects) otherwise it would not
+                // be accessible afterwards (e.g. display, removal...).
+                targetGraph = targetGraphParam.toUri(GRAPH_URI_PARAM);
+                this.checkUriConflict(targetGraph, GRAPH_URI_PARAM);
+            }
             // Check for URI mapping.
             UriMapper mapper = null;
             if (! StringUtils.isBlank(uriPattern)) {
@@ -140,17 +157,19 @@ public class RdfLoader extends BaseConverterModule
                                             "uri_translation_src", uriPattern);
                 }
             }
+            // Load RDF data into target named graph.
             Repository internal = Configuration.getDefault()
                                                .getInternalRepository();
-            // Load input source.
-            RdfSource in = (RdfSource)(p.getSource(sourceId));
+            log.debug("Loading RDF data from \"{}\" into graph \"{}\"",
+                                                        sourceId, targetGraph);
             RdfUtils.upload(in, internal, targetGraph, mapper);
             // Register new transformed RDF source.
             Source out = this.addResultSource(p, in, destTitle, targetGraph);
             // Display project source tab, including the newly created source.
             response = this.created(out).build();
 
-            log.info("RDF data successfully loaded into \"{}\"", targetGraph);
+            log.info("RDF data from \"{}\" successfully loaded into \"{}\"",
+                                                        sourceId, targetGraph);
         }
         catch (Exception e) {
             this.handleInternalError(e);

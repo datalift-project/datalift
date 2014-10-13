@@ -40,7 +40,9 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Request;
@@ -90,6 +92,15 @@ public abstract class BaseConverterModule
 
     /** Base name of the resource bundle for converter GUI. */
     protected final static String GUI_RESOURCES_BUNDLE = "resources";
+
+    /* Web service parameter names. */
+    protected final static String PROJECT_ID_PARAM      = "project";
+    protected final static String SOURCE_ID_PARAM       = "source";
+    protected final static String TARGET_SRC_NAME       = "dest_title";
+    protected final static String GRAPH_URI_PARAM       = "dest_graph_uri";
+    protected final static String BASE_URI_PARAM        = "base_uri";
+    protected final static String KEY_COLUMN_PARAM      = "key_column";
+    protected final static String OVERWRITE_GRAPH_PARAM = "overwrite";
 
     //-------------------------------------------------------------------------
     // Class members
@@ -268,6 +279,32 @@ public abstract class BaseConverterModule
             }
         }
         return src;
+    }
+
+    /**
+     * Checks that a to-be-created URI does not conflict with an
+     * existing subject in the internal repository.
+     * @param  targetUri       the URI about to be created.
+     * @param  parameterName   the request parameter the URI is
+     *                         associated to.
+     *
+     * @throws WebApplicationException if the URI already exists.
+     */
+    protected void checkUriConflict(URI targetUri, String parameterName)
+                                                throws WebApplicationException {
+        boolean found = false;
+        try {
+            Repository r = Configuration.getDefault().getInternalRepository();
+            Map<String,Object> bindings = new HashMap<String,Object>();
+            bindings.put("uri", targetUri);
+            found = r.ask("ASK { ?uri ?p ?o . }", bindings);
+        }
+        catch (Exception e) {
+            throw new TechnicalException(e);
+        }
+        if (found) {
+            this.throwNameConflictError(parameterName, targetUri);
+        }
     }
 
     /**
@@ -459,6 +496,22 @@ public abstract class BaseConverterModule
                 new TechnicalException("ws.invalid.param.error", name, value):
                 new TechnicalException("ws.missing.param", name);
         this.sendError(BAD_REQUEST, error.getLocalizedMessage());
+    }
+
+    /**
+     * Throws a {@link WebApplicationException} with a HTTP status set
+     * to 409 (Conflict) to signal an attempt to create a resource or
+     * named graph with a URI that conflicts with an existing object.
+     * @param  name    the parameter name in the web service interface.
+     * @param  value   the invalid parameter value.
+     *
+     * @throws WebApplicationException always.
+     */
+    protected void throwNameConflictError(String name, Object value)
+                                                throws WebApplicationException {
+        TechnicalException error =
+                new TechnicalException("ws.name.conflict.error", name, value);
+        this.sendError(CONFLICT, error.getLocalizedMessage());
     }
 
     /**

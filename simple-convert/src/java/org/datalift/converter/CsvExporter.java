@@ -115,6 +115,10 @@ public class CsvExporter extends BaseConverterModule
                     "GRAPH ?g { ?s ?p ?o . }\n" +
                 "} ORDER BY DESC(?s)";
 
+    /* Web service parameter names. */
+    private final static String CHARSET_PARAM           = "charset";
+    private final static String SEPARATOR_PARAM         = "separator";
+
     //-------------------------------------------------------------------------
     // Class members
     //-------------------------------------------------------------------------
@@ -136,7 +140,7 @@ public class CsvExporter extends BaseConverterModule
 
     @GET
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
-    public Response getIndexPage(@QueryParam("project") URI projectId) {
+    public Response getIndexPage(@QueryParam(PROJECT_ID_PARAM) URI projectId) {
         // Retrieve project.
         Project p = this.getProject(projectId);
         // Display conversion configuration page.
@@ -149,10 +153,11 @@ public class CsvExporter extends BaseConverterModule
 
     @POST
     @Consumes(APPLICATION_FORM_URLENCODED)
-    public Response exportSourceAsCsv(@FormParam("project") URI projectId,
-                                      @FormParam("source") URI sourceId,
-                                      @FormParam("charset") String charset,
-                                      @FormParam("separator") String separator)
+    public Response exportSourceAsCsv(
+                            @FormParam(PROJECT_ID_PARAM) URI projectId,
+                            @FormParam(SOURCE_ID_PARAM)  URI sourceId,
+                            @FormParam(CHARSET_PARAM)    String charset,
+                            @FormParam(SEPARATOR_PARAM)  String separator)
                                                 throws WebApplicationException {
         Response response = null;
 
@@ -165,21 +170,22 @@ public class CsvExporter extends BaseConverterModule
                 cs = Charset.forName(charset);
             }
             catch (Exception e) {
-                this.throwInvalidParamError("charset", charset);
+                this.throwInvalidParamError(CHARSET_PARAM, charset);
             }
             Separator sep = null;
             try {
                 sep = Separator.valueOf(separator);
             }
             catch (Exception e) {
-                this.throwInvalidParamError("separator", separator);
+                this.throwInvalidParamError(SEPARATOR_PARAM, separator);
             }
             // Retrieve source.
             Project p = this.getProject(projectId);
             TransformedRdfSource s = (TransformedRdfSource)
                                                         (p.getSource(sourceId));
             if (s == null) {
-                this.throwInvalidParamError("source", sourceId);
+                throw new ObjectNotFoundException("project.source.not.found",
+                                                  projectId, sourceId);
             }
             // Build default file name for downloaded data.
             String name = this.getTerminalName(s.getUri()) + ".csv";

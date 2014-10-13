@@ -66,6 +66,7 @@ import org.datalift.fwk.rdf.RdfFormat;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.rdf.rio.rdfxml.RDFXMLParser;
+import org.datalift.fwk.util.web.UriParam;
 
 import static org.datalift.fwk.MediaTypes.*;
 import static org.datalift.fwk.util.PrimitiveUtils.wrap;
@@ -120,33 +121,61 @@ public class XsltXmlConverter extends BaseConverterModule
 
     @GET
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
-    public Response getIndexPage(@QueryParam("project") URI projectId) {
+    public Response getIndexPage(@QueryParam(PROJECT_ID_PARAM) URI projectId) {
         return this.newProjectView("xsltXmlMapper.vm", projectId);
     }
 
     @POST
     @Consumes(APPLICATION_FORM_URLENCODED)
-    public Response mapXmlData(@FormParam("project") URI projectId,
-                               @FormParam("source") URI sourceId,
-                               @FormParam("dest_title") String destTitle,
-                               @FormParam("dest_graph_uri") URI targetGraph,
-                               @FormParam("base_uri") URI baseUri)
+    public Response mapXmlData(
+                        @FormParam(PROJECT_ID_PARAM) UriParam projectId,
+                        @FormParam(SOURCE_ID_PARAM)  UriParam sourceId,
+                        @FormParam(TARGET_SRC_NAME)  String destTitle,
+                        @FormParam(GRAPH_URI_PARAM)  UriParam targetGraphParam,
+                        @FormParam(BASE_URI_PARAM)   UriParam baseUriParam)
                                                 throws WebApplicationException {
+        if (projectId == null) {
+            this.throwInvalidParamError(PROJECT_ID_PARAM, null);
+        }
+        if (sourceId == null) {
+            this.throwInvalidParamError(SOURCE_ID_PARAM, null);
+        }
+        if (targetGraphParam == null) {
+            this.throwInvalidParamError(GRAPH_URI_PARAM, null);
+        }
+        if (baseUriParam == null) {
+            this.throwInvalidParamError(BASE_URI_PARAM, null);
+        }
         Response response = null;
+
         try {
-            log.debug("Loading RDF data from \"{}\" into graph \"{}\"",
-                                                        sourceId, targetGraph);
             // Retrieve project.
-            Project p = this.getProject(projectId);
+            Project p = this.getProject(projectId.toUri(PROJECT_ID_PARAM));
             // Load input source.
-            XmlSource in = (XmlSource)(p.getSource(sourceId));
+            XmlSource in = (XmlSource)
+                            (p.getSource(sourceId.toUri(SOURCE_ID_PARAM)));
+            if (in == null) {
+                throw new ObjectNotFoundException("project.source.not.found",
+                                                  projectId, sourceId);
+            }
+            // Extract target named graph. It shall NOT conflict with
+            // existing objects (sources, projects) otherwise it would not
+            // be accessible afterwards (e.g. display, removal...).
+            URI targetGraph = targetGraphParam.toUri(GRAPH_URI_PARAM);
+            this.checkUriConflict(targetGraph, GRAPH_URI_PARAM);
             // Convert XML data to RDF and load generated triples.
+            URI baseUri = UriParam.valueOf(baseUriParam, BASE_URI_PARAM);
+            log.debug("Mapping XML data from \"{}\" into graph \"{}\"",
+                                                        sourceId, targetGraph);
             this.convert(in, Configuration.getDefault().getInternalRepository(),
                              targetGraph, baseUri);
             // Register new transformed RDF source.
             Source out = this.addResultSource(p, in, destTitle, targetGraph);
             // Display project source tab, including the newly created source.
             response = this.created(out).build();
+
+            log.info("XML data from \"{}\" successfully mapped to \"{}\"",
+                                                        sourceId, targetGraph);
         }
         catch (Exception e) {
             this.handleInternalError(e);
