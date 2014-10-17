@@ -34,7 +34,7 @@
   <property file="${datalift.root}/build.properties"/>
 
   <property name="datalift.wrapper.modules"
-            value="flint-endpoint,projectmanager,simple-convert,database-directmapper,geo-convert,lov/api,lov/catalogue,data2ontology,virtuoso-connector,allegrograph-connector,stringtouri,silk-interlinker,incubator/ontology-mapper"/>
+            value="flint-endpoint,projectmanager,simple-convert,database-directmapper,geomrdf,lov/api,lov/catalogue,data2ontology,virtuoso-connector,allegrograph-connector,stringtouri,silk-interlinker,incubator/ontology-mapper"/>
 
 
   <!-- ================ File and Directory Names ========================== -->

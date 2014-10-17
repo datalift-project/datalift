@@ -31,7 +31,7 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 
-package org.datalift.geoconverter;
+package org.datalift.geomrdf;
 
 import java.io.File;
 import java.io.IOException;

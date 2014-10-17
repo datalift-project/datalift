@@ -304,9 +304,9 @@
     <jar jarfile="${jar.path}">
       <fileset dir="${classes.dir}"/>
       <service type="org.datalift.fwk.Module">
-      	<provider classname="org.datalift.geoconverter.ShptoGml"/>
-      	<provider classname="org.datalift.geoconverter.GmltoRdf"/>
-      	<provider classname="org.datalift.geoconverter.ShptoRdf"/>
+      	<provider classname="org.datalift.geomrdf.ShptoGml"/>
+      	<provider classname="org.datalift.geomrdf.GmltoRdf"/>
+      	<provider classname="org.datalift.geomrdf.ShptoRdf"/>
       </service>
     </jar>
   </target>
