@@ -31,7 +31,7 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 
-package org.datalift.geoconverter;
+package org.datalift.geomrdf;
 
 import java.io.File;
 import java.io.IOException;
@@ -57,7 +57,7 @@ import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.FileSource;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectModule;
-import org.datalift.fwk.project.ShpSource;
+import org.datalift.fwk.project.GmlSource;
 import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.ShpSource.Crs;
 import org.datalift.fwk.project.Source.SourceType;
@@ -90,14 +90,14 @@ import fr.ign.datalift.model.GeometryProperty;
 import fr.ign.datalift.parser.Features_Parser;
 
 /**
- * A {@link ProjectModule project module} that loads the SHP data
- * from a {@link ShpSource SHP file source} into the internal
+ * A {@link ProjectModule project module} that loads the GML data
+ * from a {@link GmlSource GML file source} into the internal
  * RDF store.
  *
  * @author fhamdi
  */
-@Path(ShptoRdf.MODULE_NAME)
-public class ShptoRdf extends BaseConverterModule
+@Path(GmltoRdf.MODULE_NAME)
+public class GmltoRdf extends BaseConverterModule
 {
 	//-------------------------------------------------------------------------
 	// Constants
@@ -110,7 +110,7 @@ public class ShptoRdf extends BaseConverterModule
 	public final static String SOURCE_URI_PREFIX  = "source";
 
 	/** The name of this module in the DataLift configuration. */
-	public final static String MODULE_NAME = "shptordf";
+	public final static String MODULE_NAME = "gmltordf";
 
 	//-------------------------------------------------------------------------
 	// Class members
@@ -123,8 +123,8 @@ public class ShptoRdf extends BaseConverterModule
 	//-------------------------------------------------------------------------
 
 	/** Default constructor. */
-	public ShptoRdf() {
-		super(MODULE_NAME, 800, SourceType.ShpSource);
+	public GmltoRdf() {
+		super(MODULE_NAME, 800, SourceType.GmlSource);
 	}
 
 	//-------------------------------------------------------------------------
@@ -137,7 +137,7 @@ public class ShptoRdf extends BaseConverterModule
 		// Retrieve project.
 		Project p = this.getProject(projectId);
 		// Display conversion configuration page.
-		TemplateModel view = this.newView("shptoRdf.vm", p);
+		TemplateModel view = this.newView("gmltoRdf.vm", p);
 		view.put("converter", this);
 		view.put("crs", Crs.values());
 		return Response.ok(view).build();
@@ -145,7 +145,7 @@ public class ShptoRdf extends BaseConverterModule
 
 	@POST
 	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-	public Response convertShpData(
+	public Response convertGmlData(
 			@FormParam("project") URI projectId,
 			@FormParam("source") URI sourceId,
 			@FormParam("dest_title") String destTitle,
@@ -160,32 +160,28 @@ public class ShptoRdf extends BaseConverterModule
 			// Retrieve project.
 			Project p = this.getProject(projectId);
 			// Retrieve source.
-			ShpSource src = (ShpSource)(p.getSource(sourceId));
+			GmlSource src = (GmlSource)(p.getSource(sourceId));
 			if (src == null) {
 				this.throwInvalidParamError("source", sourceId);
 			}
 			// Create working directory.
 			File tmpDir = this.createWorkingDirectory(src);
-			// Copy source ShapeFile files to working directory.
-			File inShpFile = this.getLocalCopy(src.getShapeFilePath(),
-					src.getShapeFileInputStream(), tmpDir);
-			this.getLocalCopy(src.getIndexFilePath(),
-					src.getIndexFileInputStream(), tmpDir);
-			this.getLocalCopy(src.getAttributeFilePath(),
-					src.getAttributeFileInputStream(), tmpDir);
-			this.getLocalCopy(src.getProjectionFilePath(),
-					src.getProjectionFileInputStream(), tmpDir);
+			// Copy source GmlFile files to working directory.
+			File inGmlFile = this.getLocalCopy(src.getGmlFilePath(),
+					src.getGmlFileInputStream(), tmpDir);
+			this.getLocalCopy(src.getXsdFilePath(),
+					src.getXsdFileInputStream(), tmpDir);
 
-			// Convert SHP data and load generated RDF triples.
+			// Convert GML data and load generated RDF triples.
 			Features_Parser parser = new Features_Parser();
 			if (Crs.valueOf(crs).getValue().equals("EPSG:4326")) {
-				parser.parseSHP(inShpFile.getCanonicalPath(), true);
+				parser.parseGML(inGmlFile.getCanonicalPath(), true, Crs.valueOf(crs).getValue());
 			}
 			else if (Crs.valueOf(crs).getValue().equals("none")) {
-				parser.parseSHP(inShpFile.getCanonicalPath(), false);
+				parser.parseGML(inGmlFile.getCanonicalPath(), false, "");
 			}
 			this.convertToRDF(src, parser.readFeatureCollection(), parser.crs, 
-					Configuration.getDefault().getInternalRepository(),
+					parser.asGmlList, Configuration.getDefault().getInternalRepository(),
 					targetGraph, baseUri, targetType);
 
 			// Register new transformed RDF source.
@@ -222,9 +218,9 @@ public class ShptoRdf extends BaseConverterModule
 	// Specific implementation
 	//-------------------------------------------------------------------------
 
-	public void convertToRDF(ShpSource src, ArrayList<AbstractFeature> featureList, 
-			String crs, Repository target, URI targetGraph, URI baseUri,
-			String targetType) {
+	public void convertToRDF(GmlSource src, ArrayList<AbstractFeature> featureList, 
+			String crs, ArrayList<String> asGmlList, Repository target, URI targetGraph, 
+			URI baseUri, String targetType) {
 
 		final UriBuilder uriBuilder = Configuration.getDefault()
 				.getBean(UriBuilder.class);
@@ -267,6 +263,8 @@ public class ShptoRdf extends BaseConverterModule
 
 			// serialize a featureCollection into RDF
 			int count = 0;
+			CreateGeoStatement cgs = new CreateGeoStatement();
+
 			for (int i = 0; i < featureList.size(); i++) {
 				count = i + 1;
 				org.openrdf.model.URI feature = vf.createURI(sbjUri + count);
@@ -282,27 +280,18 @@ public class ShptoRdf extends BaseConverterModule
 
 					if (fp instanceof GeometryProperty) {
 
-						org.openrdf.model.URI geomFeature = vf.createURI(sbjUri, this.cleanUpString(fp.getType()) + "_" + count);
+						GeometryProperty gp = (GeometryProperty)fp;
+						String geoType = gp.getType();
+						org.openrdf.model.URI geomFeature = vf.createURI(sbjUri, geoType + "_" + count);
 
-						statement = vf.createStatement(feature, Geometrie.GEOMETRIE, geomFeature);
-						aboutAttributes.add(statement);
+						cgs.createStatement(gp, vf, feature, geomFeature, geoType, crs);
+						aboutGeometry = cgs.aboutGeometry;
 
-						statement = vf.createStatement(geomFeature, RDF.TYPE, Geometrie.GEOMETRIE);
-						aboutGeometry.add(statement);
-
-						statement = vf.createStatement(geomFeature, RDF.TYPE,  vf.createURI(Geometrie.NS, fp.getType()));
-						aboutGeometry.add(statement);
-
-						BNode systcoord = vf.createBNode();
-						if (crs != null) {
-							statement = vf.createStatement(systcoord, RDFS.LABEL, vf.createLiteral(crs));
+						if (asGmlList != null) {
+							statement = vf.createStatement(geomFeature, GeoSPARQL.ASGML, vf.createLiteral(asGmlList.get(j)));
 							aboutGeometry.add(statement);
 						}
-						statement = vf.createStatement(geomFeature, Geometrie.SYSTCOORD, systcoord);
-						aboutGeometry.add(statement);
 
-						statement = vf.createStatement(geomFeature, GeoSPARQL.ASWKT, vf.createLiteral(fp.getValue()));
-						aboutGeometry.add(statement);
 
 					} else {
 						if (fp.getType() != null){
@@ -391,7 +380,7 @@ public class ShptoRdf extends BaseConverterModule
 			}
 			catch (Exception e2) { /* Ignore... */ }
 
-			throw new TechnicalException("shp.conversion.failed", e);
+			throw new TechnicalException("gml.conversion.failed", e);
 		}
 		finally {
 			// Commit pending data (including graph removal in case of error).
@@ -407,4 +396,6 @@ public class ShptoRdf extends BaseConverterModule
 			str = str.substring(str.lastIndexOf(':') + 1);
 		return WordUtils.capitalizeFully(str, new char[] { ' ' }).replaceAll(" ", "").trim();
 	}
+
+
 }

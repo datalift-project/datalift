@@ -31,23 +31,57 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 
-package fr.ign.datalift.constants;
+package fr.ign.datalift.model;
 
-import org.openrdf.model.URI;
-import org.openrdf.model.ValueFactory;
-import org.openrdf.model.impl.ValueFactoryImpl;
+import java.util.ArrayList;
 
-public class Geometrie {
+public class GeometryProperty extends FeatureProperty {
 
-	public static String NS = "http://data.ign.fr/ontology/geometrie#";
+	int numGeometries = 0;
+	int numInteriorRing = 0;
+	ArrayList<Double[]> points = new ArrayList<Double[]>();
+	ArrayList<Integer> numPoints = new ArrayList<Integer>();
+	ArrayList<Boolean> isRing = new ArrayList<Boolean>();
 
-	public static URI GEOMETRIE;
-
-	public static URI SYSTCOORD;
-
-	static {
-		ValueFactory vf = ValueFactoryImpl.getInstance(); 
-		GEOMETRIE = vf.createURI(NS, "Geometrie");
-		SYSTCOORD = vf.createURI(NS, "systCoord");
+	public int getNumGeometries() {
+		return numGeometries;
 	}
+
+	public void setNumGeometries(int numPolygon) {
+		this.numGeometries = numPolygon;
+	}
+
+	public int getNumInteriorRing() {
+		return numInteriorRing;
+	}
+
+	public void setNumInteriorRing(int numInteriorRing) {
+		this.numInteriorRing = numInteriorRing;
+	}
+
+	public void setPointsLists(Double[] point){
+		this.points.add(point);
+	}
+
+	public void setIsRing(boolean isRing){
+		this.isRing.add(isRing);
+	}
+
+	public boolean getIsRing(int indexRing){
+		return this.isRing.get(indexRing);
+	}
+
+	public int getNumPoint(int indexPointList) {
+		return this.numPoints.get(indexPointList);
+	}
+
+	public void setNumPoint(int numPoint) {
+		this.numPoints.add(numPoint);
+	}
+
+	public Double[] getPoint(int indexPoint) {
+		return this.points.get(indexPoint);
+	}
+
+
 }

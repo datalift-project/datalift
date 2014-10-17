@@ -36,6 +36,17 @@
 		<input type="text" id="base_uri" name="base_uri" title="#i18n('dest.base_uri.help')" value=""/></p>
 		<p><label for="dest_type">#i18n("dest.type_uri"): </label>
 		<input type="text" id="dest_type" name="dest_type" title="#i18n('dest.type_uri.help')" placeholder="myClass" value=""/></p>
+		<p><label for="separator">#i18n("dest.crs"): </label>
+		<select id="crs" name="crs">
+#foreach( $s in $crs )
+#set( $label = "shp.${s.name()}.crs" )
+#if( $foreach.count == 1 )
+			<option value="$esc.html($s.name())" selected="true">#i18n($label)</option>
+#else
+			<option value="$esc.html($s.name())">#i18n($label)</option>
+#end
+#end
+		</select></p>		
 		<input type="submit" id="source_submit" value="#i18n('submit.label')"/>
 	</form>
 </div>

@@ -153,34 +153,5 @@ public class GMLBuilder {
 		File gml = new File(outputGMLFilePath);
 		TransformerFactory.newInstance().newTransformer().transform(new DOMSource(dGml), new StreamResult(gml));
 	}
-
-	/**
-	 * @param args
-	 */
-	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-
-		GMLBuilder gml = new GMLBuilder();
-		ShpParser shpfeatures = new ShpParser(".//input/DEPARTEMENT.SHP", false);
-
-		try {
-			gml.creatGMLFile(".//output/departement.xsd", ".//output/departement.gml", shpfeatures.featureSource);
-
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			log.error(e.getLocalizedMessage());
-		}
-
-		ShpParser shpfeatures84 = new ShpParser(".//input/DEPARTEMENT.SHP", true);
-
-		try {
-			gml.creatGMLFile(".//output/departement84.xsd", ".//output/departement84.gml", shpfeatures84.featureSource);
-
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			log.error(e.getLocalizedMessage());
-		}
-
-	}
-
+	
 }

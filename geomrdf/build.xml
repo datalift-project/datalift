@@ -30,7 +30,7 @@
   set to the current working directory.
 -->
 
-<project name="datalift-geo-convert" default="dist" basedir=".">
+<project name="datalift-geomrdf" default="dist" basedir=".">
 
   <!-- ================ Property Definitions ============================== -->
 
@@ -94,7 +94,7 @@
                         Defaults to "dist".
    -->
 
-  <property name="app.name"             value="geo-converter"/>
+  <property name="app.name"             value="geomrdf"/>
   <property name="app.version"          value="0.8.0"/>
   <property name="app.path"             value="/${app.name}"/>
   <property name="app.long.name"        value="Datalift Geo Converter"/>
@@ -304,9 +304,9 @@
     <jar jarfile="${jar.path}">
       <fileset dir="${classes.dir}"/>
       <service type="org.datalift.fwk.Module">
-      	<provider classname="org.datalift.geoconverter.ShptoGml"/>
-      	<provider classname="org.datalift.geoconverter.GmltoRdf"/>
-      	<provider classname="org.datalift.geoconverter.ShptoRdf"/>
+      	<provider classname="org.datalift.geomrdf.ShptoGml"/>
+      	<provider classname="org.datalift.geomrdf.GmltoRdf"/>
+      	<provider classname="org.datalift.geomrdf.ShptoRdf"/>
       </service>
     </jar>
   </target>
