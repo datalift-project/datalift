@@ -68,7 +68,8 @@ public class OnlineLovService extends LovService {
 			connection.setRequestProperty("Accept", "application/json");
 			
 			if (connection.getResponseCode() != 200) {
-				log.error("HTTP request error. Response code is {}", connection.getResponseCode());
+				log.error("HTTP request error. Response code is {}",
+				          Integer.valueOf(connection.getResponseCode()));
 			}
 			
 			BufferedReader reader = new BufferedReader(new InputStreamReader(

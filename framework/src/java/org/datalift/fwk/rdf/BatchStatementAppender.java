@@ -121,7 +121,7 @@ public class BatchStatementAppender extends RDFHandlerBase
         this.statementCount = 0L;
         try {
             // Prevent transaction commit for each triple inserted.
-            cnx.setAutoCommit(false);
+            cnx.begin();
         }
         catch (RepositoryException e) {
             throw new RuntimeException("RDF triple insertion failed", e);
@@ -138,6 +138,7 @@ public class BatchStatementAppender extends RDFHandlerBase
             this.statementCount++;
             if ((this.statementCount % this.batchSize) == 0) {
                 this.cnx.commit();
+                this.cnx.begin();
             }
         }
         catch (RepositoryException e) {

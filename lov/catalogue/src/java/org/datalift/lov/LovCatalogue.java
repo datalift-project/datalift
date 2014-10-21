@@ -166,7 +166,8 @@ public class LovCatalogue extends BaseModule {
 					dataChanged = true;
 				}
 				else {
-				    log.trace("Repository size for LOV catalog context: {}", repositorySize);
+				    log.trace("Repository size for LOV catalog context: {}",
+				              Long.valueOf(repositorySize));
 				}
 			}
 		} catch (Exception e1) {
@@ -445,9 +446,11 @@ public class LovCatalogue extends BaseModule {
 					.createURI(lovContextURI.toString());
 			internalRepositoryConnection.clear(ctx);
 
-			log.debug("Adding {} statements to context <{}>", statements.size(), ctx);
+			log.debug("Adding {} statements to context <{}>",
+			          Integer.valueOf(statements.size()), ctx);
 			internalRepositoryConnection.add(statements, ctx); // auto commit
-			log.info("Internal repository size for context <{}>: {}", ctx, internalRepositoryConnection.size(ctx));
+			log.info("Internal repository size for context <{}>: {}", ctx,
+			         Long.valueOf(internalRepositoryConnection.size(ctx)));
 
 		} catch (Exception e) {
 			e.printStackTrace();

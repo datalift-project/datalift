@@ -109,7 +109,7 @@ public abstract class AbstractJsonWriter
     //-------------------------------------------------------------------------
 
     protected final IndentingWriter writer;
-    protected final String jsonCallback;
+    protected String jsonCallback;
     protected List<String> fields;
 
     private final Map<String,String> nsPrefixes = new HashMap<String,String>();
@@ -489,6 +489,17 @@ public abstract class AbstractJsonWriter
      */
     protected final void writeComma() throws IOException {
         this.writer.write(", ");
+    }
+
+    /**
+     * Sets the JSONP callback name, in case it was not known at
+     * instantiation time.
+     * @param  jsonCallback   JSONP callback name.
+     * 
+     * @see    #start(List)
+     */
+    protected final void setJsonCallback(String jsonCallback) {
+        this.jsonCallback = jsonCallback;
     }
 
     //-------------------------------------------------------------------------

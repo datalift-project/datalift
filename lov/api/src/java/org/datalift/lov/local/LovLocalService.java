@@ -3,8 +3,6 @@ package org.datalift.lov.local;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -144,11 +142,11 @@ public class LovLocalService {
 						occurrencesInDatasets = ((Literal) bindingSet
 								.getBinding("occurrencesInDatasets").getValue())
 								.stringValue().toString();
-					String reusedByDatasets = null;
-					if (bindingSet.getBinding("reusedByDatasets") != null)
-						reusedByDatasets = ((Literal) bindingSet.getBinding(
-								"reusedByDatasets").getValue()).stringValue()
-								.toString();
+//					String reusedByDatasets = null;
+//					if (bindingSet.getBinding("reusedByDatasets") != null)
+//						reusedByDatasets = ((Literal) bindingSet.getBinding(
+//								"reusedByDatasets").getValue()).stringValue()
+//								.toString();
 
 					// System.out.println(uri+"\t"+label);
 
@@ -302,10 +300,10 @@ public class LovLocalService {
 				resultsHandler.setResult_All(searchResult, new TaxoNode(
 						vocabularySpaceRoot), buildTypes());
 //				log.info("Results are set.");
-				SearchResult results = resultsHandler.getResult(0, filter_Type, filter_Domain,
-						filter_vocabulary);
+//				SearchResult results = resultsHandler.getResult(0, filter_Type, filter_Domain,
+//						filter_vocabulary);
 //				log.info("Starting JSON serialization.");
-				String json = results.toJSON();
+//				String json = results.toJSON();
 //				log.info("JSON result : {} ", json);
 
 				return resultsHandler.getResult(0, filter_Type, filter_Domain,

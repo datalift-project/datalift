@@ -258,7 +258,7 @@ public class SqlDirectMapper extends BaseConverterModule
 
             long t0 = System.currentTimeMillis();
             // Prevent transaction commit for each triple inserted.
-            cnx.setAutoCommit(false);
+            cnx.begin();
             // Clear target named graph, if any.
             org.openrdf.model.URI ctx = null;
             if (targetGraph != null) {
@@ -311,6 +311,7 @@ public class SqlDirectMapper extends BaseConverterModule
                         statementCount++;
                         if ((statementCount % batchSize) == 0) {
                             cnx.commit();
+                            cnx.begin();
                             // Trace progress.
                             if (log.isTraceEnabled()) {
                                 duration = System.currentTimeMillis() - t0;

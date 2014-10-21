@@ -59,7 +59,6 @@ import org.semarglproject.sesame.rdf.rdfa.RDFaFormat;
 import org.semarglproject.sesame.rdf.rdfa.SesameRDFaParser;
 
 import org.datalift.fwk.MediaTypes;
-import org.datalift.fwk.rdf.rio.rdfxml.RDFXMLParser;
 import org.datalift.fwk.util.StringUtils;
 
 import static org.datalift.fwk.MediaTypes.*;
@@ -79,14 +78,7 @@ public enum RdfFormat
     /** "application/rdf+xml" */
     RDF_XML     ("RDF/XML", RDFFormat.RDFXML,
                  new String[] { "rdf", "rdfs", "owl", "xml" },
-                 APPLICATION_RDF_XML_TYPE, APPLICATION_XML_TYPE) {
-            @Override
-            public RDFParser newParser(ValueFactory valueFactory) {
-                // Use Datalift's RDF/XML parser with SAX streaming support.
-                return (valueFactory == null)? new RDFXMLParser():
-                                               new RDFXMLParser(valueFactory);
-            }
-        },
+                 APPLICATION_RDF_XML_TYPE, APPLICATION_XML_TYPE),
     /** "text/turtle" */
     TURTLE      ("Turtle", RDFFormat.TURTLE, "ttl",
                  TEXT_TURTLE_TYPE, APPLICATION_TURTLE_TYPE),

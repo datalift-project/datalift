@@ -35,6 +35,7 @@
 package org.datalift.fwk.rdf;
 
 
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -240,6 +241,12 @@ public final class UriCachingValueFactory implements ValueFactory
     @Override
     public Literal createLiteral(XMLGregorianCalendar calendar) {
         return this.wrappedFactory.createLiteral(calendar);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Literal createLiteral(Date date) {
+        return this.wrappedFactory.createLiteral(date);
     }
 
     /** {@inheritDoc} */

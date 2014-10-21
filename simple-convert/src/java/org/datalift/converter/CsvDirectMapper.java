@@ -368,7 +368,7 @@ public class CsvDirectMapper extends BaseConverterModule
             long t0 = System.currentTimeMillis();
             char quote = src.getQuoteCharacter();
             // Prevent transaction commit for each triple inserted.
-            cnx.setAutoCommit(false);
+            cnx.begin();
             // Clear target named graph, if any.
             if (targetGraph != null) {
                 ctx = valueFactory.createURI(targetGraph.toString());
@@ -458,6 +458,7 @@ public class CsvDirectMapper extends BaseConverterModule
                         statementCount++;
                         if ((statementCount % batchSize) == 0) {
                             cnx.commit();
+                            cnx.begin();
                             // Trace progress.
                             if (log.isTraceEnabled()) {
                                 duration = System.currentTimeMillis() - t0;

@@ -82,21 +82,22 @@ public class StoreMappedDataSet extends SesameDataSet {
 			if(transactionCnx == null){
 				transactionCnx = internalRepository.newConnection();
 				//this way we will commit the adding transactions, batch after batch
-				transactionCnx.setAutoCommit(false);
+				transactionCnx.begin();
 			}
 			ValueFactory myFactory = transactionCnx.getValueFactory();
 			//obtain the triple
 			Statement st = myFactory.createStatement( s, p,(Value) o);
 			if(ctx.length==0){
-				// if there is no uri context add the triple to the default one
+				// if there is no URI context add the triple to the default one
 				transactionCnx.add(st, context);
 			}else{
 				transactionCnx.add(st, ctx);
 			}
 			statementCount++;
 			if(statementCount % batchSize == 0){
-				//we added enoght triples to commit the transaction
+				//we added enough triples to commit the transaction
 				transactionCnx.commit();
+				transactionCnx.begin();
 			}
 		} catch (RepositoryException e) {
 			throw new TechnicalException("triples.saving.failed", e);
@@ -105,7 +106,7 @@ public class StoreMappedDataSet extends SesameDataSet {
 	
 	/**
 	 * This method is run to commit the addition of the triples that were not committed previously.
-	 * The Repository connector is closed and resetted since there are no more triples to add
+	 * The Repository connector is closed and reset since there are no more triples to add
 	 */
 	public void flush(){
 		this.statementCount = 0;

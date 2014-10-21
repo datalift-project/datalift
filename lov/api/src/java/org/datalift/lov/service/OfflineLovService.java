@@ -21,7 +21,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.ZipEntry;
@@ -289,17 +288,17 @@ public class OfflineLovService extends LovService {
 								wrap(estimatedTime));
 						new File(lovData, NQ_AGGREGATOR).delete();
                         aggregatorDownloaded = true;
-                        return true;
+                        return Boolean.TRUE;
 
 					} catch (IOException e) {
 						log.error("Download error : " + e.getMessage());
-                        return false;
+                        return Boolean.FALSE;
 					}
 				}
 			};
             Future<Boolean> future = executor.submit(callable);
             try {
-                ret = future.get();
+                ret = future.get().booleanValue();
             }
             catch (InterruptedException e) {
                 log.error("Download has been interrupted.");

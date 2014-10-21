@@ -317,7 +317,7 @@ public class GmltoRdf extends BaseConverterModule
 
 			try {
 				// Prevent transaction commit for each triple inserted.
-				cnx.setAutoCommit(false);
+				cnx.begin();
 			}
 			catch (RepositoryException e) {
 				throw new RuntimeException("RDF triple insertion failed", e);
@@ -331,6 +331,7 @@ public class GmltoRdf extends BaseConverterModule
 					statementCount++;
 					if ((statementCount % batchSize) == 0) {
 						cnx.commit();
+						cnx.begin();
 					}
 				}
 				catch (RepositoryException e) {

@@ -763,7 +763,8 @@ public final class SparqlTool
      * result.
      * @param  result   the CONSTRUCT or DESCRIBE SPARQL query result.
      */
-    private void registerNamespaceMappings(GraphQueryResult result) {
+    private void registerNamespaceMappings(GraphQueryResult result)
+                                            throws QueryEvaluationException {
         // Clear previous mappings.
         this.queryPrefixes.clear();
         // Register namespace prefix mappings for this query.
@@ -864,7 +865,8 @@ public final class SparqlTool
          * @param  result   the query results to read triples from.
          */
         public StatementIterator(RepositoryConnection cnx,
-                                 GraphQueryResult result) {
+                                 GraphQueryResult result)
+                                            throws QueryEvaluationException {
             this.cnx = cnx;
             this.result = result;
             // Register namespace prefix mappings for this query.

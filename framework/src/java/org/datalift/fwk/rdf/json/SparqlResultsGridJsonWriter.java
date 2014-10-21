@@ -39,12 +39,20 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Writer;
 import java.text.MessageFormat;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.openrdf.query.BindingSet;
+import org.openrdf.query.QueryResultHandlerException;
 import org.openrdf.query.TupleQueryResultHandlerException;
 import org.openrdf.query.resultio.TupleQueryResultFormat;
 import org.openrdf.query.resultio.TupleQueryResultWriter;
+import org.openrdf.rio.RioSetting;
+import org.openrdf.rio.WriterConfig;
+
+import static org.openrdf.query.resultio.BasicQueryWriterSettings.JSONP_CALLBACK;
 
 
 /**
@@ -58,6 +66,12 @@ public class SparqlResultsGridJsonWriter extends AbstractGridJsonWriter
                                          implements TupleQueryResultWriter
 {
     //-------------------------------------------------------------------------
+    // Instance members
+    //-------------------------------------------------------------------------
+
+    private WriterConfig writerConfig = new WriterConfig();
+
+    //-------------------------------------------------------------------------
     // Constructors
     //-------------------------------------------------------------------------
 
@@ -66,7 +80,7 @@ public class SparqlResultsGridJsonWriter extends AbstractGridJsonWriter
      * @param  out   the byte stream to write JSON text to.
      */
     public SparqlResultsGridJsonWriter(OutputStream out) {
-        this(out, null, null);
+        this(out, null);
     }
 
     /**
@@ -75,14 +89,10 @@ public class SparqlResultsGridJsonWriter extends AbstractGridJsonWriter
      * @param  urlPattern     a message format to replace RDF resource
      *                        URIs with HTML links
      *                        (<code>&lt;a href=.../&gt;</code>).
-     * @param  jsonCallback   the JSONP callback function to wrap the
-     *                        generated JSON object or <code>null</code>
-     *                        to produce standard JSON.
      */
     public SparqlResultsGridJsonWriter(OutputStream out,
-                                       MessageFormat urlPattern,
-                                       String jsonCallback) {
-        super(out, urlPattern, jsonCallback);
+                                       MessageFormat urlPattern) {
+        super(out, urlPattern, null);
     }
 
     /**
@@ -90,7 +100,7 @@ public class SparqlResultsGridJsonWriter extends AbstractGridJsonWriter
      * @param  out   the character stream to write JSON text to.
      */
     public SparqlResultsGridJsonWriter(Writer out) {
-        this(out, null, null);
+        this(out, null);
     }
 
     /**
@@ -99,13 +109,9 @@ public class SparqlResultsGridJsonWriter extends AbstractGridJsonWriter
      * @param  urlPattern     a message format to replace RDF resource
      *                        URIs with HTML links
      *                        (<code>&lt;a href=.../&gt;</code>).
-     * @param  jsonCallback   the JSONP callback function to wrap the
-     *                        generated JSON object or <code>null</code>
-     *                        to produce standard JSON.
      */
-    public SparqlResultsGridJsonWriter(Writer out, MessageFormat urlPattern,
-                                                   String jsonCallback) {
-        super(out, urlPattern, jsonCallback);
+    public SparqlResultsGridJsonWriter(Writer out, MessageFormat urlPattern) {
+        super(out, urlPattern, null);
     }
 
     //-------------------------------------------------------------------------
@@ -118,10 +124,17 @@ public class SparqlResultsGridJsonWriter extends AbstractGridJsonWriter
         return TupleQueryResultFormat.JSON;
     }
 
+    //-------------------------------------------------------------------------
+    // QueryResultHandler contract support
+    //-------------------------------------------------------------------------
+
     /** {@inheritDoc} */
     @Override
     public void startQueryResult(List<String> bindingNames)
                                     throws TupleQueryResultHandlerException {
+        if (this.getWriterConfig().isSet(JSONP_CALLBACK)) {
+            this.setJsonCallback(this.getWriterConfig().get(JSONP_CALLBACK));
+        }
         try {
             this.startDocument(bindingNames);
         }
@@ -144,6 +157,21 @@ public class SparqlResultsGridJsonWriter extends AbstractGridJsonWriter
 
     /** {@inheritDoc} */
     @Override
+    public void handleBoolean(boolean value)
+                                        throws QueryResultHandlerException {
+        throw new QueryResultHandlerException(
+                                        new UnsupportedOperationException());
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void handleLinks(List<String> linkUrls)
+                    throws QueryResultHandlerException {
+        // TODO: Add support for JSON links.
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public void endQueryResult() throws TupleQueryResultHandlerException {
         try {
             this.endDocument();
@@ -151,5 +179,63 @@ public class SparqlResultsGridJsonWriter extends AbstractGridJsonWriter
         catch (IOException e) {
             throw new TupleQueryResultHandlerException(e);
         }
+    }
+
+    //-------------------------------------------------------------------------
+    // QueryResultWriter contract support
+    //-------------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    @Override
+    public TupleQueryResultFormat getQueryResultFormat() {
+        return getTupleQueryResultFormat();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void handleNamespace(String prefix, String uri)
+                                        throws QueryResultHandlerException {
+        this.setPrefix(prefix, uri);
+    }
+
+    @Override
+    public void startDocument() throws QueryResultHandlerException {
+        // NOP. See #startQueryResult(List<String>)
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void handleStylesheet(String stylesheetUrl)
+                                        throws QueryResultHandlerException {
+        // NOP
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void startHeader() throws QueryResultHandlerException {
+        // NOP. See #startQueryResult(List<String>)
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void endHeader() throws QueryResultHandlerException {
+        // NOP. See #startQueryResult(List<String>)
+    }
+
+    @Override
+    public Collection<RioSetting<?>> getSupportedSettings() {
+        Set<RioSetting<?>> settings = new HashSet<RioSetting<?>>();
+        settings.add(JSONP_CALLBACK);
+        return settings;
+    }
+
+    @Override
+    public WriterConfig getWriterConfig() {
+        return this.writerConfig;
+    }
+
+    @Override
+    public void setWriterConfig(WriterConfig config) {
+        this.writerConfig = config;
     }
 }

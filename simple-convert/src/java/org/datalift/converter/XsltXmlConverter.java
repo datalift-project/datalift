@@ -53,6 +53,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamSource;
 
 import org.openrdf.repository.RepositoryConnection;
+import org.openrdf.rio.rdfxml.RDFXMLParser;
 
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.log.Logger;
@@ -65,7 +66,6 @@ import org.datalift.fwk.rdf.BatchStatementAppender;
 import org.datalift.fwk.rdf.RdfFormat;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
-import org.datalift.fwk.rdf.rio.rdfxml.RDFXMLParser;
 import org.datalift.fwk.util.web.UriParam;
 
 import static org.datalift.fwk.MediaTypes.*;

@@ -68,6 +68,7 @@ import org.openrdf.query.GraphQuery;
 import org.openrdf.query.GraphQueryResult;
 import org.openrdf.query.MalformedQueryException;
 import org.openrdf.query.QueryResult;
+import org.openrdf.query.QueryResultHandlerException;
 import org.openrdf.query.TupleQuery;
 import org.openrdf.query.TupleQueryResult;
 import org.openrdf.query.TupleQueryResultHandler;
@@ -78,6 +79,7 @@ import org.openrdf.query.parser.ParsedGraphQuery;
 import org.openrdf.query.parser.ParsedQuery;
 import org.openrdf.query.parser.ParsedTupleQuery;
 import org.openrdf.query.parser.sparql.SPARQLParserFactory;
+import org.openrdf.query.resultio.sparqljson.SPARQLResultsJSONWriter;
 import org.openrdf.query.resultio.sparqlxml.SPARQLResultsXMLWriter;
 import org.openrdf.query.resultio.text.csv.SPARQLResultsCSVWriter;
 import org.openrdf.repository.RepositoryConnection;
@@ -92,6 +94,7 @@ import org.openrdf.rio.trix.TriXWriter;
 import org.openrdf.rio.turtle.TurtleWriter;
 
 import static org.openrdf.query.QueryLanguage.SPARQL;
+import static org.openrdf.query.resultio.BasicQueryWriterSettings.JSONP_CALLBACK;
 
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.rdf.ElementType;
@@ -99,7 +102,6 @@ import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.rdf.json.GridJsonRdfHandler;
 import org.datalift.fwk.rdf.json.JsonRdfHandler;
 import org.datalift.fwk.rdf.json.SparqlResultsGridJsonWriter;
-import org.datalift.fwk.rdf.json.SparqlResultsJsonWriter;
 import org.datalift.fwk.rdf.json.AbstractJsonWriter.ResourceType;
 import org.datalift.fwk.sparql.AccessController;
 import org.datalift.fwk.sparql.AccessController.ControlledQuery;
@@ -709,8 +711,10 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                     {
                         @Override
                         protected TupleQueryResultHandler newHandler(OutputStream out) {
-                            return new SparqlResultsGridJsonWriter(out,
-                                                    linkFormat, jsonCallback);
+                            SparqlResultsGridJsonWriter h =
+                                    new SparqlResultsGridJsonWriter(out, linkFormat);
+                            h.getWriterConfig().set(JSONP_CALLBACK, jsonCallback);
+                            return h;
                         }
                     };
             }
@@ -720,7 +724,9 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                     {
                         @Override
                         protected TupleQueryResultHandler newHandler(OutputStream out) {
-                            return new SparqlResultsJsonWriter(out, jsonCallback);
+                            SPARQLResultsJSONWriter h = new SPARQLResultsJSONWriter(out);
+                            h.getWriterConfig().set(JSONP_CALLBACK, jsonCallback);
+                            return h;
                         }
                     };
             }
@@ -1008,6 +1014,16 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                             // Result in request range. => Process...
                             handler.handleSolution(b);
                         }
+                    }
+                    @Override
+                    public void handleBoolean(boolean value)
+                                    throws QueryResultHandlerException {
+                        handler.handleBoolean(value);
+                    }
+                    @Override
+                    public void handleLinks(List<String> linkUrls)
+                                    throws QueryResultHandlerException {
+                        handler.handleLinks(linkUrls);
                     }
                     @Override
                     public void endQueryResult()
