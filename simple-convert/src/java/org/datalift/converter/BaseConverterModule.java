@@ -44,7 +44,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
+import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
@@ -55,10 +60,13 @@ import org.openrdf.rio.RDFHandler;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.helpers.RDFHandlerWrapper;
 
+import static javax.ws.rs.core.HttpHeaders.ACCEPT;
+
 import static javax.ws.rs.core.Response.Status.*;
 
 import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
+import org.datalift.fwk.ResourceResolver;
 import org.datalift.fwk.i18n.PreferredLocales;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.DuplicateObjectKeyException;
@@ -99,6 +107,9 @@ public abstract class BaseConverterModule
     protected final static String TARGET_SRC_NAME       = "dest_title";
     protected final static String GRAPH_URI_PARAM       = "dest_graph_uri";
     protected final static String BASE_URI_PARAM        = "base_uri";
+    protected final static String TYPE_URI_PARAM        = "dest_type";
+    protected final static String SRC_PATTERN_PARAM     = "src_pattern";
+    protected final static String DST_PATTERN_PARAM     = "dst_pattern";
     protected final static String KEY_COLUMN_PARAM      = "key_column";
     protected final static String OVERWRITE_GRAPH_PARAM = "overwrite";
 
@@ -164,6 +175,39 @@ public abstract class BaseConverterModule
         Collection<SourceType> srcTypes = new HashSet<SourceType>();
         srcTypes.addAll(Arrays.asList(inputSources));
         this.inputSources = Collections.unmodifiableCollection(srcTypes);
+    }
+
+    //-------------------------------------------------------------------------
+    // Web services
+    //-------------------------------------------------------------------------
+
+    /**
+     * <i>[Resource method]</i> Returns a static resource associated to
+     * this module.
+     * @param  path        the path of the requested static resource.
+     * @param  uriInfo     the request URI data.
+     * @param  request     the JAX-RS Request object, for content
+     *                     negotiation.
+     * @param  acceptHdr   the HTTP Accept header, for content
+     *                     negotiation.
+     *
+     * @return a JAX-RS {@link Response} wrapping the input stream
+     *         on the requested resource content.
+     * @throws WebApplicationException if any error occurred while
+     *         accessing the requested resource.
+     */
+    @GET
+    @Path("static/{path: .*$}")
+    public Response getStaticResource(@PathParam("path") String path,
+                                      @Context UriInfo uriInfo,
+                                      @Context Request request,
+                                      @HeaderParam(ACCEPT) String acceptHdr)
+                                                throws WebApplicationException {
+        log.trace("Reading static resource: {}", path);
+        return Configuration.getDefault()
+                            .getBean(ResourceResolver.class)
+                            .resolveModuleResource(this.getName(),
+                                                   uriInfo, request, acceptHdr);
     }
 
     //-------------------------------------------------------------------------
