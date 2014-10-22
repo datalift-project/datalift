@@ -119,12 +119,38 @@ public class XsltXmlConverter extends BaseConverterModule
     // Web services
     //-------------------------------------------------------------------------
 
+    /**
+     * <i>[Resource method]</i> Displays the module welcome page.
+     * @param  projectId   the URI of the data-lifting project.
+     *
+     * @return a JAX-RS response with the page template and parameters.
+     */
     @GET
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
     public Response getIndexPage(@QueryParam(PROJECT_ID_PARAM) URI projectId) {
         return this.newProjectView("xsltXmlMapper.vm", projectId);
     }
 
+    /**
+     * <i>[Resource method]</i> Converts the data of the specified XML
+     * source into RDF triples by applying a predefined XSLT stylesheet,
+     * loads them in the internal store and creates a new associated
+     * RDF source.
+     * @param  projectId          the URI of the data-lifting project.
+     * @param  sourceId           the URI of the source to convert.
+     * @param  destTitle          the name of the RDF source to hold the
+     *                            converted data.
+     * @param  targetGraphParam   the URI of the named graph to hold the
+     *                            converted data, which will also be the
+     *                            URI of the created RDF source.
+     * @param  baseUriParam       the base URI to build the RDF
+     *                            identifiers from the XML data.
+     *
+     * @return a JAX-RS response redirecting the user browser to the
+     *         created RDF source.
+     * @throws WebApplicationException if any error occurred during the
+     *         data conversion from SQL to RDF.
+     */
     @POST
     @Consumes(APPLICATION_FORM_URLENCODED)
     public Response mapXmlData(

@@ -94,12 +94,40 @@ public class RdfTransformer extends BaseConverterModule
     // Web services
     //-------------------------------------------------------------------------
 
+    /**
+     * <i>[Resource method]</i> Displays the module welcome page.
+     * @param  projectId   the URI of the data-lifting project.
+     *
+     * @return a JAX-RS response with the page template and parameters.
+     */
     @GET
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
     public Response getIndexPage(@QueryParam(PROJECT_ID_PARAM) URI projectId) {
         return this.newProjectView("constructQueries.vm", projectId);
     }
 
+    /**
+     * <i>[Resource method]</i> Transforms RDF data from the specified
+     * RDF graph (as a Datalift source object) to an new graph (RDF
+     * source) by applying a set of SPARQL CONSTRUCT queries.
+     * @param  projectId          the URI of the data-lifting project.
+     * @param  sourceId           the URI of the source to convert.
+     * @param  destTitle          the name of the RDF source to hold the
+     *                            transformed data.
+     * @param  targetGraphParam   the URI of the named graph to hold the
+     *                            transformed data, which will also be
+     *                            the URI of the created RDF source.
+     * @param  queries            the SPARQL CONSTRUCT queries to
+     *                            execute for the transformation.
+     * @param  overwrite          whether the target named graph shall
+     *                            be emptied prior executing the
+     *                            transformation.
+     *
+     * @return a JAX-RS response redirecting the user browser to the
+     *         created RDF source.
+     * @throws WebApplicationException if any error occurred during the
+     *         data conversion from CSV to RDF.
+     */
     @POST
     @Consumes(APPLICATION_FORM_URLENCODED)
     public Response convertRdfSource(
@@ -107,7 +135,7 @@ public class RdfTransformer extends BaseConverterModule
                         @FormParam(SOURCE_ID_PARAM)  UriParam sourceId,
                         @FormParam(TARGET_SRC_NAME)  String destTitle,
                         @FormParam(GRAPH_URI_PARAM)  UriParam targetGraphParam,
-                        @FormParam("query[]") List<String> queries,
+                        @FormParam("query[]")        List<String> queries,
                         @FormParam(OVERWRITE_GRAPH_PARAM) boolean overwrite)
                                                 throws WebApplicationException {
         if (projectId == null) {
@@ -134,6 +162,10 @@ public class RdfTransformer extends BaseConverterModule
                 throw new ObjectNotFoundException("project.source.not.found",
                                                   projectId, sourceId);
             }
+            // Check target named graph. It shall NOT conflict with
+            // existing objects (sources, projects) otherwise it would not
+            // be accessible afterwards (e.g. display, removal...).
+            this.checkUriConflict(targetGraph, GRAPH_URI_PARAM);
             // Clean the query list to remove empty entries.
             if (queries != null) {
                 List<String> l = new LinkedList<String>();
@@ -144,10 +176,6 @@ public class RdfTransformer extends BaseConverterModule
                 }
                 queries = l;
             }
-            // Check target named graph. It shall NOT conflict with
-            // existing objects (sources, projects) otherwise it would not
-            // be accessible afterwards (e.g. display, removal...).
-            this.checkUriConflict(targetGraph, GRAPH_URI_PARAM);
             // Check that at least one query is present.
             if ((queries == null) || (queries.size() == 0)) {
                 this.throwInvalidParamError("query", null);

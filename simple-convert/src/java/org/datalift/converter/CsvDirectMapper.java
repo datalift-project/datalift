@@ -212,27 +212,30 @@ public class CsvDirectMapper extends BaseConverterModule
      * <i>[Resource method]</i> Converts the data of the specified CSV
      * source into RDF triples, loads them in the internal store and
      * creates a new associated RDF source.
-     * @param  projectId     the URI of the data-lifting project.
-     * @param  sourceId      the URI of the source to convert.
-     * @param  destTitle     the name of the RDF source to hold the
-     *                       converted data.
-     * @param  targetGraph   the URI of the named graph to hold the
-     *                       converted data, which will also be the URI
-     *                       of the created RDF source.
-     * @param  baseUri       the base URI to build the RDF identifiers
-     *                       from the CSV data.
-     * @param  trueValues    the list of values to be regarded as TRUE
-     *                       for the columns to convert to booleans.
-     * @param  dateFormat    the {@link DateFormat date format} to use
-     *                       when converting cells into dates.
-     * @param  keyColumn     the CSV column to use as identifier when
-     *                       creating RDF object. If not specified, the
-     *                       row number is used as identifier.
-     * @param  targetType    The URI (absolute or relative to the
-     *                       <code>baseUri</code>) of the RDF type to
-     *                       assign to the created RDF objects.
-     * @param  params        The form parameters, to extract the type
-     *                       mapping for each column.
+     * @param  projectId          the URI of the data-lifting project.
+     * @param  sourceId           the URI of the source to convert.
+     * @param  destTitle          the name of the RDF source to hold the
+     *                            converted data.
+     * @param  targetGraphParam   the URI of the named graph to hold the
+     *                            converted data, which will also be the
+     *                            URI of the created RDF source.
+     * @param  baseUri            the base URI to build the RDF
+     *                            identifiers from the CSV data.
+     * @param  trueValues         the list of values to be regarded as
+     *                            boolean TRUE for the columns to
+     *                            convert to booleans.
+     * @param  dateFormat         the {@link DateFormat date format} to
+     *                            use when converting cells into dates.
+     * @param  keyColumn          the CSV column to use as identifier when
+     *                            creating RDF object. If not specified,
+     *                            the row number is used as identifier.
+     * @param  targetType         The URI (absolute or relative to the
+     *                            <code>baseUri</code>) of the RDF type
+     *                            to assign to the created RDF objects.
+     * @param  params             All form parameters, needed to
+     *                            extract the type mapping for each
+     *                            column as this information is
+     *                            dynamically named from the columns.
      *
      * @return a JAX-RS response redirecting the user browser to the
      *         created RDF source.
@@ -250,7 +253,7 @@ public class CsvDirectMapper extends BaseConverterModule
                 @FormParam("true_values") String trueValues,
                 @FormParam(DATE_FORMAT_PARAM) String dateFormat,
                 @FormParam(KEY_COLUMN_PARAM) @DefaultValue("-1") int keyColumn,
-                @FormParam("dest_type") String targetType,
+                @FormParam(TYPE_URI_PARAM) String targetType,
                 MultivaluedMap<String,String> params)
                                                 throws WebApplicationException {
         // Note: There a bug in Jersey that cause the MultivalueMap to be
@@ -265,9 +268,6 @@ public class CsvDirectMapper extends BaseConverterModule
         }
         if (targetGraphParam == null) {
             this.throwInvalidParamError(GRAPH_URI_PARAM, null);
-        }
-        if (baseUriParam == null) {
-            this.throwInvalidParamError(BASE_URI_PARAM, null);
         }
         Response response = null;
 
@@ -928,7 +928,7 @@ public class CsvDirectMapper extends BaseConverterModule
             this.value      = value;
             this.type       = type;
         }
-   
+
         @Override
         public String toString() {
             return "[row \"" + this.rowId + "\", column \"" + this.columnName
