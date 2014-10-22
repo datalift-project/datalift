@@ -130,6 +130,12 @@ public class SqlDirectMapper extends BaseConverterModule
     // Web services
     //-------------------------------------------------------------------------
 
+    /**
+     * <i>[Resource method]</i> Displays the module welcome page.
+     * @param  projectId   the URI of the data-lifting project.
+     *
+     * @return a JAX-RS response with the page template and parameters.
+     */
     @GET
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
     public Response getIndexPage(@QueryParam(PROJECT_ID_PARAM) URI projectId) {
@@ -187,6 +193,31 @@ public class SqlDirectMapper extends BaseConverterModule
         return response.build();
     }
 
+    /**
+     * <i>[Resource method]</i> Converts the data of the specified SQL
+     * source into RDF triples, loads them in the internal store and
+     * creates a new associated RDF source.
+     * @param  projectId          the URI of the data-lifting project.
+     * @param  sourceId           the URI of the source to convert.
+     * @param  destTitle          the name of the RDF source to hold the
+     *                            converted data.
+     * @param  targetGraphParam   the URI of the named graph to hold the
+     *                            converted data, which will also be the
+     *                            URI of the created RDF source.
+     * @param  baseUriParam       the base URI to build the RDF
+     *                            identifiers from the SQL data.
+     * @param  keyColumn          the SQL column to use as identifier when
+     *                            creating RDF object. If not specified,
+     *                            the row number is used as identifier.
+     * @param  targetType         The URI (absolute or relative to the
+     *                            <code>baseUri</code>) of the RDF type
+     *                            to assign to the created RDF objects.
+     *
+     * @return a JAX-RS response redirecting the user browser to the
+     *         created RDF source.
+     * @throws WebApplicationException if any error occurred during the
+     *         data conversion from SQL to RDF.
+     */
     @POST
     @Consumes(APPLICATION_FORM_URLENCODED)
     public Response mapSqlData(
@@ -194,7 +225,9 @@ public class SqlDirectMapper extends BaseConverterModule
                         @FormParam(SOURCE_ID_PARAM)  UriParam sourceId,
                         @FormParam(TARGET_SRC_NAME)  String destTitle,
                         @FormParam(GRAPH_URI_PARAM)  UriParam targetGraphParam,
-                        @FormParam(KEY_COLUMN_PARAM) String keyColumn)
+                        @FormParam(BASE_URI_PARAM)   UriParam baseUriParam,
+                        @FormParam(KEY_COLUMN_PARAM) String keyColumn,
+                        @FormParam(TYPE_URI_PARAM)   String targetType)
                                                 throws WebApplicationException {
         if (projectId == null) {
             this.throwInvalidParamError(PROJECT_ID_PARAM, null);
@@ -216,17 +249,19 @@ public class SqlDirectMapper extends BaseConverterModule
                 throw new ObjectNotFoundException("project.source.not.found",
                                                   projectId, sourceId);
             }
+            URI baseUri = UriParam.valueOf(baseUriParam, BASE_URI_PARAM);
             // Extract target named graph. It shall NOT conflict with
             // existing objects (sources, projects) otherwise it would not
             // be accessible afterwards (e.g. display, removal...).
             URI targetGraph = targetGraphParam.toUri(GRAPH_URI_PARAM);
             this.checkUriConflict(targetGraph, GRAPH_URI_PARAM);
-            // Convert CSV data and load generated RDF triples.
+            // Convert SQL data and load generated RDF triples.
             Repository internal = Configuration.getDefault()
                                                .getInternalRepository();
             log.debug("Mapping SQL data from \"{}\" into graph \"{}\"",
                                                         sourceId, targetGraph);
-            this.convert(in, keyColumn, internal, targetGraph);
+            this.convert(in, keyColumn, internal, targetGraph,
+                                                  baseUri, targetType);
             // Register new transformed RDF source.
             Source out = this.addResultSource(p, in, destTitle, targetGraph);
             // Display project source tab, including the newly created source.
@@ -246,7 +281,8 @@ public class SqlDirectMapper extends BaseConverterModule
     //-------------------------------------------------------------------------
 
     private void convert(SqlQuerySource src, String keyColumn,
-                                        Repository target, URI targetGraph) {
+                                        Repository target, URI targetGraph,
+                                        URI baseUri, String targetType) {
         if (isBlank(keyColumn)) {
             keyColumn = null;
         }
@@ -265,12 +301,27 @@ public class SqlDirectMapper extends BaseConverterModule
                 ctx = valueFactory.createURI(targetGraph.toString());
                 cnx.clear(ctx);
             }
-            String baseUri = RdfUtils.getBaseUri(
-                    (targetGraph != null)? targetGraph.toString(): null, '/');
+            // Create URIs for objects and predicates.
+            if (baseUri == null) {
+                baseUri = targetGraph;
+            }
+            String objUri  = RdfUtils.getBaseUri(
+                            (baseUri != null)? baseUri.toString(): null, '/');
             String typeUri = RdfUtils.getBaseUri(
-                    (targetGraph != null)? targetGraph.toString(): null, '#');
-            org.openrdf.model.URI rdfType = valueFactory.createURI(typeUri,
-                                    uriBuilder.urlify(src.getTitle(), RdfType));
+                            (baseUri != null)? baseUri.toString(): null, '#');
+            // Create target RDF type.
+            if (! isSet(targetType)) {
+                targetType = uriBuilder.urlify(src.getTitle(), RdfType);
+            }
+            org.openrdf.model.URI rdfType = null;
+            try {
+                // Assume target type is an absolute URI.
+                rdfType = valueFactory.createURI(targetType);
+            }
+            catch (Exception e) {
+                // Oops, targetType is a relative URI. => Append namespace URI.
+                rdfType = valueFactory.createURI(typeUri, targetType);
+            }
             // Build predicates URIs.
             int max = src.getColumnNames().size();
             org.openrdf.model.URI[] predicates = new org.openrdf.model.URI[max];
@@ -291,7 +342,7 @@ public class SqlDirectMapper extends BaseConverterModule
                 String key = (keyColumn != null)? row.getString(keyColumn):
                                                   String.valueOf(i);
                 org.openrdf.model.URI subject =
-                                valueFactory.createURI(baseUri + key); // + "#_";
+                                valueFactory.createURI(objUri + key); // + "#_";
                 log.trace("Mapping {} to <{}>", key, subject);
                 boolean firstStatement = false;
                 for (int j=0; j<max; j++) {
