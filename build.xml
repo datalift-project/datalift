@@ -39,7 +39,7 @@
             value="framework,core,sparql-endpoint,flint-endpoint,s4ac,projectmanager,simple-convert,database-directmapper,geomrdf,lov/api,lov/catalogue,data2ontology,virtuoso-connector,allegrograph-connector,stringtouri,silk-interlinker"/>
 
   <property name="app.name"             value="${ant.project.name}"/>
-  <property name="app.version"          value="0.8.0"/>
+  <property name="app.version"          value="0.8.1"/>
 
   <property name="dist.home"            location="${basedir}/core/dist"/>
   <property name="docs.dir"             location="${dist.home}/docs"/>
