@@ -13,12 +13,14 @@ import java.util.List;
 import javax.persistence.Entity;
 
 import org.datalift.core.TechnicalException;
+import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.Row;
 import org.datalift.fwk.project.SqlDatabaseSource;
 import org.datalift.fwk.project.SqlQuerySource;
-import org.datalift.fwk.project.SqlSource;
 import org.datalift.fwk.util.CloseableIterator;
+
+import static org.datalift.fwk.util.StringUtils.isSet;
 
 import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.RdfsClass;
@@ -38,6 +40,11 @@ public class SqlDatabaseSourceImpl extends BaseSource implements SqlDatabaseSour
     /** The scheme for JDBC URLs. */
     public final static String JDBC_URL_SCHEME  = "jdbc:";
 	
+    private final static String COL_TABLE_NAME = "TABLE_NAME";
+    private final static String COL_TABLE_COLUMN = "COLUMN_NAME";
+
+    private final static Logger log = Logger.getLogger();
+
     //-------------------------------------------------------------------------
     // Instance members
     //-------------------------------------------------------------------------
@@ -46,9 +53,9 @@ public class SqlDatabaseSourceImpl extends BaseSource implements SqlDatabaseSour
     private String user;
     @RdfProperty("datalift:password")
     private String password;
-	private final static String COL_TABLE_NAME = "TABLE_NAME";
-	private final static String COL_TABLE_COLUMN = "COLUMN_NAME";
+
     private List<String> tableList;
+
     //-------------------------------------------------------------------------
     // Constructors
     //-------------------------------------------------------------------------
@@ -148,24 +155,29 @@ public class SqlDatabaseSourceImpl extends BaseSource implements SqlDatabaseSour
     }
     
     private void initJdbcDriver(){
-    	String jdbcDriver = SqlSource.DatabaseType.mysql.getDriver();
-		try {
-			Class.forName(jdbcDriver);
-		} catch (ClassNotFoundException e) {
-			throw new TechnicalException("jdbc.driver.not.found", e);
-		}
+        try {
+            // Force loading of database driver.
+            String databaseType = this.getDatabaseType();
+            Class.forName(DatabaseType.valueOf(databaseType).getDriver());
+            log.debug("Database driver loaded for {}", databaseType);
+        } catch (Exception e) {
+            throw new TechnicalException("jdbc.driver.not.found", e);
+        }
     }
     
     /** {@inheritDoc} */
 	@Override
 	public List<String> getTableNames() throws SQLException{
-		if(tableList == null){
+		if(tableList == null) {
 			initJdbcDriver();
-//	    	try{
+//			try {
+				String dbType = this.getDatabaseType();
+				String query = (DatabaseType.postgresql.name().equals(dbType))?
+				                "SELECT * FROM pg_catalog.pg_tables;": "SHOW TABLES;";
 				Connection sqlCon=DriverManager.getConnection(this.getConnectionUrl(),this.getUser(), 
 						this.getPassword());
 				Statement stmt=sqlCon.createStatement();
-				ResultSet tableStmt=stmt.executeQuery("SHOW TABLES;");
+				ResultSet tableStmt=stmt.executeQuery(query);
 				tableList = new ArrayList<String>();
 				while(tableStmt.next()){
 					tableList.add(tableStmt.getString(1));
@@ -246,6 +258,23 @@ public class SqlDatabaseSourceImpl extends BaseSource implements SqlDatabaseSour
 		}
 		
 	}
+
+	/** {@inheritDoc} */
+	@Override
+	public String getDatabaseType() {
+	    return getDatabaseType(this.getConnectionUrl());
+	}
+
+    private static String getDatabaseType(String connectionUrl) {
+        if ((isSet(connectionUrl)) &&
+            (connectionUrl.startsWith(JDBC_URL_SCHEME))) {
+            String[] urlElts = connectionUrl.split(":");
+            if ((urlElts.length > 1) && (urlElts[1] != null)) {
+                return urlElts[1];
+            }
+        }
+        throw new TechnicalException("invalid.jdbc.url", connectionUrl);
+    }
 }
 	
 

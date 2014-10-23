@@ -65,6 +65,7 @@ import org.datalift.fwk.project.SqlQuerySource;
 import org.datalift.fwk.util.CloseableIterator;
 import org.datalift.fwk.util.io.FileUtils;
 
+import static org.datalift.fwk.util.StringUtils.isSet;
 import static org.datalift.fwk.util.web.Charsets.UTF_8;
 
 
@@ -144,7 +145,7 @@ public class SqlQuerySourceImpl extends CachingSourceImpl implements SqlQuerySou
     @Override
     public void setConnectionUrl(String connectionUrl) {
         // Check URL.
-        this.getDatabaseType(connectionUrl);
+        getDatabaseType(connectionUrl);
         // Store URL.
         this.setSourceUrl(connectionUrl);
         // Invalidate cache to force data reload.
@@ -223,6 +224,12 @@ public class SqlQuerySourceImpl extends CachingSourceImpl implements SqlQuerySou
         return i;
     }
 
+    /** {@inheritDoc} */
+    @Override
+    public String getDatabaseType() {
+        return getDatabaseType(this.getConnectionUrl());
+    }
+
     //-------------------------------------------------------------------------
     // CachingSourceImpl contract support
     //-------------------------------------------------------------------------
@@ -243,7 +250,7 @@ public class SqlQuerySourceImpl extends CachingSourceImpl implements SqlQuerySou
         try {
             // Force loading of database driver.
             String cnxUrl = this.getConnectionUrl();
-            databaseType = this.getDatabaseType(cnxUrl);
+            databaseType = this.getDatabaseType();
             Class.forName(DatabaseType.valueOf(databaseType).getDriver());
             log.debug("Database driver loaded for {}", databaseType);
             // Execute SQL query to retrieve data.
@@ -290,6 +297,10 @@ public class SqlQuerySourceImpl extends CachingSourceImpl implements SqlQuerySou
         return super.toString(b);
     }
 
+    //-------------------------------------------------------------------------
+    // Specific implementation
+    //-------------------------------------------------------------------------
+
     protected final void closeQuietly(ResultSet rs) {
         if (rs != null) {
             try {
@@ -298,10 +309,6 @@ public class SqlQuerySourceImpl extends CachingSourceImpl implements SqlQuerySou
             catch (Exception e) { /* Ignore... */ }
         }
     }
-
-    //-------------------------------------------------------------------------
-    // Specific implementation
-    //-------------------------------------------------------------------------
 
     /**
      * Ensures resources are released even when object gets
@@ -354,8 +361,9 @@ public class SqlQuerySourceImpl extends CachingSourceImpl implements SqlQuerySou
         // Else: Already initialized.
     }
 
-    private String getDatabaseType(String connectionUrl) {
-        if (connectionUrl.startsWith(JDBC_URL_SCHEME)) {
+    private static String getDatabaseType(String connectionUrl) {
+        if ((isSet(connectionUrl)) &&
+            (connectionUrl.startsWith(JDBC_URL_SCHEME))) {
             String[] urlElts = connectionUrl.split(":");
             if ((urlElts.length > 1) && (urlElts[1] != null)) {
                 return urlElts[1];
