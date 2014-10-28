@@ -145,16 +145,25 @@ public class SqlDirectMapper extends BaseConverterModule
     @GET
     @Path("columns")
     @Produces(APPLICATION_JSON)
-    public Response getColumnNames(@QueryParam(PROJECT_ID_PARAM) URI projectId,
-                                   @QueryParam(SOURCE_ID_PARAM)  URI sourceId,
-                                   @Context Request request)
+    public Response getColumnNames(
+                            @QueryParam(PROJECT_ID_PARAM) UriParam projectId,
+                            @QueryParam(SOURCE_ID_PARAM)  UriParam sourceId,
+                            @Context Request request)
                                                 throws WebApplicationException {
+        if (! UriParam.isSet(projectId)) {
+            this.throwInvalidParamError(PROJECT_ID_PARAM, null);
+        }
+        if (! UriParam.isSet(sourceId)) {
+            this.throwInvalidParamError(SOURCE_ID_PARAM, null);
+        }
         ResponseBuilder response = null;
+
         try {
             // Retrieve project.
-            Project p = this.getProject(projectId);
+            Project p = this.getProject(projectId.toUri(PROJECT_ID_PARAM));
             // Load input source.
-            SqlQuerySource in = (SqlQuerySource)p.getSource(sourceId);
+            SqlQuerySource in = (SqlQuerySource)
+                            (p.getSource(sourceId.toUri(SOURCE_ID_PARAM)));
             if (in == null) {
                 throw new ObjectNotFoundException("project.source.not.found",
                                                   projectId, sourceId);
@@ -229,16 +238,17 @@ public class SqlDirectMapper extends BaseConverterModule
                         @FormParam(KEY_COLUMN_PARAM) String keyColumn,
                         @FormParam(TYPE_URI_PARAM)   String targetType)
                                                 throws WebApplicationException {
-        if (projectId == null) {
+        if (! UriParam.isSet(projectId)) {
             this.throwInvalidParamError(PROJECT_ID_PARAM, null);
         }
-        if (sourceId == null) {
+        if (! UriParam.isSet(sourceId)) {
             this.throwInvalidParamError(SOURCE_ID_PARAM, null);
         }
-        if (targetGraphParam == null) {
+        if (! UriParam.isSet(targetGraphParam)) {
             this.throwInvalidParamError(GRAPH_URI_PARAM, null);
         }
         Response response = null;
+
         try {
             // Retrieve project.
             Project p = this.getProject(projectId.toUri(PROJECT_ID_PARAM));

@@ -160,16 +160,16 @@ public class XsltXmlConverter extends BaseConverterModule
                         @FormParam(GRAPH_URI_PARAM)  UriParam targetGraphParam,
                         @FormParam(BASE_URI_PARAM)   UriParam baseUriParam)
                                                 throws WebApplicationException {
-        if (projectId == null) {
+        if (! UriParam.isSet(projectId)) {
             this.throwInvalidParamError(PROJECT_ID_PARAM, null);
         }
-        if (sourceId == null) {
+        if (! UriParam.isSet(sourceId)) {
             this.throwInvalidParamError(SOURCE_ID_PARAM, null);
         }
-        if (targetGraphParam == null) {
+        if (! UriParam.isSet(targetGraphParam)) {
             this.throwInvalidParamError(GRAPH_URI_PARAM, null);
         }
-        if (baseUriParam == null) {
+        if (! UriParam.isSet(baseUriParam)) {
             this.throwInvalidParamError(BASE_URI_PARAM, null);
         }
         Response response = null;

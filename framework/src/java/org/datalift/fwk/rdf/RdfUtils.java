@@ -1048,7 +1048,7 @@ public final class RdfUtils
         else if (o instanceof URL) {
             v = valueFactory.createURI(o.toString());
         }
-        else {
+        else if (o != null) {
             throw new UnsupportedOperationException(o.getClass().getName());
         }
         return v;

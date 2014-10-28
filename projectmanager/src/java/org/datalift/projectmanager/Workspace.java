@@ -783,7 +783,7 @@ public class Workspace extends BaseModule
     public Response modifyCsvSource(
                     @PathParam("id") String projectId,
                     @FormDataParam("current_source") URI sourceUri,
-					@FormDataParam("description") String description,
+                    @FormDataParam("description") String description,
                     @FormDataParam("charset") String charset,
                     @FormDataParam("separator") String separator,
                     @FormDataParam("title_row") @DefaultValue("0") int titleRow,
@@ -818,7 +818,7 @@ public class Workspace extends BaseModule
             s.setFirstDataRow(firstRow);
             s.setLastDataRow(lastRow);
             s.setSeparator(separator);
-			if (isSet(quote)) {
+            if (isSet(quote)) {
                 s.setQuote(quote);
             }
             // Save updated source.
@@ -1029,19 +1029,22 @@ public class Workspace extends BaseModule
             // Retrieve project.
             Project p = this.loadProject(projectUri);
             // Initialize new source.
-            if(isBlank(sqlQuery)){
-            	SqlDatabaseSource src = this.projectManager.newSqlDatabaseSource(p, sourceUri, title,
-            			description, cnxUrl, user, password);
-            	src.getTableNames();
-            }else{
-            	SqlQuerySource src = this.projectManager.newSqlQuerySource(p,
+            if (isBlank(sqlQuery)) {
+                SqlDatabaseSource src =
+                        this.projectManager.newSqlDatabaseSource(p,
+                                                sourceUri, title, description,
+                                                cnxUrl, user, password);
+                src.getTableNames();
+            }
+            else {
+                SqlQuerySource src = this.projectManager.newSqlQuerySource(p,
                         sourceUri, title, description,
                         cnxUrl, user, password,
                         sqlQuery, cacheDuration);
-            	// Start iterating on source content to validate database
-            	// connection parameters and query.
-            	CloseableIterator<?> i = src.iterator();
-            	i.close();
+                // Start iterating on source content to validate database
+                // connection parameters and query.
+                CloseableIterator<?> i = src.iterator();
+                i.close();
             }
             // Persist new source.
             this.projectManager.saveProject(p);
@@ -1091,9 +1094,10 @@ public class Workspace extends BaseModule
                 s.setUser(user);
                 s.setPassword(password);
             }
-            if(s instanceof SqlQuerySource){
-            	SqlQuerySource querySource = (SqlQuerySource)s;
-            	if ((querySource.getQuery() == null) || (! querySource.getQuery().equals(sqlQuery))) {
+            if (s instanceof SqlQuerySource) {
+                SqlQuerySource querySource = (SqlQuerySource)s;
+                if ((querySource.getQuery() == null) ||
+                    (! querySource.getQuery().equals(sqlQuery))) {
                     querySource.setQuery(sqlQuery);
                 }
                 if (s instanceof CachingSource) {
@@ -1239,7 +1243,7 @@ public class Workspace extends BaseModule
     @Consumes(MULTIPART_FORM_DATA)
     public Response uploadXmlSource(
                             @PathParam("id") String projectId,
-                            @FormDataParam("file_name") String srcName, 
+                            @FormDataParam("file_name") String srcName,
                             @FormDataParam("description") String description,
                             @FormDataParam("source") InputStream fileData,
                             @FormDataParam("source")
@@ -1351,7 +1355,7 @@ public class Workspace extends BaseModule
     public Response modifyXmlSource(
                             @PathParam("id") String projectId,
                             @FormDataParam("current_source") URI sourceUri,
-							@FormDataParam("description") String description,
+                            @FormDataParam("description") String description,
                             @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
         Response response = null;
@@ -1497,7 +1501,7 @@ public class Workspace extends BaseModule
         }
         return response;
     }
-  
+
     @POST
     @Path("{id}/gmlupload")
     @Consumes(MULTIPART_FORM_DATA)
@@ -1704,7 +1708,7 @@ public class Workspace extends BaseModule
                     template = "RdfSourceGrid.vm";
                 }
                 else if(src instanceof SqlDatabaseSource){
-                	template = "DatabaseSourceGrid.vm";
+                    template = "DatabaseSourceGrid.vm";
                 }
                 else {
                     throw new TechnicalException("unknown.source.type",
@@ -1718,8 +1722,7 @@ public class Workspace extends BaseModule
         }
         return response.build();
     }
- 
-    
+
     @GET
     @Path("{id}/source/{srcid}/{prop}")
     @Produces({ APPLICATION_JSON_UTF8 })
@@ -1740,51 +1743,54 @@ public class Workspace extends BaseModule
                 this.sendError(NOT_FOUND, null);
             }
             else {
-            	Object value = null;
+                Object value = null;
                 boolean resolved = false;
-	            BeanInfo bean = Introspector.getBeanInfo(src.getClass());
-	            for (PropertyDescriptor desc : bean.getPropertyDescriptors()) {
-	            	if (prop.equalsIgnoreCase(desc.getName())) {
-	            		resolved = true;
-	                    value = desc.getReadMethod().invoke(src);
-	                    break;
-	                }
-	            }
-	            if(!resolved && src instanceof SqlDatabaseSource){
-	            	//if the source is a database then a table content is required:
-	            	SqlDatabaseSource dbSource  = (SqlDatabaseSource) src;
-	            	if(dbSource.getTableNames().contains(prop)){
-	            		CloseableIterator<Row<Object>> tableIterator = dbSource.getTableIterator(prop); 
-	            		JsonArray rowList = new JsonArray();
-	            		int i = 0;
-	            		int maxRows = endOffset - startOffset;
-	            		while(tableIterator.hasNext()){
-	           				Row<Object> row = tableIterator.next();
-	              			JsonObject mapRow = new JsonObject();
-	           				for(String key: row.keys()){
-	            				mapRow.addProperty(key, row.getString(key));
-	           				}
-	           				rowList.add(mapRow);
-	           				i++;
-	           				if(maxRows>0 && i>maxRows){
-	           					break;
-	           				}
-	           			}
-	           			resolved = true;
-	           			value = rowList;
-	           		}else{
-	           			this.sendError(NOT_FOUND, "Table not found");
-	           		}
-	            }
+                BeanInfo bean = Introspector.getBeanInfo(src.getClass());
+                for (PropertyDescriptor desc : bean.getPropertyDescriptors()) {
+                    if (prop.equalsIgnoreCase(desc.getName())) {
+                        resolved = true;
+                        value = desc.getReadMethod().invoke(src);
+                        break;
+                    }
+                }
+                if (!resolved && src instanceof SqlDatabaseSource) {
+                    // If the source is a database then a table content is required.
+                    SqlDatabaseSource dbSource  = (SqlDatabaseSource) src;
+                    if (dbSource.getTableNames().contains(prop)) {
+                        CloseableIterator<Row<Object>> tableIterator =
+                                                dbSource.getTableIterator(prop);
+                        JsonArray rowList = new JsonArray();
+                        int i = 0;
+                        int maxRows = endOffset - startOffset;
+                        while (tableIterator.hasNext()) {
+                            Row<Object> row = tableIterator.next();
+                            JsonObject mapRow = new JsonObject();
+                            for (String key: row.keys()) {
+                                mapRow.addProperty(key, row.getString(key));
+                            }
+                            rowList.add(mapRow);
+                            i++;
+                            if ((maxRows > 0) && (i > maxRows)) {
+                                break;
+                            }
+                        }
+                        resolved = true;
+                        value = rowList;
+                    }
+                    else {
+                        this.sendError(NOT_FOUND, "Table not found");
+                    }
+                }
                 if (resolved) {
                     ResponseBuilder b = Response.ok();
                     if (value != null) {
-                    	if(value instanceof JsonArray){
-                    		b.entity(value.toString());
-                    	}else{
-	                        b.entity(new Gson().toJson(value));
-                    	}
-                    	b.type(APPLICATION_JSON_UTF8);
+                        if (value instanceof JsonArray) {
+                            b.entity(value.toString());
+                        }
+                        else {
+                            b.entity(new Gson().toJson(value));
+                        }
+                        b.type(APPLICATION_JSON_UTF8);
                     }
                     response = b.build();
                 }
@@ -1798,9 +1804,6 @@ public class Workspace extends BaseModule
         return response;
     }
 
-    
-    
-    
     @GET
     @Path("{id}/source/delete")
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
@@ -1887,7 +1890,7 @@ public class Workspace extends BaseModule
         try {
             URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
             Project p = this.loadProject(projectUri);
-            
+
             TemplateModel view = this.newView("projectOntoUpload.vm", p);
             boolean cataloguePresent = false;
 
@@ -2066,7 +2069,7 @@ public class Workspace extends BaseModule
 
     private ResponseBuilder displayIndexPage(ResponseBuilder response,
                                              Project p) {
-    	// Populate view with project list.
+        // Populate view with project list.
         Collection<Project> projects = this.projectManager.listProjects();
         TemplateModel view = this.newView("workspace.vm", projects);
         // If no project is selected but only one is available, select it.

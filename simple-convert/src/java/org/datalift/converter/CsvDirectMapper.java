@@ -260,13 +260,13 @@ public class CsvDirectMapper extends BaseConverterModule
         //       empty unless at least one @FormParm annotation is present.
         // See: http://jersey.576304.n2.nabble.com/POST-parameters-not-injected-via-MultivaluedMap-td6434341.html
 
-        if (projectId == null) {
+        if (! UriParam.isSet(projectId)) {
             this.throwInvalidParamError(PROJECT_ID_PARAM, null);
         }
-        if (sourceId == null) {
+        if (! UriParam.isSet(sourceId)) {
             this.throwInvalidParamError(SOURCE_ID_PARAM, null);
         }
-        if (targetGraphParam == null) {
+        if (! UriParam.isSet(targetGraphParam)) {
             this.throwInvalidParamError(GRAPH_URI_PARAM, null);
         }
         Response response = null;

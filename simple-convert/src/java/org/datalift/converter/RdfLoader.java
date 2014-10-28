@@ -149,13 +149,13 @@ public class RdfLoader extends BaseConverterModule
                         @FormParam(SRC_PATTERN_PARAM) String uriPattern,
                         @FormParam(DST_PATTERN_PARAM) String uriReplacement)
                                                 throws WebApplicationException {
-        if (projectId == null) {
+        if (! UriParam.isSet(projectId)) {
             this.throwInvalidParamError(PROJECT_ID_PARAM, null);
         }
-        if (sourceId == null) {
+        if (! UriParam.isSet(sourceId)) {
             this.throwInvalidParamError(SOURCE_ID_PARAM, null);
         }
-        if (targetGraphParam == null) {
+        if (! UriParam.isSet(targetGraphParam)) {
             this.throwInvalidParamError(GRAPH_URI_PARAM, null);
         }
         Response response = null;

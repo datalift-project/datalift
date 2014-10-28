@@ -336,6 +336,9 @@ public abstract class BaseConverterModule
      */
     protected void checkUriConflict(URI targetUri, String parameterName)
                                                 throws WebApplicationException {
+        if (targetUri == null) {
+            this.throwInvalidParamError(parameterName, null);
+        }
         boolean found = false;
         try {
             Repository r = Configuration.getDefault().getInternalRepository();

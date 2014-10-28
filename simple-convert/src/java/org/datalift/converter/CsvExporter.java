@@ -81,6 +81,7 @@ import org.datalift.fwk.rdf.RdfException;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.util.Env;
 import org.datalift.fwk.util.web.Charsets;
+import org.datalift.fwk.util.web.UriParam;
 import org.datalift.fwk.view.TemplateModel;
 
 import static org.datalift.fwk.MediaTypes.*;
@@ -154,11 +155,17 @@ public class CsvExporter extends BaseConverterModule
     @POST
     @Consumes(APPLICATION_FORM_URLENCODED)
     public Response exportSourceAsCsv(
-                            @FormParam(PROJECT_ID_PARAM) URI projectId,
-                            @FormParam(SOURCE_ID_PARAM)  URI sourceId,
+                            @FormParam(PROJECT_ID_PARAM) UriParam projectId,
+                            @FormParam(SOURCE_ID_PARAM)  UriParam sourceId,
                             @FormParam(CHARSET_PARAM)    String charset,
                             @FormParam(SEPARATOR_PARAM)  String separator)
                                                 throws WebApplicationException {
+        if (! UriParam.isSet(projectId)) {
+            this.throwInvalidParamError(PROJECT_ID_PARAM, null);
+        }
+        if (! UriParam.isSet(sourceId)) {
+            this.throwInvalidParamError(SOURCE_ID_PARAM, null);
+        }
         Response response = null;
 
         Repository internal = Configuration.getDefault()
@@ -180,9 +187,9 @@ public class CsvExporter extends BaseConverterModule
                 this.throwInvalidParamError(SEPARATOR_PARAM, separator);
             }
             // Retrieve source.
-            Project p = this.getProject(projectId);
+            Project p = this.getProject(projectId.toUri(PROJECT_ID_PARAM));
             TransformedRdfSource s = (TransformedRdfSource)
-                                                        (p.getSource(sourceId));
+                            (p.getSource(sourceId.toUri(SOURCE_ID_PARAM)));
             if (s == null) {
                 throw new ObjectNotFoundException("project.source.not.found",
                                                   projectId, sourceId);

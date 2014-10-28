@@ -62,6 +62,7 @@ import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.sparql.AccessController;
+import org.datalift.fwk.util.web.UriParam;
 
 import static org.datalift.fwk.MediaTypes.*;
 
@@ -104,28 +105,36 @@ public class SimplePublisher extends BaseConverterModule
     @POST
     @Consumes(APPLICATION_FORM_URLENCODED)
     public Response publishRdfSource(
-                        @FormParam(PROJECT_ID_PARAM) URI projectId,
-                        @FormParam(SOURCE_ID_PARAM)  URI sourceId,
-                        @FormParam(GRAPH_URI_PARAM)  URI targetGraph,
+                        @FormParam(PROJECT_ID_PARAM) UriParam projectId,
+                        @FormParam(SOURCE_ID_PARAM)  UriParam sourceId,
+                        @FormParam(GRAPH_URI_PARAM)  UriParam targetGraphParam,
                         @FormParam(OVERWRITE_GRAPH_PARAM) boolean overwrite,
                         @Context UriInfo uriInfo,
                         @Context Request request,
                         @HeaderParam(ACCEPT) String acceptHdr)
                                                 throws WebApplicationException {
+        if (! UriParam.isSet(projectId)) {
+            this.throwInvalidParamError(PROJECT_ID_PARAM, null);
+        }
+        if (! UriParam.isSet(sourceId)) {
+            this.throwInvalidParamError(SOURCE_ID_PARAM, null);
+        }
         Response response = null;
+
         try {
             // Retrieve project.
-            Project p = this.getProject(projectId);
+            Project p = this.getProject(projectId.toUri(PROJECT_ID_PARAM));
             // Load input source.
-            TransformedRdfSource in =
-                                (TransformedRdfSource)(p.getSource(sourceId));
+            TransformedRdfSource in = (TransformedRdfSource)
+                            (p.getSource(sourceId.toUri(SOURCE_ID_PARAM)));
             if (in == null) {
                 throw new ObjectNotFoundException("project.source.not.found",
                                                   projectId, sourceId);
             }
+            URI targetGraph = targetGraphParam.toUri(GRAPH_URI_PARAM);
             if (targetGraph == null) {
-                // Get the source (CSV, RDF/XML, database...) at the origin of the
-                // transformations and use its name as target named graph.
+                // Get the source (CSV, RDF/XML, database...) at the origin of
+                // the transformations and use its name as target named graph.
                 Source origin = null;
                 TransformedRdfSource current = in;
                 while (current != null) {
@@ -134,7 +143,7 @@ public class SimplePublisher extends BaseConverterModule
                                                 (TransformedRdfSource)origin: null;
                 }
                 targetGraph = (origin != null)? new URI(origin.getUri()):
-                                                projectId;
+                                                projectId.toUri();
             }
             Configuration cfg = Configuration.getDefault();
             Repository pub    = cfg.getDataRepository();

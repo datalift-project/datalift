@@ -54,7 +54,15 @@ import static org.datalift.fwk.util.StringUtils.*;
  */
 public class UriParam
 {
+    //-------------------------------------------------------------------------
+    // Instance members
+    //-------------------------------------------------------------------------
+
     private final String v;
+
+    //-------------------------------------------------------------------------
+    // Constructors
+    //-------------------------------------------------------------------------
 
     /**
      * Creates a new UriParam wrapping the specified URI value.
@@ -62,7 +70,7 @@ public class UriParam
      */
     public UriParam(String v) {
         super();
-        // Ensure all escape sequences are properly decoded back to Unicode.
+//        // Ensure all escape sequences are properly decoded back to Unicode.
 //        if ((v != null) && (v.indexOf('%') != -1)) {
 //            try {
 //                v = URLDecoder.decode(v, Charsets.UTF8_CHARSET);
@@ -73,6 +81,10 @@ public class UriParam
 //        }
         this.v = v;
     }
+
+    //-------------------------------------------------------------------------
+    // UriParam contract definition
+    //-------------------------------------------------------------------------
 
     /**
      * Parses the wrapped URI value into a URI object.
@@ -161,5 +173,19 @@ public class UriParam
      */
     public static URI valueOf(UriParam p, String parameterName) {
         return (p != null)? p.toUri(parameterName): null;
+    }
+
+    /**
+     * Checks if a URI parameter is neither <code>null</code> nor
+     * contains a <code>null</code> or empty value. The value only
+     * made of space characters is deemed empty.
+     * @param  u   the URI parameter to check, may be <code>null</code>.
+     *
+     * @return <code>true</code> if the URI parameter is neither
+     *         <code>null</code> nor contains a <code>null</code> or
+     *         empty value.
+     */
+    public static boolean isSet(UriParam u) {
+        return ((u != null) && (trimToNull(u.v) != null));
     }
 }
