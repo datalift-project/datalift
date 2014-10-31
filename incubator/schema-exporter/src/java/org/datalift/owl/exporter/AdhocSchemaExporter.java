@@ -110,8 +110,21 @@ public class AdhocSchemaExporter extends BaseModule
             r = (isSet(SecurityContext.getUserPrincipal()))?
                         cfg.getInternalRepository() : cfg.getDataRepository();
         }
+        // Validate target graph URI.
+        try {
+            java.net.URI ngUri = java.net.URI.create(namedGraph);
+            if (! ngUri.isAbsolute()) {
+                throw new RuntimeException(
+                                "Not an absolute URI: \"" + namedGraph + '"');
+            }
+        }
+        catch (Exception e) {
+            this.sendError(BAD_REQUEST, "Invalid graph URI: \"" + namedGraph +
+                                        "\" (" + e.getMessage() + ')');
+        }
+        // Check target graph exists in triple store.
         if (! r.ask("ASK { GRAPH <" + namedGraph + "> { ?s ?p ?o . } }")) {
-            this.sendError(BAD_REQUEST, "Unknown graph: " + namedGraph);
+            this.sendError(BAD_REQUEST, "Unknown graph: \"" + namedGraph + '"');
         }
         // Compute best matching RDF representation from HTTP Accept header.
         RdfFormat format = RdfFormat.get(
