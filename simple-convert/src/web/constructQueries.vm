@@ -54,11 +54,9 @@
 		$("#add_query").button();
 
 		$("#add_query").click(function(){
-			var firstQuery = $("textarea[name='query[]']");
-			if (typeof firstQuery == 'undefined') return false;
-			$("textarea[name='query[]']")
-				.clone()
-				.insertAfter("textarea[name='query[]']");
+			var lastQuery = $("textarea[name='query[]']:last");
+			if (typeof lastQuery == 'undefined') return false;
+			lastQuery.clone().insertAfter(lastQuery);
 		});
 
 		$("#source").change(function(){
