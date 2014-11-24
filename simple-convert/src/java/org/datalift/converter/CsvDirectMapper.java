@@ -176,6 +176,7 @@ public class CsvDirectMapper extends BaseConverterModule
 
     /* Web service parameter names. */
     private final static String DATE_FORMAT_PARAM       = "date_format";
+    private final static String COLUMN_MAPPING_PREFIX   = "col_";
 
     //-------------------------------------------------------------------------
     // Class members
@@ -284,7 +285,7 @@ public class CsvDirectMapper extends BaseConverterModule
             // Load datatype mapping for each column.
             Mapping[] typeMappings = new Mapping[params.size()];
             for (String k : params.keySet()) {
-                if (k.startsWith("col_")) {
+                if (k.startsWith(COLUMN_MAPPING_PREFIX)) {
                     try {
                         int col = Integer.parseInt(k.substring(4));
                         Mapping m  = Mapping.fromString(params.getFirst(k));
@@ -651,7 +652,7 @@ public class CsvDirectMapper extends BaseConverterModule
             if (s.indexOf('.') == -1) {
                 int n = s.indexOf(',');
                 if ((n != -1) && (n == s.lastIndexOf(','))) {
-                    s.replace(',', '.');
+                    s = s.replace(',', '.');
                 }
                 // Else: No comma or more than one. => Ignore.
             }
