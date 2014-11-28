@@ -33,12 +33,23 @@
 
   <!-- Begin RDF document -->
   <xsl:template match="/">
-    <xsl:element name="rdf:RDF">
-      <rdf:Description>
-        <xsl:attribute name="rdf:about"/>
-        <xsl:apply-templates select="/*|/@*"/>
-      </rdf:Description>
-    </xsl:element>
+    <xsl:choose>
+      <xsl:when test="./rdf:RDF">
+        <!-- Protection against attempts to translate RDF/XML data. -->
+        <xsl:copy>
+          <xsl:apply-templates
+              select="*|comment()|processing-instruction()" mode="rdf"/>
+        </xsl:copy>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:element name="rdf:RDF">
+          <rdf:Description>
+            <xsl:attribute name="rdf:about"/>
+            <xsl:apply-templates select="/*|/@*"/>
+          </rdf:Description>
+        </xsl:element>
+      </xsl:otherwise>
+      </xsl:choose>
   </xsl:template>
 
   <!-- Turn XML elements into RDF triples. -->
@@ -68,13 +79,23 @@
            provided namespace, if present, or the base URI. -->
       <xsl:choose>
         <xsl:when test="namespace-uri() != ''">
-          <xsl:value-of select="concat(namespace-uri(),'#')"/>
+          <xsl:variable name="tmpUri" select="namespace-uri()"/>
+          <xsl:variable name="lastChar"
+              select="substring($tmpUri, string-length($tmpUri))"/>
+          <xsl:choose>
+            <xsl:when test="$lastChar = '/' or $lastChar = '#'">
+              <xsl:value-of select="$tmpUri"/>
+            </xsl:when>
+            <xsl:otherwise>
+              <xsl:value-of select="concat($tmpUri, '#')"/>
+            </xsl:otherwise>
+          </xsl:choose>
         </xsl:when>
         <xsl:when test="$subjectns != ''">
           <xsl:value-of select="$subjectns"/>
         </xsl:when>
         <xsl:otherwise>
-          <xsl:value-of select="concat($BaseURI,'#')"/>
+          <xsl:value-of select="concat($BaseURI, '#')"/>
         </xsl:otherwise>
       </xsl:choose>
     </xsl:variable>
@@ -99,7 +120,7 @@
             </xsl:attribute>
             <xsl:apply-templates select="@*|node()">
               <xsl:with-param name="subjectname"
-                  select="concat($newsubjectname,'/')"/>
+                  select="concat($newsubjectname, '/')"/>
               <xsl:with-param name="subjectns"
                   select="$ns"/>
             </xsl:apply-templates>
@@ -132,10 +153,30 @@
            if present, or the default provided namespace -->
       <xsl:choose>
         <xsl:when test="namespace-uri() != ''">
-          <xsl:value-of select="concat(namespace-uri(),'#')"/>
+          <xsl:variable name="tmpUri" select="namespace-uri()"/>
+          <xsl:variable name="lastChar"
+              select="substring($tmpUri, string-length($tmpUri))"/>
+          <xsl:choose>
+            <xsl:when test="$lastChar = '/' or $lastChar = '#'">
+              <xsl:value-of select="$tmpUri"/>
+            </xsl:when>
+            <xsl:otherwise>
+              <xsl:value-of select="concat($tmpUri, '#')"/>
+            </xsl:otherwise>
+          </xsl:choose>
         </xsl:when>
         <xsl:when test="namespace-uri(..) != ''">
-          <xsl:value-of select="concat(namespace-uri(..),'#')"/>
+          <xsl:variable name="tmpUri" select="namespace-uri(..)"/>
+          <xsl:variable name="lastChar"
+              select="substring($tmpUri, string-length($tmpUri))"/>
+          <xsl:choose>
+            <xsl:when test="$lastChar = '/' or $lastChar = '#'">
+              <xsl:value-of select="$tmpUri"/>
+            </xsl:when>
+            <xsl:otherwise>
+              <xsl:value-of select="concat($tmpUri, '#')"/>
+            </xsl:otherwise>
+          </xsl:choose>
         </xsl:when>
         <xsl:otherwise>
           <xsl:value-of select="$subjectns"/>
@@ -159,6 +200,15 @@
     <xsl:element name="xs:comment">
       <xsl:value-of select="."/>
     </xsl:element>
+  </xsl:template>
+
+  <!-- Identity transformation to handle attempts to translate RDF/XML data. -->
+  <xsl:template match="*|@*|comment()|processing-instruction()|text()"
+                mode="rdf">
+    <xsl:copy>
+      <xsl:apply-templates
+          select="*|@*|comment()|processing-instruction()|text()" mode="rdf"/>
+    </xsl:copy>
   </xsl:template>
 
 </xsl:stylesheet>
