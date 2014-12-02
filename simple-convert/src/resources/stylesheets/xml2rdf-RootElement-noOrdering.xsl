@@ -26,7 +26,6 @@
     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
     xmlns:xs="http://www.w3.org/TR/2008/REC-xml-20081126#">
 
-  <xsl:strip-space elements="*"/>
   <xsl:output method="xml" indent="yes"/>
 
   <xsl:param name="BaseURI"/>
@@ -43,13 +42,36 @@
       </xsl:when>
       <xsl:otherwise>
         <xsl:element name="rdf:RDF">
-          <rdf:Description>
-            <xsl:attribute name="rdf:about"/>
-            <xsl:apply-templates select="/*|/@*"/>
-          </rdf:Description>
+          <xsl:apply-templates select="*" mode="topLevel"/>
         </xsl:element>
       </xsl:otherwise>
-      </xsl:choose>
+    </xsl:choose>
+  </xsl:template>
+
+  <!-- Turn top level XML elements into RDF triples. -->
+  <xsl:template match="*" mode="topLevel">
+    <!-- Build URI for subjects resources -->
+    <xsl:variable name="newsubjectname">
+      <xsl:call-template name="compute-name"/>
+    </xsl:variable>
+
+    <xsl:variable name="ns">
+      <xsl:call-template name="compute-ns">
+        <xsl:with-param name="currentNs" select="namespace-uri()"/>
+      </xsl:call-template>
+    </xsl:variable>
+
+    <rdf:Description>
+      <xsl:attribute name="rdf:about">
+        <xsl:value-of select="$newsubjectname"/>
+      </xsl:attribute>
+      <xsl:apply-templates select="@*|node()">
+        <xsl:with-param name="subjectname"
+            select="concat($newsubjectname, '/')"/>
+        <xsl:with-param name="subjectns"
+            select="$ns"/>
+      </xsl:apply-templates>
+    </rdf:Description>
   </xsl:template>
 
   <!-- Turn XML elements into RDF triples. -->
@@ -59,45 +81,16 @@
 
     <!-- Build URI for subjects resources from ancestors elements -->
     <xsl:variable name="newsubjectname">
-      <xsl:if test="$subjectname=''">
-        <xsl:value-of select="$BaseURI"/>
-        <!-- Datalift: using '/' instead of '#' as first separator for
-             subject URIs as we use a triple store, not file RDF documents. -->
-        <xsl:text>/</xsl:text>
-      </xsl:if>
-      <xsl:value-of select="$subjectname"/>
-      <xsl:value-of select="name()"/>
-      <!-- Add an ID to sibling element of identical name. -->
-      <xsl:variable name="nodename" select="name()"/>
-      <xsl:if test="count(../*[name()=$nodename]) > 1">
-        <xsl:text>_</xsl:text><xsl:number/>
-      </xsl:if>
+      <xsl:call-template name="compute-name">
+        <xsl:with-param name="subjectName" select="$subjectname"/>
+      </xsl:call-template>
     </xsl:variable>
 
     <xsl:variable name="ns">
-      <!-- If element doesn't have a namespace, use the default
-           provided namespace, if present, or the base URI. -->
-      <xsl:choose>
-        <xsl:when test="namespace-uri() != ''">
-          <xsl:variable name="tmpUri" select="namespace-uri()"/>
-          <xsl:variable name="lastChar"
-              select="substring($tmpUri, string-length($tmpUri))"/>
-          <xsl:choose>
-            <xsl:when test="$lastChar = '/' or $lastChar = '#'">
-              <xsl:value-of select="$tmpUri"/>
-            </xsl:when>
-            <xsl:otherwise>
-              <xsl:value-of select="concat($tmpUri, '#')"/>
-            </xsl:otherwise>
-          </xsl:choose>
-        </xsl:when>
-        <xsl:when test="$subjectns != ''">
-          <xsl:value-of select="$subjectns"/>
-        </xsl:when>
-        <xsl:otherwise>
-          <xsl:value-of select="concat($BaseURI, '#')"/>
-        </xsl:otherwise>
-      </xsl:choose>
+      <xsl:call-template name="compute-ns">
+        <xsl:with-param name="parentNs"  select="$subjectns"/>
+        <xsl:with-param name="currentNs" select="namespace-uri()"/>
+      </xsl:call-template>
     </xsl:variable>
 
     <xsl:choose>
@@ -106,14 +99,14 @@
              => Create attribute triple with text data, ignoring comments. -->
         <xsl:variable name="content" select="normalize-space(text())"/>
         <xsl:if test="$content != ''">
-          <xsl:element name="{name()}" namespace="{$ns}">
+          <xsl:element name="{local-name()}" namespace="{$ns}">
              <xsl:value-of select="$content"/>
           </xsl:element>
         </xsl:if>
         <!-- Else: empty node. => Ignore... -->
       </xsl:when>
       <xsl:otherwise>
-        <xsl:element name="{name()}" namespace="{$ns}">
+        <xsl:element name="{local-name()}" namespace="{$ns}">
           <rdf:Description>
             <xsl:attribute name="rdf:about">
               <xsl:value-of select="$newsubjectname"/>
@@ -153,37 +146,21 @@
            if present, or the default provided namespace -->
       <xsl:choose>
         <xsl:when test="namespace-uri() != ''">
-          <xsl:variable name="tmpUri" select="namespace-uri()"/>
-          <xsl:variable name="lastChar"
-              select="substring($tmpUri, string-length($tmpUri))"/>
-          <xsl:choose>
-            <xsl:when test="$lastChar = '/' or $lastChar = '#'">
-              <xsl:value-of select="$tmpUri"/>
-            </xsl:when>
-            <xsl:otherwise>
-              <xsl:value-of select="concat($tmpUri, '#')"/>
-            </xsl:otherwise>
-          </xsl:choose>
-        </xsl:when>
-        <xsl:when test="namespace-uri(..) != ''">
-          <xsl:variable name="tmpUri" select="namespace-uri(..)"/>
-          <xsl:variable name="lastChar"
-              select="substring($tmpUri, string-length($tmpUri))"/>
-          <xsl:choose>
-            <xsl:when test="$lastChar = '/' or $lastChar = '#'">
-              <xsl:value-of select="$tmpUri"/>
-            </xsl:when>
-            <xsl:otherwise>
-              <xsl:value-of select="concat($tmpUri, '#')"/>
-            </xsl:otherwise>
-          </xsl:choose>
+          <xsl:call-template name="compute-ns">
+            <xsl:with-param name="parentNs"  select="$subjectns"/>
+            <xsl:with-param name="currentNs" select="namespace-uri()"/>
+          </xsl:call-template>
         </xsl:when>
         <xsl:otherwise>
-          <xsl:value-of select="$subjectns"/>
+          <xsl:call-template name="compute-ns">
+            <xsl:with-param name="parentNs"  select="$subjectns"/>
+            <xsl:with-param name="currentNs" select="namespace-uri(..)"/>
+          </xsl:call-template>
         </xsl:otherwise>
       </xsl:choose>
     </xsl:variable>
-    <xsl:element name="{name()}" namespace="{$ns}">
+
+    <xsl:element name="{local-name()}" namespace="{$ns}">
       <xsl:value-of select="."/>
     </xsl:element>
   </xsl:template>
@@ -200,6 +177,52 @@
     <xsl:element name="xs:comment">
       <xsl:value-of select="."/>
     </xsl:element>
+  </xsl:template>
+
+  <xsl:template name="compute-name">
+    <xsl:param name="subjectName"/>
+
+    <xsl:if test="$subjectName = ''">
+      <xsl:value-of select="$BaseURI"/>
+      <!-- Datalift: using '/' instead of '#' as first separator for
+           subject URIs as we use a triple store, not file RDF documents. -->
+      <xsl:text>/</xsl:text>
+    </xsl:if>
+    <xsl:value-of select="$subjectName"/>
+    <xsl:value-of select="local-name()"/>
+    <!-- Add an ID to sibling element of identical name. -->
+    <xsl:variable name="nodeName" select="local-name()"/>
+    <xsl:if test="count(../*[local-name()=$nodeName]) > 1">
+      <xsl:text>_</xsl:text><xsl:number/>
+    </xsl:if>
+  </xsl:template>
+
+  <xsl:template name="compute-ns">
+    <xsl:param name="parentNs"/>
+    <xsl:param name="currentNs"/>
+
+    <!-- If element doesn't have a namespace, use the default
+         provided namespace, if present, or the base URI. -->
+    <xsl:choose>
+      <xsl:when test="$currentNs != ''">
+        <xsl:variable name="lastChar"
+            select="substring($currentNs, string-length($currentNs))"/>
+        <xsl:choose>
+          <xsl:when test="$lastChar = '/' or $lastChar = '#'">
+            <xsl:value-of select="$currentNs"/>
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:value-of select="concat($currentNs, '#')"/>
+          </xsl:otherwise>
+        </xsl:choose>
+      </xsl:when>
+      <xsl:when test="$parentNs != ''">
+        <xsl:value-of select="$parentNs"/>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:value-of select="concat($BaseURI, '#')"/>
+      </xsl:otherwise>
+    </xsl:choose>
   </xsl:template>
 
   <!-- Identity transformation to handle attempts to translate RDF/XML data. -->

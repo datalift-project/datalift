@@ -35,8 +35,12 @@
 package org.datalift.converter;
 
 
-import java.io.InputStream;
 import java.net.URI;
+import java.net.URL;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
@@ -67,10 +71,11 @@ import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.rdf.rio.rdfxml.RDFXMLParser;
 import org.datalift.fwk.util.web.UriParam;
+import org.datalift.fwk.view.TemplateModel;
 
 import static org.datalift.fwk.MediaTypes.*;
 import static org.datalift.fwk.util.PrimitiveUtils.wrap;
-import static org.datalift.fwk.util.StringUtils.isBlank;
+import static org.datalift.fwk.util.StringUtils.*;
 
 
 /**
@@ -87,6 +92,57 @@ import static org.datalift.fwk.util.StringUtils.isBlank;
 @Path(XsltXmlConverter.MODULE_NAME)
 public class XsltXmlConverter extends BaseConverterModule
 {
+    public enum DefaultStylesheet
+    {
+        DOCUMENT        ("xml.xslt.whole.document",
+                         "stylesheets/xml2rdf-WholeDocument-noOrdering.xsl"),
+        ROOT_ELEMENT    ("xml.xslt.root.element",
+                         "stylesheets/xml2rdf-RootElement-noOrdering.xsl"),
+        FIRST_LEVEL_CHILDREN("xml.xslt.first.level.children",
+                         "stylesheets/xml2rdf-ChildElements-noOrdering.xsl");
+
+        public final String label;
+        private final String path;
+
+        DefaultStylesheet(String label, String path) {
+            this.label = label;
+            this.path = path;
+        }
+
+        public URL getUrl() {
+            return this.getClass().getClassLoader().getResource(this.path);
+        }
+
+        @Override
+        public String toString() {
+            return this.name() + '(' + this.path + ')';
+        }
+
+        /**
+         * Return the URL of the stylesheet associated to the
+         * enumeration value corresponding to the specified label.
+         * @param  s   the enumeration value label.
+         *
+         * @return the stylesheet URL or <code>null</code> if the
+         *         specified label was not recognized.
+         */
+        public static URL fromString(String s) {
+            DefaultStylesheet def = null;
+            if (isSet(s)) {
+                for (DefaultStylesheet e : values()) {
+                    if (e.name().equalsIgnoreCase(s)) {
+                        def = e;
+                        break;
+                    }
+                }
+            }
+            else {
+                def = values()[0];
+            }
+            return (def != null)? def.getUrl(): null;
+        }
+    }
+
     //-------------------------------------------------------------------------
     // Constants
     //-------------------------------------------------------------------------
@@ -94,15 +150,16 @@ public class XsltXmlConverter extends BaseConverterModule
     /** The name of this module in the DataLift configuration. */
     public final static String MODULE_NAME = "xsltxmlmapper";
 
-    private final static String DEFAULT_STYLESHEET =
-                                        "stylesheets/xml2rdf3-noOrdering.xsl";
+    /* Web service parameter names. */
+    private final static String STYLESHEET_PARAM = "stylesheet";
 
     //-------------------------------------------------------------------------
     // Class members
     //-------------------------------------------------------------------------
 
     private static TransformerFactory transformerFactory;
-    private static Templates defaultTemplates;
+    private static Map<String,Templates> cachedTemplates =
+                                    new ConcurrentHashMap<String,Templates>();
 
     private final static Logger log = Logger.getLogger();
 
@@ -128,7 +185,9 @@ public class XsltXmlConverter extends BaseConverterModule
     @GET
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
     public Response getIndexPage(@QueryParam(PROJECT_ID_PARAM) URI projectId) {
-        return this.newProjectView("xsltXmlMapper.vm", projectId);
+        TemplateModel view = this.getProjectView("xsltXmlMapper.vm", projectId);
+        view.put("stylesheets", this.getStylesheets(projectId));
+        return Response.ok(view, TEXT_HTML_UTF8).build();
     }
 
     /**
@@ -158,7 +217,8 @@ public class XsltXmlConverter extends BaseConverterModule
                         @FormParam(SOURCE_ID_PARAM)  UriParam sourceId,
                         @FormParam(TARGET_SRC_NAME)  String destTitle,
                         @FormParam(GRAPH_URI_PARAM)  UriParam targetGraphParam,
-                        @FormParam(BASE_URI_PARAM)   UriParam baseUriParam)
+                        @FormParam(BASE_URI_PARAM)   UriParam baseUriParam,
+                        @FormParam(STYLESHEET_PARAM) String stylesheet)
                                                 throws WebApplicationException {
         if (! UriParam.isSet(projectId)) {
             this.throwInvalidParamError(PROJECT_ID_PARAM, null);
@@ -184,6 +244,23 @@ public class XsltXmlConverter extends BaseConverterModule
                 throw new ObjectNotFoundException("project.source.not.found",
                                                   projectId, sourceId);
             }
+            // Resolve stylesheet.
+            StreamSource xslt = null;
+            URL u = DefaultStylesheet.fromString(stylesheet);
+            if (u != null) {
+                // Default stylesheet matched.
+                xslt = new StreamSource(u.openStream(), u.toString());
+            }
+            else {
+                // Not a default stylesheet. => Assume project file source.
+                XmlSource xslSrc = (XmlSource)(p.getSource(stylesheet));
+                if (xslSrc != null) {
+                    xslt = new StreamSource(xslSrc.getInputStream());
+                }
+            }
+            if (xslt == null) {
+                this.throwInvalidParamError(STYLESHEET_PARAM, stylesheet);
+            }
             // Extract target named graph. It shall NOT conflict with
             // existing objects (sources, projects) otherwise it would not
             // be accessible afterwards (e.g. display, removal...).
@@ -194,7 +271,7 @@ public class XsltXmlConverter extends BaseConverterModule
             log.debug("Mapping XML data from \"{}\" into graph \"{}\"",
                                                         sourceId, targetGraph);
             this.convert(in, Configuration.getDefault().getInternalRepository(),
-                             targetGraph, baseUri);
+                             targetGraph, baseUri, xslt);
             // Register new transformed RDF source.
             Source out = this.addResultSource(p, in, destTitle, targetGraph);
             // Display project source tab, including the newly created source.
@@ -213,8 +290,33 @@ public class XsltXmlConverter extends BaseConverterModule
     // Specific implementation
     //-------------------------------------------------------------------------
 
-    private void convert(XmlSource src, Repository target,
-                                        URI targetGraph, URI baseUri) {
+    private Collection<StylesheetDesc> getStylesheets(URI projectId) {
+        Collection<StylesheetDesc> l =
+                        new LinkedList<XsltXmlConverter.StylesheetDesc>();
+        // Add default stylesheets.
+        for (DefaultStylesheet def : DefaultStylesheet.values()) {
+            l.add(new StylesheetDesc(def));
+        }
+        // Add project XML sources associated to a .xsl[t] file.
+        try {
+            Project p = this.getProject(projectId);
+            for (Source s : p.getSources()) {
+                if (s instanceof XmlSource) {
+                    String path = ((XmlSource)s).getFilePath();
+                    if (path.toLowerCase().lastIndexOf(".xsl") != -1) {
+                        l.add(new StylesheetDesc(s.getUri(), path));
+                    }
+                }
+            }
+        }
+        catch (Exception e) {
+            log.warn("Failed to list project XSLT stylesheets.", e);
+        }
+        return l;
+    }
+
+    private void convert(XmlSource src, Repository target, URI targetGraph,
+                                        URI baseUri, StreamSource stylesheet) {
         if (baseUri == null) {
             baseUri = targetGraph;
         }
@@ -245,7 +347,7 @@ public class XsltXmlConverter extends BaseConverterModule
                 xmlSrc.setSystemId(src.getSourceUrl());
             }
             // Apply XSL transformation to build RDF XML from XML data.
-            Transformer t = this.newTransformer(null);
+            Transformer t = this.newTransformer(stylesheet);
             t.setParameter("BaseURI", xmlBaseUri);
             t.transform(xmlSrc, rdfParser.getSAXResult(rdfBaseUri));
 
@@ -269,7 +371,10 @@ public class XsltXmlConverter extends BaseConverterModule
      *                use the default stylesheet.
      * @return a new Transformer object.
      */
-    private Transformer newTransformer(InputStream xslt) {
+    private Transformer newTransformer(StreamSource xslt) {
+        if (xslt == null) {
+            throw new IllegalArgumentException("xslt");
+        }
         if (transformerFactory == null) {
             // set thread content classloader to ensure proper resource
             // (JAR service provider configuration file and stylesheets)
@@ -284,18 +389,17 @@ public class XsltXmlConverter extends BaseConverterModule
         }
         Transformer t = null;
         try {
-            if (xslt == null) {
-                // Use default XML to RDF transformation stylesheet.
-                if (defaultTemplates == null) {
-                    defaultTemplates = transformerFactory.newTemplates(
-                            new StreamSource(
-                                this.getClass().getClassLoader()
-                                    .getResourceAsStream(DEFAULT_STYLESHEET)));
+            String path = xslt.getSystemId();
+            if (isSet(path)) {
+                Templates templates = cachedTemplates.get(path);
+                if (templates == null) {
+                    templates = transformerFactory.newTemplates(xslt);
+                    cachedTemplates.put(path, templates);
                 }
-                t = defaultTemplates.newTransformer();
+                t = templates.newTransformer();
             }
             else {
-                t = transformerFactory.newTransformer(new StreamSource(xslt));
+                t = transformerFactory.newTransformer(xslt);
             }
         }
         catch (Exception e) {
@@ -315,5 +419,36 @@ public class XsltXmlConverter extends BaseConverterModule
             }
         }
         return baseUri;
+    }
+
+
+    public final static class StylesheetDesc
+    {
+        private final String id;
+        private final String label;
+
+        public StylesheetDesc(DefaultStylesheet def) {
+            this.id    = def.name();
+            this.label = def.label;
+        }
+
+        public StylesheetDesc(String id, String path) {
+            this.id = id;
+            int n = path.lastIndexOf('/');
+            this.label = (n != -1)? path.substring(n + 1): path;
+        }
+
+        public String getId() {
+            return this.id;
+        }
+
+        public String getLabel() {
+            return this.label;
+        }
+
+        @Override
+        public String toString() {
+            return this.id;
+        }
     }
 }

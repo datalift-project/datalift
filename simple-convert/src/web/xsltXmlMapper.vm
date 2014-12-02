@@ -36,6 +36,17 @@
 		<p><label for="base_uri">#i18n("dest.base_uri"): </label>
 		<input type="text" id="base_uri" name="base_uri" title="#i18n('dest.base_uri.help')" value=""/></p>
 
+		<p><label for="stylesheet">#i18n("xml.transform.stylesheet"):</label>
+		<select name="stylesheet" id="stylesheet">
+#foreach( $xslt in $stylesheets )
+#if( $foreach.first )
+			<option value="${xslt.id}" selected="true">$i18n.html($xslt.label)</option>
+#else
+			<option value="${xslt.id}">$i18n.html($xslt.label)</option>
+#end
+#end
+		</select></p>
+
 		<input type="submit" id="source_submit" value="#i18n('submit.label')"/>
 	</form>
 </div>

@@ -384,20 +384,39 @@ public abstract class BaseConverterModule
      * @param  templateName   the relative template name.
      * @param  projectId      the URI of the project to display.
      *
-     * @return a template model for rendering the specified template,
-     *         populated with the specified project.
+     * @return a service response wrapping a template model rendering
+     *         the specified template, populated with the specified
+     *         project.
+     * @see    #getProjectView(String, URI)
      */
     protected final Response newProjectView(String templateName,
                                             URI projectId) {
-        Response response = null;
+        TemplateModel view = this.getProjectView(templateName, projectId);
+        return Response.ok(view, TEXT_HTML_UTF8).build();
+    }
+
+    /**
+     * Returns a template model for the specified template, populated
+     * with the specified project.
+     * <p>
+     * The template name shall be relative to the module, the module
+     * name is automatically prepended.</p>
+     * @param  templateName   the relative template name.
+     * @param  projectId      the URI of the project to display.
+     *
+     * @return a template model for rendering the specified template,
+     *         populated with the specified project.
+     */
+    protected final TemplateModel getProjectView(String templateName,
+                                                 URI projectId) {
+        TemplateModel view = null;
         try {
             // Retrieve project.
             Project p = this.getProject(projectId);
             // Display conversion configuration page.
-            TemplateModel view = this.newView(templateName, p);
+            view = this.newView(templateName, p);
             view.registerFieldsFor(SourceType.class);
             view.put("converter", this);
-            response = Response.ok(view, TEXT_HTML_UTF8).build();
         }
         catch (ObjectNotFoundException e) {
             this.throwInvalidParamError("project", projectId);
@@ -405,7 +424,7 @@ public abstract class BaseConverterModule
         catch (IllegalArgumentException e) {
             this.throwInvalidParamError("project", projectId);
         }
-        return response;
+        return view;
     }
 
     /**
