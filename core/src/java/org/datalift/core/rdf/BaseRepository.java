@@ -35,6 +35,8 @@
 package org.datalift.core.rdf;
 
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -98,6 +100,10 @@ abstract public class BaseRepository extends Repository
     /** The property suffix for repository type. */
     public final static String REPOSITORY_TYPE = ".repository.type";
 
+    /** The list of predefined RDF store names for Datalift usage. */
+    private final static Collection<String> WELL_KNOWN_REPOSITORIES =
+                                            Arrays.asList("data", "internal");
+
     //-------------------------------------------------------------------------
     // Class members
     //-------------------------------------------------------------------------
@@ -133,11 +139,13 @@ abstract public class BaseRepository extends Repository
      */
     protected BaseRepository(String name, String url,
                                           Configuration configuration) {
-        // Read repository connection URL and display label. If label is
-        // absent from configuration, use the label property name as key
-        // for retrieving internationalized text from resource bundles.
+        // Read repository display label from configuration. If no label is
+        // defined, use the label property name as key for retrieving
+        // internationalized text from resource bundles, for well-known
+        // repositories (i.e. internal and data).
         super(name, url, configuration.getProperty(name + REPOSITORY_LABEL,
-                                                   name + REPOSITORY_LABEL),
+                                 WELL_KNOWN_REPOSITORIES.contains(name)?
+                                                 name + REPOSITORY_LABEL: null),
                          parseAccessControlFlag(name, configuration));
         if (isBlank(this.url)) {
             throw new TechnicalException("repository.invalid.url",
