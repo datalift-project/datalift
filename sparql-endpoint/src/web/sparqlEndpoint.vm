@@ -57,7 +57,7 @@
 				</div>
 #end
 				<p><label for="max">#i18n("sparql.max.results"): </label>
-				<input type="text" name="max" id="max" value="${max}"/></p>
+				<input type="text" name="max" id="max" title="#i18n("sparql.max.results.tooltip")" value="${max}"/></p>
 			</div>
 			<div class="dl-form-buttons">
 				<input type="submit" value="#i18n("sparql.query.execute")" id="query_submit"/>
