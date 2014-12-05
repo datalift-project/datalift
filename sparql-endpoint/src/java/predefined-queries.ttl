@@ -1,3 +1,5 @@
+# Pre-defined queries for Datalift SPARQL endpoints
+
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix dcterms: <http://purl.org/dc/terms/> .
@@ -6,48 +8,53 @@
 _:1 a datalift:SparqlQuery ;
     rdfs:label
         "All entries" ,
-        "Toutes les entrÃ©es"@fr ;
+        "Toutes les entrées"@fr ;
+    datalift:position 100 ;
     dcterms:description
         "Lists all entries (subject, predicates and objects) from the repository" ,
-        "Retourne toutes les entrÃ©es (sujets, prÃ©dicats et objets) du dÃ©pÃ´t"@fr ;
+        "Liste toutes les entrées (sujets, prédicats et objets) du dépôt"@fr ;
     rdf:value
         "SELECT * WHERE {\n  ?s ?p ?o .\n}\n" .
 
 _:2 a datalift:SparqlQuery ;
     rdfs:label
-        "Subjects" ,
-        "Sujets"@fr ;
+        "Resources" ,
+        "Ressources"@fr ;
+    datalift:position 1 ;
     dcterms:description
-        "Lists all subjects in the repository" ,
-        "Retourne la liste des sujets du dÃ©pÃ´t"@fr ;
+        "Lists all RDF resources (triple subjects) in the repository" ,
+        "Liste les ressources RDF (sujets) du dépôt"@fr ;
     rdf:value
         "SELECT DISTINCT ?s WHERE {\n  ?s ?p ?o .\n}\n" .
 
 _:3 a datalift:SparqlQuery ;
     rdfs:label
         "Types" ;
+    datalift:position 2 ;
     dcterms:description
         "Lists the RDF types present in the repository" ,
-        "Retourne la liste des types RDF connus dans le dÃ©pÃ´t"@fr ;
+        "Liste les types RDF connus dans le dépôt"@fr ;
     rdf:value
         "SELECT DISTINCT ?type WHERE {\n  ?s a ?type .\n}\n" .
 
 _:4 a datalift:SparqlQuery ;
     rdfs:label
-        "Contexts" ,
-        "Contextes"@fr ;
+        "Graphs" ,
+        "Graphes"@fr ;
+    datalift:position 3 ;
     dcterms:description
-        "Lists the contexts (a.k.a named graphs) present in the repository" ,
-        "Retourne la liste des contextes (graphes nommÃ©s) dÃ©finis dans le dÃ©pÃ´t"@fr ;
+        "Lists all named graphs present in the repository" ,
+        "Liste les graphes nommés présents dans le dépôt"@fr ;
     rdf:value
         "SELECT DISTINCT ?graph WHERE {\n  GRAPH ?graph {\n    ?s ?p ?o .\n  }\n}\n" .
 
 _:5 a datalift:SparqlQuery ;
     rdfs:label
         "Links" ,
-        "Toutes les liens"@fr ;
+        "Liens \"owl#sameAs\""@fr ;
+    datalift:position 20 ;
     dcterms:description
-        "Lists all links from the repository" ,
-        "Retourne toutes les liens (sujets, prÃ©dicats et objets) du dÃ©pÃ´t"@fr ;
+        "Lists all links (owl#sameAs) between objects in the repository" ,
+        "Liste les liens (owl#sameAs) entre objets du dépôt"@fr ;
     rdf:value
         "SELECT * WHERE {\n  ?s <http://www.w3.org/2002/07/owl#sameAs> ?o .\n}\n" .
