@@ -95,6 +95,7 @@ import static org.openrdf.query.QueryLanguage.SPARQL;
 
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.rdf.ElementType;
+import org.datalift.fwk.rdf.QueryDescription;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.rdf.json.GridJsonRdfHandler;
 import org.datalift.fwk.rdf.json.JsonRdfHandler;

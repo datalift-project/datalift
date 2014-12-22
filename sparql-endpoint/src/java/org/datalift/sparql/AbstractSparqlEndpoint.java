@@ -55,8 +55,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.MissingResourceException;
 import java.util.TreeSet;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
@@ -164,10 +162,6 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     /** The name of the default template for the endpoint welcome page. */
     protected final static String DEFAULT_WELCOME_TEMPLATE =
                                                         "sparqlEndpoint.vm";
-
-    private final static Pattern QUERY_START_PATTERN = Pattern.compile(
-                    "SELECT|CONSTRUCT|ASK|DESCRIBE", Pattern.CASE_INSENSITIVE);
-    private final static int MAX_QUERY_DESC = 128;
 
     /**
      * The object description query to use when the RDF store provides
@@ -1034,26 +1028,6 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         this.sendError(BAD_REQUEST, error.getLocalizedMessage());
     }
 
-    protected final static String getQueryDesc(String query,
-                                               int max, boolean normalize) {
-        String desc = "";
-        if (query != null) {
-            // Strip prefix declarations.
-            Matcher m = QUERY_START_PATTERN.matcher(query);
-            if (m.find()) {
-                query = query.substring(m.start());
-            }
-            if (normalize) {
-                // Normalize query string.
-                query = query.replaceAll("\\s+", " ");
-            }
-            // Get the N first chars of the query string, minus prefixes.
-            desc = ((max > 3) && (query.length() > max))?
-                                    query.substring(0, max - 3) + "...": query;
-        }
-        return desc;
-    }
-
     private ElementType getDescribeTypeFromUri(URI uri,
                                                 Repository repository) {
         ElementType type = null;
@@ -1211,69 +1185,6 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
             }
         }
         return queries;
-    }
-
-    //-------------------------------------------------------------------------
-    // QueryDescription
-    //-------------------------------------------------------------------------
-
-    /**
-     * Helper class to ease logging of SPARQL queries by providing a
-     * {@link #toString() shortened description} of the query text,
-     * without namespace prefixes declarations and a possibly truncated
-     * query body.
-     */
-    protected final static class QueryDescription
-    {
-        /** The full text of the SPARQL query. */
-        public final String query;
-        private final int maxLength;
-        private final boolean normalize;
-        /** The shortened description of the SPARQL query. */
-        private String desc = null;
-
-        /**
-         * Creates a SPARQL query logging helper that normalizes the
-         * query text and limits it to the first 128 characters.
-         * @param  query   the SPARQL query to wrap.
-         */
-        public QueryDescription(String query) {
-            this(query, MAX_QUERY_DESC, true);
-        }
-
-        /**
-         * Creates a SPARQL query logging helper that limits the query
-         * text to the first 128 characters.
-         * @param  query       the SPARQL query to wrap.
-         * @param  normalize   whether to normalize spaces.
-         */
-        public QueryDescription(String query, boolean normalize) {
-            this(query, MAX_QUERY_DESC, normalize);
-        }
-
-        /**
-         * Creates a SPARQL query logging helper wrapping the specified
-         * query.
-         * @param  query       the SPARQL query to wrap.
-         * @param  max         the maximum length of the query
-         *                     description.
-         * @param  normalize   whether to normalize spaces.
-         */
-        public QueryDescription(String query, int max, boolean normalize) {
-            this.query = query;
-            this.maxLength = max;
-            this.normalize = normalize;
-        }
-
-        /** {@inheritDoc} */
-        @Override
-        public String toString() {
-            if (this.desc == null) {
-                this.desc = getQueryDesc(this.query,
-                                         this.maxLength, this.normalize);
-            }
-            return this.desc;
-        }
     }
 
     //-------------------------------------------------------------------------
