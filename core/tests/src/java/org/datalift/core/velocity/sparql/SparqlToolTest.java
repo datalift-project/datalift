@@ -88,7 +88,7 @@ public class SparqlToolTest
 
     private final static String SUBJECT1 = DT + "1";
     private final static String TITLE1 = "Sample-12";
-    private final static String DESCRIPTION1 = "Revue de presse";
+    private final static String DESCRIPTION1 = "Revue de \t presse";
 
     private final static String SUBJECT2 = DT + "2";
     private final static String TITLE2 = "Sample-2";
