@@ -467,7 +467,7 @@ public final class SparqlTool
             s = "_:" + v.stringValue();
         }
         else if (v instanceof Literal) {
-            s = (isNative(v))? ((Literal)v).getLabel(): v.toString();
+            s = (isNative(v))? ((Literal)v).getLabel(): v.stringValue();
         }
         else if (v != null) {
             s = v.stringValue();
@@ -870,7 +870,8 @@ public final class SparqlTool
             if (this.result.getBindingNames().contains(orderBy)) {
                 Locale locale = PreferredLocales.get().get(0);
                 // Key prefix for missing sort key.
-                final String missingKey = (asc)? "zzzzzzzz-": "00000000 ";
+                final String missingKey = (asc)? "zzzzzzzz-":
+                                                 "" + Integer.MIN_VALUE + ' ';
                 int n = 0;
                 // Collect results for sorting.
                 List<LocaleComparable<Map<String,Value>>> l =
@@ -882,7 +883,8 @@ public final class SparqlTool
                     // Compute result key. If the sort binding is absent,
                     // place the result at the end of the list.
                     Value v = bindings.get(orderBy);
-                    String key = (v != null)? v.stringValue(): missingKey + n;
+                    String key = (v != null)? SparqlTool.this.toString(v):
+                                              missingKey + n;
                     l.add(new LocaleComparable<Map<String,Value>>(
                                                         key, bindings, locale));
                 }
