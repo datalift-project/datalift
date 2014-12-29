@@ -22,6 +22,18 @@
 	#end
 #end
 		</select></p>
+#if( ${repositories.size()} > 1 )
+		<p><label for="store">#i18n("dest.repository"): </label>
+		<select id="store" name="store">
+#foreach( $item in $repositories )
+#if( $foreach.count == 1 )
+			<option value="$esc.html($!{item.name})" selected="true">#i18n($!{item.label})</option>
+#else
+			<option value="$esc.html($!{item.name})">#i18n($!{item.label})</option>
+#end
+#end
+		</select></p>
+#end
 		<p><label for="dest_graph_uri">#i18n("dest.uri"):</label>
 		<input type="text" name="dest_graph_uri" id="dest_graph_uri" title="#i18n('dest.graph.help')" value=""/></p>
 		<input type="submit" id="source_submit" value="#i18n('submit.label')"/>

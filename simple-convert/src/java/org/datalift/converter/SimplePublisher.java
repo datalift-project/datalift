@@ -63,8 +63,10 @@ import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.sparql.AccessController;
 import org.datalift.fwk.util.web.UriParam;
+import org.datalift.fwk.view.TemplateModel;
 
 import static org.datalift.fwk.MediaTypes.*;
+import static org.datalift.fwk.util.StringUtils.isSet;
 
 
 /**
@@ -83,6 +85,9 @@ public class SimplePublisher extends BaseConverterModule
     /** The name of this module in the DataLift configuration. */
     public final static String MODULE_NAME = "simple-publisher";
 
+    /* Web service parameter names. */
+    protected final static String REPOSITORY_PARAM      = "store";
+
     //-------------------------------------------------------------------------
     // Constructors
     //-------------------------------------------------------------------------
@@ -99,15 +104,19 @@ public class SimplePublisher extends BaseConverterModule
     @GET
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
     public Response getIndexPage(@QueryParam(PROJECT_ID_PARAM) URI projectId) {
-        return this.newProjectView("publisher.vm", projectId);
+        TemplateModel view = this.getProjectView("publisher.vm", projectId);
+        view.put("repositories", Configuration.getDefault()
+                                              .getRepositories(true));
+        return Response.ok(view, TEXT_HTML_UTF8).build();
     }
 
     @POST
     @Consumes(APPLICATION_FORM_URLENCODED)
     public Response publishRdfSource(
-                        @FormParam(PROJECT_ID_PARAM) UriParam projectId,
-                        @FormParam(SOURCE_ID_PARAM)  UriParam sourceId,
-                        @FormParam(GRAPH_URI_PARAM)  UriParam targetGraphParam,
+                        @FormParam(PROJECT_ID_PARAM)  UriParam projectId,
+                        @FormParam(SOURCE_ID_PARAM)   UriParam sourceId,
+                        @FormParam(REPOSITORY_PARAM)  String repository,
+                        @FormParam(GRAPH_URI_PARAM)   UriParam targetGraphParam,
                         @FormParam(OVERWRITE_GRAPH_PARAM) boolean overwrite,
                         @Context UriInfo uriInfo,
                         @Context Request request,
@@ -118,6 +127,15 @@ public class SimplePublisher extends BaseConverterModule
         }
         if (! UriParam.isSet(sourceId)) {
             this.throwInvalidParamError(SOURCE_ID_PARAM, null);
+        }
+        Configuration cfg = Configuration.getDefault();
+        Repository pub = null;
+        try {
+            pub = (isSet(repository))? cfg.getRepository(repository):
+                                       cfg.getDataRepository();
+        }
+        catch (Exception e) {
+            this.throwInvalidParamError(REPOSITORY_PARAM, repository);
         }
         Response response = null;
 
@@ -145,8 +163,6 @@ public class SimplePublisher extends BaseConverterModule
                 targetGraph = (origin != null)? new URI(origin.getUri()):
                                                 projectId.toUri();
             }
-            Configuration cfg = Configuration.getDefault();
-            Repository pub    = cfg.getDataRepository();
             // Publish input source triples in public repository.
             if (overwrite) {
                 RdfUtils.clearGraph(pub, targetGraph);
