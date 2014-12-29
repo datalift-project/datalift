@@ -57,6 +57,7 @@ public class VersatilePropertiesTest
     @Before
     public void setUp() throws Exception {
         this.sut = new VersatileProperties();
+        this.sut.setSystemPropertiesOverride(false);
     }
 
     @Test
@@ -92,18 +93,20 @@ public class VersatilePropertiesTest
         String value = "Hello";
         this.sut.setProperty("x", value);
 
-        this.sut.setProperty("foo", "${t:-${x}, you}");
+        System.getProperties().remove("ujsp-zzz"); // Unknown Java System Prop.
+        this.sut.setProperty("foo", "${ujsp-zzz:-${x}, you}");
         assertEquals(value + ", you", this.sut.getProperty("foo"));
 
         String expected = value + ", me";
-        this.sut.setProperty("foo", "${t:=${x}, me}");
+        this.sut.setProperty("foo", "${ujsp-zzz:=${x}, me}");
         assertEquals(expected, this.sut.getProperty("foo"));
-        this.sut.setProperty("foo", "${t}");
+        this.sut.setProperty("foo", "${ujsp-zzz}");
         assertEquals(expected, this.sut.getProperty("foo"));
-        this.sut.setProperty("foo", "${#t}");
+        this.sut.setProperty("foo", "${#ujsp-zzz}");
         assertEquals(expected.length(), this.sut.getInt("foo", -1));
 
-        this.sut.setProperty("foo", "${z:?${x}, you}");
+        System.getProperties().remove("ujsp-yyy"); // Unknown Java System Prop.
+        this.sut.setProperty("foo", "${ujsp-yyy:?${x}, you}");
         try {
             this.sut.getProperty("foo");
             fail("Exception expected");
@@ -113,9 +116,9 @@ public class VersatilePropertiesTest
             assertEquals(value + ", you", e.getMessage());
         }
 
-        this.sut.setProperty("foo", "${t:+${x}, you}");
+        this.sut.setProperty("foo", "${ujsp-zzz:+${x}, you}");
         assertEquals(value + ", you", this.sut.getProperty("foo"));
-        this.sut.setProperty("foo", "${z:+${x}, you}");
+        this.sut.setProperty("foo", "${ujsp-yyy:+${x}, you}");
         // assertNull(this.sut.getProperty("foo"));
 
         value = "unhappy code";
@@ -129,10 +132,10 @@ public class VersatilePropertiesTest
         this.sut.setProperty("foo", "${t: " + (2 - value.length()) + ":7}");
         assertEquals(value.substring(2, 7), this.sut.getProperty("foo"));
 
-        this.sut.setProperty("foo", "${t:z}");
-        assertEquals("${t:z}", this.sut.getProperty("foo"));
-        this.sut.setProperty("foo", "${t\\:z}");
-        assertEquals("${t\\:z}", this.sut.getProperty("foo"));
+        this.sut.setProperty("foo", "${t:ujsp-yyy}");
+        assertEquals("${t:ujsp-yyy}", this.sut.getProperty("foo"));
+        this.sut.setProperty("foo", "${t\\:ujsp-yyy}");
+        assertEquals("${t\\:ujsp-yyy}", this.sut.getProperty("foo"));
         this.sut.setProperty("foo", "${\\#t}");
         assertEquals("${\\#t}", this.sut.getProperty("foo"));
     }
@@ -172,6 +175,8 @@ public class VersatilePropertiesTest
         this.sut.setProperty("home.dir",       homeDir);
         this.sut.setProperty("java.vm.name",   vmName);
         this.sut.setProperty("java.vm.vendor", vmVendor);
+
+        this.sut.setSystemPropertiesOverride(true);
 
         String system = System.getProperty("user.home");
         assertSame(system, this.sut.get("user.home"));
