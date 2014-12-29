@@ -142,14 +142,11 @@ public class CsvExporter extends BaseConverterModule
     @GET
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
     public Response getIndexPage(@QueryParam(PROJECT_ID_PARAM) URI projectId) {
-        // Retrieve project.
-        Project p = this.getProject(projectId);
         // Display conversion configuration page.
-        TemplateModel view = this.newView("csvExporter.vm", p);
-        view.put("converter", this);
+        TemplateModel view = this.getProjectView("csvExporter.vm", projectId);
         view.put("charsets", Charsets.availableCharsets);
         view.put("separators", Separator.values());
-        return Response.ok(view).build();
+        return Response.ok(view, TEXT_HTML_UTF8).build();
     }
 
     @POST
