@@ -181,14 +181,26 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                               + "    ?o1 ?p2 ?o2 .\n"
                               + "    FILTER isBlank(?o1)\n  '}'\n"
                               + "  FILTER ( ?s1 = <{0}> || ?o1 = <{0}> )\n'}'");
+    /* Optimized query for SPARQL 1.1 compliant store but Sesame 2.6 is NOT!
+            new MessageFormat("CONSTRUCT '{' ?s1 ?p1 ?o1 ."
+                              +            " ?o1 ?p2 ?o2 . '}'\n"
+                              + "WHERE '{'\n  '{'\n"
+                              + "    ?s1 ?p1 ?o1 .\n"
+                              + "    OPTIONAL '{'\n"
+                              + "      ?o1 ?p2 ?o2 .\n"
+                              + "      FILTER isBlank(?o1)\n    '}'\n"
+                              + "    VALUES ?s1 '{' <{0}> '}'\n"
+                              + "  '}'\n  UNION '{'\n"
+                              + "    ?s1 ?p1 ?o1 .\n"
+                              + "    VALUES ?o1 '{' <{0}> '}'\n"
+                              + "  '}'\n'}'");
+     */
     private final static MessageFormat DESCRIBE_PREDICATE_QUERY =
-            new MessageFormat("CONSTRUCT '{' ?s ?p ?o . '}' WHERE '{'\n"
-                              + "  ?s ?p ?o .\n"
-                              + "  FILTER ( ?p = <{0}> )\n'}'");
+            new MessageFormat("CONSTRUCT '{' ?s <{0}> ?o . '}' WHERE '{'"
+                              + " ?s <{0}> ?o . '}'");
     private final static MessageFormat DESCRIBE_TYPE_QUERY =
-            new MessageFormat("CONSTRUCT '{' ?s a ?t . '}' WHERE '{'\n"
-                              + "  ?s a ?t .\n"
-                              + "  FILTER ( ?t = <{0}> )\n'}'");
+            new MessageFormat("CONSTRUCT '{' ?s a <{0}> . '}' WHERE '{'"
+                              + " ?s a <{0}> . '}'");
     private final static MessageFormat DESCRIBE_GRAPH_QUERY =
             new MessageFormat("CONSTRUCT '{' ?s ?p ?o . '}' WHERE '{'\n"
                               + "  GRAPH <{0}> '{' ?s ?p ?o . '}'\n'}'");
