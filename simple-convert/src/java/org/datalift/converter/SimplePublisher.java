@@ -163,7 +163,7 @@ public class SimplePublisher extends BaseConverterModule
                 targetGraph = (origin != null)? new URI(origin.getUri()):
                                                 projectId.toUri();
             }
-            // Publish input source triples in public repository.
+            // Publish input source triples in target repository.
             if (overwrite) {
                 RdfUtils.clearGraph(pub, targetGraph);
             }
@@ -176,7 +176,7 @@ public class SimplePublisher extends BaseConverterModule
                 catch (Exception e) { /* Ignore... */ }
             }
             // Display generated triples.
-            response = this.displayGraph(null, targetGraph,
+            response = this.displayGraph(pub, targetGraph,
                                          uriInfo, request, acceptHdr);
         }
         catch (Exception e) {
