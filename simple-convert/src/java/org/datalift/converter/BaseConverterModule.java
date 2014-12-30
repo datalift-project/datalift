@@ -84,6 +84,7 @@ import org.datalift.fwk.view.ViewFactory;
 
 import static org.datalift.fwk.MediaTypes.*;
 import static org.datalift.fwk.util.PrimitiveUtils.wrap;
+import static org.datalift.fwk.util.StringUtils.trimToNull;
 
 
 /**
@@ -558,6 +559,11 @@ public abstract class BaseConverterModule
      */
     protected void throwInvalidParamError(String name, Object value)
                                                 throws WebApplicationException {
+        if (value instanceof String) {
+            // Special case for Strings: Jersey passes empty strings to
+            // web service methods for missing request parameters.
+            value = trimToNull((String)value);
+        }
         TechnicalException error = (value != null)?
                 new TechnicalException("ws.invalid.param.error", name, value):
                 new TechnicalException("ws.missing.param", name);

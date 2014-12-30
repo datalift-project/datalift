@@ -1131,12 +1131,35 @@ public class Workspace extends BaseModule
                             @FormParam("cache_duration") int cacheDuration,
                             @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
+        if (! isSet(title)) {
+            this.throwInvalidParamError("title", title);
+        }
+        if (! isSet(endpointUrl)) {
+            this.throwInvalidParamError("connection_url", endpointUrl);
+        }
+        else {
+            try {
+                new URL(endpointUrl);
+            }
+            catch (Exception e) {
+                this.throwInvalidParamError("connection_url", endpointUrl);
+            }
+        }
+        if (isSet(defaultGraph)) {
+            try {
+                new URI(defaultGraph);
+            }
+            catch (Exception e) {
+                this.throwInvalidParamError("default_graph_uri", defaultGraph);
+            }
+        }
+
         Response response = null;
         try {
             // Check SPARQL query is a CONSTRUCT or DESCRIBE.
             if ((sparqlQuery == null) ||
                 (! CONSTRUCT_VALIDATION_PATTERN.matcher(sparqlQuery).find())) {
-                this.throwInvalidParamError("sparqlQuery", sparqlQuery);
+                this.throwInvalidParamError("sparql_query", sparqlQuery);
             }
             log.debug("Processing SPARQL source creation request for \"{}\"",
                       title);
@@ -2605,6 +2628,11 @@ public class Workspace extends BaseModule
     }
 
     private void throwInvalidParamError(String name, Object value) {
+        if (value instanceof String) {
+            // Special case for Strings: Jersey passes empty strings to
+            // web service methods for missing request parameters.
+            value = trimToNull((String)value);
+        }
         TechnicalException error = (value != null)?
                 new TechnicalException("ws.invalid.param.error", name, value):
                 new TechnicalException("ws.missing.param", name);
