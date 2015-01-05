@@ -1213,6 +1213,29 @@ public class Workspace extends BaseModule
                             @FormParam("cache_duration") int cacheDuration,
                             @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
+        if (! isSet(title)) {
+            this.throwInvalidParamError("title", title);
+        }
+        if (! isSet(endpointUrl)) {
+            this.throwInvalidParamError("connection_url", endpointUrl);
+        }
+        else {
+            try {
+                new URL(endpointUrl);
+            }
+            catch (Exception e) {
+                this.throwInvalidParamError("connection_url", endpointUrl);
+            }
+        }
+        if (isSet(defaultGraph)) {
+            try {
+                new URI(defaultGraph);
+            }
+            catch (Exception e) {
+                this.throwInvalidParamError("default_graph_uri", defaultGraph);
+            }
+        }
+
         Response response = null;
         try {
             // Check SPARQL query is a CONSTRUCT or DESCRIBE.
