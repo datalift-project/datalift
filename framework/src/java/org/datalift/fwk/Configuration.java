@@ -367,6 +367,17 @@ public abstract class Configuration
      */
     abstract public void removeBean(Object bean, String key);
 
+    /**
+     * Initializes this configuration.
+     */
+    abstract public void init();
+
+    /**
+     * Shuts down this configuration, freeing all attached resources
+     * and closing all repository connections.
+     */
+    abstract public void shutdown();
+
     //-------------------------------------------------------------------------
     // Singleton access and installation methods
     //-------------------------------------------------------------------------

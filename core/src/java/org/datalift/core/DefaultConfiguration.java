@@ -444,14 +444,29 @@ public class DefaultConfiguration extends Configuration
         }
     }
 
-    //-------------------------------------------------------------------------
-    // Specific implementation
-    //-------------------------------------------------------------------------
+    /** {@inheritDoc} */
+    @Override
+    public void init() {
+        // Initialize the file storages.
+        this.privateStorage = this.initFileStore(PRIVATE_STORAGE_PATH, true);
+        this.publicStorage  = this.initFileStore(PUBLIC_STORAGE_PATH, false);
+        // Check configuration to warn against potential problems.
+        if (this.publicStorage == null) {
+            log.warn("No public file store defined. " +
+                     "No file can be made remotely available.");
+        }
+        else {
+            log.info("Public file store: {}", this.publicStorage);
+        }
+        if (this.privateStorage != null) {
+            log.info("Private file store: {}", this.privateStorage);
+        }
+        // Initialize the RDF stores.
+        this.initRepositories();
+    }
 
-    /**
-     * Shuts down this configuration, freeing all attached resources
-     * and closing all repository connections.
-     */
+    /** {@inheritDoc} */
+    @Override
     public void shutdown() {
         for (Repository r : this.repositories.values()) {
             try {
@@ -460,6 +475,10 @@ public class DefaultConfiguration extends Configuration
             catch (Exception e) { /* Ignore... */ }
         }
     }
+
+    //-------------------------------------------------------------------------
+    // Specific implementation
+    //-------------------------------------------------------------------------
 
     /**
      * Loads the DataLift configuration, reading the configuration file
@@ -491,28 +510,6 @@ public class DefaultConfiguration extends Configuration
             config = new VersatileProperties(props);
         }
         return config;
-    }
-
-    /**
-     * Initializes this configuration.
-     */
-    public void init() {
-        // Initialize the file storages.
-        this.privateStorage = this.initFileStore(PRIVATE_STORAGE_PATH, true);
-        this.publicStorage  = this.initFileStore(PUBLIC_STORAGE_PATH, false);
-        // Check configuration to warn against potential problems.
-        if (this.publicStorage == null) {
-            log.warn("No public file store defined. " +
-                     "No file can be made remotely available.");
-        }
-        else {
-            log.info("Public file store: {}", this.publicStorage);
-        }
-        if (this.privateStorage != null) {
-            log.info("Private file store: {}", this.privateStorage);
-        }
-        // Initialize the RDF stores.
-        this.initRepositories();
     }
 
     /**
