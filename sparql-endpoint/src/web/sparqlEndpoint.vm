@@ -272,7 +272,7 @@
 			for (var i = 0; i < gridData.rows.length; i++) {
 				for (var k = 0; k < gridData.head.length; k++) {
 					var toCmp = eval("gridData.rows[i]." + gridData.head[k]);
-					if (toCmp.toLowerCase().indexOf(searchString) != -1) {
+					if (toCmp.toString().toLowerCase().indexOf(searchString) != -1) {
 						searchData[c] = gridData.rows[i];
 						c++;
 						k = gridData.head.length;
@@ -285,7 +285,7 @@
 			var c = 0;
 			for (var i = 0; i < gridData.rows.length; i++) {
 				var toCmp = eval("gridData.rows[i]." + searchColumn);
-				if (toCmp.toLowerCase().indexOf(searchString) != -1) {
+				if (toCmp.toString().toLowerCase().indexOf(searchString) != -1) {
 					searchData[c] = gridData.rows[i];
 					c++;
 				}
