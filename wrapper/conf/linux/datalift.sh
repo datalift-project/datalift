@@ -6,6 +6,6 @@ runDir=`dirname $0`
 # rely on native libraries.
 java -Djava.library.path="${runDir}/bin/lib:$HOME/.datalift/lib" \
      -Xms256M -Xmx3G -Xverify:all \
-     -Djava.net.useSystemProxies=true -Djava.awt.headless=true \
+     -Djava.net.useSystemProxies=true \
      -jar "${runDir}/bin/datalift-wrapper.jar" "$@" "${runDir}"
 #
