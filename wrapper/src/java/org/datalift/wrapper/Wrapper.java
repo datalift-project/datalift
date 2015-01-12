@@ -350,7 +350,8 @@ public final class Wrapper
             }
             httpServer.addHandler(ctx);
             System.out.println("Deploying \"" + webapp.getName() +
-                               "\" with context path \"" + path + '"');
+                               "\" with context path \"" +
+                               ((path.length() == 0)? "/": path) + '"');
         }
         // Ensure unused local variables can be garbage-collected.
         env = null;
