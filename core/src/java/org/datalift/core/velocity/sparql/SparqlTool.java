@@ -46,6 +46,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.MissingResourceException;
 import java.util.Map.Entry;
 
 import org.apache.velocity.tools.config.DefaultKey;
@@ -128,6 +129,10 @@ public final class SparqlTool
     private final Map<String,Value> bindings = new HashMap<String,Value>();
     private final Map<String,String> queryPrefixes =
                                                 new HashMap<String,String>();
+    /** The default repository to evaluate SPARQL queries against. */
+    private Repository defaultRepository = null;
+    /** Whether to include inferred statements in query results. */
+    private boolean includeInferred = true;
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -138,6 +143,7 @@ public final class SparqlTool
         Collection<AccessController> acs =
                                     this.cfg.getBeans(AccessController.class);
         this.accessController = (! acs.isEmpty())? acs.iterator().next(): null;
+        this.setDefaultRepository(null);
     }
 
     //-------------------------------------------------------------------------
@@ -225,8 +231,8 @@ public final class SparqlTool
     }
 
     /**
-     * Executes the specified ASK query against Datalift
-     * {@link Configuration#getDefaultRepository() default RDF store}.
+     * Executes the specified ASK query against the
+     * {@link #getDefaultRepository() default RDF store}.
      * @param  query   the ASK query.
      *
      * @return the query result as a boolean.
@@ -236,14 +242,16 @@ public final class SparqlTool
      * @see    #ask(String, String)
      */
     public boolean ask(String query) {
-        return this.ask(this.cfg.getDefaultRepository(), query);
+        return this.ask(this.defaultRepository, query);
     }
 
     /**
      * Executes the specified ASK query against the specified Datalift
      * RDF store.
      * @param  repository   the name of the RDF store to query, as
-     *                      specified in Datalift configuration.
+     *                      specified in Datalift configuration or
+     *                      <code>null</code> to query the
+     *                      {@link #getDefaultRepository() default RDF store}.
      * @param  query        the ASK query.
      *
      * @return the query result as a boolean.
@@ -255,8 +263,8 @@ public final class SparqlTool
     }
 
     /**
-     * Executes the specified SELECT query against Datalift
-     * {@link Configuration#getDefaultRepository() default RDF store}.
+     * Executes the specified SELECT query against the
+     * {@link #getDefaultRepository() default RDF store}.
      * @param  query   the SELECT query.
      *
      * @return the query result as an iterator on the matched bindings.
@@ -266,7 +274,7 @@ public final class SparqlTool
      * @see    #select(String, String)
      */
     public Iterator<Map<String,Value>> select(String query) {
-        return this.select(this.cfg.getDefaultRepository(), query);
+        return this.select(this.defaultRepository, query);
     }
 
     /**
@@ -274,9 +282,8 @@ public final class SparqlTool
      * Datalift RDF store.
      * @param  repository   the name of the RDF store to query, as
      *                      specified in Datalift configuration or
-     *                      <code>null</code> to query Datalift
-     *                      {@link Configuration#getDefaultRepository()
-     *                       default RDF store}.
+     *                      <code>null</code> to query the
+     *                      {@link #getDefaultRepository() default RDF store}.
      * @param  query        the SELECT query.
      *
      * @return the query result as an iterator on the matched bindings.
@@ -288,9 +295,8 @@ public final class SparqlTool
     }
 
     /**
-     * Executes the specified CONSTRUCT (or DESCRIBE) query against
-     * Datalift
-     * {@link Configuration#getDefaultRepository() default RDF store}.
+     * Executes the specified CONSTRUCT (or DESCRIBE) query against the
+     * {@link #getDefaultRepository() default RDF store}.
      * @param  query   the CONSTRUCT (or DESCRIBE) query.
      *
      * @return the query result as a {@link Statement} iterator.
@@ -300,14 +306,16 @@ public final class SparqlTool
      * @see    #construct(String, String)
      */
     public Iterator<Statement> construct(String query) {
-        return this.construct(this.cfg.getDefaultRepository(), query);
+        return this.construct(this.defaultRepository, query);
     }
 
     /**
      * Executes the specified CONSTRUCT (or DESCRIBE) query against
      * the specified Datalift RDF store.
      * @param  repository   the name of the RDF store to query, as
-     *                      specified in Datalift configuration.
+     *                      specified in Datalift configuration or
+     *                      <code>null</code> to query the
+     *                      {@link #getDefaultRepository() default RDF store}.
      * @param  query        the CONSTRUCT (or DESCRIBE) query.
      *
      * @return the query result as a {@link Statement} iterator.
@@ -320,9 +328,8 @@ public final class SparqlTool
 
     /**
      * Executes a DESCRIBE query for the specified RDF resource against
-     * Datalift
-     * {@link Configuration#getDefaultRepository() default RDF store}.
-     * @param  uri   the URI of the RDF resource to retrieve.
+     * the {@link #getDefaultRepository() default RDF store}.
+     * @param  uri   the URI of the RDF resource to describe.
      *
      * @return the query result as a {@link DescribeResult} object.
      * @throws RdfQueryException if any error occurred executing the
@@ -331,15 +338,17 @@ public final class SparqlTool
      * @see    #describe(String, String)
      */
     public DescribeResult describe(Object uri) {
-       return this.describe(this.cfg.getDefaultRepository(), uri);
+       return this.describe(this.defaultRepository, uri);
     }
 
     /**
      * Executes a DESCRIBE query for the specified RDF resource against
      * the specified Datalift RDF store.
      * @param  repository   the name of the RDF store to query, as
-     *                      specified in Datalift configuration.
-     * @param  uri          the URI of the RDF resource to retrieve.
+     *                      specified in Datalift configuration or
+     *                      <code>null</code> to query the
+     *                      {@link #getDefaultRepository() default RDF store}.
+     * @param  uri          the URI of the RDF resource to describe.
      *
      * @return the query result as a {@link DescribeResult} object.
      * @throws RdfQueryException if any error occurred executing the
@@ -475,6 +484,50 @@ public final class SparqlTool
         return s;
     }
 
+    /**
+     * Returns the name of the default repository to send queries to.
+     * @return the name of the default repository or an empty string
+     *         if Datalift
+     *         {@link Configuration#getDefaultRepository() default RDF store}
+     *         is being used.
+     */
+    public String getDefaultRepository() {
+        return (this.defaultRepository.equals(this.cfg.getDefaultRepository()))?
+                                "": this.defaultRepository.getName();
+    }
+
+    /**
+     * Sets the repository to send queries to when no explicit target
+     * repository is specified.
+     * @param  repository   the repository name in Datalift configuration.
+     *
+     * @throws MissingResourceException if the requested repository does
+     *         not exist.
+     */
+    public void setDefaultRepository(String repository) {
+        this.defaultRepository = (isSet(repository))?
+                    cfg.getRepository(repository): cfg.getDefaultRepository();
+    }
+
+    /**
+     * Returns whether inferred statements are included in query
+     * responses.
+     * @return <code>true</code> if inferred statements are included
+     *         in query responses; <code>false</code> otherwise.
+     */
+    public boolean getIncludeInferred() {
+        return this.includeInferred;
+    }
+
+    /**
+     * Sets whether to include inferred statements in query results.
+     * @param  includeInferred   whether to include inferred statements
+     *                           in query results
+     */
+    public void setIncludeInferred(boolean includeInferred) {
+        this.includeInferred = includeInferred;
+    }
+
     //-------------------------------------------------------------------------
     // Specific implementation
     //-------------------------------------------------------------------------
@@ -498,6 +551,8 @@ public final class SparqlTool
             BooleanQuery q = cnx.prepareBooleanQuery(SPARQL, ctrl.query);
             this.setGraphConstraints(q, ctrl);
             this.setBindings(q);
+            q.setIncludeInferred(this.includeInferred);
+
             boolean result = q.evaluate();
             if (log.isDebugEnabled()) {
                 if (this.bindings.isEmpty()) {
@@ -549,6 +604,8 @@ public final class SparqlTool
             TupleQuery q = cnx.prepareTupleQuery(SPARQL, ctrl.query);
             this.setGraphConstraints(q, ctrl);
             this.setBindings(q);
+            q.setIncludeInferred(this.includeInferred);
+
             if (log.isDebugEnabled()) {
                 if (this.bindings.isEmpty()) {
                     log.debug("Executing \"{}\" on RDF store: {}...",
@@ -594,6 +651,8 @@ public final class SparqlTool
             GraphQuery q = cnx.prepareGraphQuery(SPARQL, ctrl.query);
             this.setGraphConstraints(q, ctrl);
             this.setBindings(q);
+            q.setIncludeInferred(this.includeInferred);
+
             if (log.isDebugEnabled()) {
                 if (this.bindings.isEmpty()) {
                     log.debug("Executing \"{}\" on RDF store: {}...",
@@ -641,6 +700,8 @@ public final class SparqlTool
             GraphQuery q = cnx.prepareGraphQuery(SPARQL, ctrl.query);
             this.setGraphConstraints(q, ctrl);
             this.setBindings(q);
+            q.setIncludeInferred(this.includeInferred);
+
             DescribeResult result = new DescribeResult(u, q.evaluate());
             if (log.isDebugEnabled()) {
                 if (this.bindings.isEmpty()) {
