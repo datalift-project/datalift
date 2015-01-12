@@ -206,13 +206,16 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                               + "  GRAPH <{0}> '{' ?s ?p ?o . '}'\n'}'");
 
     private final static String DETERMINE_TYPE_QUERY =
-            "SELECT DISTINCT ?s ?p ?g ?t ?o WHERE {\n" +
-            "  OPTIONAL { ?s ?p1 ?o1 . FILTER( ?s = ?u ) }\n" +
-            "  OPTIONAL { ?s2 ?p ?o2 . FILTER( ?p = ?u ) }\n" +
-            "  OPTIONAL { ?s3 a  ?t  . FILTER( ?t = ?u ) }\n" +
-            "  OPTIONAL { GRAPH ?g { ?s4 ?p4 ?o4 . FILTER( ?g = ?u ) } }\n" +
-            "  OPTIONAL { ?s5 ?p5 ?o . FILTER( ?o = ?u ) }\n" +
-            "} LIMIT 1";
+            "SELECT DISTINCT ?kind WHERE {\n" +
+                "{ ?u ?p1 ?o1 . BIND(\"r\" as ?kind) }\n" +
+                "UNION\n" +
+                "{ GRAPH ?u { ?s4 ?p4 ?o4 . BIND(\"g\" as ?kind) } }\n" +
+                "UNION\n" +
+                "{ ?s2 ?u ?o2 . BIND(\"p\" as ?kind) }\n" +
+                "UNION\n" +
+                "{ ?s3 a ?u .   BIND(\"t\" as ?kind) }\n" +
+                "UNION\n" +
+                "{ ?s5 ?p5 ?u . BIND(\"v\" as ?kind) }\n}";
 
     /** The SPARQL query to extract predefined query data. */
     private final static String LOAD_PREDEFINED_QUERIES_QUERY =
@@ -1052,26 +1055,31 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                     private ElementType nodeType = null;
                     @Override
                     public void handleSolution(BindingSet b) {
+                        String kind = null;
+                        Value v = b.getValue("kind");
+                        if (v instanceof Literal) {
+                            kind = v.stringValue();
+                        }
                         if (nodeType == null) {
                             // Only consider predicates, types or values if the
                             // URI doesn't match a resource or a named graph.
-                            if (b.hasBinding("p")) {
+                            if ("p".equals(kind)) {
                                 nodeType = Predicate;
                             }
-                            else if (b.hasBinding("t")) {
+                            else if ("t".equals(kind)) {
                                 nodeType = RdfType;
                             }
-                            else if (b.hasBinding("o")) {
+                            else if ("v".equals(kind)) {
                                 nodeType = Value;
                             }
                         }
                         // Resources and named graphs take precedence.
-                        if (b.hasBinding("s")) {
+                        if ("r".equals(kind)) {
                             if ((nodeType != Graph) || (! serveGraphsFirst)) {
                                 nodeType = Resource;
                             }
                         }
-                        if (b.hasBinding("g")) {
+                        if ("g".equals(kind)) {
                             if ((nodeType != Resource) || (serveGraphsFirst)) {
                                 nodeType = Graph;
                             }
@@ -1087,7 +1095,8 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                 repository = Configuration.getDefault().getDefaultRepository();
             }
             // Execute filter query.
-            repository.select(DETERMINE_TYPE_QUERY, bindings, m);
+            repository.select(DETERMINE_TYPE_QUERY, bindings, m,
+                                                    null, null, false);
             type = m.getResult();
         }
         catch (Exception e) {
