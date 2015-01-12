@@ -163,8 +163,28 @@ public abstract class Repository
      * @throws RdfQueryException if any error occurred executing
      *         the query.
      */
+    public boolean ask(String query, Map<String,Object> bindings,
+                                     Dataset dataset, String baseUri) {
+        return this.ask(query, bindings, dataset, baseUri, true);
+    }
+
+    /**
+     * Executes the specified ASK SPARQL query on a specific dataset
+     * with a set of initial bindings.
+     * @param  query             the ASK query.
+     * @param  bindings          the initial bindings or <code>null</code>
+     *                           if no variables shall be initially bound.
+     * @param  dataset           the specific dataset to query.
+     * @param  baseUri           the base URI for relative URI resolution.
+     * @param  includeInferred   whether to include inferred statements.
+     *
+     * @return the ASK query result.
+     * @throws RdfQueryException if any error occurred executing
+     *         the query.
+     */
     abstract public boolean ask(String query, Map<String,Object> bindings,
-                                Dataset dataset, String baseUri);
+                                Dataset dataset, String baseUri,
+                                boolean includeInferred);
 
     /**
      * Executes the specified SELECT SPARQL query on the default graph.
@@ -219,10 +239,33 @@ public abstract class Repository
      * @throws RdfQueryException if any error occurred executing
      *         the query.
      */
+    public void select(String query, Map<String,Object> bindings,
+                       TupleQueryResultHandler handler,
+                       Dataset dataset, String baseUri) throws RdfException {
+        this.select(query, bindings, handler, dataset, baseUri, true);
+    }
+
+    /**
+     * Executes the specified SELECT SPARQL query on a specific dataset
+     * with a set of initial bindings. The query results are directly
+     * handed over to the specified handler object.
+     * @param  query             the SELECT query.
+     * @param  bindings          the initial bindings or <code>null</code>
+     *                           if no variables shall be initially bound.
+     * @param  handler           the query result handler.
+     * @param  dataset           the specific dataset to query.
+     * @param  baseUri           the base URI for relative URI resolution.
+     * @param  includeInferred   whether to include inferred statements.
+     *
+     * @throws RdfException      if any error was reported by the
+     *         result handler.
+     * @throws RdfQueryException if any error occurred executing
+     *         the query.
+     */
     abstract public void select(String query, Map<String,Object> bindings,
                                 TupleQueryResultHandler handler,
-                                Dataset dataset, String baseUri)
-                                                        throws RdfException;
+                                Dataset dataset, String baseUri,
+                                boolean includeInferred) throws RdfException;
 
     /**
      * Executes the specified CONSTRUCT or DESCRIBE SPARQL query on the
@@ -276,9 +319,31 @@ public abstract class Repository
      * @throws RdfQueryException if any error occurred executing
      *         the query.
      */
+    public void construct(String query, Map<String,Object> bindings,
+                          RDFHandler handler, Dataset dataset, String baseUri)
+                                                        throws RdfException {
+        this.construct(query, bindings, handler, dataset, baseUri, true);
+    }
+
+    /**
+     * Executes the specified CONSTRUCT or DESCRIBE SPARQL query on a
+     * specific dataset with a set of initial bindings. The query
+     * results are directly handed over to the specified handler object.
+     * @param  query      the CONSTRUCT or DESCRIBE query.
+     * @param  bindings   the initial bindings or <code>null</code> if
+     *                    no variables shall be initially bound.
+     * @param  handler    the query result handler.
+     * @param  dataset    the specific dataset to query.
+     * @param  baseUri    the base URI for relative URI resolution.
+     *
+     * @throws RdfException      if any error was reported by the
+     *         result handler.
+     * @throws RdfQueryException if any error occurred executing
+     *         the query.
+     */
     abstract public void construct(String query, Map<String,Object> bindings,
-                                   RDFHandler handler,
-                                   Dataset dataset, String baseUri)
+                                   RDFHandler handler, Dataset dataset,
+                                   String baseUri, boolean includeInferred)
                                                         throws RdfException;
 
     /**

@@ -200,11 +200,12 @@ abstract public class BaseRepository extends Repository
     /** {@inheritDoc} */
     @Override
     public boolean ask(String query, Map<String,Object> bindings,
-                                     Dataset dataset, String baseUri) {
+                    Dataset dataset, String baseUri, boolean includeInferred) {
         RepositoryConnection cnx = this.newConnection();
         try {
             BooleanQuery q = cnx.prepareBooleanQuery(SPARQL, query, baseUri);
             this.setBindings(q, bindings);
+            q.setIncludeInferred(includeInferred);
             if (dataset != null) {
                 q.setDataset(dataset);
             }
@@ -226,12 +227,13 @@ abstract public class BaseRepository extends Repository
     /** {@inheritDoc} */
     @Override
     public void construct(String query, Map<String,Object> bindings,
-                          RDFHandler handler,
-                          Dataset dataset, String baseUri) throws RdfException {
+                          RDFHandler handler, Dataset dataset, String baseUri,
+                          boolean includeInferred) throws RdfException {
         RepositoryConnection cnx = this.newConnection();
         try {
             GraphQuery q = cnx.prepareGraphQuery(SPARQL, query, baseUri);
             this.setBindings(q, bindings);
+            q.setIncludeInferred(includeInferred);
             if (dataset != null) {
                 q.setDataset(dataset);
             }
@@ -253,12 +255,14 @@ abstract public class BaseRepository extends Repository
     /** {@inheritDoc} */
     @Override
     public void select(String query, Map<String,Object> bindings,
-                       TupleQueryResultHandler handler,
-                       Dataset dataset, String baseUri) throws RdfException {
+                       TupleQueryResultHandler handler, Dataset dataset,
+                       String baseUri, boolean includeInferred)
+                                                       throws RdfException {
         RepositoryConnection cnx = this.newConnection();
         try {
             TupleQuery q = cnx.prepareTupleQuery(SPARQL, query, baseUri);
             this.setBindings(q, bindings);
+            q.setIncludeInferred(includeInferred);
             if (dataset != null) {
                 q.setDataset(dataset);
             }
