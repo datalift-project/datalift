@@ -98,6 +98,23 @@ public interface SparqlEndpoint
         DESCRIBE
     }
 
+    /**
+     * The (optional) configuration property indicating whether
+     * <a href="http://www.w3.org/Submission/CBD/">Concise Bounded Description</a>
+     * is supported by the back-end RDF stores for describing RDF
+     * resources. If set to <code>false</code>, a built-in CONSTRUCT
+     * query is used to include a first level of blank nodes.
+     */
+    public final static String CBD_SUPPORT_PROPERTY =
+                                            "sparql.use.repository.cdb";
+    /**
+     * The (optional) configuration property indicating whether
+     * named graphs shall be served in priority to resources in case
+     * the same URI exists describing both.
+     */
+    public final static String PREFER_GRAPHS_PROPERTY =
+                                            "sparql.serve.graphs.first";
+
     //-------------------------------------------------------------------------
     // Methods
     //-------------------------------------------------------------------------

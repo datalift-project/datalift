@@ -54,6 +54,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.MissingResourceException;
+import java.util.Set;
 import java.util.TreeSet;
 
 import javax.ws.rs.Consumes;
@@ -127,15 +128,6 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     public final static String MODULE_NAME = "sparql";
 
     /**
-     * The (optional) configuration property indicating whether
-     * <a href="http://www.w3.org/Submission/CBD/">Concise Bounded Description</a>
-     * is supported by the back-end RDF stores for describing RDF
-     * resources. If set to <code>false</code>, a built-in CONSTRUCT
-     * query is used to include a first level of blank nodes.
-     */
-    public final static String CBD_SUPPORT_PROPERTY =
-                                            "sparql.use.repository.cdb";
-    /**
      * The configuration property defining the maximum number of entries
      * (statements, binding sets...) to be displayed in HTML pages.
      */
@@ -151,13 +143,6 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                                             "sparql.predefined.queries.file";
     /** The default queries file, embedded in module JAR. */
     private final static String DEFAULT_QUERIES_FILE = "predefined-queries.ttl";
-    /**
-     * The (optional) configuration property indicating whether
-     * named graphs shall be served in priority to resources in case
-     * the same URI exists describing both.
-     */
-    public final static String PREFER_GRAPHS_PROPERTY =
-                                            "sparql.serve.graphs.first";
 
     /** The name of the default template for the endpoint welcome page. */
     protected final static String DEFAULT_WELCOME_TEMPLATE =
@@ -207,15 +192,15 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
 
     private final static String DETERMINE_TYPE_QUERY =
             "SELECT DISTINCT ?kind WHERE {\n" +
-                "{ ?u ?p1 ?o1 . BIND(\"r\" as ?kind) }\n" +
+                "{ ?u ?p1 ?o1 . BIND(\"" + Resource + "\" AS ?kind) }\n" +
                 "UNION\n" +
-                "{ GRAPH ?u { ?s4 ?p4 ?o4 . BIND(\"g\" as ?kind) } }\n" +
+                "{ GRAPH ?u { ?s4 ?p4 ?o4 . BIND(\"" + Graph + "\" AS ?kind) } }\n" +
                 "UNION\n" +
-                "{ ?s2 ?u ?o2 . BIND(\"p\" as ?kind) }\n" +
+                "{ ?s2 ?u ?o2 . BIND(\"" + Predicate + "\" AS ?kind) }\n" +
                 "UNION\n" +
-                "{ ?s3 a ?u .   BIND(\"t\" as ?kind) }\n" +
+                "{ ?s3 a ?u .   BIND(\"" + RdfType + "\" AS ?kind) }\n" +
                 "UNION\n" +
-                "{ ?s5 ?p5 ?u . BIND(\"v\" as ?kind) }\n}";
+                "{ ?s5 ?p5 ?u . BIND(\"" + Value + "\" AS ?kind) }\n}";
 
     /** The SPARQL query to extract predefined query data. */
     private final static String LOAD_PREDEFINED_QUERIES_QUERY =
@@ -1052,42 +1037,23 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
             bindings.put("u", uri);
             TupleQueryResultMapper<ElementType> m =
                                 new BaseTupleQueryResultMapper<ElementType>() {
-                    private ElementType nodeType = null;
+                    private Set<ElementType> nodeKinds =
+                        new TreeSet<ElementType>(comparator(serveGraphsFirst));
+
                     @Override
                     public void handleSolution(BindingSet b) {
-                        String kind = null;
-                        Value v = b.getValue("kind");
-                        if (v instanceof Literal) {
-                            kind = v.stringValue();
-                        }
-                        if (nodeType == null) {
-                            // Only consider predicates, types or values if the
-                            // URI doesn't match a resource or a named graph.
-                            if ("p".equals(kind)) {
-                                nodeType = Predicate;
-                            }
-                            else if ("t".equals(kind)) {
-                                nodeType = RdfType;
-                            }
-                            else if ("v".equals(kind)) {
-                                nodeType = Value;
-                            }
-                        }
-                        // Resources and named graphs take precedence.
-                        if ("r".equals(kind)) {
-                            if ((nodeType != Graph) || (! serveGraphsFirst)) {
-                                nodeType = Resource;
-                            }
-                        }
-                        if ("g".equals(kind)) {
-                            if ((nodeType != Resource) || (serveGraphsFirst)) {
-                                nodeType = Graph;
+                        if (b.hasBinding("kind")) {
+                            ElementType kind = ElementType.fromString(
+                                            b.getValue("kind").stringValue());
+                            if (kind != null) {
+                                this.nodeKinds.add(kind);
                             }
                         }
                     }
                     @Override
                     public ElementType getResult() {
-                        return nodeType;
+                        return (! this.nodeKinds.isEmpty())?
+                                        this.nodeKinds.iterator().next(): null;
                     }
                 };
             if (repository == null) {
