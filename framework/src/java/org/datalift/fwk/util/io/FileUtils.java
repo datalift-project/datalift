@@ -54,6 +54,8 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -92,6 +94,9 @@ public final class FileUtils
     // Constants
     //-------------------------------------------------------------------------
 
+    /** Well-known compression formats extensions. */
+    public final static Collection<String> COMPRESSION_FORMATS_EXTENSIONS =
+                                            Arrays.asList("zip", "gz", "bz2");
     /* BZip2 magic numbers. */
     private final static byte[] BZ2_HEADERS = { 0x42, 0x5a, 0x68 };
     /* MIME type for contents of unknown type. */

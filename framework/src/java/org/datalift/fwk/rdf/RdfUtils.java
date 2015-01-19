@@ -779,10 +779,11 @@ public final class RdfUtils
      *         <code>null</code> or is not a regular file.
      */
     public static RdfFormat guessRdfFormatFromExtension(String fileName) {
-        String ext = "";
-        int i = fileName.lastIndexOf('.');
-        if ((i > 0) && (i < fileName.length() - 1)) {
-            ext = fileName.substring(i+1);
+        String ext = getFileExtension(fileName);
+        // Ignore compression formats extensions, if any.
+        if (FileUtils.COMPRESSION_FORMATS_EXTENSIONS.contains(ext)) {
+            int l = fileName.length() - ext.length() - 1;
+            ext = getFileExtension(fileName.substring(0, l));
         }
         RdfFormat format = null;
         for (RdfFormat t : RdfFormat.values()) {
@@ -1123,6 +1124,21 @@ public final class RdfUtils
         // [#x10000-#x10FFFF]
         return (c >= 32 && c <= 55295) || (c >= 57344 && c <= 65533) ||
                (c >= 65536 && c <= 1114111) || c == 9 || c == 10 || c == 13;
+    }
+
+    /**
+     * Returns the extension (file type) from the specified file name.
+     * @param  fileName   the file name.
+     *
+     * @return the extension from the specified file name.
+     */
+    private static String getFileExtension(String fileName) {
+        String ext = "";
+        int i = fileName.lastIndexOf('.');
+        if ((i > 0) && (i < fileName.length() - 1)) {
+            ext = fileName.substring(i+1);
+        }
+        return ext;
     }
 
     /** The severity levels for RDF parse errors. */
