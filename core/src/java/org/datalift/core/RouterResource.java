@@ -67,7 +67,6 @@ import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 import static javax.ws.rs.core.Response.Status.*;
 
 import org.openrdf.model.Literal;
-import org.openrdf.query.Binding;
 import org.openrdf.query.BindingSet;
 import org.openrdf.query.TupleQueryResultHandlerBase;
 
@@ -704,24 +703,23 @@ public class RouterResource implements LifeCycle, ResourceResolver
         public void handleSolution(BindingSet b) {
             if (this.type == null) {
                 // Store information for the first matched entry.
-                this.type = (b.getBinding("s") != null)? ElementType.Resource:
-                            (b.getBinding("g") != null)? ElementType.Graph: null;
-                if (this.type == null) {
-                    this.lastModified = this.getDate(b, "lastModified");
+                this.type = (b.hasBinding("s"))? ElementType.Resource:
+                            (b.hasBinding("g"))? ElementType.Graph: null;
+                if (this.type != null) {
+                    this.lastModified = this.extractDate(b, "lastModified");
                 }
             }
             // Else: Ignore subsequent entries.
         }
 
-        private Date getDate(BindingSet b, String name) {
+        private Date extractDate(BindingSet b, String name) {
             Date d = null;
-            Binding v = b.getBinding(name);
-            if (v != null) {
+            if (b.hasBinding(name)) {
                 try {
                     // Try to extract date.
-                    d = ((Literal)(v.getValue())).calendarValue()
-                                                 .toGregorianCalendar()
-                                                 .getTime();
+                    d = ((Literal)(b.getValue(name))).calendarValue()
+                                                     .toGregorianCalendar()
+                                                     .getTime();
                 }
                 catch (Exception e) { /* No date here... */ }
             }
