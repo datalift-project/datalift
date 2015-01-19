@@ -31,6 +31,8 @@
 		#set( $graphContext = "${graphContext}&default-graph-uri=$!esc.url($describe-uri)" )
 	#elseif( $describe-type == "Predicate" )
 		#set( $title = "sparql.describe.predicate" )
+	#elseif( $describe-type == "RdfType" )
+		#set( $title = "sparql.describe.rdftype" )
 	#else
 		#set( $title = "sparql.describe.object" )
 	#end
