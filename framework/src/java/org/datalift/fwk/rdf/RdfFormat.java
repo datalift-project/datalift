@@ -100,6 +100,8 @@ public enum RdfFormat
     TRIG        ("TriG", RDFFormat.TRIG, "trig", APPLICATION_TRIG_TYPE),
     /** "application/x-trig" */
     TRIX        ("TriX", RDFFormat.TRIX, "trix", APPLICATION_TRIX_TYPE),
+    /** "application/x-trig" */
+    NQUADS      ("N-Quads", RDFFormat.NQUADS, "nq", TEXT_NQUADS_TYPE),
     // /** "application/rdf+json" */
     // RDF_JSON    ("RDF/JSON", RDFFormat.RDFJSON, "json",
     //              APPLICATION_RDF_JSON_TYPE, APPLICATION_JSON_TYPE),
