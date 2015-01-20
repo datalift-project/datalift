@@ -81,7 +81,7 @@ public class OfflineLovService extends LovService {
 	/** Aggregator in tripleStore */
 	private boolean dataLoaded = false;
 	/** If an update is required*/
-	private boolean updating = true;
+	private boolean updating = false;
 
 	/** Last LOV update */
 	private Date lastLovUpdate = null;
