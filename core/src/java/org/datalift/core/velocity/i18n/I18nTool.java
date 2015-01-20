@@ -64,11 +64,11 @@ import org.datalift.fwk.log.Logger;
  *  <li>Accessor methods to user's locale information, e.g. language
  *   to set the <code>lang</code> attribute of the &lt;html&gt; tag</li>
  * </ul>
- * 
+ *
  * @author lbihanic
  */
 @DefaultKey(I18nTool.KEY)
-public class I18nTool
+public final class I18nTool
 {
     // ------------------------------------------------------------------------
     // Constants
@@ -147,7 +147,7 @@ public class I18nTool
      * specified arguments.
      * @param  key    the message identifier.
      * @param  args   the message arguments.
-     * 
+     *
      * @return the formatted message.
      */
     public String format(String key, Object... args) {
@@ -180,6 +180,17 @@ public class I18nTool
     }
 
     /**
+     * Shortcut for {@link #format(String, Object...)}.
+     * @param  key    the message identifier.
+     * @param  args   the message arguments.
+     *
+     * @return the formatted message.
+     */
+    public String msg(String key, Object... args) {
+        return this.format(key, args);
+    }
+
+    /**
      * Formats the specified internationalized message with the
      * specified arguments and escape the resulting string using HTML
      * entities.
@@ -207,6 +218,18 @@ public class I18nTool
     public String javascript(String key, Object... args) {
         String s = this.format(key, args);
         return (s != null)? StringEscapeUtils.escapeJavaScript(s): null;
+    }
+
+    /**
+     * Shortcut for {@link #javascript(String, Object...)}.
+     * @param  key    the message identifier.
+     * @param  args   the message arguments.
+     *
+     * @return the formatted message, escaped for inserting in
+     *         Javascript code.
+     */
+    public String js(String key, Object... args) {
+        return this.javascript(key, args);
     }
 
     /**
