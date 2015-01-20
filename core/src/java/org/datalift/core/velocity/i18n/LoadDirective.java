@@ -66,7 +66,7 @@ import org.datalift.fwk.log.Logger;
  *
  * @author lbihanic
  */
-public class LoadDirective extends Directive
+public final class LoadDirective extends Directive
 {
     //-------------------------------------------------------------------------
     // Constants

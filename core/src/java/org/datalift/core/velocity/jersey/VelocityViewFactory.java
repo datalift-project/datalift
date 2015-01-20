@@ -56,7 +56,7 @@ import org.datalift.fwk.view.ViewFactory;
  *
  * @author lbihanic
  */
-public class VelocityViewFactory extends ViewFactory
+public final class VelocityViewFactory extends ViewFactory
 {
     //-------------------------------------------------------------------------
     // ViewFactory contract support
