@@ -654,7 +654,8 @@ public class RouterResource implements LifeCycle, ResourceResolver
                 Map<String,Object> bindings = new HashMap<String,Object>();
                 bindings.put("u", this.uri);
                 Configuration.getDefault().getDataRepository()
-                                          .select(query, bindings, result);
+                                          .select(query, bindings, result,
+                                                         null, null, false);
             }
             catch (Exception e) {
                 throw new RuntimeException("Failed to execute query \""
