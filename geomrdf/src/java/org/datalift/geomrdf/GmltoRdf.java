@@ -74,16 +74,13 @@ import static javax.ws.rs.core.MediaType.TEXT_HTML;
 import static org.datalift.fwk.rdf.ElementType.RdfType;
 import static org.datalift.fwk.util.StringUtils.*;
 
-import org.openrdf.model.BNode;
 import org.openrdf.model.Statement;
 import org.openrdf.model.ValueFactory;
 import org.openrdf.model.vocabulary.RDF;
-import org.openrdf.model.vocabulary.RDFS;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
 
 import fr.ign.datalift.constants.GeoSPARQL;
-import fr.ign.datalift.constants.Geometrie;
 import fr.ign.datalift.model.AbstractFeature;
 import fr.ign.datalift.model.FeatureProperty;
 import fr.ign.datalift.model.GeometryProperty;

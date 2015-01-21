@@ -344,7 +344,7 @@ public class Features_Parser {
 	}
 
 	protected void parsePoint(GeometryProperty gp, Point p){
-		Double[] pt = {p.getX(), p.getY()};
+		Double[] pt = { Double.valueOf(p.getX()), Double.valueOf(p.getY()) };
 		gp.setPointsLists(pt);
 	}
 

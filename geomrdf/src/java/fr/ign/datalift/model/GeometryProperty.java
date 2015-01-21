@@ -64,19 +64,20 @@ public class GeometryProperty extends FeatureProperty {
 	}
 
 	public void setIsRing(boolean isRing){
-		this.isRing.add(isRing);
+		this.isRing.add(Boolean.valueOf(isRing));
 	}
 
 	public boolean getIsRing(int indexRing){
-		return this.isRing.get(indexRing);
+		return (Boolean.TRUE.equals(this.isRing.get(indexRing)));
 	}
 
 	public int getNumPoint(int indexPointList) {
-		return this.numPoints.get(indexPointList);
+		Integer v = this.numPoints.get(indexPointList);
+		return (v != null)? v.intValue(): -1;
 	}
 
 	public void setNumPoint(int numPoint) {
-		this.numPoints.add(numPoint);
+		this.numPoints.add(Integer.valueOf(numPoint));
 	}
 
 	public Double[] getPoint(int indexPoint) {

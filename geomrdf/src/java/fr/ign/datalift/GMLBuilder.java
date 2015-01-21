@@ -57,7 +57,6 @@ import org.geotools.referencing.CRS;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.w3c.dom.Document;
 
-import fr.ign.datalift.parser.ShpParser;
 
 public class GMLBuilder {
 

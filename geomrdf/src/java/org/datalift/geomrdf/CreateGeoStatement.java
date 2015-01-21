@@ -225,11 +225,14 @@ public class CreateGeoStatement {
 		geoStatement = vf.createStatement(geomFeature, RDF.TYPE, Geometrie.POINT);
 		aboutGeometry.add(geoStatement);
 		this.setCrs(geomFeature,crs);
-		geoStatement = vf.createStatement(geomFeature, Geometrie.COORDX, vf.createLiteral(point[0]));
-		aboutGeometry.add(geoStatement);
-		geoStatement = vf.createStatement(geomFeature, Geometrie.COORDY, vf.createLiteral(point[1]));
-		aboutGeometry.add(geoStatement);
-
+		if ((point.length > 0) && (point[0] != null)) {
+		    geoStatement = vf.createStatement(geomFeature, Geometrie.COORDX, vf.createLiteral(point[0].doubleValue()));
+		    aboutGeometry.add(geoStatement);
+		}
+		if ((point.length > 1) && (point[1] != null)) {
+		    geoStatement = vf.createStatement(geomFeature, Geometrie.COORDY, vf.createLiteral(point[1].doubleValue()));
+		    aboutGeometry.add(geoStatement);
+		}
 	}
 
 	protected int getCurrentIndexPoint(GeometryProperty gp, int currentIndexPoint){
