@@ -369,9 +369,31 @@ public abstract class BaseConverterModule
     protected TransformedRdfSource addResultSource(Project p, Source parent,
                                                    String name, URI uri)
                                                             throws IOException {
+        return this.addResultSource(p, parent, name, uri, null);
+    }
+
+    /**
+     * Creates a new transformed RDF source and attach it to the
+     * specified project.
+     * @param  p         the owning project.
+     * @param  parent    the parent source object.
+     * @param  name      the new source name.
+     * @param  uri       the new source URI.
+     * @param  baseUri   the URI that was used to parse RDF data or to
+     *                   compute the URIs of resources and predicates of
+     *                   the RDF source, <code>null</code> if the URIs
+     *                   within the source do not share any common base.
+     *
+     * @return the newly created transformed RDF source.
+     * @throws IOException if any error occurred creating the source.
+     */
+    protected TransformedRdfSource addResultSource(Project p, Source parent,
+                                                   String name, URI uri,
+                                                   URI baseUri)
+                                                            throws IOException {
         TransformedRdfSource newSrc =
                         this.projectManager.newTransformedRdfSource(p, uri,
-                                                    name, null, uri, parent);
+                                            name, null, uri, baseUri, parent);
         this.projectManager.saveProject(p);
         return newSrc;
     }

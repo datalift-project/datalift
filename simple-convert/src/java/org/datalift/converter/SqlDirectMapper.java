@@ -273,7 +273,8 @@ public class SqlDirectMapper extends BaseConverterModule
             this.convert(in, keyColumn, internal, targetGraph,
                                                   baseUri, targetType);
             // Register new transformed RDF source.
-            Source out = this.addResultSource(p, in, destTitle, targetGraph);
+            Source out = this.addResultSource(p, in, destTitle,
+                                                     targetGraph, baseUri);
             // Display project source tab, including the newly created source.
             response = this.created(out).build();
 

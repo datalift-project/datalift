@@ -51,5 +51,17 @@ public interface RdfSource extends Source, CloseableIterable<Statement>
     // RdfSource contract definition
     //-------------------------------------------------------------------------
 
-    // No specific method other than iterator().
+    /**
+     * Returns the URI that was used to parse RDF data or to compute
+     * the URIs of resources and predicates of this source, if any.
+     * <p>
+     * Please note that this base URI may be partial, i.e. it may lack
+     * the trailing '/' or '#' characters. In this case, resources URIs
+     * are (usually) built by appending as terminal '/' character while
+     * predicate URIs use a terminal '#' character.</p>
+     *
+     * @return the base URI for this source or <code>null</code> if the
+     *         URIs within this source do not share any common base.
+     */
+    public String getBaseUri();
 }

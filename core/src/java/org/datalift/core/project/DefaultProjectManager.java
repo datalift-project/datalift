@@ -333,12 +333,28 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
                                     URI uri, String title, String description,
                                     URI targetGraph, Source parent)
                                                             throws IOException {
+        return this.newTransformedRdfSource(project, uri, title, description,
+                                            targetGraph, null, parent);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public TransformedRdfSource newTransformedRdfSource(Project project,
+                                    URI uri, String title, String description,
+                                    URI targetGraph, URI baseUri, Source parent)
+                                                            throws IOException {
+        if (targetGraph == null) {
+            throw new IllegalArgumentException("targetGraph");
+        }
         // Create new transformed RDF source.
         TransformedRdfSourceImpl src =
                         new TransformedRdfSourceImpl(uri.toString(), project);
         // Set source parameters.
         this.initSource(src, title, description);
         src.setTargetGraph(targetGraph.toString());
+        if (baseUri != null) {
+            src.setBaseUri(baseUri.toString());
+        }
         src.setParent(parent);
         // Add source to project.
         project.add(src);

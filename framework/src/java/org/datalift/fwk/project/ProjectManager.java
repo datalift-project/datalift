@@ -248,6 +248,27 @@ public interface ProjectManager
                                                             throws IOException;
 
     /**
+     * Creates a new transformed RDF source object.
+     * @param  project       the owning project.
+     * @param  uri           the source URI.
+     * @param  title         the source label.
+     * @param  targetGraph   the URI of the target named graph.
+     * @param  baseUri       the URI that was used to compute the URIs
+     *                       of the resources and predicates of the
+     *                       source.
+     * @param  parent        the parent source.
+     *
+     * @return a new transformed RDF source, associated to the specified
+     *         project.
+     * @throws IOException if any error occurred creating the source
+     *         or accessing the underlying data.
+     */
+    public TransformedRdfSource newTransformedRdfSource(Project project,
+                                URI uri, String title, String description,
+                                URI targetGraph, URI baseUri, Source parent)
+                                                            throws IOException;
+
+    /**
      * Creates a new Shapefile source object.
      * @param  project       the owning project.
      * @param  uri           the source URI.

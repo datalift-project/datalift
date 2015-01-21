@@ -133,19 +133,19 @@ public class RdfFileSourceImpl extends BaseFileSource
         }
     }
 
+    /** {@inheritDoc} */
+    @Override
+    public final String getBaseUri() {
+        return this.baseUri;
+    }
+
     //-------------------------------------------------------------------------
     // RdfFileSource contract support
     //-------------------------------------------------------------------------
 
     /** {@inheritDoc} */
     @Override
-    public String getBaseUri() {
-        return this.baseUri;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public void setBaseUri(String uri) {
+    public final void setBaseUri(String uri) {
         this.baseUri = uri;
     }
 }

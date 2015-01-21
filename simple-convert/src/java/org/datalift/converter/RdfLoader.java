@@ -194,7 +194,12 @@ public class RdfLoader extends BaseConverterModule
                                                         sourceId, targetGraph);
             RdfUtils.upload(in, internal, targetGraph, mapper);
             // Register new transformed RDF source.
-            Source out = this.addResultSource(p, in, destTitle, targetGraph);
+            URI baseUri = null;
+            if (in.getBaseUri() != null) {
+                baseUri = URI.create(in.getBaseUri());
+            }
+            Source out = this.addResultSource(p, in, destTitle,
+                                                     targetGraph, baseUri);
             // Display project source tab, including the newly created source.
             response = this.created(out).build();
 

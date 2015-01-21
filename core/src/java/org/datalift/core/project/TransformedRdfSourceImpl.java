@@ -71,6 +71,8 @@ public class TransformedRdfSourceImpl extends BaseSource
     private String targetGraph;
     @RdfProperty("datalift:parentSource")
     private Source parent;
+    @RdfProperty("datalift:baseUri")
+    private String baseUri;
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -135,6 +137,12 @@ public class TransformedRdfSourceImpl extends BaseSource
     @Override
     public String getTargetGraph() {
         return this.targetGraph;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public String getBaseUri() {
+        return this.baseUri;
     }
 
     /** {@inheritDoc} */
@@ -227,14 +235,32 @@ public class TransformedRdfSourceImpl extends BaseSource
     // Specific implementation
     //-------------------------------------------------------------------------
 
-    public void setTargetGraph(String targetGraph) {
+    /**
+     * Sets the URI of the named graph containing this source data
+     * (triples) in the DataLift internal RDF store.
+     * @param  targetGraph   the URI of the source named graph.
+     */
+    public final void setTargetGraph(String targetGraph) {
         this.targetGraph = targetGraph;
         if (this.getTitle() == null) {
             this.setTitle("<" + targetGraph + '>');
         }
     }
 
-    protected RepositoryConnection getRepositoryConnection() {
+    /**
+     * Sets the base URI that was used to compute the URIs of the
+     * resources and predicates of this source.
+     * @param  baseUri   the base URI.
+     */
+    public final void setBaseUri(String baseUri) {
+        this.baseUri = baseUri;
+    }
+
+    /**
+     * Returns a connection to the Datalift internal repository.
+     * @return a connection to the Datalift internal repository.
+     */
+    protected final RepositoryConnection getRepositoryConnection() {
         return Configuration.getDefault()
                             .getInternalRepository().newConnection();
     }
