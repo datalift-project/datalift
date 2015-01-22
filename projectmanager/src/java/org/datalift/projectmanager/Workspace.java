@@ -485,6 +485,7 @@ public class Workspace extends BaseModule
         ResponseBuilder response = null;
 
         URI uri = this.getAbsolutePath(uriInfo);
+        log.debug("Displaying project {}", uri);
         try {
             Project p = this.loadProject(uri);
             // Check data freshness HTTP headers (If-Modified-Since & ETags)
@@ -2116,14 +2117,16 @@ public class Workspace extends BaseModule
     private ResponseBuilder displayIndexPage(ResponseBuilder response,
                                              Project p) {
         // Populate view with project list.
+        log.trace("Loading project lists");
         Collection<Project> projects = this.projectManager.listProjects();
         TemplateModel view = this.newView("workspace.vm", projects);
         // If no project is selected but only one is available, select it.
-        if (projects.size() == 1) {
+        if ((p == null) && (projects.size() == 1)) {
             p = projects.iterator().next();
         }
         // Display selected project.
         if (p != null) {
+            log.trace("Checking modules applicable to {}", p.getTitle());
             view.put("current", p);
             License l = licenses.get(p.getLicense());
             if (l == null) {
@@ -2151,6 +2154,8 @@ public class Workspace extends BaseModule
                     if (modulePage != null) {
                         modules.add(modulePage);
                     }
+                    log.trace("Module {} applicable: {}",
+                                    m.getName(), wrap(modulePage != null));
                 }
                 catch (Exception e) {
                     TechnicalException error = new TechnicalException(
@@ -2173,6 +2178,7 @@ public class Workspace extends BaseModule
             cc.setMustRevalidate(true);
             response = response.cacheControl(cc);
         }
+        log.trace("Done building index page");
         return response.entity(view).type(TEXT_HTML_UTF8);
     }
 
