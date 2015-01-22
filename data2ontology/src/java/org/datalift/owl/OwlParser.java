@@ -10,7 +10,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.datalift.fwk.log.Logger;
 import org.openrdf.OpenRDFException;
 import org.openrdf.model.Literal;
 import org.openrdf.model.URI;
@@ -34,8 +33,6 @@ import static org.openrdf.query.QueryLanguage.SPARQL;
 
 
 public class OwlParser {
-	
-	private final static Logger log = Logger.getLogger();
 	
 	private final static AnnotationProperty RDFS_LABEL =
             new AnnotationProperty(RDFS.LABEL.stringValue(), "rdfs:label",

@@ -28,7 +28,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
@@ -44,7 +43,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.UriInfo;
 
@@ -74,10 +72,7 @@ import org.datalift.owl.OwlObject;
 import org.datalift.owl.OwlParser;
 import org.datalift.owl.OwlProperty;
 import org.datalift.owl.TechnicalException;
-import org.datalift.sparql.query.UpdateQuery;
-import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
-import org.openrdf.model.vocabulary.RDF;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -102,8 +97,6 @@ public class Data2Ontology extends BaseModule implements ProjectModule
     private final static int MODULE_POSITION = 1500;
     /** Base name of the resource bundle for converter GUI. */
     private final static String GUI_RESOURCES_BUNDLE = "resources";
-    /** The regex to split string concatenation expressions. */
-    private final static Pattern CONCAT_PATTERN = Pattern.compile("\\+");
 
     //-------------------------------------------------------------------------
     // Class members
@@ -235,22 +228,13 @@ public class Data2Ontology extends BaseModule implements ProjectModule
                 f.setLastModified((info.expires > 0L)? info.expires: now);
                 // Extract RDF format from MIME type to force file suffix.
                 RdfFormat fmt = RdfFormat.find(info.mimeType);
-
                 if (fmt == null) {
-                	// we probably got it from lov (but application/octet-stream)
-                	if (src.endsWith(".n3")) {
-                		fmt = RdfFormat.N3;
-                	}
-                	else if (src.endsWith(".rdf")) {
-                		fmt = RdfFormat.RDF_XML;
-                	}
-                	else if (src.endsWith(".ttl")) {
-                		fmt = RdfFormat.TURTLE;
-                	}
-                	else {
-                		throw new TechnicalException("invalid.remote.mime.type",
-                				info.mimeType);
-                	}
+                    // We probably got it from LOV (but application/octet-stream)
+                    fmt = RdfUtils.guessRdfFormatFromExtension(src);
+                }
+                if (fmt == null) {
+                    throw new TechnicalException("invalid.remote.mime.type",
+                                                 info.mimeType);
                 }
                 // Ensure file extension is present to allow RDF syntax
                 // detection in future cache accesses.
@@ -311,13 +295,10 @@ public class Data2Ontology extends BaseModule implements ProjectModule
                                                 sourceGraph, ctx, construct);
             RdfUtils.convert(internal, Arrays.asList(construct),
                              internal, ctx, createSource);
-            Source out = in;
             if (createSource) {
                 // Register new transformed RDF source.
-                out = this.addResultSource(p, in, targetName, java.net.URI.create(targetGraph));
+                this.addResultSource(p, in, targetName, java.net.URI.create(targetGraph));
             }
-            // Display project source tab, including the newly created source.
-//            response = this.displayMappingResult(out, createSource).build();
             response = Response.ok("{"
                 + "\"uri\": \"" + targetGraph + "\", "
                 + "\"title\": \"" + targetName + "\""
@@ -396,38 +377,16 @@ public class Data2Ontology extends BaseModule implements ProjectModule
         return src;
     }
 
-    /**
-     * Creates a new transformed RDF source and attach it to the
-     * specified project.
-     * @param  p        the owning project.
-     * @param  parent   the parent source object.
-     * @param  name     the new source name.
-     * @param  uri      the new source URI.
-     *
-     * @return the newly created transformed RDF source.
-     * @throws IOException if any error occurred creating the source.
-     */
     private TransformedRdfSource addResultSource(Project p, Source parent,
-                                                   String name, URI uri)
-                                                            throws IOException {
+                                                 String name, java.net.URI uri)
+                                                                 throws IOException {
         java.net.URI id = java.net.URI.create(uri.toString());
         TransformedRdfSource newSrc =
-                        this.projectManager.newTransformedRdfSource(p, id,
-                                                    name, null, id, parent);
+                    this.projectManager.newTransformedRdfSource(p, id,
+                                                        name, null, id, parent);
         this.projectManager.saveProject(p);
         return newSrc;
     }
-
-    private TransformedRdfSource addResultSource(Project p, Source parent,
-									            String name, java.net.URI uri)
-									                     throws IOException {
-		java.net.URI id = java.net.URI.create(uri.toString());
-		TransformedRdfSource newSrc =
-		this.projectManager.newTransformedRdfSource(p, id,
-		             name, null, id, parent);
-		this.projectManager.saveProject(p);
-		return newSrc;
-	}
 
     private String getRdfAcceptHeader() {
         StringBuilder buf = new StringBuilder();
@@ -451,70 +410,6 @@ public class Data2Ontology extends BaseModule implements ProjectModule
         return buf.toString();
     }
 
-    private UpdateQuery mapNode(UpdateQuery query, MappingDesc m,
-                                Resource from, Resource node, URI srcGraph) {
-        Map<URI,String> mapping = new HashMap<URI,String>();
-        if (m.types.isEmpty()) {
-            // Simple property.
-            URI u = query.uri(m.predicate);
-            query.prefixFor(u.getNamespace());
-            mapping.put(u, this.mapFunctions(m.value, query));
-        }
-        else {
-            // RDF node.
-            if (isSet(m.predicate)) {
-                Resource o = query.blankNode();
-                URI u = query.uri(m.predicate);
-                query.prefixFor(u.getNamespace());
-                query.triple(node, u, o);
-                node = o;
-            }
-            // Else: No predicate linking node to parent? Assume root node.
-
-            for (String t : m.types) {
-                // Add RDF types.
-                query.rdfType(node, query.uri(t));
-            }
-            if (isSet(m.value)) {
-                // Add value mapping.
-                mapping.put(RDF.VALUE, this.mapFunctions(m.value, query));
-            }
-        }
-        if (! mapping.isEmpty()) {
-            // Mappings present (triples & where clauses) => Insert in query.
-            query.map(srcGraph, from, node, mapping);
-        }
-        // Process child mappings.
-        for (MappingDesc child : m.children) {
-            this.mapNode(query, child, from, node, srcGraph);
-        }
-        return query;
-    }
-
-    private String mapFunctions(String expr, UpdateQuery query) {
-        if (isSet(expr)) {
-            if (CONCAT_PATTERN.matcher(expr).find()) {
-                boolean inQuotes = false;
-                StringBuilder buf = new StringBuilder(expr.length() + 8);
-                buf.append("CONCAT(");
-                for (String s : CONCAT_PATTERN.split(expr.trim())) {
-                    for (int i=0,max=s.length(); i<max; i++) {
-                        if (s.charAt(i) == '"') inQuotes = (! inQuotes);
-                    }
-                    if (inQuotes) {
-                        buf.append(s).append('+');
-                    }
-                    else {
-                        buf.append(s.trim()).append(',');
-                    }
-                }
-                buf.setLength(buf.length() - 1);
-                expr = buf.append(')').toString();
-            }
-        }
-        return expr;
-    }
-
     /**
      * Return a model for the specified template view, populated with
      * the specified model object.
@@ -529,33 +424,6 @@ public class Data2Ontology extends BaseModule implements ProjectModule
     private TemplateModel newView(String templateName, Object it) {
         return ViewFactory.newView(
                                 "/" + this.getName() + '/' + templateName, it);
-    }
-
-    /**
-     * Notifies the user of successful processing, redirecting
-     * HTML clients (i.e. browsers) to the display of the content
-     * of the created or updated source.
-     * @param  src       the source the creation or update of which
-     *                   shall be reported.
-     * @param  created   whether the source was created.
-     *
-     * @return an partially-built response object redirecting the client
-     *         browser to the project source page. The HTTP status code
-     *         depends on whether the source was created.
-     * @throws TechnicalException if any error occurred.
-     */
-    private ResponseBuilder displayMappingResult(Source src, boolean created) {
-        ResponseBuilder response = null;
-        String targetUrl = src.getProject().getUri() + "#source";
-        if (created) {
-            response = Response.created(java.net.URI.create(src.getUri()))
-                               .entity(this.newView("redirect.vm", targetUrl))
-                               .type(TEXT_HTML_UTF8);
-        }
-        else {
-            response = Response.seeOther(java.net.URI.create(targetUrl));
-        }
-        return response;
     }
 
     /**
