@@ -5,9 +5,6 @@ import java.io.ObjectStreamException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.Path;
@@ -233,8 +230,7 @@ public abstract class ModuleController extends BaseModule implements ProjectModu
 	public UriDesc canHandle(Project p) {
 		UriDesc modulePage = null;
 		try {
-			List<Source> projectSources = new ArrayList<Source>(p.getSources());
-			for(Source source : projectSources){
+			for(Source source : p.getSources()){
 				//if there is at least one source handlable by the module add the button
 				if(canHandle(source)){
 					modulePage = new UriDesc(this.getName() + "?project=" + p.getUri(), accessMethod 
@@ -242,7 +238,7 @@ public abstract class ModuleController extends BaseModule implements ProjectModu
 					if(this.position > 0){
 						modulePage.setPosition(this.position);
 					}
-					return modulePage;
+					break;
 				}
 			}
 		} catch (URISyntaxException e) {
