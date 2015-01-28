@@ -278,7 +278,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     public void init(Configuration configuration) {
         // Check whether Concise Bounded Description is to be used.
         this.useCdb = this.getBoolean(configuration,
-                                                CBD_SUPPORT_PROPERTY, false);
+                                                CBD_SUPPORT_PROPERTY, true);
         // Check whether graphs shall be served first.
         this.serveGraphsFirst = this.getBoolean(configuration,
                                                 PREFER_GRAPHS_PROPERTY, false);
@@ -345,6 +345,12 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         try {
             if ((! isBlank(jsonCallback)) && (isBlank(format))) {
                 format = APPLICATION_JSON;
+            }
+            if (startOffset <= 0) {
+                startOffset = -1;
+            }
+            if (endOffset <= 0) {
+                endOffset = -1;
             }
             response = this.doExecute(defaultGraphUris, namedGraphUris, query,
                                       startOffset, endOffset, gridJson,
