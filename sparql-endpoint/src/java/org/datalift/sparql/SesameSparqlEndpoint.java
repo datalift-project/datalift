@@ -142,6 +142,12 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
      */
     public final static String INCLUDE_INFERRED_TRIPLES_PROPERTY =
                                             "sparql.include.inferred.triples";
+    /**
+     * The configuration property defining whether including XML Schema
+     * data types in literal display.
+     */
+    public final static String DISPLAY_LITERAL_DATATYPES_PROPERTY =
+                                            "sparql.display.literal.datatypes";
 
     /** The supported MIME types for SELECT query responses. */
     protected final static List<Variant> SELECT_RESPONSE_TYPES =
@@ -710,8 +716,13 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                     {
                         @Override
                         protected TupleQueryResultHandler newHandler(OutputStream out) {
-                            return new SparqlResultsGridJsonWriter(out,
+                            SparqlResultsGridJsonWriter resultsWriter =
+                                        new SparqlResultsGridJsonWriter(out,
                                                     linkFormat, jsonCallback);
+                            if (getDisplayLiteralDatatypes()) {
+                                resultsWriter.setIncludeLiteralDataTypes(true);
+                            }
+                            return resultsWriter;
                         }
                     };
             }
@@ -799,6 +810,18 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
     public boolean getIncludeInferredTriples() {
         return this.getBoolean(Configuration.getDefault(),
                                INCLUDE_INFERRED_TRIPLES_PROPERTY, true);
+    }
+
+    /**
+     * Returns whether to include XML Schema data types when displaying
+     * native literals. The flag is read from Datalift configuration.
+     * @return whether literal data types shall be included in display,
+     *         <code>false</code> if the flag is not defined in
+     *         configuration.
+     */
+    public boolean getDisplayLiteralDatatypes() {
+        return this.getBoolean(Configuration.getDefault(),
+                               DISPLAY_LITERAL_DATATYPES_PROPERTY, false);
     }
 
     /**
