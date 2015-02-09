@@ -64,11 +64,11 @@ import java.util.concurrent.atomic.AtomicInteger;
  * <h3>Getting Started</h3>
  * <blockquote><pre>
  *  // Create a new cache, 5000 is max number of objects.
- *  SimpleCache<String,String> cache = new SimpleCache<String,String>(5000);
+ *  SimpleCache&lt;String,String&gt; cache = new SimpleCache&lt;String,String&gt;(5000);
  *  // Put an object into the cache.
- *  cache.put("mykey", value, 500); // 500 is time to live in seconds
+ *  cache.put(&quot;mykey&quot;, value, 500); // 500 is time to live in seconds
  *  // Get an object from the cache
- *  value = cache.get("mykey");
+ *  value = cache.get(&quot;mykey&quot;);
  * </pre></blockquote>
  *
  * @param  K   the type of keys maintained by this cache.
