@@ -79,6 +79,7 @@ import org.datalift.fwk.Module;
 import org.datalift.fwk.ResourceResolver;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.rdf.ElementType;
+import org.datalift.fwk.rdf.QueryDescription;
 import org.datalift.fwk.sparql.SparqlEndpoint;
 import org.datalift.fwk.sparql.SparqlQueries;
 import org.datalift.fwk.util.UriPolicy;
@@ -658,8 +659,11 @@ public class RouterResource implements LifeCycle, ResourceResolver
                                                          null, null, false);
             }
             catch (Exception e) {
-                throw new RuntimeException("Failed to execute query \""
-                                    + query + "\" for \"" + this.uri + '"', e);
+                log.warn("Failed to execute URI type determination query " +
+                         "\"{}\" for \"{}\"", e,
+                         new QueryDescription(query), this.uri);
+                // Assume the URI identifies a resource.
+                result.type = ElementType.Resource;
             }
             if (result.type != null) {
                 // URI found as subject in RDF store.
