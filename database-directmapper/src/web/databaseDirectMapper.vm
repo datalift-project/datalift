@@ -1,21 +1,20 @@
-## #set( $moduleUri = "${it.uri}/database-directmapper")
-#set( $moduleUri = "$baseUri/database-directmapper")
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
+#set( $moduleUri = "$baseUri/database-directmapper")
 #load("database-directmapper/resources")
 #load_core_resources
 	<title>#i18n("database-directmapper.title") - DataLift</title>
 #css_links
 </head>
 <body >
-    #banner
-    <div class="ui-widget-content converter_main" id="workspace">
-    	<h3 class="ui-widget-header dl-widget-header">
-				#i18n("database-directmapper.title") - #i18n("project.label") ${it.title}</h3>
-    	<form id="converter_form" method="post" action="${moduleUri}">
-			<input type="hidden" name="project" id="project" value="${it.uri}"/>
+#banner
+<div class="ui-widget-content converter_main" id="workspace">
+	<h3 class="ui-widget-header dl-widget-header">#i18n("database-directmapper.title") - #i18n("project.label") ${it.title}</h3>
+
+	<form id="converter_form" method="post" action="${moduleUri}">
+		<input type="hidden" name="project" id="project" value="${it.uri}"/>
 		<p><label for="source">#i18n("source.to_convert"):</label>
 		<select name="source" id="source">
 #foreach( $curSrc in $it.getSources() )
@@ -27,38 +26,59 @@
 			#end
 		#end
 			<option value="${curSrc.uri}" name="${curSrc.title}" count="$count">$esc.html($curSrc.title)</option>
-			##$esc.html($curSrc.title)
 	#end
 #end
 		</select></p>
 
 		<p><label for="dest_title">#i18n("dest.title"):</label>
 			<input type="text" name="dest_title" id="dest_title" value=""/></p>
-		
+
 		<p><label for="dest_graph_uri" class="hidden">#i18n("dest.uri"):</label>
 			<input type="text" name="dest_graph_uri" id="dest_graph_uri" value=""/></p>
 
 		<input type="submit" id="source_submit" value="#i18n('submit.label')"/>
-		
 	</form>
-    </div>
-	
-	#script_links
-	<script type="text/javascript">
+</div>
+
+#script_links
+<script type="text/javascript">
 	$(function() {
 		$("#source_submit").button();
 
 		$("#source").change(function(){
-			$("#source option:selected").each(function () {
-				$("#dest_title").attr("value", $(this).attr('name') + " - (RDF #" + $(this).attr("count") + ")");
-				$("#dest_graph_uri").attr("value", $(this).attr("value") + "-rdf-" + $(this).attr("count"));
+			$("#source option:selected").each(function() {
+				var name  = $(this).attr("name");
+				var uri   = $(this).attr("value");
+				var count = $(this).attr("count");
+				$("#dest_title").attr("value", getTargetSrcName(name, count));
+				$("#dest_graph_uri").attr("value", getTargetGraphUri(uri, count));
 			});
 		});
 		$("#source").change();
 	});
 
-</script>
 
-	
+	function getTargetSrcName(parentSrc, count) {
+		if (parentSrc.match(/\(RDF #[0-9-]+\)/)) {
+			return parentSrc.replace(/\((RDF #[0-9-]+)\)/, "(\$1-" + count + ")");
+		}
+		else {
+			return parentSrc + " (RDF #" + count + ")";
+		}
+	}
+
+	function getTargetGraphUri(parentUri, count) {
+		var sep = "-";
+		if (parentUri.endsWith("/")) sep = "";
+		return parentUri + encodeURIComponent(sep + count);
+	}
+
+	/* Make sure the endsWith() function is defined. */
+	if (typeof String.prototype.endsWith !== 'function') {
+	    String.prototype.endsWith = function(suffix) {
+	        return this.indexOf(suffix, this.length - suffix.length) !== -1;
+	    };
+	}
+</script>
 </body>
-	
+</html>
