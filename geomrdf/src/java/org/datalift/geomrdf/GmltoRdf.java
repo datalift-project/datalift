@@ -67,7 +67,6 @@ import org.datalift.fwk.rdf.UriCachingValueFactory;
 import org.datalift.fwk.util.Env;
 import org.datalift.fwk.util.UriBuilder;
 import org.datalift.fwk.util.io.FileUtils;
-import org.datalift.fwk.view.TemplateModel;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_XHTML_XML;
 import static javax.ws.rs.core.MediaType.TEXT_HTML;
@@ -131,13 +130,7 @@ public class GmltoRdf extends BaseConverterModule
 	@GET
 	@Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
 	public Response getIndexPage(@QueryParam("project") URI projectId) {
-		// Retrieve project.
-		Project p = this.getProject(projectId);
-		// Display conversion configuration page.
-		TemplateModel view = this.newView("gmltoRdf.vm", p);
-		view.put("converter", this);
-		view.put("crs", Crs.values());
-		return Response.ok(view).build();
+		return this.newProjectView("gmltoRdf.vm", projectId);
 	}
 
 	@POST

@@ -64,6 +64,7 @@ import org.datalift.fwk.project.ProjectManager;
 import org.datalift.fwk.project.ProjectModule;
 import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.TransformedRdfSource;
+import org.datalift.fwk.project.ShpSource.Crs;
 import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.rdf.ElementType;
 import org.datalift.fwk.rdf.Repository;
@@ -310,7 +311,9 @@ extends BaseModule implements ProjectModule
 			Project p = this.getProject(projectId);
 			// Display conversion configuration page.
 			TemplateModel view = this.newView(templateName, p);
+			view.registerFieldsFor(SourceType.class);
 			view.put("converter", this);
+			view.put("crs", Crs.values());
 			response = Response.ok(view, TEXT_HTML_UTF8).build();
 		}
 		catch (ObjectNotFoundException e) {
