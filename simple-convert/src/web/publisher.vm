@@ -47,7 +47,7 @@
 		$("#source_submit").button();
 
 		$("#source").change(function() {
-			$("#source option:selected").each(function () {
+			$("#source option:selected").each(function() {
 				$("#dest_graph_uri").attr('value', $(this).attr('value'));
 			});
 		});

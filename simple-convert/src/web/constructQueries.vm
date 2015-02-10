@@ -60,7 +60,7 @@
 		});
 
 		$("#source").change(function(){
-			$("#source option:selected").each(function () {
+			$("#source option:selected").each(function() {
 				var name  = $(this).attr("name");
 				var uri   = $(this).attr("value");
 				var count = $(this).attr("count");
