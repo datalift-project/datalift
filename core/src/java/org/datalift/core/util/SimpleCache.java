@@ -44,6 +44,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.datalift.fwk.util.TimeUtils.fromSeconds;
+
 
 /**
  * Simple local in-memory cache using {@link java.util.concurrent}
@@ -86,9 +88,11 @@ public class SimpleCache<K,V>
     private final Map<K,Entry<K,V>> cache;
     /** Used to restrict the size of the cache map. */
     private final Queue<K> queue;
-    /** Using this integer because ConcurrentLinkedQueue.size() is not
-     * constant time. */
-    private AtomicInteger size = new AtomicInteger();
+    /**
+     * Using this integer because ConcurrentLinkedQueue.size() is not
+     * constant time.
+     */
+    private final AtomicInteger size = new AtomicInteger();
 
     /**
      * Creates a cache with the specified maximum size and infinite
@@ -175,7 +179,7 @@ public class SimpleCache<K,V>
      */
     public void put(K key, V v, int ttl) {
         this.put0(key, v, (ttl < 0)? Long.MAX_VALUE:
-                                System.currentTimeMillis() + (ttl * 1000L));
+                            System.currentTimeMillis() + fromSeconds(ttl));
     }
 
     /**

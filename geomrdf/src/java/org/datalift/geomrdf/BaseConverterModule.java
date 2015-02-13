@@ -74,6 +74,7 @@ import org.datalift.fwk.view.ViewFactory;
 
 import static org.datalift.fwk.MediaTypes.*;
 import static org.datalift.fwk.util.PrimitiveUtils.wrap;
+import static org.datalift.fwk.util.TimeUtils.asSeconds;
 
 
 /**
@@ -434,11 +435,12 @@ extends BaseModule implements ProjectModule
 				if (namedGraph != null) {
 					log.debug("Exported {} triples from <{}> in {} seconds",
 							wrap(this.statementCount), namedGraph,
-							wrap(delay / 1000.0));
+							wrap(asSeconds(delay)));
 				}
 				else {
 					log.debug("Exported {} triples in {} seconds",
-							wrap(this.statementCount), wrap(delay / 1000.0));
+							wrap(this.statementCount),
+							wrap(asSeconds(delay)));
 				}
 			}
 		};

@@ -75,6 +75,7 @@ import org.datalift.fwk.util.io.FileUtils;
 
 import static org.datalift.fwk.util.PrimitiveUtils.*;
 import static org.datalift.fwk.util.StringUtils.isBlank;
+import static org.datalift.fwk.util.TimeUtils.asSeconds;
 
 
 /**
@@ -363,7 +364,7 @@ public final class RdfUtils
                           wrap(appender.getStatementCount()),
                           (namedGraph != null)? "<" + namedGraph + '>':
                                                 "default graph",
-                          wrap(appender.getDuration() / 1000.0));
+                          wrap(asSeconds(appender.getDuration())));
             }
         }
         catch (Exception e) {
@@ -461,7 +462,7 @@ public final class RdfUtils
 
             log.debug("Inserted {} RDF triples into <{}> in {} seconds",
                       wrap(appender.getStatementCount()), namedGraph,
-                      wrap(appender.getDuration() / 1000.0));
+                      wrap(asSeconds(appender.getDuration())));
         }
         catch (Exception e) {
             try {
@@ -623,7 +624,7 @@ public final class RdfUtils
                     log.debug("Inserted {} RDF triples into <{}>"
                               + " in {} seconds for query #{}",
                               wrap(appender.getStatementCount()), namedGraph,
-                              wrap(appender.getDuration() / 1000.0), wrap(i));
+                              wrap(asSeconds(appender.getDuration())), wrap(i));
                 }
                 catch (OpenRDFException e) {
                     if ((e instanceof MalformedQueryException) ||

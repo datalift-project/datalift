@@ -51,7 +51,17 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import static javax.ws.rs.core.MediaType.APPLICATION_XHTML_XML;
+import static javax.ws.rs.core.MediaType.TEXT_HTML;
+
 import org.apache.commons.lang.WordUtils;
+
+import org.openrdf.model.Statement;
+import org.openrdf.model.ValueFactory;
+import org.openrdf.model.vocabulary.RDF;
+import org.openrdf.repository.RepositoryConnection;
+import org.openrdf.repository.RepositoryException;
+
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.FileSource;
@@ -68,16 +78,10 @@ import org.datalift.fwk.util.Env;
 import org.datalift.fwk.util.UriBuilder;
 import org.datalift.fwk.util.io.FileUtils;
 
-import static javax.ws.rs.core.MediaType.APPLICATION_XHTML_XML;
-import static javax.ws.rs.core.MediaType.TEXT_HTML;
 import static org.datalift.fwk.rdf.ElementType.RdfType;
+import static org.datalift.fwk.util.PrimitiveUtils.wrap;
 import static org.datalift.fwk.util.StringUtils.*;
-
-import org.openrdf.model.Statement;
-import org.openrdf.model.ValueFactory;
-import org.openrdf.model.vocabulary.RDF;
-import org.openrdf.repository.RepositoryConnection;
-import org.openrdf.repository.RepositoryException;
+import static org.datalift.fwk.util.TimeUtils.asSeconds;
 
 import fr.ign.datalift.constants.CRS;
 import fr.ign.datalift.model.AbstractFeature;
@@ -352,8 +356,8 @@ public class ShptoRdf extends BaseConverterModule
 			}
 
 			log.debug("Inserted {} RDF triples into <{}> in {} seconds",
-					Long.valueOf(statementCount), targetGraph,
-					Double.valueOf(duration / 1000.0));
+					wrap(statementCount), targetGraph,
+					wrap(asSeconds(duration)));
 		}
 		catch (TechnicalException e) {
 			throw e;

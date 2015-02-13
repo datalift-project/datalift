@@ -92,6 +92,7 @@ import org.datalift.fwk.util.web.UriParam;
 import static org.datalift.fwk.rdf.ElementType.*;
 import static org.datalift.fwk.util.PrimitiveUtils.wrap;
 import static org.datalift.fwk.util.StringUtils.*;
+import static org.datalift.fwk.util.TimeUtils.*;
 import static org.datalift.fwk.MediaTypes.*;
 
 
@@ -465,7 +466,7 @@ public class CsvDirectMapper extends BaseConverterModule
                                 duration = System.currentTimeMillis() - t0;
                                 log.trace("Inserted {} RDF triples from {} CSV lines in {} seconds...",
                                           wrap(statementCount), wrap(i - 1),
-                                          wrap(duration / 1000.0));
+                                          wrap(asSeconds(duration)));
                             }
                         }
                     }
@@ -481,7 +482,7 @@ public class CsvDirectMapper extends BaseConverterModule
             duration = System.currentTimeMillis() - t0;
             log.debug("Inserted {} RDF triples into <{}> from {} CSV lines in {} seconds",
                       wrap(statementCount), targetGraph,
-                      wrap(i - 1), wrap(duration / 1000.0));
+                      wrap(i - 1), wrap(asSeconds(duration)));
         }
         catch (TechnicalException e) {
             throw e;
@@ -876,7 +877,7 @@ public class CsvDirectMapper extends BaseConverterModule
                     v++;        // From 0-based Calendar to 1-based XML date.
                 }
                 else if (field == ZONE_OFFSET) {
-                    v = (v + c.get(DST_OFFSET)) / (60 * 1000);
+                    v = (int)((v + c.get(DST_OFFSET)) / ONE_MINUTE);
                 }
             }
             return v;

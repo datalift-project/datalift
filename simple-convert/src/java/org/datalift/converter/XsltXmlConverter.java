@@ -76,6 +76,7 @@ import org.datalift.fwk.view.TemplateModel;
 import static org.datalift.fwk.MediaTypes.*;
 import static org.datalift.fwk.util.PrimitiveUtils.wrap;
 import static org.datalift.fwk.util.StringUtils.*;
+import static org.datalift.fwk.util.TimeUtils.asSeconds;
 
 
 /**
@@ -354,7 +355,7 @@ public class XsltXmlConverter extends BaseConverterModule
 
             log.debug("Inserted {} RDF triples into <{}> in {} seconds",
                       wrap(appender.getStatementCount()), targetGraph,
-                      wrap(appender.getDuration() / 1000.0));
+                      wrap(asSeconds(appender.getDuration())));
         }
         catch (Exception e) {
             throw new TechnicalException("xml.conversion.failed", e);

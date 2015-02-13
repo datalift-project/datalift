@@ -86,6 +86,7 @@ import org.datalift.fwk.view.TemplateModel;
 
 import static org.datalift.fwk.MediaTypes.*;
 import static org.datalift.fwk.util.PrimitiveUtils.wrap;
+import static org.datalift.fwk.util.TimeUtils.asSeconds;
 
 
 /**
@@ -306,7 +307,7 @@ public class CsvExporter extends BaseConverterModule
                             long delay = System.currentTimeMillis() - t0;
                             log.debug("Exported {} CSV lines from <{}> in {} seconds",
                                       wrap(lineCount), namedGraph,
-                                      wrap(delay / 1000.0));
+                                      wrap(asSeconds(delay)));
                         }
 
                         private void writeLine() {

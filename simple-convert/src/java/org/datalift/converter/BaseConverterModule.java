@@ -61,7 +61,6 @@ import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.helpers.RDFHandlerWrapper;
 
 import static javax.ws.rs.core.HttpHeaders.ACCEPT;
-
 import static javax.ws.rs.core.Response.Status.*;
 
 import org.datalift.fwk.BaseModule;
@@ -85,6 +84,7 @@ import org.datalift.fwk.view.ViewFactory;
 import static org.datalift.fwk.MediaTypes.*;
 import static org.datalift.fwk.util.PrimitiveUtils.wrap;
 import static org.datalift.fwk.util.StringUtils.trimToNull;
+import static org.datalift.fwk.util.TimeUtils.asSeconds;
 
 
 /**
@@ -555,15 +555,18 @@ public abstract class BaseConverterModule
                 @Override
                 public void endRDF() throws RDFHandlerException {
                     super.endRDF();
-                    long delay = System.currentTimeMillis() - this.t0;
-                    if (namedGraph != null) {
-                       log.debug("Exported {} triples from <{}> in {} seconds",
-                              wrap(this.statementCount), namedGraph,
-                              wrap(delay / 1000.0));
-                    }
-                    else {
-                       log.debug("Exported {} triples in {} seconds",
-                              wrap(this.statementCount), wrap(delay / 1000.0));
+                    if (log.isDebugEnabled()) {
+                        long delay = System.currentTimeMillis() - this.t0;
+                        if (namedGraph != null) {
+                            log.debug("Exported {} triples from <{}> in {} seconds",
+                                      wrap(this.statementCount), namedGraph,
+                                      wrap(asSeconds(delay)));
+                        }
+                        else {
+                            log.debug("Exported {} triples in {} seconds",
+                                      wrap(this.statementCount),
+                                      wrap(asSeconds(delay)));
+                        }
                     }
                 }
             };

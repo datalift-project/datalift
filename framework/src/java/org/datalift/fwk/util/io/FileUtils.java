@@ -73,6 +73,7 @@ import org.datalift.fwk.util.web.HttpDateFormat;
 
 import static org.datalift.fwk.util.PrimitiveUtils.wrap;
 import static org.datalift.fwk.util.StringUtils.isSet;
+import static org.datalift.fwk.util.TimeUtils.*;
 import static org.datalift.fwk.util.web.Charsets.UTF_8;
 
 
@@ -415,8 +416,8 @@ public final class FileUtils
             else {
                 long delay = System.currentTimeMillis() - t0;
                 log.debug("{} MBs of data written to {} in {} seconds",
-                          wrap((byteCount / 1000) / 1000.0), to,
-                          wrap(delay / 1000.0));
+                          wrap(asMegaBytes(byteCount)), to,
+                          wrap(asSeconds(delay)));
             }
         }
     }
@@ -511,8 +512,8 @@ public final class FileUtils
             else {
                 long delay = System.currentTimeMillis() - t0;
                 log.debug("Copied {} MBs of data from {} to {} in {} seconds",
-                          wrap((byteCount / 1000) / 1000.0),
-                          from, to, wrap(delay / 1000.0));
+                          wrap(asMegaBytes(byteCount)), from, to,
+                          wrap(asSeconds(delay)));
             }
         }
     }
@@ -588,7 +589,7 @@ public final class FileUtils
                    try {
                        int seconds = Integer.parseInt(
                                        token.substring(token.indexOf('=') + 1));
-                       expiry = baseTime + (seconds * 1000L);
+                       expiry = baseTime + fromSeconds(seconds);
                    }
                    catch (Exception e) { /* Ignore... */ }
                }
@@ -629,6 +630,15 @@ public final class FileUtils
         return get16(b, offset) | ((long)get16(b, offset+2) << 16);
     }
 
+    /**
+     * Converts a number of bytes into megabytes.
+     * @param  bytes   a number of bytes.
+     * @return the number of megabytes corresponding to
+     *         <code>bytes</code>.
+     */
+    private final static double asMegaBytes(long bytes) {
+        return (bytes / 1000) / 1000.0;
+    }
 
     //-------------------------------------------------------------------------
     // DownloadInfo nested class
@@ -721,8 +731,8 @@ public final class FileUtils
                 long delay = System.currentTimeMillis() - this.startTime;
                 if (delay > 0L) {
                     log.debug("Read {} MBs from {} in {} seconds ({} MB/s)",
-                          wrap((this.readBytes / 1000L) / 1000.0),
-                          this.file, wrap(delay / 1000.0),
+                          wrap(asMegaBytes(this.readBytes)), this.file,
+                          wrap(asSeconds(delay)),
                           wrap((this.readBytes / delay) / 1000.0));
                 }
             }
@@ -737,8 +747,8 @@ public final class FileUtils
                 ((this.readBytes - this.lastLog) > this.logThreshold)) {
                 long delay = System.currentTimeMillis() - this.startTime;
                 log.trace("Read {} MBs from {} in {} seconds",
-                          wrap((this.readBytes / 1000L) / 1000.0),
-                          this.file, wrap(delay / 1000.0));
+                          wrap(asMegaBytes(this.readBytes)), this.file,
+                          wrap(asSeconds(delay)));
                 this.lastLog = (this.readBytes / this.logThreshold)
                                                         * this.logThreshold;
             }

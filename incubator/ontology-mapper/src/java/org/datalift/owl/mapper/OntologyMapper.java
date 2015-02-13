@@ -101,6 +101,7 @@ import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.rdf.RdfFormat;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
+import org.datalift.fwk.util.TimeUtils;
 import org.datalift.fwk.util.io.FileUtils;
 import org.datalift.fwk.util.web.Charsets;
 import org.datalift.fwk.util.web.HttpDateFormat;
@@ -138,8 +139,8 @@ public class OntologyMapper extends BaseModule implements ProjectModule
     /** The regex to split string concatenation expressions. */
     private final static Pattern CONCAT_PATTERN = Pattern.compile("\\+");
  
-    /** One month (30 days actually), in seconds. */
-    private final static long MONTH_IN_SECONDS = 30 * 24* 3600L;
+    /** One month (30 days actually), in milliseconds. */
+    private final static long ONE_MONTH = 30 * TimeUtils.ONE_DAY;
 
     //-------------------------------------------------------------------------
     // Class members
@@ -537,8 +538,7 @@ public class OntologyMapper extends BaseModule implements ProjectModule
         // Retrieve file from source URL.
         FileUtils.DownloadInfo info = FileUtils.save(u, null, headers, f);
         // Cache data as long as allowed, 1 month otherwise.
-        f.setLastModified((info.expires > now)? info.expires:
-                                            now + (MONTH_IN_SECONDS * 1000L));
+        f.setLastModified((info.expires > now)? info.expires: now + ONE_MONTH);
         if (info.httpStatus == 0) {
             // New file has been downloaded.
             // => Retrieve data MIME type.

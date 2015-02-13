@@ -32,42 +32,58 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 
-package org.datalift.core.log;
-
-
-import org.datalift.fwk.log.Logger;
-import org.datalift.fwk.util.TimeUtils;
+package org.datalift.fwk.util;
 
 
 /**
- * An object counting the number of seconds since its creation.
- * Instances of this class are intended to be used as
- * {@link Logger#setContext(Object, Object) diagnostic context}
- * to trace request execution time.
+ * A set of utility methods for converting time units.
  *
  * @author lbihanic
  */
-public final class TimerContext
+public final class TimeUtils
 {
-    //-------------------------------------------------------------------------
-    // Instance members
-    //-------------------------------------------------------------------------
+    /** Number of milliseconds in one second. */
+    public final static long ONE_SECOND = 1000L;
 
-    /** Context creation time. */
-    private final long startTime = System.currentTimeMillis();
+    /** Number of milliseconds in one minute. */
+    public final static long ONE_MINUTE = 60 * ONE_SECOND;
 
-    //-------------------------------------------------------------------------
-    // Object contract support
-    //-------------------------------------------------------------------------
+    /** Number of milliseconds in one hour. */
+    public final static long ONE_HOUR   = 60 * ONE_MINUTE;
 
-    @Override
+    /** Number of milliseconds in one day. */
+    public final static long ONE_DAY    = 24 * ONE_HOUR;
+
+    /** Number of milliseconds in one week. */
+    public final static long ONE_WEEK   = 7 * ONE_DAY;
+
     /**
-     * {@inheritDoc}
-     * <p>This implementation return the number of seconds (as a
-     * double) since the object creation.</p>
+     * Converts a number of milliseconds into seconds.
+     * @param  millis   a number of milliseconds.
+     * @return the number of seconds corresponding to
+     *         <code>millis</code>.
      */
-    public String toString() {
-        long duration = System.currentTimeMillis() - this.startTime;
-        return Double.toString(TimeUtils.asSeconds(duration));
+    public static double asSeconds(long millis) {
+       return millis / (double)ONE_SECOND;
+    }
+
+    /**
+     * Converts a number of milliseconds into minutes.
+     * @param  millis   a number of milliseconds.
+     * @return the number of minutes corresponding to
+     *         <code>millis</code>.
+     */
+    public static double asMinutes(long millis) {
+       return millis / (double)ONE_MINUTE;
+    }
+
+    /**
+     * Converts a number of seconds into milliseconds.
+     * @param  seconds   the number of seconds.
+     * @return the number of milliseconds corresponding to
+     *         </code>seconds</code>.
+     */
+    public static long fromSeconds(long seconds) {
+        return seconds * ONE_SECOND;
     }
 }

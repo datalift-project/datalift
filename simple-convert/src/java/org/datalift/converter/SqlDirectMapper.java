@@ -80,6 +80,7 @@ import org.datalift.fwk.util.web.UriParam;
 import static org.datalift.fwk.rdf.ElementType.*;
 import static org.datalift.fwk.util.PrimitiveUtils.wrap;
 import static org.datalift.fwk.util.StringUtils.*;
+import static org.datalift.fwk.util.TimeUtils.*;
 import static org.datalift.fwk.MediaTypes.*;
 
 
@@ -378,7 +379,7 @@ public class SqlDirectMapper extends BaseConverterModule
                                 duration = System.currentTimeMillis() - t0;
                                 log.trace("Inserted {} RDF triples from {} SQL results in {} seconds...",
                                           wrap(statementCount), wrap(i - 1),
-                                          wrap(duration / 1000.0));
+                                          wrap(asSeconds(duration)));
                         }
                         }
                         //log.trace("<{}> <{}> {}", subject, predicates[j], value);
@@ -391,7 +392,7 @@ public class SqlDirectMapper extends BaseConverterModule
             duration = System.currentTimeMillis() - t0;
             log.debug("Inserted {} RDF triples into <{}> from {} SQL results in {} seconds",
                       wrap(statementCount), targetGraph,
-                      wrap(i - 1), wrap(duration / 1000.0));
+                      wrap(i - 1), wrap(asSeconds(duration)));
         }
         catch (Exception e) {
             throw new TechnicalException("sql.conversion.failed", e);
@@ -465,6 +466,6 @@ public class SqlDirectMapper extends BaseConverterModule
     }
 
     private final int getTimeZoneOffsetInMinutes(GregorianCalendar c) {
-        return (c.get(ZONE_OFFSET) + c.get(DST_OFFSET)) / (60*1000);
+        return (int)((c.get(ZONE_OFFSET) + c.get(DST_OFFSET)) / ONE_MINUTE);
     }
 }
