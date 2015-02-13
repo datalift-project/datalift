@@ -42,6 +42,10 @@ package org.datalift.fwk.util;
  */
 public final class TimeUtils
 {
+    //-------------------------------------------------------------------------
+    // Constants
+    //-------------------------------------------------------------------------
+
     /** Number of milliseconds in one second. */
     public final static long ONE_SECOND = 1000L;
 
@@ -56,6 +60,22 @@ public final class TimeUtils
 
     /** Number of milliseconds in one week. */
     public final static long ONE_WEEK   = 7 * ONE_DAY;
+
+    //-------------------------------------------------------------------------
+    // Constructors
+    //-------------------------------------------------------------------------
+
+    /**
+     * Default constructor, private on purpose.
+     * @throws UnsupportedOperationException always.
+     */
+    private TimeUtils() {
+        throw new UnsupportedOperationException();
+    }
+
+    //-------------------------------------------------------------------------
+    // PrimitiveUtils contract definition
+    //-------------------------------------------------------------------------
 
     /**
      * Converts a number of milliseconds into seconds.
