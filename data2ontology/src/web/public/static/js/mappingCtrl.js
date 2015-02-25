@@ -334,6 +334,9 @@ function MappingCtrl($scope, $location, $http, $timeout, Shared) {
 	}
 	
 	$scope.filterByVocSpace = function(result) {
+		if ($scope.vocSpaceFilter == undefined || $scope.vocSpaceFilter == "All") {
+			return true;
+		}
 		for (var i = 0 ; i < result.vocSpaces.length ; ++i) {
 			if (result.vocSpaces[i].label == $scope.vocSpaceFilter) {
 				return true;
