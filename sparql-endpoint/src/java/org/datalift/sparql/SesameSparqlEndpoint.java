@@ -109,6 +109,7 @@ import org.datalift.fwk.util.CloseableIterator;
 import static org.datalift.fwk.MediaTypes.*;
 import static org.datalift.fwk.util.PrimitiveUtils.wrap;
 import static org.datalift.fwk.util.StringUtils.*;
+import static org.datalift.fwk.util.TimeUtils.asSeconds;
 
 
 /**
@@ -142,12 +143,11 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
      */
     public final static String INCLUDE_INFERRED_TRIPLES_PROPERTY =
                                             "sparql.include.inferred.triples";
-    /**
-     * The configuration property defining whether including XML Schema
-     * data types in literal display.
-     */
-    public final static String DISPLAY_LITERAL_DATATYPES_PROPERTY =
-                                            "sparql.display.literal.datatypes";
+
+    /** JSON MIME type parameter flag for grid-optimized format. */
+    public final static String GRID_JSON_FLAG = "grid";
+    /** JSON MIME type parameter flag for typed-literal data. */
+    public final static String TYPED_JSON_FLAG = "typed";
 
     /** The supported MIME types for SELECT query responses. */
     protected final static List<Variant> SELECT_RESPONSE_TYPES =
@@ -288,14 +288,12 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
     /** {@inheritDoc} */
     @Override
     protected ResponseBuilder doExecute(List<String> defaultGraphUris,
-                                        List<String> namedGraphUris,
-                                        String query, int startOffset,
-                                        int endOffset, boolean gridJson,
-                                        String format, String jsonCallback,
-                                        UriInfo uriInfo, Request request,
-                                        String acceptHdr,
-                                        List<Variant> allowedTypes,
-                                        Map<String,Object> viewData)
+                                List<String> namedGraphUris, String query,
+                                int startOffset, int endOffset,
+                                String format, String jsonCallback,
+                                UriInfo uriInfo, Request request,
+                                String acceptHdr, List<Variant> allowedTypes,
+                                Map<String,Object> viewData)
                                                 throws WebApplicationException {
         log.trace("Processing SPARQL query: \"{}\"", query);
         // Build base URI from request if none was enforced in configuration.
@@ -354,7 +352,6 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
         model.put("query", query);
         model.put("min",  wrap(startOffset));
         model.put("max",  wrap(endOffset));
-        model.put("grid", wrap(gridJson));
         model.put("format", format);
         if (viewData != null) {
             model.putAll(viewData);
@@ -373,8 +370,10 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
             if ((mediaType.isCompatible(APPLICATION_JSON_TYPE)) ||
                 (mediaType.isCompatible(APPLICATION_RDF_JSON_TYPE)) ||
                 (mediaType.isCompatible(APPLICATION_SPARQL_RESULT_JSON_TYPE))) {
-                String fmt = (gridJson)? GRID_JSON_SINGLE_VALUE_FMT:
-                                         STD_JSON_SINGLE_VALUE_FMT;
+                MediaType expectedType =
+                        (isSet(format))? MediaType.valueOf(format): mediaType;
+                String fmt = (this.isGridJson(expectedType))?
+                        GRID_JSON_SINGLE_VALUE_FMT: STD_JSON_SINGLE_VALUE_FMT;
                 result = String.format(fmt, result);
                 // Check for JSONP results.
                 if (isSet(jsonCallback)) {
@@ -402,9 +401,12 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                 response = Response.ok(this.newView("constructResult.vm", model));
             }
             else {
+                MediaType expectedType =
+                        (isSet(format))? MediaType.valueOf(format): mediaType;
+
                 StreamingOutput out = this.getConstructHandlerOutput(repo,
                                         controlledQuery, startOffset, endOffset,
-                                        gridJson, jsonCallback, baseUri,
+                                        expectedType, jsonCallback, baseUri,
                                         dataset, responseType, query);
                 response = Response.ok(out, responseType);
             }
@@ -426,9 +428,12 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                 response = Response.ok(this.newView("selectResult.vm", model));
             }
             else {
+                MediaType expectedType =
+                        (isSet(format))? MediaType.valueOf(format): mediaType;
+
                 StreamingOutput out = this.getSelectHandlerOutput(repo,
                                         controlledQuery, startOffset, endOffset,
-                                        gridJson, jsonCallback, baseUri,
+                                        expectedType, jsonCallback, baseUri,
                                         dataset, responseType, query);
                 response = Response.ok(out, responseType);
             }
@@ -592,8 +597,8 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
     private StreamingOutput getConstructHandlerOutput(
                             final Repository repository, final String query,
                             final int startOffset, final int endOffset,
-                            final boolean gridJson, final String jsonCallback,
-                            final String baseUri,
+                            final MediaType expectedType,
+                            final String jsonCallback, final String baseUri,
                             final Dataset dataset, final Variant v,
                             final String userQuery) {
         StreamingOutput handler = null;
@@ -604,7 +609,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
             (mediaType.isCompatible(APPLICATION_SPARQL_RESULT_JSON_TYPE))) {
             final MessageFormat linkFormat =
                     this.getDescribeLinkFormat(baseUri, repository, dataset);
-            if (gridJson) {
+            if (isGridJson(expectedType)) {
                 final int max = this.getDefaultMaxResults(startOffset, endOffset);
                 handler = new ConstructStreamingOutput(repository, query,
                                             startOffset, max, baseUri, dataset, userQuery)
@@ -697,8 +702,8 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
     private StreamingOutput getSelectHandlerOutput(
                             final Repository repository, final String query,
                             final int startOffset, final int endOffset,
-                            final boolean gridJson, final String jsonCallback,
-                            final String baseUri,
+                            final MediaType expectedType,
+                            final String jsonCallback, final String baseUri,
                             final Dataset dataset, final Variant v,
                             final String userQuery) {
         StreamingOutput handler = null;
@@ -707,7 +712,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
         if ((mediaType.isCompatible(APPLICATION_JSON_TYPE)) ||
             (mediaType.isCompatible(APPLICATION_RDF_JSON_TYPE)) ||
             (mediaType.isCompatible(APPLICATION_SPARQL_RESULT_JSON_TYPE))) {
-            if (gridJson) {
+            if (isGridJson(expectedType)) {
                 final int max = this.getDefaultMaxResults(startOffset, endOffset);
                 final MessageFormat linkFormat =
                     this.getDescribeLinkFormat(baseUri, repository, dataset);
@@ -719,7 +724,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                             SparqlResultsGridJsonWriter resultsWriter =
                                         new SparqlResultsGridJsonWriter(out,
                                                     linkFormat, jsonCallback);
-                            if (getDisplayLiteralDatatypes()) {
+                            if (isTypedLiteralJson(expectedType)) {
                                 resultsWriter.setIncludeLiteralDataTypes(true);
                             }
                             return resultsWriter;
@@ -813,15 +818,27 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
     }
 
     /**
-     * Returns whether to include XML Schema data types when displaying
-     * native literals. The flag is read from Datalift configuration.
-     * @return whether literal data types shall be included in display,
-     *         <code>false</code> if the flag is not defined in
-     *         configuration.
+     * Returns whether the specified MIME type has the
+     * {@link #GRID_JSON_FLAG grid-optimized format} flag set.
+     * @param  t   a MIME type
+     * @return <code>true</code> if the parameters of the MIME type
+     *         include the {@link #GRID_JSON_FLAG grid-optimized format}
+     *         flag.
      */
-    public boolean getDisplayLiteralDatatypes() {
-        return this.getBoolean(Configuration.getDefault(),
-                               DISPLAY_LITERAL_DATATYPES_PROPERTY, false);
+    private boolean isGridJson(MediaType t) {
+        return (t != null) && (t.getParameters().containsKey(GRID_JSON_FLAG));
+    }
+
+    /**
+     * Returns whether the specified MIME type has the
+     * {@link #TYPED_JSON_FLAG typed-literal data} flag set.
+     * @param  t   a MIME type
+     * @return <code>true</code> if the parameters of the MIME type
+     *         include the {@link #TYPED_JSON_FLAG typed-literal data}
+     *         flag.
+     */
+    private boolean isTypedLiteralJson(MediaType t) {
+        return (t != null) && (t.getParameters().containsKey(TYPED_JSON_FLAG));
     }
 
     /**
@@ -946,8 +963,8 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                         QueryDescription desc = (log.isDebugEnabled())?
                                     new QueryDescription(userQuery, -1, false):
                                     new QueryDescription(userQuery);
-                        log.info(msg, wrap(evalTime / 1000.0),
-                                      wrap(sendTime / 1000.0),
+                        log.info(msg, wrap(asSeconds(evalTime)),
+                                      wrap(asSeconds(sendTime)),
                                       wrap(this.count), "statements",
                                       repository.name, desc, defGraphs);
                     }
@@ -1050,8 +1067,8 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                         QueryDescription desc = (log.isDebugEnabled())?
                                     new QueryDescription(userQuery, -1, false):
                                     new QueryDescription(userQuery);
-                        log.info(msg, wrap(evalTime / 1000.0),
-                                      wrap(sendTime / 1000.0),
+                        log.info(msg, wrap(asSeconds(evalTime)),
+                                      wrap(asSeconds(sendTime)),
                                       wrap(this.count), "binding sets",
                                       repository.name, desc, defGraphs);
                     }
@@ -1182,8 +1199,8 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                     QueryDescription desc = (log.isDebugEnabled())?
                                         new QueryDescription(query, -1, false):
                                         new QueryDescription(query);
-                    log.info(msg, wrap(this.evalTime / 1000.0),
-                                  wrap(sendTime / 1000.0),
+                    log.info(msg, wrap(asSeconds(this.evalTime)),
+                                  wrap(asSeconds(sendTime)),
                                   wrap(this.count),
                                   (this.columns != null)? "binding sets": "statements",
                                   repository.name, desc, defGraphs);

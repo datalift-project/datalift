@@ -306,7 +306,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     public ResponseBuilder executeQuery(String query, UriInfo uriInfo,
                                         Request request, String acceptHdr)
                                                 throws WebApplicationException {
-        return this.executeQuery(null, null, query, -1, -1, false, null, null,
+        return this.executeQuery(null, null, query, -1, -1, null, null,
                                  uriInfo, request, acceptHdr);
     }
 
@@ -318,18 +318,18 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                                         Request request, String acceptHdr)
                                                 throws WebApplicationException {
         return this.executeQuery(defaultGraphUris, namedGraphUris, query,
-                        -1, -1, false, null, null, uriInfo, request, acceptHdr);
+                            -1, -1, null, null, uriInfo, request, acceptHdr);
     }
 
     /** {@inheritDoc} */
     @Override
     public ResponseBuilder executeQuery(List<String> defaultGraphUris,
                             List<String> namedGraphUris, String query,
-                            int startOffset, int endOffset, boolean gridJson,
+                            int startOffset, int endOffset,
                             UriInfo uriInfo, Request request, String acceptHdr)
                                                 throws WebApplicationException {
         return this.executeQuery(defaultGraphUris, namedGraphUris, query,
-                                startOffset, endOffset, gridJson, null, null,
+                                startOffset, endOffset, null, null,
                                 uriInfo, request, acceptHdr);
     }
 
@@ -338,7 +338,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     public ResponseBuilder executeQuery(List<String> defaultGraphUris,
                             List<String> namedGraphUris, String query,
                             int startOffset, int endOffset,
-                            boolean gridJson, String format, String jsonCallback,
+                            String format, String jsonCallback,
                             UriInfo uriInfo, Request request, String acceptHdr)
                                                 throws WebApplicationException {
         ResponseBuilder response = null;
@@ -353,7 +353,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                 endOffset = -1;
             }
             response = this.doExecute(defaultGraphUris, namedGraphUris, query,
-                                      startOffset, endOffset, gridJson,
+                                      startOffset, endOffset,
                                       format, jsonCallback,
                                       uriInfo, request, acceptHdr, null, null);
         }
@@ -461,7 +461,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                 viewData.put("describe-type", type);
                 viewData.put("describe-uri",  u);
                 response = this.doExecute(defGraphs, namedGraphUris, query,
-                                          -1, max, false, format, jsonCallback,
+                                          -1, max, format, jsonCallback,
                                           uriInfo, request, acceptHdr,
                                           allowedTypes, viewData);
             }
@@ -527,7 +527,6 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                 @QueryParam("query") String query,
                 @QueryParam("min") @DefaultValue("-1") int startOffset,
                 @QueryParam("max") @DefaultValue("-1") int endOffset,
-                @QueryParam("grid") @DefaultValue("false") boolean gridJson,
                 @QueryParam("format") String format,
                 @QueryParam("callback") String jsonCallback,
                 @Context UriInfo uriInfo,
@@ -535,7 +534,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                 @HeaderParam(ACCEPT) String acceptHdr)
                                                 throws WebApplicationException {
         return this.dispatchQuery(defaultGraphUris, namedGraphUris, query,
-                                  startOffset, endOffset, gridJson, format,
+                                  startOffset, endOffset, format,
                                   jsonCallback, uriInfo, request, acceptHdr);
     }
 
@@ -578,7 +577,6 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                 @FormParam("query") String query,
                 @FormParam("min") @DefaultValue("-1") int startOffset,
                 @FormParam("max") @DefaultValue("-1") int endOffset,
-                @FormParam("grid") @DefaultValue("false") boolean gridJson,
                 @FormParam("format") String format,
                 @FormParam("callback") String jsonCallback,
                 @Context UriInfo uriInfo,
@@ -586,7 +584,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                 @HeaderParam(ACCEPT) String acceptHdr)
                                                 throws WebApplicationException {
         return this.getQuery(defaultGraphUris, namedGraphUris, query,
-                             startOffset, endOffset, gridJson, format,
+                             startOffset, endOffset, format,
                              jsonCallback, uriInfo, request, acceptHdr);
     }
 
@@ -599,7 +597,6 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                 @QueryParam("query") String query,
                 @QueryParam("min") @DefaultValue("-1") int startOffset,
                 @QueryParam("max") @DefaultValue("-1") int endOffset,
-                @QueryParam("grid") @DefaultValue("false") boolean gridJson,
                 @QueryParam("format") String format,
                 @QueryParam("callback") String jsonCallback,
                 @Context UriInfo uriInfo,
@@ -612,7 +609,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
             defGraphUris.addAll(defaultGraphUris);
         }
         return this.dispatchQuery(defGraphUris, namedGraphUris, query,
-                                  startOffset, endOffset, gridJson, format,
+                                  startOffset, endOffset, format,
                                   jsonCallback, uriInfo, request, acceptHdr);
     }
 
@@ -626,15 +623,14 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                 @FormParam("query") String query,
                 @FormParam("min") @DefaultValue("-1") int startOffset,
                 @FormParam("max") @DefaultValue("-1") int endOffset,
-                @FormParam("grid") @DefaultValue("false") boolean gridJson,
                 @FormParam("format") String format,
                 @FormParam("callback") String jsonCallback,
                 @Context UriInfo uriInfo,
                 @Context Request request,
                 @HeaderParam(ACCEPT) String acceptHdr)
                                                 throws WebApplicationException {
-        return this.getStoreQuery(repository, defaultGraphUris, namedGraphUris, query,
-                                  startOffset, endOffset, gridJson, format,
+        return this.getStoreQuery(repository, defaultGraphUris, namedGraphUris,
+                                  query, startOffset, endOffset, format,
                                   jsonCallback, uriInfo, request, acceptHdr);
     }
 
@@ -732,7 +728,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     private final Response dispatchQuery(List<String> defaultGraphUris,
                             List<String> namedGraphUris, String query,
                             int startOffset, int endOffset,
-                            boolean gridJson, String format, String jsonCallback,
+                            String format, String jsonCallback,
                             UriInfo uriInfo, Request request, String acceptHdr)
                                                 throws WebApplicationException {
         ResponseBuilder response = null;
@@ -741,7 +737,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         if (StringUtils.isSet(query)) {
             try {
                 response = this.executeQuery(defaultGraphUris, namedGraphUris,
-                                query, startOffset, endOffset, gridJson, format,
+                                query, startOffset, endOffset, format,
                                 jsonCallback, uriInfo, request, acceptHdr);
             }
             catch (Exception e) {
@@ -756,15 +752,13 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     }
 
     abstract protected ResponseBuilder doExecute(
-                                          List<String> defaultGraphUris,
-                                          List<String> namedGraphUris,
-                                          String query, int startOffset,
-                                          int endOffset, boolean gridJson,
-                                          String format, String jsonCallback,
-                                          UriInfo uriInfo, Request request,
-                                          String acceptHdr,
-                                          List<Variant> allowedTypes,
-                                          Map<String,Object> viewData)
+                                  List<String> defaultGraphUris,
+                                  List<String> namedGraphUris, String query,
+                                  int startOffset, int endOffset,
+                                  String format, String jsonCallback,
+                                  UriInfo uriInfo, Request request,
+                                  String acceptHdr, List<Variant> allowedTypes,
+                                  Map<String,Object> viewData)
                                                             throws Exception;
 
     protected final Repository getTargetRepository(

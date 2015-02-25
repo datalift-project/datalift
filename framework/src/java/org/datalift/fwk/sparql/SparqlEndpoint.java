@@ -176,11 +176,6 @@ public interface SparqlEndpoint
      *                            (inclusive).
      * @param  endOffset          the index of the last expected result
      *                            (exclusive).
-     * @param  gridJson           whether to return data grid optimized
-     *                            JSON result. Only applicable if the
-     *                            requested result MIME type is
-     *                            "application/json" or
-     *                            "application/sparql-results+json".
      * @param  uriInfo            the request URI data.
      * @param  request            the JAX-RS Request object, for content
      *                            negotiation.
@@ -196,7 +191,7 @@ public interface SparqlEndpoint
      */
     public ResponseBuilder executeQuery(List<String> defaultGraphUris,
                             List<String> namedGraphUris, String query,
-                            int startOffset, int endOffset, boolean gridJson,
+                            int startOffset, int endOffset,
                             UriInfo uriInfo, Request request, String acceptHdr)
                                                 throws WebApplicationException;
 
@@ -212,11 +207,6 @@ public interface SparqlEndpoint
      *                            (inclusive).
      * @param  endOffset          the index of the last expected result
      *                            (exclusive).
-     * @param  gridJson           whether to return data grid optimized
-     *                            JSON result. Only applicable if the
-     *                            requested result MIME type is
-     *                            "application/json" or
-     *                            "application/sparql-results+json".
      * @param  format             the expected response format,
      *                            overrides the HTTP Accept header.
      * @param  jsonCallback       the name of the JSONP callback to
@@ -236,7 +226,7 @@ public interface SparqlEndpoint
      */
     public ResponseBuilder executeQuery(List<String> defaultGraphUris,
                             List<String> namedGraphUris, String query,
-                            int startOffset, int endOffset, boolean gridJson,
+                            int startOffset, int endOffset,
                             String format, String jsonCallback,
                             UriInfo uriInfo, Request request, String acceptHdr)
                                                 throws WebApplicationException;

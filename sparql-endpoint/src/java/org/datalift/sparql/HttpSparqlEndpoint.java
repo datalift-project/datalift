@@ -136,14 +136,12 @@ public class HttpSparqlEndpoint extends AbstractSparqlEndpoint
     /** {@inheritDoc} */
     @Override
     protected ResponseBuilder doExecute(List<String> defaultGraphUris,
-                                        List<String> namedGraphUris,
-                                        String query, int startOffset,
-                                        int endOffset, boolean gridJson,
-                                        String format, String jsonCallback,
-                                        UriInfo uriInfo, Request request,
-                                        String acceptHdr,
-                                        List<Variant> allowedTypes,
-                                        Map<String,Object> viewData)
+                                List<String> namedGraphUris, String query,
+                                int startOffset, int endOffset,
+                                String format, String jsonCallback,
+                                UriInfo uriInfo, Request request,
+                                String acceptHdr, List<Variant> allowedTypes,
+                                Map<String,Object> viewData)
                                     throws IOException, URISyntaxException {
         log.trace("Processing SPARQL query: \"{}\"", query);
         // Forward query to the SPARQL endpoint.
