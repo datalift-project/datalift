@@ -92,7 +92,7 @@
    -->
 
   <property name="app.name"             value="ontology-mapper"/>
-  <property name="app.version"          value="0.8.1"/>
+  <property name="app.version"          value="0.8.3"/>
   <property name="app.path"             value="/${app.name}"/>
   <property name="app.long.name"        value="Ontology Mapper"/>
 
