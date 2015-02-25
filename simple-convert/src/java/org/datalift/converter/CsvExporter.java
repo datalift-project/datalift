@@ -81,10 +81,12 @@ import org.datalift.fwk.rdf.RdfException;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.util.Env;
 import org.datalift.fwk.util.web.Charsets;
+import org.datalift.fwk.util.web.UriParam;
 import org.datalift.fwk.view.TemplateModel;
 
 import static org.datalift.fwk.MediaTypes.*;
 import static org.datalift.fwk.util.PrimitiveUtils.wrap;
+import static org.datalift.fwk.util.TimeUtils.asSeconds;
 
 
 /**
@@ -141,24 +143,27 @@ public class CsvExporter extends BaseConverterModule
     @GET
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
     public Response getIndexPage(@QueryParam(PROJECT_ID_PARAM) URI projectId) {
-        // Retrieve project.
-        Project p = this.getProject(projectId);
         // Display conversion configuration page.
-        TemplateModel view = this.newView("csvExporter.vm", p);
-        view.put("converter", this);
+        TemplateModel view = this.getProjectView("csvExporter.vm", projectId);
         view.put("charsets", Charsets.availableCharsets);
         view.put("separators", Separator.values());
-        return Response.ok(view).build();
+        return Response.ok(view, TEXT_HTML_UTF8).build();
     }
 
     @POST
     @Consumes(APPLICATION_FORM_URLENCODED)
     public Response exportSourceAsCsv(
-                            @FormParam(PROJECT_ID_PARAM) URI projectId,
-                            @FormParam(SOURCE_ID_PARAM)  URI sourceId,
+                            @FormParam(PROJECT_ID_PARAM) UriParam projectId,
+                            @FormParam(SOURCE_ID_PARAM)  UriParam sourceId,
                             @FormParam(CHARSET_PARAM)    String charset,
                             @FormParam(SEPARATOR_PARAM)  String separator)
                                                 throws WebApplicationException {
+        if (! UriParam.isSet(projectId)) {
+            this.throwInvalidParamError(PROJECT_ID_PARAM, null);
+        }
+        if (! UriParam.isSet(sourceId)) {
+            this.throwInvalidParamError(SOURCE_ID_PARAM, null);
+        }
         Response response = null;
 
         Repository internal = Configuration.getDefault()
@@ -180,9 +185,9 @@ public class CsvExporter extends BaseConverterModule
                 this.throwInvalidParamError(SEPARATOR_PARAM, separator);
             }
             // Retrieve source.
-            Project p = this.getProject(projectId);
+            Project p = this.getProject(projectId.toUri(PROJECT_ID_PARAM));
             TransformedRdfSource s = (TransformedRdfSource)
-                                                        (p.getSource(sourceId));
+                            (p.getSource(sourceId.toUri(SOURCE_ID_PARAM)));
             if (s == null) {
                 throw new ObjectNotFoundException("project.source.not.found",
                                                   projectId, sourceId);
@@ -302,7 +307,7 @@ public class CsvExporter extends BaseConverterModule
                             long delay = System.currentTimeMillis() - t0;
                             log.debug("Exported {} CSV lines from <{}> in {} seconds",
                                       wrap(lineCount), namedGraph,
-                                      wrap(delay / 1000.0));
+                                      wrap(asSeconds(delay)));
                         }
 
                         private void writeLine() {

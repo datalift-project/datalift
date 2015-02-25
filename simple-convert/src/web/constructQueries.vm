@@ -13,7 +13,7 @@
 </head>
 <body>
 #banner
-	<div class="ui-widget-content" id="workspace">
+	<div class="ui-widget-content converter_main" id="workspace">
 		<h3 class="ui-widget-header dl-widget-header">#i18n("rdftransformer.title") - #i18n("project.label") ${it.title}</h3>
 		<form id="converter_form" method="post" action="${baseUri}/rdftransformer">
 			<input type="hidden" name="project" id="project" value="${it.uri}"/>
@@ -22,12 +22,12 @@
 #foreach( $curSrc in $it.getSources() )
 	#set( $count = 1 )
 	#if( $converter.canHandle($curSrc) )
-		#foreach($source in $project.getSources())
+		#foreach($source in $it.getSources())
 			#if( $source.getType() == $field.TransformedRdfSource && $source.getParent().uri == $curSrc.uri)
 				#set( $count = $count + 1)
 			#end
 		#end
-				<option value="${curSrc.uri}" name="${curSrc.title}" count="$count">$esc.html($curSrc.title)</option>
+				<option value="$esc.html(${curSrc.uri})" name="$esc.html(${curSrc.title})" count="$count">$esc.html($curSrc.title)</option>
 	#end
 #end
 			</select></p>
@@ -36,7 +36,7 @@
 			<input type="text" name="dest_title" id="dest_title" value=""/></p>
 
 			<p><label for="dest_graph_uri" class="hidden">#i18n("dest.uri"):</label>
-			<input type="text" name="dest_graph_uri" id="dest_graph_uri" value=""/></p>
+			<input type="text" name="dest_graph_uri" id="dest_graph_uri" title="#i18n('dest.graph.help')" value=""/></p>
 
 			<p><label for="query[]">#i18n("construct.query.label"):</label><br />
 			<textarea name="query[]" class="construct_query" style="width:600px; height:150px;"></textarea>
@@ -47,24 +47,26 @@
 	</div>
 
 #script_links
+<script type="text/javascript" src="${baseUri}/rdftransformer/static/js/converters.js"></script>
 <script type="text/javascript">
 	$(function() {
 		$("#queries_submit").button();
 		$("#add_query").button();
 
 		$("#add_query").click(function(){
-			var firstQuery = $("textarea[name='query[]']");
-			if (typeof firstQuery == 'undefined') return false;
-			$("textarea[name='query[]']")
-				.clone()
-				.insertAfter("textarea[name='query[]']");
+			var lastQuery = $("textarea[name='query[]']:last");
+			if (typeof lastQuery == 'undefined') return false;
+			lastQuery.clone().insertAfter(lastQuery);
 		});
 
 		$("#source").change(function(){
-		 	$("#source option:selected").each(function () {
-		 		$("#dest_title").attr("value", $(this).attr('name') + " - (RDF #" + $(this).attr("count") + ")");
-				$("#dest_graph_uri").attr("value", $(this).attr("value") + "-rdf-" + $(this).attr("count"));
-		 	});
+			$("#source option:selected").each(function() {
+				var name  = $(this).attr("name");
+				var uri   = $(this).attr("value");
+				var count = $(this).attr("count");
+				$("#dest_title").attr("value", getTargetSrcName(name, count));
+				$("#dest_graph_uri").attr("value", getTargetGraphUri(uri, count));
+			});
 		});
 		$("#source").change();
 	});

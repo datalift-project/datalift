@@ -70,5 +70,5 @@ public interface SqlSource extends Source
     public String getPassword();
     public void setPassword(String password);
 
-  
+    public String getDatabaseType();
 }

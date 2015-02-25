@@ -52,7 +52,6 @@ import org.datalift.fwk.Configuration;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectModule;
-import org.datalift.fwk.project.RdfFileSource;
 import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.project.Source.SourceType;
@@ -61,15 +60,16 @@ import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.util.RegexUriMapper;
 import org.datalift.fwk.util.StringUtils;
 import org.datalift.fwk.util.UriMapper;
+import org.datalift.fwk.util.web.UriParam;
 
-import static org.datalift.fwk.util.StringUtils.*;
 import static org.datalift.fwk.MediaTypes.*;
 
 
 /**
- * A {@link ProjectModule project module} that loads the RDF data
- * from a {@link RdfFileSource RDF file source} into the internal
- * RDF store.
+ * A {@link ProjectModule project module} that copies RDF triples
+ * from one {@link TransformedRdfSource source graph} to
+ * {@link TransformedRdfSource another}, converting the URIs that
+ * match a given regular expression.
  *
  * @author lbihanic
  */
@@ -102,27 +102,64 @@ public class RdfUriMapper extends BaseConverterModule
     // Web services
     //-------------------------------------------------------------------------
 
+    /**
+     * <i>[Resource method]</i> Displays the module welcome page.
+     * @param  projectId   the URI of the data-lifting project.
+     *
+     * @return a JAX-RS response with the page template and parameters.
+     */
     @GET
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
     public Response getIndexPage(@QueryParam(PROJECT_ID_PARAM) URI projectId) {
         return this.newProjectView("uriMapper.vm", projectId);
     }
 
+    /**
+     * <i>[Resource method]</i> Copy all the triples from the specified
+     * RDF graph (as a Datalift source object) to an new graph (RDF
+     * source), converting all URIs that match a given regular
+     * expression.
+     * @param  projectId          the URI of the data-lifting project.
+     * @param  sourceId           the URI of the source to convert.
+     * @param  destTitle          the name of the RDF source to hold the
+     *                            copied triples.
+     * @param  targetGraphParam   the URI of the named graph to hold the
+     *                            copied triples, which will also be the
+     *                            URI of the created RDF source.
+     * @param  uriPattern         an optional regular expression to
+     *                            apply to the URIs found in the RDF
+     *                            data to alter them (see next
+     *                            parameter).
+     * @param  uriReplacement     an optional replacement string,
+     *                            possibly including replacement patterns
+     *                            from the above regular expression.
+     *
+     * @return a JAX-RS response redirecting the user browser to the
+     *         created RDF source.
+     * @throws WebApplicationException if any error occurred during the
+     *         data conversion from SQL to RDF.
+     */
     @POST
     @Consumes(APPLICATION_FORM_URLENCODED)
-    public Response loadRdfData(
-                    @FormParam(PROJECT_ID_PARAM) URI projectId,
-                    @FormParam(SOURCE_ID_PARAM)  URI sourceId,
-                    @FormParam(TARGET_SRC_NAME)  String destTitle,
-                    @FormParam(GRAPH_URI_PARAM)  URI targetGraph,
-                    @FormParam("src_pattern")    String uriPattern,
-                    @FormParam("dst_pattern")    String uriReplacement)
+    public Response mapUris(
+                    @FormParam(PROJECT_ID_PARAM)  UriParam projectId,
+                    @FormParam(SOURCE_ID_PARAM)   UriParam sourceId,
+                    @FormParam(TARGET_SRC_NAME)   String destTitle,
+                    @FormParam(GRAPH_URI_PARAM)   UriParam targetGraphParam,
+                    @FormParam(SRC_PATTERN_PARAM) String uriPattern,
+                    @FormParam(DST_PATTERN_PARAM) String uriReplacement)
                                                 throws WebApplicationException {
+        if (! UriParam.isSet(projectId)) {
+            this.throwInvalidParamError(PROJECT_ID_PARAM, null);
+        }
+        if (! UriParam.isSet(sourceId)) {
+            this.throwInvalidParamError(SOURCE_ID_PARAM, null);
+        }
+        if (! UriParam.isSet(targetGraphParam)) {
+            this.throwInvalidParamError(GRAPH_URI_PARAM, null);
+        }
         Response response = null;
         try {
-            if (isBlank(targetGraph.toString())) {
-                targetGraph = null;
-            }
             // Check for URI mapping.
             UriMapper mapper = null;
             if (! StringUtils.isBlank(uriPattern)) {
@@ -134,15 +171,19 @@ public class RdfUriMapper extends BaseConverterModule
                     this.throwInvalidParamError("src_pattern", uriPattern);
                 }
             }
-            // Retrieve project.
-            Project p = this.getProject(projectId);
-            // Load input source.
-            TransformedRdfSource in =
-                                (TransformedRdfSource)(p.getSource(sourceId));
+            // Retrieve project and source.
+            Project p = this.getProject(projectId.toUri(PROJECT_ID_PARAM));
+            TransformedRdfSource in = (TransformedRdfSource)
+                                (p.getSource(sourceId.toUri(SOURCE_ID_PARAM)));
             if (in == null) {
                 throw new ObjectNotFoundException("project.source.not.found",
                                                   projectId, sourceId);
             }
+            // Check target named graph. It shall NOT conflict with
+            // existing objects (sources, projects) otherwise it would not
+            // be accessible afterwards (e.g. display, removal...).
+            URI targetGraph = targetGraphParam.toUri(GRAPH_URI_PARAM);
+            this.checkUriConflict(targetGraph, GRAPH_URI_PARAM);
             // Copy triples from the input source to the target named graph,
             // mapping URIs on the fly...
             Repository internal = Configuration.getDefault()

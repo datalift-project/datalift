@@ -75,6 +75,7 @@ import org.datalift.fwk.util.io.FileUtils;
 
 import static org.datalift.fwk.util.PrimitiveUtils.*;
 import static org.datalift.fwk.util.StringUtils.isBlank;
+import static org.datalift.fwk.util.TimeUtils.asSeconds;
 
 
 /**
@@ -363,7 +364,7 @@ public final class RdfUtils
                           wrap(appender.getStatementCount()),
                           (namedGraph != null)? "<" + namedGraph + '>':
                                                 "default graph",
-                          wrap(appender.getDuration() / 1000.0));
+                          wrap(asSeconds(appender.getDuration())));
             }
         }
         catch (Exception e) {
@@ -461,7 +462,7 @@ public final class RdfUtils
 
             log.debug("Inserted {} RDF triples into <{}> in {} seconds",
                       wrap(appender.getStatementCount()), namedGraph,
-                      wrap(appender.getDuration() / 1000.0));
+                      wrap(asSeconds(appender.getDuration())));
         }
         catch (Exception e) {
             try {
@@ -623,7 +624,7 @@ public final class RdfUtils
                     log.debug("Inserted {} RDF triples into <{}>"
                               + " in {} seconds for query #{}",
                               wrap(appender.getStatementCount()), namedGraph,
-                              wrap(appender.getDuration() / 1000.0), wrap(i));
+                              wrap(asSeconds(appender.getDuration())), wrap(i));
                 }
                 catch (OpenRDFException e) {
                     if ((e instanceof MalformedQueryException) ||
@@ -779,10 +780,11 @@ public final class RdfUtils
      *         <code>null</code> or is not a regular file.
      */
     public static RdfFormat guessRdfFormatFromExtension(String fileName) {
-        String ext = "";
-        int i = fileName.lastIndexOf('.');
-        if ((i > 0) && (i < fileName.length() - 1)) {
-            ext = fileName.substring(i+1);
+        String ext = getFileExtension(fileName);
+        // Ignore compression formats extensions, if any.
+        if (FileUtils.COMPRESSION_FORMATS_EXTENSIONS.contains(ext)) {
+            int l = fileName.length() - ext.length() - 1;
+            ext = getFileExtension(fileName.substring(0, l));
         }
         RdfFormat format = null;
         for (RdfFormat t : RdfFormat.values()) {
@@ -1048,7 +1050,7 @@ public final class RdfUtils
         else if (o instanceof URL) {
             v = valueFactory.createURI(o.toString());
         }
-        else {
+        else if (o != null) {
             throw new UnsupportedOperationException(o.getClass().getName());
         }
         return v;
@@ -1123,6 +1125,21 @@ public final class RdfUtils
         // [#x10000-#x10FFFF]
         return (c >= 32 && c <= 55295) || (c >= 57344 && c <= 65533) ||
                (c >= 65536 && c <= 1114111) || c == 9 || c == 10 || c == 13;
+    }
+
+    /**
+     * Returns the extension (file type) from the specified file name.
+     * @param  fileName   the file name.
+     *
+     * @return the extension from the specified file name.
+     */
+    private static String getFileExtension(String fileName) {
+        String ext = "";
+        int i = fileName.lastIndexOf('.');
+        if ((i > 0) && (i < fileName.length() - 1)) {
+            ext = fileName.substring(i+1);
+        }
+        return ext;
     }
 
     /** The severity levels for RDF parse errors. */

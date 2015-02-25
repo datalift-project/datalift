@@ -1,20 +1,16 @@
 package org.datalift.lov.service;
 
-import java.io.BufferedWriter;
+import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.net.URI;
 import java.net.URL;
-import java.net.URLConnection;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -23,13 +19,17 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.log.Logger;
+import org.datalift.fwk.rdf.BatchStatementAppender;
 import org.datalift.fwk.rdf.RdfException;
+import org.datalift.fwk.rdf.RdfFormat;
 import org.datalift.fwk.rdf.RdfUtils;
+import org.datalift.fwk.rdf.Repository;
+import org.datalift.fwk.util.Env;
+import org.datalift.fwk.util.io.FileUtils;
+import org.datalift.fwk.util.web.Charsets;
 import org.datalift.lov.local.LovLocalService;
 import org.datalift.lov.local.LovLocalVocabularyService;
 import org.datalift.lov.local.LovUtil;
@@ -38,10 +38,13 @@ import org.datalift.lov.local.objects.vocab.VocabsDictionaryItem;
 import static org.datalift.fwk.util.PrimitiveUtils.wrap;
 
 import org.openrdf.repository.RepositoryConnection;
-import org.openrdf.repository.RepositoryException;
+import org.openrdf.rio.ParserConfig;
+import org.openrdf.rio.RDFParser;
+import org.openrdf.rio.RDFParser.DatatypeHandling;
 import org.semanticweb.yars.nx.Node;
 import org.semanticweb.yars.nx.Triple;
 import org.semanticweb.yars.nx.parser.NxParser;
+
 
 /**
  * Service implementation that performs local request to get its results.
@@ -61,67 +64,78 @@ public class OfflineLovService extends LovService {
 			+ "\"facet_types\": null," + "\"params\": null,"
 			+ "\"results\": []" + "}";
 
-	private final static String N3_AGGREGATOR = "lov_aggregator.n3";
-	private final static String NQ_AGGREGATOR = "lov_aggregator.nq";
-	private final static String ZIPPED_AGGREGATOR = NQ_AGGREGATOR + ".zip";
-	private final static String BAK_AGGREGATOR = ZIPPED_AGGREGATOR + ".bak";
+	// private final static String NQ_AGGREGATOR = "lov_aggregator.nq";
+	// private final static String ZIPPED_AGGREGATOR = NQ_AGGREGATOR + ".zip";
 
-	/** Datalift configuration */
-	private Configuration configuration;
+	public final static String LOV_SRC_URL_PROPERTY = "lov.data.url";
+	public final static String LOV_DATA_URL =
+	            // "http://lov.okfn.org/dataset/lov/agg/" + ZIPPED_AGGREGATOR;
+	            "http://lov.okfn.org/lov.nq.gz";
 
-	/** LOV Data file */
-	private File lovData;
+	private final static String BACKUP_FILE_EXT = ".bak";
 
 	/** Aggregator download state */
-	private boolean aggregatorDownloaded;
-
+	private boolean aggregatorDownloaded = false;
 	/** Triple store loading state */
-	private boolean dataLoading;
-
+	private boolean dataLoading = false;
 	/** Aggregator in tripleStore */
-	private boolean dataLoaded;
-
+	private boolean dataLoaded = false;
 	/** If an update is required*/
-	private boolean updating;
+	private boolean updating = false;
 
-	/** Last lov update */
+	/** Last LOV update */
 	private Date lastLovUpdate = null;
 
 	/** Search service */
 	private LovLocalService localService;
-
 	/** Vocabs service */
 	private LovLocalVocabularyService vocabsService;
 
+	/** LOV data source URL. */
+	private final URL lovSourceUrl;
+	/** LOV data cache directory. */
+	private File lovDataDir;
+	/** The local cache of LOV data. */
+	private final File lovDataFile;
+
 	public OfflineLovService(Configuration configuration) {
-		this.configuration = configuration;
 		localService = new LovLocalService(configuration);
 		vocabsService = new LovLocalVocabularyService(configuration);
+		try {
+		    lovSourceUrl = new URL(configuration.getProperty(
+		                        LOV_SRC_URL_PROPERTY, LOV_DATA_URL));
+		}
+		catch (Exception e) {
+		    throw new RuntimeException(e);
+		}
+		lovDataDir = new File(configuration.getTempStorage(), "lov/data");
+		if (!lovDataDir.exists()) {
+		    lovDataDir.mkdirs();
+		}
+		String lovSrcFile = new File(lovSourceUrl.getPath()).getName();
+		lovDataFile = new File(lovDataDir, lovSrcFile);
 
-        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
-                @Override
-                public Thread newThread(Runnable runnable) {
-                   Thread thread = Executors.defaultThreadFactory().newThread(runnable);
-                   thread.setDaemon(true);
-                   thread.setName("Lov initialization thread");
-                   return thread;
-                }
-        });
+		ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
+		    @Override
+		    public Thread newThread(Runnable runnable) {
+		        Thread thread = Executors.defaultThreadFactory().newThread(runnable);
+                       thread.setDaemon(true);
+                       thread.setName("Lov initialization thread");
+                       return thread;
+		    }
+		});
 
-        Runnable runnable = new Runnable() {
+		Runnable runnable = new Runnable() {
+		    @Override
+		    public void run() {
+		        if (downloadAggregator()) {
+		            loadDataIntoRepository();
+		        }
+		    }
+		};
 
-            @Override
-            public void run() {
-                if (downloadAggregator()) {
-                    extractZippedAggregator();
-                    convertAggregator();
-                    loadDataIntoRepository();
-                }
-            }
-        };
-
-        executor.schedule(runnable, 10, TimeUnit.SECONDS);
-        executor.shutdown();
+		executor.schedule(runnable, 10, TimeUnit.SECONDS);
+		executor.shutdown();
 	}
 
 	@Override
@@ -200,241 +214,179 @@ public class OfflineLovService extends LovService {
 	}
 
 	public void update() {
-		File bakLov = new File(lovData, BAK_AGGREGATOR);
+		File bakLov = new File(lovDataDir,
+		                       lovDataFile.getName() + BACKUP_FILE_EXT);
 		if (bakLov.exists()) {
 			bakLov.delete();
 		}
-
-		File zippedLov = new File(lovData, ZIPPED_AGGREGATOR);
-		if (zippedLov.exists()) {
-			zippedLov.renameTo(bakLov);
+		if (lovDataFile.exists()) {
+			lovDataFile.renameTo(bakLov);
 		}
-
-		File lov = new File(lovData, N3_AGGREGATOR);
-		if (lov.exists()) {
-			lov.delete();
+		String lovSrcFile = lovDataFile.getName();
+		for (File f : lovDataDir.listFiles()) {
+		    if (! f.getName().startsWith(lovSrcFile)) {
+		        f.delete();
+		    }
 		}
-
 		updating = true;
 		dataLoaded = false;
-        
+
 		downloadAggregator();
-        extractZippedAggregator();
-        convertAggregator();
-        loadDataIntoRepository();
+		loadDataIntoRepository();
+		updating = false;
 	}
 
 	// -------------------------------------------------------------------------
 
 	private boolean downloadAggregator() {
-        boolean ret = false;
-		lovData = new File(configuration.getTempStorage(), "lov/data");
-		if (!lovData.exists()) {
-			lovData.mkdirs();
-		}
+		boolean ret = false;
 		aggregatorDownloaded = false;
 
-		List<String> files = Arrays.asList(lovData.list());
-		// si le fichier lov_aggregator.nq n'existe pas, on va le récupérer
-		if ( ! files.contains(ZIPPED_AGGREGATOR)) {
-			// lancement du téléchargement dans un nouveau thread
-            ExecutorService executor = Executors.newSingleThreadExecutor(new ThreadFactory() {
-                @Override
-                public Thread newThread(Runnable runnable) {
-                   Thread thread = Executors.defaultThreadFactory().newThread(runnable);
-                   thread.setDaemon(true);
-                   thread.setName("Lov downloader thread");
-                   return thread;
-                }
-            });
+		if (! lovDataFile.exists()) {
+			// LOV data file not found. => Download it.
+			ExecutorService executor = Executors.newSingleThreadExecutor(new ThreadFactory() {
+				@Override
+				public Thread newThread(Runnable runnable) {
+					Thread thread = Executors.defaultThreadFactory().newThread(runnable);
+					thread.setDaemon(true);
+					thread.setName("Lov downloader thread");
+					return thread;
+				}
+			});
 
-            Callable<Boolean> callable = new Callable<Boolean>() {
-
-                @Override
-                public Boolean call() throws Exception {
-					log.info("Downloading file from http://lov.okfn.org/dataset/lov/agg/"
-							+ ZIPPED_AGGREGATOR);
+			Callable<Boolean> callable = new Callable<Boolean>() {
+				@Override
+				public Boolean call() throws Exception {
+					Boolean success = Boolean.FALSE;
+					log.debug("Downloading LOV data from \"{}\"...", lovSourceUrl);
 					try {
-
 						long startTime = System.currentTimeMillis();
-
-						// adresse pour récupérer le lov
-						URL lovUrl = new URL(
-								"http://lov.okfn.org/dataset/lov/agg/"
-										+ ZIPPED_AGGREGATOR);
-
-						URLConnection conn = lovUrl.openConnection();
-						conn.setDoOutput(true);
-						conn.setDoInput(true);
-						conn.setRequestProperty("content-type", "binary/data");
-						InputStream in = conn.getInputStream();
-						FileOutputStream out = new FileOutputStream(lovData
-								.getAbsolutePath() + "/" + ZIPPED_AGGREGATOR);
-
-						byte[] b = new byte[1024];
-						int count;
-
-						while ((count = in.read(b)) >= 0) {
-							out.write(b, 0, count);
-						}
-						// fermeture des streams
-						out.flush();
-						in.close();
-						out.close();
-
-						long estimatedTime = ((System.currentTimeMillis() - startTime) / 1000);
-
-						log.info("File downloaded in {} s.",
-								wrap(estimatedTime));
-						new File(lovData, NQ_AGGREGATOR).delete();
-                        aggregatorDownloaded = true;
-                        return Boolean.TRUE;
-
+						FileUtils.save(lovSourceUrl, lovDataFile);
+						double estimatedTime = ((System.currentTimeMillis() - startTime) / 1000.0);
+						log.info("Downloaded LOV data from \"{}\" in {} seconds",
+						         lovSourceUrl, wrap(estimatedTime));
+						aggregatorDownloaded = true;
+						success = Boolean.TRUE;
 					} catch (IOException e) {
-						log.error("Download error : " + e.getMessage());
-                        return Boolean.FALSE;
+						log.error("Failed downloading LOV data: {}", e, e.getMessage());
 					}
+					return success;
 				}
 			};
-            Future<Boolean> future = executor.submit(callable);
-            try {
-                ret = future.get().booleanValue();
-            }
-            catch (InterruptedException e) {
-                log.error("Download has been interrupted.");
-                ret = false;
-            }
-            catch (ExecutionException e) {
-                log.error("Execution problem : " + e.getMessage());
-                ret = false;
-            }
-            executor.shutdown();
+
+			Future<Boolean> future = executor.submit(callable);
+			try {
+			    ret = future.get().booleanValue();
+			}
+			catch (InterruptedException e) {
+			    log.warn("LOV data download has been interrupted.");
+			}
+			catch (ExecutionException e) {
+			    log.error("LOV data download failure: {}", e.getMessage());
+			}
+			finally {
+			    executor.shutdown();
+			}
 		}
-        else { // on a déjà le fichier, on charge le lov
-					// TODO : vérifier si une mise à jour est disponible
-			lastLovUpdate = new Date(
-					new File(lovData, ZIPPED_AGGREGATOR).lastModified());
-			log.info("No need for download. LovAggregator is here !");
-            ret = true;
+		else {
+			// LOV data file already present.
+			// TODO : Check if updated version is available.
+			lastLovUpdate = new Date(lovDataFile.lastModified());
+			log.info("No download needed: LOV data already present");
+			ret = true;
 			aggregatorDownloaded = true;
 		}
-        return ret;
+		return ret;
 	}
 
-	// load data of lov into a dedicated named graph
+	// load data of LOV into a dedicated named graph
 	private void loadDataIntoRepository() throws RuntimeException {
-
 		// TODO vérifier la vitesse de chargement des données (mettre dans un
 		// autre thread ?)
 		// => il faudra probablement gérer l'accès au repository avec un
 		// semaphore
-
-		if (!aggregatorDownloaded) {
-			return;
-		}
-		if (dataLoaded) {
+		if ((! aggregatorDownloaded) || dataLoaded) {
 			return;
 		}
 		dataLoading = true;
 
-		URI lovContextURI = URI.create(LOV_CONTEXT);
-
+		File inFile = lovDataFile;
+		boolean deleteInFile = false;
+		RepositoryConnection cnx = null;
 		try {
-			if(updating) {
-				RdfUtils.clearGraph(this.configuration.getInternalRepository(), lovContextURI);
+			Repository r = Configuration.getDefault()
+			                            .getInternalRepository();
+			cnx = r.newConnection();
+
+			URI lovCtxUri = URI.create(LOV_CONTEXT);
+			if (updating) {
+				RdfUtils.clearGraph(r, lovCtxUri);
 			}
-
-			RepositoryConnection conn = this.configuration.getInternalRepository().newConnection();
-			org.openrdf.model.URI ctx = null;
-			long repositorySize = 0;
-			ctx = conn.getValueFactory().createURI(LOV_CONTEXT);
-			repositorySize = conn.size(ctx);
-
-            if (repositorySize == 0L) {
-				File lov = new File(lovData, N3_AGGREGATOR);
-				log.info("Loading LOV data ({}) into repository...", lov);
+			org.openrdf.model.URI ctx =
+			        cnx.getValueFactory().createURI(LOV_CONTEXT);
+			long repositorySize = cnx.size(ctx);
+			if (repositorySize == 0L) {
+				log.debug("Loading LOV data ({}) into repository...", lovDataFile);
 				long startTime = System.currentTimeMillis();
 
-				RdfUtils.upload(lov, this.configuration.getInternalRepository(), lovContextURI);
-				// conn.add(lov, null, RDFFormat.N3, ctx);
-				double loadTime = (System.currentTimeMillis() - startTime) / 1000.0;
-				log.info("LOV data ({}) successfully loaded in {} s. Offline service is ready.",
-				         lov, wrap(loadTime));
+				RdfFormat fmt = RdfUtils.guessRdfFormatFromExtension(lovDataFile.getName());
+				if (fmt == RdfFormat.NQUADS) {
+				    // Sesame 2.6.x does not support N-Quads.
+				    // => Translate N-Quads into N3.
+				    inFile = this.convertNQuads2N3();
+				    deleteInFile = true;
+				    fmt = RdfFormat.N3;
+				}
+				// Ignore RDF parse errors (such as ill-formatted
+				// dates that sometimes occur in LOV data).
+				RDFParser parser = fmt.newParser();
+				parser.setParserConfig(new ParserConfig(
+                                        true,       // Assume data are valid.
+                                        false,      // Report all errors.
+                                        false,      // Don't preserve BNode ids.
+                                        DatatypeHandling.VERIFY));
+				parser.setStopAtFirstError(false);
+				parser.setRDFHandler(new BatchStatementAppender(cnx, ctx));
+				parser.parse(FileUtils.getInputStream(inFile), "");
 
+				double loadTime = (System.currentTimeMillis() - startTime) / 1000.0;
+				log.info("LOV data successfully loaded in {} seconds. LOV offline service is ready.",
+				         wrap(loadTime));
 				lastLovUpdate = new Date();
 			}
 		}
 		catch (RdfException e) {
-            log.error("Cannot parse aggregator, please contact a LOV administrator. Error message : {}", e.getMessage());
-		} catch (RepositoryException e) {
+			log.error("Error parsing LOV data: \"{}\". Please contact a LOV administrator.", e, e.getMessage());
+		}
+		catch (Exception e) {
+			log.error("Error processing LOV data: \"{}\".", e, e.getMessage());
 			throw new RuntimeException(e);
 		}
 		finally {
+			Repository.closeQuietly(cnx);
+			if (deleteInFile) {
+			    inFile.delete();
+			}
 			dataLoading = false;
 		}
-
 		dataLoaded = true;
 	}
 
-	private boolean extractZippedAggregator() {
+	private File convertNQuads2N3() throws IOException {
+		File tmpFile = File.createTempFile("lov-", ".n3");
+		tmpFile.deleteOnExit();
 
-		log.trace("Extracting aggregator...");
-
-		byte[] buffer = new byte[1024];
-
+		InputStream in = null;
+		Writer out = null;
 		try {
+			final int chunkSize = Env.getFileBufferSize();
+			out = new OutputStreamWriter(
+			        new BufferedOutputStream(
+			            new FileOutputStream(tmpFile), chunkSize),
+			        Charsets.UTF_8);
 
-			String output = lovData.getAbsolutePath() + "/" + NQ_AGGREGATOR;
-
-			// get the zip file content
-			ZipInputStream zis = new ZipInputStream(new FileInputStream(
-					lovData.getAbsolutePath() + "/" + ZIPPED_AGGREGATOR));
-			// get the zipped file list entry
-			ZipEntry ze = zis.getNextEntry();
-
-			while (ze != null) {
-
-				File newFile = new File(output);
-
-				// folders should have been created when downloading
-				FileOutputStream fos = new FileOutputStream(newFile);
-
-				int len;
-				while ((len = zis.read(buffer)) > 0) {
-					fos.write(buffer, 0, len);
-				}
-
-				fos.close();
-				ze = zis.getNextEntry();
-			}
-
-			zis.closeEntry();
-			zis.close();
-
-			log.info("Aggregator unzipped.");
-
-			return true;
-
-		} catch (IOException e) {
-			// e.printStackTrace();
-			log.error("Aggregator extraction failed.");
-		}
-
-		return false;
-
-	}
-
-	private void convertAggregator() {
-
-		log.trace("Converting {} to {}.", NQ_AGGREGATOR, N3_AGGREGATOR);
-
-		try {
-			NxParser nxp = new NxParser(new FileInputStream(
-					lovData.getAbsolutePath() + "/" + NQ_AGGREGATOR), false);
-
-			FileWriter fw = new FileWriter(lovData.getAbsolutePath() + "/"
-					+ N3_AGGREGATOR);
-			BufferedWriter out = new BufferedWriter(fw);
+			in = FileUtils.getInputStream(lovDataFile);
+			NxParser nxp = new NxParser(in, false);
 
 			int notQuad = 0;
 			int notEvenTriple = 0;
@@ -442,30 +394,27 @@ public class OfflineLovService extends LovService {
 				Node[] ns = nxp.next();
 				if (ns.length == 4) {
 					out.write(new Triple(ns[0], ns[1], ns[2]).toN3());
-				} else {
+				}
+				else {
 					++notQuad;
 					if (ns.length == 3) {
 						out.write(new Triple(ns[0], ns[1], ns[2]).toN3());
-					} else {
+					}
+					else {
 						++notEvenTriple;
 					}
 				}
-				out.newLine();
+				out.write('\n');
 			}
-			log.trace("notQuad : {} - notEvenTriple : {}", wrap(notQuad),
-					wrap(notEvenTriple));
+			log.trace("notQuad: {}, notEvenTriple: {}",
+			                    wrap(notQuad), wrap(notEvenTriple));
 			out.flush();
 			out.close();
-
-			log.info("Conversion done.");
-
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			// e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			// e.printStackTrace();
 		}
+		finally {
+			FileUtils.closeQuietly(in);
+			FileUtils.closeQuietly(out);
+		}
+		return tmpFile;
 	}
-
 }

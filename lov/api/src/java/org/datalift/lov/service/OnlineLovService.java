@@ -9,6 +9,8 @@ import java.net.URL;
 
 import org.datalift.fwk.log.Logger;
 
+import static org.datalift.fwk.util.PrimitiveUtils.wrap;
+
 /**
  * Service implementation that performs HTTP request to get its results.
  * 
@@ -68,8 +70,7 @@ public class OnlineLovService extends LovService {
 			connection.setRequestProperty("Accept", "application/json");
 			
 			if (connection.getResponseCode() != 200) {
-				log.error("HTTP request error. Response code is {}",
-				          Integer.valueOf(connection.getResponseCode()));
+				log.error("HTTP request error. Response code is {}", wrap(connection.getResponseCode()));
 			}
 			
 			BufferedReader reader = new BufferedReader(new InputStreamReader(

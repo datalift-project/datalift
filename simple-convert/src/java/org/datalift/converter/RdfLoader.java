@@ -103,27 +103,60 @@ public class RdfLoader extends BaseConverterModule
     // Web services
     //-------------------------------------------------------------------------
 
+    /**
+     * <i>[Resource method]</i> Displays the module welcome page.
+     * @param  projectId   the URI of the data-lifting project.
+     *
+     * @return a JAX-RS response with the page template and parameters.
+     */
     @GET
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
     public Response getIndexPage(@QueryParam(PROJECT_ID_PARAM) URI projectId) {
         return this.newProjectView("rdfLoader.vm", projectId);
     }
 
+    /**
+     * <i>[Resource method]</i> Loads the data from the specified RDF
+     * source (file or SPARQL) into the internal store and creates a
+     * new associated RDF source.
+     * @param  projectId          the URI of the data-lifting project.
+     * @param  sourceId           the URI of the source to convert.
+     * @param  destTitle          the name of the RDF source to hold the
+     *                            converted data.
+     * @param  targetGraphParam   the URI of the named graph to hold the
+     *                            converted data, which will also be the
+     *                            URI of the created RDF source.
+     * @param  uriPattern         an optional regular expression to
+     *                            apply to the URIs found in the RDF
+     *                            data to alter them (see next
+     *                            parameter).
+     * @param  uriReplacement     an optional replacement string,
+     *                            possibly including replacement patterns
+     *                            from the above regular expression.
+     *
+     * @return a JAX-RS response redirecting the user browser to the
+     *         created RDF source.
+     * @throws WebApplicationException if any error occurred during the
+     *         data conversion from SQL to RDF.
+     */
     @POST
     @Consumes(APPLICATION_FORM_URLENCODED)
     public Response loadRdfData(
-                    @FormParam(PROJECT_ID_PARAM) UriParam projectId,
-                    @FormParam(SOURCE_ID_PARAM) UriParam sourceId,
-                    @FormParam(TARGET_SRC_NAME) String destTitle,
-                    @FormParam(GRAPH_URI_PARAM) UriParam targetGraphParam,
-                    @FormParam("uri_translation_src") String uriPattern,
-                    @FormParam("uri_translation_dest") String uriReplacement)
+                        @FormParam(PROJECT_ID_PARAM)  UriParam projectId,
+                        @FormParam(SOURCE_ID_PARAM)   UriParam sourceId,
+                        @FormParam(TARGET_SRC_NAME)   String destTitle,
+                        @FormParam(GRAPH_URI_PARAM)   UriParam targetGraphParam,
+                        @FormParam(SRC_PATTERN_PARAM) String uriPattern,
+                        @FormParam(DST_PATTERN_PARAM) String uriReplacement)
                                                 throws WebApplicationException {
-        if (projectId == null) {
+        if (! UriParam.isSet(projectId)) {
             this.throwInvalidParamError(PROJECT_ID_PARAM, null);
         }
-        if (sourceId == null) {
+        if (! UriParam.isSet(sourceId)) {
             this.throwInvalidParamError(SOURCE_ID_PARAM, null);
+        }
+        if (! UriParam.isSet(targetGraphParam)) {
+            this.throwInvalidParamError(GRAPH_URI_PARAM, null);
         }
         Response response = null;
 
@@ -137,14 +170,11 @@ public class RdfLoader extends BaseConverterModule
                 throw new ObjectNotFoundException("project.source.not.found",
                                                   projectId, sourceId);
             }
-            URI targetGraph = null;
-            if (targetGraphParam != null) {
-                // Extract target named graph. It shall NOT conflict with
-                // existing objects (sources, projects) otherwise it would not
-                // be accessible afterwards (e.g. display, removal...).
-                targetGraph = targetGraphParam.toUri(GRAPH_URI_PARAM);
-                this.checkUriConflict(targetGraph, GRAPH_URI_PARAM);
-            }
+            // Extract target named graph. It shall NOT conflict with
+            // existing objects (sources, projects) otherwise it would not
+            // be accessible afterwards (e.g. display, removal...).
+            URI targetGraph = targetGraphParam.toUri(GRAPH_URI_PARAM);
+            this.checkUriConflict(targetGraph, GRAPH_URI_PARAM);
             // Check for URI mapping.
             UriMapper mapper = null;
             if (! StringUtils.isBlank(uriPattern)) {
@@ -164,7 +194,12 @@ public class RdfLoader extends BaseConverterModule
                                                         sourceId, targetGraph);
             RdfUtils.upload(in, internal, targetGraph, mapper);
             // Register new transformed RDF source.
-            Source out = this.addResultSource(p, in, destTitle, targetGraph);
+            URI baseUri = null;
+            if (in.getBaseUri() != null) {
+                baseUri = URI.create(in.getBaseUri());
+            }
+            Source out = this.addResultSource(p, in, destTitle,
+                                                     targetGraph, baseUri);
             // Display project source tab, including the newly created source.
             response = this.created(out).build();
 

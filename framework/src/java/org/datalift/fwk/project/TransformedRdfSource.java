@@ -46,7 +46,7 @@ public interface TransformedRdfSource extends RdfSource
     /**
      * Returns the URI of the named graph containing this source data
      * (triples) in the DataLift internal RDF store.
-     * @return the URI of the source named graph
+     * @return the URI of the source named graph.
      */
     public String getTargetGraph();
 

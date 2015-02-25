@@ -57,7 +57,9 @@
 				</div>
 #end
 				<p><label for="max">#i18n("sparql.max.results"): </label>
-				<input type="text" name="max" id="max" value="${max}"/></p>
+				<input type="text" name="max" id="max" title="#i18n("sparql.max.results.tooltip")" value="${max}"/>
+				<input type="checkbox" name="typed_literals" id="typed_literals" #if( $grid.isSet() )checked="checked"#end />
+				<label for="typed_literals">#i18n("sparql.typed.literals")</label></p>
 			</div>
 			<div class="dl-form-buttons">
 				<input type="submit" value="#i18n("sparql.query.execute")" id="query_submit"/>
@@ -141,9 +143,10 @@
 					// Prevent the navigator from sending the form
 					e.preventDefault();
 					// Format request
+					var gridType = ";grid=true" + (($("#typed_literals").attr('checked'))? ";typed=true": "");
 					var formData = {
 						query: query,
-						grid: 'true'
+						format: "application/json" + gridType
 					};
 #if( ${repositories.size()} > 1 )
 					formData['default-graph-uri'] = $("#default-graph-uri").val();
@@ -272,7 +275,7 @@
 			for (var i = 0; i < gridData.rows.length; i++) {
 				for (var k = 0; k < gridData.head.length; k++) {
 					var toCmp = eval("gridData.rows[i]." + gridData.head[k]);
-					if (toCmp.toLowerCase().indexOf(searchString) != -1) {
+					if (toCmp.toString().toLowerCase().indexOf(searchString) != -1) {
 						searchData[c] = gridData.rows[i];
 						c++;
 						k = gridData.head.length;
@@ -285,7 +288,7 @@
 			var c = 0;
 			for (var i = 0; i < gridData.rows.length; i++) {
 				var toCmp = eval("gridData.rows[i]." + searchColumn);
-				if (toCmp.toLowerCase().indexOf(searchString) != -1) {
+				if (toCmp.toString().toLowerCase().indexOf(searchString) != -1) {
 					searchData[c] = gridData.rows[i];
 					c++;
 				}

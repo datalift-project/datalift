@@ -2,7 +2,6 @@ package org.datalift.lov;
 
 import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 import static javax.ws.rs.core.MediaType.TEXT_HTML;
-import static org.datalift.fwk.util.StringUtils.urlify;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -49,6 +48,9 @@ import org.openrdf.query.TupleQuery;
 import org.openrdf.query.TupleQueryResult;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.http.HTTPRepository;
+
+import static org.datalift.fwk.util.PrimitiveUtils.wrap;
+import static org.datalift.fwk.util.StringUtils.urlify;
 
 
 /**
@@ -166,8 +168,7 @@ public class LovCatalogue extends BaseModule {
 					dataChanged = true;
 				}
 				else {
-				    log.trace("Repository size for LOV catalog context: {}",
-				              Long.valueOf(repositorySize));
+				    log.trace("Repository size for LOV catalog context: {}", wrap(repositorySize));
 				}
 			}
 		} catch (Exception e1) {
@@ -446,11 +447,9 @@ public class LovCatalogue extends BaseModule {
 					.createURI(lovContextURI.toString());
 			internalRepositoryConnection.clear(ctx);
 
-			log.debug("Adding {} statements to context <{}>",
-			          Integer.valueOf(statements.size()), ctx);
+			log.debug("Adding {} statements to context <{}>", wrap(statements.size()), ctx);
 			internalRepositoryConnection.add(statements, ctx); // auto commit
-			log.info("Internal repository size for context <{}>: {}", ctx,
-			         Long.valueOf(internalRepositoryConnection.size(ctx)));
+			log.info("Internal repository size for context <{}>: {}", ctx, wrap(internalRepositoryConnection.size(ctx)));
 
 		} catch (Exception e) {
 			e.printStackTrace();

@@ -36,9 +36,12 @@ package org.datalift.core.velocity.sparql;
 
 
 import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 
@@ -67,6 +70,7 @@ import static org.junit.Assert.*;
 
 import org.datalift.core.DefaultConfiguration;
 import org.datalift.fwk.Configuration;
+import org.datalift.fwk.i18n.PreferredLocales;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.rdf.Repository;
 
@@ -80,8 +84,15 @@ public class SparqlToolTest
     private final static String DC = DC_Elements.uri;
     private final static String DT = "http://www.datalift.org/test/";
 
+    private final static URI SAMPLE_TYPE = new URIImpl(DT + "Sample");
+
     private final static String SUBJECT1 = DT + "1";
+    private final static String TITLE1 = "Sample-12";
+    private final static String DESCRIPTION1 = "Revue de \t presse";
+
     private final static String SUBJECT2 = DT + "2";
+    private final static String TITLE2 = "Sample-2";
+    private final static String DESCRIPTION2 = "Répertoire des métiers";
 
     private final static String RDF_STORE = "test";
 
@@ -161,6 +172,40 @@ public class SparqlToolTest
     }
 
     @Test
+    public void selectSortTest() {
+        Map<String,Object> ctx = new HashMap<String,Object>();
+        List<String> results = new ArrayList<String>();
+        ctx.put("c", results);
+        ctx.put("q", "SELECT * WHERE { ?s dc:title ?title . }");
+        String page = this.render(ctx,
+                "$sparql.prefix('dc', '" + DC + "')" +
+                "#foreach($i in $sparql.select($q).sort('title') )\n" +
+                "#set($l = \"<$i['s']> $i['title']\")" +
+                "#set($x = $c.add($i['title'].stringValue()))"+
+                "$l\n" +
+                "#end");
+        log.debug("{} ->\n{}", ctx.get("q"), page);
+        assertEquals(2, results.size());
+        assertEquals(TITLE2, results.get(0));
+        assertEquals(TITLE1, results.get(1));
+        results.clear();
+        // Force French locale for sorting, to ignore accents.
+        PreferredLocales.set(Arrays.asList(Locale.FRANCE));
+        ctx.put("q", "SELECT * WHERE { ?s dc:description ?desc . }");
+        page = this.render(ctx,
+                "$sparql.prefix('dc', '" + DC + "')" +
+                "#foreach($i in $sparql.select($q).sort('desc') )\n" +
+                "#set($l = \"<$i['s']> $i['desc']\")" +
+                "#set($x = $c.add($i['desc'].stringValue()))"+
+                "$l\n" +
+                "#end");
+        log.debug("{} ->\n{}", ctx.get("q"), page);
+        assertEquals(2, results.size());
+        assertEquals(DESCRIPTION2, results.get(0));
+        assertEquals(DESCRIPTION1, results.get(1));
+    }
+
+    @Test
     public void missingVarSelectTest() {
         Map<String,Object> ctx = new HashMap<String,Object>();
         List<String> results = new LinkedList<String>();
@@ -214,13 +259,13 @@ public class SparqlToolTest
                 "$c.put('notFound', $r.valueOf('dc:unknown')))" +
                 "$c.put('creatorOf', $r.resultsFor('" + SUBJECT2 + "').valueOf('dc:creator')))");
         log.trace("{} ->\n{}", SUBJECT1, page);
-        assertEquals(DT + "Sample",     results.get("type"));
-        assertEquals("sample1",         results.get("title"));
-        assertEquals("First test item", results.get("description"));
+        assertEquals(DT + "Sample", results.get("type"));
+        assertEquals(TITLE1,        results.get("title"));
+        assertEquals(DESCRIPTION1,  results.get("description"));
         assertEquals(SparqlToolTest.class.getSimpleName(),
-                                        results.get("creator"));
-        assertEquals("",       results.get("notFound"));
-        assertEquals(SUBJECT1, results.get("creatorOf"));
+                                    results.get("creator"));
+        assertEquals("",            results.get("notFound"));
+        assertEquals(SUBJECT1,      results.get("creatorOf"));
     }
 
     private String render(Map<String,Object> ctx, String template) {
@@ -244,14 +289,14 @@ public class SparqlToolTest
         RepositoryConnection cnx = r.newConnection();
         try {
             String s = SUBJECT1;
-            cnx.add(triple(s, RDF.TYPE, new URIImpl(DT + "Sample")));
-            cnx.add(triple(s, DC + "title", "sample1"));
-            cnx.add(triple(s, DC + "description", "First test item"));
+            cnx.add(triple(s, RDF.TYPE, SAMPLE_TYPE));
+            cnx.add(triple(s, DC + "title", TITLE1));
+            cnx.add(triple(s, DC + "description", DESCRIPTION1));
             cnx.add(triple(s, DC + "creator", SparqlToolTest.class.getSimpleName()));
             s = SUBJECT2;
-            cnx.add(triple(s, RDF.TYPE, new URIImpl(DT + "Sample")));
-            cnx.add(triple(s, DC + "title", "sample2"));
-            cnx.add(triple(s, DC + "description", "Second test item"));
+            cnx.add(triple(s, RDF.TYPE, SAMPLE_TYPE));
+            cnx.add(triple(s, DC + "title", TITLE2));
+            cnx.add(triple(s, DC + "description", DESCRIPTION2));
             cnx.add(triple(s, DC + "creator", SparqlToolTest.class.getSimpleName()));
             cnx.add(triple(s, DC + "creator", new URIImpl(SUBJECT1)));
         }

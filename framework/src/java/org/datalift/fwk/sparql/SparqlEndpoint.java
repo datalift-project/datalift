@@ -98,6 +98,23 @@ public interface SparqlEndpoint
         DESCRIBE
     }
 
+    /**
+     * The (optional) configuration property indicating whether
+     * <a href="http://www.w3.org/Submission/CBD/">Concise Bounded Description</a>
+     * is supported by the back-end RDF stores for describing RDF
+     * resources. If set to <code>false</code>, a built-in CONSTRUCT
+     * query is used to include a first level of blank nodes.
+     */
+    public final static String CBD_SUPPORT_PROPERTY =
+                                            "sparql.use.repository.cdb";
+    /**
+     * The (optional) configuration property indicating whether
+     * named graphs shall be served in priority to resources in case
+     * the same URI exists describing both.
+     */
+    public final static String PREFER_GRAPHS_PROPERTY =
+                                            "sparql.serve.graphs.first";
+
     //-------------------------------------------------------------------------
     // Methods
     //-------------------------------------------------------------------------
@@ -159,11 +176,6 @@ public interface SparqlEndpoint
      *                            (inclusive).
      * @param  endOffset          the index of the last expected result
      *                            (exclusive).
-     * @param  gridJson           whether to return data grid optimized
-     *                            JSON result. Only applicable if the
-     *                            requested result MIME type is
-     *                            "application/json" or
-     *                            "application/sparql-results+json".
      * @param  uriInfo            the request URI data.
      * @param  request            the JAX-RS Request object, for content
      *                            negotiation.
@@ -179,7 +191,7 @@ public interface SparqlEndpoint
      */
     public ResponseBuilder executeQuery(List<String> defaultGraphUris,
                             List<String> namedGraphUris, String query,
-                            int startOffset, int endOffset, boolean gridJson,
+                            int startOffset, int endOffset,
                             UriInfo uriInfo, Request request, String acceptHdr)
                                                 throws WebApplicationException;
 
@@ -195,11 +207,6 @@ public interface SparqlEndpoint
      *                            (inclusive).
      * @param  endOffset          the index of the last expected result
      *                            (exclusive).
-     * @param  gridJson           whether to return data grid optimized
-     *                            JSON result. Only applicable if the
-     *                            requested result MIME type is
-     *                            "application/json" or
-     *                            "application/sparql-results+json".
      * @param  format             the expected response format,
      *                            overrides the HTTP Accept header.
      * @param  jsonCallback       the name of the JSONP callback to
@@ -219,7 +226,7 @@ public interface SparqlEndpoint
      */
     public ResponseBuilder executeQuery(List<String> defaultGraphUris,
                             List<String> namedGraphUris, String query,
-                            int startOffset, int endOffset, boolean gridJson,
+                            int startOffset, int endOffset,
                             String format, String jsonCallback,
                             UriInfo uriInfo, Request request, String acceptHdr)
                                                 throws WebApplicationException;

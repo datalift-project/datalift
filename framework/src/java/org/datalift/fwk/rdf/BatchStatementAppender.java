@@ -173,7 +173,8 @@ public class BatchStatementAppender extends RDFHandlerBase
     /**
      * Returns the duration of the triples processing, including the
      * amount of time taken by the underlying RDF parser and RDF store.
-     * @return the duration of the triples processing.
+     * @return the duration of the triples processing as a number of
+     *         milliseconds.
      */
     public final long getDuration() {
         return this.duration;

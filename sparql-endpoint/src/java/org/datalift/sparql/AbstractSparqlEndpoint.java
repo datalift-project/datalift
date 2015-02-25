@@ -54,9 +54,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.MissingResourceException;
+import java.util.Set;
 import java.util.TreeSet;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
@@ -129,15 +128,6 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     public final static String MODULE_NAME = "sparql";
 
     /**
-     * The (optional) configuration property indicating whether
-     * <a href="http://www.w3.org/Submission/CBD/">Concise Bounded Description</a>
-     * is supported by the back-end RDF stores for describing RDF
-     * resources. If set to <code>false</code>, a built-in CONSTRUCT
-     * query is used to include a first level of blank nodes.
-     */
-    public final static String CBD_SUPPORT_PROPERTY =
-                                            "sparql.use.repository.cdb";
-    /**
      * The configuration property defining the maximum number of entries
      * (statements, binding sets...) to be displayed in HTML pages.
      */
@@ -153,21 +143,10 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                                             "sparql.predefined.queries.file";
     /** The default queries file, embedded in module JAR. */
     private final static String DEFAULT_QUERIES_FILE = "predefined-queries.ttl";
-    /**
-     * The (optional) configuration property indicating whether
-     * named graphs shall be served in priority to resources in case
-     * the same URI exists describing both.
-     */
-    public final static String PREFER_GRAPHS_PROPERTY =
-                                            "sparql.serve.graphs.first";
 
     /** The name of the default template for the endpoint welcome page. */
     protected final static String DEFAULT_WELCOME_TEMPLATE =
                                                         "sparqlEndpoint.vm";
-
-    private final static Pattern QUERY_START_PATTERN = Pattern.compile(
-                    "SELECT|CONSTRUCT|ASK|DESCRIBE", Pattern.CASE_INSENSITIVE);
-    private final static int MAX_QUERY_DESC = 128;
 
     /**
      * The object description query to use when the RDF store provides
@@ -187,26 +166,41 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                               + "    ?o1 ?p2 ?o2 .\n"
                               + "    FILTER isBlank(?o1)\n  '}'\n"
                               + "  FILTER ( ?s1 = <{0}> || ?o1 = <{0}> )\n'}'");
+    /* Optimized query for SPARQL 1.1 compliant store but Sesame 2.6 is NOT!
+            new MessageFormat("CONSTRUCT '{' ?s1 ?p1 ?o1 ."
+                              +            " ?o1 ?p2 ?o2 . '}'\n"
+                              + "WHERE '{'\n  '{'\n"
+                              + "    ?s1 ?p1 ?o1 .\n"
+                              + "    OPTIONAL '{'\n"
+                              + "      ?o1 ?p2 ?o2 .\n"
+                              + "      FILTER isBlank(?o1)\n    '}'\n"
+                              + "    VALUES ?s1 '{' <{0}> '}'\n"
+                              + "  '}'\n  UNION '{'\n"
+                              + "    ?s1 ?p1 ?o1 .\n"
+                              + "    VALUES ?o1 '{' <{0}> '}'\n"
+                              + "  '}'\n'}'");
+     */
     private final static MessageFormat DESCRIBE_PREDICATE_QUERY =
-            new MessageFormat("CONSTRUCT '{' ?s ?p ?o . '}' WHERE '{'\n"
-                              + "  ?s ?p ?o .\n"
-                              + "  FILTER ( ?p = <{0}> )\n'}'");
+            new MessageFormat("CONSTRUCT '{' ?s <{0}> ?o . '}' WHERE '{'"
+                              + " ?s <{0}> ?o . '}'");
     private final static MessageFormat DESCRIBE_TYPE_QUERY =
-            new MessageFormat("CONSTRUCT '{' ?s a ?t . '}' WHERE '{'\n"
-                              + "  ?s a ?t .\n"
-                              + "  FILTER ( ?t = <{0}> )\n'}'");
+            new MessageFormat("CONSTRUCT '{' ?s a <{0}> . '}' WHERE '{'"
+                              + " ?s a <{0}> . '}'");
     private final static MessageFormat DESCRIBE_GRAPH_QUERY =
             new MessageFormat("CONSTRUCT '{' ?s ?p ?o . '}' WHERE '{'\n"
                               + "  GRAPH <{0}> '{' ?s ?p ?o . '}'\n'}'");
 
     private final static String DETERMINE_TYPE_QUERY =
-            "SELECT DISTINCT ?s ?p ?g ?t ?o WHERE {\n" +
-            "  OPTIONAL { ?s ?p1 ?o1 . FILTER( ?s = ?u ) }\n" +
-            "  OPTIONAL { ?s2 ?p ?o2 . FILTER( ?p = ?u ) }\n" +
-            "  OPTIONAL { ?s3 a  ?t  . FILTER( ?t = ?u ) }\n" +
-            "  OPTIONAL { GRAPH ?g { ?s4 ?p4 ?o4 . FILTER( ?g = ?u ) } }\n" +
-            "  OPTIONAL { ?s5 ?p5 ?o . FILTER( ?o = ?u ) }\n" +
-            "} LIMIT 1";
+            "SELECT DISTINCT ?kind WHERE {\n" +
+                "{ ?u ?p1 ?o1 . BIND(\"" + Resource + "\" AS ?kind) }\n" +
+                "UNION\n" +
+                "{ GRAPH ?u { ?s4 ?p4 ?o4 . BIND(\"" + Graph + "\" AS ?kind) } }\n" +
+                "UNION\n" +
+                "{ ?s2 ?u ?o2 . BIND(\"" + Predicate + "\" AS ?kind) }\n" +
+                "UNION\n" +
+                "{ ?s3 a ?u .   BIND(\"" + RdfType + "\" AS ?kind) }\n" +
+                "UNION\n" +
+                "{ ?s5 ?p5 ?u . BIND(\"" + Value + "\" AS ?kind) }\n}";
 
     /** The SPARQL query to extract predefined query data. */
     private final static String LOAD_PREDEFINED_QUERIES_QUERY =
@@ -284,7 +278,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     public void init(Configuration configuration) {
         // Check whether Concise Bounded Description is to be used.
         this.useCdb = this.getBoolean(configuration,
-                                                CBD_SUPPORT_PROPERTY, false);
+                                                CBD_SUPPORT_PROPERTY, true);
         // Check whether graphs shall be served first.
         this.serveGraphsFirst = this.getBoolean(configuration,
                                                 PREFER_GRAPHS_PROPERTY, false);
@@ -312,7 +306,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     public ResponseBuilder executeQuery(String query, UriInfo uriInfo,
                                         Request request, String acceptHdr)
                                                 throws WebApplicationException {
-        return this.executeQuery(null, null, query, -1, -1, false, null, null,
+        return this.executeQuery(null, null, query, -1, -1, null, null,
                                  uriInfo, request, acceptHdr);
     }
 
@@ -324,18 +318,18 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                                         Request request, String acceptHdr)
                                                 throws WebApplicationException {
         return this.executeQuery(defaultGraphUris, namedGraphUris, query,
-                        -1, -1, false, null, null, uriInfo, request, acceptHdr);
+                            -1, -1, null, null, uriInfo, request, acceptHdr);
     }
 
     /** {@inheritDoc} */
     @Override
     public ResponseBuilder executeQuery(List<String> defaultGraphUris,
                             List<String> namedGraphUris, String query,
-                            int startOffset, int endOffset, boolean gridJson,
+                            int startOffset, int endOffset,
                             UriInfo uriInfo, Request request, String acceptHdr)
                                                 throws WebApplicationException {
         return this.executeQuery(defaultGraphUris, namedGraphUris, query,
-                                startOffset, endOffset, gridJson, null, null,
+                                startOffset, endOffset, null, null,
                                 uriInfo, request, acceptHdr);
     }
 
@@ -344,7 +338,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     public ResponseBuilder executeQuery(List<String> defaultGraphUris,
                             List<String> namedGraphUris, String query,
                             int startOffset, int endOffset,
-                            boolean gridJson, String format, String jsonCallback,
+                            String format, String jsonCallback,
                             UriInfo uriInfo, Request request, String acceptHdr)
                                                 throws WebApplicationException {
         ResponseBuilder response = null;
@@ -352,8 +346,14 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
             if ((! isBlank(jsonCallback)) && (isBlank(format))) {
                 format = APPLICATION_JSON;
             }
+            if (startOffset <= 0) {
+                startOffset = -1;
+            }
+            if (endOffset <= 0) {
+                endOffset = -1;
+            }
             response = this.doExecute(defaultGraphUris, namedGraphUris, query,
-                                      startOffset, endOffset, gridJson,
+                                      startOffset, endOffset,
                                       format, jsonCallback,
                                       uriInfo, request, acceptHdr, null, null);
         }
@@ -461,7 +461,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                 viewData.put("describe-type", type);
                 viewData.put("describe-uri",  u);
                 response = this.doExecute(defGraphs, namedGraphUris, query,
-                                          -1, max, false, format, jsonCallback,
+                                          -1, max, format, jsonCallback,
                                           uriInfo, request, acceptHdr,
                                           allowedTypes, viewData);
             }
@@ -527,7 +527,6 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                 @QueryParam("query") String query,
                 @QueryParam("min") @DefaultValue("-1") int startOffset,
                 @QueryParam("max") @DefaultValue("-1") int endOffset,
-                @QueryParam("grid") @DefaultValue("false") boolean gridJson,
                 @QueryParam("format") String format,
                 @QueryParam("callback") String jsonCallback,
                 @Context UriInfo uriInfo,
@@ -535,7 +534,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                 @HeaderParam(ACCEPT) String acceptHdr)
                                                 throws WebApplicationException {
         return this.dispatchQuery(defaultGraphUris, namedGraphUris, query,
-                                  startOffset, endOffset, gridJson, format,
+                                  startOffset, endOffset, format,
                                   jsonCallback, uriInfo, request, acceptHdr);
     }
 
@@ -578,7 +577,6 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                 @FormParam("query") String query,
                 @FormParam("min") @DefaultValue("-1") int startOffset,
                 @FormParam("max") @DefaultValue("-1") int endOffset,
-                @FormParam("grid") @DefaultValue("false") boolean gridJson,
                 @FormParam("format") String format,
                 @FormParam("callback") String jsonCallback,
                 @Context UriInfo uriInfo,
@@ -586,7 +584,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                 @HeaderParam(ACCEPT) String acceptHdr)
                                                 throws WebApplicationException {
         return this.getQuery(defaultGraphUris, namedGraphUris, query,
-                             startOffset, endOffset, gridJson, format,
+                             startOffset, endOffset, format,
                              jsonCallback, uriInfo, request, acceptHdr);
     }
 
@@ -599,7 +597,6 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                 @QueryParam("query") String query,
                 @QueryParam("min") @DefaultValue("-1") int startOffset,
                 @QueryParam("max") @DefaultValue("-1") int endOffset,
-                @QueryParam("grid") @DefaultValue("false") boolean gridJson,
                 @QueryParam("format") String format,
                 @QueryParam("callback") String jsonCallback,
                 @Context UriInfo uriInfo,
@@ -612,7 +609,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
             defGraphUris.addAll(defaultGraphUris);
         }
         return this.dispatchQuery(defGraphUris, namedGraphUris, query,
-                                  startOffset, endOffset, gridJson, format,
+                                  startOffset, endOffset, format,
                                   jsonCallback, uriInfo, request, acceptHdr);
     }
 
@@ -626,15 +623,14 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                 @FormParam("query") String query,
                 @FormParam("min") @DefaultValue("-1") int startOffset,
                 @FormParam("max") @DefaultValue("-1") int endOffset,
-                @FormParam("grid") @DefaultValue("false") boolean gridJson,
                 @FormParam("format") String format,
                 @FormParam("callback") String jsonCallback,
                 @Context UriInfo uriInfo,
                 @Context Request request,
                 @HeaderParam(ACCEPT) String acceptHdr)
                                                 throws WebApplicationException {
-        return this.getStoreQuery(repository, defaultGraphUris, namedGraphUris, query,
-                                  startOffset, endOffset, gridJson, format,
+        return this.getStoreQuery(repository, defaultGraphUris, namedGraphUris,
+                                  query, startOffset, endOffset, format,
                                   jsonCallback, uriInfo, request, acceptHdr);
     }
 
@@ -732,7 +728,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     private final Response dispatchQuery(List<String> defaultGraphUris,
                             List<String> namedGraphUris, String query,
                             int startOffset, int endOffset,
-                            boolean gridJson, String format, String jsonCallback,
+                            String format, String jsonCallback,
                             UriInfo uriInfo, Request request, String acceptHdr)
                                                 throws WebApplicationException {
         ResponseBuilder response = null;
@@ -741,7 +737,7 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         if (StringUtils.isSet(query)) {
             try {
                 response = this.executeQuery(defaultGraphUris, namedGraphUris,
-                                query, startOffset, endOffset, gridJson, format,
+                                query, startOffset, endOffset, format,
                                 jsonCallback, uriInfo, request, acceptHdr);
             }
             catch (Exception e) {
@@ -756,15 +752,13 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     }
 
     abstract protected ResponseBuilder doExecute(
-                                          List<String> defaultGraphUris,
-                                          List<String> namedGraphUris,
-                                          String query, int startOffset,
-                                          int endOffset, boolean gridJson,
-                                          String format, String jsonCallback,
-                                          UriInfo uriInfo, Request request,
-                                          String acceptHdr,
-                                          List<Variant> allowedTypes,
-                                          Map<String,Object> viewData)
+                                  List<String> defaultGraphUris,
+                                  List<String> namedGraphUris, String query,
+                                  int startOffset, int endOffset,
+                                  String format, String jsonCallback,
+                                  UriInfo uriInfo, Request request,
+                                  String acceptHdr, List<Variant> allowedTypes,
+                                  Map<String,Object> viewData)
                                                             throws Exception;
 
     protected final Repository getTargetRepository(
@@ -1034,26 +1028,6 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         this.sendError(BAD_REQUEST, error.getLocalizedMessage());
     }
 
-    protected final static String getQueryDesc(String query,
-                                               int max, boolean normalize) {
-        String desc = "";
-        if (query != null) {
-            // Strip prefix declarations.
-            Matcher m = QUERY_START_PATTERN.matcher(query);
-            if (m.find()) {
-                query = query.substring(m.start());
-            }
-            if (normalize) {
-                // Normalize query string.
-                query = query.replaceAll("\\s+", " ");
-            }
-            // Get the N first chars of the query string, minus prefixes.
-            desc = ((max > 3) && (query.length() > max))?
-                                    query.substring(0, max - 3) + "...": query;
-        }
-        return desc;
-    }
-
     private ElementType getDescribeTypeFromUri(URI uri,
                                                 Repository repository) {
         ElementType type = null;
@@ -1063,37 +1037,23 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
             bindings.put("u", uri);
             TupleQueryResultMapper<ElementType> m =
                                 new BaseTupleQueryResultMapper<ElementType>() {
-                    private ElementType nodeType = null;
+                    private Set<ElementType> nodeKinds =
+                        new TreeSet<ElementType>(comparator(serveGraphsFirst));
+
                     @Override
                     public void handleSolution(BindingSet b) {
-                        if (nodeType == null) {
-                            // Only consider predicates, types or values if the
-                            // URI doesn't match a resource or a named graph.
-                            if (b.hasBinding("p")) {
-                                nodeType = Predicate;
-                            }
-                            else if (b.hasBinding("t")) {
-                                nodeType = RdfType;
-                            }
-                            else if (b.hasBinding("o")) {
-                                nodeType = Value;
-                            }
-                        }
-                        // Resources and named graphs take precedence.
-                        if (b.hasBinding("s")) {
-                            if ((nodeType != Graph) || (! serveGraphsFirst)) {
-                                nodeType = Resource;
-                            }
-                        }
-                        if (b.hasBinding("g")) {
-                            if ((nodeType != Resource) || (serveGraphsFirst)) {
-                                nodeType = Graph;
+                        if (b.hasBinding("kind")) {
+                            ElementType kind = ElementType.fromString(
+                                            b.getValue("kind").stringValue());
+                            if (kind != null) {
+                                this.nodeKinds.add(kind);
                             }
                         }
                     }
                     @Override
                     public ElementType getResult() {
-                        return nodeType;
+                        return (! this.nodeKinds.isEmpty())?
+                                        this.nodeKinds.iterator().next(): null;
                     }
                 };
             if (repository == null) {
@@ -1101,7 +1061,8 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                 repository = Configuration.getDefault().getDefaultRepository();
             }
             // Execute filter query.
-            repository.select(DETERMINE_TYPE_QUERY, bindings, m);
+            repository.select(DETERMINE_TYPE_QUERY, bindings, m,
+                                                    null, null, false);
             type = m.getResult();
         }
         catch (Exception e) {
@@ -1211,69 +1172,6 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
             }
         }
         return queries;
-    }
-
-    //-------------------------------------------------------------------------
-    // QueryDescription
-    //-------------------------------------------------------------------------
-
-    /**
-     * Helper class to ease logging of SPARQL queries by providing a
-     * {@link #toString() shortened description} of the query text,
-     * without namespace prefixes declarations and a possibly truncated
-     * query body.
-     */
-    protected final static class QueryDescription
-    {
-        /** The full text of the SPARQL query. */
-        public final String query;
-        private final int maxLength;
-        private final boolean normalize;
-        /** The shortened description of the SPARQL query. */
-        private String desc = null;
-
-        /**
-         * Creates a SPARQL query logging helper that normalizes the
-         * query text and limits it to the first 128 characters.
-         * @param  query   the SPARQL query to wrap.
-         */
-        public QueryDescription(String query) {
-            this(query, MAX_QUERY_DESC, true);
-        }
-
-        /**
-         * Creates a SPARQL query logging helper that limits the query
-         * text to the first 128 characters.
-         * @param  query       the SPARQL query to wrap.
-         * @param  normalize   whether to normalize spaces.
-         */
-        public QueryDescription(String query, boolean normalize) {
-            this(query, MAX_QUERY_DESC, normalize);
-        }
-
-        /**
-         * Creates a SPARQL query logging helper wrapping the specified
-         * query.
-         * @param  query       the SPARQL query to wrap.
-         * @param  max         the maximum length of the query
-         *                     description.
-         * @param  normalize   whether to normalize spaces.
-         */
-        public QueryDescription(String query, int max, boolean normalize) {
-            this.query = query;
-            this.maxLength = max;
-            this.normalize = normalize;
-        }
-
-        /** {@inheritDoc} */
-        @Override
-        public String toString() {
-            if (this.desc == null) {
-                this.desc = getQueryDesc(this.query,
-                                         this.maxLength, this.normalize);
-            }
-            return this.desc;
-        }
     }
 
     //-------------------------------------------------------------------------

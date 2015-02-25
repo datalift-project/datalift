@@ -222,7 +222,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
                                       String description, URI baseUri,
                                       String filePath, String mimeType)
                                                             throws IOException {
-        // Create new CSV source.
+        // Create new RDF file source.
         RdfFileSourceImpl src = new RdfFileSourceImpl(uri.toString(), project);
         // Set source parameters.
         this.initSource(src, title, description);
@@ -249,7 +249,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
                                   String srcUrl, String user, String password,
                                   String request, int cacheDuration)
                                                             throws IOException {
-        // Create new CSV source.
+        // Create new SQL source.
         SqlQuerySourceImpl src = new SqlQuerySourceImpl(uri.toString(), project);
         // Set source parameters.
         this.initSource(src, title, description);
@@ -291,7 +291,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
                                         String description, String endpointUrl,
                                         String sparqlQuery, int cacheDuration)
                                                             throws IOException {
-        // Create new CSV source.
+        // Create new RDF SPARQL source.
         SparqlSourceImpl src = new SparqlSourceImpl(uri.toString(), project);
         // Set source parameters.
         this.initSource(src, title, description);
@@ -333,12 +333,28 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
                                     URI uri, String title, String description,
                                     URI targetGraph, Source parent)
                                                             throws IOException {
-        // Create new CSV source.
+        return this.newTransformedRdfSource(project, uri, title, description,
+                                            targetGraph, null, parent);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public TransformedRdfSource newTransformedRdfSource(Project project,
+                                    URI uri, String title, String description,
+                                    URI targetGraph, URI baseUri, Source parent)
+                                                            throws IOException {
+        if (targetGraph == null) {
+            throw new IllegalArgumentException("targetGraph");
+        }
+        // Create new transformed RDF source.
         TransformedRdfSourceImpl src =
                         new TransformedRdfSourceImpl(uri.toString(), project);
         // Set source parameters.
         this.initSource(src, title, description);
         src.setTargetGraph(targetGraph.toString());
+        if (baseUri != null) {
+            src.setBaseUri(baseUri.toString());
+        }
         src.setParent(parent);
         // Add source to project.
         project.add(src);

@@ -65,8 +65,14 @@ public class LocaleComparable<T> implements Comparable<LocaleComparable<T>>
     // Constants
     //-------------------------------------------------------------------------
 
-    /** A regular expression to match integer values within strings. */
-    private final static Pattern NUM_ELT_PATTERN = Pattern.compile("[0-9]+");
+    /**
+     * A regular expression to match integer values within strings.
+     * Minus signs are considered part of the integer value only when
+     * occurring at the beginning of the string or if preceded with
+     * whitespace characters.
+     */
+    private final static Pattern NUM_ELT_PATTERN =
+                                Pattern.compile("((?<=(^|\\s+))[-]?)?[0-9]+");
 
     //-------------------------------------------------------------------------
     // Instance members
@@ -194,16 +200,45 @@ public class LocaleComparable<T> implements Comparable<LocaleComparable<T>>
             int j = m.start();
             if (i != j) {
                 // String prefix.
-                l.add(c.getCollationKey(s.substring(i, j)));
+                l.add(c.getCollationKey(this.normalize(s.substring(i, j))));
             }
             // Numeric value
             i = m.end();
-            l.add(Integer.valueOf(s.substring(j, i)));
+            l.add(Integer.valueOf(s.substring(j, i).trim(), 10));
         }
         int n = s.length();
         if (i != n) {
-            l.add(c.getCollationKey(s.substring(i, n)));
+            l.add(c.getCollationKey(this.normalize(s.substring(i, n))));
         }
         return l.toArray(new Comparable[l.size()]);
+    }
+
+    private String normalize(String s) {
+        if (s != null) {
+            s = s.replaceAll("\\s+", " ").trim();
+        }
+        return s;
+    }
+
+    //-------------------------------------------------------------------------
+    // Object contract support
+    //-------------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    @Override
+    public String toString() {
+        StringBuilder b = new StringBuilder(this.key.length() * 2);
+        for (Comparable<?> c : this.elts) {
+            b.append('[');
+            if (c instanceof CollationKey) {
+                b.append(((CollationKey)c).getSourceString());
+            }
+            else {
+                b.append(String.valueOf(c));
+            }
+            b.append("]/");
+        }
+        b.setLength(b.length() -1);
+        return b.toString();
     }
 }

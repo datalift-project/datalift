@@ -228,22 +228,13 @@ public class Data2Ontology extends BaseModule implements ProjectModule
                 f.setLastModified((info.expires > 0L)? info.expires: now);
                 // Extract RDF format from MIME type to force file suffix.
                 RdfFormat fmt = RdfFormat.find(info.mimeType);
-
                 if (fmt == null) {
-                	// we probably got it from lov (but application/octet-stream)
-                	if (src.endsWith(".n3")) {
-                		fmt = RdfFormat.N3;
-                	}
-                	else if (src.endsWith(".rdf")) {
-                		fmt = RdfFormat.RDF_XML;
-                	}
-                	else if (src.endsWith(".ttl")) {
-                		fmt = RdfFormat.TURTLE;
-                	}
-                	else {
-                		throw new TechnicalException("invalid.remote.mime.type",
-                				info.mimeType);
-                	}
+                    // We probably got it from LOV (but application/octet-stream)
+                    fmt = RdfUtils.guessRdfFormatFromExtension(src);
+                }
+                if (fmt == null) {
+                    throw new TechnicalException("invalid.remote.mime.type",
+                                                 info.mimeType);
                 }
                 // Ensure file extension is present to allow RDF syntax
                 // detection in future cache accesses.
@@ -308,8 +299,6 @@ public class Data2Ontology extends BaseModule implements ProjectModule
                 // Register new transformed RDF source.
                 this.addResultSource(p, in, targetName, java.net.URI.create(targetGraph));
             }
-            // Display project source tab, including the newly created source.
-//            response = this.displayMappingResult(out, createSource).build();
             response = Response.ok("{"
                 + "\"uri\": \"" + targetGraph + "\", "
                 + "\"title\": \"" + targetName + "\""
@@ -388,27 +377,16 @@ public class Data2Ontology extends BaseModule implements ProjectModule
         return src;
     }
 
-    /**
-     * Creates a new transformed RDF source and attach it to the
-     * specified project.
-     * @param  p        the owning project.
-     * @param  parent   the parent source object.
-     * @param  name     the new source name.
-     * @param  uri      the new source URI.
-     *
-     * @return the newly created transformed RDF source.
-     * @throws IOException if any error occurred creating the source.
-     */
     private TransformedRdfSource addResultSource(Project p, Source parent,
-						 String name, java.net.URI uri)
-									                     throws IOException {
-		java.net.URI id = java.net.URI.create(uri.toString());
-		TransformedRdfSource newSrc =
-		this.projectManager.newTransformedRdfSource(p, id,
-		             name, null, id, parent);
-		this.projectManager.saveProject(p);
-		return newSrc;
-	}
+                                                 String name, java.net.URI uri)
+                                                                 throws IOException {
+        java.net.URI id = java.net.URI.create(uri.toString());
+        TransformedRdfSource newSrc =
+                    this.projectManager.newTransformedRdfSource(p, id,
+                                                        name, null, id, parent);
+        this.projectManager.saveProject(p);
+        return newSrc;
+    }
 
     private String getRdfAcceptHeader() {
         StringBuilder buf = new StringBuilder();

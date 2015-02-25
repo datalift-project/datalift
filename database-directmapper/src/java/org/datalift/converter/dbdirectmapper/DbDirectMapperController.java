@@ -24,6 +24,7 @@ import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.SqlDatabaseSource;
 import org.datalift.fwk.project.Source.SourceType;
+import org.datalift.fwk.project.SqlSource.DatabaseType;
 import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.rdf.Repository;
 
@@ -80,12 +81,14 @@ public class DbDirectMapperController extends ModuleController {
      */
     private void convert(SqlDatabaseSource source, String targetUri, Repository repository) {
     	try{
-	    	Connection sqlConnection=SQLConnector.connect(source.getUser(), source.getPassword(), source.getDatabasePath(), 
-	    			DriverType.MysqlDriver,source.getDatabaseName());
-	    	DirectMapper.generateDirectMapping(sqlConnection, DriverType.MysqlDriver, targetUri, repository);
+		DriverType driver = (DatabaseType.mysql.name().equals(source.getDatabaseType()))?
+		                DriverType.MysqlDriver: DriverType.PostgreSQL;
+		Connection sqlConnection=SQLConnector.connect(source.getUser(), source.getPassword(), source.getDatabasePath(), 
+				driver,source.getDatabaseName());
+		DirectMapper.generateDirectMapping(sqlConnection, driver, targetUri, repository);
     	}catch (Exception e) {
     		log.fatal(e);
-            throw new TechnicalException("sql.conversion.failed", e);
+    		throw new TechnicalException("sql.conversion.failed", e);
     	}
     }
 

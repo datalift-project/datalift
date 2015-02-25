@@ -126,6 +126,12 @@ public class MediaTypes extends MediaType
     public final static MediaType APPLICATION_TRIG_TYPE =
                                             MediaType.valueOf(APPLICATION_TRIG);
 
+    /** "text/x-nquads" */
+    public final static String TEXT_NQUADS = "text/x-nquads";
+    /** "text/x-nquads" */
+    public final static MediaType TEXT_NQUADS_TYPE =
+                                            MediaType.valueOf(TEXT_NQUADS);
+
     /** "application/rdf+json" */
     public final static String APPLICATION_RDF_JSON = "application/rdf+json";
     /** "application/rdf+json" */

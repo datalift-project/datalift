@@ -72,7 +72,7 @@ import static org.datalift.core.velocity.jersey.VelocityTemplateProcessor.*;
  *
  * @author lbihanic
  */
-public class ModuleResourceLoader extends ResourceLoader
+public final class ModuleResourceLoader extends ResourceLoader
 {
     //-------------------------------------------------------------------------
     // Constants

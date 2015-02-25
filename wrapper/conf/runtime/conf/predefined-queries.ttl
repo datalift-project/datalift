@@ -1,24 +1,49 @@
+# Pre-defined queries for Datalift SPARQL endpoints
+
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
 @prefix datalift: <http://www.datalift.org/core#> .
 
 _:1 a datalift:SparqlQuery ;
     rdfs:label
         "All entries" ,
         "Toutes les entrées"@fr ;
+    datalift:position 100 ;
+    dcterms:description
+        "Lists all entries (subject, predicates and objects) from the repository" ,
+        "Liste toutes les entrées (sujets, prédicats et objets) du dépôt"@fr ;
     rdf:value
         "SELECT * WHERE {\n  ?s ?p ?o .\n}\n" .
 
 _:2 a datalift:SparqlQuery ;
     rdfs:label
-        "RDF types" ,
-        "Types RDF"@fr ;
+        "Resources" ,
+        "Ressources"@fr ;
+    datalift:position 1 ;
+    dcterms:description
+        "Lists all RDF resources (triple subjects) from the repository" ,
+        "Liste les ressources RDF (sujets) du dépôt"@fr ;
     rdf:value
-        "SELECT DISTINCT ?type WHERE {\n  ?s a ?type .\n}\n" .
+        "SELECT DISTINCT ?s WHERE {\n  ?s ?p ?o .\n}\n" .
 
 _:3 a datalift:SparqlQuery ;
     rdfs:label
-        "Contexts (named graphs)" ,
-        "Contextes (graphes nommés)"@fr ;
+        "Types" ;
+    datalift:position 2 ;
+    dcterms:description
+        "Lists the RDF types present in the repository" ,
+        "Liste les types RDF connus dans le dépôt"@fr ;
+    rdf:value
+        "SELECT DISTINCT ?type WHERE {\n  ?s a ?type .\n}\n" .
+
+_:4 a datalift:SparqlQuery ;
+    rdfs:label
+        "Graphs" ,
+        "Graphes"@fr ;
+    datalift:position 3 ;
+    dcterms:description
+        "Lists all named graphs present in the repository" ,
+        "Liste les graphes nommés présents dans le dépôt"@fr ;
     rdf:value
         "SELECT DISTINCT ?graph WHERE {\n  GRAPH ?graph {\n    ?s ?p ?o .\n  }\n}\n" .

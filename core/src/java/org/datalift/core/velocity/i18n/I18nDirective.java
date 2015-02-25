@@ -63,7 +63,7 @@ import org.datalift.fwk.log.Logger;
  *
  * @author lbihanic
  */
-public class I18nDirective extends Directive
+public final class I18nDirective extends Directive
 {
     //-------------------------------------------------------------------------
     // Class members

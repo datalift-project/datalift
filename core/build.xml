@@ -93,7 +93,7 @@
    -->
 
   <property name="app.name"             value="datalift"/>
-  <property name="app.version"          value="0.8.0"/>
+  <property name="app.version"          value="0.8.1"/>
   <property name="app.path"             value="/${app.name}"/>
   <property name="app.long.name"        value="Datalift"/>
 
@@ -502,6 +502,7 @@
         </fileset>
       </batchtest>
       <classpath refid="tests.classpath"/>
+      <sysproperty key="datalift.home" value="${tests.build.home}"/>
       <formatter type="plain"/>
       <!-- formatter type="xml"/ -->
     </junit>

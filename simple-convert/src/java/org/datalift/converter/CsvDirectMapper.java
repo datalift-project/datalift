@@ -92,6 +92,7 @@ import org.datalift.fwk.util.web.UriParam;
 import static org.datalift.fwk.rdf.ElementType.*;
 import static org.datalift.fwk.util.PrimitiveUtils.wrap;
 import static org.datalift.fwk.util.StringUtils.*;
+import static org.datalift.fwk.util.TimeUtils.*;
 import static org.datalift.fwk.MediaTypes.*;
 
 
@@ -176,6 +177,7 @@ public class CsvDirectMapper extends BaseConverterModule
 
     /* Web service parameter names. */
     private final static String DATE_FORMAT_PARAM       = "date_format";
+    private final static String COLUMN_MAPPING_PREFIX   = "col_";
 
     //-------------------------------------------------------------------------
     // Class members
@@ -212,27 +214,30 @@ public class CsvDirectMapper extends BaseConverterModule
      * <i>[Resource method]</i> Converts the data of the specified CSV
      * source into RDF triples, loads them in the internal store and
      * creates a new associated RDF source.
-     * @param  projectId     the URI of the data-lifting project.
-     * @param  sourceId      the URI of the source to convert.
-     * @param  destTitle     the name of the RDF source to hold the
-     *                       converted data.
-     * @param  targetGraph   the URI of the named graph to hold the
-     *                       converted data, which will also be the URI
-     *                       of the created RDF source.
-     * @param  baseUri       the base URI to build the RDF identifiers
-     *                       from the CSV data.
-     * @param  trueValues    the list of values to be regarded as TRUE
-     *                       for the columns to convert to booleans.
-     * @param  dateFormat    the {@link DateFormat date format} to use
-     *                       when converting cells into dates.
-     * @param  keyColumn     the CSV column to use as identifier when
-     *                       creating RDF object. If not specified, the
-     *                       row number is used as identifier.
-     * @param  targetType    The URI (absolute or relative to the
-     *                       <code>baseUri</code>) of the RDF type to
-     *                       assign to the created RDF objects.
-     * @param  params        The form parameters, to extract the type
-     *                       mapping for each column.
+     * @param  projectId          the URI of the data-lifting project.
+     * @param  sourceId           the URI of the source to convert.
+     * @param  destTitle          the name of the RDF source to hold the
+     *                            converted data.
+     * @param  targetGraphParam   the URI of the named graph to hold the
+     *                            converted data, which will also be the
+     *                            URI of the created RDF source.
+     * @param  baseUri            the base URI to build the RDF
+     *                            identifiers from the CSV data.
+     * @param  trueValues         the list of values to be regarded as
+     *                            boolean TRUE for the columns to
+     *                            convert to booleans.
+     * @param  dateFormat         the {@link DateFormat date format} to
+     *                            use when converting cells into dates.
+     * @param  keyColumn          the CSV column to use as identifier when
+     *                            creating RDF object. If not specified,
+     *                            the row number is used as identifier.
+     * @param  targetType         The URI (absolute or relative to the
+     *                            <code>baseUri</code>) of the RDF type
+     *                            to assign to the created RDF objects.
+     * @param  params             All form parameters, needed to
+     *                            extract the type mapping for each
+     *                            column as this information is
+     *                            dynamically named from the columns.
      *
      * @return a JAX-RS response redirecting the user browser to the
      *         created RDF source.
@@ -250,24 +255,21 @@ public class CsvDirectMapper extends BaseConverterModule
                 @FormParam("true_values") String trueValues,
                 @FormParam(DATE_FORMAT_PARAM) String dateFormat,
                 @FormParam(KEY_COLUMN_PARAM) @DefaultValue("-1") int keyColumn,
-                @FormParam("dest_type") String targetType,
+                @FormParam(TYPE_URI_PARAM) String targetType,
                 MultivaluedMap<String,String> params)
                                                 throws WebApplicationException {
         // Note: There a bug in Jersey that cause the MultivalueMap to be
         //       empty unless at least one @FormParm annotation is present.
         // See: http://jersey.576304.n2.nabble.com/POST-parameters-not-injected-via-MultivaluedMap-td6434341.html
 
-        if (projectId == null) {
+        if (! UriParam.isSet(projectId)) {
             this.throwInvalidParamError(PROJECT_ID_PARAM, null);
         }
-        if (sourceId == null) {
+        if (! UriParam.isSet(sourceId)) {
             this.throwInvalidParamError(SOURCE_ID_PARAM, null);
         }
-        if (targetGraphParam == null) {
+        if (! UriParam.isSet(targetGraphParam)) {
             this.throwInvalidParamError(GRAPH_URI_PARAM, null);
-        }
-        if (baseUriParam == null) {
-            this.throwInvalidParamError(BASE_URI_PARAM, null);
         }
         Response response = null;
 
@@ -284,7 +286,7 @@ public class CsvDirectMapper extends BaseConverterModule
             // Load datatype mapping for each column.
             Mapping[] typeMappings = new Mapping[params.size()];
             for (String k : params.keySet()) {
-                if (k.startsWith("col_")) {
+                if (k.startsWith(COLUMN_MAPPING_PREFIX)) {
                     try {
                         int col = Integer.parseInt(k.substring(4));
                         Mapping m  = Mapping.fromString(params.getFirst(k));
@@ -327,7 +329,8 @@ public class CsvDirectMapper extends BaseConverterModule
                           join(errors, "\n\t- "));
             }
             // Register new transformed RDF source.
-            Source out = this.addResultSource(p, in, destTitle, targetGraph);
+            Source out = this.addResultSource(p, in, destTitle,
+                                                     targetGraph, baseUri);
             // Display project source tab, including the newly created source.
             response = this.created(out).build();
 
@@ -464,7 +467,7 @@ public class CsvDirectMapper extends BaseConverterModule
                                 duration = System.currentTimeMillis() - t0;
                                 log.trace("Inserted {} RDF triples from {} CSV lines in {} seconds...",
                                           wrap(statementCount), wrap(i - 1),
-                                          wrap(duration / 1000.0));
+                                          wrap(asSeconds(duration)));
                             }
                         }
                     }
@@ -480,7 +483,7 @@ public class CsvDirectMapper extends BaseConverterModule
             duration = System.currentTimeMillis() - t0;
             log.debug("Inserted {} RDF triples into <{}> from {} CSV lines in {} seconds",
                       wrap(statementCount), targetGraph,
-                      wrap(i - 1), wrap(duration / 1000.0));
+                      wrap(i - 1), wrap(asSeconds(duration)));
         }
         catch (TechnicalException e) {
             throw e;
@@ -652,7 +655,7 @@ public class CsvDirectMapper extends BaseConverterModule
             if (s.indexOf('.') == -1) {
                 int n = s.indexOf(',');
                 if ((n != -1) && (n == s.lastIndexOf(','))) {
-                    s.replace(',', '.');
+                    s = s.replace(',', '.');
                 }
                 // Else: No comma or more than one. => Ignore.
             }
@@ -875,7 +878,7 @@ public class CsvDirectMapper extends BaseConverterModule
                     v++;        // From 0-based Calendar to 1-based XML date.
                 }
                 else if (field == ZONE_OFFSET) {
-                    v = (v + c.get(DST_OFFSET)) / (60 * 1000);
+                    v = (int)((v + c.get(DST_OFFSET)) / ONE_MINUTE);
                 }
             }
             return v;
@@ -929,7 +932,7 @@ public class CsvDirectMapper extends BaseConverterModule
             this.value      = value;
             this.type       = type;
         }
-   
+
         @Override
         public String toString() {
             return "[row \"" + this.rowId + "\", column \"" + this.columnName

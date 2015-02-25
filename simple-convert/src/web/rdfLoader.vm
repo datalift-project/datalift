@@ -37,11 +37,11 @@
 
 		<fieldset class="ui-widget ui-widget-content" style="width:97%;">
 			<legend>#i18n("uri.translation.title")</legend>
-			<p><label for="uri_translation_src">#i18n("uri.translation.src"):</label>
-			<input type="text" name="uri_translation_src" id="uri_translation_src" value=""/>
+			<p><label for="src_pattern">#i18n("uri.translation.src"):</label>
+			<input type="text" name="src_pattern" id="src_pattern" value=""/>
 			<a href="#i18n("regex.help.page")" target="_blank">#i18n("help.label")</a></p>
-			<p><label for="uri_translation_dest">#i18n("uri.translation.dest"):</label>
-			<input type="text" name="uri_translation_dest" id="uri_translation_dest" value=""/>
+			<p><label for="dst_pattern">#i18n("uri.translation.dest"):</label>
+			<input type="text" name="dst_pattern" id="dst_pattern" value=""/>
 			<a href="#i18n("regex.help.page")" target="_blank">#i18n("help.label")</a></p>
 		</fieldset>
 
@@ -50,15 +50,19 @@
 </div>
 
 #script_links
+<script type="text/javascript" src="${baseUri}/rdfloader/static/js/converters.js"></script>
 <script type="text/javascript">
 	$(function() {
 		$("#source_submit").button();
 
 		$("#source").change(function() {
-		 	$("#source option:selected").each(function () {
-		 		$("#dest_title").attr("value", $(this).attr('name') + " - (RDF #" + $(this).attr("count") + ")");
-				$("#dest_graph_uri").attr("value", $(this).attr("value") + "-rdf-" + $(this).attr("count"));
-		 	});
+			$("#source option:selected").each(function() {
+				var name  = $(this).attr("name");
+				var uri   = $(this).attr("value");
+				var count = $(this).attr("count");
+				$("#dest_title").attr("value", getTargetSrcName(name, count));
+				$("#dest_graph_uri").attr("value", getTargetGraphUri(uri, count));
+			});
 		 });
 		 $("#source").change();
 	});

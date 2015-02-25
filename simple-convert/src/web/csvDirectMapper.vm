@@ -52,6 +52,7 @@
 </div>
 
 #script_links
+<script type="text/javascript" src="${baseUri}/csvdirectmapper/static/js/converters.js"></script>
 <script type="text/javascript">
 	$(function() {
 		$("#accordion").accordion({
@@ -63,11 +64,14 @@
 		$("#source_submit").button();
 
 		$("#source").change(function() {
-			$("#source option:selected").each(function () {
-				$("#dest_title").attr("value", $(this).attr("name") + " - (RDF #" + $(this).attr("count") + ")");
-				$("#dest_graph_uri").attr("value", $(this).attr("value") + encodeURIComponent("-rdf-" + $(this).attr("count")));
-				$("#base_uri").attr("value", $(this).attr("value") + encodeURIComponent("-rdf-" + $(this).attr("count")));
-				var targetUrl = $(this).attr("value") + "/columnNames";
+			$("#source option:selected").each(function() {
+				var name  = $(this).attr("name");
+				var uri   = $(this).attr("value");
+				var count = $(this).attr("count");
+				$("#dest_title").attr("value", getTargetSrcName(name, count));
+				$("#dest_graph_uri").attr("value", getTargetGraphUri(uri, count));
+				$("#base_uri").attr("value", getTargetBaseUri(uri, count));
+				var targetUrl = uri + "/columnNames";
 				jQuery.ajax({
 					type: "GET",
 					url: encodeURI(targetUrl),

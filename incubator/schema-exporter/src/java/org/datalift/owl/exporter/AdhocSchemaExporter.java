@@ -5,8 +5,10 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeSet;
 
 import javax.ws.rs.GET;
@@ -110,8 +112,24 @@ public class AdhocSchemaExporter extends BaseModule
             r = (isSet(SecurityContext.getUserPrincipal()))?
                         cfg.getInternalRepository() : cfg.getDataRepository();
         }
-        if (! r.ask("ASK { GRAPH <" + namedGraph + "> { ?s ?p ?o . } }")) {
-            this.sendError(BAD_REQUEST, "Unknown graph: " + namedGraph);
+        // Validate target graph URI.
+        java.net.URI ngUri = null;
+        try {
+            ngUri = java.net.URI.create(namedGraph);
+            if (! ngUri.isAbsolute()) {
+                throw new RuntimeException(
+                                "Not an absolute URI: \"" + namedGraph + '"');
+            }
+        }
+        catch (Exception e) {
+            this.sendError(BAD_REQUEST, "Invalid graph URI: \"" + namedGraph +
+                                        "\" (" + e.getMessage() + ')');
+        }
+        // Check target graph exists in triple store.
+        Map<String,Object> bindings = new HashMap<String,Object>();
+        bindings.put("g", ngUri);
+        if (! r.ask("ASK { GRAPH ?g { ?s ?p ?o . } }", bindings)) {
+            this.sendError(BAD_REQUEST, "Unknown graph: \"" + namedGraph + '"');
         }
         // Compute best matching RDF representation from HTTP Accept header.
         RdfFormat format = RdfFormat.get(

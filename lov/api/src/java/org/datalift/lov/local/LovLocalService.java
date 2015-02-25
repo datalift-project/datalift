@@ -2,6 +2,7 @@ package org.datalift.lov.local;
 
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -16,6 +17,7 @@ import org.datalift.lov.local.objects.SearchParams;
 import org.datalift.lov.local.objects.SearchResult;
 import org.datalift.lov.local.objects.TaxoNode;
 import org.datalift.lov.local.objects.Vocabulary;
+
 import org.openrdf.model.Literal;
 import org.openrdf.query.BindingSet;
 import org.openrdf.query.QueryLanguage;
@@ -78,30 +80,25 @@ public class LovLocalService {
 				params.setWeightLodNbOcc(0.7f);
 				
 				StringBuilder query = new StringBuilder();
-
 				query.append("SELECT DISTINCT * ");
-				query.append("FROM " + LovUtil.LOV_CONTEXT_SPARQL);
-				query.append(" WHERE { ");
-				query.append(" ?uri ?p ?label. ");
-				query.append(" FILTER(isURI(?uri)) ");
-				query.append(" FILTER(isLiteral(?label)) ");
-				query.append(" FILTER(CONTAINS(LCASE(STR(?label)),\"" + searchWords.toLowerCase() + "\")) " );
-				query.append(" ?uri rdf:type ?uriType. ");
-				query.append(" OPTIONAL { ");
-				query.append(" ?vocabSpace dcterms:hasPart ?uri.");
-				query.append(" }");
-				query.append(" OPTIONAL { ");
-				query.append(" ?uri rdfs:isDefinedBy ?vocabulary." );
-				query.append(" ?vocabulary rdf:type voaf:Vocabulary. ");
-				query.append(" ?vocabSpace dcterms:hasPart ?vocabulary. ");
-				query.append(" }");
-				query.append(" OPTIONAL { ");
-				query.append(" ?uri voaf:occurrencesInVocabularies ?occurrencesInVocabularies. ");
-				query.append(" ?uri voaf:reusedByVocabularies ?reusedByVocabularies. ");
-				query.append(" ?uri voaf:occurrencesInDatasets ?occurrencesInDatasets. ");
-				query.append(" ?uri voaf:reusedByDatasets ?reusedByDatasets. ");
-				query.append(" }");
-				query.append(" }");
+				query.append("FROM ").append(LovUtil.LOV_CONTEXT_SPARQL);
+				query.append(" WHERE {");
+				query.append(" ?uri ?p ?label .");
+				query.append(" FILTER(isURI(?uri))");
+				query.append(" FILTER(isLiteral(?label))");
+				query.append(" FILTER(CONTAINS(LCASE(STR(?label)),\"")
+				     .append(searchWords.toLowerCase()).append("\"))");
+				query.append(" ?uri rdf:type ?uriType .");
+				// query.append(" OPTIONAL { ?vocabSpace dcterms:hasPart ?uri . }");
+				query.append(" OPTIONAL {");
+				query.append("   ?uri rdfs:isDefinedBy ?vocabulary .");
+				query.append("   ?vocabulary rdf:type voaf:Vocabulary . }");
+				query.append(" OPTIONAL { ?vocabSpace dcterms:hasPart ?vocabulary . }");
+				query.append(" OPTIONAL { ?uri voaf:occurrencesInVocabularies ?occurrencesInVocabularies . }");
+				query.append(" OPTIONAL { ?vocabulary voaf:reusedByVocabularies ?reusedByVocabularies . }");
+				query.append(" OPTIONAL { ?vocabulary voaf:occurrencesInDatasets ?occurrencesInDatasets . }");
+				query.append(" OPTIONAL { ?vocabulary voaf:reusedByDatasets ?reusedByDatasets . }");
+				query.append("}");
 				TupleQueryResult result = conn.prepareTupleQuery(
 						QueryLanguage.SPARQL, LovConstants.PREFIXES + query.toString())
 						.evaluate();
@@ -905,7 +902,7 @@ public class LovLocalService {
 			list.add(s);
 			return list;
 		}
-		return null;
+		return Collections.emptyList();
 	}
 
 	public static boolean incrementTaxoNode(String uri, TaxoNode root) {

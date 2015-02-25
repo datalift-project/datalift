@@ -75,6 +75,11 @@ public abstract class AbstractGridJsonWriter extends AbstractJsonWriter
      * RDF resource URIs.
      */
     private final MessageFormat urlPattern;
+    /**
+     * Whether to include the data type when displaying literal values.
+     * Defaults to <code>false</code>.
+     */
+    private boolean includeLiteralDataTypes = false;
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -126,6 +131,30 @@ public abstract class AbstractGridJsonWriter extends AbstractJsonWriter
                                               String jsonCallback) {
         super(out, jsonCallback);
         this.urlPattern = urlPattern;
+    }
+
+    //-------------------------------------------------------------------------
+    // Accessors
+    //-------------------------------------------------------------------------
+
+    /**
+     * Returns whether the data type is included when displaying literal
+     * values.
+     * @return whether the data type is included when displaying literal
+     *         values. Defaults to <code>false</code>.
+     */
+    public final boolean getIncludeLiteralDataTypes() {
+        return this.includeLiteralDataTypes;
+    }
+
+    /**
+     * Sets whether to include the data type when displaying literal
+     * values.
+     * @param  includeTypes   <code>true</code> to include data type;
+     *                        <code>false</code> otherwise.
+     */
+    public final void setIncludeLiteralDataTypes(boolean includeTypes) {
+        this.includeLiteralDataTypes = includeTypes;
     }
 
     //-------------------------------------------------------------------------
@@ -217,21 +246,6 @@ public abstract class AbstractGridJsonWriter extends AbstractJsonWriter
         this.end();
     }
 
-/*
-    public void handleRow(Row<?> row) throws IOException {
-        this.startSolution();           // start of new solution
-
-        for (Iterator<String> i=this.fields.iterator(); i.hasNext(); ) {
-            String key = i.next();
-            this.writeKeyValue(key, new LiteralImpl(row.getString(key)), Unknown);
-            if (i.hasNext()) {
-                this.writeComma();
-            }
-        }
-        this.endSolution();             // end solution
-    }
-*/
-
     /**
      * Appends an RDF field value (URI, blank node, literal...) as a
      * simple string, substituting URLs to URIs if a URL format has
@@ -252,7 +266,7 @@ public abstract class AbstractGridJsonWriter extends AbstractJsonWriter
             this.writeValue("_:" + value.stringValue(), type);
         }
         else if (value instanceof Literal) {
-            if (isNative(value)) {
+            if ((! this.includeLiteralDataTypes) && (isNative(value))) {
                 this.writer.write(((Literal)value).getLabel());
             }
             else {

@@ -36,6 +36,7 @@ package org.datalift.core.log;
 
 
 import org.datalift.fwk.log.Logger;
+import org.datalift.fwk.util.TimeUtils;
 
 
 /**
@@ -67,6 +68,6 @@ public final class TimerContext
      */
     public String toString() {
         long duration = System.currentTimeMillis() - this.startTime;
-        return Double.toString(duration / 1000.0);
+        return Double.toString(TimeUtils.asSeconds(duration));
     }
 }

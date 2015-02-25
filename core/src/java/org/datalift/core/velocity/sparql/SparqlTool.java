@@ -36,13 +36,17 @@ package org.datalift.core.velocity.sparql;
 
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.MissingResourceException;
 import java.util.Map.Entry;
 
 import org.apache.velocity.tools.config.DefaultKey;
@@ -71,7 +75,10 @@ import static org.openrdf.query.QueryLanguage.SPARQL;
 
 import org.datalift.core.rdf.QueryException;
 import org.datalift.fwk.Configuration;
+import org.datalift.fwk.i18n.LocaleComparable;
+import org.datalift.fwk.i18n.PreferredLocales;
 import org.datalift.fwk.log.Logger;
+import org.datalift.fwk.rdf.QueryDescription;
 import org.datalift.fwk.rdf.RdfNamespace;
 import org.datalift.fwk.rdf.RdfQueryException;
 import org.datalift.fwk.rdf.RdfUtils;
@@ -93,7 +100,7 @@ import static org.datalift.fwk.util.StringUtils.*;
  * query, the resulting data may vary according to the access rights
  * granted to the user (logged in or anonymous). The Velocity templates
  * shall thus always expect some data to be missing.</p>
- * 
+ *
  * @author lbihanic
  */
 @DefaultKey("sparql")
@@ -122,6 +129,10 @@ public final class SparqlTool
     private final Map<String,Value> bindings = new HashMap<String,Value>();
     private final Map<String,String> queryPrefixes =
                                                 new HashMap<String,String>();
+    /** The default repository to evaluate SPARQL queries against. */
+    private Repository defaultRepository = null;
+    /** Whether to include inferred statements in query results. */
+    private boolean includeInferred = true;
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -132,6 +143,7 @@ public final class SparqlTool
         Collection<AccessController> acs =
                                     this.cfg.getBeans(AccessController.class);
         this.accessController = (! acs.isEmpty())? acs.iterator().next(): null;
+        this.setDefaultRepository(null);
     }
 
     //-------------------------------------------------------------------------
@@ -181,7 +193,7 @@ public final class SparqlTool
      * Binds the specified value to the specified SPARQL query variable.
      * If the value is a native Java object (URI, URL, Integer, Boolean,
      * Byte...) it is first {@link RdfUtils#mapBinding(Object) converted}
-     * into an RDF {@link Value} object. 
+     * into an RDF {@link Value} object.
      * @param  name    the name of the SPARQL query variable.
      * @param  value   the value to associate to variable
      *                 <code>name</code>.
@@ -219,8 +231,8 @@ public final class SparqlTool
     }
 
     /**
-     * Executes the specified ASK query against Datalift
-     * {@link Configuration#getDefaultRepository() default RDF store}.
+     * Executes the specified ASK query against the
+     * {@link #getDefaultRepository() default RDF store}.
      * @param  query   the ASK query.
      *
      * @return the query result as a boolean.
@@ -230,14 +242,16 @@ public final class SparqlTool
      * @see    #ask(String, String)
      */
     public boolean ask(String query) {
-        return this.ask(this.cfg.getDefaultRepository(), query);
+        return this.ask(this.defaultRepository, query);
     }
 
     /**
      * Executes the specified ASK query against the specified Datalift
      * RDF store.
      * @param  repository   the name of the RDF store to query, as
-     *                      specified in Datalift configuration.
+     *                      specified in Datalift configuration or
+     *                      <code>null</code> to query the
+     *                      {@link #getDefaultRepository() default RDF store}.
      * @param  query        the ASK query.
      *
      * @return the query result as a boolean.
@@ -249,8 +263,8 @@ public final class SparqlTool
     }
 
     /**
-     * Executes the specified SELECT query against Datalift
-     * {@link Configuration#getDefaultRepository() default RDF store}.
+     * Executes the specified SELECT query against the
+     * {@link #getDefaultRepository() default RDF store}.
      * @param  query   the SELECT query.
      *
      * @return the query result as an iterator on the matched bindings.
@@ -260,14 +274,16 @@ public final class SparqlTool
      * @see    #select(String, String)
      */
     public Iterator<Map<String,Value>> select(String query) {
-        return this.select(this.cfg.getDefaultRepository(), query);
+        return this.select(this.defaultRepository, query);
     }
 
     /**
      * Executes the specified SELECT query against the specified
      * Datalift RDF store.
      * @param  repository   the name of the RDF store to query, as
-     *                      specified in Datalift configuration.
+     *                      specified in Datalift configuration or
+     *                      <code>null</code> to query the
+     *                      {@link #getDefaultRepository() default RDF store}.
      * @param  query        the SELECT query.
      *
      * @return the query result as an iterator on the matched bindings.
@@ -279,9 +295,8 @@ public final class SparqlTool
     }
 
     /**
-     * Executes the specified CONSTRUCT (or DESCRIBE) query against
-     * Datalift
-     * {@link Configuration#getDefaultRepository() default RDF store}.
+     * Executes the specified CONSTRUCT (or DESCRIBE) query against the
+     * {@link #getDefaultRepository() default RDF store}.
      * @param  query   the CONSTRUCT (or DESCRIBE) query.
      *
      * @return the query result as a {@link Statement} iterator.
@@ -291,14 +306,16 @@ public final class SparqlTool
      * @see    #construct(String, String)
      */
     public Iterator<Statement> construct(String query) {
-        return this.construct(this.cfg.getDefaultRepository(), query);
+        return this.construct(this.defaultRepository, query);
     }
 
     /**
      * Executes the specified CONSTRUCT (or DESCRIBE) query against
      * the specified Datalift RDF store.
      * @param  repository   the name of the RDF store to query, as
-     *                      specified in Datalift configuration.
+     *                      specified in Datalift configuration or
+     *                      <code>null</code> to query the
+     *                      {@link #getDefaultRepository() default RDF store}.
      * @param  query        the CONSTRUCT (or DESCRIBE) query.
      *
      * @return the query result as a {@link Statement} iterator.
@@ -311,9 +328,8 @@ public final class SparqlTool
 
     /**
      * Executes a DESCRIBE query for the specified RDF resource against
-     * Datalift
-     * {@link Configuration#getDefaultRepository() default RDF store}.
-     * @param  uri   the URI of the RDF resource to retrieve.
+     * the {@link #getDefaultRepository() default RDF store}.
+     * @param  uri   the URI of the RDF resource to describe.
      *
      * @return the query result as a {@link DescribeResult} object.
      * @throws RdfQueryException if any error occurred executing the
@@ -322,15 +338,17 @@ public final class SparqlTool
      * @see    #describe(String, String)
      */
     public DescribeResult describe(Object uri) {
-       return this.describe(this.cfg.getDefaultRepository(), uri); 
+       return this.describe(this.defaultRepository, uri);
     }
 
     /**
      * Executes a DESCRIBE query for the specified RDF resource against
      * the specified Datalift RDF store.
      * @param  repository   the name of the RDF store to query, as
-     *                      specified in Datalift configuration.
-     * @param  uri          the URI of the RDF resource to retrieve.
+     *                      specified in Datalift configuration or
+     *                      <code>null</code> to query the
+     *                      {@link #getDefaultRepository() default RDF store}.
+     * @param  uri          the URI of the RDF resource to describe.
      *
      * @return the query result as a {@link DescribeResult} object.
      * @throws RdfQueryException if any error occurred executing the
@@ -444,11 +462,10 @@ public final class SparqlTool
      *  <dt>String values</dt>
      *  <dd>the value enclosed in double quotes, followed by the
      *      language tag, if any</dd>
-     *   are displayed
-     * directly, string literals are 
+     * </dl>
      * @param  v   a RDF value.
      *
-     * @return
+     * @return a string representation of the specified RDF value.
      */
     public String toString(Value v) {
         String s = "";
@@ -459,12 +476,56 @@ public final class SparqlTool
             s = "_:" + v.stringValue();
         }
         else if (v instanceof Literal) {
-            s = (isNative(v))? ((Literal)v).getLabel(): v.toString();
+            s = (isNative(v))? ((Literal)v).getLabel(): v.stringValue();
         }
         else if (v != null) {
             s = v.stringValue();
         }
         return s;
+    }
+
+    /**
+     * Returns the name of the default repository to send queries to.
+     * @return the name of the default repository or an empty string
+     *         if Datalift
+     *         {@link Configuration#getDefaultRepository() default RDF store}
+     *         is being used.
+     */
+    public String getDefaultRepository() {
+        return (this.defaultRepository.equals(this.cfg.getDefaultRepository()))?
+                                "": this.defaultRepository.getName();
+    }
+
+    /**
+     * Sets the repository to send queries to when no explicit target
+     * repository is specified.
+     * @param  repository   the repository name in Datalift configuration.
+     *
+     * @throws MissingResourceException if the requested repository does
+     *         not exist.
+     */
+    public void setDefaultRepository(String repository) {
+        this.defaultRepository = (isSet(repository))?
+                    cfg.getRepository(repository): cfg.getDefaultRepository();
+    }
+
+    /**
+     * Returns whether inferred statements are included in query
+     * responses.
+     * @return <code>true</code> if inferred statements are included
+     *         in query responses; <code>false</code> otherwise.
+     */
+    public boolean getIncludeInferred() {
+        return this.includeInferred;
+    }
+
+    /**
+     * Sets whether to include inferred statements in query results.
+     * @param  includeInferred   whether to include inferred statements
+     *                           in query results
+     */
+    public void setIncludeInferred(boolean includeInferred) {
+        this.includeInferred = includeInferred;
     }
 
     //-------------------------------------------------------------------------
@@ -490,21 +551,26 @@ public final class SparqlTool
             BooleanQuery q = cnx.prepareBooleanQuery(SPARQL, ctrl.query);
             this.setGraphConstraints(q, ctrl);
             this.setBindings(q);
+            q.setIncludeInferred(this.includeInferred);
+
             boolean result = q.evaluate();
             if (log.isDebugEnabled()) {
                 if (this.bindings.isEmpty()) {
                     log.debug("\"{}\" on RDF store: {} -> {}",
-                              query, repository, wrap(result));
+                              new QueryDescription(query), repository,
+                              wrap(result));
                 }
                 else {
                     log.debug("\"{}\" ({}) on RDF store: {} -> {}",
-                              query, this.bindings, repository, wrap(result));
+                              new QueryDescription(query), this.bindings,
+                              repository, wrap(result));
                 }
             }
             return result;
         }
         catch (OpenRDFException e) {
-            log.error("Error executing SPARQL query \"{}\"", e, query);
+            log.error("Error executing SPARQL query \"{}\"", e,
+                                                new QueryDescription(query));
             throw new QueryException(query, e);
         }
         finally {
@@ -527,28 +593,33 @@ public final class SparqlTool
         if (! isSet(query)) {
             throw new IllegalArgumentException("query");
         }
+        QueryDescription queryDesc = new QueryDescription(query);
+
         RepositoryConnection cnx = null;
         try {
-            cnx = repository.newConnection();
             query = this.addPrefixes(query);
             ControlledQuery ctrl = this.checkAccessControls(query, repository);
+            // Evaluate query.
+            cnx = repository.newConnection();
             TupleQuery q = cnx.prepareTupleQuery(SPARQL, ctrl.query);
             this.setGraphConstraints(q, ctrl);
             this.setBindings(q);
+            q.setIncludeInferred(this.includeInferred);
+
             if (log.isDebugEnabled()) {
                 if (this.bindings.isEmpty()) {
                     log.debug("Executing \"{}\" on RDF store: {}...",
-                                            query, repository);
+                              queryDesc, repository);
                 }
                 else {
                     log.debug("Executing \"{}\" ({}) on RDF store: {}\"...",
-                                            query, this.bindings, repository);
+                              queryDesc, this.bindings, repository);
                 }
             }
-            return new SelectResultIterator(cnx, q.evaluate());
+            return new SelectResultIterator(cnx, q.evaluate(), queryDesc);
         }
         catch (Exception e) {
-            log.error("Error executing SPARQL query \"{}\"", e, query);
+            log.error("Error executing SPARQL query \"{}\"", e, queryDesc);
             Repository.closeQuietly(cnx);
             throw new QueryException(query, e);
         }
@@ -570,6 +641,8 @@ public final class SparqlTool
         if (! isSet(query)) {
             throw new IllegalArgumentException("query");
         }
+        QueryDescription queryDesc = new QueryDescription(query);
+
         RepositoryConnection cnx = null;
         try {
             cnx = repository.newConnection();
@@ -578,20 +651,22 @@ public final class SparqlTool
             GraphQuery q = cnx.prepareGraphQuery(SPARQL, ctrl.query);
             this.setGraphConstraints(q, ctrl);
             this.setBindings(q);
+            q.setIncludeInferred(this.includeInferred);
+
             if (log.isDebugEnabled()) {
                 if (this.bindings.isEmpty()) {
                     log.debug("Executing \"{}\" on RDF store: {}...",
-                                            query, repository);
+                              queryDesc, repository);
                 }
                 else {
                     log.debug("Executing \"{}\" ({}) on RDF store: {}...",
-                                            query, this.bindings, repository);
+                              queryDesc, this.bindings, repository);
                 }
             }
-            return new StatementIterator(cnx, q.evaluate());
+            return new StatementIterator(cnx, q.evaluate(), queryDesc);
         }
         catch (Exception e) {
-            log.error("Error executing SPARQL query \"{}\"", e, query);
+            log.error("Error executing SPARQL query \"{}\"", e, queryDesc);
             Repository.closeQuietly(cnx);
             throw new QueryException(query, e);
         }
@@ -615,6 +690,8 @@ public final class SparqlTool
         }
         String u = uri.toString();
         String query = "DESCRIBE <" + this.resolvePrefixes(u, false) + '>';
+        QueryDescription queryDesc = new QueryDescription(query);
+
         RepositoryConnection cnx = null;
         try {
             cnx = repository.newConnection();
@@ -623,22 +700,24 @@ public final class SparqlTool
             GraphQuery q = cnx.prepareGraphQuery(SPARQL, ctrl.query);
             this.setGraphConstraints(q, ctrl);
             this.setBindings(q);
+            q.setIncludeInferred(this.includeInferred);
+
             DescribeResult result = new DescribeResult(u, q.evaluate());
             if (log.isDebugEnabled()) {
                 if (this.bindings.isEmpty()) {
                     log.debug("\"{}\" on RDF store: {} -> {} triples",
-                                    query, repository, wrap(result.size()));
+                              queryDesc, repository, wrap(result.size()));
                 }
                 else {
                     log.debug("\"{}\" ({}) on RDF store: {} -> {} triples",
-                                    query, this.bindings,
-                                    repository, wrap(result.size()));
+                              queryDesc, this.bindings,
+                              repository, wrap(result.size()));
                 }
             }
             return result;
         }
         catch (Exception e) {
-            log.error("Error executing SPARQL query \"{}\"", e, query);
+            log.error("Error executing SPARQL query \"{}\"", e, queryDesc);
             throw new QueryException(query, e);
         }
         finally {
@@ -791,16 +870,121 @@ public final class SparqlTool
     /**
      * An iterator on the results of a SELECT SPARQL query.
      */
-    private final class SelectResultIterator
+    public final class SelectResultIterator
                                         implements Iterator<Map<String,Value>>
     {
         private final RepositoryConnection cnx;
         private final TupleQueryResult result;
+        private final QueryDescription query;
+        private final List<String> bindingNames;
 
-        public SelectResultIterator(RepositoryConnection cnx,
-                                    TupleQueryResult result) {
+        /**
+         * Creates an iterator to access the results of a SELECT SPARQL
+         * query in a Velocity-friendly manner (using Java collections
+         * instead of Sesame classes).
+         * @param  cnx      the repository connection.
+         * @param  result   the query result to read data from.
+         * @param  query    the query being processed.
+         */
+        protected SelectResultIterator(RepositoryConnection cnx,
+                                       TupleQueryResult result,
+                                       QueryDescription query)
+                                            throws QueryEvaluationException {
             this.cnx = cnx;
             this.result = result;
+            this.query  = query;
+            this.bindingNames = result.getBindingNames();
+        }
+
+        /**
+         * Sorts the SELECT query results according to the specified
+         * binding, in ascending order. Sorting applies to the
+         * {@link Value#stringValue() stringified binding value},
+         * using a {@link LocaleComparable locale-aware comparator}. If
+         * the sort criteria is not part of the query bindings, no error
+         * is returned and the results remain sorted in triple store
+         * order.
+         * @param  orderBy   the binding to use for sorting results.
+         * @param  asc       whether to sort the results in ascending
+         *                   or descending order.
+         *
+         * @return the remaining results, sorted.
+         * @see    #sort(String, boolean)
+         */
+        public Iterator<Map<String,Value>> sort(String orderBy) {
+            return this.sort(orderBy, true);
+        }
+
+        /**
+         * Sorts the SELECT query results according to the specified
+         * binding. Sorting applies to the
+         * {@link Value#stringValue() stringified binding value},
+         * using a {@link LocaleComparable locale-aware comparator}. If
+         * the sort criteria is not part of the query bindings, no error
+         * is returned and the results remain sorted in triple store
+         * order.
+         * @param  orderBy   the binding to use for sorting results.
+         * @param  asc       whether to sort the results in ascending
+         *                   or descending order.
+         *
+         * @return the remaining results, sorted.
+         */
+        public Iterator<Map<String,Value>> sort(String orderBy, boolean asc) {
+            Iterator<Map<String,Value>> sortedResults = this;
+
+            if (this.bindingNames.contains(orderBy)) {
+                Locale locale = PreferredLocales.get().get(0);
+                // Key prefix for missing sort key.
+                final String missingKey = (asc)? "zzzzzzzz-":
+                                                 "" + Integer.MIN_VALUE + ' ';
+                int n = 0;
+                // Collect results for sorting.
+                List<LocaleComparable<Map<String,Value>>> l =
+                        new ArrayList<LocaleComparable<Map<String,Value>>>(128);
+                while (this.hasNext()) {
+                    n++;
+                    // Process next binding set.
+                    Map<String,Value> bindings = this.next();
+                    // Compute result key. If the sort binding is absent,
+                    // place the result at the end of the list.
+                    Value v = bindings.get(orderBy);
+                    String key = (v != null)? SparqlTool.this.toString(v):
+                                              missingKey + n;
+                    l.add(new LocaleComparable<Map<String,Value>>(
+                                                        key, bindings, locale));
+                }
+                // Sort results.
+                Collections.sort(l);
+                if (! asc) {
+                    Collections.reverse(l);
+                }
+                // Return an iterator on sorted results.
+                final Iterator<LocaleComparable<Map<String,Value>>> i =
+                                   Collections.unmodifiableList(l).iterator();
+                sortedResults = new Iterator<Map<String,Value>>() {
+                        @Override
+                        public boolean hasNext() {
+                            return i.hasNext();
+                        }
+
+                        @Override
+                        public Map<String,Value> next() {
+                            return i.next().data;
+                        }
+
+                        @Override
+                        public void remove() {
+                            i.remove();
+                        }
+                    };
+            }
+            else {
+                // Sort binding not present. => Return unsorted results.
+                log.warn("SPARQL SELECT result sort error: " +
+                         "binding \"{}\" not present in query:\n{}",
+                         orderBy, this.query);
+            }
+            return sortedResults;
         }
 
         /** {@inheritDoc} */
@@ -814,7 +998,9 @@ public final class SparqlTool
                 }
             }
             catch (Exception e) {
-                log.error("Unexpected error while browsing result", e);
+                log.error("Unexpected error while browsing result of:\n{}", e,
+                          this.query);
+                // Do not propagate error to prevent page rendering failure.
             }
             return hasNext;
         }
@@ -830,7 +1016,8 @@ public final class SparqlTool
                 return bindings;
             }
             catch (Exception e) {
-                throw new RuntimeException("Failed reading query results", e);
+                throw new RuntimeException("Result reading error for: " +
+                                                               this.query, e);
             }
         }
 
@@ -856,6 +1043,7 @@ public final class SparqlTool
     {
         private final RepositoryConnection cnx;
         private final GraphQueryResult result;
+        private final QueryDescription query;
 
         /**
          * Creates a statement iterator, reading triples from the
@@ -863,12 +1051,15 @@ public final class SparqlTool
          * @param  cnx      the connection to the RDF store, to be
          *                  closed once the results have been read.
          * @param  result   the query results to read triples from.
+         * @param  query    the query being processed.
          */
         public StatementIterator(RepositoryConnection cnx,
-                                 GraphQueryResult result)
+                                 GraphQueryResult result,
+                                 QueryDescription query)
                                             throws QueryEvaluationException {
             this.cnx = cnx;
             this.result = result;
+            this.query  = query;
             // Register namespace prefix mappings for this query.
             registerNamespaceMappings(result);
         }
@@ -884,7 +1075,9 @@ public final class SparqlTool
                 }
             }
             catch (Exception e) {
-                log.error("Unexpected error while browsing result", e);
+                log.error("Unexpected error while browsing result of:\n{}", e,
+                          this.query);
+                // Do not propagate error to prevent page rendering failure.
             }
             return hasNext;
         }
@@ -896,7 +1089,8 @@ public final class SparqlTool
                 return this.result.next();
             }
             catch (Exception e) {
-                throw new RuntimeException("Failed reading query results", e);
+                throw new RuntimeException("Result reading error for: " +
+                                                                this.query, e);
             }
         }
 

@@ -28,7 +28,7 @@
     <div class="dl-panel">
       <a href="${it.uri}#ontology">#i18n("back")</a>
       <div id="accordion">
-	<h3><a href="#">Ontology</a></h3>
+	<h3><a href="#">#i18n("project.upload_ontology.heading")</a></h3>
 	<div>
 	  <form method="post" action="${it.uri}/$target" class="form_formated">
 		<input type="hidden" name="oldTitle" id="oldTitle" value="$!{current.title}"/>

@@ -48,13 +48,6 @@ public interface RdfFileSource extends RdfSource, FileSource
     //-------------------------------------------------------------------------
 
     /**
-     * Returns the base URI to apply when resolving relative URIs
-     * in this source.
-     * @return the base URI or <code>null</code> if none was set.
-     */
-    public String getBaseUri();
-
-    /**
      * Sets the base URI to apply when resolving relative URIs
      * in this source.
      * @param  uri   the base URI or <code>null</code> if no resolution

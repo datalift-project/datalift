@@ -216,7 +216,7 @@ public class ApplicationLoader extends LogServletContextListener
 
         try {
             // Load application configuration.
-            DefaultConfiguration cfg = this.loadConfiguration(props);
+            Configuration cfg = this.loadConfiguration(props);
             Configuration.setDefault(cfg);
             // Find available third-party modules.
             this.registerBundles(cfg);
@@ -277,7 +277,7 @@ public class ApplicationLoader extends LogServletContextListener
      *         found configuration file(s).
      * @throws TechnicalException if any error occurred.
      */
-    protected DefaultConfiguration loadConfiguration(Properties props) {
+    protected Configuration loadConfiguration(Properties props) {
         return new DefaultConfiguration(props);
     }
 
@@ -326,9 +326,9 @@ public class ApplicationLoader extends LogServletContextListener
                     Logger.setContext(Path, prevCtx);
                 }
             }
-            if (cfg instanceof DefaultConfiguration) {
-                ((DefaultConfiguration)cfg).shutdown();
-            }
+            // Shutdown configuration, to release repository connections.
+            cfg.shutdown();
+
             log.info("DataLift shutdown complete");
         }
         finally {

@@ -44,7 +44,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
+import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
@@ -55,10 +60,12 @@ import org.openrdf.rio.RDFHandler;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.helpers.RDFHandlerWrapper;
 
+import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 import static javax.ws.rs.core.Response.Status.*;
 
 import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
+import org.datalift.fwk.ResourceResolver;
 import org.datalift.fwk.i18n.PreferredLocales;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.DuplicateObjectKeyException;
@@ -76,6 +83,8 @@ import org.datalift.fwk.view.ViewFactory;
 
 import static org.datalift.fwk.MediaTypes.*;
 import static org.datalift.fwk.util.PrimitiveUtils.wrap;
+import static org.datalift.fwk.util.StringUtils.trimToNull;
+import static org.datalift.fwk.util.TimeUtils.asSeconds;
 
 
 /**
@@ -99,6 +108,9 @@ public abstract class BaseConverterModule
     protected final static String TARGET_SRC_NAME       = "dest_title";
     protected final static String GRAPH_URI_PARAM       = "dest_graph_uri";
     protected final static String BASE_URI_PARAM        = "base_uri";
+    protected final static String TYPE_URI_PARAM        = "dest_type";
+    protected final static String SRC_PATTERN_PARAM     = "src_pattern";
+    protected final static String DST_PATTERN_PARAM     = "dst_pattern";
     protected final static String KEY_COLUMN_PARAM      = "key_column";
     protected final static String OVERWRITE_GRAPH_PARAM = "overwrite";
 
@@ -164,6 +176,39 @@ public abstract class BaseConverterModule
         Collection<SourceType> srcTypes = new HashSet<SourceType>();
         srcTypes.addAll(Arrays.asList(inputSources));
         this.inputSources = Collections.unmodifiableCollection(srcTypes);
+    }
+
+    //-------------------------------------------------------------------------
+    // Web services
+    //-------------------------------------------------------------------------
+
+    /**
+     * <i>[Resource method]</i> Returns a static resource associated to
+     * this module.
+     * @param  path        the path of the requested static resource.
+     * @param  uriInfo     the request URI data.
+     * @param  request     the JAX-RS Request object, for content
+     *                     negotiation.
+     * @param  acceptHdr   the HTTP Accept header, for content
+     *                     negotiation.
+     *
+     * @return a JAX-RS {@link Response} wrapping the input stream
+     *         on the requested resource content.
+     * @throws WebApplicationException if any error occurred while
+     *         accessing the requested resource.
+     */
+    @GET
+    @Path("static/{path: .*$}")
+    public Response getStaticResource(@PathParam("path") String path,
+                                      @Context UriInfo uriInfo,
+                                      @Context Request request,
+                                      @HeaderParam(ACCEPT) String acceptHdr)
+                                                throws WebApplicationException {
+        log.trace("Reading static resource: {}", path);
+        return Configuration.getDefault()
+                            .getBean(ResourceResolver.class)
+                            .resolveModuleResource(this.getName(),
+                                                   uriInfo, request, acceptHdr);
     }
 
     //-------------------------------------------------------------------------
@@ -292,6 +337,9 @@ public abstract class BaseConverterModule
      */
     protected void checkUriConflict(URI targetUri, String parameterName)
                                                 throws WebApplicationException {
+        if (targetUri == null) {
+            this.throwInvalidParamError(parameterName, null);
+        }
         boolean found = false;
         try {
             Repository r = Configuration.getDefault().getInternalRepository();
@@ -321,9 +369,31 @@ public abstract class BaseConverterModule
     protected TransformedRdfSource addResultSource(Project p, Source parent,
                                                    String name, URI uri)
                                                             throws IOException {
+        return this.addResultSource(p, parent, name, uri, null);
+    }
+
+    /**
+     * Creates a new transformed RDF source and attach it to the
+     * specified project.
+     * @param  p         the owning project.
+     * @param  parent    the parent source object.
+     * @param  name      the new source name.
+     * @param  uri       the new source URI.
+     * @param  baseUri   the URI that was used to parse RDF data or to
+     *                   compute the URIs of resources and predicates of
+     *                   the RDF source, <code>null</code> if the URIs
+     *                   within the source do not share any common base.
+     *
+     * @return the newly created transformed RDF source.
+     * @throws IOException if any error occurred creating the source.
+     */
+    protected TransformedRdfSource addResultSource(Project p, Source parent,
+                                                   String name, URI uri,
+                                                   URI baseUri)
+                                                            throws IOException {
         TransformedRdfSource newSrc =
                         this.projectManager.newTransformedRdfSource(p, uri,
-                                                    name, null, uri, parent);
+                                            name, null, uri, baseUri, parent);
         this.projectManager.saveProject(p);
         return newSrc;
     }
@@ -337,20 +407,39 @@ public abstract class BaseConverterModule
      * @param  templateName   the relative template name.
      * @param  projectId      the URI of the project to display.
      *
-     * @return a template model for rendering the specified template,
-     *         populated with the specified project.
+     * @return a service response wrapping a template model rendering
+     *         the specified template, populated with the specified
+     *         project.
+     * @see    #getProjectView(String, URI)
      */
     protected final Response newProjectView(String templateName,
                                             URI projectId) {
-        Response response = null;
+        TemplateModel view = this.getProjectView(templateName, projectId);
+        return Response.ok(view, TEXT_HTML_UTF8).build();
+    }
+
+    /**
+     * Returns a template model for the specified template, populated
+     * with the specified project.
+     * <p>
+     * The template name shall be relative to the module, the module
+     * name is automatically prepended.</p>
+     * @param  templateName   the relative template name.
+     * @param  projectId      the URI of the project to display.
+     *
+     * @return a template model for rendering the specified template,
+     *         populated with the specified project.
+     */
+    protected final TemplateModel getProjectView(String templateName,
+                                                 URI projectId) {
+        TemplateModel view = null;
         try {
             // Retrieve project.
             Project p = this.getProject(projectId);
             // Display conversion configuration page.
-            TemplateModel view = this.newView(templateName, p);
+            view = this.newView(templateName, p);
             view.registerFieldsFor(SourceType.class);
             view.put("converter", this);
-            response = Response.ok(view, TEXT_HTML_UTF8).build();
         }
         catch (ObjectNotFoundException e) {
             this.throwInvalidParamError("project", projectId);
@@ -358,7 +447,7 @@ public abstract class BaseConverterModule
         catch (IllegalArgumentException e) {
             this.throwInvalidParamError("project", projectId);
         }
-        return response;
+        return view;
     }
 
     /**
@@ -466,15 +555,18 @@ public abstract class BaseConverterModule
                 @Override
                 public void endRDF() throws RDFHandlerException {
                     super.endRDF();
-                    long delay = System.currentTimeMillis() - this.t0;
-                    if (namedGraph != null) {
-                       log.debug("Exported {} triples from <{}> in {} seconds",
-                              wrap(this.statementCount), namedGraph,
-                              wrap(delay / 1000.0));
-                    }
-                    else {
-                       log.debug("Exported {} triples in {} seconds",
-                              wrap(this.statementCount), wrap(delay / 1000.0));
+                    if (log.isDebugEnabled()) {
+                        long delay = System.currentTimeMillis() - this.t0;
+                        if (namedGraph != null) {
+                            log.debug("Exported {} triples from <{}> in {} seconds",
+                                      wrap(this.statementCount), namedGraph,
+                                      wrap(asSeconds(delay)));
+                        }
+                        else {
+                            log.debug("Exported {} triples in {} seconds",
+                                      wrap(this.statementCount),
+                                      wrap(asSeconds(delay)));
+                        }
                     }
                 }
             };
@@ -492,6 +584,11 @@ public abstract class BaseConverterModule
      */
     protected void throwInvalidParamError(String name, Object value)
                                                 throws WebApplicationException {
+        if (value instanceof String) {
+            // Special case for Strings: Jersey passes empty strings to
+            // web service methods for missing request parameters.
+            value = trimToNull((String)value);
+        }
         TechnicalException error = (value != null)?
                 new TechnicalException("ws.invalid.param.error", name, value):
                 new TechnicalException("ws.missing.param", name);

@@ -141,6 +141,16 @@ public class SparqlSourceImpl extends CachingSourceImpl implements SparqlSource
     // SparqlSource contract support
     //-------------------------------------------------------------------------
 
+    /**
+     * {@inheritDoc}
+     * @return <code>null</code> always as SPARQL-originating data do
+     *         not share any common base URI.
+     */
+    @Override
+    public String getBaseUri() {
+        return null;
+    }
+
     /** {@inheritDoc} */
     @Override
     public String getEndpointUrl() {

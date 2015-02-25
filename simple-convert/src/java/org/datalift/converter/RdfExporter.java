@@ -62,6 +62,7 @@ import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.rdf.RdfFormat;
 import org.datalift.fwk.rdf.Repository;
+import org.datalift.fwk.util.web.UriParam;
 import org.datalift.fwk.view.TemplateModel;
 
 import static org.datalift.fwk.MediaTypes.*;
@@ -121,10 +122,16 @@ public class RdfExporter extends BaseConverterModule
     @POST
     @Consumes(APPLICATION_FORM_URLENCODED)
     public Response exportRdfSource(
-                            @FormParam(PROJECT_ID_PARAM) URI projectId,
-                            @FormParam(SOURCE_ID_PARAM)  URI sourceId,
+                            @FormParam(PROJECT_ID_PARAM) UriParam projectId,
+                            @FormParam(SOURCE_ID_PARAM)  UriParam sourceId,
                             @FormParam(TARGET_FMT_PARAM) String mimeType)
                                                 throws WebApplicationException {
+        if (! UriParam.isSet(projectId)) {
+            this.throwInvalidParamError(PROJECT_ID_PARAM, null);
+        }
+        if (! UriParam.isSet(sourceId)) {
+            this.throwInvalidParamError(SOURCE_ID_PARAM, null);
+        }
         Response response = null;
 
         Repository internal = Configuration.getDefault()
@@ -135,9 +142,9 @@ public class RdfExporter extends BaseConverterModule
                 this.throwInvalidParamError(TARGET_FMT_PARAM, mimeType);
             }
             // Retrieve source.
-            Project p = this.getProject(projectId);
+            Project p = this.getProject(projectId.toUri(PROJECT_ID_PARAM));
             TransformedRdfSource s = (TransformedRdfSource)
-                                                        (p.getSource(sourceId));
+                            (p.getSource(sourceId.toUri(SOURCE_ID_PARAM)));
             if (s == null) {
                 throw new ObjectNotFoundException("project.source.not.found",
                                                   projectId, sourceId);

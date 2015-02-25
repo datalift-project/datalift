@@ -117,8 +117,15 @@ public final class Wrapper
     private final static String JAR_EXTENSION = ".jar";
 
     // Constants for well-known Java system properties.
+    /** Java runtime directory. */
     private final static String JAVA_CURRENT_DIR_PROP   = "user.dir";
+    /** JVM temporary file storage directory. */
     private final static String JAVA_TEMP_DIR_PROP      = "java.io.tmpdir";
+    /** Java system property for setting HTTP proxy. */
+    private final static String HTTP_PROXY_HOST_PROP    = "http.proxyHost";
+    /** Java system property for auto-detection of system proxy settings. */
+    private final static String USE_SYSTEM_PROXIES_PROP =
+                                                "java.net.useSystemProxies";
 
     private final static Comparator<String> CONTEXT_PATH_COMPARATOR =
             new Comparator<String>() {
@@ -278,9 +285,10 @@ public final class Wrapper
         // On Windows and Linux/Gnome 2.x systems, gather proxy configuration
         // from the system (it's the default value for Mac OS X).
         if ((CURRENT_OS != MacOS) &&
-            (System.getProperty("http.proxyHost") == null)) {
-            // No HTTP proxy explicitly set. => Ask Java to check system config.
-            System.setProperty("java.net.useSystemProxies",
+            (System.getProperty(HTTP_PROXY_HOST_PROP) == null) &&
+            (System.getProperty(USE_SYSTEM_PROXIES_PROP) == null)) {
+            // No HTTP proxy explicitly set. => Ask Java to use system proxies.
+            System.setProperty(USE_SYSTEM_PROXIES_PROP,
                                                     Boolean.TRUE.toString());
         }
         // Set Jetty runtime configuration properties.
@@ -342,7 +350,8 @@ public final class Wrapper
             }
             httpServer.addHandler(ctx);
             System.out.println("Deploying \"" + webapp.getName() +
-                               "\" with context path \"" + path + '"');
+                               "\" with context path \"" +
+                               ((path.length() == 0)? "/": path) + '"');
         }
         // Ensure unused local variables can be garbage-collected.
         env = null;

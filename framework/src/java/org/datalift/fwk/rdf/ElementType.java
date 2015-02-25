@@ -45,16 +45,38 @@ import org.datalift.fwk.util.StringUtils;
  */
 public enum ElementType
 {
+    //-------------------------------------------------------------------------
+    // Values
+    //-------------------------------------------------------------------------
+
     /** RDF resource, typically the subject of a statement */
-    Resource,
-    /** RDF property */
-    Predicate,
+    Resource(1),
     /** Named graph */
-    Graph,
+    Graph(2),
+    /** RDF property */
+    Predicate(3),
     /** RDF type/class */
-    RdfType,
+    RdfType(4),
     /** RDF value, typically a literal. */
-    Value;
+    Value(5);
+
+    //-------------------------------------------------------------------------
+    // Instance members
+    //-------------------------------------------------------------------------
+
+    public final int priority;
+
+    //-------------------------------------------------------------------------
+    // Constructors
+    //-------------------------------------------------------------------------
+
+    ElementType(int priority) {
+        this.priority = priority;
+    }
+
+    //-------------------------------------------------------------------------
+    // Static utility methods
+    //-------------------------------------------------------------------------
 
     /**
      * Return the enumeration value corresponding to the specified
@@ -79,5 +101,42 @@ public enum ElementType
             }
         }
         return v;
+    }
+
+    public static Comparator comparator() {
+        return comparator(false);
+    }
+
+    public static Comparator comparator(boolean preferGraphs) {
+        return new Comparator(preferGraphs);
+    }
+
+    //-------------------------------------------------------------------------
+    // Comparator companion class
+    //-------------------------------------------------------------------------
+
+    public static final class Comparator
+                                implements java.util.Comparator<ElementType> {
+        private final boolean preferGraphs;
+
+        public Comparator() {
+            this(false);
+        }
+
+        public Comparator(boolean preferGraphs) {
+            this.preferGraphs = preferGraphs;
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public int compare(ElementType o1, ElementType o2) {
+            int p1 = o1.priority;
+            int p2 = o2.priority;
+            if (this.preferGraphs) {
+                if (o1 == Graph) p1 = 0;
+                if (o2 == Graph) p2 = 0;
+            }
+            return p1 - p2;
+        }
     }
 }
