@@ -1,12 +1,7 @@
 package org.datalift.lov.service;
 
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
 import java.net.URI;
 import java.net.URL;
 import java.text.SimpleDateFormat;
@@ -27,9 +22,7 @@ import org.datalift.fwk.rdf.RdfException;
 import org.datalift.fwk.rdf.RdfFormat;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
-import org.datalift.fwk.util.Env;
 import org.datalift.fwk.util.io.FileUtils;
-import org.datalift.fwk.util.web.Charsets;
 import org.datalift.lov.local.LovLocalService;
 import org.datalift.lov.local.LovLocalVocabularyService;
 import org.datalift.lov.local.LovUtil;
@@ -40,10 +33,6 @@ import static org.datalift.fwk.util.PrimitiveUtils.wrap;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.rio.ParserConfig;
 import org.openrdf.rio.RDFParser;
-import org.openrdf.rio.RDFParser.DatatypeHandling;
-import org.semanticweb.yars.nx.Node;
-import org.semanticweb.yars.nx.Triple;
-import org.semanticweb.yars.nx.parser.NxParser;
 
 
 /**
@@ -300,6 +289,7 @@ public class OfflineLovService extends LovService {
 	}
 
 	// load data of LOV into a dedicated named graph
+	@SuppressWarnings("deprecation")
 	private void loadDataIntoRepository() throws RuntimeException {
 		// TODO vérifier la vitesse de chargement des données (mettre dans un
 		// autre thread ?)
@@ -330,13 +320,6 @@ public class OfflineLovService extends LovService {
 				long startTime = System.currentTimeMillis();
 
 				RdfFormat fmt = RdfUtils.guessRdfFormatFromExtension(lovDataFile.getName());
-				if (fmt == RdfFormat.NQUADS) {
-				    // Sesame 2.6.x does not support N-Quads.
-				    // => Translate N-Quads into N3.
-				    inFile = this.convertNQuads2N3();
-				    deleteInFile = true;
-				    fmt = RdfFormat.N3;
-				}
 				// Ignore RDF parse errors (such as ill-formatted
 				// dates that sometimes occur in LOV data).
 				RDFParser parser = fmt.newParser();
@@ -344,7 +327,7 @@ public class OfflineLovService extends LovService {
                                         true,       // Assume data are valid.
                                         false,      // Report all errors.
                                         false,      // Don't preserve BNode ids.
-                                        DatatypeHandling.VERIFY));
+                                        org.openrdf.rio.RDFParser.DatatypeHandling.VERIFY));
 				parser.setStopAtFirstError(false);
 				parser.setRDFHandler(new BatchStatementAppender(cnx, ctx));
 				parser.parse(FileUtils.getInputStream(inFile), "");
@@ -370,51 +353,5 @@ public class OfflineLovService extends LovService {
 			dataLoading = false;
 		}
 		dataLoaded = true;
-	}
-
-	private File convertNQuads2N3() throws IOException {
-		File tmpFile = File.createTempFile("lov-", ".n3");
-		tmpFile.deleteOnExit();
-
-		InputStream in = null;
-		Writer out = null;
-		try {
-			final int chunkSize = Env.getFileBufferSize();
-			out = new OutputStreamWriter(
-			        new BufferedOutputStream(
-			            new FileOutputStream(tmpFile), chunkSize),
-			        Charsets.UTF_8);
-
-			in = FileUtils.getInputStream(lovDataFile);
-			NxParser nxp = new NxParser(in, false);
-
-			int notQuad = 0;
-			int notEvenTriple = 0;
-			while (nxp.hasNext()) {
-				Node[] ns = nxp.next();
-				if (ns.length == 4) {
-					out.write(new Triple(ns[0], ns[1], ns[2]).toN3());
-				}
-				else {
-					++notQuad;
-					if (ns.length == 3) {
-						out.write(new Triple(ns[0], ns[1], ns[2]).toN3());
-					}
-					else {
-						++notEvenTriple;
-					}
-				}
-				out.write('\n');
-			}
-			log.trace("notQuad: {}, notEvenTriple: {}",
-			                    wrap(notQuad), wrap(notEvenTriple));
-			out.flush();
-			out.close();
-		}
-		finally {
-			FileUtils.closeQuietly(in);
-			FileUtils.closeQuietly(out);
-		}
-		return tmpFile;
 	}
 }
