@@ -134,8 +134,8 @@ public class SimpleCache<K,V>
      */
     public V get(K key) {
         V v = null;
-        if (this.cache.containsKey(key)) {
-            Entry<K,V> e = this.cache.get(key);
+        Entry<K,V> e = this.cache.get(key);
+        if (e != null) {
             if (! e.isExpired()) {
                 v = e.getValue();
             }
