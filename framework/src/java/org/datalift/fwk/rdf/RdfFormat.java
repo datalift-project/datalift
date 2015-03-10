@@ -165,8 +165,14 @@ public enum RdfFormat
 
     /**
      * Creates a new RdfFormat instance.
-     * @param  type        the official type.
-     * @param  mimeTypes   the MIME types that map to the official type.
+     * @param  name        the format display name.
+     * @param  format      the Sesame RDF format descriptor.
+     * @param  extension   the default file extension for the format.
+     * @param  mimeTypes   the MIME types for the format, the first
+     *                     element being the official/preferred MIME
+     *                     type.
+     *
+     * @see    #RdfFormat(String, RDFFormat, boolean, String[], MediaType...)
      */
     RdfFormat(String name, RDFFormat format,
                            String extension, MediaType... mimeTypes) {
@@ -175,8 +181,14 @@ public enum RdfFormat
 
     /**
      * Creates a new RdfFormat instance.
-     * @param  type        the official type.
-     * @param  mimeTypes   the MIME types that map to the official type.
+     * @param  name         the format display name.
+     * @param  format       the Sesame RDF format descriptor.
+     * @param  extensions   the file extensions for the format.
+     * @param  mimeTypes    the MIME types for the format, the first
+     *                      element being the official/preferred MIME
+     *                      type.
+     *
+     * @see    #RdfFormat(String, RDFFormat, boolean, String[], MediaType...)
      */
     RdfFormat(String name, RDFFormat format,
                            String[] extensions, MediaType... mimeTypes) {
@@ -185,8 +197,14 @@ public enum RdfFormat
 
     /**
      * Creates a new RdfFormat instance.
-     * @param  type        the official type.
-     * @param  mimeTypes   the MIME types that map to the official type.
+     * @param  name         the format display name.
+     * @param  format       the Sesame RDF format descriptor.
+     * @param  canOutput    whether outputting to this format is
+     *                      supported.
+     * @param  extensions   the file extensions for the format.
+     * @param  mimeTypes    the MIME types for the format, the first
+     *                      element being the official/preferred MIME
+     *                      type.
      */
     RdfFormat(String name, RDFFormat format, boolean canOutput,
                            String[] extensions, MediaType... mimeTypes) {
