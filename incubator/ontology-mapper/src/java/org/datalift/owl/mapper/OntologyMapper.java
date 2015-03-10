@@ -530,7 +530,7 @@ public class OntologyMapper extends BaseModule implements ProjectModule
         long now = System.currentTimeMillis();
         // Compute HTTP Accept header.
         Map<String,String> headers = new HashMap<String,String>();
-        headers.put(ACCEPT, this.getRdfAcceptHeader());
+        headers.put(ACCEPT, RdfUtils.getRdfAcceptHeader());
         if (f.exists() && (f.lastModified() < now)) {
             headers.put(IF_MODIFIED_SINCE,
                         HttpDateFormat.formatDate(f.lastModified()));
@@ -579,28 +579,6 @@ public class OntologyMapper extends BaseModule implements ProjectModule
         // Else: Not modified...
 
         return f;
-    }
-
-    private String getRdfAcceptHeader() {
-        StringBuilder buf = new StringBuilder();
-        for (RdfFormat fmt : RdfFormat.values()) {
-            boolean first = true;
-            for (MediaType m : fmt.mimeTypes) {
-                if (first) {
-                    // Preferred MIME type (q=1.0).
-                    if (buf.length() != 0) {
-                        buf.append(", ");
-                    }
-                    buf.append(m);
-                    first = false;
-                }
-                else {
-                    // Secondary MIME types.
-                    buf.append(", ").append(m).append("; q=0.5");
-                }
-            }
-        }
-        return buf.toString();
     }
 
     private UpdateQuery mapNode(UpdateQuery query, MappingDesc m,

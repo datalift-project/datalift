@@ -989,6 +989,33 @@ public final class RdfUtils
     }
 
     /**
+     * Returns the value for HTTP <code>Accept</code> header for
+     * retrieving RDF content from a remote server.
+     * @return the value for HTTP <code>Accept</code> header including
+     *         all supported RDF MIME types.
+     */
+    public static String getRdfAcceptHeader() {
+        StringBuilder buf = new StringBuilder();
+        for (RdfFormat fmt : RdfFormat.values()) {
+            boolean preferred = true;
+            for (MediaType m : fmt.mimeTypes) {
+                buf.append(m);
+                if (! preferred) {
+                    // Secondary MIME types => Lower preference.
+                    buf.append("; q=0.5");
+                }
+                buf.append(", ");
+                preferred = false;
+            }
+        }
+        if (buf.length() > 2) {
+            // Strip last comma separator.
+            buf.setLength(buf.length() - 2);
+        }
+        return buf.toString();
+    }
+
+    /**
      * Maps a Java object to an RDF data type.
      * @param  o   the Java object to map.
      *
