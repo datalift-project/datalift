@@ -71,7 +71,9 @@ import org.datalift.fwk.util.Env;
 import org.datalift.fwk.util.web.Charsets;
 
 import static org.datalift.fwk.MediaTypes.*;
+import static org.datalift.fwk.util.PrimitiveUtils.wrap;
 import static org.datalift.fwk.util.StringUtils.*;
+import static org.datalift.fwk.util.io.FileUtils.*;
 
 
 /**
@@ -252,16 +254,16 @@ public class SparqlSourceImpl extends CachingSourceImpl implements SparqlSource
         URL u = null;
         String query = null;
         HttpURLConnection cnx = null;
-        log.debug("Reloading cache from {}, query: {}",
+        log.debug("Reloading cache from {}, query:\n{}",
                                         this.getEndpointUrl(), this.getQuery());
         try {
             // Build HTTP query string.
-            StringBuilder buf = new StringBuilder(2048);
+            StringBuilder buf = new StringBuilder(4096);
             // Extract query data from endpoint URL, if any.
             u = new URL(this.getEndpointUrl());
             String q = u.getQuery();
             if (isSet(q)) {
-                buf.append(u.getQuery()).append('&');
+                buf.append(q).append('&');
                 u = new URI(u.getProtocol(), null,
                             u.getHost(), u.getPort(), u.getPath(),
                             null, null).toURL();
@@ -305,14 +307,21 @@ public class SparqlSourceImpl extends CachingSourceImpl implements SparqlSource
         }
         cnx.setUseCaches(false);
         cnx.setDoInput(true);
-        log.debug("Connecting to: {}", u);
+        log.trace("Connecting to: {}", u);
         // Append query string in case of HTTP POST.
         if (query != null) {
-            cnx.setDoOutput(true);
-            OutputStream out = cnx.getOutputStream();
-            out.write(query.getBytes(Charsets.UTF_8));
-            out.flush();
-            out.close();
+            OutputStream out = null;
+            try {
+                cnx.setDoOutput(true);
+                out = cnx.getOutputStream();
+                out.write(query.getBytes(Charsets.UTF_8));
+                out.flush();
+            }
+            finally {
+                if (out != null) {
+                    out.close();
+                }
+            }
         }
         // Force server connection.
         cnx.connect();
@@ -320,8 +329,9 @@ public class SparqlSourceImpl extends CachingSourceImpl implements SparqlSource
         InputStream in = cnx.getErrorStream();
         if (in == null) {
             // No error data found. => save response data to cache.
-            this.save(cnx.getInputStream());
-            log.debug("Query results saved to {}", this.getCacheFile());
+            long l = this.save(cnx.getInputStream());
+            log.debug("Query results ({} MB) saved to {}",
+                      wrap(asMegaBytes(l)), this.getCacheFile());
         }
         else {
             char[] buf = new char[1024];
@@ -368,22 +378,26 @@ public class SparqlSourceImpl extends CachingSourceImpl implements SparqlSource
     // Specific implementation
     //-------------------------------------------------------------------------
 
-    private void save(InputStream in) throws IOException {
+    private long save(InputStream in) throws IOException {
         FileOutputStream fos = null;
+        long byteCount = 0L;
         try {
             fos = new FileOutputStream(this.getCacheFile());
-            byte[] buf = new byte[8192];
+            byte[] buf = new byte[Env.getFileBufferSize()];
             int l;
             while ((l = in.read(buf)) != -1) {
                 fos.write(buf, 0, l);
+                byteCount += l;
             }
+            fos.flush();
         }
         finally {
             if (fos != null) {
-                try { fos.close(); } catch (Exception e) { /* Ignore... */ }
+                fos.close();
             }
-            try { in.close();  } catch (Exception e) { /* Ignore... */ }
+            closeQuietly(in);
         }
+        return byteCount;
     }
 
     /**

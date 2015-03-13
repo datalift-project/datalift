@@ -550,6 +550,16 @@ public final class FileUtils
         }
     }
 
+    /**
+     * Converts a number of bytes into megabytes.
+     * @param  bytes   a number of bytes.
+     * @return the number of megabytes corresponding to
+     *         <code>bytes</code>.
+     */
+    public final static double asMegaBytes(long bytes) {
+        return (bytes / 1000) / 1000.0;
+    }
+
     //-------------------------------------------------------------------------
     // Specific implementation
     //-------------------------------------------------------------------------
@@ -628,16 +638,6 @@ public final class FileUtils
      */
     private final static long get32(byte b[], int offset) {
         return get16(b, offset) | ((long)get16(b, offset+2) << 16);
-    }
-
-    /**
-     * Converts a number of bytes into megabytes.
-     * @param  bytes   a number of bytes.
-     * @return the number of megabytes corresponding to
-     *         <code>bytes</code>.
-     */
-    private final static double asMegaBytes(long bytes) {
-        return (bytes / 1000) / 1000.0;
     }
 
     //-------------------------------------------------------------------------
