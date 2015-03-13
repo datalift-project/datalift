@@ -168,6 +168,9 @@ public abstract class AbstractGridJsonWriter extends AbstractJsonWriter
      * {@link #writeValueSimple(Value, ResourceType)} to output RDF
      * values in a format suitable for directly filling HTML tables
      * with minimum client-side processing.</p>
+     * @param  value   the RDF value.
+     * @param  type    the type of the resource being displayed
+     *                 (optional).
      */
     @Override
     protected final void writeValue(Value value, ResourceType type)
@@ -257,7 +260,7 @@ public abstract class AbstractGridJsonWriter extends AbstractJsonWriter
      *
      * @throws IOException if any error occurred output the JSON text.
      */
-    private final void writeValueSimple(Value value, ResourceType type)
+    protected final void writeValueSimple(Value value, ResourceType type)
                                                             throws IOException {
         if (value instanceof URI) {
             this.writeValue((URI)value, type);

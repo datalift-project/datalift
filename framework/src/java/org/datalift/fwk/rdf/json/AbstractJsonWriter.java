@@ -387,7 +387,7 @@ public abstract class AbstractJsonWriter
     /**
      * Escapes JSON special characters (/, \, \b, \f, \n, \r, \t)
      * in a string value.
-     * @param  value   the string value.
+     * @param  s   the string value.
      */
     protected String escapeJsonString(String s) {
         // Escape special characters
@@ -404,7 +404,7 @@ public abstract class AbstractJsonWriter
 
     /**
      * Escapes HTML special characters (&, <, >) in a string value.
-     * @param  value   the string value.
+     * @param  s   the string value.
      */
     protected String escapeHtmlString(String s) {
         // Escape special characters

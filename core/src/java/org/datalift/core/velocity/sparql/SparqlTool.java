@@ -335,7 +335,7 @@ public final class SparqlTool
      * @throws RdfQueryException if any error occurred executing the
      *         query or processing the result.
      *
-     * @see    #describe(String, String)
+     * @see    #describe(String, Object)
      */
     public DescribeResult describe(Object uri) {
        return this.describe(this.defaultRepository, uri);
@@ -905,8 +905,6 @@ public final class SparqlTool
          * is returned and the results remain sorted in triple store
          * order.
          * @param  orderBy   the binding to use for sorting results.
-         * @param  asc       whether to sort the results in ascending
-         *                   or descending order.
          *
          * @return the remaining results, sorted.
          * @see    #sort(String, boolean)

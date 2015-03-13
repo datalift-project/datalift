@@ -97,7 +97,7 @@ public interface ProjectModule extends Module
          *
          * @throws URISyntaxException if the specified URI is not valid.
          *
-         * @see    #UriDesc(URI, String)
+         * @see    #UriDesc(URI, HttpMethod, String)
          */
         public UriDesc(String uri, String label) throws URISyntaxException {
             this(new URI(uri), HttpMethod.GET, label);

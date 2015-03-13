@@ -221,7 +221,7 @@ public class CsvDirectMapper extends BaseConverterModule
      * @param  targetGraphParam   the URI of the named graph to hold the
      *                            converted data, which will also be the
      *                            URI of the created RDF source.
-     * @param  baseUri            the base URI to build the RDF
+     * @param  baseUriParam       the base URI to build the RDF
      *                            identifiers from the CSV data.
      * @param  trueValues         the list of values to be regarded as
      *                            boolean TRUE for the columns to

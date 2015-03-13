@@ -46,9 +46,10 @@ public interface AccessContextProvider
      * Populates the context object to be used by the
      * {@link AccessController} to evaluate the access control
      * policies.
-     * @param  context   the access context, possibly already partially
-     *                   populated by other access control providers.
-     * @param  target    the RDF repository being-queried.
+     * @param  context      the access context, possibly already
+     *                      partially populated by other access control
+     *                      providers.
+     * @param  repository   the RDF repository being-queried.
      */
     public void populateContext(Map<String,Object> context,
                                 Repository repository);

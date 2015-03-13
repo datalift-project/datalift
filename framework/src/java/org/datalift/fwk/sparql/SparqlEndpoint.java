@@ -76,7 +76,7 @@ import org.datalift.fwk.rdf.Repository;
  *    <dt><code>uri</code></dt>
  *    <dd>the object to describe</dd>
  *    <dt><code>type</code></dt>
- *    <dd>the object type (see {@link DescribeType})</dd>
+ *    <dd>the object type (see {@link ElementType})</dd>
  *    <dt><code>default-graph</code></dt>
  *    <dd>the RDF store to read the object description from</dd>
  *   </dl></dd>
@@ -259,7 +259,7 @@ public interface SparqlEndpoint
      * @throws SecurityException if the user is not allowed to
      *         perform the query.
      *
-     * @see    #describe(String, DescribeType, Repository, UriInfo, Request, String)
+     * @see    #describe(String, ElementType, Repository, UriInfo, Request, String, List)
      */
     public ResponseBuilder describe(String uri, ElementType type,
                                 UriInfo uriInfo, Request request,

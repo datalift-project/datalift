@@ -388,7 +388,7 @@ public class PrimitiveUtils
      *
      * @return the boolean value wrapped by the specified object;
      *         <code>def</code> if <code>b</code> is <code>null</code>.
-     * @see    Boolean#booleanValue(Boolean)
+     * @see    Boolean#booleanValue()
      */
     public static boolean booleanValue(Boolean b, boolean def) {
         return (b != null)? b.booleanValue(): def;
@@ -518,7 +518,7 @@ public class PrimitiveUtils
      * @return the value wrapped by the specified <code>Number</code>
      *         as a short; <code>0</code> if <code>b</code> is
      *         <code>null</code>.
-     * @see    #shortbyteValue(Number, int)
+     * @see    #shortValue(Number, int)
      */
     public static short shortValue(Number n) {
         return shortValue(n, 0);

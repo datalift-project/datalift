@@ -110,7 +110,7 @@ public final class I18nTool
 
     /**
      * Returns the language code from the
-     * {@link #locale() user's preferred locale}.
+     * {@link #getLocale() user's preferred locale}.
      * @return the language code from the user's preferred locale or
      *         <code>en</code> (English) if no locale information is
      *         available.
@@ -127,7 +127,7 @@ public final class I18nTool
 
     /**
      * Returns the country code from the
-     * {@link #locale() user's preferred locale}.
+     * {@link #getLocale() user's preferred locale}.
      * @return the country code from the user's preferred locale or
      *         an empty string if no locale information is available
      *         or the locale has no country code.

@@ -119,7 +119,7 @@ public enum RdfFormat
 
     /**
      * The supported RDF MIME types, in a format suitable for JAX-RS
-     * {@link Request#selectVariant(List) content negotiation.
+     * {@link Request#selectVariant(List) content negotiation}.
      */
     public final static List<Variant> VARIANTS;
 

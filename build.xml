@@ -163,11 +163,11 @@
        -->
       <link href="http://docs.oracle.com/javase/6/docs/api/"/>
       <link href="http://docs.oracle.com/javaee/5/api/"/>
-      <link href="http://www.openrdf.org/doc/sesame2/api/"/>
+      <link href="http://rdf4j.org/sesame/2.7/apidocs/"/>
       <!-- link href="http://jersey.java.net/nonav/apidocs/latest/jersey/"/ -->
       <link href="http://velocity.apache.org/engine/releases/velocity-1.7/apidocs/"/>
       <link href="http://logging.apache.org/log4j/1.2/apidocs/"/>
-      <link href="http://shiro.apache.org/static/1.1.0/apidocs/"/>
+      <link href="http://shiro.apache.org/static/latest/apidocs/"/>
     </javadoc>
   </target>
 
