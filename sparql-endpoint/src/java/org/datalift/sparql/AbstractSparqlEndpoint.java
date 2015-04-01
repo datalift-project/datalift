@@ -158,7 +158,8 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
             new MessageFormat("DESCRIBE <{0}>");
     /** The default query for object description. */ 
     private final static MessageFormat DEFAULT_DESCRIBE_OBJECT_QUERY =
-            new MessageFormat("CONSTRUCT '{' ?s1 ?p1 ?o1 ."
+            // SPARQL 1.0 compliant query (i.e. for Sesame 2.6):
+            /* new MessageFormat("CONSTRUCT '{' ?s1 ?p1 ?o1 ."
                               +            " ?o1 ?p2 ?o2 . '}'\n"
                               + "WHERE '{'\n"
                               + "  ?s1 ?p1 ?o1 .\n"
@@ -166,7 +167,8 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                               + "    ?o1 ?p2 ?o2 .\n"
                               + "    FILTER isBlank(?o1)\n  '}'\n"
                               + "  FILTER ( ?s1 = <{0}> || ?o1 = <{0}> )\n'}'");
-    /* Optimized query for SPARQL 1.1 compliant store but Sesame 2.6 is NOT!
+             */
+            // SPARQL 1.1 optimized query (for Sesame 2.7+):
             new MessageFormat("CONSTRUCT '{' ?s1 ?p1 ?o1 ."
                               +            " ?o1 ?p2 ?o2 . '}'\n"
                               + "WHERE '{'\n  '{'\n"
@@ -179,7 +181,6 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                               + "    ?s1 ?p1 ?o1 .\n"
                               + "    VALUES ?o1 '{' <{0}> '}'\n"
                               + "  '}'\n'}'");
-     */
     private final static MessageFormat DESCRIBE_PREDICATE_QUERY =
             new MessageFormat("CONSTRUCT '{' ?s <{0}> ?o . '}' WHERE '{'"
                               + " ?s <{0}> ?o . '}'");
@@ -502,8 +503,6 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
      *                            result.
      * @param  endOffset          the offset of the last expected
      *                            result.
-     * @param  gridJson           whether to return HTML table-ready
-     *                            JSON data.
      * @param  format             the expected response format,
      *                            overrides the HTTP Accept header.
      * @param  jsonCallback       the name of the JSONP callback to
@@ -551,8 +550,6 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
      *                            result.
      * @param  endOffset          the offset of the last expected
      *                            result.
-     * @param  gridJson           whether to return HTML table-ready
-     *                            JSON data.
      * @param  format             the expected response format,
      *                            overrides the HTTP Accept header.
      * @param  jsonCallback       the name of the JSONP callback to
@@ -643,16 +640,19 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
      * Whenever known, the type of description shall be provided to
      * avoid the overhead of querying the RDF store to try to detect
      * the possible applicable description types.</p>
-     * @param  uri            the URI of the object to describe.
-     * @param  type           the type of the object or
-     *                        <code>null</code> if unknown.
-     * @param  defaultGraph   the RDF store to read the object
-     *                        description from.
-     * @param  uriInfo        the request URI data.
-     * @param  request        the JAX-RS Request object, for content
-     *                        negotiation.
-     * @param  acceptHdr      the HTTP Accept header, for content
-     *                        negotiation.
+     * @param  uri                the URI of the object to describe.
+     * @param  type               the type of the object or
+     *                            <code>null</code> if unknown.
+     * @param  defaultGraphUris   the <code>default-graph-uri</code>
+     *                            parameter of the SPARQL query.
+     * @param  namedGraphUris     the <code>named-graph-uri</code>
+     *                            parameter of the SPARQL query.
+     * @param  max                the max. number of results to return.
+     * @param  uriInfo            the request URI data.
+     * @param  request            the JAX-RS Request object, for content
+     *                            negotiation.
+     * @param  acceptHdr          the HTTP Accept header, for content
+     *                            negotiation.
      *
      * @return the SPARQL query result, formatted according to the
      *         negotiated content type.
@@ -687,16 +687,19 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
      * Whenever known, the type of description shall be provided to
      * avoid the overhead of querying the RDF store to try to detect
      * the possible applicable description types.</p>
-     * @param  uri            the URI of the object to describe.
-     * @param  type           the type of the object or
-     *                        <code>null</code> if unknown.
-     * @param  defaultGraph   the RDF store to read the object
-     *                        description from.
-     * @param  uriInfo        the request URI data.
-     * @param  request        the JAX-RS Request object, for content
-     *                        negotiation.
-     * @param  acceptHdr      the HTTP Accept header, for content
-     *                        negotiation.
+     * @param  uri                the URI of the object to describe.
+     * @param  type               the type of the object or
+     *                            <code>null</code> if unknown.
+     * @param  defaultGraphUris   the <code>default-graph-uri</code>
+     *                            parameter of the SPARQL query.
+     * @param  namedGraphUris     the <code>named-graph-uri</code>
+     *                            parameter of the SPARQL query.
+     * @param  max                the max. number of results to return.
+     * @param  uriInfo            the request URI data.
+     * @param  request            the JAX-RS Request object, for content
+     *                            negotiation.
+     * @param  acceptHdr          the HTTP Accept header, for content
+     *                            negotiation.
      *
      * @return the SPARQL query result, formatted according to the
      *         negotiated content type.
