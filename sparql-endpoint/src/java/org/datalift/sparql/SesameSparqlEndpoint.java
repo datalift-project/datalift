@@ -428,8 +428,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                 response = Response.ok(this.newView("selectResult.vm", model));
             }
             else {
-                MediaType expectedType =
-                        (isSet(format))? MediaType.valueOf(format): mediaType;
+                MediaType expectedType = this.parseFormat(format, mediaType);
 
                 StreamingOutput out = this.getSelectHandlerOutput(repo,
                                         controlledQuery, startOffset, endOffset,
@@ -474,6 +473,34 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
             types = supportedTypes;
         }
         return this.getResponseType(request, expected, types);
+    }
+
+    /**
+     * Parse request format string, preventing error to propagate in
+     * case the format string is not a valid MIME type specification.
+     * @param  format   the request format parameter.
+     * @param  def      the negotiated MIME type for the response.
+     * @return the MIME type corresponding to the format or, if
+     *         invalid, the default type.
+     */
+    private MediaType parseFormat(String format, MediaType def) {
+        MediaType t = def;
+        if (isSet(format)) {
+            try {
+                // Strip additional MIME types if more than one are present.
+                int n = format.indexOf(',');
+                if (n != -1) {
+                    format = format.substring(0, n);
+                }
+                t = MediaType.valueOf(format);
+            }
+            catch (Exception e) {
+                log.warn("Invalid format specification : {}. Error: {}",
+                                                        format, e.getMessage());
+                // And return default (negotiated) MIME type.
+            }
+        }
+        return t;
     }
 
     private boolean executeAskQuery(Repository repository, String query,
