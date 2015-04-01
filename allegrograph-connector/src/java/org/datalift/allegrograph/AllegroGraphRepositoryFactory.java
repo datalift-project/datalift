@@ -70,7 +70,7 @@ public class AllegroGraphRepositoryFactory extends RepositoryFactory
      */
     public final static String ALLEGROGRAPH_REPOSITORY_TYPE = "allegrograph";
 
-    /** The regex pattern that AllegroGraph connection URL shallcomply with. */
+    /** The regex pattern that AllegroGraph connection URL shall comply with. */
     private final static Pattern AG_URL_PATTERN = Pattern.compile(
             "http://(.+?)/((catalogs/(\\w+?)/)??)repositories/(\\w+?)(/??)");
 
