@@ -245,10 +245,10 @@ public class ApplicationLoader extends LogServletContextListener
                     this.initResource(new DefaultProjectManager(), cfg));
             }
             // Execute modules second initialization step.
+            this.postInitModules(cfg);
             for (LifeCycle r : this.components) {
                 this.postInitResource(r, cfg);
             }
-            this.postInitModules(cfg);
             // So far, so good.
             log.info("DataLift initialization complete");
         }
