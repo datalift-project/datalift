@@ -60,7 +60,7 @@ public interface LifeCycle
      * Component initialization, second step.
      * <p>
      * At this stage, all components have been initialized (first step
-     * at least) so that dependencies can be resolved./p>
+     * at least) so that dependencies can be resolved.</p>
      *
      * @param  configuration   the DataLift configuration.
      */
