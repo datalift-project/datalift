@@ -52,8 +52,8 @@ import com.clarkparsia.empire.util.EmpireAnnotationProvider;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import org.datalift.fwk.Configuration;
 import org.datalift.fwk.log.Logger;
-import org.datalift.fwk.util.StringUtils;
 
 
 /**
@@ -75,7 +75,8 @@ public final class CustomAnnotationProvider implements EmpireAnnotationProvider
      * RDF-annotated classes to search for and automatically register
      * when this provider is created.
      */
-    public final static String ANNOTATED_CLASSES_PROP = "annotated.classes";
+    public final static String ANNOTATED_CLASSES_PROP =
+                                                    "rdf.persistent.classes";
 
     //-------------------------------------------------------------------------
     // Class members
@@ -104,19 +105,19 @@ public final class CustomAnnotationProvider implements EmpireAnnotationProvider
      */
     @Inject
     public CustomAnnotationProvider(@Named("ec") EmpireConfiguration cfg) {
-        String v = cfg.get(ANNOTATED_CLASSES_PROP);
-        if (StringUtils.isBlank(v)) {
-            throw new IllegalArgumentException("Missing property \""
-                                        + ANNOTATED_CLASSES_PROP
-                                        + "\" in Empire configuration");
-        }
-        for (String c : v.split("\\s*,\\s*")) {
+        // Retrieve persistent classes from Datalift configuration, as
+        // classes (instead of strings in Empire configuration), so that
+        // originating class loader information is preserved.
+        @SuppressWarnings("unchecked")
+        Collection<Class<?>> persistentClasses = (Collection<Class<?>>)
+                (Configuration.getDefault().getBean(ANNOTATED_CLASSES_PROP));
+        for (Class<?> c: persistentClasses) {
             try {
-                this.register(Class.forName(c));
+                this.register(c);
             }
             catch (Exception e) {
                 throw new RuntimeException("Failed to load class \"" +
-                                           c + "\": " + e.getMessage(), e);
+                                    c.getName() + "\": " + e.getMessage(), e);
             }
         }
     }

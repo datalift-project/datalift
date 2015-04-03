@@ -42,6 +42,7 @@ import java.net.URI;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -80,7 +81,6 @@ import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.project.XmlSource;
 import org.datalift.fwk.project.CsvSource.Separator;
 import org.datalift.fwk.rdf.RdfNamespace;
-import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.security.SecurityContext;
 
 import static org.datalift.fwk.util.StringUtils.*;
@@ -130,8 +130,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     public void postInit(Configuration configuration) {
         try {
             // Configures Empire JPA persistence provider.
-            this.emf = this.createEntityManagerFactory(
-                                        configuration.getInternalRepository());
+            this.emf = this.createEntityManagerFactory(configuration);
             // Create Data Access Object for persisting Project objects.
             this.projectDao = new GenericRdfJpaDao<Project>(
                                                 ProjectImpl.class, this.emf);
@@ -658,21 +657,22 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
      * Creates and configures a new Empire JPA EntityManagerFactory to
      * persist objects into the specified RDF repository.
      *
-     * @param  repository   the RDF repository to persist objects into.
+     * @param  cfg   the Datalift configuration.
      *
      * @return a configured Empire EntityManagerFactory.
      */
-    private EntityManagerFactory createEntityManagerFactory(
-                                                        Repository repository) {
+    private EntityManagerFactory createEntityManagerFactory(Configuration cfg) {
         // Build Empire configuration.
         Map<String,String> props = new HashMap<String,String>();
         Map<String,Map<String,String>> unitCfg =
                                     new HashMap<String, Map<String, String>>();
         // Set Empire global options.
         props.put("STRICT_MODE", Boolean.FALSE.toString());     // Lax mode.
-        // Register persistent classes in Empire configuration.
-        String classList = join(this.classes, ",").replace("class ", "");
-        props.put(CustomAnnotationProvider.ANNOTATED_CLASSES_PROP, classList);
+        // Register persistence classes through Datalift configuration to
+        // preserve originating classloader information that would be lost
+        // by passing through Empire configuration that only accepts strings.
+        cfg.registerBean(CustomAnnotationProvider.ANNOTATED_CLASSES_PROP,
+                         Collections.unmodifiableCollection(this.classes));
         // Register the path of each persistent class to Javassist bytecode
         // generation tool (otherwise object instantiation will fail in
         // multi-classloader environments (such as web apps)).
@@ -681,7 +681,10 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
             // cp.insertClassPath(new ClassClassPath(c));
             cp.appendClassPath(new LoaderClassPath(c.getClassLoader()));
         }
-        log.debug("Registered persistent classes: {}", classList);
+        if (log.isDebugEnabled()) {
+            String classList = join(this.classes, ",").replace("class ", "");
+            log.debug("Registered persistent classes: {}", classList);
+        }
         // Register custom annotation provider to retrieve the list of
         // persistent classes from Empire configuration rather than from a file.
         EmpireConfiguration empireCfg = new EmpireConfiguration(props, unitCfg);
@@ -692,7 +695,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         Map<Object, Object> map = new HashMap<Object,Object>();
         map.put(ConfigKeys.FACTORY, "sesame");
         map.put(RepositoryFactoryKeys.REPO_HANDLE,
-                                            repository.getNativeRepository());
+                cfg.getInternalRepository().getNativeRepository());
         // Create Empire JPA persistence provider.
         PersistenceProvider provider = Empire.get().persistenceProvider();
         return provider.createEntityManagerFactory("", map);
