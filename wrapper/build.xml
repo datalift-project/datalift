@@ -68,6 +68,7 @@
 
   <property name="lib.home"             location="${basedir}/lib"/>
   <property name="run.lib.home"         location="${lib.home}/runtime"/>
+  <property name="build.lib.home"       location="${lib.home}/buildtime"/>
 
   <property name="classes.dir"          location="${build.home}/classes"/>
   <property name="dist.dir"             location="${build.home}/dist"/>
@@ -130,6 +131,14 @@
   <path id="compile.classpath">
     <!-- Runtime libraries -->
     <path refid="runtime.classpath"/>
+  </path>
+
+  <path id="build.classpath">
+    <fileset dir="${build.lib.home}">
+      <include name="**/*.jar"/>
+    </fileset>
+    <!-- Compilation libraries -->
+    <path refid="compile.classpath"/>
   </path>
 
   <path id="tests.classpath">
@@ -340,23 +349,33 @@
 
   <target name="dist-mac" depends="prepare-dist"
                       description="Builds a Mac OS X binary distribution">
-    <mkdir dir="${mac.dist.dir}"/>
-    <!-- Copy Mac application directory structure -->
-    <copy todir="${mac.dist.dir}" preservelastmodified="true">
-      <fileset dir="${mac.conf}"/>
-    </copy>
-    <!-- Make sure Java wrapper is executable -->
-    <chmod perm="ugo+rx" type="file">
-      <fileset dir="${mac.dist.dir}/Contents/MacOS"/>
-    </chmod>
+    <taskdef name="jarbundler"
+        classname="net.sourceforge.jarbundler.JarBundler">
+      <classpath refid="build.classpath"/>
+    </taskdef>
+
+    <!-- java.library.path system propery should also include
+         "$USER_HOME/Library/Application Support/DataLift/lib" but no
+         operational way to escape space character in path was found. -->
+    <jarbundler name="Datalift" version="${full.app.version}"
+                 dir="${dist.home}"
+           mainclass="org.datalift.wrapper.Wrapper"
+            bundleid="org.datalift.wrapper.Wrapper"
+          infostring="Datalift ${app.version} Beta"
+                icon="${mac.conf}/Contents/Resources/datalift.icns"
+          jvmversion="1.6+"
+           vmoptions="-Xms256M -Xmx3G -Xverify:all -Xshare:off -Djava.library.path=$JAVAROOT/lib -Dsun.net.inetaddr.ttl=60"
+    workingdirectory="$APP_PACKAGE/Contents/Resources"
+            stubfile="${mac.conf}/Contents/MacOS/universalJavaApplicationStub">
+      <jarfileset dir="${gen.dist.dir}/bin">
+        <include name="**/*.jar" />
+      </jarfileset>
+    </jarbundler>
     <!-- Copy Datalift Java application -->
     <copy todir="${mac.dist.dir}/Contents/Resources"
                                           preservelastmodified="true">
-      <fileset dir="${gen.dist.dir}"/>
+      <fileset dir="${gen.dist.dir}" excludes="bin/**"/>
     </copy>
-    <move todir="${mac.dist.dir}/Contents/Resources/Java">
-      <fileset dir="${mac.dist.dir}/Contents/Resources/bin"/>
-    </move>
   </target>
 
   <target name="dist-def" depends="prepare-dist"
