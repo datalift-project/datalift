@@ -177,6 +177,9 @@ public class LocalFileStoreFactory extends FileStoreFactory
                 throw new IllegalArgumentException("from");
             }
             this.ensureManagedFile(to);
+            if (! to.exists()) {
+                to.getParentFile().mkdirs();
+            }
             FileUtils.save(from, to);
         }
 
