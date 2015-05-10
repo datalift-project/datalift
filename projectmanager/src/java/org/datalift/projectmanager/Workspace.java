@@ -48,14 +48,12 @@ import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.MissingResourceException;
-import java.util.TreeSet;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -135,6 +133,7 @@ import org.datalift.fwk.util.CloseableIterator;
 import org.datalift.fwk.util.UriBuilder;
 import org.datalift.fwk.util.io.FileUtils;
 import org.datalift.fwk.util.web.Charsets;
+import org.datalift.fwk.util.web.Menu;
 import org.datalift.fwk.view.TemplateModel;
 import org.datalift.fwk.view.ViewFactory;
 
@@ -2134,19 +2133,7 @@ public class Workspace extends BaseModule
             }
             view.put("license", l.getLabel());
             // Search for modules accepting the selected project.
-            Collection<UriDesc> modules = new TreeSet<UriDesc>(
-                    // Sort modules according to position, lower transformation
-                    // steps (i.e. direct mappers to RDF) first.
-                    new Comparator<UriDesc>() {
-                        @Override
-                        public int compare(UriDesc u1, UriDesc u2) {
-                            int v = u1.getPosition() - u2.getPosition();
-                            // Use module label to disambiguate modules
-                            // requesting the same position in list.
-                            return (v != 0)? v: u1.getLabel()
-                                                  .compareToIgnoreCase(u2.getLabel());
-                        }
-                    });
+            Menu modules = new Menu();
             for (ProjectModule m : Configuration.getDefault().getBeans(
                                                         ProjectModule.class)) {
                 try {

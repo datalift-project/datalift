@@ -35,12 +35,11 @@
 package org.datalift.fwk.project;
 
 
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 
 import org.datalift.fwk.Module;
+import org.datalift.fwk.util.web.MenuEntry;
 
 
 /**
@@ -64,16 +63,6 @@ public interface ProjectModule extends Module
      */
     public abstract UriDesc canHandle(Project p);
 
-    /**
-     * The HTTP methods supported for accessing the module entry pages.
-     * <p>
-     * As the data-lifting process is usually user-driven, modules
-     * should avoid using HTTP methods other than {@link #GET} or
-     * {@link #POST} as only these two are supported by web
-     * browsers.</p>
-     */
-    public enum HttpMethod { GET, POST, PUT, DELETE; }
-
     //-------------------------------------------------------------------------
     // UriDesc nested class
     //-------------------------------------------------------------------------
@@ -81,7 +70,7 @@ public interface ProjectModule extends Module
     /**
      * A description of the access to a module page.
      */
-    public class UriDesc
+    public class UriDesc extends MenuEntry
     {
         private final URI uri;
         private final HttpMethod method;
@@ -139,6 +128,7 @@ public interface ProjectModule extends Module
          * @param  label    the page description to display to the user.
          */
         public UriDesc(URI uri, HttpMethod method, String label) {
+            super();
             if (uri == null) {
                 throw new IllegalArgumentException("uri");
             }
@@ -159,20 +149,6 @@ public interface ProjectModule extends Module
          */
         public URI getUri() {
             return this.uri;
-        }
-
-        /**
-         * Returns the page URL, resolved using the specified
-         * (absolute) base URI.
-         * @param  baseUri   the base URI to resolve the page URI, if
-         *                   relative.
-         *
-         * @return the page URL.
-         * @throws MalformedURLException if no valid URL can be built
-         *         from the page URI of if the base URI is invalid.
-         */
-        public String getUrl(String baseUri) throws MalformedURLException {
-            return this.toUrl(baseUri, this.getUri());
         }
 
         /**
@@ -240,49 +216,6 @@ public interface ProjectModule extends Module
          */
         public URI getIcon() {
             return this.icon;
-        }
-
-        /**
-         * <i>Reserved for future use</i>.
-         * @param  baseUri   the application base URI.
-         *
-         * @return the absolute URL of the module icon file.
-         * @throws MalformedURLException if an error occurred building
-         *         the icon file URL.
-         */
-        public String getIcon(String baseUri) throws MalformedURLException {
-            return this.toUrl(baseUri, this.getIcon());
-        }
-
-        //---------------------------------------------------------------------
-        // Object contract support
-        //---------------------------------------------------------------------
-
-        /** {@inheritDoc} */
-        @Override
-        public String toString() {
-            return this.label + " -> " + this.method + ' ' + this.uri;
-        }
-
-        //---------------------------------------------------------------------
-        // Specific implementation
-        //---------------------------------------------------------------------
-
-        private String toUrl(String baseUri, URI uri)
-                                                throws MalformedURLException {
-            String url = null;
-            if (uri != null) {
-                if (baseUri != null) {
-                    if (! baseUri.endsWith("/")) {
-                        baseUri += '/';
-                    }
-                    url = new URL(new URL(baseUri), uri.toString()).toString();
-                }
-                else {
-                    url = this.getUri().toString();
-                }
-            }
-            return url;
         }
     }
 }

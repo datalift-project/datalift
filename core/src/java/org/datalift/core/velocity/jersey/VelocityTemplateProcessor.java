@@ -88,6 +88,7 @@ import org.datalift.core.velocity.sparql.SparqlTool;
 import org.datalift.fwk.i18n.PreferredLocales;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.security.SecurityContext;
+import org.datalift.fwk.util.web.MainMenu;
 import org.datalift.fwk.view.TemplateModel;
 
 import static org.datalift.fwk.util.StringUtils.*;
@@ -122,6 +123,8 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
     public final static String CTX_FIELD_TOOL       = "field";
     /** The context key for Datalift SPARQL tool. */
     public final static String CTX_SPARQL_TOOL      = "sparql";
+    /** The context key for Datalift main menu. */
+    public final static String CTX_MAIN_MENU        = "mainMenu";
 
     /** The context key for the HTTP servlet request object. */
     public final static String CTX_HTTP_REQUEST     = "request";
@@ -323,6 +326,9 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
             }
             if (! ctx.containsKey(CTX_SPARQL_TOOL)) {
                 ctx.put(CTX_SPARQL_TOOL, new SparqlTool());
+            }
+            if (! ctx.containsKey(CTX_MAIN_MENU)) {
+                ctx.put(CTX_MAIN_MENU, MainMenu.get());
             }
             VelocityContext context = new VelocityContext(ctx);
             // Prepare writing into HTTP response.

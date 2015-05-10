@@ -78,6 +78,7 @@ import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.rdf.ElementType;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.sparql.SparqlEndpoint;
+import org.datalift.fwk.util.web.MenuEntry.HttpMethod;
 import org.datalift.fwk.view.TemplateModel;
 import org.datalift.fwk.view.ViewFactory;
 
