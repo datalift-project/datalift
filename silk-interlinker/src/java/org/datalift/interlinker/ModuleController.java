@@ -1,9 +1,7 @@
 package org.datalift.interlinker;
 
 import java.io.ObjectStreamException;
-
 import java.net.URI;
-
 import java.util.ResourceBundle;
 
 import javax.ws.rs.GET;
@@ -30,6 +28,7 @@ import org.datalift.fwk.view.TemplateModel;
 import org.datalift.fwk.view.ViewFactory;
 
 import static javax.ws.rs.core.HttpHeaders.ACCEPT;
+
 import static org.datalift.fwk.MediaTypes.*;
 
 /**
@@ -63,8 +62,6 @@ public abstract class ModuleController extends BaseModule implements ProjectModu
     protected int position;
     /** The requested module label in menu. */
     protected String label;
-    /** The HTTP method to access the module entry page. */
-    protected final HttpMethod accessMethod;
     /** The DataLift project manager. */
     protected ProjectManager projectManager;
     
@@ -78,23 +75,9 @@ public abstract class ModuleController extends BaseModule implements ProjectModu
      * @param pos Position of the module's button.
      */
     public ModuleController(String name, int pos) {
-       this(name,pos,HttpMethod.GET);
-    }
-    
-    /**
-     * Interlinking controller with custom access Method
-     * @param name Name of the module
-     * @param pos Position of the module's button.
-     * @param method access method to get the description of the module's uri
-     */
-    public ModuleController(String name, int pos, HttpMethod method){
-    	 super(name);
-         this.position = pos;
-         this.label = getTranslatedResource(name + ".button");
-         if (method == null) {
-             throw new IllegalArgumentException("method");
-         }
-         this.accessMethod = method;
+        super(name);
+        this.position = pos;
+        this.label = getTranslatedResource(name + ".button");
     }
     
     //-------------------------------------------------------------------------

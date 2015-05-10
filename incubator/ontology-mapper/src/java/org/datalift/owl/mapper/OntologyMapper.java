@@ -196,8 +196,7 @@ public class OntologyMapper extends BaseModule implements ProjectModule
                                 .getString("ontology.mapper.button");
 
                     projectPage = new UriDesc(
-                                    this.getName() + "?project=" + p.getUri(),
-                                    HttpMethod.GET, label);
+                            this.getName() + "?project=" + p.getUri(), label);
                     projectPage.setPosition(MODULE_POSITION);
                 }
                 catch (Exception e) {

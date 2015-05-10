@@ -37,9 +37,9 @@ import static org.datalift.fwk.MediaTypes.*;
  *
  * @author csuglia
  */
-public abstract class ModuleController extends BaseModule implements ProjectModule {
-
-	//-------------------------------------------------------------------------
+public abstract class ModuleController extends BaseModule implements ProjectModule
+{
+    //-------------------------------------------------------------------------
     // Constants
     //-------------------------------------------------------------------------
 
@@ -61,8 +61,6 @@ public abstract class ModuleController extends BaseModule implements ProjectModu
     protected int position;
     /** The requested module label in menu. */
     protected String label;
-    /** The HTTP method to access the module entry page. */
-    protected final HttpMethod accessMethod;
     /** The DataLift project manager. */
     protected ProjectManager projectManager;
 
@@ -76,23 +74,9 @@ public abstract class ModuleController extends BaseModule implements ProjectModu
      * @param pos Position of the module's button.
      */
     public ModuleController(String name, int pos) {
-       this(name,pos,HttpMethod.GET);
-    }
-
-    /**
-     * Interlinking controller with custom access Method
-     * @param name Name of the module
-     * @param pos Position of the module's button.
-     * @param method access method to get the description of the module's uri
-     */
-    public ModuleController(String name, int pos, HttpMethod method){
-    	 super(name);
-         this.position = pos;
-         this.label = getTranslatedResource(name + ".label");
-         if (method == null) {
-             throw new IllegalArgumentException("method");
-         }
-         this.accessMethod = method;
+        super(name);
+        this.position = pos;
+        this.label = getTranslatedResource(name + ".label");
     }
 
     //-------------------------------------------------------------------------
@@ -113,15 +97,15 @@ public abstract class ModuleController extends BaseModule implements ProjectModu
     }
 
     /**
-	 * Resource getter.
-	 * @param key The key to retrieve.
-	 * @return The value of key.
-	 */
-	protected String getTranslatedResource(String key) {
-		return PreferredLocales.get().getBundle(GUI_RESOURCES_BUNDLE, ModuleController.class).getString(key);
-	}
+     * Resource getter.
+     * @param key The key to retrieve.
+     * @return The value of key.
+     */
+    protected String getTranslatedResource(String key) {
+        return PreferredLocales.get().getBundle(GUI_RESOURCES_BUNDLE, ModuleController.class).getString(key);
+    }
 
-	/**
+    /**
      * Handles the Velocity templates.
      * @param templateName Name of the template to parse.
      * @param it Parameters for the template.
@@ -176,9 +160,9 @@ public abstract class ModuleController extends BaseModule implements ProjectModu
      * source list, basing on the redirect velocity script.
      */
     protected ResponseBuilder getSourceListPage(Source src){
-    	String targetUrl = src.getProject().getUri() + "#source";
-    	TemplateModel template = ViewFactory.newView("/" + this.getName() + "/redirect.vm" ,targetUrl);
-    	return Response.created(URI.create(src.getUri()))
+        String targetUrl = src.getProject().getUri() + "#source";
+        TemplateModel template = ViewFactory.newView("/" + this.getName() + "/redirect.vm" ,targetUrl);
+        return Response.created(URI.create(src.getUri()))
                    .entity(template)
                    .type(TEXT_HTML_UTF8);
     }
@@ -208,9 +192,10 @@ public abstract class ModuleController extends BaseModule implements ProjectModu
             view.put("it", p);
             view.put("module", this);
             response = Response.ok(view, TEXT_HTML_UTF8).build();
-        }catch(ObjectStreamException e){
-        	log.fatal(e);
-        	throw new RuntimeException(e);
+        }
+        catch(ObjectStreamException e){
+            log.fatal(e);
+            throw new RuntimeException(e);
         }
         return response;
     }
@@ -227,25 +212,25 @@ public abstract class ModuleController extends BaseModule implements ProjectModu
      *        The uri of the module if there are sources that can be converted.
      */
     @Override
-	public UriDesc canHandle(Project p) {
-		UriDesc modulePage = null;
-		try {
-			for(Source source : p.getSources()){
-				//if there is at least one source handlable by the module add the button
-				if(canHandle(source)){
-					modulePage = new UriDesc(this.getName() + "?project=" + p.getUri(), accessMethod,
-							this.label);
-					if(this.position > 0){
-						modulePage.setPosition(this.position);
-					}
-					break;
-				}
-			}
-		} catch (URISyntaxException e) {
-			throw new TechnicalException("Wrong.uri.syntax", e);
-		}
-		return modulePage;
-	}
+    public UriDesc canHandle(Project p) {
+        UriDesc modulePage = null;
+        try {
+            for (Source source : p.getSources()) {
+                //if there is at least one source handlable by the module add the button
+                if(canHandle(source)){
+                    modulePage = new UriDesc(this.getName() + "?project=" + p.getUri(),
+                                             this.label);
+                    if(this.position > 0){
+                        modulePage.setPosition(this.position);
+                    }
+                    break;
+                }
+            }
+        } catch (URISyntaxException e) {
+            throw new TechnicalException("Wrong.uri.syntax", e);
+        }
+        return modulePage;
+    }
 
     //-------------------------------------------------------------------------
     // Module contract support

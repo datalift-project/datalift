@@ -106,8 +106,6 @@ extends BaseModule implements ProjectModule
 	protected final Collection<SourceType> inputSources;
 	/** The requested module position in menu. */
 	protected final int position;
-	/** The HTTP method to access the module entry page. */
-	protected final HttpMethod accessMethod;
 
 	/** The DataLift project manager. */
 	protected ProjectManager projectManager = null;
@@ -126,26 +124,7 @@ extends BaseModule implements ProjectModule
 	 */
 	public BaseConverterModule(String name, int position,
 			SourceType... inputSources) {
-		this(name, position, HttpMethod.GET, inputSources);
-	}
-
-	/**
-	 * Creates a new module instance.
-	 * @param  name           the module name.
-	 * @param  position       the requested module position in menu.
-	 * @param  method         the HTTP method (GET or POST) to access
-	 *                        the module entry page.
-	 * @param  inputSources   the types of sources this module expects
-	 *                        as input.
-	 */
-	public BaseConverterModule(String name, int position,
-			HttpMethod method, SourceType... inputSources) {
 		super(name);
-
-		if (method == null) {
-			throw new IllegalArgumentException("method");
-		}
-		this.accessMethod = method;
 		this.position = position;
 
 		if ((inputSources == null) || (inputSources.length == 0)) {
@@ -184,7 +163,7 @@ extends BaseModule implements ProjectModule
 
 					projectPage = new UriDesc(
 							this.getName() + "?project=" + p.getUri(),
-							this.accessMethod, label);
+							label);
 					if (this.position > 0) {
 						projectPage.setPosition(this.position);
 					}
