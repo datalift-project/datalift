@@ -40,6 +40,11 @@ import java.net.URI;
 import java.net.URL;
 
 
+/**
+ * An entry in a {@link Menu GUI menu}.
+ *
+ * @author lbihanic
+ */
 abstract public class MenuEntry implements Comparable<MenuEntry>
 {
     // ------------------------------------------------------------------------
@@ -143,6 +148,15 @@ abstract public class MenuEntry implements Comparable<MenuEntry>
     // Specific implementation
     // ------------------------------------------------------------------------
 
+    /**
+     * Build a URL string.
+     * @param baseUri   the application base URI (context).
+     * @param uri       the page URI.
+     * @return the stringified URL, built by concatenating the page URI
+     *         to the base URI.
+     * @throws MalformedURLException if the constructed URI is not a
+     *         valid URL.
+     */
     protected final String toUrl(String baseUri, URI uri)
                                             throws MalformedURLException {
         String url = null;
