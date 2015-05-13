@@ -39,7 +39,9 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.MissingResourceException;
+import java.util.NoSuchElementException;
 
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.i18n.PreferredLocales;
@@ -55,6 +57,18 @@ import org.datalift.fwk.util.web.MenuEntry.HttpMethod;
  */
 public class MainMenu extends Menu
 {
+    // ------------------------------------------------------------------------
+    // Constants
+    // ------------------------------------------------------------------------
+
+    /**
+     * The default name for resource bundles: "<code>resources</code>",
+     * which corresponds to:
+     * <code>&lt;module-name&gt;/resources_&lt;locale&gt;.properties</code>.
+     * For example: <code>sparql/resources_fr.properties</code>
+     */
+    public final static String DEFAULT_BUNDLE_NAME = "resources";
+
     // ------------------------------------------------------------------------
     // Class members
     // ------------------------------------------------------------------------
@@ -75,6 +89,48 @@ public class MainMenu extends Menu
      */
     private MainMenu() {
         super();
+    }
+
+    // ------------------------------------------------------------------------
+    // Collection contract support
+    // ------------------------------------------------------------------------
+
+    /** {@inheritDoc} */
+    @Override
+    public Iterator<MenuEntry> iterator() {
+        final Iterator<MenuEntry> i = super.iterator();
+        final MenuEntry first = (i.hasNext())? i.next(): null;
+
+        return new Iterator<MenuEntry>() {
+            private MenuEntry next = first;
+
+            @Override
+            public boolean hasNext() {
+                return (this.next != null);
+            }
+
+            @Override
+            public MenuEntry next() {
+                MenuEntry e = this.next;
+                if (e == null) {
+                    throw new NoSuchElementException();
+                }
+                this.next = null;
+                while (i.hasNext()) {
+                    MenuEntry n = i.next();
+                    if (n.isAccessible()) {
+                        this.next = n;
+                        break;
+                    }
+                }
+                return e;
+            }
+
+            @Override
+            public void remove() {
+                i.remove();
+            }
+        };
     }
 
     // ------------------------------------------------------------------------
