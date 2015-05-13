@@ -368,7 +368,7 @@
     workingdirectory="$APP_PACKAGE/Contents/Resources"
             stubfile="${mac.conf}/Contents/MacOS/universalJavaApplicationStub">
       <jarfileset dir="${gen.dist.dir}/bin">
-        <include name="**/*.jar" />
+        <include name="**/*.jar"/>
       </jarfileset>
     </jarbundler>
     <!-- Copy Datalift Java application -->
@@ -383,7 +383,9 @@
     <mkdir dir="${def.dist.dir}"/>
     <!-- Copy Windows application excutable and Linux start-up script-->
     <copy todir="${def.dist.dir}" preservelastmodified="true">
-      <fileset dir="${windows.conf}"/>
+      <fileset dir="${windows.conf}">
+        <include name="**/*.exe"/>
+      </fileset>
       <fileset dir="${linux.conf}"/>
     </copy>
     <!-- Make sure shell-script are executable -->
