@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Generation of Windows Datalift wrapper (Datalift.exe) shall be performed
+     by running the following command from the Wrapper root directory
+     (datalift/wrapper) :
+         launch4jc.exe .\conf\windows\datalift-wrapper.xml
+ -->
+<launch4jConfig>
+  <headerType>console</headerType>
+  <outfile>Datalift.exe</outfile>
+  <jar>.\bin\datalift-wrapper.jar</jar>
+  <dontWrapJar>true</dontWrapJar>
+  <errTitle>Datalift</errTitle>
+  <downloadUrl>http://java.com/download</downloadUrl>
+  <supportUrl></supportUrl>
+  <cmdLine></cmdLine>
+  <chdir>.</chdir>
+  <priority>normal</priority>
+  <stayAlive>false</stayAlive>
+  <restartOnCrash>false</restartOnCrash>
+  <manifest></manifest>
+  <icon>datalift.ico</icon>
+  <singleInstance>
+    <mutexName>datalift-wrapper</mutexName>
+    <windowTitle></windowTitle>
+  </singleInstance>
+  <jre>
+    <path></path>
+    <bundledJre64Bit>false</bundledJre64Bit>
+    <bundledJreAsFallback>false</bundledJreAsFallback>
+    <minVersion>1.6.0</minVersion>
+    <jdkPreference>preferJdk</jdkPreference>
+    <runtimeBits>64/32</runtimeBits>
+  </jre>
+</launch4jConfig>
