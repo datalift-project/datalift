@@ -46,6 +46,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
@@ -133,6 +134,7 @@ import org.datalift.fwk.util.CloseableIterator;
 import org.datalift.fwk.util.UriBuilder;
 import org.datalift.fwk.util.io.FileUtils;
 import org.datalift.fwk.util.web.Charsets;
+import org.datalift.fwk.util.web.MainMenu;
 import org.datalift.fwk.util.web.Menu;
 import org.datalift.fwk.view.TemplateModel;
 import org.datalift.fwk.view.ViewFactory;
@@ -247,6 +249,8 @@ public class Workspace extends BaseModule
         }
         // Load licenses.
         this.loadLicenses(configuration);
+        // Register main menu entry.
+        this.registerToMainMenu();
     }
 
     /** {@inheritDoc} */
@@ -2603,6 +2607,16 @@ public class Workspace extends BaseModule
     private final FileStore getFileStore(Configuration cfg) {
         FileStore fs = cfg.getPublicStorage();
         return (fs != null)? fs: cfg.getPrivateStorage();
+    }
+
+    /**
+     * Register one main menu entry to access the project workspace.
+     */
+    private void registerToMainMenu() {
+        MainMenu.get().add(new MainMenu.EntryDesc(
+                        MODULE_NAME, "project.workspace.link",
+                        MainMenu.DEFAULT_BUNDLE_NAME, this,
+                        10, new ArrayList<String>()));
     }
 
     private void registerNamespacePrefix(String prefix, String uri) {

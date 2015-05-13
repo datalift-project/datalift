@@ -49,6 +49,7 @@ import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.ResourceResolver;
+import org.datalift.fwk.util.web.MainMenu;
 import org.datalift.sparql.SesameSparqlEndpoint;
 
 
@@ -64,6 +65,8 @@ public class FlintSparqlEditor extends SesameSparqlEndpoint
     // Constants
     //-------------------------------------------------------------------------
 
+    /** Legacy endpoint path. */
+    private final static String LEGACY_ENDPOINT_PATH = "legacy";
     /** The name of the template for the endpoint welcome page. */
     private final static String WELCOME_TEMPLATE = "flintEditor.vm";
 
@@ -110,8 +113,23 @@ public class FlintSparqlEditor extends SesameSparqlEndpoint
     }
 
     @GET
-    @Path("legacy")
+    @Path(LEGACY_ENDPOINT_PATH)
     public Response getLegacyWelcomePage() {
         return this.displayWelcomePage(DEFAULT_WELCOME_TEMPLATE).build();
+    }
+
+    /**
+     * Register one (or several) main menu entry(ies) to access this
+     * SPARQL endpoint.
+     */
+    @Override
+    protected void registerToMainMenu() {
+        MainMenu.get().add(new MainMenu.EntryDesc(
+                        MODULE_NAME + '/' + LEGACY_ENDPOINT_PATH,
+                        "legacy.endpoint.title",
+                        MainMenu.DEFAULT_BUNDLE_NAME, this, 1, null));
+        MainMenu.get().add(new MainMenu.EntryDesc(
+                        MODULE_NAME, "flint.endpoint.title",
+                        MainMenu.DEFAULT_BUNDLE_NAME, this, 2, null));
     }
 }

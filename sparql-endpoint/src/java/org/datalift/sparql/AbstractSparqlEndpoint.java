@@ -101,6 +101,7 @@ import org.datalift.fwk.rdf.TupleQueryResultMapper;
 import org.datalift.fwk.security.SecurityContext;
 import org.datalift.fwk.sparql.SparqlEndpoint;
 import org.datalift.fwk.util.StringUtils;
+import org.datalift.fwk.util.web.MainMenu;
 import org.datalift.fwk.view.TemplateModel;
 import org.datalift.fwk.view.ViewFactory;
 
@@ -286,6 +287,8 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         // Load predefined SPARQL queries.
         this.predefinedQueries = Collections.unmodifiableList(
                                     this.loadPredefinedQueries(configuration));
+        // Register main menu entry(ies).
+        this.registerToMainMenu();
     }
 
     /**
@@ -938,6 +941,16 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
             // Else: use default value.
         }
         return value;
+    }
+
+    /**
+     * Register one (or several) main menu entry(ies) to access this
+     * SPARQL endpoint.
+     */
+    protected void registerToMainMenu() {
+        MainMenu.get().add(new MainMenu.EntryDesc(
+                        MODULE_NAME, "sparql.endpoint.title",
+                        MainMenu.DEFAULT_BUNDLE_NAME, this, 1, null));
     }
 
     /**
