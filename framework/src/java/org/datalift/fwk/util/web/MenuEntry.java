@@ -39,6 +39,8 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 
+import org.datalift.fwk.security.SecurityContext;
+
 
 /**
  * An entry in a {@link Menu GUI menu}.
@@ -120,6 +122,15 @@ abstract public class MenuEntry implements Comparable<MenuEntry>
     public String getIcon(String baseUri) throws MalformedURLException {
         return this.toUrl(baseUri, this.getIcon());
     }
+
+    /**
+     * Returns whether this entry is accessible, security-wise, to the
+     * {@link SecurityContext current user} (either anonymous or logged
+     * in with a set of roles).
+     * @return <code>true</code> if this menu entry is accessible to the
+     *         current user, <code>false</code> otherwise.
+     */
+    abstract public boolean isAccessible();
 
     // ------------------------------------------------------------------------
     // Comparable contract support

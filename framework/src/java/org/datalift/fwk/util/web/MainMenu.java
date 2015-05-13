@@ -36,11 +36,15 @@ package org.datalift.fwk.util.web;
 
 
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.MissingResourceException;
 
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.i18n.PreferredLocales;
 import org.datalift.fwk.log.Logger;
+import org.datalift.fwk.security.SecurityContext;
 import org.datalift.fwk.util.web.MenuEntry.HttpMethod;
 
 
@@ -118,6 +122,7 @@ public class MainMenu extends Menu
         private final String bundleName;
         private final Class<?> owner;
         private final int position;
+        private final Collection<String> roles;
         private boolean bundleErrorLogged = false;
 
         // --------------------------------------------------------------------
@@ -136,6 +141,11 @@ public class MainMenu extends Menu
          *                     retrieving the classloader capable of
          *                     loading the resource bundle.
          * @param position     the entry position in the menu.
+         * @param roles        the security roles required to access the
+         *                     menu entry, <code>null</code> if entry is
+         *                     public or an empty list if authentication
+         *                     is mandated but no specific role is
+         *                     required.
          *
          * @throws IllegalArgumentException if <code>label</code> is
          *         <code>null</code> or if <code>position</code> is
@@ -144,8 +154,8 @@ public class MainMenu extends Menu
          *         <code>uri</code> is <code>null</code>.
          */
         public EntryDesc(String uri, String label, String bundleName,
-                                     Object owner, int position) {
-            this(uri, null, label, bundleName, owner, position);
+                         Object owner, int position, Collection<String> roles) {
+            this(uri, null, label, bundleName, owner, position, roles);
         }
 
         /**
@@ -160,6 +170,11 @@ public class MainMenu extends Menu
          *                     retrieving the classloader capable of
          *                     loading the resource bundle.
          * @param position     the entry position in the menu.
+         * @param roles        the security roles required to access the
+         *                     menu entry, <code>null</code> if entry is
+         *                     public or an empty list if authentication
+         *                     is mandated but no specific role is
+         *                     required.
          *
          * @throws IllegalArgumentException if <code>label</code> is
          *         <code>null</code> or if <code>position</code> is
@@ -168,9 +183,10 @@ public class MainMenu extends Menu
          *         <code>uri</code> is <code>null</code>.
          */
         public EntryDesc(String uri, HttpMethod method, String label,
-                         String bundleName, Object owner, int position) {
+                         String bundleName, Object owner, int position,
+                         Collection<String> roles) {
             this(URI.create(uri), method, label, bundleName, owner.getClass(),
-                 position);
+                 position, roles);
         }
 
         /**
@@ -185,13 +201,19 @@ public class MainMenu extends Menu
          *                     retrieving the classloader capable of
          *                     loading the resource bundle.
          * @param position     the entry position in the menu.
+         * @param roles        the security roles required to access the
+         *                     menu entry, <code>null</code> if entry is
+         *                     public or an empty list if authentication
+         *                     is mandated but no specific role is
+         *                     required.
          *
          * @throws IllegalArgumentException if <code>label</code> or
          *         <code>uri</code> is <code>null</code> or if
          *         <code>position</code> is negative.
          */
         public EntryDesc(URI uri, HttpMethod method, String label,
-                         String bundleName, Class<?> owner, int position) {
+                         String bundleName, Class<?> owner, int position,
+                         Collection<String> roles) {
             super();
             if (uri == null) {
                 throw new IllegalArgumentException("uri");
@@ -209,6 +231,9 @@ public class MainMenu extends Menu
             this.bundleName = bundleName;
             this.owner = (owner != null)? owner: this.getClass();
             this.position = position;
+            this.roles = (roles == null)? null:
+                            Collections.unmodifiableCollection(
+                                                new ArrayList<String>(roles));
         }
 
         // --------------------------------------------------------------------
@@ -264,6 +289,31 @@ public class MainMenu extends Menu
         @Override
         public URI getIcon() {
             return null;
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public boolean isAccessible() {
+            // No role list provided = entry is public.
+            boolean accessible = (this.roles == null);
+            if (! accessible) {
+                if (roles.isEmpty()) {
+                    // Empty role list => Just check user has logged in.
+                    accessible = (SecurityContext.getUserPrincipal() != null);
+                }
+                else {
+                    // Check that at least one of the user roles matches
+                    // one of the required roles.
+                    SecurityContext ctx = SecurityContext.getContext();
+                    for (String role : this.roles) {
+                        if (ctx.hasRole(role)) {
+                            accessible = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            return accessible;
         }
     }
 }

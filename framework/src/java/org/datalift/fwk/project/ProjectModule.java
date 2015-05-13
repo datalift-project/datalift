@@ -51,6 +51,10 @@ import org.datalift.fwk.util.web.MenuEntry;
  */
 public interface ProjectModule extends Module
 {
+    // ------------------------------------------------------------------------
+    // ProjectModule contract definition
+    // ------------------------------------------------------------------------
+
     /**
      * Returns whether this module applies to the specified project,
      * i.e. the project current state allows data manipulation (e.g.
@@ -63,20 +67,28 @@ public interface ProjectModule extends Module
      */
     public abstract UriDesc canHandle(Project p);
 
-    //-------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
     // UriDesc nested class
-    //-------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
 
     /**
      * A description of the access to a module page.
      */
     public class UriDesc extends MenuEntry
     {
+        // --------------------------------------------------------------------
+        // Instance members
+        // --------------------------------------------------------------------
+
         private final URI uri;
         private final HttpMethod method;
         private final String label;
         private URI icon;
         private int position = 5000;
+
+        // --------------------------------------------------------------------
+        // Constructors
+        // --------------------------------------------------------------------
 
         /**
          * Creates the description of a URI accessible using the HTTP
@@ -143,29 +155,58 @@ public interface ProjectModule extends Module
             this.label = label;
         }
 
-        /**
-         * Returns the page (relative) URI.
-         * @return the page URI.
-         */
+        // --------------------------------------------------------------------
+        // MenuEntry contract support
+        // --------------------------------------------------------------------
+
+        /** {@inheritDoc} */
+        @Override
         public URI getUri() {
             return this.uri;
         }
 
-        /**
-         * Returns the HTTP method to access the page.
-         * @return the HTTP method.
-         */
+        /** {@inheritDoc} */
+        @Override
         public HttpMethod getMethod() {
             return this.method;
         }
 
-        /**
-         * Returns the description of the page to display to the user.
-         * @return the description of the page.
-         */
+        /** {@inheritDoc} */
+        @Override
         public String getLabel() {
             return this.label;
         }
+
+        /**
+         * {@inheritDoc}
+         * <p>
+         * Default value is 5000.</p>
+         */
+        @Override
+        public int getPosition() {
+            return this.position;
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public URI getIcon() {
+            return this.icon;
+        }
+
+        /**
+         * {@inheritDoc}
+         * @return <code>true</code> always, as access control shall
+         *         have been performed by
+         *         {@link ProjectModule#canHandle(Project)}.
+         */
+        @Override
+        public boolean isAccessible() {
+            return true;
+        }
+
+        // --------------------------------------------------------------------
+        // Specific implementation
+        // --------------------------------------------------------------------
 
         /**
          * Sets the position where the module page shall appear in
@@ -192,30 +233,11 @@ public interface ProjectModule extends Module
         }
 
         /**
-         * Returns the position at which the module page shall appear
-         * in the list of modules applicable to a project.
-         * <p>
-         * Default value is 5000.</p>
-         * @return the module page position.
-         */
-        public int getPosition() {
-            return this.position;
-        }
-
-        /**
          * <i>Reserved for future use</i>.
          * @param  icon   the module icon or <code>null</code>.
          */
         public void setIcon(URI icon) {
             this.icon = icon;
-        }
-
-        /**
-         * <i>Reserved for future use</i>.
-         * @return the module icon or <code>null</code>.
-         */
-        public URI getIcon() {
-            return this.icon;
         }
     }
 }
