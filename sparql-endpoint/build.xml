@@ -105,6 +105,8 @@
   <property name="dist.home"            location="${basedir}/dist"/>
 
   <property name="src.home"             location="${basedir}/src/java"/>
+  <property name="lib.home"             location="${basedir}/lib"/>
+  <property name="run.lib.home"         location="${lib.home}/runtime"/>
   <property name="web.home"             location="${basedir}/src/web"/>
 
   <property name="fwk.web.home"         location="${fwk.home}/src/web"/>
@@ -155,6 +157,9 @@
 
   <path id="runtime.classpath">
     <!-- Include all JAR files that will be included in webapp WAR -->
+    <fileset dir="${run.lib.home}">
+      <include name="**/*.jar"/>
+    </fileset>
     <fileset dir="${fwk.run.libs}">
       <include name="**/*.jar"/>
     </fileset>
@@ -291,6 +296,12 @@
     <copy todir="${classes.dir}" includeEmptyDirs="false"
                                  preservelastmodified="true">
       <fileset dir="${web.home}" excludes="**/*.vm,**/.*"/>
+    </copy>
+    <!-- Copy runtime JARs to embed in distribution -->
+    <copy todir="${classes.dir}" flatten="true">
+      <fileset dir="${run.lib.home}">
+        <include name="**/*.jar"/>
+      </fileset>
     </copy>
     <!-- Create build directories as needed -->
     <mkdir dir="${dist.home}"/>

@@ -96,6 +96,8 @@ import org.openrdf.rio.turtle.TurtleWriter;
 import static org.openrdf.query.QueryLanguage.SPARQL;
 import static org.openrdf.query.resultio.BasicQueryWriterSettings.JSONP_CALLBACK;
 
+import com.github.jsonldjava.sesame.SesameJSONLDWriter;
+
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.rdf.ElementType;
 import org.datalift.fwk.rdf.QueryDescription;
@@ -177,6 +179,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                     new Variant(APPLICATION_TRIG_TYPE, null, null),
                     new Variant(APPLICATION_TRIX_TYPE, null, null),
                     new Variant(APPLICATION_SPARQL_RESULT_JSON_TYPE, null, null),
+                    new Variant(APPLICATION_JSON_LD_TYPE, null, null),
                     new Variant(APPLICATION_RDF_JSON_TYPE, null, null),
                     new Variant(APPLICATION_JSON_TYPE, null, null),
                     new Variant(TEXT_HTML_TYPE, null, null),
@@ -633,9 +636,19 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
         StreamingOutput handler = null;
 
         MediaType mediaType = v.getMediaType();
-        if ((mediaType.isCompatible(APPLICATION_JSON_TYPE)) ||
-            (mediaType.isCompatible(APPLICATION_RDF_JSON_TYPE)) ||
-            (mediaType.isCompatible(APPLICATION_SPARQL_RESULT_JSON_TYPE))) {
+        if (mediaType.isCompatible(APPLICATION_JSON_LD_TYPE)) {
+            handler = new ConstructStreamingOutput(repository, query,
+                            startOffset, endOffset, baseUri, dataset, userQuery)
+                {
+                    @Override
+                    protected RDFHandler newHandler(OutputStream out) {
+                        return new SesameJSONLDWriter(out);
+                    }
+                };
+        }
+        else if ((mediaType.isCompatible(APPLICATION_JSON_TYPE)) ||
+                 (mediaType.isCompatible(APPLICATION_RDF_JSON_TYPE)) ||
+                 (mediaType.isCompatible(APPLICATION_SPARQL_RESULT_JSON_TYPE))) {
             final MessageFormat linkFormat =
                     this.getDescribeLinkFormat(baseUri, repository, dataset);
             if (isGridJson(expectedType)) {
