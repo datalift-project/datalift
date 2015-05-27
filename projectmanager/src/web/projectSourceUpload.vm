@@ -32,10 +32,16 @@
 </head>
 <body>
 #banner
-<div style="position:absolute;top:15px;right:15px;">
-	<a href="${baseUri}/sparql" id="goto_sparql" class="button">#i18n("sparql.endpoint.link")</a>
-	<a href="${baseUri}/project" id="goto_workspace" class="button">#i18n("project.workspace.link")</a>
-</div>
+	<div id="main-menu" style="position:absolute;top:15px;right:15px;">
+#foreach( $m in $mainMenu )
+#set( $entryUrl = $m.getUrl(${baseUri}) )
+#if( $m.method.name() == "GET" )
+		<a href="${entryUrl}" class="button">${m.label}</a>
+#else
+		<form method="post" action="${entryUrl}"><input type="submit" class="button" value="${m.label}"/></form>
+#end
+#end
+	</div>
 
 <div id="content" class="ui-widget-content dl-main-panel">
 <h3 class="ui-widget-header dl-widget-header">#i18n($title) - #i18n("project") $esc.html($it.title)</h3>
@@ -422,9 +428,9 @@
 				    }
 				});
 
-		$("#goto_sparql").button();
-		$("#goto_workspace").button();
+		$("#main-menu .button").button();
 		$("input:submit").button();
+
 		$("#accordion").accordion({
 			autoHeight: false,
 			navigation: true,

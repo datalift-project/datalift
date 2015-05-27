@@ -9,9 +9,17 @@
 </head>
 <body>
 #banner
-<div style="position:absolute;top:15px;right:15px;">
-	<a href="${baseUri}/sparql" id="goto_sparql" class="button">#i18n("sparql.endpoint.link")</a>
-</div>
+	<div id="main-menu" style="position:absolute;top:15px;right:15px;">
+#foreach( $m in $mainMenu )
+#set( $entryUrl = $m.getUrl(${baseUri}) )
+#if( $m.method.name() == "GET" )
+		<a href="${entryUrl}" class="button">${m.label}</a>
+#else
+		<form method="post" action="${entryUrl}"><input type="submit" class="button" value="${m.label}"/></form>
+#end
+#end
+	</div>
+
 <div id="workspace" class="ui-widget-content">
 #if( $current )
 	<h3 class="ui-widget-header dl-widget-header">#i18n("project") $!esc.html($current.title)</h3>
@@ -101,8 +109,8 @@
 	var currentProject = "$current.uri";
 #end
 	$(function() {
+		$("#main-menu .button").button();
 		$("input:submit, .button").button();
-		$("#goto_sparql").button();
 		$("#tabs").tabs();
 
 		var currentForm;

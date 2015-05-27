@@ -9,11 +9,16 @@
 </head>
 <body>
 #banner
-	<div style="position:absolute;top:15px;right:15px;">
-		<a href="${baseUri}/sparql" id="goto_sparql" class="button">#i18n("sparql.endpoint.link")</a>
-		<a href="${baseUri}/project" id="goto_workspace" class="button">#i18n("project.workspace.link")</a>
+	<div id="main-menu" style="position:absolute;top:15px;right:15px;">
+#foreach( $m in $mainMenu )
+#set( $entryUrl = $m.getUrl(${baseUri}) )
+#if( $m.method.name() == "GET" )
+		<a href="${entryUrl}" class="button">${m.label}</a>
+#else
+		<form method="post" action="${entryUrl}"><input type="submit" class="button" value="${m.label}"/></form>
+#end
+#end
 	</div>
-
 	<div id="content" class="ui-widget-content dl-main-panel">
 		<h3 id="title_bar" class="ui-widget-header dl-widget-header">#i18n("source.grid.desc") $!esc.html($it.title) ($!esc.html($it.tableCount) #i18n("project.upload_source.tables_numb"))</h3>
 		<div id="results" class="dl-result-panel">
@@ -35,8 +40,8 @@
 	<script language="javascript" src="${baseUri}/project/static/js/jqgrid.common.js"></script>
 	<script type="text/javascript">
 		$(function() {
-			$("#goto_sparql").button();
-			$("#goto_workspace").button();
+			$("#main-menu .button").button();
+
 			$(document.body).delegate("#tableList","change",function(){
 					jQuery.ajax({
 					type: "GET",

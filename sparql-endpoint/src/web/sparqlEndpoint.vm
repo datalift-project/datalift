@@ -12,13 +12,11 @@
 	<div id="main-menu" style="position:absolute;top:15px;right:15px;">
 #foreach( $m in $mainMenu )
 #set( $entryUrl = $m.getUrl(${baseUri}) )
-##if( ! $entryUrl == $uriInfo.path )
 #if( $m.method.name() == "GET" )
 		<a href="${entryUrl}" class="button">${m.label}</a>
 #else
 		<form method="post" action="${entryUrl}"><input type="submit" class="button" value="${m.label}"/></form>
 #end
-##end
 #end
 	</div>
 	<div id="content" class="ui-widget-content dl-main-panel">
