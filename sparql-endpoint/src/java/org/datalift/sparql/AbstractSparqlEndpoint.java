@@ -148,6 +148,14 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
     /** The name of the default template for the endpoint welcome page. */
     protected final static String DEFAULT_WELCOME_TEMPLATE =
                                                         "sparqlEndpoint.vm";
+    /**
+     * The configuration property defining the (client-side) cache
+     * duration of SPARQL query results (in minutes).
+     */
+    public final static String RESULTS_CACHE_DURATION_PROPERTY =
+                                            "sparql.results.cache.duration";
+    /** Default value for {@link #RESULTS_CACHE_DURATION_PROPERTY}. */
+    public final static int DEFAULT_RESULTS_CACHE_DURATION = 3;
 
     /**
      * The object description query to use when the RDF store provides
@@ -239,6 +247,8 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
      * is used for both.
      */
     private boolean serveGraphsFirst;
+    /** The client-side cache duration for SPARQL query results. */
+    private int resultsCacheInSeconds;
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -287,6 +297,21 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
         // Load predefined SPARQL queries.
         this.predefinedQueries = Collections.unmodifiableList(
                                     this.loadPredefinedQueries(configuration));
+        // Compute client-side result cache duration.
+        String s = configuration.getProperty(RESULTS_CACHE_DURATION_PROPERTY,
+                                        "" + DEFAULT_RESULTS_CACHE_DURATION);
+        try {
+            this.resultsCacheInSeconds = Integer.parseInt(s) * 60;
+        }
+        catch (Exception e) {
+            log.error("Failed to parse value for configuration property {}: " +
+                      "{}. Disabling client-side cache",
+                      RESULTS_CACHE_DURATION_PROPERTY, s);
+            this.resultsCacheInSeconds = -1;
+        }
+        if (this.resultsCacheInSeconds <= 0) {
+            this.resultsCacheInSeconds = 0;
+        }
         // Register main menu entry(ies).
         this.registerToMainMenu();
     }
@@ -745,6 +770,18 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
                 response = this.executeQuery(defaultGraphUris, namedGraphUris,
                                 query, startOffset, endOffset, format,
                                 jsonCallback, uriInfo, request, acceptHdr);
+                if (this.resultsCacheInSeconds != 0) {
+                    // Add cache directives.
+                    CacheControl cc = new CacheControl();
+                    cc.setMaxAge(this.resultsCacheInSeconds);
+                    cc.setPrivate(true);
+                    cc.setNoTransform(false);
+                    GregorianCalendar cal = new GregorianCalendar();
+                    cal.add(Calendar.SECOND, this.resultsCacheInSeconds);
+                    response = response.header(VARY, AUTHORIZATION)
+                                       .cacheControl(cc)
+                                       .expires(cal.getTime());
+                }
             }
             catch (Exception e) {
                 this.handleError(query, e);
