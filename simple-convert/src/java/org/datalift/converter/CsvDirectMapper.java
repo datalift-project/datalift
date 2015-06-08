@@ -725,6 +725,10 @@ public class CsvDirectMapper extends BaseConverterModule
                                    MappingContext ctx) {
         Value v = null;
         try {
+            int l = s.length();
+            if ((s.charAt(0) == '<') && (s.charAt(l-1) == '>')) {
+                s = s.substring(1, l-1);
+            }
             // Use java.net.URI to ensure no illegal character is present.
             v = valueFactory.createURI(URI.create(s).toString());
         }
