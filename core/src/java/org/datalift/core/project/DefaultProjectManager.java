@@ -51,12 +51,12 @@ import java.util.Map;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.spi.PersistenceProvider;
 
-import com.clarkparsia.common.util.PrefixMapping;
 import com.clarkparsia.empire.Empire;
 import com.clarkparsia.empire.config.ConfigKeys;
 import com.clarkparsia.empire.config.EmpireConfiguration;
-import com.clarkparsia.empire.sesametwo.OpenRdfEmpireModule;
-import com.clarkparsia.empire.sesametwo.RepositoryFactoryKeys;
+import com.clarkparsia.empire.sesame.OpenRdfEmpireModule;
+import com.clarkparsia.empire.sesame.RepositoryFactoryKeys;
+import com.complexible.common.util.PrefixMapping;
 
 import javassist.ClassPool;
 import javassist.LoaderClassPath;
