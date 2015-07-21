@@ -298,6 +298,11 @@ public class S4acAccessController extends BaseModule
                 graphs = this.evaluatePolicies(type,
                                 this.getPolicyEvaluationRepository(repository));
             }
+            else {
+                // User not logged: no protected graphs accessible.
+                graphs = new HashSet<String>();
+                user   = "<anonymous user>";
+            }
             // Public graphs, i.e. the ones upon which there are no access
             // control policy, are accessible to anyone.
             graphs.addAll(this.getPublicGraphs(repository));
