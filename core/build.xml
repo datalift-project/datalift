@@ -118,8 +118,10 @@
   <property name="fwk.tests.libs"       location="${fwk.home}/tests/lib"/>
 
   <property name="docs.dir"             location="${dist.home}/docs"/>
-  <property name="web-inf.dir"          location="${build.home}/WEB-INF"/>
-  <property name="classes.dir"          location="${web-inf.dir}/classes"/>
+  <property name="web-inf.path"         value="WEB-INF"/>
+  <property name="web-inf.dir"          location="${build.home}/${web-inf.path}"/>
+  <property name="classes.path"         value="${web-inf.path}/classes"/>
+  <property name="classes.dir"          location="${build.home}/${classes.path}"/>
   <property name="lib.dir"              location="${web-inf.dir}/lib"/>
 
   <property name="tests.home"           location="${basedir}/tests"/>
@@ -135,8 +137,14 @@
   <property name="tests.logs.dir"       location="${tests.build.home}/logs"/>
 
   <property name="app.docbase"          value="${app.name}"/>
+  <property name="jar.name"
+            value="${app.docbase}-core-${app.version}.jar"/>
+  <property name="jar.path"             location="${lib.dir}/${jar.name}"/>
   <property name="war.name"             value="${app.docbase}.war"/>
   <property name="war.path"             location="${dist.home}/${war.name}"/>
+
+  <property name="security.context.class"
+            value="org.datalift.core.security.shiro.ShiroSecurityContext"/>
 
   <property name="locale.default"       value="en"/>
   <property name="locale.default_resources"
@@ -388,10 +396,17 @@
 
   <target name="dist" depends="compile,test,prepare-dist,resource-copy"
                       description="Create binary distribution">
+    <!-- Create Core JAR file -->
+    <jar jarfile="${jar.path}">
+      <fileset dir="${classes.dir}"/>
+      <service type="org.datalift.fwk.security.SecurityContext">
+        <provider classname="${security.context.class}"/>
+      </service>
+     </jar>
     <!-- Create application WAR file -->
     <jar jarfile="${war.path}"
          basedir="${build.home}"
-        excludes="${tests.build.dir}/**,${run-env.dir}/**"/>
+        excludes="${tests.build.dir}/**,${run-env.dir}/**,${classes.path}/**"/>
   </target>
 
   <!--
