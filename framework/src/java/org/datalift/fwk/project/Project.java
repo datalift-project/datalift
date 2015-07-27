@@ -63,8 +63,6 @@ public interface Project
     public Source getSource(String uri);
     public void remove(Source source);
 
-    public Date getCreationDate();
-
     public Date getModificationDate();
     public void setModificationDate(Date date);
 

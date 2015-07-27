@@ -43,6 +43,7 @@ import org.openrdf.model.Statement;
 import org.openrdf.rio.ParserConfig;
 import org.openrdf.rio.RDFParser;
 
+import com.clarkparsia.empire.annotation.NamedGraph;
 import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.RdfsClass;
 
@@ -61,7 +62,8 @@ import org.datalift.fwk.util.Env;
  * @author hdevos
  */
 @Entity
-@RdfsClass("datalift:rdfSource")
+@RdfsClass("datalift:RdfSource")
+@NamedGraph(type = NamedGraph.NamedGraphType.Static, value="http://www.datalift.org/core/projects")
 public class RdfFileSourceImpl extends BaseFileSource
                                implements RdfFileSource
 {

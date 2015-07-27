@@ -36,7 +36,6 @@ package org.datalift.fwk.project;
 
 
 import java.net.URI;
-import java.util.Date;
 
 
 public interface Ontology
@@ -49,6 +48,4 @@ public interface Ontology
     public URI getSource();
     public void setSource(URI source);
 
-    public Date getDateSubmitted();
-    public String getOperator();
 }

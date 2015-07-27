@@ -469,8 +469,6 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         // Set ontology parameters.
         ontology.setTitle(title);
         ontology.setSource(url);
-        ontology.setDateSubmitted(new Date());
-        ontology.setOperator(SecurityContext.getUserPrincipal());
         // Add ontology to project.
         project.addOntology(ontology);
         log.debug("New ontology <{}> added to project \"{}\"",
@@ -513,7 +511,6 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         p.setLicense(license);
 
         Date date = new Date();
-        p.setCreationDate(date);
         p.setModificationDate(date);
         p.setOwner(SecurityContext.getUserPrincipal());
         log.debug("New project <{}> created", p.getUri());
@@ -709,8 +706,6 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         }
         src.setTitle(title);
         src.setDescription(description);
-        src.setCreationDate(new Date());
-        src.setOperator(SecurityContext.getUserPrincipal());
     }
 
     private void checkAvailable() {

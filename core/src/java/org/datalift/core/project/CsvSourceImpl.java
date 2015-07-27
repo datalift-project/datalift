@@ -48,6 +48,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.persistence.Entity;
 
+import com.clarkparsia.empire.annotation.NamedGraph;
 import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.RdfsClass;
 
@@ -72,7 +73,8 @@ import static org.datalift.fwk.util.StringUtils.*;
  * @author hdevos
  */
 @Entity
-@RdfsClass("datalift:csvSource")
+@RdfsClass("datalift:CsvSource")
+@NamedGraph(type = NamedGraph.NamedGraphType.Static, value="http://www.datalift.org/core/projects")
 public class CsvSourceImpl extends BaseFileSource
                            implements CsvSource
 {

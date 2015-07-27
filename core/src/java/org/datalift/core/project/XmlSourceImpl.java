@@ -37,6 +37,7 @@ package org.datalift.core.project;
 
 import javax.persistence.Entity;
 
+import com.clarkparsia.empire.annotation.NamedGraph;
 import com.clarkparsia.empire.annotation.RdfsClass;
 
 import org.datalift.fwk.project.Project;
@@ -49,7 +50,8 @@ import org.datalift.fwk.project.XmlSource;
  * @author lbihanic
  */
 @Entity
-@RdfsClass("datalift:xmlSource")
+@RdfsClass("datalift:XmlSource")
+@NamedGraph(type = NamedGraph.NamedGraphType.Static, value="http://www.datalift.org/core/projects")
 public class XmlSourceImpl extends BaseFileSource
                            implements XmlSource
 {

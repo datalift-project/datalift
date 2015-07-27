@@ -53,6 +53,7 @@ import java.util.NoSuchElementException;
 import javax.persistence.Entity;
 import javax.sql.rowset.WebRowSet;
 
+import com.clarkparsia.empire.annotation.NamedGraph;
 import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.RdfsClass;
 import com.sun.rowset.WebRowSetImpl;
@@ -75,7 +76,8 @@ import static org.datalift.fwk.util.web.Charsets.UTF_8;
  * @author hdevos
  */
 @Entity
-@RdfsClass("datalift:sqlSource")
+@RdfsClass("datalift:SqlQuerySource")
+@NamedGraph(type = NamedGraph.NamedGraphType.Static, value="http://www.datalift.org/core/projects")
 public class SqlQuerySourceImpl extends CachingSourceImpl implements SqlQuerySource
 {
     //-------------------------------------------------------------------------
@@ -95,11 +97,11 @@ public class SqlQuerySourceImpl extends CachingSourceImpl implements SqlQuerySou
     // Instance members
     //-------------------------------------------------------------------------
 
-    @RdfProperty("datalift:user")
+    @RdfProperty("datalift:userName")
     private String user;
     @RdfProperty("datalift:password")
     private String password;
-    @RdfProperty("datalift:request")
+    @RdfProperty("datalift:query")
     private String query;
 
     private transient WebRowSet rowSet = null;

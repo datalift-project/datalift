@@ -48,6 +48,7 @@ import javax.persistence.FetchType;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.OneToMany;
 
+import com.clarkparsia.empire.annotation.NamedGraph;
 import com.clarkparsia.empire.annotation.RdfId;
 import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.RdfsClass;
@@ -84,7 +85,8 @@ import org.datalift.fwk.util.web.Charsets;
  */
 @Entity
 @MappedSuperclass
-@RdfsClass("vdpp:Project")
+@RdfsClass("datalift:Project")
+@NamedGraph(type = NamedGraph.NamedGraphType.Static, value="http://www.datalift.org/core/projects")
 public class ProjectImpl extends BaseRdfEntity implements Project
 {
     //-------------------------------------------------------------------------
@@ -104,14 +106,12 @@ public class ProjectImpl extends BaseRdfEntity implements Project
     @OneToMany(fetch = FetchType.EAGER, cascade = { CascadeType.ALL })
     private Collection<Source> sources = new LinkedList<Source>();
 
-    @RdfProperty("dcterms:issued")
-    private Date dateCreated;
     @RdfProperty("dcterms:modified")
     private Date dateModified;
-    @RdfProperty("dcterms:license")
+    @RdfProperty("dc:license")
     private URI license;
 
-    @RdfProperty("void:vocabulary")
+    @RdfProperty("datalift:ontology")
     @OneToMany(fetch = FetchType.EAGER, cascade = { CascadeType.ALL })
     private Collection<Ontology> ontologies = new LinkedList<Ontology>();
 
@@ -233,12 +233,6 @@ public class ProjectImpl extends BaseRdfEntity implements Project
 
     /** {@inheritDoc} */
     @Override
-    public Date getCreationDate() {
-        return this.copy(this.dateCreated);
-    }
-
-    /** {@inheritDoc} */
-    @Override
     public Date getModificationDate() {
         return this.copy(this.dateModified);
     }
@@ -341,13 +335,5 @@ public class ProjectImpl extends BaseRdfEntity implements Project
      */
     public void setOwner(String o) {
         this.owner = o;
-    }
-
-    /**
-     * Sets the creation date of this project.
-     * @param  date   the project creation date.
-     */
-    public void setCreationDate(Date date) {
-        this.dateCreated = this.copy(date);
     }
 }
