@@ -743,6 +743,22 @@ public interface ProjectManager
             URI influenced, URI... used);
     
     /**
+     * Declare that an output happened and persist it
+     * 
+     * @param  project   the project this event is associated with
+     * @param  operation   the uri of the operation associated with this event
+     * @param  parameters   the parameters used during the event
+     * @param  start   date of the event begining
+     * @param  end   date of the event end
+     * @param  agent   the agent who triggered the event
+     * @param  used   the list of entity exported
+     * @return the created event
+     */
+    public Event saveOutputEvent(Project project, URI operation,
+            Map<String, Object> parameters, Date start, Date end, URI agent,
+            URI... used);
+    
+    /**
      * persist an declared event or save his modifications
      * 
      * @param  event   the event to save

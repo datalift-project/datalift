@@ -1057,6 +1057,25 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     
     /** {@inheritDoc} */
     @Override
+    public Event saveOutputEvent(Project project, URI operation,
+            Map<String, Object> parameters, Date start, Date end, URI agent,
+            URI... used){
+        URI operationE = operation;
+        if(operation == null)
+            operationE = this.createDefaultMethodOperationId();
+        Map<String, Object> parametersE = parameters;
+        if(parameters == null){
+            parametersE = new HashMap<String, Object>();
+            for(int i = 0; i < used.length; i++)
+                parametersE.put("used " + (i + 1), used[i].toString());
+        }
+        return this.saveEvent(project, operationE, parametersE,
+                Event.OUTPUT_EVENT_TYPE, Event.SOURCE_EVENT_SUBJECT, start, end,
+                agent, null, used);
+    }
+    
+    /** {@inheritDoc} */
+    @Override
     public Event saveEvent(Event event){
         Event ret = this.projectDao.save(event);
         if(event.getProject() != null)
