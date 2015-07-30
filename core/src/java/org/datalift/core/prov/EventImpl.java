@@ -13,6 +13,7 @@ import javax.persistence.OneToMany;
 
 import org.datalift.core.project.BaseRdfEntity;
 import org.datalift.fwk.log.Logger;
+import org.datalift.fwk.project.Project;
 import org.datalift.fwk.prov.Event;
 import org.datalift.fwk.prov.EventType;
 
@@ -46,6 +47,7 @@ public class EventImpl extends BaseRdfEntity implements Event{
     @RdfProperty("prov:used")
     @OneToMany(fetch = FetchType.EAGER, cascade = { CascadeType.ALL })
     private Collection<URI> used = new LinkedList<URI>();
+    private Project project = null;
 
     
     public EventImpl(){
@@ -53,6 +55,7 @@ public class EventImpl extends BaseRdfEntity implements Event{
     }
     
     public EventImpl(URI id,
+            Project project,
             URI operation,
             Map<String, Object> parameters,
             EventType eventType,
@@ -78,6 +81,7 @@ public class EventImpl extends BaseRdfEntity implements Event{
         for(URI i : used)
             this.used.add(i);
         this.uri = id;
+        this.project = project;
     }
     
     
@@ -142,4 +146,19 @@ public class EventImpl extends BaseRdfEntity implements Event{
         this.uri = URI.create(id);
     }
 
+    @Override
+    public Project getProject() {
+        return this.project;
+    }
+    
+    @Override
+    public boolean equals(Object o){
+        if(o == null)
+            return false;
+        if(!(o instanceof Event))
+            return false;
+        if(((Event)o).getUri().equals(this.uri))
+            return true;
+        return false;
+    }
 }

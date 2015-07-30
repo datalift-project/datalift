@@ -727,12 +727,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
             log.debug("Releasing resources for source <{}>", source.getUri());
             source.delete();
         }
-        // Persist changes.
-        this.saveProject(p);
-        this.projectDao.delete(source);
-        log.debug("Source <{}> removed from project \"{}\"",
-                                                source.getUri(), p.getTitle());
-      //add the event
+        //add the event
         URI operationE = operation;
         if(operation == null)
             operationE = this.createDefaultMethodOperationId();
@@ -745,6 +740,11 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         this.addEvent(p, operationE, parametersE, Event.DESTRUCTION_EVENT_TYPE,
                 Event.SOURCE_EVENT_SUBJECT, eventStart, new Date(), null,
                 URI.create(source.getUri()));
+        // Persist changes.
+        this.saveProject(p);
+        this.projectDao.delete(source);
+        log.debug("Source <{}> removed from project \"{}\"",
+                                                source.getUri(), p.getTitle());
     }
 
     /** {@inheritDoc} */
@@ -804,11 +804,6 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         }
         // Remove ontology from project.
         ontology = project.removeOntology(ontology.getTitle());
-        // Persist changes.
-        this.saveProject(project);
-        this.projectDao.delete(ontology);
-        log.debug("Ontology <{}> removed form project \"{}\"",
-                                    ontology.getSource(), project.getTitle());
         //add the event
         URI operationE = operation;
         if(operation == null)
@@ -822,6 +817,11 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         this.addEvent(project, operationE, parametersE, Event.DESTRUCTION_EVENT_TYPE,
                 Event.ONTOLOGY_EVENT_SUBJECT, eventStart, new Date(), null,
                 URI.create(ontology.getUri()));
+        // Persist changes.
+        this.saveProject(project);
+        this.projectDao.delete(ontology);
+        log.debug("Ontology <{}> removed form project \"{}\"",
+                                    ontology.getSource(), project.getTitle());
     }
 
     /** {@inheritDoc} */
@@ -900,7 +900,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         // Delete project (and dependent objects: sources, ontologies...)
         this.projectDao.delete(p);
         log.debug("Project <{}> deleted", p.getUri());
-      //add the event
+        //save the event
         URI operationE = operation;
         if(operation == null)
             operationE = this.createDefaultMethodOperationId();
@@ -909,7 +909,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
             parametersE = new HashMap<String, Object>();
             parametersE.put("project", p.getUri());
         }
-        this.addEvent(p, operationE, parametersE, Event.DESTRUCTION_EVENT_TYPE,
+        this.saveEvent(p, operationE, parametersE, Event.DESTRUCTION_EVENT_TYPE,
                 Event.PROJECT_EVENT_SUBJECT, eventStart, new Date(), null,
                 URI.create(p.getUri()));
     }
@@ -934,10 +934,49 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
                 this.projectDao.save(p);
             }
             log.debug("Project <{}> saved to RDF store", p.getUri());
+            //save events
+            if(p.getEvents().isEmpty()){
+                Map<String, Object> parameters = new HashMap<String, Object>();
+                parameters.put("project", p.getUri());
+                this.addEvent(p, this.createDefaultMethodOperationId(),
+                        parameters, Event.UPDATE_EVENT_TYPE,
+                        Event.PROJECT_EVENT_SUBJECT, null, null, null,
+                        URI.create(p.getUri()));
+            }
+            while(!p.getEvents().isEmpty())
+                this.saveEvent((Event) p.getEvents().toArray()[0]);
         }
         catch (Exception e) {
             throw new RuntimeException("Invalid project URI: " + p.getUri(), e);
         }
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public void saveProject(Project p, URI operation,
+            Map<String, Object> parameters, EventType eventType,
+            EventSubject eventSubject, Date start, URI influenced){
+      //add the event
+        URI operationE = operation;
+        if(operation == null)
+            operationE = this.createDefaultMethodOperationId();
+        Map<String, Object> parametersE = parameters;
+        if(parameters == null){
+            parametersE = new HashMap<String, Object>();
+            parametersE.put("project", p.getUri());
+        }
+        EventType eventTypeE = eventType;
+        if(eventType == null)
+            eventTypeE = Event.UPDATE_EVENT_TYPE;
+        EventSubject eventSubjectE = eventSubject;
+        if(eventSubject == null)
+            eventSubjectE = Event.PROJECT_EVENT_SUBJECT;
+        URI influencedE = influenced;
+        if(influenced == null)
+            influencedE = URI.create(p.getUri());
+        this.addEvent(p, operationE, parametersE, eventTypeE,
+                eventSubjectE, start, new Date(), null, influencedE);
+        this.saveProject(p);
     }
 
     /** {@inheritDoc} */
@@ -984,7 +1023,11 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
             }
         }
         //build event uri
-        StringBuilder str = new StringBuilder(project.getUri());
+        StringBuilder str;
+        if(project == null)
+            str = new StringBuilder("http://www.datalift.org/core");
+        else
+            str = new StringBuilder(project.getUri());
         str.append("/event/").append(eventTypeE.getInitial());
         if(eventSubject != null)
             str.append(eventSubject.getInitial());
@@ -993,11 +1036,32 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         str.append("/").append(format.format(startE)).append("/");
         str.append(Double.toString(Math.random()).substring(2, 6));
         URI id = URI.create(str.toString());
-        //create and persist event
-        EventImpl event = new EventImpl(id, operationE, parameters, eventTypeE,
-                startE, endE, agentE, influenced, used);
-        this.projectDao.save(event);
+        //create event and put it on the project
+        EventImpl event = new EventImpl(id, project, operationE, parameters,
+                eventTypeE, startE, endE, agentE, influenced, used);
+        if(project != null)
+            project.addEvent(event);
         return event;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public Event saveEvent(Project project, URI operation,
+            Map<String, Object> parameters, EventType eventType,
+            EventSubject eventSubject, Date start, Date end, URI agent,
+            URI influenced, URI... used){
+        Event ret = this.addEvent(project, operation, parameters, eventType,
+                eventSubject, start, end, agent, influenced, used);
+        return this.saveEvent(ret);
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public Event saveEvent(Event event){
+        Event ret = this.projectDao.save(event);
+        if(event.getProject() != null)
+            event.getProject().removeEvent(event);
+        return ret;
     }
 
     //-------------------------------------------------------------------------

@@ -5,6 +5,8 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
 
+import org.datalift.fwk.project.Project;
+
 public interface Event {
     
     public static final EventType CREATION_EVENT_TYPE
@@ -44,4 +46,5 @@ public interface Event {
     public URI getAgent();
     public URI getInfluenced();
     public Collection<URI> getUsed();
+    public Project getProject();
 }

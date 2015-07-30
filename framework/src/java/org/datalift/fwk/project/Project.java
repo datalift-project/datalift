@@ -39,6 +39,8 @@ import java.net.URI;
 import java.util.Collection;
 import java.util.Date;
 
+import org.datalift.fwk.prov.Event;
+
 
 /**
  * A data-lifting project.
@@ -73,4 +75,8 @@ public interface Project
     public void addOntology(Ontology ontology);
     public Ontology getOntology(String title);
     public Ontology removeOntology(String title);
+    
+    public void addEvent(Event event);
+    public void removeEvent(Event event);
+    public Collection<Event> getEvents();
 }

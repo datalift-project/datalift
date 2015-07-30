@@ -114,6 +114,23 @@ public interface ProjectManager
      * @param  p   the project to save or update in the RDF store.
      */
     public void saveProject(Project p);
+    
+    /**
+     * Marks the specified project for being persisted into permanent
+     * storage.
+     * With event informations
+     * 
+     * @param  p   the project to save or update in the RDF store
+     * @param  operation    the operation of the event
+     * @param  parameters   the parameters of the event
+     * @param  eventType   the type of event
+     * @param  eventSubject   the type of the influenced entity
+     * @param  start        the event start time
+     * @param  influenced   the uri of the influenced entity
+     */
+    public void saveProject(Project p, URI operation,
+            Map<String, Object> parameters, EventType eventType,
+            EventSubject eventSubject, Date start, URI influenced);
 
     /**
      * Removes the specified project from the DataLift internal RDF
@@ -686,6 +703,26 @@ public interface ProjectManager
     public void addPersistentClasses(Collection<Class<?>> classes);
     
     /**
+     * Declare that an event happened in the project
+     * 
+     * @param  project   the project this event is associated with
+     * @param  operation   the uri of the operation associated with this event
+     * @param  parameters   the parameters used during the event
+     * @param  eventType   the type of event
+     * @param  eventSubject   the type of the influenced entity
+     * @param  start   date of the event begining
+     * @param  end   date of the event end
+     * @param  agent   the agent who triggered the event
+     * @param  influenced   the uri of the influenced entity
+     * @param  used   the list of entity used during the event
+     * @return the created event
+     */
+    public Event addEvent(Project project, URI operation,
+            Map<String, Object> parameters, EventType eventType,
+            EventSubject eventSubject, Date start, Date end, URI agent,
+            URI influenced, URI... used);
+    
+    /**
      * Declare that an event happened and persist it
      * 
      * @param  project   the project this event is associated with
@@ -698,9 +735,18 @@ public interface ProjectManager
      * @param  agent   the agent who triggered the event
      * @param  influenced   the uri of the influenced entity
      * @param  used   the list of entity used during the event
+     * @return the created event
      */
-    public Event addEvent(Project project, URI operation,
+    public Event saveEvent(Project project, URI operation,
             Map<String, Object> parameters, EventType eventType,
             EventSubject eventSubject, Date start, Date end, URI agent,
             URI influenced, URI... used);
+    
+    /**
+     * persist an declared event or save his modifications
+     * 
+     * @param  event   the event to save
+     * @return the saved event
+     */
+    public Event saveEvent(Event event);
 }

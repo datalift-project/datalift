@@ -37,6 +37,7 @@ package org.datalift.core.project;
 
 import java.net.URI;
 import java.net.URLDecoder;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -57,6 +58,7 @@ import org.datalift.fwk.project.Ontology;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.TransformedRdfSource;
+import org.datalift.fwk.prov.Event;
 import org.datalift.fwk.util.StringUtils;
 import org.datalift.fwk.util.web.Charsets;
 
@@ -114,6 +116,8 @@ public class ProjectImpl extends BaseRdfEntity implements Project
     @RdfProperty("datalift:ontology")
     @OneToMany(fetch = FetchType.EAGER, cascade = { CascadeType.ALL })
     private Collection<Ontology> ontologies = new LinkedList<Ontology>();
+    
+    private Collection<Event> events = new ArrayList<Event>();
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -287,6 +291,24 @@ public class ProjectImpl extends BaseRdfEntity implements Project
         }
         return ontology;
     }
+    
+    /** {@inheritDoc} */
+    @Override
+    public void addEvent(Event event) {
+        this.events.add(event);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void removeEvent(Event event) {
+        this.events.remove(event);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Collection<Event> getEvents() {
+        return this.events;
+    }
 
     //-------------------------------------------------------------------------
     // BaseRdfEntity contract support
@@ -336,4 +358,5 @@ public class ProjectImpl extends BaseRdfEntity implements Project
     public void setOwner(String o) {
         this.owner = o;
     }
+
 }
