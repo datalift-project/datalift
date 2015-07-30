@@ -36,6 +36,9 @@ package org.datalift.converter;
 
 
 import java.net.URI;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
@@ -84,6 +87,9 @@ public class SimplePublisher extends BaseConverterModule
 
     /** The name of this module in the DataLift configuration. */
     public final static String MODULE_NAME = "simple-publisher";
+    
+    public final static String OPERATION_ID =
+            "http://www.datalift.org/core/converter/operation/" + MODULE_NAME;
 
     /* Web service parameter names. */
     protected final static String REPOSITORY_PARAM      = "store";
@@ -122,6 +128,7 @@ public class SimplePublisher extends BaseConverterModule
                         @Context Request request,
                         @HeaderParam(ACCEPT) String acceptHdr)
                                                 throws WebApplicationException {
+        Date eventStart = new Date();
         if (! UriParam.isSet(projectId)) {
             this.throwInvalidParamError(PROJECT_ID_PARAM, null);
         }
@@ -178,6 +185,16 @@ public class SimplePublisher extends BaseConverterModule
             // Display generated triples.
             response = this.displayGraph(pub, targetGraph,
                                          uriInfo, request, acceptHdr);
+            //save event
+            Map<String, Object> parameters = new HashMap<String, Object>();
+            parameters.put("projectId", projectId);
+            parameters.put("sourceId", sourceId);
+            parameters.put("repository", repository);
+            parameters.put("targetGraphParam", targetGraphParam);
+            parameters.put("overwrite", overwrite);
+            URI operation = URI.create(OPERATION_ID);
+            this.projectManager.saveOutputEvent(p, operation, parameters,
+                    eventStart, new Date(), null, sourceId.toUri());
         }
         catch (Exception e) {
             this.handleInternalError(e);
