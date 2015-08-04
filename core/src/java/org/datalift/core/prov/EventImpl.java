@@ -48,6 +48,8 @@ public class EventImpl extends BaseRdfEntity implements Event{
     @OneToMany(fetch = FetchType.EAGER, cascade = { CascadeType.ALL })
     private Collection<URI> used = new LinkedList<URI>();
     private Project project = null;
+    @RdfProperty("prov:wasInformedBy")
+    private URI informer;
 
     
     public EventImpl(){
@@ -63,6 +65,7 @@ public class EventImpl extends BaseRdfEntity implements Event{
             Date end,
             URI agent,
             URI influenced,
+            URI informer,
             URI... used){
         this.operation = operation;
         if(parameters != null){
@@ -82,9 +85,14 @@ public class EventImpl extends BaseRdfEntity implements Event{
             this.used.add(i);
         this.uri = id;
         this.project = project;
+        this.informer = informer;
     }
     
     
+    @Override
+    public URI getInformer(){
+        return this.informer;
+    }
     
     @Override
     public URI getUri() {
@@ -160,5 +168,13 @@ public class EventImpl extends BaseRdfEntity implements Event{
         if(((Event)o).getUri().equals(this.uri))
             return true;
         return false;
+    }
+    
+    public void addUsed(URI used){
+        this.used.add(used);
+    }
+    
+    public void setInfluenced(URI influenced){
+        this.influenced = influenced;
     }
 }

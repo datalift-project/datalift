@@ -47,4 +47,5 @@ public interface Event {
     public URI getInfluenced();
     public Collection<URI> getUsed();
     public Project getProject();
+    public URI getInformer();
 }

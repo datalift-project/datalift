@@ -32,15 +32,12 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 
-package org.datalift.core.project;
+package org.datalift.fwk.project;
 
 
 import java.net.URI;
 import java.util.Collection;
 import java.util.List;
-
-import org.datalift.fwk.project.ObjectNotFoundException;
-import org.datalift.fwk.project.PersistenceException;
 
 
 public interface GenericRdfDao

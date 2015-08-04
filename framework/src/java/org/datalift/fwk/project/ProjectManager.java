@@ -703,6 +703,13 @@ public interface ProjectManager
     public void addPersistentClasses(Collection<Class<?>> classes);
     
     /**
+     * return a DAO to manage persistent classes
+     * 
+     * @return a generic RDF DAO
+     */
+    public GenericRdfDao getRdfDao();
+    
+    /**
      * Declare that an event happened in the project
      * 
      * @param  project   the project this event is associated with
@@ -759,7 +766,7 @@ public interface ProjectManager
             URI... used);
     
     /**
-     * persist an declared event or save his modifications
+     * persist a declared event or save his modifications
      * 
      * @param  event   the event to save
      * @return the saved event

@@ -52,6 +52,7 @@ import com.clarkparsia.empire.impl.RdfQuery;
 
 import org.datalift.core.util.web.RequestLifecycleFilter.RequestLifecycleListener;
 import org.datalift.fwk.log.Logger;
+import org.datalift.fwk.project.GenericRdfDao;
 import org.datalift.fwk.project.ObjectNotFoundException;
 import org.datalift.fwk.project.PersistenceException;
 

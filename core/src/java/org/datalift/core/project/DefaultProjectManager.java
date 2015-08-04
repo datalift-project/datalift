@@ -69,8 +69,10 @@ import org.datalift.fwk.Configuration;
 import org.datalift.fwk.FileStore;
 import org.datalift.fwk.LifeCycle;
 import org.datalift.fwk.MediaTypes;
+import org.datalift.fwk.async.TaskContext;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.CsvSource;
+import org.datalift.fwk.project.GenericRdfDao;
 import org.datalift.fwk.project.SparqlSource;
 import org.datalift.fwk.project.SqlDatabaseSource;
 import org.datalift.fwk.project.SqlQuerySource;
@@ -1010,18 +1012,8 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         if(end == null)
             endE = startE;
         URI agentE = agent;
-        if(agent == null){
-            try{
-                if(SecurityContext.getUserPrincipal() != null)
-                    agentE = URI.create("http://www.datalift.org/core/agent/" +
-                            SecurityContext.getUserPrincipal());
-                else
-                    agentE = URI
-                            .create("http://www.datalift.org/core/agent/Unknow");
-            } catch (Exception e){
-                agentE = URI.create("http://www.datalift.org/core/agent/Unknow");
-            }
-        }
+        if(agent == null)
+            agentE = TaskContext.getCurrent().getCurrentAgent();
         //build event uri
         StringBuilder str;
         if(project == null)
@@ -1038,7 +1030,8 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         URI id = URI.create(str.toString());
         //create event and put it on the project
         EventImpl event = new EventImpl(id, project, operationE, parameters,
-                eventTypeE, startE, endE, agentE, influenced, used);
+                eventTypeE, startE, endE, agentE, influenced,
+                TaskContext.getCurrent().getCurrentEvent(), used);
         if(project != null)
             project.addEvent(event);
         return event;
@@ -1082,6 +1075,12 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
             event.getProject().removeEvent(event);
         return ret;
     }
+    
+    /** {@inheritDoc} */
+    @Override
+    public GenericRdfDao getRdfDao(){
+        return this.projectDao;
+    }
 
     //-------------------------------------------------------------------------
     // Object contract support
@@ -1097,7 +1096,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     //-------------------------------------------------------------------------
     // Specific implementation
     //-------------------------------------------------------------------------
-
+    
     /**
      * Adds the specified namespace to the list of RDF namespaces
      * known of Empire persistence manager.
@@ -1121,7 +1120,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
             this.registerRdfNamespace(ns);
         }
     }
-
+    
     /**
      * Returns the list of persistent classes to be handled by Empire JPA
      * provider.
