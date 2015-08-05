@@ -50,7 +50,7 @@ public class TaskImpl extends BaseRdfEntity implements Task{
         //NOP
     }
     
-    public TaskImpl(Project project, Operation operation,
+    public TaskImpl(URI uri, Project project, Operation operation,
             Map<String, String> parameters){
         if(parameters != null){
             this.param = new JsonStringParameters(parameters);
@@ -63,6 +63,7 @@ public class TaskImpl extends BaseRdfEntity implements Task{
         this.agent = TaskContext.getCurrent().getCurrentAgent();
         this.status = TaskStatus.newStatus.getUri();
         this.issue = new Date();
+        this.uri = uri;
     }
 
     @Override

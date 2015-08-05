@@ -1,10 +1,14 @@
 package org.datalift.core.async;
 
 import java.net.URI;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -60,7 +64,20 @@ public class TaskManagerImpl implements TaskManager{
             if(this.dao == null)
                 this.dao = Configuration.getDefault().getBean(ProjectManager.class)
                         .getRdfDao();
-            Task task = new TaskImpl(project, op, parameters);
+            //build task uri
+            StringBuilder str;
+            if(project == null)
+                str = new StringBuilder("http://www.datalift.org/core");
+            else
+                str = new StringBuilder(project.getUri());
+            str.append("/task/");
+            DateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm.SSS'Z'");
+            format.setTimeZone(TimeZone.getTimeZone("UTC"));
+            str.append(format.format(new Date())).append("/");
+            str.append(Double.toString(Math.random()).substring(2, 6));
+            //create and execute task
+            Task task = new TaskImpl(URI.create(str.toString()), project, op,
+                    parameters);
             this.executor.execute(new TaskExecution(project, task));
             return task;
         } else {
