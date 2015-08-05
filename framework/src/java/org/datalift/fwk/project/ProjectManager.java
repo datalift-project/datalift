@@ -106,7 +106,7 @@ public interface ProjectManager
      */
     public Project newProject(URI projectId, String title,
                               String description, URI license,
-                              URI operation, Map<String, Object> parameters);
+                              URI operation, Map<String, String> parameters);
 
     /**
      * Marks the specified project for being persisted into permanent
@@ -129,7 +129,7 @@ public interface ProjectManager
      * @param  influenced   the uri of the influenced entity
      */
     public void saveProject(Project p, URI operation,
-            Map<String, Object> parameters, EventType eventType,
+            Map<String, String> parameters, EventType eventType,
             EventSubject eventSubject, Date start, URI influenced);
 
     /**
@@ -149,7 +149,7 @@ public interface ProjectManager
      * @param  p   the project to remove.
      */
     public void deleteProject(Project p, URI operation,
-            Map<String, Object> parameters);
+            Map<String, String> parameters);
 
     /**
      * Creates a new CSV source object.
@@ -191,7 +191,7 @@ public interface ProjectManager
     public CsvSource newCsvSource(Project project, URI uri, String title,
                                   String description, String filePath,
                                   char separator, URI operation,
-                                  Map<String, Object> parameters, Date start)
+                                  Map<String, String> parameters, Date start)
                                   throws IOException;
 
     /**
@@ -248,7 +248,7 @@ public interface ProjectManager
     public RdfFileSource newRdfSource(Project project, URI uri, String title,
                                       String description, URI baseUri,
                                       String filePath, String mimeType, 
-                                      URI operation, Map<String, Object> parameters,
+                                      URI operation, Map<String, String> parameters,
                                       Date start) throws IOException;
     
     /**
@@ -302,7 +302,7 @@ public interface ProjectManager
                                   String title, String description,
                                   String srcUrl, String user, String password,
                                   String request, int cacheDuration,
-                                  URI operation, Map<String, Object> parameters,
+                                  URI operation, Map<String, String> parameters,
                                   Date start) throws IOException;
     
     /**
@@ -350,7 +350,7 @@ public interface ProjectManager
     public SqlDatabaseSource newSqlDatabaseSource(Project project, URI uri,
                                   String title, String description,
                                   String srcUrl, String user, String password,
-                                  URI operation, Map<String, Object> parameters,
+                                  URI operation, Map<String, String> parameters,
                                   Date start) throws IOException;
 
     /**
@@ -401,7 +401,7 @@ public interface ProjectManager
                                         String description, String endpointUrl,
                                         String sparqlQuery, int cacheDuration,
                                         URI operation,
-                                        Map<String, Object> parameters,
+                                        Map<String, String> parameters,
                                         Date start) throws IOException;
 
     /**
@@ -440,7 +440,7 @@ public interface ProjectManager
      */
     public XmlSource newXmlSource(Project project, URI uri, String title,
                                   String description, String filePath,
-                                  URI operation, Map<String, Object> parameters,
+                                  URI operation, Map<String, String> parameters,
                                   Date start) throws IOException;
 
     /**
@@ -506,7 +506,7 @@ public interface ProjectManager
     public TransformedRdfSource newTransformedRdfSource(Project project,
                                 URI uri, String title, String description,
                                 URI targetGraph, URI baseUri, Source parent,
-                                URI operation, Map<String, Object> parameters,
+                                URI operation, Map<String, String> parameters,
                                 Date start) throws IOException;
 
     /**
@@ -558,7 +558,7 @@ public interface ProjectManager
                                   String description, String shpFilePath,
                                   String shxFilePath, String dbfFilePath,
                                   String prjFilePath, URI operation,
-                                  Map<String, Object> parameters, Date start)
+                                  Map<String, String> parameters, Date start)
                                                             throws IOException;
 
 
@@ -602,7 +602,7 @@ public interface ProjectManager
     public GmlSource newGmlSource(Project project, URI uri, String title,
                                   String description, String gmlFilePath,
                                   String xsdFilePath, URI operation,
-                                  Map<String, Object> parameters, Date start)
+                                  Map<String, String> parameters, Date start)
                                                             throws IOException;
     
     /**
@@ -633,7 +633,7 @@ public interface ProjectManager
      * @param  parameters   the parameters of the event
      */
     public void delete(Source source, boolean deleteResources, URI operation,
-            Map<String, Object> parameters);
+            Map<String, String> parameters);
 
     /**
      * Create a new ontology description.
@@ -659,7 +659,7 @@ public interface ProjectManager
      *         project.
      */
     public Ontology newOntology(Project project, URI srcUrl, String title,
-            URI operation, Map<String, Object> parameters);
+            URI operation, Map<String, String> parameters);
 
     /**
      * Deletes the specified ontology from the project.
@@ -678,7 +678,7 @@ public interface ProjectManager
      * @param  parameters   the parameters of the event
      */
     public void deleteOntology(Project project, Ontology ontology,
-            URI operation, Map<String, Object> parameters);
+            URI operation, Map<String, String> parameters);
 
     /**
      * Builds the path to the project directory or to the specified
@@ -725,7 +725,7 @@ public interface ProjectManager
      * @return the created event
      */
     public Event addEvent(Project project, URI operation,
-            Map<String, Object> parameters, EventType eventType,
+            Map<String, String> parameters, EventType eventType,
             EventSubject eventSubject, Date start, Date end, URI agent,
             URI influenced, URI... used);
     
@@ -745,7 +745,7 @@ public interface ProjectManager
      * @return the created event
      */
     public Event saveEvent(Project project, URI operation,
-            Map<String, Object> parameters, EventType eventType,
+            Map<String, String> parameters, EventType eventType,
             EventSubject eventSubject, Date start, Date end, URI agent,
             URI influenced, URI... used);
     
@@ -762,7 +762,7 @@ public interface ProjectManager
      * @return the created event
      */
     public Event saveOutputEvent(Project project, URI operation,
-            Map<String, Object> parameters, Date start, Date end, URI agent,
+            Map<String, String> parameters, Date start, Date end, URI agent,
             URI... used);
     
     /**

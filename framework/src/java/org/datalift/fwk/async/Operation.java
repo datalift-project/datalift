@@ -6,5 +6,5 @@ import java.util.Map;
 public interface Operation {
 
     public URI getOperationId();
-    public void execute(Map<String, Object> parameters) throws Exception;
+    public void execute(Map<String, String> parameters) throws Exception;
 }

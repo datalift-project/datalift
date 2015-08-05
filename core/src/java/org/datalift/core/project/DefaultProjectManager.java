@@ -210,7 +210,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     @Override
     public CsvSource newCsvSource(Project project, URI uri, String title,
             String description, String filePath, char separator, URI operation,
-            Map<String, Object> parameters, Date start)
+            Map<String, String> parameters, Date start)
             throws IOException{
         // Create new CSV source.
         CsvSourceImpl src = new CsvSourceImpl(uri.toString(), project);
@@ -237,14 +237,14 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         URI operationE = operation;
         if(operation == null)
             operationE = this.createDefaultMethodOperationId();
-        Map<String, Object> parametersE = parameters;
+        Map<String, String> parametersE = parameters;
         if(parameters == null){
-            parametersE = new HashMap<String, Object>();
+            parametersE = new HashMap<String, String>();
             parametersE.put("project", project.getUri());
             parametersE.put("title", title);
             parametersE.put("description", description);
             parametersE.put("filePath", filePath);
-            parametersE.put("separator", separator);
+            parametersE.put("separator", "" + separator);
             parametersE.put("uri", uri.toString());
         }
         this.addEvent(project, operationE, parametersE, Event.CREATION_EVENT_TYPE,
@@ -267,7 +267,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     @Override
     public RdfFileSource newRdfSource(Project project, URI uri, String title,
             String description, URI baseUri, String filePath, String mimeType, 
-            URI operation, Map<String, Object> parameters, Date start)
+            URI operation, Map<String, String> parameters, Date start)
             throws IOException{
         // Create new RDF file source.
         RdfFileSourceImpl src = new RdfFileSourceImpl(uri.toString(), project);
@@ -290,14 +290,14 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         URI operationE = operation;
         if(operation == null)
             operationE = this.createDefaultMethodOperationId();
-        Map<String, Object> parametersE = parameters;
+        Map<String, String> parametersE = parameters;
         if(parameters == null){
-            parametersE = new HashMap<String, Object>();
+            parametersE = new HashMap<String, String>();
             parametersE.put("project", project.getUri());
             parametersE.put("uri", uri.toString());
             parametersE.put("title", title);
             parametersE.put("description", description);
-            parametersE.put("baseUri", baseUri);
+            parametersE.put("baseUri", baseUri.toString());
             parametersE.put("filePath", filePath);
             parametersE.put("mimeType", mimeType);
         }
@@ -324,7 +324,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
             String title, String description,
             String srcUrl, String user, String password,
             String request, int cacheDuration,
-            URI operation, Map<String, Object> parameters,
+            URI operation, Map<String, String> parameters,
             Date start) throws IOException{
      // Create new SQL source.
         SqlQuerySourceImpl src = new SqlQuerySourceImpl(uri.toString(), project);
@@ -343,9 +343,9 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         URI operationE = operation;
         if(operation == null)
             operationE = this.createDefaultMethodOperationId();
-        Map<String, Object> parametersE = parameters;
+        Map<String, String> parametersE = parameters;
         if(parameters == null){
-            parametersE = new HashMap<String, Object>();
+            parametersE = new HashMap<String, String>();
             parametersE.put("project", project.getUri());
             parametersE.put("uri", uri.toString());
             parametersE.put("title", title);
@@ -376,7 +376,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     @Override
     public SqlDatabaseSource newSqlDatabaseSource(Project project, URI uri,
             String title, String description, String srcUrl, String user,
-            String password, URI operation, Map<String, Object> parameters,
+            String password, URI operation, Map<String, String> parameters,
             Date start) throws IOException{
         // Create new SQL Database source.
         SqlDatabaseSourceImpl src = new SqlDatabaseSourceImpl(uri.toString(), project);
@@ -393,9 +393,9 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         URI operationE = operation;
         if(operation == null)
             operationE = this.createDefaultMethodOperationId();
-        Map<String, Object> parametersE = parameters;
+        Map<String, String> parametersE = parameters;
         if(parameters == null){
-            parametersE = new HashMap<String, Object>();
+            parametersE = new HashMap<String, String>();
             parametersE.put("project", project.getUri());
             parametersE.put("uri", uri.toString());
             parametersE.put("title", title);
@@ -424,7 +424,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     @Override
     public SparqlSource newSparqlSource(Project project, URI uri, String title,
             String description, String endpointUrl, String sparqlQuery,
-            int cacheDuration, URI operation, Map<String, Object> parameters,
+            int cacheDuration, URI operation, Map<String, String> parameters,
             Date start) throws IOException{
         // Create new RDF SPARQL source.
         SparqlSourceImpl src = new SparqlSourceImpl(uri.toString(), project);
@@ -441,9 +441,9 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         URI operationE = operation;
         if(operation == null)
             operationE = this.createDefaultMethodOperationId();
-        Map<String, Object> parametersE = parameters;
+        Map<String, String> parametersE = parameters;
         if(parameters == null){
-            parametersE = new HashMap<String, Object>();
+            parametersE = new HashMap<String, String>();
             parametersE.put("project", project.getUri());
             parametersE.put("uri", uri.toString());
             parametersE.put("title", title);
@@ -471,7 +471,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     @Override
     public XmlSource newXmlSource(Project project, URI uri, String title,
             String description, String filePath, URI operation,
-            Map<String, Object> parameters, Date start) throws IOException{
+            Map<String, String> parameters, Date start) throws IOException{
         // Create new XML source.
         XmlSourceImpl src = new XmlSourceImpl(uri.toString(), project);
         // Set source parameters.
@@ -490,9 +490,9 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         URI operationE = operation;
         if(operation == null)
             operationE = this.createDefaultMethodOperationId();
-        Map<String, Object> parametersE = parameters;
+        Map<String, String> parametersE = parameters;
         if(parameters == null){
-            parametersE = new HashMap<String, Object>();
+            parametersE = new HashMap<String, String>();
             parametersE.put("project", project.getUri());
             parametersE.put("uri", uri.toString());
             parametersE.put("title", title);
@@ -530,7 +530,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     public TransformedRdfSource newTransformedRdfSource(Project project,
             URI uri, String title, String description,
             URI targetGraph, URI baseUri, Source parent,
-            URI operation, Map<String, Object> parameters,
+            URI operation, Map<String, String> parameters,
             Date start) throws IOException{
         if (targetGraph == null) {
             throw new IllegalArgumentException("targetGraph");
@@ -553,9 +553,9 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         URI operationE = operation;
         if(operation == null)
             operationE = this.createDefaultMethodOperationId();
-        Map<String, Object> parametersE = parameters;
+        Map<String, String> parametersE = parameters;
         if(parameters == null){
-            parametersE = new HashMap<String, Object>();
+            parametersE = new HashMap<String, String>();
             parametersE.put("project", project.getUri());
             parametersE.put("uri", uri.toString());
             parametersE.put("title", title);
@@ -589,7 +589,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     public ShpSource newShpSource(Project project, URI uri, String title,
             String description, String shpFilePath, String shxFilePath,
             String dbfFilePath, String prjFilePath, URI operation,
-            Map<String, Object> parameters, Date start) throws IOException{
+            Map<String, String> parameters, Date start) throws IOException{
         // Create new Shapefile source.
         ShpSourceImpl src = new ShpSourceImpl(uri.toString(), project);
         // Set source parameters.
@@ -626,9 +626,9 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         URI operationE = operation;
         if(operation == null)
             operationE = this.createDefaultMethodOperationId();
-        Map<String, Object> parametersE = parameters;
+        Map<String, String> parametersE = parameters;
         if(parameters == null){
-            parametersE = new HashMap<String, Object>();
+            parametersE = new HashMap<String, String>();
             parametersE.put("project", project.getUri());
             parametersE.put("uri", uri.toString());
             parametersE.put("title", title);
@@ -658,7 +658,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     @Override
     public GmlSource newGmlSource(Project project, URI uri, String title,
             String description, String gmlFilePath, String xsdFilePath,
-            URI operation, Map<String, Object> parameters, Date start)
+            URI operation, Map<String, String> parameters, Date start)
                                                         throws IOException{
         // Create new Gmlfile source.
         GmlSourceImpl src = new GmlSourceImpl(uri.toString(), project);
@@ -684,9 +684,9 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         URI operationE = operation;
         if(operation == null)
             operationE = this.createDefaultMethodOperationId();
-        Map<String, Object> parametersE = parameters;
+        Map<String, String> parametersE = parameters;
         if(parameters == null){
-            parametersE = new HashMap<String, Object>();
+            parametersE = new HashMap<String, String>();
             parametersE.put("project", project.getUri());
             parametersE.put("uri", uri.toString());
             parametersE.put("title", title);
@@ -715,7 +715,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     /** {@inheritDoc} */
     @Override
     public void delete(Source source, boolean deleteResources, URI operation,
-            Map<String, Object> parameters){
+            Map<String, String> parameters){
         Date eventStart = new Date();
         this.checkAvailable();
         if (source == null) {
@@ -733,9 +733,9 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         URI operationE = operation;
         if(operation == null)
             operationE = this.createDefaultMethodOperationId();
-        Map<String, Object> parametersE = parameters;
+        Map<String, String> parametersE = parameters;
         if(parameters == null){
-            parametersE = new HashMap<String, Object>();
+            parametersE = new HashMap<String, String>();
             parametersE.put("source", source.getUri());
             parametersE.put("deleteResources", Boolean.toString(deleteResources));
         }
@@ -758,7 +758,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     /** {@inheritDoc} */
     @Override
     public Ontology newOntology(Project project, URI url, String title,
-            URI operation, Map<String, Object> parameters){
+            URI operation, Map<String, String> parameters){
         Date eventStart = new Date();
         // Create new ontology.
         OntologyImpl ontology = new OntologyImpl();
@@ -773,9 +773,9 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         URI operationE = operation;
         if(operation == null)
             operationE = this.createDefaultMethodOperationId();
-        Map<String, Object> parametersE = parameters;
+        Map<String, String> parametersE = parameters;
         if(parameters == null){
-            parametersE = new HashMap<String, Object>();
+            parametersE = new HashMap<String, String>();
             parametersE.put("project", project.getUri());
             parametersE.put("ontology", ontology.getUri());
             parametersE.put("title", title);
@@ -795,7 +795,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     /** {@inheritDoc} */
     @Override
     public void deleteOntology(Project project, Ontology ontology,
-            URI operation, Map<String, Object> parameters){
+            URI operation, Map<String, String> parameters){
         Date eventStart = new Date();
         this.checkAvailable();
         if (project == null) {
@@ -810,9 +810,9 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         URI operationE = operation;
         if(operation == null)
             operationE = this.createDefaultMethodOperationId();
-        Map<String, Object> parametersE = parameters;
+        Map<String, String> parametersE = parameters;
         if(parameters == null){
-            parametersE = new HashMap<String, Object>();
+            parametersE = new HashMap<String, String>();
             parametersE.put("project", project.getUri());
             parametersE.put("ontology", ontology.getUri());
         }
@@ -838,7 +838,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     @Override
     public Project newProject(URI projectId, String title,
             String description, URI license,
-            URI operation, Map<String, Object> parameters){
+            URI operation, Map<String, String> parameters){
         Date eventStart = new Date();
         // Check that no project with the same URI already exists.
         if (this.findProject(projectId) != null) {
@@ -859,9 +859,9 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         URI operationE = operation;
         if(operation == null)
             operationE = this.createDefaultMethodOperationId();
-        Map<String, Object> parametersE = parameters;
+        Map<String, String> parametersE = parameters;
         if(parameters == null){
-            parametersE = new HashMap<String, Object>();
+            parametersE = new HashMap<String, String>();
             parametersE.put("projectId", projectId.toString());
             parametersE.put("title", title);
             parametersE.put("description", description);
@@ -892,7 +892,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     /** {@inheritDoc} */
     @Override
     public void deleteProject(Project p, URI operation,
-            Map<String, Object> parameters){
+            Map<String, String> parameters){
         Date eventStart = new Date();
         this.checkAvailable();
         // Delete server-side resources attached to sources.
@@ -906,9 +906,9 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         URI operationE = operation;
         if(operation == null)
             operationE = this.createDefaultMethodOperationId();
-        Map<String, Object> parametersE = parameters;
+        Map<String, String> parametersE = parameters;
         if(parameters == null){
-            parametersE = new HashMap<String, Object>();
+            parametersE = new HashMap<String, String>();
             parametersE.put("project", p.getUri());
         }
         this.saveEvent(p, operationE, parametersE, Event.DESTRUCTION_EVENT_TYPE,
@@ -938,7 +938,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
             log.debug("Project <{}> saved to RDF store", p.getUri());
             //save events
             if(p.getEvents().isEmpty()){
-                Map<String, Object> parameters = new HashMap<String, Object>();
+                Map<String, String> parameters = new HashMap<String, String>();
                 parameters.put("project", p.getUri());
                 this.addEvent(p, this.createDefaultMethodOperationId(),
                         parameters, Event.UPDATE_EVENT_TYPE,
@@ -956,15 +956,15 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     /** {@inheritDoc} */
     @Override
     public void saveProject(Project p, URI operation,
-            Map<String, Object> parameters, EventType eventType,
+            Map<String, String> parameters, EventType eventType,
             EventSubject eventSubject, Date start, URI influenced){
       //add the event
         URI operationE = operation;
         if(operation == null)
             operationE = this.createDefaultMethodOperationId();
-        Map<String, Object> parametersE = parameters;
+        Map<String, String> parametersE = parameters;
         if(parameters == null){
-            parametersE = new HashMap<String, Object>();
+            parametersE = new HashMap<String, String>();
             parametersE.put("project", p.getUri());
         }
         EventType eventTypeE = eventType;
@@ -994,7 +994,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     /** {@inheritDoc} */
     @Override
     public Event addEvent(Project project, URI operation,
-            Map<String, Object> parameters, EventType eventType,
+            Map<String, String> parameters, EventType eventType,
             EventSubject eventSubject, Date start, Date end, URI agent,
             URI influenced, URI... used){
         //control parameters values, put the default one if absent
@@ -1040,7 +1040,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     /** {@inheritDoc} */
     @Override
     public Event saveEvent(Project project, URI operation,
-            Map<String, Object> parameters, EventType eventType,
+            Map<String, String> parameters, EventType eventType,
             EventSubject eventSubject, Date start, Date end, URI agent,
             URI influenced, URI... used){
         Event ret = this.addEvent(project, operation, parameters, eventType,
@@ -1051,14 +1051,14 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     /** {@inheritDoc} */
     @Override
     public Event saveOutputEvent(Project project, URI operation,
-            Map<String, Object> parameters, Date start, Date end, URI agent,
+            Map<String, String> parameters, Date start, Date end, URI agent,
             URI... used){
         URI operationE = operation;
         if(operation == null)
             operationE = this.createDefaultMethodOperationId();
-        Map<String, Object> parametersE = parameters;
+        Map<String, String> parametersE = parameters;
         if(parameters == null){
-            parametersE = new HashMap<String, Object>();
+            parametersE = new HashMap<String, String>();
             for(int i = 0; i < used.length; i++)
                 parametersE.put("used " + (i + 1), used[i].toString());
         }

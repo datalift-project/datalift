@@ -208,9 +208,9 @@ public class CsvExporter extends BaseConverterModule
                                .header("Refresh", "0.1; " + p.getUri())
                                .build();
             //save event
-            Map<String, Object> parameters = new HashMap<String, Object>();
-            parameters.put("projectId", projectId);
-            parameters.put("sourceId", sourceId);
+            Map<String, String> parameters = new HashMap<String, String>();
+            parameters.put("projectId", projectId.toUri().toString());
+            parameters.put("sourceId", sourceId.toUri().toString());
             parameters.put("charset", charset);
             parameters.put("separator", separator);
             URI operation = URI.create(OPERATION_ID);

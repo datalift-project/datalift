@@ -9,5 +9,5 @@ import org.datalift.fwk.project.Project;
 public interface TaskManager extends LifeCycle{
 
     public Task submit(Project project, URI operation,
-            Map<String, Object> parameters) throws UnregisteredOperationException;
+            Map<String, String> parameters) throws UnregisteredOperationException;
 }

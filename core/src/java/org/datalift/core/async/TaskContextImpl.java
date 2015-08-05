@@ -29,7 +29,7 @@ public class TaskContextImpl extends TaskContext{
     }
     
     public void startOperation(Project project, URI operation,
-            Map<String, Object> parameters){
+            Map<String, String> parameters){
         this.executions.add(new OperationExecution(project, operation, parameters));
     }
     
@@ -129,10 +129,10 @@ public class TaskContextImpl extends TaskContext{
         private Project project;
         private EventImpl event = null;
         private URI operation;
-        private Map<String, Object> parameters;
+        private Map<String, String> parameters;
         
         public OperationExecution(Project project, URI operation,
-                Map<String, Object> parameters){
+                Map<String, String> parameters){
             this.operation = operation;
             this.parameters = parameters;
             this.project = project;

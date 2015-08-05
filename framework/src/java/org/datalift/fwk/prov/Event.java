@@ -39,7 +39,7 @@ public interface Event {
 
     public URI getUri();
     public URI getOperation();
-    public Map<String, Object> getParameters();
+    public Map<String, String> getParameters();
     public EventType getEventType();
     public Date getStartTime();
     public Date getEndTime();

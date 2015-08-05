@@ -9,7 +9,7 @@ public interface Task{
     public URI getAgent();
     public URI getUri();
     public TaskStatus getStatus();
-    public Map<String, Object> getParmeters();
+    public Map<String, String> getParmeters();
     public Operation getOperation();
     public Date getStartTime();
     public Date getEndTime();

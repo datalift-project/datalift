@@ -167,9 +167,9 @@ public class RdfExporter extends BaseConverterModule
                                .header("Refresh", "0.1; " + p.getUri())
                                .build();
             //save event
-            Map<String, Object> parameters = new HashMap<String, Object>();
-            parameters.put("projectId", projectId);
-            parameters.put("sourceId", sourceId);
+            Map<String, String> parameters = new HashMap<String, String>();
+            parameters.put("projectId", projectId.toUri().toString());
+            parameters.put("sourceId", sourceId.toUri().toString());
             parameters.put("mimeType", mimeType);
             URI operation = URI.create(OPERATION_ID);
             this.projectManager.saveOutputEvent(p, operation, parameters,

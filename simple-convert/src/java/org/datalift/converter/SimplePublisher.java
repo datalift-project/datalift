@@ -186,12 +186,12 @@ public class SimplePublisher extends BaseConverterModule
             response = this.displayGraph(pub, targetGraph,
                                          uriInfo, request, acceptHdr);
             //save event
-            Map<String, Object> parameters = new HashMap<String, Object>();
-            parameters.put("projectId", projectId);
-            parameters.put("sourceId", sourceId);
+            Map<String, String> parameters = new HashMap<String, String>();
+            parameters.put("projectId", projectId.toUri().toString());
+            parameters.put("sourceId", sourceId.toUri().toString());
             parameters.put("repository", repository);
-            parameters.put("targetGraphParam", targetGraphParam);
-            parameters.put("overwrite", overwrite);
+            parameters.put("targetGraphParam", targetGraphParam.toUri().toString());
+            parameters.put("overwrite", Boolean.toString(overwrite));
             URI operation = URI.create(OPERATION_ID);
             this.projectManager.saveOutputEvent(p, operation, parameters,
                     eventStart, new Date(), null, sourceId.toUri());

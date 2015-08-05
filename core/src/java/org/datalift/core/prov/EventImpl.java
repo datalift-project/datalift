@@ -12,7 +12,7 @@ import javax.persistence.FetchType;
 import javax.persistence.OneToMany;
 
 import org.datalift.core.project.BaseRdfEntity;
-import org.datalift.fwk.log.Logger;
+import org.datalift.core.util.JsonStringParameters;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.prov.Event;
 import org.datalift.fwk.prov.EventType;
@@ -33,7 +33,7 @@ public class EventImpl extends BaseRdfEntity implements Event{
     private URI operation;
     @RdfProperty("datalift:parameters")
     private String parameters;
-    private JsonParam param;
+    private JsonStringParameters param;
     @RdfProperty("datalift:eventType")
     private URI type;
     @RdfProperty("prov:startedAtTime")
@@ -59,7 +59,7 @@ public class EventImpl extends BaseRdfEntity implements Event{
     public EventImpl(URI id,
             Project project,
             URI operation,
-            Map<String, Object> parameters,
+            Map<String, String> parameters,
             EventType eventType,
             Date start,
             Date end,
@@ -69,9 +69,7 @@ public class EventImpl extends BaseRdfEntity implements Event{
             URI... used){
         this.operation = operation;
         if(parameters != null){
-            this.param = new JsonParam();
-            this.param.add(parameters);
-            this.parameters = this.param.save();
+            this.param = new JsonStringParameters(parameters);
         } else {
             this.param = null;
             this.parameters = null;
@@ -105,16 +103,10 @@ public class EventImpl extends BaseRdfEntity implements Event{
     }
 
     @Override
-    public Map<String, Object> getParameters() {
+    public Map<String, String> getParameters() {
         if(this.param == null && this.parameters != null){
-            this.param = new JsonParam();
-            try {
-                this.param.load(this.parameters);
-            } catch (Exception e) {
-                Logger.getLogger().error("cant deserialized parameters", e);
-                throw new RuntimeException("cant deserialized parameters", e);
-            }
-            return this.param.getParameters();
+            this.param = new JsonStringParameters(this.parameters);
+            return this.param.getParametersMap();
         }
         return null;
     }

@@ -8,15 +8,15 @@ import java.util.Map;
 import javax.persistence.Entity;
 
 import org.datalift.core.project.BaseRdfEntity;
-import org.datalift.core.prov.JsonParam;
+import org.datalift.core.util.JsonStringParameters;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.async.Operation;
 import org.datalift.fwk.async.Task;
 import org.datalift.fwk.async.TaskContext;
 import org.datalift.fwk.async.TaskStatus;
 import org.datalift.fwk.async.UnregisteredOperationException;
-import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.Project;
+
 import com.clarkparsia.empire.annotation.NamedGraph;
 import com.clarkparsia.empire.annotation.RdfId;
 import com.clarkparsia.empire.annotation.RdfProperty;
@@ -34,7 +34,7 @@ public class TaskImpl extends BaseRdfEntity implements Task{
     private Operation operation;
     @RdfProperty("datalift:parameters")
     private String parameters;
-    private JsonParam param;
+    private JsonStringParameters param;
     @RdfProperty("prov:wasAssociatedWith")
     private URI agent;
     @RdfProperty("datalift:status")
@@ -51,11 +51,9 @@ public class TaskImpl extends BaseRdfEntity implements Task{
     }
     
     public TaskImpl(Project project, Operation operation,
-            Map<String, Object> parameters){
+            Map<String, String> parameters){
         if(parameters != null){
-            this.param = new JsonParam();
-            this.param.add(parameters);
-            this.parameters = this.param.save();
+            this.param = new JsonStringParameters(parameters);
         } else {
             this.param = null;
             this.parameters = null;
@@ -83,16 +81,10 @@ public class TaskImpl extends BaseRdfEntity implements Task{
     }
 
     @Override
-    public Map<String, Object> getParmeters() {
+    public Map<String, String> getParmeters() {
         if(this.param == null && this.parameters != null){
-            this.param = new JsonParam();
-            try {
-                this.param.load(this.parameters);
-            } catch (Exception e) {
-                Logger.getLogger().error("cant deserialized parameters", e);
-                throw new RuntimeException("cant deserialized parameters", e);
-            }
-            return this.param.getParameters();
+            this.param = new JsonStringParameters(this.parameters);
+            return this.param.getParametersMap();
         }
         return null;
     }

@@ -52,7 +52,7 @@ public class TaskManagerImpl implements TaskManager{
 
     @Override
     public Task submit(Project project, URI operation,
-            Map<String, Object> parameters) throws UnregisteredOperationException {
+            Map<String, String> parameters) throws UnregisteredOperationException {
         Operation op = this.operations.get(operation.toString());
         if(op == null)
             throw new UnregisteredOperationException(operation);
