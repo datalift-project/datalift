@@ -36,6 +36,8 @@ public interface Event {
             = EventSubject.addNewInstance("project", "P");
     public static final EventSubject ONTOLOGY_EVENT_SUBJECT
             = EventSubject.addNewInstance("ontology", "O");
+    public static final EventSubject WORKFLOW_EVENT_SUBJECT
+            = EventSubject.addNewInstance("workflow", "W");
 
     public URI getUri();
     public URI getOperation();

@@ -59,6 +59,7 @@ import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.prov.Event;
+import org.datalift.fwk.replay.Workflow;
 import org.datalift.fwk.util.StringUtils;
 import org.datalift.fwk.util.web.Charsets;
 
@@ -116,6 +117,10 @@ public class ProjectImpl extends BaseRdfEntity implements Project
     @RdfProperty("datalift:ontology")
     @OneToMany(fetch = FetchType.EAGER, cascade = { CascadeType.ALL })
     private Collection<Ontology> ontologies = new LinkedList<Ontology>();
+    
+    @RdfProperty("datalift:workflow")
+    @OneToMany(fetch = FetchType.EAGER, cascade = { CascadeType.ALL })
+    private Collection<Workflow> workflows = new LinkedList<Workflow>();
     
     private Collection<Event> events = new ArrayList<Event>();
 
@@ -308,6 +313,34 @@ public class ProjectImpl extends BaseRdfEntity implements Project
     @Override
     public Collection<Event> getEvents() {
         return this.events;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void addWorkflow(Workflow workflow) {
+        this.workflows.add(workflow);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Collection<Workflow> getWorkflows() {
+        return Collections.unmodifiableCollection(this.workflows);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Workflow getWorkflow(URI uri) {
+        for(Workflow o : this.workflows)
+            if(o.getUri().equals(uri))
+                return o;
+        return null;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void removeWorkflow(URI uri) {
+        Workflow w = this.getWorkflow(uri);
+        this.workflows.remove(w);
     }
 
     //-------------------------------------------------------------------------

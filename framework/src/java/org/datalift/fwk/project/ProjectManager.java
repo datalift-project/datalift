@@ -45,6 +45,8 @@ import org.datalift.fwk.MediaTypes;
 import org.datalift.fwk.prov.Event;
 import org.datalift.fwk.prov.EventSubject;
 import org.datalift.fwk.prov.EventType;
+import org.datalift.fwk.replay.Workflow;
+import org.datalift.fwk.replay.WorkflowStep;
 
 
 /**
@@ -772,4 +774,69 @@ public interface ProjectManager
      * @return the saved event
      */
     public Event saveEvent(Event event);
+    
+    /**
+     * Create a new workflow.
+     * 
+     * @param  url   the workflow URL.
+     * @param  title    the workflow title.
+     * @param  description    the workflow description.
+     * @param  variables    the workflow variables default values mapped by name.
+     * @param  outputStep    the workflow steps tree root.
+     *
+     * @return the new workflow, added to the project.
+     */
+    public Workflow newWorkflow(Project project, URI url, String title,
+            String description, Map<String, String> variables,
+            WorkflowStep outputStep);
+    
+    /**
+     * Create a new workflow.
+     * With event informations
+     * 
+     * @param  url   the workflow URL.
+     * @param  title    the workflow title.
+     * @param  description    the workflow description.
+     * @param  variables    the workflow variables default values mapped by name.
+     * @param  outputStep    the workflow steps tree root.
+     * @param  eventOperation    the operation of the event
+     * @param  eventParameters   the parameters of the event
+     * @param  eventStart        the event start time
+     *
+     * @return the new workflow, added to the project.
+     */
+    public Workflow newWorkflow(Project project, URI url, String title,
+            String description, Map<String, String> variables,
+            WorkflowStep outputStep,  URI eventOperation,
+            Map<String, String> eventParameters, Date eventStart);
+
+    /**
+     * Deletes the specified workflow from the project.
+     * 
+     * @param  project    the owning project.
+     * @param  workflow   the workflow to remove.
+     */
+    public void deleteWorkflow(Project project, Workflow workflow);
+    
+    /**
+     * Deletes the specified workflow from the project.
+     * With event informations
+     * 
+     * @param  project    the owning project.
+     * @param  workflow   the workflow to remove.
+     * @param  eventOperation    the operation of the event
+     * @param  eventParameters   the parameters of the event
+     */
+    public void deleteWorkflow(Project project, Workflow workflow,
+            URI eventOperation, Map<String, String> eventParameters);
+    
+    /**
+     * create a workflow step.
+     * 
+     * @param operation     the id of the step operation
+     * @param parameters    the parameters values map
+     * @return  a new workflow step to build the step tree for a new workflow
+     */
+    public WorkflowStep NewWorkflowStep(URI operation,
+            Map<String, String> parameters);
 }

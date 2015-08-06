@@ -65,6 +65,9 @@ import javassist.ClassPool;
 import javassist.LoaderClassPath;
 
 import org.datalift.core.prov.EventImpl;
+import org.datalift.core.replay.WorkflowImpl;
+import org.datalift.core.replay.WorkflowStepImpl;
+import org.datalift.core.util.JsonStringParameters;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.FileStore;
 import org.datalift.fwk.LifeCycle;
@@ -90,6 +93,8 @@ import org.datalift.fwk.prov.Event;
 import org.datalift.fwk.prov.EventSubject;
 import org.datalift.fwk.prov.EventType;
 import org.datalift.fwk.rdf.RdfNamespace;
+import org.datalift.fwk.replay.Workflow;
+import org.datalift.fwk.replay.WorkflowStep;
 import org.datalift.fwk.security.SecurityContext;
 
 import static org.datalift.fwk.util.StringUtils.*;
@@ -1070,6 +1075,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     /** {@inheritDoc} */
     @Override
     public Event saveEvent(Event event){
+        this.checkAvailable();
         Event ret = this.projectDao.save(event);
         if(event.getProject() != null)
             event.getProject().removeEvent(event);
@@ -1080,6 +1086,98 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     @Override
     public GenericRdfDao getRdfDao(){
         return this.projectDao;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public Workflow newWorkflow(Project project, URI url, String title,
+            String description, Map<String, String> variables,
+            WorkflowStep outputStep) {
+        return this.newWorkflow(project, url, title, description, variables,
+                outputStep, null, null, new Date());
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public Workflow newWorkflow(Project project, URI url, String title,
+            String description, Map<String, String> variables,
+            WorkflowStep outputStep,  URI eventOperation,
+            Map<String, String> eventParameters, Date eventStart){
+        Date eventStartE = eventStart;
+        if(eventStart == null)
+            eventStartE = new Date();
+        // Create the workflow
+        WorkflowImpl wfl = new WorkflowImpl(url, title, description, variables,
+                (WorkflowStepImpl) outputStep);
+        // Add it to the project
+        project.addWorkflow(wfl);
+        log.debug("New workflow <{}> added to project \"{}\"",
+                                                    url, project.getTitle());
+      //add the event
+        URI operationE = eventOperation;
+        if(eventOperation == null)
+            operationE = this.createDefaultMethodOperationId();
+        Map<String, String> parametersE = eventParameters;
+        if(eventParameters == null){
+            parametersE = new HashMap<String, String>();
+            parametersE.put("project", project.getUri());
+            parametersE.put("workflow", wfl.getUri().toString());
+            parametersE.put("title", title);
+            parametersE.put("description", description);
+            parametersE.put("variables", new JsonStringParameters(variables)
+                                                                .toString());
+            parametersE.put("outputStep", outputStep.toString());
+        }
+        this.addEvent(project, operationE, parametersE, Event.CREATION_EVENT_TYPE,
+                Event.WORKFLOW_EVENT_SUBJECT, eventStartE, new Date(), null,
+                wfl.getUri());
+        return wfl;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void deleteWorkflow(Project project, Workflow workflow) {
+        this.deleteWorkflow(project, workflow, null, null);
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public void deleteWorkflow(Project project, Workflow workflow,
+            URI eventOperation, Map<String, String> eventParameters){
+        Date eventStart = new Date();
+        this.checkAvailable();
+        if (project == null) {
+            throw new IllegalArgumentException("project");
+        }
+        if (workflow == null) {
+            throw new IllegalArgumentException("workflow");
+        }
+        project.removeWorkflow(workflow.getUri());
+        //add the event
+        URI operationE = eventOperation;
+        if(eventOperation == null)
+            operationE = this.createDefaultMethodOperationId();
+        Map<String, String> parametersE = eventParameters;
+        if(eventParameters == null){
+            parametersE = new HashMap<String, String>();
+            parametersE.put("project", project.getUri());
+            parametersE.put("workflow", workflow.getUri().toString());
+        }
+        this.addEvent(project, operationE, parametersE, Event.DESTRUCTION_EVENT_TYPE,
+                Event.WORKFLOW_EVENT_SUBJECT, eventStart, new Date(), null,
+                workflow.getUri());
+        // Persist changes.
+        this.saveProject(project);
+        this.projectDao.delete(workflow);
+        log.debug("Workflow <{}> removed form project \"{}\"",
+                                    workflow.getTitle(), project.getTitle());
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public WorkflowStep NewWorkflowStep(URI operation,
+            Map<String, String> parameters) {
+        return new WorkflowStepImpl(operation, parameters);
     }
 
     //-------------------------------------------------------------------------

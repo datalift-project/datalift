@@ -40,6 +40,7 @@ import java.util.Collection;
 import java.util.Date;
 
 import org.datalift.fwk.prov.Event;
+import org.datalift.fwk.replay.Workflow;
 
 
 /**
@@ -79,4 +80,9 @@ public interface Project
     public void addEvent(Event event);
     public void removeEvent(Event event);
     public Collection<Event> getEvents();
+    
+    public void addWorkflow(Workflow workflow);
+    public Collection<Workflow> getWorkflows();
+    public Workflow getWorkflow(URI uri);
+    public void removeWorkflow(URI uri);
 }
