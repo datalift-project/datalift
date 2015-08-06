@@ -34,6 +34,9 @@ public class EventImpl extends BaseRdfEntity implements Event{
     @RdfProperty("datalift:parameters")
     private String parameters;
     private JsonStringParameters param;
+    @RdfProperty("datalift:project")
+    private URI projectId;
+    private Project project = null;
     @RdfProperty("datalift:eventType")
     private URI type;
     @RdfProperty("prov:startedAtTime")
@@ -47,7 +50,6 @@ public class EventImpl extends BaseRdfEntity implements Event{
     @RdfProperty("prov:used")
     @OneToMany(fetch = FetchType.EAGER, cascade = { CascadeType.ALL })
     private Collection<URI> used = new LinkedList<URI>();
-    private Project project = null;
     @RdfProperty("prov:wasInformedBy")
     private URI informer;
 
@@ -84,6 +86,8 @@ public class EventImpl extends BaseRdfEntity implements Event{
         this.uri = id;
         this.project = project;
         this.informer = informer;
+        if(project != null)
+            this.projectId = URI.create(project.getUri());
     }
     
     
