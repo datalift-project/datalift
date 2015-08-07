@@ -871,4 +871,13 @@ public interface ProjectManager
      * @return the events mapped by there URI
      */
     public Map<URI, Event> getEvents(Project project);
+    
+    /**
+     * get all output events associated to the given project. if project is null
+     * events without associated project are return
+     * 
+     * @param project   the associated project
+     * @return the events mapped by there URI
+     */
+    public Map<URI, Event> getOutputEvents(Project project);
 }

@@ -1282,6 +1282,40 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         return results;
     }
     
+    @Override
+    public Map<URI, Event> getOutputEvents(Project project) {
+        RdfsClass rdfsClass = EventImpl.class.getAnnotation(RdfsClass.class);
+        if (rdfsClass == null) {
+            throw new IllegalArgumentException(EventImpl.class.getName());
+        }
+        if (project == null) {
+            throw new IllegalArgumentException("project");
+        }
+        String rdfType = rdfsClass.value();
+        if(this.getQnamePrefix(rdfType) == null)
+            rdfType = "<" + rdfType + ">";
+        Map<URI, Event> results = new HashMap<URI, Event>();
+        EntityManager em = this.emf.createEntityManager();
+        try {
+            String pUri = project.getUri().toString();
+            if(this.getQnamePrefix(pUri) == null)
+                pUri = "<" + pUri + ">";
+            Query query = em.createQuery(
+                    "where { ?result rdf:type " + rdfType +
+                    " . ?result datalift:project " + pUri +
+                    " . ?result datalift:eventType <" +
+                    Event.OUTPUT_EVENT_TYPE.getUri().toString() + ">}");
+            query.setHint(RdfQuery.HINT_ENTITY_CLASS, EventImpl.class);
+            for (Object p : query.getResultList()) {
+                results.put(((Event)p).getUri(), (Event)p);
+            }
+        }
+        catch (javax.persistence.PersistenceException e) {
+            throw new PersistenceException(e);
+        }
+        return results;
+    }
+    
     //-------------------------------------------------------------------------
     // Object contract support
     //-------------------------------------------------------------------------
