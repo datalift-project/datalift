@@ -839,4 +839,36 @@ public interface ProjectManager
      */
     public WorkflowStep NewWorkflowStep(URI operation,
             Map<String, String> parameters);
+    
+    /**
+     * get an event by his URI
+     * 
+     * @param uri the event URI
+     * @return the event or null if not exist
+     */
+    public Event getEvent(URI uri);
+    
+    /**
+     * get all events which have the given resource as influenced value
+     * 
+     * @param uri the influenced entity URI
+     * @return the events mapped by there URI
+     */
+    public Map<URI, Event> getEventsAbout(URI uri);
+    
+    /**
+     * get all events
+     * 
+     * @return the events mapped by there URI
+     */
+    public Map<URI, Event> getEvents();
+    
+    /**
+     * get all events associated to the given project. if project is null events
+     * without associated project are return
+     * 
+     * @param project   the associated project
+     * @return the events mapped by there URI
+     */
+    public Map<URI, Event> getEvents(Project project);
 }

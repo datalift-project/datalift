@@ -51,12 +51,16 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.TimeZone;
 
+import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.Query;
 import javax.persistence.spi.PersistenceProvider;
 
 import com.clarkparsia.empire.Empire;
+import com.clarkparsia.empire.annotation.RdfsClass;
 import com.clarkparsia.empire.config.ConfigKeys;
 import com.clarkparsia.empire.config.EmpireConfiguration;
+import com.clarkparsia.empire.impl.RdfQuery;
 import com.clarkparsia.empire.sesame.OpenRdfEmpireModule;
 import com.clarkparsia.empire.sesame.RepositoryFactoryKeys;
 import com.complexible.common.util.PrefixMapping;
@@ -76,6 +80,7 @@ import org.datalift.fwk.async.TaskContext;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.CsvSource;
 import org.datalift.fwk.project.GenericRdfDao;
+import org.datalift.fwk.project.PersistenceException;
 import org.datalift.fwk.project.SparqlSource;
 import org.datalift.fwk.project.SqlDatabaseSource;
 import org.datalift.fwk.project.SqlQuerySource;
@@ -302,7 +307,10 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
             parametersE.put("uri", uri.toString());
             parametersE.put("title", title);
             parametersE.put("description", description);
-            parametersE.put("baseUri", baseUri.toString());
+            if(baseUri != null)
+                parametersE.put("baseUri", baseUri.toString());
+            else
+                parametersE.put("baseUri", null);
             parametersE.put("filePath", filePath);
             parametersE.put("mimeType", mimeType);
         }
@@ -565,7 +573,8 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
             parametersE.put("uri", uri.toString());
             parametersE.put("title", title);
             parametersE.put("description", description);
-            parametersE.put("targetGraph", targetGraph.toString());
+            if(targetGraph != null)
+                parametersE.put("targetGraph", targetGraph.toString());
             if(baseUri != null)
                 parametersE.put("baseUri", baseUri.toString());
             else
@@ -1180,6 +1189,99 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         return new WorkflowStepImpl(operation, parameters);
     }
 
+    @Override
+    public Event getEvent(URI uri) {
+        return this.projectDao.find(EventImpl.class, uri);
+    }
+
+    @Override
+    public Map<URI, Event> getEventsAbout(URI uri) {
+        RdfsClass rdfsClass = EventImpl.class.getAnnotation(RdfsClass.class);
+        if (rdfsClass == null) {
+            throw new IllegalArgumentException(EventImpl.class.getName());
+        }
+        String rdfType = rdfsClass.value();
+        if(this.getQnamePrefix(rdfType) == null)
+            rdfType = "<" + rdfType + ">";
+        Map<URI, Event> results = new HashMap<URI, Event>();
+        EntityManager em = this.emf.createEntityManager();
+        try {
+            Query query = em.createQuery(
+                                "where { ?result rdf:type " + rdfType +
+                                        " . ?result prov:influenced " +
+                                        uri.toString() + "}");
+            query.setHint(RdfQuery.HINT_ENTITY_CLASS, EventImpl.class);
+            for (Object p : query.getResultList()) {
+                results.put(((Event)p).getUri(), (Event)p);
+            }
+        }
+        catch (javax.persistence.PersistenceException e) {
+            throw new PersistenceException(e);
+        }
+        return results;
+    }
+
+    @Override
+    public Map<URI, Event> getEvents() {
+        RdfsClass rdfsClass = EventImpl.class.getAnnotation(RdfsClass.class);
+        if (rdfsClass == null) {
+            throw new IllegalArgumentException(EventImpl.class.getName());
+        }
+        String rdfType = rdfsClass.value();
+        if(this.getQnamePrefix(rdfType) == null)
+            rdfType = "<" + rdfType + ">";
+        Map<URI, Event> results = new HashMap<URI, Event>();
+        EntityManager em = this.emf.createEntityManager();
+        try {
+            Query query = em.createQuery(
+                                "where { ?result rdf:type " + rdfType + "}");
+            query.setHint(RdfQuery.HINT_ENTITY_CLASS, EventImpl.class);
+            for (Object p : query.getResultList()) {
+                results.put(((Event)p).getUri(), (Event)p);
+            }
+        }
+        catch (javax.persistence.PersistenceException e) {
+            throw new PersistenceException(e);
+        }
+        return results;
+    }
+
+    @Override
+    public Map<URI, Event> getEvents(Project project) {
+        RdfsClass rdfsClass = EventImpl.class.getAnnotation(RdfsClass.class);
+        if (rdfsClass == null) {
+            throw new IllegalArgumentException(EventImpl.class.getName());
+        }
+        String rdfType = rdfsClass.value();
+        if(this.getQnamePrefix(rdfType) == null)
+            rdfType = "<" + rdfType + ">";
+        Map<URI, Event> results = new HashMap<URI, Event>();
+        EntityManager em = this.emf.createEntityManager();
+        try {
+            Query query;
+            if(project == null){
+                query = em.createQuery(
+                        "where { ?result rdf:type " + rdfType +
+                        " . FILTER NOT EXISTS { ?result datalift:project ?p }");
+            } else {
+                String pUri = project.getUri().toString();
+                if(this.getQnamePrefix(pUri) == null)
+                    pUri = "<" + pUri + ">";
+                query = em.createQuery(
+                        "where { ?result rdf:type " + rdfType +
+                        " . ?result datalift:project " + pUri + "}");
+            }
+            query.setHint(RdfQuery.HINT_ENTITY_CLASS, EventImpl.class);
+            for (Object p : query.getResultList()) {
+                results.put(((Event)p).getUri(), (Event)p);
+            }
+        }
+        catch (javax.persistence.PersistenceException e) {
+            throw new PersistenceException(e);
+        }
+        return results;
+    }
+    
     //-------------------------------------------------------------------------
     // Object contract support
     //-------------------------------------------------------------------------
@@ -1194,6 +1296,19 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     //-------------------------------------------------------------------------
     // Specific implementation
     //-------------------------------------------------------------------------
+    
+    /**
+     * return the namespace used
+     * @param qname the qname or URI
+     * @return  the namespace used as a prefix on the qname or null if qname is
+     * an URI without prefix or if the namespace is unknown
+     */
+    private RdfNamespace getQnamePrefix(String qname){
+        for(RdfNamespace ns : RdfNamespace.values())
+            if(qname.startsWith(ns.prefix + ":"))
+                return ns;
+        return null;
+    }
     
     /**
      * Adds the specified namespace to the list of RDF namespaces
