@@ -424,7 +424,7 @@ public class RouterResource implements LifeCycle, ResourceResolver
                     if (b == null) {
                         // Get MIME type from file extension.
                         String mt = new MimetypesFileTypeMap().getContentType(rsc);
-                        log.debug("Serving module public resource: {}/{} ({})",
+                        log.trace("Serving module public resource: {}/{} ({})",
                                   module, rsc, mt);
                         b = Response.ok(src.openStream(), mt);
                     }
@@ -496,7 +496,7 @@ public class RouterResource implements LifeCycle, ResourceResolver
             if (b == null) {
                 // Get MIME type from file extension.
                 String mt = new MimetypesFileTypeMap().getContentType(f);
-                log.debug("Serving static resource: {} ({})", f, mt);
+                log.trace("Serving static resource: {} ({})", f, mt);
                 try {
                     b = Response.ok(store.getInputStream(f), mt);
                 }

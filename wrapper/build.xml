@@ -35,6 +35,8 @@
 
   <property name="datalift.wrapper.modules"
             value="flint-endpoint,projectmanager,simple-convert,database-directmapper,geomrdf,lov/api,lov/catalogue,data2ontology,virtuoso-connector,allegrograph-connector,stringtouri,silk-interlinker,incubator/ontology-mapper"/>
+  <property name="security.context.class"
+            value="org.datalift.core.security.LocalUserSecurityContext"/>
 
 
   <!-- ================ File and Directory Names ========================== -->
@@ -247,6 +249,8 @@
 
   <target name="build-core">
     <subant target="dist">
+      <property name="security.context.class"
+               value="${security.context.class}"/>
       <filelist dir="${datalift.root}" files="framework,core"/>
     </subant>
   </target>

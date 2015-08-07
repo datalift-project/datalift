@@ -77,7 +77,12 @@ public class ShiroSecurityContext extends SecurityContext
     /** {@inheritDoc} */
     @Override
     public boolean isAuthenticated() {
-        return this.getSubject().isAuthenticated();
+        boolean authenticated = false;
+        Subject s = this.getSubject();
+        if (s != null) {
+            authenticated = s.isAuthenticated();
+        }
+        return authenticated;
     }
 
     /** {@inheritDoc} */

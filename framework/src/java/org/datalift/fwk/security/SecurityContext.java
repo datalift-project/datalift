@@ -38,6 +38,8 @@ package org.datalift.fwk.security;
 import java.util.Iterator;
 import java.util.ServiceLoader;
 
+import org.datalift.fwk.log.Logger;
+
 
 /**
  * A factory class that abstracts access to the user's security
@@ -56,6 +58,8 @@ public abstract class SecurityContext
      * implementation.
      */
     private static SecurityContext instance = null;
+
+    private final static Logger log = Logger.getLogger();
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -165,6 +169,8 @@ public abstract class SecurityContext
                         ServiceLoader.load(SecurityContext.class).iterator();
             if (i.hasNext()) {
                 instance = i.next();
+                log.info("Using security context implementation: {}",
+                          instance.getClass().getSimpleName());
             }
             else {
                 throw new IllegalStateException(
