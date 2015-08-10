@@ -97,10 +97,10 @@
 			
 			<div id="workflow">
 				<form class="grid_form">
-					<table id="selectable_workflow">
+					<table id="selectable_workflows">
 						<tr><td/></tr>
 					</table>
-					<div id="selectable_workflow_toolbar"></div>
+					<div id="selectable_workflows_toolbar"></div>
 				</form>
 			</div>
 		</div>
@@ -169,7 +169,7 @@
 		$(window).bind('resize', function() {
 			$("#selectable_sources").setGridWidth($("#tabs").width() - 30);
 			$("#selectable_ontologies").setGridWidth($("#tabs").width() - 30);
-			$("#selectable_workflow").setGridWidth($("#tabs").width() - 30);
+			$("#selectable_workflows").setGridWidth($("#tabs").width() - 30);
 		}).trigger('resize');
 
 		$(".delete").click(function(e) {
@@ -396,21 +396,89 @@
 	
 	function loadGridWorkflow(){
 		/* Workflow */
-		jQuery("#selectable_workflow").jqGrid({
+		jQuery("#selectable_workflows").jqGrid({
 			datatype: "local",
 			colNames:['#i18n("project.p_uri")','#i18n("project.p_title")','#i18n("project.p_others")'],
 			colModel:[
 				{name:'uri',   index:'uri',   sorttype:"text"},
 				{name:'title', index:'title', sorttype:"text"},
-				{name:'infos', index:'infos', sorttype:"text"} ],
+				{name:'infos', index:'infos', sorttype:"text"} 
+			],
 			caption: "",
 			rowNum: 10,
 			rowList: [10,20,30],
-			pager: '#selectable_workflow_toolbar',
+			pager: '#selectable_workflows_toolbar',
 			gridview: true,
 			height: 250
 		});
-		jQuery("#selectable_workflow").jqGrid('hideCol',["uri"]);
+		
+		var mydataWorkflow =[
+	#foreach( $curWfl in $current.getWorkflows() )
+		{
+			uri   : "$!esc.javascript($curWfl.getUri())",
+			title : "$!esc.javascript($curWfl.getTitle())",
+			infos : "$!esc.javascript($curWfl.getDescription())"
+		}
+	#end
+		];
+		for(var i=0; i<=mydataWorkflow.length; i++){
+			jQuery("#selectable_workflows").jqGrid("addRowData",i+1,mydataWorkflow[i]);
+		}
+		jQuery("#selectable_workflows")
+			.jqGrid('navGrid', '#selectable_workflows_toolbar',
+				{ edit:false,add:false,del:false, refresh:false, search:false }
+			).navButtonAdd(
+			'#selectable_workflows_toolbar',
+			{
+				caption:"",
+				buttonicon:"ui-icon-plus",
+				onClickButton:function(){
+					window.location = currentProject + "/workflow/new";
+				}
+			}).navButtonAdd('#selectable_workflows_toolbar',
+				{
+					caption:"",
+					buttonicon:"ui-icon-triangle-1-e",
+					onClickButton:function(){
+						var id = jQuery("#selectable_workflows").getGridParam('selrow');
+						if(id){
+							var ret = jQuery("#selectable_workflows").getRowData(id);
+							window.location = currentProject +"/workflow/"+ ret.title +"/start";
+						} else {
+							alert("#i18n("project.msg.select_row")");
+						}
+					}
+				}
+			).navButtonAdd('#selectable_workflows_toolbar',
+				{
+					caption:"",
+					buttonicon:"ui-icon-pencil",
+					onClickButton:function(){
+						var id = jQuery("#selectable_workflows").getGridParam('selrow');
+						if(id){
+							var ret = jQuery("#selectable_workflows").getRowData(id);
+							window.location = currentProject +"/workflow/"+ ret.title +"/modify";
+						} else {
+							alert("#i18n("project.msg.select_row")");
+						}
+					}
+				}
+			).navButtonAdd('#selectable_workflows_toolbar',
+				{
+					caption:"",
+					buttonicon:"ui-icon-trash",
+					onClickButton:function(){
+						var id = jQuery("#selectable_workflows").getGridParam('selrow');
+						if(id){
+							var ret = jQuery("#selectable_workflows").getRowData(id);
+							window.location = currentProject +"/workflow/"+ ret.title +"/delete";
+						} else {
+							alert("#i18n("project.msg.select_row")");
+						}
+					}
+				}
+			);
+		jQuery("#selectable_workflows").jqGrid('hideCol',["uri"]);
 	}
 </script>
 </body>
