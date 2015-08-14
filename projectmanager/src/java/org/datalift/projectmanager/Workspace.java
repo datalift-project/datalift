@@ -100,7 +100,6 @@ import com.google.gson.JsonObject;
 import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.FormDataParam;
 
-import org.datalift.core.util.JsonStringMap;
 import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.FileStore;
@@ -2053,7 +2052,7 @@ public class Workspace extends BaseModule
                     outputInitials + "/" + outputTime + "/" + outputRandom);
         Project project = this.loadProject(projectUri);
         Map<URI, Event> events = this.projectManager.getEvents(project);
-        Map<URI, Event> creationByInfluenced = new HashMap<URI, Event>();
+        final Map<URI, Event> creationByInfluenced = new HashMap<URI, Event>();
         for(Event e : events.values()){
             if(e.getEventType() == Event.CREATION_EVENT_TYPE){
                 Event informer = events.get(e.getInformer());
@@ -2954,4 +2953,6 @@ public class Workspace extends BaseModule
         }
         return rootStep;
     }
+    
+    
 }
