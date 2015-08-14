@@ -1,0 +1,252 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+#load("project/resources")
+#load_core_resources
+	<title>#i18n("workspace.title") - DataLift</title>
+#css_links
+</head>
+<body>
+#banner
+	<div id="main-menu" style="position:absolute;top:15px;right:15px;">
+#foreach( $m in $mainMenu )
+#set( $entryUrl = $m.getUrl(${baseUri}) )
+#if( $m.method.name() == "GET" )
+		<a href="${entryUrl}" class="button">${m.label}</a>
+#else
+		<form method="post" action="${entryUrl}"><input type="submit" class="button" value="${m.label}"/></form>
+#end
+#end
+	</div>
+
+<div id="workspace_1" class="ui-widget-content">
+#if( $current )
+	<h3 class="ui-widget-header dl-widget-header">Nouveau du projet #i18n("project") $!esc.html($current.title)</h3>
+#else
+	<h3 class="ui-widget-header dl-widget-header">Modification du projet #i18n("workspace.title")</h3>
+#end
+	<div class="dl-panel">
+		<a href="http://localhost:9091/project">Retour à l'espace de travail</a>
+		<div id="accordion">
+			<h3><a href="#"></a></h3>
+			<div>
+				<form method="post" action="${it.uri}/$target" class="form_formated">
+					<p><label for="title">#i18n("project.upload_ontology.title"):</label>
+					<input type="text" id="title" name="title" value="$!esc.html($current.title)" autofocus="true"/></p>
+					<p><label for="source_url">#i18n("project.upload_ontology.source"):</label>
+					<input type="text" id="source_url" name="source_url" value="$!esc.html($current.source)"/></p>
+					<p id="workflow">
+						<form>
+							<table id="selectable_workflows">
+								<tr><td/></tr>
+							</table>
+							<div id="selectable_workflows_toolbar"></div>
+						</form>
+					</p>
+					<p><input type="button" onclick="nextPage()" value="Suivant"/></p>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
+<div id="workspace_2" style="display:none;">
+#if( $current )
+	<h3 class="ui-widget-header dl-widget-header">Nouveau du projet #i18n("project") $!esc.html($current.title)</h3>
+#else
+	<h3 class="ui-widget-header dl-widget-header">Modification du projet #i18n("workspace.title")</h3>
+#end
+	<div>
+		<a href="http://localhost:9091/project">Retour à l'espace de travail</a>
+		<h3 class="ui-widget-header dl-widget-header">Variables</h3>
+		<form>
+			<div id="dynamicInput">
+				<input type="text" name="keys"/>
+				<input type="text" name="values"/>
+			</div>
+			<input type="submit" value="Ajouter" onClick="addInput('dynamicInput');"/>
+		</form>
+		<div style="width:20%;float:left;">
+			<h3 class="ui-widget-header dl-widget-header">Title</h3>
+			<ul id="subEvents">
+				  
+			</ul>
+		</div>
+		<div style="width:80%;float:right;">
+			<h3 class="ui-widget-header dl-widget-header">Evènements</h3>
+			<form id="parameters" class="form_formated" method="post" action="">
+				
+			</form>
+		</div>
+	</div>
+</div>
+<div style="clear:both"></div>
+#footer
+
+#script_links
+<script type="text/javascript">
+	$("input:submit").button();
+	$("input:button").button();
+	$("#main-menu .button").button();
+	jQuery("#selectable_workflows").jqGrid({
+		datatype: "local",
+		colNames:['#i18n("project.p_uri")','Date','Opération','Agent','#i18n("project.p_others")'],
+		colModel:[
+			{name:'uri',   index:'uri',   sorttype:"text"},
+			{name:'date',   index:'date',   sorttype:"text"},
+			{name:'operation', index:'operation', sorttype:"text"},
+			{name:'agent', index:'agent', sorttype:"text"},
+			{name:'usedSources', index:'usedSources', sorttype:"text"} 
+		],
+		caption: "",
+		rowNum: 10,
+		rowList: [10,20,30],
+		pager: '#selectable_workflows_toolbar',
+		gridview: true,
+		height: 250
+	});
+	var mydataWorkflow =[
+	#foreach( $curWfl in $outputs )
+		{
+			##uri   : "$!esc.javascript($curWfl.getUri())",
+			##title : "$!esc.javascript($curWfl.getTitle())",
+			##infos : "$!esc.javascript($curWfl.getDescription())"
+			
+			uri         : "$!esc.javascript($curWfl.getUri())",
+			date        : "$!esc.javascript($curWfl.getStartTime())",
+			operation   : "$!esc.javascript($curWfl.getOperation())",
+			agent       : "$!esc.javascript($curWfl.getAgent())",
+			usedSources : "$!esc.javascript($curWfl.getUsed().iterator().next())"
+		}
+	#end
+	];
+	for(var i=0; i<=mydataWorkflow.length; i++){
+		jQuery("#selectable_workflows").jqGrid("addRowData",i+1,mydataWorkflow[i]);
+	}
+	jQuery("#selectable_workflows").jqGrid('hideCol',["uri"]);
+	$("#accordion").accordion({
+		autoHeight: false,
+		navigation: true
+	});
+	$("#accordion1").accordion({
+		autoHeight: false,
+		navigation: true
+	});
+	$("#selectable_workflows").setGridWidth($("#accordion").width() - 80);
+	function nextPage(){
+		var id = jQuery("#selectable_workflows").getGridParam('selrow');
+		if(id){
+			var events = jQuery("#selectable_workflows").getRowData(id);
+			$("#workspace_1").css("display","none");
+			$("#workspace_2").css("display","block");
+			var uri = events.uri;
+			uri = uri+"/parameters";
+			uri = uri.replace("event", "output");
+			
+			setEvents(uri);
+			writeGraph();
+		} else {
+			alert("#i18n("project.msg.select_row")");
+		}
+	}
+	function addInput(divName){
+		var newdiv = document.createElement('div');
+		htmlCode = "<input type='text' name='keys'>";
+		htmlCode = htmlCode+"<input type='text' name='values'>";
+		newdiv.innerHTML = htmlCode;
+		document.getElementById(divName).appendChild(newdiv);
+	}
+	function setEvents(uri){
+		$.ajax({
+			url : uri,
+			type : 'GET',
+			error : function(){
+			},
+			success : function(result, status, error){
+				sessionStorage["uri"] = uri;
+				sessionStorage["result"] = result;
+			}
+		});
+		console.log(sessionStorage);
+	}
+	function getJSON(){
+		var json = JSON.parse(sessionStorage.getItem("result"));
+		return json;
+	}
+	function writeGraph(){
+		var json = getJSON();
+		var htmlCode = "";
+		var names = {};
+		$.each(json, function(key, val) {
+			names[key] = parseInt(Math.random()*1000);
+		});
+		$.each(json, function(key, val) {
+			console.log(key);
+			htmlCode = htmlCode+'<li class="ui-widget-header" style="list-style-type:none;"><a href="'+key+'" onClick="go(this);return false;">step '+names[key]+'</a></li>';
+			if(val.previous!=undefined){
+				$.each(val.previous, function(k,v){
+					console.log(v);
+					htmlCode = htmlCode+'<li><a href="'+v+'" onClick="go(this);return false;">step '+names[v]+'</a></li>';
+				});
+			}
+		});
+		$("#subEvents").html(htmlCode);
+	}
+	function go(p){
+		var json = getJSON();
+		var htmlCode = "";
+		console.log(p);
+		console.log(json[p]);
+		$.each(json[p].parameters, function(key, val){
+			console.log(key);
+			console.log(val);
+			htmlCode = htmlCode + "<p><label>"+key+"</label>";
+			htmlCode = htmlCode + '<input type="text" value="'+val+'" name="value1"/></p>';				
+		});
+		htmlCode = htmlCode +'<input type="hidden" id="" value=""/>';
+		htmlCode = htmlCode +'<input type="button" onClick="valid()" value="envoyer"/>';
+		$("#parameters").html(htmlCode);
+	}
+	function valid(){
+		var obj = {};
+		obj["title"] = $("#title").val();
+		obj["description"] = $("#title").val();
+		obj["origin"] = sessionStorage.getItem("uri");
+		var json = getJSON();
+		var sub = {};
+		sub["operation"] = sessionStorage.getItem("uri");
+		sub["parameters"] = getParams();
+		//sub["previous"] = ;
+		obj["output"] = sub;
+		console.log(obj);
+		$.post("localhost", obj);
+	}
+	function getKeys(){
+		var obj = document.getElementsByName('keys');
+		var keys = [];
+		$.each(obj, function(key, val){
+			keys.push(val.value);
+		});
+		return keys;
+	}
+	function getValues(){
+		var obj = document.getElementsByName('values');
+		var values = [];
+		$.each(obj, function(key, val){
+			values.push(val.value);
+		});
+		return values;
+	}
+	function getParams(){
+		var params = {};
+		var keys=getKeys();
+		var values=getValues();
+		for(var i=0; i<keys.length; i++){
+			params[keys[i]]=values[i];
+		}
+		console.log(params);
+		return params;
+	}
+</script>
+</body>
+</html>
