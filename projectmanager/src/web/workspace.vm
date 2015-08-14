@@ -44,6 +44,7 @@
 				<li><a onclick="historyPush('${current.uri}#description');" href="#description">#i18n("project.title.description")</a></li>
 				<li><a onclick="historyPush('${current.uri}#source');" href="#source">#i18n("project.title.sources")</a></li>
 				<li><a onclick="historyPush('${current.uri}#ontology');" href="#ontology">#i18n("project.title.ontology")</a></li>
+				<li><a onclick="historyPush('${current.uri}#workflow');" href="#workflow">Workflow</a></li>
 			</ul>
 
 			<div id="description"><p>
@@ -91,6 +92,15 @@
 						<tr><td/></tr>
 					</table>
 					<div id="selectable_ontologies_toolbar"></div>
+				</form>
+			</div>
+			
+			<div id="workflow">
+				<form class="grid_form">
+					<table id="selectable_workflows">
+						<tr><td/></tr>
+					</table>
+					<div id="selectable_workflows_toolbar"></div>
 				</form>
 			</div>
 		</div>
@@ -154,15 +164,16 @@
 
 		loadGridSources();
 		loadGridOntologies();
+		loadGridWorkflow();
 
 		$(window).bind('resize', function() {
 			$("#selectable_sources").setGridWidth($("#tabs").width() - 30);
 			$("#selectable_ontologies").setGridWidth($("#tabs").width() - 30);
+			$("#selectable_workflows").setGridWidth($("#tabs").width() - 30);
 		}).trigger('resize');
 
 		$(".delete").click(function(e) {
 			e.preventDefault();
-			alert("test click");
 		});
 	});
 
@@ -380,6 +391,93 @@
 			}
 		});
 		jQuery("#selectable_ontologies").jqGrid('hideCol',["uri"]);
+	}
+	
+	function loadGridWorkflow(){
+		/* Workflow */
+		jQuery("#selectable_workflows").jqGrid({
+			datatype: "local",
+			colNames:['#i18n("project.p_uri")','#i18n("project.p_title")','#i18n("project.p_others")'],
+			colModel:[
+				{name:'uri',   index:'uri',   sorttype:"text"},
+				{name:'title', index:'title', sorttype:"text"},
+				{name:'infos', index:'infos', sorttype:"text"} 
+			],
+			caption: "",
+			rowNum: 10,
+			rowList: [10,20,30],
+			pager: '#selectable_workflows_toolbar',
+			gridview: true,
+			height: 250
+		});
+		
+		var mydataWorkflow =[
+	#foreach( $curWfl in $current.getWorkflows() )
+		{
+			uri   : "$!esc.javascript($curWfl.getUri())",
+			title : "$!esc.javascript($curWfl.getTitle())",
+			infos : "$!esc.javascript($curWfl.getDescription())"
+		}
+	#end
+		];
+		for(var i=0; i<=mydataWorkflow.length; i++){
+			jQuery("#selectable_workflows").jqGrid("addRowData",i+1,mydataWorkflow[i]);
+		}
+		jQuery("#selectable_workflows")
+			.jqGrid('navGrid', '#selectable_workflows_toolbar',
+				{ edit:false,add:false,del:false, refresh:false, search:false }
+			).navButtonAdd(
+			'#selectable_workflows_toolbar',
+			{
+				caption:"",
+				buttonicon:"ui-icon-plus",
+				onClickButton:function(){
+					window.location = currentProject + "/workflow/new";
+				}
+			}).navButtonAdd('#selectable_workflows_toolbar',
+				{
+					caption:"",
+					buttonicon:"ui-icon-triangle-1-e",
+					onClickButton:function(){
+						var id = jQuery("#selectable_workflows").getGridParam('selrow');
+						if(id){
+							var ret = jQuery("#selectable_workflows").getRowData(id);
+							window.location = currentProject +"/workflow/"+ ret.title +"/start";
+						} else {
+							alert("#i18n("project.msg.select_row")");
+						}
+					}
+				}
+			).navButtonAdd('#selectable_workflows_toolbar',
+				{
+					caption:"",
+					buttonicon:"ui-icon-pencil",
+					onClickButton:function(){
+						var id = jQuery("#selectable_workflows").getGridParam('selrow');
+						if(id){
+							var ret = jQuery("#selectable_workflows").getRowData(id);
+							window.location = currentProject +"/workflow/"+ ret.title +"/modify";
+						} else {
+							alert("#i18n("project.msg.select_row")");
+						}
+					}
+				}
+			).navButtonAdd('#selectable_workflows_toolbar',
+				{
+					caption:"",
+					buttonicon:"ui-icon-trash",
+					onClickButton:function(){
+						var id = jQuery("#selectable_workflows").getGridParam('selrow');
+						if(id){
+							var ret = jQuery("#selectable_workflows").getRowData(id);
+							window.location = currentProject +"/workflow/"+ ret.title +"/delete";
+						} else {
+							alert("#i18n("project.msg.select_row")");
+						}
+					}
+				}
+			);
+		jQuery("#selectable_workflows").jqGrid('hideCol',["uri"]);
 	}
 </script>
 </body>
