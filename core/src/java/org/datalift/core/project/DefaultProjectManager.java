@@ -71,7 +71,7 @@ import javassist.LoaderClassPath;
 import org.datalift.core.prov.EventImpl;
 import org.datalift.core.replay.WorkflowImpl;
 import org.datalift.core.replay.WorkflowStepImpl;
-import org.datalift.core.util.JsonStringParameters;
+import org.datalift.core.util.JsonStringMap;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.FileStore;
 import org.datalift.fwk.LifeCycle;
@@ -1045,7 +1045,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         //create event and put it on the project
         EventImpl event = new EventImpl(id, project, operationE, parameters,
                 eventTypeE, startE, endE, agentE, influenced,
-                TaskContext.getCurrent().getCurrentEvent(), used);
+                TaskContext.getCurrent().getCurrentEvent().getUri(), used);
         if(project != null)
             project.addEvent(event);
         return event;
@@ -1101,23 +1101,23 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     @Override
     public Workflow newWorkflow(Project project, URI url, String title,
             String description, Map<String, String> variables,
-            WorkflowStep outputStep) {
+            WorkflowStep outputStep, URI originEvent) {
         return this.newWorkflow(project, url, title, description, variables,
-                outputStep, null, null, new Date());
+                outputStep, originEvent, null, null, new Date());
     }
     
     /** {@inheritDoc} */
     @Override
     public Workflow newWorkflow(Project project, URI url, String title,
             String description, Map<String, String> variables,
-            WorkflowStep outputStep,  URI eventOperation,
+            WorkflowStep outputStep, URI originEvent, URI eventOperation,
             Map<String, String> eventParameters, Date eventStart){
         Date eventStartE = eventStart;
         if(eventStart == null)
             eventStartE = new Date();
         // Create the workflow
         WorkflowImpl wfl = new WorkflowImpl(url, title, description, variables,
-                (WorkflowStepImpl) outputStep);
+                (WorkflowStepImpl) outputStep, originEvent);
         // Add it to the project
         project.addWorkflow(wfl);
         log.debug("New workflow <{}> added to project \"{}\"",
@@ -1133,7 +1133,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
             parametersE.put("workflow", wfl.getUri().toString());
             parametersE.put("title", title);
             parametersE.put("description", description);
-            parametersE.put("variables", new JsonStringParameters(variables)
+            parametersE.put("variables", new JsonStringMap(variables)
                                                                 .toString());
             parametersE.put("outputStep", outputStep.toString());
         }
@@ -1185,8 +1185,8 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     /** {@inheritDoc} */
     @Override
     public WorkflowStep NewWorkflowStep(URI operation,
-            Map<String, String> parameters) {
-        return new WorkflowStepImpl(operation, parameters);
+            Map<String, String> parameters, URI originEvent) {
+        return new WorkflowStepImpl(operation, parameters, originEvent);
     }
 
     @Override
@@ -1385,7 +1385,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
                     SqlQuerySourceImpl.class, SqlDatabaseSourceImpl.class,
                     SparqlSourceImpl.class, XmlSourceImpl.class,
                     TransformedRdfSourceImpl.class, ShpSourceImpl.class,
-                    GmlSourceImpl.class, EventImpl.class));
+                    GmlSourceImpl.class, EventImpl.class, WorkflowImpl.class));
         return classes;
     }
 

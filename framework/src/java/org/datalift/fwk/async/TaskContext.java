@@ -2,6 +2,7 @@ package org.datalift.fwk.async;
 
 import java.net.URI;
 
+import org.datalift.fwk.prov.Event;
 import org.datalift.fwk.prov.EventSubject;
 import org.datalift.fwk.prov.EventType;
 
@@ -18,8 +19,8 @@ public abstract class TaskContext {
     }
     
     public abstract URI getCurrentAgent();
-    public abstract URI getCurrentEvent();
-    public abstract void beginAsEvent(EventType eventType, EventSubject eventSubject);
+    public abstract Event getCurrentEvent();
+    public abstract Event beginAsEvent(EventType eventType, EventSubject eventSubject);
     public abstract void addUsedOnEvent(URI used);
     public abstract void addInfluencedEntityOnEvent(URI influenced);
 

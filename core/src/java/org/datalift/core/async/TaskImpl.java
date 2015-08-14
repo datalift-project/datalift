@@ -8,7 +8,7 @@ import java.util.Map;
 import javax.persistence.Entity;
 
 import org.datalift.core.project.BaseRdfEntity;
-import org.datalift.core.util.JsonStringParameters;
+import org.datalift.core.util.JsonStringMap;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.async.Operation;
 import org.datalift.fwk.async.Task;
@@ -16,12 +16,20 @@ import org.datalift.fwk.async.TaskContext;
 import org.datalift.fwk.async.TaskStatus;
 import org.datalift.fwk.async.UnregisteredOperationException;
 import org.datalift.fwk.project.Project;
+import org.datalift.fwk.prov.Event;
 
 import com.clarkparsia.empire.annotation.NamedGraph;
 import com.clarkparsia.empire.annotation.RdfId;
 import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.RdfsClass;
 
+/**
+ * an implementation of Task to execute on an own thread and to persist with
+ * Empire
+ * 
+ * @author rcabaret
+ *
+ */
 @Entity
 @RdfsClass("datalift:Task")
 @NamedGraph(type = NamedGraph.NamedGraphType.Static, value="http://www.datalift.org/core/project-history")
@@ -34,7 +42,7 @@ public class TaskImpl extends BaseRdfEntity implements Task{
     private Operation operation;
     @RdfProperty("datalift:parameters")
     private String parameters;
-    private JsonStringParameters param;
+    private JsonStringMap param;
     @RdfProperty("prov:wasAssociatedWith")
     private URI agent;
     @RdfProperty("datalift:status")
@@ -45,15 +53,27 @@ public class TaskImpl extends BaseRdfEntity implements Task{
     private Date end;
     @RdfProperty("dcterms:issued")
     private Date issue;
+    private Event runningEvent;
     
+    /**
+     * construct an empty TaskImpl
+     */
     public TaskImpl(){
         //NOP
     }
     
+    /**
+     * construct a TaskImpl
+     * 
+     * @param uri   the uri of the task
+     * @param project   the project associated with the task
+     * @param operation the operation executed by the task
+     * @param parameters    the parameters used by the operation
+     */
     public TaskImpl(URI uri, Project project, Operation operation,
             Map<String, String> parameters){
         if(parameters != null){
-            this.param = new JsonStringParameters(parameters);
+            this.param = new JsonStringMap(parameters);
         } else {
             this.param = null;
             this.parameters = null;
@@ -66,30 +86,35 @@ public class TaskImpl extends BaseRdfEntity implements Task{
         this.uri = uri;
     }
 
+    /** {@inheritDoc} */
     @Override
     public URI getAgent() {
         return this.agent;
     }
 
+    /** {@inheritDoc} */
     @Override
     public URI getUri() {
         return this.uri;
     }
 
+    /** {@inheritDoc} */
     @Override
     public TaskStatus getStatus() {
         return TaskStatus.getByUri(this.status);
     }
 
+    /** {@inheritDoc} */
     @Override
     public Map<String, String> getParmeters() {
         if(this.param == null && this.parameters != null){
-            this.param = new JsonStringParameters(this.parameters);
-            return this.param.getParametersMap();
+            this.param = new JsonStringMap(this.parameters);
+            return this.param;
         }
         return null;
     }
 
+    /** {@inheritDoc} */
     @Override
     public Operation getOperation() {
         if(this.operation == null){
@@ -108,26 +133,31 @@ public class TaskImpl extends BaseRdfEntity implements Task{
         return this.operation;
     }
 
+    /** {@inheritDoc} */
     @Override
     public Date getStartTime() {
         return this.start;
     }
 
+    /** {@inheritDoc} */
     @Override
     public Date getEndTime() {
         return this.end;
     }
 
+    /** {@inheritDoc} */
     @Override
     public Date getIssueTime() {
         return this.issue;
     }
 
+    /** {@inheritDoc} */
     @Override
     protected void setId(String id) {
         this.uri = URI.create(id);
     }
 
+    /** {@inheritDoc} */
     @Override
     public void setStatus(TaskStatus status) {
         TaskStatus s = TaskStatus.getByUri(this.status);
@@ -151,5 +181,17 @@ public class TaskImpl extends BaseRdfEntity implements Task{
             this.end = new Date();
         if(status == TaskStatus.runStatus)
             this.start = new Date();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Event getRunningEvent() {
+        return this.runningEvent;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public void setRunningEvent(Event event){
+        this.runningEvent = event;
     }
 }

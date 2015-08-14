@@ -783,12 +783,13 @@ public interface ProjectManager
      * @param  description    the workflow description.
      * @param  variables    the workflow variables default values mapped by name.
      * @param  outputStep    the workflow steps tree root.
+     * @param  originEvent  the event the workflow was extracted from
      *
      * @return the new workflow, added to the project.
      */
     public Workflow newWorkflow(Project project, URI url, String title,
             String description, Map<String, String> variables,
-            WorkflowStep outputStep);
+            WorkflowStep outputStep, URI originEvent);
     
     /**
      * Create a new workflow.
@@ -799,6 +800,7 @@ public interface ProjectManager
      * @param  description    the workflow description.
      * @param  variables    the workflow variables default values mapped by name.
      * @param  outputStep    the workflow steps tree root.
+     * @param  originEvent  the event the workflow was extracted from
      * @param  eventOperation    the operation of the event
      * @param  eventParameters   the parameters of the event
      * @param  eventStart        the event start time
@@ -807,7 +809,7 @@ public interface ProjectManager
      */
     public Workflow newWorkflow(Project project, URI url, String title,
             String description, Map<String, String> variables,
-            WorkflowStep outputStep,  URI eventOperation,
+            WorkflowStep outputStep, URI originEvent, URI eventOperation,
             Map<String, String> eventParameters, Date eventStart);
 
     /**
@@ -835,10 +837,11 @@ public interface ProjectManager
      * 
      * @param operation     the id of the step operation
      * @param parameters    the parameters values map
+     * @param originEvent   the event the workflow step was extracted from
      * @return  a new workflow step to build the step tree for a new workflow
      */
     public WorkflowStep NewWorkflowStep(URI operation,
-            Map<String, String> parameters);
+            Map<String, String> parameters, URI originEvent);
     
     /**
      * get an event by his URI

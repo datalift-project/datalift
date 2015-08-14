@@ -22,10 +22,12 @@ public class TaskContextImpl extends TaskContext{
 
     private URI taskAgent;
     private ArrayList<OperationExecution> executions = new ArrayList<OperationExecution>();
+    private Event informer;
     
-    public TaskContextImpl(Task task){
+    public TaskContextImpl(Task task, Event informer){
         super();
         this.taskAgent = URI.create(task.getUri().toString() + "/softwareAgent");
+        this.informer = informer;
     }
     
     public void startOperation(Project project, URI operation,
@@ -33,16 +35,19 @@ public class TaskContextImpl extends TaskContext{
         this.executions.add(new OperationExecution(project, operation, parameters));
     }
     
-    public void endOperation(){
+    public Event endOperation(boolean well){
         OperationExecution oe = this.executions.get(this.executions.size() - 1);
-        ProjectManager pm = Configuration.getDefault().getBean(ProjectManager.class);
-        pm.saveEvent(oe.event);
+        if(oe.event != null && well){
+            ProjectManager pm = Configuration.getDefault().getBean(ProjectManager.class);
+            pm.saveEvent(oe.event);
+        }
         this.executions.remove(oe);
+        return oe.event;
     }
     
     @Override
     public URI getCurrentAgent() {
-        Event event = this.getCurrentEventObject();
+        Event event = this.getCurrentEvent();
         if(event == null){
             if(TaskContext.defaultOne == null)
                 throw new RuntimeException("default Task Context undefined");
@@ -53,15 +58,25 @@ public class TaskContextImpl extends TaskContext{
     }
 
     @Override
-    public URI getCurrentEvent() {
-        return this.getCurrentEventObject().getUri();
+    public Event getCurrentEvent() {
+        Event ev = this.informer;
+        if(!this.executions.isEmpty()){
+            int i = this.executions.size() - 2;
+            ev = this.executions.get(i + 1).event;
+            while(ev == null && i >= 0){
+                ev = this.executions.get(i).event;
+                i--;
+            }
+        }
+        return ev;
     }
 
     @Override
-    public void beginAsEvent(EventType eventType, EventSubject eventSubject) {
+    public Event beginAsEvent(EventType eventType, EventSubject eventSubject) {
         OperationExecution oe = this.executions.get(this.executions.size() - 1);
         ProjectManager pm = Configuration.getDefault().getBean(ProjectManager.class);
-        
+        if(oe.event != null)
+            return oe.event;
         URI operationE = oe.operation;
         if(oe.operation == null)
             operationE = URI
@@ -87,9 +102,10 @@ public class TaskContextImpl extends TaskContext{
         //create event and put it on the project
         EventImpl event = new EventImpl(id, oe.project, operationE, oe.parameters,
                 eventTypeE, startE, null, this.getCurrentAgent(), null,
-                TaskContext.getCurrent().getCurrentEvent());
+                TaskContext.getCurrent().getCurrentEvent().getUri());
         EventImpl evt = (EventImpl) pm.saveEvent(event);
         oe.event = evt;
+        return evt;
     }
     
     @Override
@@ -110,19 +126,6 @@ public class TaskContextImpl extends TaskContext{
         if(oe == null)
             throw new RuntimeException("no current event to update");
         oe.event.setInfluenced(influenced);
-    }
-    
-    public Event getCurrentEventObject() {
-        Event ev = null;
-        if(!this.executions.isEmpty()){
-            int i = this.executions.size() - 2;
-            ev = this.executions.get(i + 1).event;
-            while(ev == null && i >= 0){
-                ev = this.executions.get(i).event;
-                i--;
-            }
-        }
-        return ev;
     }
 
     private class OperationExecution{

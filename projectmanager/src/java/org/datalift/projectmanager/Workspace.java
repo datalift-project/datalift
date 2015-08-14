@@ -54,6 +54,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.MissingResourceException;
 
 import javax.ws.rs.Consumes;
@@ -80,6 +81,9 @@ import javax.xml.parsers.SAXParserFactory;
 import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 import static javax.ws.rs.core.Response.Status.*;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.openrdf.model.Literal;
 import org.openrdf.model.Value;
 import org.openrdf.model.vocabulary.RDFS;
@@ -96,6 +100,7 @@ import com.google.gson.JsonObject;
 import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.FormDataParam;
 
+import org.datalift.core.util.JsonStringMap;
 import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.FileStore;
@@ -124,13 +129,17 @@ import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.project.XmlSource;
 import org.datalift.fwk.project.CsvSource.Separator;
 import org.datalift.fwk.project.ProjectModule.UriDesc;
+import org.datalift.fwk.prov.Event;
 import org.datalift.fwk.rdf.ElementType;
 import org.datalift.fwk.rdf.RdfFormat;
 import org.datalift.fwk.rdf.RdfNamespace;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
+import org.datalift.fwk.replay.Workflow;
+import org.datalift.fwk.replay.WorkflowStep;
 import org.datalift.fwk.sparql.SparqlEndpoint;
 import org.datalift.fwk.util.CloseableIterator;
+import org.datalift.fwk.util.StringUtils;
 import org.datalift.fwk.util.UriBuilder;
 import org.datalift.fwk.util.io.FileUtils;
 import org.datalift.fwk.util.web.Charsets;
@@ -150,6 +159,7 @@ import static org.datalift.fwk.util.StringUtils.*;
  * data-lifting projects.
  *
  * @author hdevos
+ * @author rcabaret
  */
 @Path(Workspace.PROJECT_URI_PREFIX)
 public class Workspace extends BaseModule
@@ -164,6 +174,7 @@ public class Workspace extends BaseModule
     public enum ProjectTab {
         Description     ("description"),
         Sources         ("source"),
+        Workflows       ("workflow"),
         Ontologies      ("ontology");
 
         public final String anchor;
@@ -1989,6 +2000,215 @@ public class Workspace extends BaseModule
         }
         return response;
     }
+    
+    @GET
+    @Path("{pid}/workflow/new")
+    public Response getWorkflowCreationPage(
+                    @PathParam("pid") String projectId,
+                    @Context UriInfo uriInfo){
+        Response response = null;
+        URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
+        Project project = this.loadProject(projectUri);
+        Collection<Event> outputs =
+                this.projectManager.getOutputEvents(project).values();
+        TemplateModel view = this.newView("workflowModify.vm", project);
+        view.put("current", null);
+        view.put("outputs", outputs);
+        response = Response.ok(view, TEXT_HTML).build();
+        return response;
+    }
+    
+    @GET
+    @Path("{pid}/workflow/{wid}")
+    public Response getWorkflowModificationPage(
+                    @PathParam("pid") String projectId,
+                    @PathParam("wid") String workflowId,
+                    @Context UriInfo uriInfo){
+        Response response = null;
+        URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
+        Project project = this.loadProject(projectUri);
+        URI workflowUri = URI.create(projectId.toString() +
+                "/workflow/" + workflowId);
+        Workflow workflow = project.getWorkflow(workflowUri);
+        Collection<Event> outputs =
+                this.projectManager.getOutputEvents(project).values();
+        TemplateModel view = this.newView("workflowModify.vm", project);
+        view.put("current", workflow);
+        view.put("outputs", outputs);
+        response = Response.ok(view, TEXT_HTML).build();
+        return response;
+    }
+    
+    @GET
+    @Path("{pid}/output/{oinitials}/{otime}/{orand}/parameters")
+    @Produces(APPLICATION_JSON)
+    public String getOutputParameters(
+                    @PathParam("pid") String projectId,
+                    @PathParam("oinitials") String outputInitials,
+                    @PathParam("otime") String outputTime,
+                    @PathParam("orand") String outputRandom,
+                    @Context UriInfo uriInfo) throws JSONException{
+        URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
+        URI outputUri = URI.create(projectUri.toString() + "/event/" +
+                    outputInitials + "/" + outputTime + "/" + outputRandom);
+        Project project = this.loadProject(projectUri);
+        Map<URI, Event> events = this.projectManager.getEvents(project);
+        Map<URI, Event> creationByInfluenced = new HashMap<URI, Event>();
+        for(Event e : events.values()){
+            if(e.getEventType() == Event.CREATION_EVENT_TYPE){
+                Event informer = events.get(e.getInformer());
+                if(informer != null){
+                    if(informer.getEventType() != Event.CREATION_EVENT_TYPE ||
+                            !informer.getInfluenced().equals(e.getInfluenced()))
+                        creationByInfluenced.put(e.getInfluenced(), e);
+                } else {
+                    creationByInfluenced.put(e.getInfluenced(), e);
+                }
+            }
+        }
+        class paramExtractor{
+            private Map<URI, Event> crs = creationByInfluenced;
+            JSONObject extract(Event e, JSONObject json) throws JSONException{
+                JSONObject jobj;
+                if(json == null)
+                    jobj = new JSONObject();
+                else
+                    jobj = json;
+                JSONObject jstep = new JSONObject();
+                jstep.put("operation", e.getOperation().toString());
+                jstep.put("parameters", new JsonStringMap(
+                        e.getParameters()).getJSONObject());
+                JSONArray prev = new JSONArray();
+                for(URI usedUri : e.getUsed()){
+                    Event previous = this.crs.get(usedUri);
+                    if(previous != null &&
+                            jobj.optJSONObject(usedUri.toString()) == null)
+                        this.extract(previous, jobj);
+                    prev.put(previous.getUri().toString());
+                }
+                if(prev.length() > 0)
+                    jstep.put("previous", prev);
+                jobj.put(e.getUri().toString(), jstep);
+                return jobj;
+            }
+        }
+        Event output = events.get(outputUri);
+        JSONObject json = new paramExtractor().extract(output, null);
+        return json.toString();
+    }
+    
+    @GET
+    @Path("{pid}/workflow/{wid}/replay/new")
+    public Response getReplayConfigurationPage(
+                    @PathParam("pid") String projectId,
+                    @PathParam("wid") String workflowId,
+                    @Context UriInfo uriInfo){
+        Response response = null;
+        URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
+        Project project = this.loadProject(projectUri);
+        URI workflowUri = URI.create(projectId.toString() +
+                "/workflow/" + workflowId);
+        Workflow workflow = project.getWorkflow(workflowUri);
+        TemplateModel view = this.newView("replay.vm", project);
+        view.put("current", workflow);
+        response = Response.ok(view, TEXT_HTML).build();
+        return response;
+    }
+    
+    @POST
+    @Path("{pid}/workflow/new")
+    @Consumes(APPLICATION_JSON)
+    public Response newWorkflow(
+                    @PathParam("pid") String projectId,
+                    String json,
+                    @Context UriInfo uriInfo){
+        Response response = null;
+        try {
+            // Retrieve project.
+            URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
+            Project p = this.loadProject(projectUri);
+            // Extract workflow from the json
+            JSONObject jsonWorkflow = new JSONObject(json);
+            String wTitle = jsonWorkflow.getString("title");
+            URI wOrigin = URI.create(jsonWorkflow.getString("origin"));
+            String wDescription = jsonWorkflow.getString("description");
+            URI wUri = URI.create(p.getUri() + "/workflow/" + StringUtils
+                    .urlify(wTitle));
+            Map<String, String> wVariables = new JsonStringMap(
+                    jsonWorkflow.optJSONObject("variables"));
+            WorkflowStep wOutput = this.extractWorkflowStepsFromJson(
+                    jsonWorkflow.getJSONObject("output"));
+            // add workflow to the project
+            Workflow workflow = this.projectManager.newWorkflow(p, wUri, wTitle,
+                    wDescription, wVariables, wOutput, wOrigin);
+            p.addWorkflow(workflow);
+            // Persist new workflow
+            this.projectManager.saveProject(p);
+            response = this.redirect(p, ProjectTab.Workflows).build();
+        } catch (Exception e) {
+            this.handleInternalError(e, "Failed to add workflow");
+        }
+        return response;
+    }
+    
+    @POST
+    @Path("{pid}/workflow/{wid}")
+    @Consumes(APPLICATION_JSON)
+    public Response updateWorkflow(
+                    @PathParam("pid") String projectId,
+                    @PathParam("wid") String workflowId,
+                    String json,
+                    @Context UriInfo uriInfo){
+        Response response = null;
+        try{
+            URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
+            Project p = this.loadProject(projectUri);
+            URI workflowUri = URI.create(p.getUri() + "/workflow/" + workflowId);
+            Workflow w = p.getWorkflow(workflowUri);
+            JSONObject jsonWorkflow = new JSONObject(json);
+            String wTitle = jsonWorkflow.getString("title");
+            String wDescription = jsonWorkflow.getString("description");
+            Map<String, String> wVariables = new JsonStringMap(
+                    jsonWorkflow.optJSONObject("variables"));
+            WorkflowStep wOutput = this.extractWorkflowStepsFromJson(
+                    jsonWorkflow.getJSONObject("output"));
+            // detect and save changes
+            if(!w.getTitle().equals(wTitle))
+                w.setTitle(wTitle);
+            if(!w.getDescription().equals(wDescription))
+                w.setDescription(wDescription);
+            if(!w.getVariables().equals(wVariables)){
+                w.removeAllVariables();
+                for(Entry<String, String> v : wVariables.entrySet())
+                    w.addVariable(v.getKey(), v.getValue());
+            }
+            if(!w.getOutputStep().equals(wOutput))
+                w.setSteps(wOutput);
+            // Persist workflow changes
+            this.projectManager.saveProject(p);
+            response = this.redirect(p, ProjectTab.Workflows).build();
+        } catch (Exception e){
+            this.handleInternalError(e, "Failed to udate workflow");
+        }
+        return response;
+    }
+    
+    @POST
+    @Path("{pid}/workflow/{wid}/replay/new")
+    @Consumes(APPLICATION_JSON)
+    public Response executeWorflow(
+                    @PathParam("pid") String projectId,
+                    @PathParam("wid") String workflowId,
+                    @Context UriInfo uriInfo,
+                    String json) throws Exception{
+        URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
+        Project p = this.loadProject(projectUri);
+        URI workflowUri = URI.create(p.getUri() + "/workflow/" + workflowId);
+        Workflow w = p.getWorkflow(workflowUri);
+        Map<String, String> variables = new JsonStringMap(json);
+        w.replay(variables);
+        return this.redirect(p, ProjectTab.Workflows).build();
+    }
 
     @GET
     @Path("{id}/ontology/{ontologyTitle}/modify")
@@ -2698,5 +2918,40 @@ public class Workspace extends BaseModule
             }
             this.sendError(INTERNAL_SERVER_ERROR, error.getLocalizedMessage());
         }
+    }
+    
+    private WorkflowStep extractWorkflowStepsFromJson(JSONObject json)
+            throws JSONException{
+        WorkflowStep rootStep = null;
+        Map<String, WorkflowStep> steps = new HashMap<String, WorkflowStep>();
+        // extract all steps
+        for(String e : JSONObject.getNames(json)){
+            JSONObject jstep = json.getJSONObject(e);
+            WorkflowStep step = this.projectManager.NewWorkflowStep(
+                    URI.create(jstep.getString("operation")),
+                    new JsonStringMap(jstep.getJSONObject("parameters")),
+                    URI.create(e));
+            steps.put(e, step);
+        }
+        // link steps
+        for(String e : steps.keySet()){
+            WorkflowStep step = steps.get(e);
+            JSONObject jstep = json.getJSONObject(e);
+            JSONArray prevs = jstep.optJSONArray("previous");
+            if(prevs != null && prevs.length() > 0){
+                for(int i = prevs.length() - 1; i >= 0; i--){
+                    step.addPreviousStep(steps.get(prevs.getString(i)));
+                }
+            }
+        }
+        // search for the root step
+        for(String e : steps.keySet()){
+            if(steps.get(e).getNextSteps() == null ||
+                    steps.get(e).getNextSteps().isEmpty()){
+                rootStep = steps.get(e);
+                break;
+            }
+        }
+        return rootStep;
     }
 }
