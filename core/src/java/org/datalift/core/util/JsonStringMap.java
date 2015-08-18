@@ -126,9 +126,11 @@ public class JsonStringMap implements Map<String, String> {
     /** {@inheritDoc} */
     @Override
     public String put(String key, String value) {
-        if(key == null || value == null)
-            throw new NullPointerException();
-        String p = this.jobj.optString(key);
+        if(key == null)
+            throw new IllegalArgumentException("the key is null");
+        String p = null;
+        if(!this.jobj.isNull(key))
+            p = this.jobj.optString(key);
         try {
             this.jobj.put(key, value);
         } catch (JSONException e) {
