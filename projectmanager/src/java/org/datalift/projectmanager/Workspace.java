@@ -2013,6 +2013,7 @@ public class Workspace extends BaseModule
         TemplateModel view = this.newView("workflowModify.vm", project);
         view.put("current", null);
         view.put("outputs", outputs);
+        view.put("posturl", projectUri.toString() + "/workflow/new");
         response = Response.ok(view, TEXT_HTML).build();
         return response;
     }
@@ -2034,13 +2035,14 @@ public class Workspace extends BaseModule
         TemplateModel view = this.newView("workflowModify.vm", project);
         view.put("current", workflow);
         view.put("outputs", outputs);
+        view.put("posturl", projectUri.toString() + "/workflow/" + workflowId);
         response = Response.ok(view, TEXT_HTML).build();
         return response;
     }
     
     @GET
     @Path("{pid}/output/{oinitials}/{otime}/{orand}/parameters")
-    @Produces(APPLICATION_JSON)
+    @Produces(TEXT_PLAIN)
     public String getOutputParameters(
                     @PathParam("pid") String projectId,
                     @PathParam("oinitials") String outputInitials,
@@ -2116,7 +2118,7 @@ public class Workspace extends BaseModule
     
     @POST
     @Path("{pid}/workflow/new")
-    @Consumes(APPLICATION_JSON)
+    @Consumes(TEXT_PLAIN)
     public Response newWorkflow(
                     @PathParam("pid") String projectId,
                     String json,
@@ -2152,7 +2154,7 @@ public class Workspace extends BaseModule
     
     @POST
     @Path("{pid}/workflow/{wid}")
-    @Consumes(APPLICATION_JSON)
+    @Consumes(TEXT_PLAIN)
     public Response updateWorkflow(
                     @PathParam("pid") String projectId,
                     @PathParam("wid") String workflowId,
@@ -2194,7 +2196,7 @@ public class Workspace extends BaseModule
     
     @POST
     @Path("{pid}/workflow/{wid}/replay/new")
-    @Consumes(APPLICATION_JSON)
+    @Consumes(TEXT_PLAIN)
     public Response executeWorflow(
                     @PathParam("pid") String projectId,
                     @PathParam("wid") String workflowId,
