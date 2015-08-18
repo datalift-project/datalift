@@ -417,7 +417,7 @@
 			uri   : "$!esc.javascript($curWfl.getUri())",
 			title : "$!esc.javascript($curWfl.getTitle())",
 			infos : "$!esc.javascript($curWfl.getDescription())"
-		}
+		},
 	#end
 		];
 		for(var i=0; i<=mydataWorkflow.length; i++){
