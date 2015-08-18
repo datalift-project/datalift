@@ -95,6 +95,7 @@ public class EventImpl extends BaseRdfEntity implements Event{
         this.operation = operation;
         if(parameters != null){
             this.param = new JsonStringMap(parameters);
+            this.parameters = this.param.toString();
         } else {
             this.param = null;
             this.parameters = null;
