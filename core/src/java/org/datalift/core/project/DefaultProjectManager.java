@@ -1042,10 +1042,12 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         str.append("/").append(format.format(startE)).append("/");
         str.append(Double.toString(Math.random()).substring(2, 6));
         URI id = URI.create(str.toString());
+        URI informerE = null;
+        if(TaskContext.getCurrent().getCurrentEvent() != null)
+            informerE = TaskContext.getCurrent().getCurrentEvent().getUri();
         //create event and put it on the project
         EventImpl event = new EventImpl(id, project, operationE, parameters,
-                eventTypeE, startE, endE, agentE, influenced,
-                TaskContext.getCurrent().getCurrentEvent().getUri(), used);
+                eventTypeE, startE, endE, agentE, influenced, informerE, used);
         if(project != null)
             project.addEvent(event);
         return event;
@@ -1057,6 +1059,10 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
             Map<String, String> parameters, EventType eventType,
             EventSubject eventSubject, Date start, Date end, URI agent,
             URI influenced, URI... used){
+        if(parameters == null)
+            throw new IllegalArgumentException("the event need parameters");
+        if(operation == null)
+            throw new IllegalArgumentException("the event need operation");
         Event ret = this.addEvent(project, operation, parameters, eventType,
                 eventSubject, start, end, agent, influenced, used);
         return this.saveEvent(ret);

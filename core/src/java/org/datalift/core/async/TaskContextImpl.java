@@ -99,10 +99,13 @@ public class TaskContextImpl extends TaskContext{
         str.append("/").append(format.format(startE)).append("/");
         str.append(Double.toString(Math.random()).substring(2, 6));
         URI id = URI.create(str.toString());
+        URI informerE = null;
+        if(TaskContext.getCurrent().getCurrentEvent() != null)
+            informerE = TaskContext.getCurrent().getCurrentEvent().getUri();
         //create event and put it on the project
         EventImpl event = new EventImpl(id, oe.project, operationE, oe.parameters,
                 eventTypeE, startE, null, this.getCurrentAgent(), null,
-                TaskContext.getCurrent().getCurrentEvent().getUri());
+                informerE);
         EventImpl evt = (EventImpl) pm.saveEvent(event);
         oe.event = evt;
         return evt;
