@@ -2030,6 +2030,9 @@ public class Workspace extends BaseModule
         URI workflowUri = URI.create(projectId.toString() +
                 "/workflow/" + workflowId);
         Workflow workflow = project.getWorkflow(workflowUri);
+        if(workflow == null)
+            throw new RuntimeException("this project is unknown : " +
+                    workflowUri.toString());
         Collection<Event> outputs =
                 this.projectManager.getOutputEvents(project).values();
         TemplateModel view = this.newView("workflowModify.vm", project);
@@ -2148,6 +2151,8 @@ public class Workspace extends BaseModule
             // Extract workflow from the json
             JSONObject jsonWorkflow = new JSONObject(json);
             String wTitle = jsonWorkflow.getString("title");
+            if(wTitle.trim().toLowerCase().equals("new"))
+                throw new IllegalArgumentException("title cant be \"new\"");
             URI wOrigin = URI.create(jsonWorkflow.getString("origin"));
             String wDescription = jsonWorkflow.getString("description");
             URI wUri = URI.create(p.getUri() + "/workflow/" + StringUtils
