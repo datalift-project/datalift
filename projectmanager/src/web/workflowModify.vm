@@ -22,16 +22,16 @@
 
 <div id="workspace_1" class="ui-widget-content">
 #if( $current )
-	<h3 class="ui-widget-header dl-widget-header">Nouveau du projet #i18n("project") $!esc.html($current.title)</h3>
+	<h3 class="ui-widget-header dl-widget-header">Modification du Workflow #i18n("$current.title")</h3>
 #else
-	<h3 class="ui-widget-header dl-widget-header">Modification du projet #i18n("workspace.title")</h3>
+	<h3 class="ui-widget-header dl-widget-header">Nouveau Workflow</h3>
 #end
 	<div class="dl-panel">
 		<a href="http://localhost:9091/project">Retour à l'espace de travail</a>
 		<div id="accordion">
 			<h3><a href="#"></a></h3>
 			<div>
-				<form method="post" action="${it.uri}/$target" class="form_formated">
+				<form method="post" class="form_formated">
 					<p><label for="title">#i18n("project.upload_ontology.title"):</label>
 					<input type="text" id="title" name="title" value="$!esc.html($current.title)" autofocus="true"/></p>
 					<p><label for="source_url">#i18n("project.upload_ontology.source"):</label>
@@ -56,27 +56,35 @@
 #else
 	<h3 class="ui-widget-header dl-widget-header">Modification du projet #i18n("workspace.title")</h3>
 #end
-	<div>
-		<a href="http://localhost:9091/project">Retour à l'espace de travail</a>
-		<h3 class="ui-widget-header dl-widget-header">Variables</h3>
-		<form>
-			<div id="dynamicInput">
-				<input type="text" name="keys"/>
-				<input type="text" name="values"/>
+	<div class="dl-panel">
+		<a href="http://localhost:9091/project" class="ui-widget-content" style="border:none;">Retour à l'espace de travail</a>
+		<div id="accordion1">
+			<h3><a href="#"></a></h3>
+			<div class="group">
+				<h3 class="ui-widget-header dl-widget-header">Variables</h3>
+				<form>
+					<div id="dynamicInput">
+						<div style="margin:5px;">
+							<input type="text" name="keys" style="width:15%;"/>
+							<input type="text" name="values" style="width:60%;"/>
+						</div>
+					</div>
+					<input type="button" value="Ajouter" onClick="addInput('dynamicInput');" style="margin:5px;"/>
+				</form>
+				<div style="width:18%;float:left;" class="ui-widget-content">
+					<h3 class="ui-widget-header dl-widget-header">Title</h3>
+					<ul id="subEvents" style="list-style-type:none;padding:0px;">
+						  
+					</ul>
+				</div>
+				<div style="width:81%;float:right;">
+					<h3 class="ui-widget-header dl-widget-header" id="operation">Operations</h3>
+					<form id="parameters" class="form_formated" method="post">
+					
+					</form>
+					<input type="button" id="valid" value="envoyer" class="button" style="display:none;"/>
+				</div>
 			</div>
-			<input type="button" value="Ajouter" onClick="addInput('dynamicInput');"/>
-		</form>
-		<div style="width:20%;float:left;">
-			<h3 class="ui-widget-header dl-widget-header">Title</h3>
-			<ul id="subEvents">
-				  
-			</ul>
-		</div>
-		<div style="width:80%;float:right;">
-			<h3 class="ui-widget-header dl-widget-header">Evènements</h3>
-			<form id="parameters" class="form_formated" method="post" enctype="text/plain">
-				
-			</form>
 		</div>
 	</div>
 </div>
@@ -126,7 +134,8 @@
 	});
 	$("#accordion1").accordion({
 		autoHeight: false,
-		navigation: true
+		navigation: true,
+		heightStyle: "content"
 	});
 	$("#selectable_workflows").setGridWidth($("#accordion").width() - 80);
 	function nextPage(){
@@ -148,8 +157,9 @@
 	}
 	function addInput(divName){
 		var newdiv = document.createElement('div');
-		htmlCode = "<input type='text' name='keys'>";
-		htmlCode = htmlCode+"<input type='text' name='values'>";
+		newdiv.style.margin = "5px";
+		htmlCode = "<input type='text' name='keys' style='width:15%;margin-right:5px;'>";
+		htmlCode = htmlCode+"<input type='text' name='values' style='width:60%;'>";
 		newdiv.innerHTML = htmlCode;
 		document.getElementById(divName).appendChild(newdiv);
 	}
@@ -184,7 +194,7 @@
 			if(val.previous!=undefined){
 				$.each(val.previous, function(k,v){
 					console.log(v);
-					htmlCode = htmlCode+'<li><a href="'+v+'" onClick="go(this);return false;">step '+names[v]+'</a></li>';
+					htmlCode = htmlCode+'<li>&emsp;&emsp;&emsp;<a href="'+v+'" onClick="go(this);return false;">step '+names[v]+'</a></li>';
 				});
 			}
 		});
@@ -193,16 +203,19 @@
 	function go(p){
 		var json = getJSON();
 		var htmlCode = "";
+		htmlCode = htmlCode + '<p style="font-weight:bold;"><span style="display:inline-block;width:22%;">operation : </span>'+json[p].operation+'</p>';
 		$.each(json[p].parameters, function(key, val){
 			htmlCode = htmlCode + "<p><label>"+key+"</label>";				
 			htmlCode = htmlCode + '<input type="text" value="'+val+'" name="values1"/></p>';
 			htmlCode = htmlCode + '<input type="hidden" value="'+key+'" name="keys1"/>';
 		});
 		htmlCode = htmlCode +'<input type="hidden" id="uri" value="'+p+'"/>';
-		htmlCode = htmlCode +'<input type="button" onClick="valid()" value="envoyer"/>';
 		$("#parameters").html(htmlCode);
+		$("#valid").css("display","inline")
+		$("#operation").html("<i>"+p+"</i>");
 	}
-	function valid(){
+	$("#valid").click(
+	function(){
 		var obj = {};
 		obj["title"] = $("#title").val();
 		obj["description"] = $("#title").val();
@@ -219,15 +232,20 @@
 		});
 		obj["output"] = sub;
 		console.log(obj);
+		alert(obj);
+		
 		$.ajax({
             url: "$posturl",
             type: 'post',
             dataType: 'json',
-			contentType : 'application/json; charset=utf-8',
+			contentType : 'text/plain; charset=utf-8',
             data: JSON.stringify(obj),
-			url: "${baseUri}/project#workflow"
+			cache: false,
+			complete : function(){
+				window.location = "${baseUri}/project#workflow";
+			}
         });
-	}
+	});
 	function getKeys(){
 		var obj = document.getElementsByName('keys');
 		var keys = [];

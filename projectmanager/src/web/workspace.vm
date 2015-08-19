@@ -442,7 +442,7 @@
 						var id = jQuery("#selectable_workflows").getGridParam('selrow');
 						if(id){
 							var ret = jQuery("#selectable_workflows").getRowData(id);
-							window.location = currentProject +"/workflow/"+ ret.title +"/start";
+							window.location = ret.uri+"/replay/new";
 						} else {
 							alert("#i18n("project.msg.select_row")");
 						}
@@ -456,7 +456,7 @@
 						var id = jQuery("#selectable_workflows").getGridParam('selrow');
 						if(id){
 							var ret = jQuery("#selectable_workflows").getRowData(id);
-							window.location = currentProject +"/workflow/"+ ret.title +"/modify";
+							window.location = ret.uri;
 						} else {
 							alert("#i18n("project.msg.select_row")");
 						}
@@ -470,7 +470,7 @@
 						var id = jQuery("#selectable_workflows").getGridParam('selrow');
 						if(id){
 							var ret = jQuery("#selectable_workflows").getRowData(id);
-							window.location = currentProject +"/workflow/"+ ret.title +"/delete";
+							window.location = ret.uri+"/delete";
 						} else {
 							alert("#i18n("project.msg.select_row")");
 						}
