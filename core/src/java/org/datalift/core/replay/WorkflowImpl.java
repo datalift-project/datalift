@@ -10,8 +10,7 @@ import java.util.Map.Entry;
 
 import javax.persistence.Entity;
 
-import org.datalift.core.async.DefaultTaskContextImpl;
-import org.datalift.core.async.TaskContextImpl;
+import org.datalift.core.async.TaskContextBase;
 import org.datalift.core.project.BaseRdfEntity;
 import org.datalift.core.util.JsonStringMap;
 import org.datalift.core.util.VersatileProperties;
@@ -236,13 +235,8 @@ public class WorkflowImpl extends BaseRdfEntity implements Workflow{
             TaskManager taskManager =
                     Configuration.getDefault().getBean(TaskManager.class);
             TaskContext context = TaskContext.getCurrent();
-            if(context instanceof TaskContextImpl)
-                ((TaskContextImpl) context).startOperation(project, URI.create(
-                        "http://www.datalift.org/core/operation/replay"), null);
-            else
-                ((DefaultTaskContextImpl) context).startOperation(project, URI
-                        .create("http://www.datalift.org/core/operation/replay"),
-                        null);
+            ((TaskContextBase) context).startOperation(project, URI.create(
+                    "http://www.datalift.org/core/operation/replay"), null);
             Event parentEvent = context.beginAsEvent(
                     Event.INFORMATION_EVENT_TYPE, Event.WORKFLOW_EVENT_SUBJECT);
             for(int j = steps.size() - 1; j >= 0 && fail == null; j--){
@@ -280,15 +274,9 @@ public class WorkflowImpl extends BaseRdfEntity implements Workflow{
                 }
             }
             if(fail == null)
-                if(context instanceof TaskContextImpl)
-                    ((TaskContextImpl) context).endOperation(true);
-                else
-                    ((DefaultTaskContextImpl) context).endOperation(true);
+                ((TaskContextBase) context).endOperation(true);
             else
-                if(context instanceof TaskContextImpl)
-                    ((TaskContextImpl) context).endOperation(false);
-                else
-                    ((DefaultTaskContextImpl) context).endOperation(false);
+                ((TaskContextBase) context).endOperation(false);
             // delete events and sources produced during the replay
             project = projectManager.findProject(URI.create(project.getUri()));
             Collection<Source> sourcesToDel = new ArrayList<Source>();

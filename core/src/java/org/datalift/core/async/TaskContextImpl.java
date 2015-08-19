@@ -18,23 +18,38 @@ import org.datalift.fwk.prov.Event;
 import org.datalift.fwk.prov.EventSubject;
 import org.datalift.fwk.prov.EventType;
 
-public class TaskContextImpl extends TaskContext{
+/**
+ * the default implementation for TaskContext instances defined on a thread
+ * 
+ * @author rcabaret
+ *
+ */
+public class TaskContextImpl extends TaskContextBase{
 
     private URI taskAgent;
     private ArrayList<OperationExecution> executions = new ArrayList<OperationExecution>();
     private Event informer;
     
+    /**
+     * construct a TaskContextImpl for a task
+     * 
+     * @param task  a task associated with the current thread execution
+     * @param informer  the event which triggered this task
+     */
     public TaskContextImpl(Task task, Event informer){
-        super();
         this.taskAgent = URI.create(task.getUri().toString() + "/softwareAgent");
         this.informer = informer;
     }
     
+    /** {@inheritDoc} */
+    @Override
     public void startOperation(Project project, URI operation,
             Map<String, String> parameters){
         this.executions.add(new OperationExecution(project, operation, parameters));
     }
     
+    /** {@inheritDoc} */
+    @Override
     public Event endOperation(boolean well){
         OperationExecution oe = this.executions.get(this.executions.size() - 1);
         if(oe.event != null && well){
@@ -45,6 +60,7 @@ public class TaskContextImpl extends TaskContext{
         return oe.event;
     }
     
+    /** {@inheritDoc} */
     @Override
     public URI getCurrentAgent() {
         Event event = this.getCurrentEvent();
@@ -57,6 +73,7 @@ public class TaskContextImpl extends TaskContext{
         }
     }
 
+    /** {@inheritDoc} */
     @Override
     public Event getCurrentEvent() {
         Event ev = this.informer;
@@ -71,6 +88,7 @@ public class TaskContextImpl extends TaskContext{
         return ev;
     }
 
+    /** {@inheritDoc} */
     @Override
     public Event beginAsEvent(EventType eventType, EventSubject eventSubject) {
         OperationExecution oe = this.executions.get(this.executions.size() - 1);
@@ -111,6 +129,7 @@ public class TaskContextImpl extends TaskContext{
         return evt;
     }
     
+    /** {@inheritDoc} */
     @Override
     public void addUsedOnEvent(URI used) {
         if(this.executions.isEmpty())
@@ -121,6 +140,7 @@ public class TaskContextImpl extends TaskContext{
         oe.event.addUsed(used);
     }
 
+    /** {@inheritDoc} */
     @Override
     public void addInfluencedEntityOnEvent(URI influenced) {
         if(this.executions.isEmpty())
@@ -129,19 +149,5 @@ public class TaskContextImpl extends TaskContext{
         if(oe == null)
             throw new RuntimeException("no current event to update");
         oe.event.setInfluenced(influenced);
-    }
-
-    private class OperationExecution{
-        private Project project;
-        private EventImpl event = null;
-        private URI operation;
-        private Map<String, String> parameters;
-        
-        public OperationExecution(Project project, URI operation,
-                Map<String, String> parameters){
-            this.operation = operation;
-            this.parameters = parameters;
-            this.project = project;
-        }
     }
 }

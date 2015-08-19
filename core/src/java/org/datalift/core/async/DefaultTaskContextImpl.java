@@ -18,11 +18,25 @@ import org.datalift.fwk.prov.EventSubject;
 import org.datalift.fwk.prov.EventType;
 import org.datalift.fwk.security.SecurityContext;
 
-public class DefaultTaskContextImpl extends TaskContext{
+/**
+ * the default implementation for the TaskContext defined as default one
+ * 
+ * @author rcabaret
+ *
+ */
+public class DefaultTaskContextImpl extends TaskContextBase{
 
     private final ThreadLocal<ArrayList<OperationExecution>> threadExecutions =
             new ThreadLocal<ArrayList<OperationExecution>>();
     
+    /**
+     * construct a DefaultTaskContextImpl
+     */
+    public DefaultTaskContextImpl(){
+        //NOP
+    }
+    
+    /** {@inheritDoc} */
     @Override
     public URI getCurrentAgent() {
         URI ret;
@@ -38,6 +52,7 @@ public class DefaultTaskContextImpl extends TaskContext{
         return ret;
     }
 
+    /** {@inheritDoc} */
     @Override
     public Event getCurrentEvent() {
         ArrayList<OperationExecution> executions = this.threadExecutions.get();
@@ -54,6 +69,7 @@ public class DefaultTaskContextImpl extends TaskContext{
         return ev;
     }
 
+    /** {@inheritDoc} */
     @Override
     public Event beginAsEvent(EventType eventType, EventSubject eventSubject) {
         ArrayList<OperationExecution> executions = this.threadExecutions.get();
@@ -97,6 +113,7 @@ public class DefaultTaskContextImpl extends TaskContext{
         return evt;
     }
 
+    /** {@inheritDoc} */
     @Override
     public void addUsedOnEvent(URI used) {
         ArrayList<OperationExecution> executions = this.threadExecutions.get();
@@ -108,6 +125,7 @@ public class DefaultTaskContextImpl extends TaskContext{
         oe.event.addUsed(used);
     }
 
+    /** {@inheritDoc} */
     @Override
     public void addInfluencedEntityOnEvent(URI influenced) {
         ArrayList<OperationExecution> executions = this.threadExecutions.get();
@@ -119,6 +137,8 @@ public class DefaultTaskContextImpl extends TaskContext{
         oe.event.setInfluenced(influenced);
     }
     
+    /** {@inheritDoc} */
+    @Override
     public void startOperation(Project project, URI operation,
             Map<String, String> parameters){
         ArrayList<OperationExecution> executions = this.threadExecutions.get();
@@ -129,6 +149,8 @@ public class DefaultTaskContextImpl extends TaskContext{
         executions.add(new OperationExecution(project, operation, parameters));
     }
     
+    /** {@inheritDoc} */
+    @Override
     public Event endOperation(boolean well){
         ArrayList<OperationExecution> executions = this.threadExecutions.get();
         if(executions == null || executions.isEmpty())
@@ -140,19 +162,5 @@ public class DefaultTaskContextImpl extends TaskContext{
         }
         executions.remove(oe);
         return oe.event;
-    }
-
-    private class OperationExecution{
-        private Project project;
-        private EventImpl event = null;
-        private URI operation;
-        private Map<String, String> parameters;
-        
-        public OperationExecution(Project project, URI operation,
-                Map<String, String> parameters){
-            this.operation = operation;
-            this.parameters = parameters;
-            this.project = project;
-        }
     }
 }
