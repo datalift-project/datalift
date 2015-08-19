@@ -2116,6 +2116,23 @@ public class Workspace extends BaseModule
         return response;
     }
     
+    @GET
+    @Path("{pid}/workflow/{wid}/delete")
+    public Response deleteWorkflow(
+                    @PathParam("pid") String projectId,
+                    @PathParam("wid") String workflowId,
+                    @Context UriInfo uriInfo){
+        Response response = null;
+        URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
+        Project project = this.loadProject(projectUri);
+        URI workflowUri = URI.create(projectId.toString() +
+                "/workflow/" + workflowId);
+        Workflow workflow = project.getWorkflow(workflowUri);
+        this.projectManager.deleteWorkflow(project, workflow);
+        response = this.redirect(project, ProjectTab.Workflows).build();
+        return response;
+    }
+    
     @POST
     @Path("{pid}/workflow/new")
     @Consumes(TEXT_PLAIN)
