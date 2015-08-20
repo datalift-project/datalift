@@ -2027,7 +2027,7 @@ public class Workspace extends BaseModule
         Response response = null;
         URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
         Project project = this.loadProject(projectUri);
-        URI workflowUri = URI.create(projectId.toString() +
+        URI workflowUri = URI.create(projectUri.toString() +
                 "/workflow/" + workflowId);
         Workflow workflow = project.getWorkflow(workflowUri);
         if(workflow == null)
@@ -2110,7 +2110,7 @@ public class Workspace extends BaseModule
         Response response = null;
         URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
         Project project = this.loadProject(projectUri);
-        URI workflowUri = URI.create(projectId.toString() +
+        URI workflowUri = URI.create(projectUri.toString() +
                 "/workflow/" + workflowId);
         Workflow workflow = project.getWorkflow(workflowUri);
         TemplateModel view = this.newView("replay.vm", project);
@@ -2128,7 +2128,7 @@ public class Workspace extends BaseModule
         Response response = null;
         URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
         Project project = this.loadProject(projectUri);
-        URI workflowUri = URI.create(projectId.toString() +
+        URI workflowUri = URI.create(projectUri.toString() +
                 "/workflow/" + workflowId);
         Workflow workflow = project.getWorkflow(workflowUri);
         this.projectManager.deleteWorkflow(project, workflow);
