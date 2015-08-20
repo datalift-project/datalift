@@ -789,7 +789,7 @@ public interface ProjectManager
      */
     public Workflow newWorkflow(Project project, URI url, String title,
             String description, Map<String, String> variables,
-            WorkflowStep outputStep, URI originEvent);
+            WorkflowStep outputStep);
     
     /**
      * Create a new workflow.
@@ -809,7 +809,7 @@ public interface ProjectManager
      */
     public Workflow newWorkflow(Project project, URI url, String title,
             String description, Map<String, String> variables,
-            WorkflowStep outputStep, URI originEvent, URI eventOperation,
+            WorkflowStep outputStep, URI eventOperation,
             Map<String, String> eventParameters, Date eventStart);
 
     /**

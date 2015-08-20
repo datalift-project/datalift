@@ -1107,23 +1107,23 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     @Override
     public Workflow newWorkflow(Project project, URI url, String title,
             String description, Map<String, String> variables,
-            WorkflowStep outputStep, URI originEvent) {
+            WorkflowStep outputStep) {
         return this.newWorkflow(project, url, title, description, variables,
-                outputStep, originEvent, null, null, new Date());
+                outputStep, null, null, new Date());
     }
     
     /** {@inheritDoc} */
     @Override
     public Workflow newWorkflow(Project project, URI url, String title,
             String description, Map<String, String> variables,
-            WorkflowStep outputStep, URI originEvent, URI eventOperation,
+            WorkflowStep outputStep, URI eventOperation,
             Map<String, String> eventParameters, Date eventStart){
         Date eventStartE = eventStart;
         if(eventStart == null)
             eventStartE = new Date();
         // Create the workflow
         WorkflowImpl wfl = new WorkflowImpl(url, title, description, variables,
-                (WorkflowStepImpl) outputStep, originEvent);
+                (WorkflowStepImpl) outputStep);
         // Add it to the project
         project.addWorkflow(wfl);
         log.debug("New workflow <{}> added to project \"{}\"",

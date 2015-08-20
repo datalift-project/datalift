@@ -34,6 +34,12 @@ import com.clarkparsia.empire.annotation.RdfId;
 import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.RdfsClass;
 
+/**
+ * the default implementation of the Workflow interface
+ * 
+ * @author rcabaret
+ *
+ */
 @Entity
 @RdfsClass("datalift:Workflow")
 @NamedGraph(type = NamedGraph.NamedGraphType.Static, value="http://www.datalift.org/core/projects")
@@ -59,42 +65,46 @@ public class WorkflowImpl extends BaseRdfEntity implements Workflow{
     }
     
     public WorkflowImpl(URI uri, String title, String description,
-            Map<String, String> variables, WorkflowStepImpl output, URI origin){
+            Map<String, String> variables, WorkflowStepImpl output){
         this.uri = uri;
         this.description = description;
         this.title = title;
         this.vars = new JsonStringMap(variables);
         this.variabels = this.vars.toString();
-        this.output = output;
-        this.parameters = this.output.toString();
-        this.origin = origin;
+        this.setSteps(output);
     }
     
+    /** {@inheritDoc} */
     @Override
     public URI getUri() {
         return this.uri;
     }
 
+    /** {@inheritDoc} */
     @Override
     public String getTitle() {
         return this.title;
     }
 
+    /** {@inheritDoc} */
     @Override
     public void setTitle(String title) {
         this.title = title;
     }
 
+    /** {@inheritDoc} */
     @Override
     public String getDescription() {
         return this.description;
     }
 
+    /** {@inheritDoc} */
     @Override
     public void setDescription(String description) {
         this.description = description;
     }
 
+    /** {@inheritDoc} */
     @Override
     public Map<String, String> getVariables() {
         this.refrechJsons();
@@ -104,6 +114,7 @@ public class WorkflowImpl extends BaseRdfEntity implements Workflow{
             return null;
     }
 
+    /** {@inheritDoc} */
     @Override
     public void addVariable(String name, String defaultValue) {
         this.refrechJsons();
@@ -113,12 +124,14 @@ public class WorkflowImpl extends BaseRdfEntity implements Workflow{
         this.variabels = this.vars.toString();
     }
 
+    /** {@inheritDoc} */
     @Override
     public WorkflowStep getOutputStep() {
         this.refrechJsons();
         return this.output;
     }
 
+    /** {@inheritDoc} */
     @Override
     public void setSteps(WorkflowStep outputStep) {
         if(outputStep != null){
@@ -148,17 +161,21 @@ public class WorkflowImpl extends BaseRdfEntity implements Workflow{
                 }
             this.output = (WorkflowStepImpl) outputStep;
             this.parameters = this.output.toString();
+            this.origin = this.output.getOriginEvent();
         } else {
             this.output = null;
             this.parameters = null;
+            this.origin = null;
         }
     }
 
+    /** {@inheritDoc} */
     @Override
     protected void setId(String id) {
         this.uri = URI.create(id);
     }
 
+    /** {@inheritDoc} */
     private void refrechJsons(){
         if(this.parameters != null && this.output == null)
             try {
@@ -171,22 +188,20 @@ public class WorkflowImpl extends BaseRdfEntity implements Workflow{
             this.vars = new JsonStringMap(this.variabels);
     }
 
+    /** {@inheritDoc} */
     @Override
     public void removeAllVariables() {
         this.variabels = null;
         this.vars = null;
     }
 
+    /** {@inheritDoc} */
     @Override
     public URI getOriginEvent() {
         return this.origin;
     }
-
-    @Override
-    public void setOriginEvent(URI event) {
-        this.origin = event;
-    }
     
+    /** {@inheritDoc} */
     @Override
     public void replay(Map<String, String> variables){
         List<Collection<WorkflowStep>> steps =
@@ -317,6 +332,13 @@ public class WorkflowImpl extends BaseRdfEntity implements Workflow{
         }
     }
     
+    /**
+     * return, for the given step, the previous step that point the given parameter
+     * 
+     * @param step  the step
+     * @param parameter the name of the parameter that point to the previous step
+     * @return  the previous step
+     */
     private WorkflowStep foundPrevousStepUsedOnParameter(
             WorkflowStep step,
             String parameter){

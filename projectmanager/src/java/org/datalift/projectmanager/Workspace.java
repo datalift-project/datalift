@@ -2153,7 +2153,6 @@ public class Workspace extends BaseModule
             String wTitle = jsonWorkflow.getString("title");
             if(wTitle.trim().toLowerCase().equals("new"))
                 throw new IllegalArgumentException("title cant be \"new\"");
-            URI wOrigin = URI.create(jsonWorkflow.getString("origin"));
             String wDescription = jsonWorkflow.getString("description");
             URI wUri = URI.create(p.getUri() + "/workflow/" + StringUtils
                     .urlify(wTitle));
@@ -2163,7 +2162,7 @@ public class Workspace extends BaseModule
                     jsonWorkflow.getJSONObject("output"));
             // add workflow to the project
             Workflow workflow = this.projectManager.newWorkflow(p, wUri, wTitle,
-                    wDescription, wVariables, wOutput, wOrigin);
+                    wDescription, wVariables, wOutput);
             p.addWorkflow(workflow);
             // Persist new workflow
             this.projectManager.saveProject(p);

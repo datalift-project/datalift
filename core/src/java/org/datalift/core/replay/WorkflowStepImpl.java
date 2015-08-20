@@ -13,6 +13,12 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+/**
+ * the default implementation for the WorkflowStep interface
+ * 
+ * @author rcabaret
+ *
+ */
 public class WorkflowStepImpl implements WorkflowStep{
 
     private URI originEvent;
@@ -21,6 +27,13 @@ public class WorkflowStepImpl implements WorkflowStep{
     private List<WorkflowStep> previous = new ArrayList<WorkflowStep>();
     private JsonStringMap param;
     
+    /**
+     * construct a workflow steps graph from a json String
+     * 
+     * @param json  the json string
+     * @param eventOfThis   the URI of the current step on the graph
+     * @throws JSONException
+     */
     public WorkflowStepImpl(String json, URI eventOfThis) throws JSONException{
         Map<String, WorkflowStep> steps = new HashMap<String, WorkflowStep>();
         JSONObject jobj = new JSONObject(json);
@@ -54,6 +67,13 @@ public class WorkflowStepImpl implements WorkflowStep{
         }
     }
     
+    /**
+     * construct a new WorkflowStepImpl
+     * 
+     * @param operation the operation to run
+     * @param parameters    the parameters patterns Map
+     * @param originEvent   the Event which the step is extracted from
+     */
     public WorkflowStepImpl(URI operation, Map<String, String> parameters,
             URI originEvent){
         this.operation = operation;
@@ -61,13 +81,14 @@ public class WorkflowStepImpl implements WorkflowStep{
         this.originEvent = originEvent;
     }
     
+    /** {@inheritDoc} */
     @Override
-    public void addPreviousStep(WorkflowStep nextStep){
+    public void addPreviousStep(WorkflowStep previousStep){
         Map<URI, WorkflowStepImpl> controled;
         List<WorkflowStepImpl> toControl;
-        WorkflowStepImpl step = (WorkflowStepImpl) nextStep;
+        WorkflowStepImpl step = (WorkflowStepImpl) previousStep;
         // control itself
-        if(nextStep.getOriginEvent().equals(this.originEvent))
+        if(previousStep.getOriginEvent().equals(this.originEvent))
             throw new RuntimeException("a step cant be itself previous");
         // control duplicate steps
         controled = new HashMap<URI, WorkflowStepImpl>();
@@ -112,35 +133,50 @@ public class WorkflowStepImpl implements WorkflowStep{
         step.nexts.add(this);
     }
     
+    /**
+     * return the Json String of the step graph of this step and all the previous ones
+     * 
+     * @return  the json String
+     */
     public String getJson(){
         return WorkflowStepImpl.genericStepToJsonObject(this, null).toString();
     }
     
+    /**
+     * return the Json String of the step graph of this step and all the previous ones
+     * 
+     * @return  the json String
+     */
     @Override
     public String toString(){
         return this.getJson();
     }
     
+    /** {@inheritDoc} */
     @Override
     public URI getOperation() {
         return this.operation;
     }
 
+    /** {@inheritDoc} */
     @Override
     public List<WorkflowStep> getPreviousSteps() {
         return new ArrayList<WorkflowStep>(this.previous);
     }
 
+    /** {@inheritDoc} */
     @Override
     public Collection<WorkflowStep> getNextSteps() {
         return new ArrayList<WorkflowStep>(this.nexts);
     }
 
+    /** {@inheritDoc} */
     @Override
     public Map<String, String> getParameters() {
         return new HashMap<String, String>(this.param);
     }
 
+    /** {@inheritDoc} */
     @Override
     public boolean equals(Object o){
         if(o == null)
@@ -157,6 +193,13 @@ public class WorkflowStepImpl implements WorkflowStep{
                 .equals(WorkflowStepImpl.genericStepToJsonObject(ths, null));
     }
     
+    /**
+     * return a JSONObject of the step graph of this step and all the previous ones
+     * 
+     * @param step  the step to extract down
+     * @param graph JSONObject of the up graph or null if the given step is the root
+     * @return  the JSONObject of the given and extracted graph union
+     */
     private static JSONObject genericStepToJsonObject(WorkflowStep step,
             JSONObject graph){
         JSONObject jobj = graph;
@@ -185,6 +228,7 @@ public class WorkflowStepImpl implements WorkflowStep{
         return null;
     }
 
+    /** {@inheritDoc} */
     @Override
     public URI getOriginEvent() {
         return this.originEvent;
