@@ -2204,7 +2204,7 @@ public class Workspace extends BaseModule
                 for(Entry<String, String> v : wVariables.entrySet())
                     w.addVariable(v.getKey(), v.getValue());
             }
-            if(!w.getOutputStep().equals(wOutput))
+            if(!w.getOutputStep().toString().equals(wOutput.toString()))
                 w.setSteps(wOutput);
             // Persist workflow changes
             this.projectManager.saveProject(p);

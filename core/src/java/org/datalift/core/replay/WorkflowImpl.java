@@ -4,6 +4,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -135,7 +136,7 @@ public class WorkflowImpl extends BaseRdfEntity implements Workflow{
     @Override
     public void setSteps(WorkflowStep outputStep) {
         if(outputStep != null){
-            if(outputStep.getNextSteps() != null ||
+            if(outputStep.getNextSteps() != null &&
                     !outputStep.getNextSteps().isEmpty())
                 throw new RuntimeException("the step must be the last one");
             Collection<WorkflowStep> controled = new ArrayList<WorkflowStep>();
@@ -288,31 +289,26 @@ public class WorkflowImpl extends BaseRdfEntity implements Workflow{
                         fail = t;
                 }
             }
-            if(fail == null)
-                ((TaskContextBase) context).endOperation(true);
-            else
-                ((TaskContextBase) context).endOperation(false);
             // delete events and sources produced during the replay
             project = projectManager.findProject(URI.create(project.getUri()));
             Collection<Source> sourcesToDel = new ArrayList<Source>();
             Collection<URI> ToDel = new ArrayList<URI>();
             Collection<Workflow> workflowsToDel = new ArrayList<Workflow>();
             GenericRdfDao dao = projectManager.getRdfDao();
-            Map<URI, Event> allEvents = projectManager.getEvents(project);
-            for(Event e : allEvents.values()){
-                if(e.getInformer().equals(parentEvent.getUri())){
-                    if(e.getEventType() == Event.CREATION_EVENT_TYPE){
-                        Source s = project.getSource(e.getInfluenced());
-                        Workflow w = project.getWorkflow(e.getInfluenced());
-                        if(s != null)
-                            sourcesToDel.add(s);
-                        else if(w != null)
-                            workflowsToDel.add(w);
-                        else
-                            ToDel.add(e.getInfluenced());
-                    }
-                    dao.delete(e);
+            Collection<Event> allEvents = this.foundAllInformatedEvent(
+                    projectManager.getEvents(project).values(), parentEvent);
+            for(Event e : allEvents){
+                if(e.getEventType() == Event.CREATION_EVENT_TYPE){
+                    Source s = project.getSource(e.getInfluenced());
+                    Workflow w = project.getWorkflow(e.getInfluenced());
+                    if(s != null)
+                        sourcesToDel.add(s);
+                    else if(w != null)
+                        workflowsToDel.add(w);
+                    else
+                        ToDel.add(e.getInfluenced());
                 }
+                dao.delete(e);
             }
             for(Source s : sourcesToDel)
                 project.remove(s);
@@ -327,6 +323,14 @@ public class WorkflowImpl extends BaseRdfEntity implements Workflow{
                     project.removeOntology(onto.getTitle());
             }
             projectManager.saveProject(project);
+            allEvents = this.foundAllInformatedEvent(
+                    projectManager.getEvents(project).values(), parentEvent);
+            for(Event e : allEvents)
+                dao.delete(e);
+            if(fail == null)
+                ((TaskContextBase) context).endOperation(true);
+            else
+                ((TaskContextBase) context).endOperation(false);
         } catch (Exception e){
             throw new RuntimeException(e);
         }
@@ -362,5 +366,38 @@ public class WorkflowImpl extends BaseRdfEntity implements Workflow{
             throw new RuntimeException(
                     "no used source match with the parameter : " + parameter);
         return input;
+    }
+    
+    /**
+     * return all events of the list which is directly or transitively informed by the given event
+     * 
+     * @param events    the Collection of Event to search in
+     * @param informer  informer Event
+     * @return  the Collection of informed Events
+     */
+    private Collection<Event> foundAllInformatedEvent(Collection<Event> events,
+            Event informer){
+        Collection<URI> informers = new ArrayList<URI>();
+        Collection<Event> informed = new ArrayList<Event>();
+        Collection<Event> rejected = new ArrayList<Event>();
+        for(Event e : events)
+            if(e.getInformer() != null)
+                rejected.add(e);
+        informers.add(informer.getUri());
+        boolean found = true;
+        while(found){
+            found = false;
+            Iterator<Event> i = rejected.iterator();
+            while(i.hasNext()){
+                Event e = i.next();
+                if(informers.contains(e.getInformer())){
+                    found = true;
+                    informers.add(e.getUri());
+                    informed.add(e);
+                    i.remove();
+                }
+            }
+        }
+        return informed;
     }
 }

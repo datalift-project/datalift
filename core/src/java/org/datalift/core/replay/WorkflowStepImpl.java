@@ -175,23 +175,6 @@ public class WorkflowStepImpl implements WorkflowStep{
     public Map<String, String> getParameters() {
         return new HashMap<String, String>(this.param);
     }
-
-    /** {@inheritDoc} */
-    @Override
-    public boolean equals(Object o){
-        if(o == null)
-            return false;
-        if(!(o instanceof WorkflowStep))
-            return false;
-        WorkflowStep ths = this;
-        WorkflowStep oth = (WorkflowStep) o;
-        while(ths.getNextSteps() != null || !ths.getNextSteps().isEmpty())
-            ths = ths.getNextSteps().iterator().next();
-        while(oth.getNextSteps() != null || !oth.getNextSteps().isEmpty())
-            oth = oth.getNextSteps().iterator().next();
-        return WorkflowStepImpl.genericStepToJsonObject(oth, null).toString()
-                .equals(WorkflowStepImpl.genericStepToJsonObject(ths, null));
-    }
     
     /**
      * return a JSONObject of the step graph of this step and all the previous ones
