@@ -26,23 +26,26 @@
 #else
 	<h3 class="ui-widget-header dl-widget-header">Modification du projet #i18n("workspace.title")</h3>
 #end
-	<div>
-		<a href="http://localhost:9091/project">Retour à l'espace de travail</a>
-		<h3 class="ui-widget-header dl-widget-header">Variables</h3>
-		<form class="form_formated">
-			<div>
-				<p><span style="width:22%;font-weight:bold;">title :</span>$workflow.getTitle()</p>
-				<p><span style="width:22%;font-weight:bold;">Description :</span>$workflow.getDescription()</p>
-			</div>
-			<div id="inputs">
-				#foreach( $cur in $workflow.getVariables().entrySet() )
-					<p><label>$!esc.html($cur.getKey())</label>
-					<input type="hidden" value="$!esc.html($cur.getKey())" name="keys"/>
-					<input type="text" value="$!esc.html($cur.getValue())" name="values"/></p>
-				#end
-			</div>
-			<input type="button" value="Démarrer" onClick="valid()"/>
-		</form>
+	<a href="http://localhost:9091/project" style="margin:3px;">Retour à l'espace de travail</a>
+	<div id="accordion">
+		<h3><a href="#"></a></h3>
+		<div class="group">
+			<h3 class="ui-widget-header dl-widget-header">Variables</h3>
+			<form class="form_formated">
+				<div style="width:100%;">
+					<p><span style="width:17.5%;font-weight:bold;display:inline-block;">title :</span>$workflow.getTitle()</p>
+					<p><span style="width:17.5%;font-weight:bold;display:inline-block;">Description :</span>$workflow.getDescription()</p>
+				</div>
+				<div id="inputs">
+					#foreach( $cur in $workflow.getVariables().entrySet() )
+						<p><label>$!esc.html($cur.getKey())</label>
+						<input type="hidden" value="$!esc.html($cur.getKey())" name="keys"/>
+						<input type="text" value="$!esc.html($cur.getValue())" name="values"/></p>
+					#end
+				</div>
+				<input type="button" value="Démarrer" onClick="valid()"/>
+			</form>
+		</div>
 	</div>
 </div>
 <div style="clear:both"></div>
@@ -61,6 +64,7 @@
 	function valid(){
 		var sub = getParams();
 		console.log(sub);
+		alert(sub);
 		$.ajax({
             url: "",
             type: 'post',
@@ -96,7 +100,6 @@
 		for(var i=0; i<keys.length; i++){
 			params[keys[i]]=values[i];
 		}
-		console.log(params);
 		return params;
 	}
 </script>
