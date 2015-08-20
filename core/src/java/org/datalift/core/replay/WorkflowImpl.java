@@ -354,7 +354,8 @@ public class WorkflowImpl extends BaseRdfEntity implements Workflow{
         for(URI used : event.getUsed()){
             if(used.equals(value)){
                 for(WorkflowStep previous : step.getPreviousSteps()){
-                    if(value.equals(previous.getOriginEvent())){
+                    if(value.equals(projectManager.getEvent(
+                            previous.getOriginEvent()).getInfluenced())){
                         input = previous;
                     }
                     break;
