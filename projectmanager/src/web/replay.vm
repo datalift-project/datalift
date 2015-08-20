@@ -31,14 +31,14 @@
 		<h3 class="ui-widget-header dl-widget-header">Variables</h3>
 		<form class="form_formated">
 			<div>
-				<p><span style="width:22%;font-weight:bold;">title :</span>$current.getTitle()</p>
-				<p><span style="width:22%;font-weight:bold;">Description :</span>$current.getDescription()</p>
+				<p><span style="width:22%;font-weight:bold;">title :</span>$workflow.getTitle()</p>
+				<p><span style="width:22%;font-weight:bold;">Description :</span>$workflow.getDescription()</p>
 			</div>
 			<div id="inputs">
-				#foreach( $cur in $current.getVariables().entrySet() )
-					<p><label>$!esc.html($cur.getKey())</label>";
-					<input type="hidden" value="$!esc.html($cur.getKey())" name="key"/><p>';
-					<input type="text" value="$!esc.html($cur.getValue())" name="value"/><p>';
+				#foreach( $cur in $workflow.getVariables().entrySet() )
+					<p><label>$!esc.html($cur.getKey())</label>
+					<input type="hidden" value="$!esc.html($cur.getKey())" name="keys"/>
+					<input type="text" value="$!esc.html($cur.getValue())" name="values"/></p>
 				#end
 			</div>
 			<input type="button" value="Démarrer" onClick="valid()"/>
@@ -62,7 +62,7 @@
 		var sub = getParams();
 		console.log(sub);
 		$.ajax({
-            url: "$posturl",
+            url: "",
             type: 'post',
             dataType: 'json',
 			contentType : 'text/plain; charset=utf-8',
