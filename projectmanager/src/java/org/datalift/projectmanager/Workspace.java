@@ -2114,7 +2114,7 @@ public class Workspace extends BaseModule
                 "/workflow/" + workflowId);
         Workflow workflow = project.getWorkflow(workflowUri);
         TemplateModel view = this.newView("replay.vm", project);
-        view.put("current", workflow);
+        view.put("workflow", workflow);
         response = Response.ok(view, TEXT_HTML).build();
         return response;
     }
