@@ -29,11 +29,11 @@
 	<div>
 		<a href="http://localhost:9091/project">Retour à l'espace de travail</a>
 		<h3 class="ui-widget-header dl-widget-header">Variables</h3>
-		<form>
-			<p><label for="title">#i18n("project.upload_ontology.title"):</label>
-			<input type="text" id="title" name="title" value="$!esc.html($current.title)" autofocus="true"/></p>
-			<p><label for="description">#i18n("project.upload_ontology.source"):</label>
-			<input type="text" id="description" name="source_url" value="$!esc.html($current.source)"/></p>
+		<form class="form_formated">
+			<div>
+				<p><span style="width:22%;font-weight:bold;">title :</span>$current.getTitle()</p>
+				<p><span style="width:22%;font-weight:bold;">Description :</span>$current.getDescription()</p>
+			</div>
 			<div id="inputs">
 				#foreach( $cur in $current.getVariables().entrySet() )
 					<p><label>$!esc.html($cur.getKey())</label>";
@@ -58,17 +58,20 @@
 		autoHeight: false,
 		navigation: true
 	});
-	$("#accordion1").accordion({
-		autoHeight: false,
-		navigation: true
-	});
 	function valid(){
-		var obj = {};
-		obj["title"] = $("#title").val();
-		obj["description"] = $("#description").val();
-		obj["parameters"] = getParams();
-		console.log(obj);
-		$.post("localhost", obj);
+		var sub = getParams();
+		console.log(sub);
+		$.ajax({
+            url: "$posturl",
+            type: 'post',
+            dataType: 'json',
+			contentType : 'text/plain; charset=utf-8',
+            data: JSON.stringify(sub),
+			cache: false,
+			complete : function(){
+				window.location = "${baseUri}/project#workflow";
+			}
+        });
 	}
 	function getKeys(){
 		var obj = document.getElementsByName('keys');

@@ -150,7 +150,9 @@
 			uri = uri.replace("event", "output");
 			
 			setEvents(uri);
+			alert("setEvents");
 			writeGraph();
+			alert("writeGraph")
 		} else {
 			alert("#i18n("project.msg.select_row")");
 		}
@@ -170,8 +172,6 @@
 			error : function(){
 			},
 			success : function(result, status, error){
-				console.log(result);
-				console.log("type :"+typeof result);
 				sessionStorage["uri"] = uri;
 				sessionStorage["result"] = result;
 			}
@@ -203,7 +203,7 @@
 	function go(p){
 		var json = getJSON();
 		var htmlCode = "";
-		htmlCode = htmlCode + '<p style="font-weight:bold;"><span style="display:inline-block;width:22%;">operation : </span>'+json[p].operation+'</p>';
+		htmlCode = htmlCode + '<p style="font-weight:bold;"><span style="display:inline-block;width:22%;">operation</span>'+json[p].operation+'</p>';
 		$.each(json[p].parameters, function(key, val){
 			htmlCode = htmlCode + "<p><label>"+key+"</label>";				
 			htmlCode = htmlCode + '<input type="text" value="'+val+'" name="values1"/></p>';
@@ -232,7 +232,6 @@
 		});
 		obj["output"] = sub;
 		console.log(obj);
-		alert(obj);
 		
 		$.ajax({
             url: "$posturl",
