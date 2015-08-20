@@ -2080,8 +2080,24 @@ public class Workspace extends BaseModule
                     jobj = json;
                 JSONObject jstep = new JSONObject();
                 jstep.put("operation", e.getOperation().toString());
-                jstep.put("parameters", new JsonStringMap(
-                        e.getParameters()).getJSONObject());
+                JsonStringMap params = new JsonStringMap(e.getParameters());
+                if(e.getUsed() != null && !e.getUsed().isEmpty()){
+                    for(Entry<String, String> entry : params.entrySet()){
+                        URI uriVal = null;
+                        try{
+                            uriVal = URI.create(entry.getValue());
+                        } catch (Exception ex){
+                            continue;
+                        }
+                        for(URI used : e.getUsed()){
+                            if(used.equals(uriVal)){
+                                entry.setValue("$INPUT");
+                                break;
+                            }
+                        }
+                    }
+                }
+                jstep.put("parameters", params.getJSONObject());
                 JSONArray prev = new JSONArray();
                 for(URI usedUri : e.getUsed()){
                     Event previous = this.crs.get(usedUri);
