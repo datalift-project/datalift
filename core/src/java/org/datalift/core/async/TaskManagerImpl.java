@@ -20,6 +20,7 @@ import org.datalift.fwk.async.TaskContext;
 import org.datalift.fwk.async.TaskManager;
 import org.datalift.fwk.async.TaskStatus;
 import org.datalift.fwk.async.UnregisteredOperationException;
+import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.GenericRdfDao;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectManager;
@@ -172,6 +173,7 @@ public class TaskManagerImpl implements TaskManager{
                 this.task.setStatus(TaskStatus.failStatus);
                 this.dao.save(this.task);
                 ((TaskContextImpl) TaskContext.getCurrent()).endOperation(false);
+                Logger.getLogger().error("the task fail", e);
                 throw new RuntimeException("error during task execution" + e);
             }
         }
