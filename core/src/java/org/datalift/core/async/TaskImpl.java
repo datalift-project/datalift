@@ -74,6 +74,7 @@ public class TaskImpl extends BaseRdfEntity implements Task{
             Map<String, String> parameters){
         if(parameters != null){
             this.param = new JsonStringMap(parameters);
+            this.parameters = this.param.toString();
         } else {
             this.param = null;
             this.parameters = null;
@@ -111,7 +112,7 @@ public class TaskImpl extends BaseRdfEntity implements Task{
             this.param = new JsonStringMap(this.parameters);
             return this.param;
         }
-        return null;
+        return this.param;
     }
 
     /** {@inheritDoc} */
