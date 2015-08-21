@@ -44,10 +44,12 @@
 							<div id="selectable_workflows_toolbar"></div>
 						</form>
 					</p>
-					<p><input type="button" onclick="nextPage()" value="Suivant"/></p>
+					<p>
+						<input type="button" onclick="nextPage()" value="Suivant"/>
 					#if( $current )
-					<p><input type="button" onclick="next()" value="Suivant >>>"/></p>
+						<input type="button" onclick="next()" value="Garder le même évènement"/></p>
 					#end
+					</p>
 				</form>
 			</div>
 		</div>
@@ -159,9 +161,11 @@
 			sessionStorage["origin"] = events.uri;
 			uri = uri+"/parameters";
 			uri = uri.replace("event", "output");
+			console.log(uri);
 			
 			setEvents(uri);
 			writeGraph();
+			console.log("writeGraph");
 		} else {
 			alert("#i18n("project.msg.select_row")");
 		}
@@ -200,11 +204,13 @@
 	}
 	function writeGraph(){
 		var json = getJSON();
+		console.log(json);
 		var htmlCode = "";
 		var names = {};
 		$.each(json, function(key, val) {
 			names[key] = parseInt(Math.random()*1000);
 		});
+		console.log(names);
 		$.each(json, function(key, val) {
 			console.log(key);
 			htmlCode = htmlCode+'<li class="ui-widget-header" style="list-style-type:none;"><a href="'+key+'" onClick="go(this);return false;">step '+names[key]+'</a></li>';
@@ -215,6 +221,7 @@
 				});
 			}
 		});
+		console.log(htmlCode);
 		$("#subEvents").html(htmlCode);
 	}
 	function go(p){
@@ -235,7 +242,7 @@
 	function(){
 		var obj = {};
 		obj["title"] = $("#title").val();
-		obj["description"] = $("#title").val();
+		obj["description"] = $("#source_url").val();
 		obj["origin"] = sessionStorage.getItem("origin");
 		obj["variables"] = getVars();
 		var json = getJSON();
@@ -250,7 +257,6 @@
 		obj["output"] = sub;
 		console.log(obj);
 		console.log(JSON.stringify(obj));
-		alert(obj);
 		
 		$.ajax({
             url: "$posturl",

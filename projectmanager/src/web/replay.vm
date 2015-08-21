@@ -21,11 +21,7 @@
 	</div>
 
 <div id="workspace">
-#if( $current.getWorkflow() )
-	<h3 class="ui-widget-header dl-widget-header">Nouveau du projet #i18n("project") $!esc.html($current.title)</h3>
-#else
-	<h3 class="ui-widget-header dl-widget-header">Modification du projet #i18n("workspace.title")</h3>
-#end
+	<h3 class="ui-widget-header dl-widget-header">Execution de workflow </h3>
 	<a href="http://localhost:9091/project" style="margin:3px;">Retour à l'espace de travail</a>
 	<div id="accordion">
 		<h3><a href="#"></a></h3>
@@ -33,8 +29,10 @@
 			<h3 class="ui-widget-header dl-widget-header">Variables</h3>
 			<form class="form_formated">
 				<div style="width:100%;">
-					<p><span style="width:17.5%;font-weight:bold;display:inline-block;">title :</span>$workflow.getTitle()</p>
-					<p><span style="width:17.5%;font-weight:bold;display:inline-block;">Description :</span>$workflow.getDescription()</p>
+					<p><span style="width:17.5%;font-weight:bold;display:inline-block;">title :</span>$!esc.html($workflow.getTitle())</p>
+					#if( $workflow.getDescription() )
+					<p><span style="width:17.5%;font-weight:bold;display:inline-block;">Description :</span>$!esc.html($workflow.getDescription())</p>
+					#end
 				</div>
 				<div id="inputs">
 					#foreach( $cur in $workflow.getVariables().entrySet() )
@@ -64,9 +62,9 @@
 	function valid(){
 		var sub = getParams();
 		console.log(sub);
-		alert(sub);
+		alert(window.location.href);
 		$.ajax({
-            url: "",
+            url: window.location.href,
             type: 'post',
             dataType: 'json',
 			contentType : 'text/plain; charset=utf-8',
