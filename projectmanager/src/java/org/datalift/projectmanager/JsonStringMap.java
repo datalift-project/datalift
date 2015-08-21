@@ -59,7 +59,10 @@ public class JsonStringMap implements Map<String, String> {
      * @param json  a JSONObject to read
      */
     public JsonStringMap(JSONObject json){
-        this.jobj = new JSONObject(json, JSONObject.getNames(json));
+        if(json == null || json.length() == 0)
+            this.jobj = new JSONObject();
+        else
+            this.jobj = new JSONObject(json, JSONObject.getNames(json));
     }
     
     /**
@@ -87,7 +90,11 @@ public class JsonStringMap implements Map<String, String> {
      * @return the JSONObject
      */
     public JSONObject getJSONObject(){
-        return new JSONObject(this.jobj, JSONObject.getNames(this.jobj));
+        String[] names = JSONObject.getNames(this.jobj);
+        if(names != null)
+            return new JSONObject(this.jobj, names);
+        else
+            return new JSONObject();
     }
 
     /** {@inheritDoc} */
@@ -166,8 +173,10 @@ public class JsonStringMap implements Map<String, String> {
     @Override
     public Set<String> keySet() {
         Set<String> s = new HashSet<String>();
-        for(String k :JSONObject.getNames(this.jobj))
-                s.add(k);
+        String[] names = JSONObject.getNames(this.jobj);
+        if(names != null)
+            for(String k : names)
+                    s.add(k);
         return s;
     }
 
@@ -175,8 +184,10 @@ public class JsonStringMap implements Map<String, String> {
     @Override
     public Collection<String> values() {
         Collection<String> s = new ArrayList<String>();
-        for(String k :JSONObject.getNames(this.jobj))
-                s.add(this.jobj.optString(k));
+        String[] names = JSONObject.getNames(this.jobj);
+        if(names != null)
+            for(String k : names)
+                    s.add(this.jobj.optString(k));
         return s;
     }
 
@@ -185,8 +196,10 @@ public class JsonStringMap implements Map<String, String> {
     public Set<Map.Entry<String, String>> entrySet() {
         Set<Map.Entry<String, String>> s
                 = new HashSet<Map.Entry<String, String>>();
-        for(String k :JSONObject.getNames(this.jobj))
-            s.add(new Couple(k, this.jobj.optString(k)));
+        String[] names = JSONObject.getNames(this.jobj);
+        if(names != null)
+            for(String k : names)
+                s.add(new Couple(k, this.jobj.optString(k)));
         return s;
     }
     
@@ -194,10 +207,11 @@ public class JsonStringMap implements Map<String, String> {
     private static Map<String, String> getAllAsStringMap(JSONObject json){
         Map<String, String> result = new HashMap<String, String>();
         String[] names = JSONObject.getNames(json);
-        for(String n : names)
-            try {
-                result.put(n, json.get(n).toString());
-            } catch (JSONException e) {}
+        if(names != null)
+            for(String n : names)
+                try {
+                    result.put(n, json.get(n).toString());
+                } catch (JSONException e) {}
         return result;
     }
     

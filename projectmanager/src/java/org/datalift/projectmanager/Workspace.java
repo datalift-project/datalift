@@ -43,7 +43,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.net.URI;
 import java.net.URL;
@@ -107,7 +106,6 @@ import org.datalift.fwk.Configuration;
 import org.datalift.fwk.FileStore;
 import org.datalift.fwk.ResourceResolver;
 import org.datalift.fwk.async.Operation;
-import org.datalift.fwk.async.TaskContext;
 import org.datalift.fwk.async.TaskManager;
 import org.datalift.fwk.async.UnregisteredOperationException;
 import org.datalift.fwk.log.Logger;
@@ -135,8 +133,6 @@ import org.datalift.fwk.project.XmlSource;
 import org.datalift.fwk.project.CsvSource.Separator;
 import org.datalift.fwk.project.ProjectModule.UriDesc;
 import org.datalift.fwk.prov.Event;
-import org.datalift.fwk.prov.EventSubject;
-import org.datalift.fwk.prov.EventType;
 import org.datalift.fwk.rdf.ElementType;
 import org.datalift.fwk.rdf.RdfFormat;
 import org.datalift.fwk.rdf.RdfNamespace;
@@ -2221,8 +2217,12 @@ public class Workspace extends BaseModule
             String wDescription = jsonWorkflow.getString("description");
             URI wUri = URI.create(p.getUri() + "/workflow/" + StringUtils
                     .urlify(wTitle));
-            Map<String, String> wVariables = new JsonStringMap(
-                    jsonWorkflow.optJSONObject("variables"));
+            JSONObject jsonVariables = jsonWorkflow.optJSONObject("variables");
+            Map<String, String> wVariables;
+            if(jsonVariables == null)
+                wVariables = new JsonStringMap();
+            else
+                wVariables = new JsonStringMap(jsonVariables);
             WorkflowStep wOutput = this.extractWorkflowStepsFromJson(
                     jsonWorkflow.getJSONObject("output"));
             // add workflow to the project
