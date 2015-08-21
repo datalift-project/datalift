@@ -43,6 +43,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Modifier;
 import java.net.URI;
 import java.net.URL;
 import java.nio.charset.Charset;
@@ -104,6 +106,10 @@ import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.FileStore;
 import org.datalift.fwk.ResourceResolver;
+import org.datalift.fwk.async.Operation;
+import org.datalift.fwk.async.TaskContext;
+import org.datalift.fwk.async.TaskManager;
+import org.datalift.fwk.async.UnregisteredOperationException;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.CachingSource;
 import org.datalift.fwk.project.CsvSource;
@@ -129,6 +135,8 @@ import org.datalift.fwk.project.XmlSource;
 import org.datalift.fwk.project.CsvSource.Separator;
 import org.datalift.fwk.project.ProjectModule.UriDesc;
 import org.datalift.fwk.prov.Event;
+import org.datalift.fwk.prov.EventSubject;
+import org.datalift.fwk.prov.EventType;
 import org.datalift.fwk.rdf.ElementType;
 import org.datalift.fwk.rdf.RdfFormat;
 import org.datalift.fwk.rdf.RdfNamespace;
@@ -210,6 +218,9 @@ public class Workspace extends BaseModule
     public final static String SOURCE_URI_PREFIX  = "source";
     /** The name of this module in the DataLift configuration. */
     public final static String MODULE_NAME = PROJECT_URI_PREFIX;
+    /** The base for all Operations URI of the module */
+    public final static String OPERATION_BASE_URI = "http://www.datalift.org/" +
+            MODULE_NAME + "/operation/";
 
     /** The relative path prefix for project objects and resources. */
     private final static String REL_PROJECT_PATH = PROJECT_URI_PREFIX + '/';
@@ -236,6 +247,8 @@ public class Workspace extends BaseModule
 
     /** Project Manager bean. */
     private ProjectManager projectManager = null;
+    /** Task Manager bean. */
+    private TaskManager taskManager = null;
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -261,12 +274,24 @@ public class Workspace extends BaseModule
         this.loadLicenses(configuration);
         // Register main menu entry.
         this.registerToMainMenu();
+        // Register Operations
+        for(Class<?> op : this.getClass().getDeclaredClasses())
+            if(!Modifier.isAbstract(op.getModifiers()) &&
+                    !op.isInterface() &&
+                    Operation.class.isAssignableFrom(op))
+                try {
+                    configuration.registerBean(op.getDeclaredConstructor(
+                            this.getClass()).newInstance(this));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
     }
 
     /** {@inheritDoc} */
     @Override
     public void postInit(Configuration configuration) {
         this.projectManager = configuration.getBean(ProjectManager.class);
+        this.taskManager = configuration.getBean(TaskManager.class);
     }
 
     // ------------------------------------------------------------------------
@@ -1167,26 +1192,59 @@ public class Workspace extends BaseModule
                 this.throwInvalidParamError("default_graph_uri", defaultGraph);
             }
         }
-
-        Response response = null;
+        URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
+        // Retrieve project.
+        Project p = this.loadProject(projectUri);
+        Map<String, String> params = new HashMap<String, String>();
+        params.put("projectUri", p.getUri());
+        params.put("title", title);
+        params.put("description", description);
+        params.put("endpointUrl", endpointUrl);
+        params.put("sparqlQuery", sparqlQuery);
+        params.put("defaultGraph", defaultGraph);
+        params.put("user", user);
+        params.put("password", password);
+        params.put("cacheDuration", Integer.toString(cacheDuration));
         try {
+            System.out.println("enter");
+            this.taskManager.submit(p, new UploadSparqlSource().getOperationId(),
+                    params);
+        } catch (UnregisteredOperationException e) {
+            this.handleInternalError(e, "error during operation execution");
+        }
+        // (browsers) to the source tab of the project page.
+        return this.redirect(p, ProjectTab.Sources).build();
+    }
+
+    public class UploadSparqlSource extends OperationBase{
+        @Override
+        public void execute(Map<String, String> parameters) throws Exception {
+            String projectUriString = parameters.get("projectUri");
+            String title = parameters.get("title");
+            String description = parameters.get("description");
+            String endpointUrl = parameters.get("endpointUrl");
+            String sparqlQuery = parameters.get("sparqlQuery");
+            String defaultGraph = parameters.get("defaultGraph");
+            String user = parameters.get("user");
+            String password = parameters.get("password");
+            int cacheDuration = Integer.parseInt(parameters.get("cacheDuration"));
             // Check SPARQL query is a CONSTRUCT or DESCRIBE.
             if ((sparqlQuery == null) ||
                 (! CONSTRUCT_VALIDATION_PATTERN.matcher(sparqlQuery).find())) {
-                this.throwInvalidParamError("sparql_query", sparqlQuery);
+                throw new IllegalArgumentException("sparql_query : " + sparqlQuery);
             }
             log.debug("Processing SPARQL source creation request for \"{}\"",
                       title);
             // Build object URIs from request path.
-            URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
+            URI projectUri = URI.create(projectUriString);
             URI sourceUri = new URI(projectUri.getScheme(), null,
                                     projectUri.getHost(), projectUri.getPort(),
-                                    this.newSourceId(projectUri.getPath(), title),
+                                    Workspace.this.newSourceId(projectUri.getPath(), title),
                                     null, null);
             // Retrieve project.
-            Project p = this.loadProject(projectUri);
+            Project p = Workspace.this.loadProject(projectUri);
             // Initialize new source.
-            SparqlSource src = this.projectManager.newSparqlSource(p, sourceUri,
+            SparqlSource src = Workspace.this.projectManager.newSparqlSource(p, sourceUri,
                                         title, description,
                                         endpointUrl, sparqlQuery,
                                         cacheDuration);
@@ -1198,20 +1256,11 @@ public class Workspace extends BaseModule
             CloseableIterator<?> i = src.iterator();
             i.close();
             // Persist new source.
-            this.projectManager.saveProject(p);
-            // Notify user of successful creation, redirecting HTML clients
-            // (browsers) to the source tab of the project page.
-            response = this.created(p, sourceUri, ProjectTab.Sources).build();
-
+            Workspace.this.projectManager.saveProject(p);
             log.info("New SPARQL source \"{}\" created", sourceUri);
         }
-        catch (Exception e) {
-            this.handleInternalError(e,
-                             "Failed to create SPARQL source for {}", title);
-        }
-        return response;
     }
-
+    
     @POST
     @Path("{id}/sparqlmodify")
     public Response modifySparqlSource(
@@ -2993,5 +3042,12 @@ public class Workspace extends BaseModule
         return rootStep;
     }
     
-    
+    public abstract class OperationBase implements Operation{
+
+        @Override
+        public URI getOperationId() {
+            return URI.create(OPERATION_BASE_URI + this.getClass().getSimpleName());
+        }
+
+    }
 }
