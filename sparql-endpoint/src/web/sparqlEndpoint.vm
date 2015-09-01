@@ -1,29 +1,60 @@
+## Edited By Zakaria Khattabi
+##--------->Edition Started in 13 April 2014
+##	-Add comments
+##  -Split the pieces of the page by two carriage returns
+##  -Add of the button "clear", "paste", "save" and "show the saved request"
+##  -Add the button "print"
+##  -Add the chart's choose functionality
+##  -Change the position of head title
+##  (make it outside the div block having id value "content")
+##  -Customize the print Menu
+##  -Replace the character "_" by "-" in the saving request
+##  -Customize the list of all request
+##  -View the list of all graphs
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
+##Insert the title and the common meta tags
 <head>
 #load("sparql/resources")
 #load_core_resources
-	<title>#i18n("sparql.query.results") - #i18n("sparql.endpoint.title") - DataLift</title>
-#css_links
+	<title>#i18n("sparql.query.results") - #i18n("sparql.endpoint.title") - Datalift</title>
+#css_links_legacyVizu
 </head>
 <body>
+
+
+## start of the top bar (logo) + the button of goto workspace
 #banner
-	<div id="main-menu" style="position:absolute;top:15px;right:15px;">
+	<div id="main-menu" style="position:absolute;top:21px;right:15px;">
 #foreach( $m in $mainMenu )
 #set( $entryUrl = $m.getUrl(${baseUri}) )
+##if( ! $entryUrl == $uriInfo.path )
 #if( $m.method.name() == "GET" )
 		<a href="${entryUrl}" class="button">${m.label}</a>
 #else
 		<form method="post" action="${entryUrl}"><input type="submit" class="button" value="${m.label}"/></form>
 #end
+##end
 #end
+		<!--HERE-->
 	</div>
+## end of the top bar (logo) + the button of goto workspace
+
+	##output message : "Editeur de requête SPARQL"
+	<h3 id="query_title" class="ui-widget-header dl-widget-header" style="margin-left:10px;margin-right:10px;">#i18n("sparql.query.full")</h3>
+
+
+	## start of the body page except footer
 	<div id="content" class="ui-widget-content dl-main-panel">
-		<h3 class="ui-widget-header dl-widget-header">#i18n("sparql.query.full")</h3>
+		## Start of the block query panel
 		<div class="dl-panel">
+			## Form of query panel
 		    <form id="query_form" action="${baseUri}/sparql" method="get">
 #if( ${repositories.size()} > 1 )
+
+
+			## Select of a deposit intern or extern
 			<div class="dl-form-elt">
 				<label for="default-graph-uri">#i18n("sparql.repository"): </label>
 				<select id="default-graph-uri" name="default-graph-uri">
@@ -37,7 +68,11 @@
 				</select>
 			</div>
 #end
+
+
+			## simple space
 			<span>&nbsp;</span>
+			## Block of output format
 			<div id="result_format" class="dl-form-elt">
 				<label>#i18n("sparql.parameter.format"): </label>
 				<input type="radio" id="html_format" name="format" value="application/json" checked="checked"/><label for="html_format">HTML</label>
@@ -49,47 +84,273 @@
 				<input type="radio" id="csv_format" name="format" value="text/csv, text/plain; q=0.5"/><label for="csv_format">CSV</label>
 				<input type="hidden" id="format_save"/>
 			</div>
-			<div class="dl-form-elt" style="width: 100%;">
-				<p></p>
-				<label for="query">#i18n("sparql.query.light"): </label><br />
-				<textarea id="query" name="query" spellcheck="false" style="width:100%; min-height:100px;"></textarea></p>
-#if( !${queries.isEmpty()} )
-				<div id="predef-queries">
-					<label>#i18n("sparql.predef.queries"): </label>
-#foreach( $q in $queries )
-					<button title="$!esc.html($q.description)" query="$!esc.html($q)">$esc.html($q.label)</button> 
-#end
-				</div>
-#end
-				<p><label for="max">#i18n("sparql.max.results"): </label>
+
+			## Input for the maximum number of the result
+			<div style="display:inline-block;">
+				<label for="max">#i18n("sparql.max.results"): </label>
 				<input type="text" name="max" id="max" title="#i18n("sparql.max.results.tooltip")" value="${max}"/>
 				<input type="checkbox" name="typed_literals" id="typed_literals" #if( $grid.isSet() )checked="checked"#end />
-				<label for="typed_literals">#i18n("sparql.typed.literals")</label></p>
+				<label for="typed_literals">#i18n("sparql.typed.literals")</label>
 			</div>
-			<div class="dl-form-buttons">
-				<input type="submit" value="#i18n("sparql.query.execute")" id="query_submit"/>
+
+			## Block of the query and buttons
+			<div style="width: 100%;margin-bottom:2px;">
+				<p></p>
+				## Textarea for the sparql's queries
+				<textarea id="query" name="query" spellcheck="false" style="width:100%; min-height:100px;" rows="12"></textarea>
+			</div>
+
+
+			## Button for the query execution
+			<div style="height:30px;width:100%;margin-top:4px;">
+				<div style="height:30px;float:left;margin:auto;">
+				</div>
+				<div style="height:30px;float:right;margin:auto;">
+					<input type="button" id="delete" class="button" style='background-image:url("http://localhost:9091/images/legacy-vizu/icons/delete.png");'/>
+					<span id="dialog1"></span>
+					<input type="button" id="predef" class="button" style='background-image:url("http://localhost:9091/images/legacy-vizu/icons/list.png");'/>
+					<span id="predefList"></span>
+					<input type="button" id="saved_request" class="button" style='background-image:url("http://localhost:9091/images/legacy-vizu/icons/folder.png");'/>
+					<span id="dialog"></span>
+					<input type="button" id="resave" class="button" style='display:none;background-image:url("http://localhost:9091/images/legacy-vizu/icons/saveAs.png");'/>
+					<input type="button" id="save" class="button" style='background-image:url("http://localhost:9091/images/legacy-vizu/icons/save.png");'/>
+					<input type="button" id="print" class="button" style='background-image:url("http://localhost:9091/images/legacy-vizu/icons/print.png");'/>
+					<input type="button" id="clear" class="button" style='background-image:url("http://localhost:9091/images/legacy-vizu/icons/erase.png");'/>
+					<input type="button" id="graphs" class="button" style='background-image:url("http://localhost:9091/images/legacy-vizu/icons/chart.png");'/>
+					<input type="hidden" value="" id="nVars"/>
+					<input type="submit" id="query_submit" style='background-image:url("http://localhost:9091/images/legacy-vizu/icons/run.png");'/>
+				</div>
 			</div>
 		    </form>
 		</div>
+		## End of the block query panel
+
+
+		## start of the block result panel
 		<div id="results" class="dl-result-panel">
 			<table id="table_results"><tr><td/></tr></table>
 			<div id="pagernav"></div>
 		</div>
+		## block of nav search et display the result
 		<div id="searchnav" style="display:none">
 			#i18n("grid.search.value.label") <input type="search" id="gridsearch" placeholder="#i18n("grid.search.value.placeholder")" results="0" class="gridsearch"/>
 			#i18n("grid.search.column.label") <select id="searchColumn"></select>
 		</div>
+		## end of the block result panel
 	</div>
+	## End of the body page except footer
+
+
+	## Start block content graphs
+	<div id="graphs_content" class="ui-widget-content dl-main-panel" style="display:none;" ng-app="filterApp" ng-controller="filterCtrl">
+		<div style="height:20px;">
+			<div style="width:18px;height:18px;float:right; margin-right:10px;">
+				<button type="button" id="close_graphs_content" class="close"><b>x</b></button>
+			</div>
+		</div>
+		<div style="height:30px;width:98%;margin:auto;">
+			<div style="display:inline-block;">
+				<span>#i18n("sparql.endpoint.groupBy") :</span>
+				<select ng-model="type" id="selectGroupBy" onchange="showSubGroupBy()" onblur="showSubGroupBy()" onfocus="showSubGroupBy()">
+					<option value="">#i18n("sparql.endpoint.categories")</option>
+					<option ng-repeat="category in #i18n("sparql.endpoint.getGategories")" value="{{category}}">{{category}}</option>
+				</select>
+			</div>
+			<div style="display:none;" id="subGroupBy">
+				<span>#i18n("sparql.endpoint.subGroupBy") :</span>
+				<select ng-model="subType">
+					<option value="">#i18n("sparql.endpoint.subCategories")</option>
+					<!--<option ng-repeat="category in #i18n("sparql.endpoint.getSubGategories")" value="{{category}}">{{category}}</option>-->
+					<option ng-repeat="category in subs" value="{{category}}">{{category}}</option>
+				</select>
+			</div>
+			<div style="display:inline-block;margin-left:3px;">
+				<span>#i18n("sparql.endpoint.search") :</span>
+				<input id="graph-selector" type="text" placeholder="#i18n("sparql.endpoint.msgSearch")" style="display:inline-block;width:250px;" ng-model="search.$"/>
+			</div>
+			## Select a deposit intern or extern
+			<div class="dl-form-elt">
+				<label for="default-graph-uri">#i18n("sparql.repository"): </label>
+				<select id="default-graph-uri-visu" name="default-graph-uri">
+#foreach( $item in $repositories )
+#if( $foreach.count == 1 )
+					<option value="$esc.html($!{item.name})" selected="true">#i18n($!{item.label})</option>
+#else
+					<option value="$esc.html($!{item.name})">#i18n($!{item.label})</option>
+#end
+#end
+				</select>
+			</div>
+		</div>
+		<div style="width:100%; height:100%;">
+			<div style="width:80%;float:left;margin-left:10px;" id="sub_graphs_content">
+				<div ng-if="isChecked">
+					<div ng-repeat="g in #i18n("sparql.endpoint.graphs") | filter:search  | filter:type
+					| filter:subType | orderBy:['category','subCategory']" style="display:inline-block;margin:1px;">
+						<div style="width:150px;height:150px;border:1px solid #a6c9e2;display:inline-block;margin:1px;cursor:pointer;" id="selector">
+							<div ng-if="g.paramMin <= paramNumber && g.paramMax >= paramNumber">
+								<img src="{{g.img}}" alt="{{g.category}}+{{g.subCategory}}-{{g.name}}" ng-click="itemClicked(g.name)"
+								ng-if="paramNumber == 1 && g.typeParam1 == types[0] && !g.Param2IsRequired &&
+								!g.Param3IsRequired && !g.Param4IsRequired && !g.Param5IsRequired"/>
+
+								<img src="{{g.img}}" alt="{{g.category}}-{{g.name}}" ng-click="itemClicked(g.name)"
+								ng-else-if="paramNumber == 1 && g.typeParam1 == 'any' && !g.Param2IsRequired &&
+								!g.Param3IsRequired && !g.Param4IsRequired && !g.Param5IsRequired"/>
+
+								<img src="{{g.img}}" alt="{{g.category}}-{{g.name}}" ng-click="itemClicked(g.name)"
+								ng-else-if="paramNumber == 2 && g.typeParam1 == types[0] && g.typeParam2 == types[1]
+								&& !g.Param3IsRequired && !g.Param4IsRequired && !g.Param5IsRequired"/>
+
+								<img src="{{g.img}}" alt="{{g.category}}-{{g.name}}" ng-click="itemClicked(g.name)"
+								ng-else-if="paramNumber == 3 && g.typeParam1 == types[0] && g.typeParam2 == types[1]
+								&& g.typeParam3 == types[2]"/>
+
+								<img src="{{g.img}}" alt="{{g.category}}-{{g.name}}" ng-click="itemClicked(g.name)"
+								ng-else-if="paramNumber == 4 && g.typeParam1 == types[0] && g.typeParam2 == types[1] &&
+								g.typeParam3 == types[2] && g.typeParam4 == types[3]"/>
+
+								<img src="{{g.img}}" alt="{{g.category}}-{{g.name}}" ng-click="itemClicked(g.name)"
+								ng-else-if="paramNumber == 5 && g.typeParam1 == types[0] && g.typeParam2 == types[1] &&
+								g.typeParam3 == types[2] && g.typeParam4 == types[3] && g.typeParam5 == types[4]"/>
+
+								<img src="{{g.isDisabled}}" alt="{{g.category}}-{{g.name}}" ng-else/>
+							</div>
+							<div ng-else>
+								<img src="{{g.isDisabled}}" alt="{{g.category}}-{{g.name}}"/>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div ng-else>
+					<div ng-repeat="g in #i18n("sparql.endpoint.graphs") | filter:search  | filter:type
+					| filter:subType | filter:{online:switchState} | orderBy:['category','subCategory']"
+					style="display:inline-block;margin:1px;">
+						<div style="width:150px;height:150px;border:1px solid #a6c9e2;display:inline-block;margin:1px;cursor:pointer;" id="selector">
+							<div ng-if="g.paramMin <= paramNumber && g.paramMax >= paramNumber">
+								<img src="{{g.img}}" alt="{{g.category}}-{{g.name}}" ng-click="itemClicked(g.name)"
+								ng-if="paramNumber == 1 && g.typeParam1 == types[0] && !g.Param2IsRequired &&
+								!g.Param3IsRequired && !g.Param4IsRequired && !g.Param5IsRequired"/>
+
+								<img src="{{g.img}}" alt="{{g.category}}-{{g.name}}" ng-click="itemClicked(g.name)"
+								ng-else-if="paramNumber == 1 && g.typeParam1 == 'any' && !g.Param2IsRequired &&
+								!g.Param3IsRequired && !g.Param4IsRequired && !g.Param5IsRequired"/>
+
+								<img src="{{g.img}}" alt="{{g.category}}-{{g.name}}" ng-click="itemClicked(g.name)"
+								ng-else-if="paramNumber == 2 && g.typeParam1 == types[0] && g.typeParam2 == types[1]
+								&& !g.Param3IsRequired && !g.Param4IsRequired && !g.Param5IsRequired"/>
+
+								<img src="{{g.img}}" alt="{{g.category}}-{{g.name}}" ng-click="itemClicked(g.name)"
+								ng-else-if="paramNumber == 3 && g.typeParam1 == types[0] && g.typeParam2 == types[1]
+								&& g.typeParam3 == types[2]"/>
+
+								<img src="{{g.img}}" alt="{{g.category}}-{{g.name}}" ng-click="itemClicked(g.name)"
+								ng-else-if="paramNumber == 4 && g.typeParam1 == types[0] && g.typeParam2 == types[1] &&
+								g.typeParam3 == types[2] && g.typeParam4 == types[3]"/>
+
+								<img src="{{g.img}}" alt="{{g.category}}-{{g.name}}" ng-click="itemClicked(g.name)"
+								ng-else-if="paramNumber == 5 && g.typeParam1 == types[0] && g.typeParam2 == types[1] &&
+								g.typeParam3 == types[2] && g.typeParam4 == types[3] && g.typeParam5 == types[4]"/>
+
+								<img src="{{g.isDisabled}}" alt="{{g.category}}-{{g.name}}" ng-else/>
+							</div>
+							<div ng-else>
+								<img src="{{g.isDisabled}}" alt="{{g.category}}-{{g.name}}"/>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div style="width:18%;float:right;">
+				<div style="width:90%;float:left">
+					<!--<img id="enableGraphControl"
+					src="${baseUri}/images/legacy-vizu/icons/ControlPanel.png"
+					alt="ajuster les paramètres de visualisation"/>-->
+					<div style="width:90%;margin-right:10%;">
+						<input type="button" value="En ligne/Hors ligne" id="online" class="button" style="width:100%;"/>
+						<div id="onOff" style="background-color:#DDECF7;display:none;">
+							<div style="height:2px;">
+								<button type="button" id="close_onOff" class="close">
+									<b>x</b>
+								</button>
+							</div>
+							<div class="onoffswitch" style="margin-left:10%;display:inline-block;">
+								<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="myonoffswitch" checked>
+								<label class="onoffswitch-label" for="myonoffswitch">
+									<span class="onoffswitch-inner"></span>
+									<span class="onoffswitch-switch"></span>
+								</label>
+							</div>
+							<div id="onOffText" style="position:absolute;display:inline-block;margin:5px;">
+							</div>
+						</div>
+					</div>
+					<span id="onParams" style="display:none;"><br/></span>
+					<div id="parameters">
+
+					</div>
+					<input type="hidden" id="graphName" name="graphName" value=""/>
+					<input type="hidden" id="graphDoc" name="graphDoc" value=""/>
+					<input type="hidden" id="graphDes" name="graphDes" value=""/>
+					<div id="description">
+
+					</div>
+					<br/>
+					<table style="border-collapse:collapse;width:90%;">
+						<tr><th style="border:1px solid #a6c9e2;background-color:#4297D7;color:#FFFFFF;">#i18n("sparql.endpoint.libraries")</th></tr>
+						<tr><td style="border:1px solid #a6c9e2;"><a href="" onclick="window.open('http://atos.net')">&copy;&nbsp;Atos</td></tr>
+						<tr><td style="border:1px solid #a6c9e2;"><a href="" onclick="window.open('http://dev.data2000.no/sgvizler/')">&copy;&nbsp;Sgvizler</td></tr>
+						<tr><td style="border:1px solid #a6c9e2;"><a href="" onclick="window.open('http://leafletjs.com/')">&copy;&nbsp;Leaflet</td></tr>
+						<tr><td style="border:1px solid #a6c9e2;"><a href="" onclick="window.open('http://www.highcharts.com/')">&copy;&nbsp;Highcharts</td></tr>
+						<tr><td style="border:1px solid #a6c9e2;"><a href="" onclick="window.open('http://openlayers.org/')">&copy;&nbsp;OpenLayers 3</td></tr>
+					</table>
+				</div>
+				<div style="clear:both">
+				</div>
+			</div>
+			<div style="clear:both">
+			</div>
+		</div>
+	</div>
+	## End block content graphs
+
+	## Start block show description content graph
+	<div id="graphs_show_description" class="ui-widget-content dl-main-panel" style="display:none;height:700px">
+		<div style="height:20px;">
+			<div style="width:18px;height:18px;float:left; margin-left:10px;">
+				<button type="button" id="back_graphs_content" class="close">
+					<img src="${baseUri}/images/legacy-vizu/icons/undo.png"/>
+				</button>
+			</div>
+			<div style="width:18px;height:18px;float:right;margin-right:10px;">
+				<button type="button" id="close_show_description" class="close">
+					<b>x</b>
+				</button>
+			</div>
+		</div>
+		<div style="width:90%;margin:auto;">
+			<div id="graphs_get_description" style="width:100%;height:660px;border:1px solid #a6c9e2;">
+
+			</div>
+		</div>
+	</div>
+	## End block show description content graph
+
 #footer
 	<div style="text-align:right;font-style:italic;font-size:0.8em">
-		<span style="color:gray">Version @full.app.version@</span>
+		<span style="color:gray" id="version">Version @full.app.version@</span>
 	</div>
 
-#script_links
+#script_links_legacyVizu
+	<script src="${baseUri}/js/legacy-vizu/mapline.js"></script>
 	<script type="text/javascript">
 		var searchData = new Array();
 		var responsePtr;
-
+		var isMapLine = false;
+		
+		#foreach( $q in $queries )
+			$("#query").val("$esc.propertyValue($q)");
+		#end
+		
 		function queryUpdate() {
 			var disableSelect = true;
 			var disableConstruct = true;
@@ -108,35 +369,24 @@
 		};
 
 		$(function() {
-			$("#main-menu .button").button();
+			$(".button").button();
 			$("#query_submit").button();
 			$("#result_format").buttonset();
 
-			var firstButton = true;
-			$("#predef-queries button").each(function(button) {
-				$(this).button();
-				$(this).click(function() {
-					$("#query").val($(this).attr("query"));
-					queryUpdate();
-					return false;
-				});
-				if (firstButton) {
-					$("#query").val($(this).attr("query"));
-					queryUpdate();
-					firstButton = false;
-				}
-			});
-
+			
 			$("#query").keyup(function() {
 				queryUpdate();
 			});
+
+
 			$("#query_form").keydown(function(e) {
 				if (e.keyCode == 13 && (e.metaKey || e.ctrlKey)) {
 					$("#query_form").submit();
 				}
 			});
 
-			$("#query_form").submit(function(e) {
+			//$("#query_form").submit(function(e) {
+			$("#query_form").click(function(e) {
 				// Switch to POST for large queries
 				var query = $("#query").val();
 				var method = (query.length > 1900)? "post": "get";
@@ -148,7 +398,8 @@
 					// Prevent the navigator from sending the form
 					e.preventDefault();
 					// Format request
-					var gridType = ";grid=true" + (($("#typed_literals").attr('checked'))? ";typed=true": "");
+					// var gridType = ";grid=true" + (($("#typed_literals").attr('checked'))? ";typed=true": "");
+					var gridType = ($("#typed_literals").attr('checked'))? ";typed=true": "";
 					var formData = {
 						query: query,
 						format: "application/json" + gridType
@@ -205,25 +456,50 @@
 			}
 			responsePtr = response;
 			// initialize search select
-			var options = $('#searchColumn').attr('options');
+			//this line was modified on 21/05/2015 by z.khattabi
+			//the line below work just with the old version of jQuery
+			//I cohabited the old version and the new version on the same page
+			//the term "JQ" is equivalent to $ or jQuery object
+			var options = JQ('#searchColumn').attr('options');
 			options.length = 0;
 			options[options.length] = new Option("#i18n("grid.search.column.option.all")", "all", true, true);
 			// generating Column Model for jqGrid
 			var myColModel = [];
-			for (var i = 0; i < response.head.length; i++ ) {
+			// for (var i = 0; i < response.head.length; i++ ) {
+				// myColModel[i] = [];
+				// myColModel[i].name = response.head[i];
+				##add row to search select
+				// options[options.length] = new Option(response.head[i], response.head[i], false, false);
+			// }
+			for (var i = 0; i < response.head.vars.length; i++ ) {
 				myColModel[i] = [];
-				myColModel[i].name = response.head[i];
-				// add row to search select
+				myColModel[i].name = response.head.vars[i];
+				##add row to search select
 				options[options.length] = new Option(response.head[i], response.head[i], false, false);
 			}
 			$("#table_results").GridUnload();
 			// initializing jqGrid
+			
+			//Added
+			var rows = [];
+			
+			$.each(response.results.bindings, function(key, val) {
+				var sObj = {};
+				$.each(val, function(k, sub) {					
+					var url = '<a href="'+sub.value+'"\>'+sub.value+'</a>';
+					sObj[k] = url;
+				});
+				rows.push(sObj);
+			});
+			
 			$("#table_results").jqGrid({
 				datatype: "local",
-				colNames: response.head,
+				// colNames: response.head,
+				colNames: response.head.vars,
 				colModel: myColModel,
 				pager: $('#pagernav'),
-				data: response.rows,
+				// data: response.rows,
+				data: rows,
 				caption: $("#searchnav").html(),
 				rowNum: 200,
 				rowList: [50,100,200,500,1000,2000],
@@ -232,6 +508,7 @@
 					caption: "#i18n("grid.search.value.label")"
 				}
 			});
+			
 			$("#results").show();
 			$("#table_results").setGridWidth($("#results").width());
 		}
@@ -299,6 +576,2660 @@
 				}
 			}
 		}
+
+
+		##Event for clear a request
+		$('#clear').click(
+            function(){
+                $('#query').val('');
+            }
+        );
+
+
+		##Event for print a request
+		$('#print').click(
+            function(){
+				var popUp = window.open("", "MsgWindow", "width=800, height=600");
+				var req = $('#query').val().trim();
+				req = stringProcessing(req);
+				popUp.document.write(req);
+				popUp.print();
+				popUp.close();
+            }
+        );
+
+
+		##Function for processing string before print
+		function stringProcessing(str)
+		{
+			str = str.replace(/(?:>)/g, '&gt;');
+			str = str.replace(/(?:<)/g, '&lt;');
+			str = str.replace(/(?:\r\n|\r|\n)/g, '<br/>');
+			str = str.replace(/(?:\t)/g, '&nbsp;&nbsp;&nbsp;');
+			str = str.replace(/(?: )/g, '&nbsp;');
+
+			var a = str.split('<br/>');
+
+			var result = '<table>';
+			for(var i=0; i<a.length; i++)
+			{
+				result = result+'<tr><td style="width:30px;font-family: \'Times New Roman\', Times, serif; font-size:11px;">'+(i+1)+'</td>';
+				result = result+'<td style="font-family: \'Times New Roman\', Times, serif; font-size:11px;">'+a[i]+'</td></tr>';
+			}
+			result = result+'</table>';
+
+			return result;
+		}
+
+
+		## Event for get the list of all graphs
+		$('#graphs').click(
+            function(){
+				$('#content').css('display','none');
+				$('#graphs_content').css('display','block');
+
+				var appElement = document.querySelector('[ng-app=filterApp]');
+				var $scope = angular.element(appElement).scope();
+				$scope.$apply(function(){
+					$scope.paramNumber = getNumberVariables();
+					$scope.query = $("#query").val();
+				});
+
+				var q = $('#query').val();
+				q = q.split("limit");
+				qq = q[0].split("LIMIT");
+				qq[0] = qq[0] + " limit 1";
+				var sel = $('#default-graph-uri').val();
+
+				$.ajax({
+					url : '${baseUri}/sparql',
+					type : 'GET',
+					data : {
+						'default-graph-uri' : sel,
+						'query' : qq[0],
+						// 'max'   : 1,
+						// 'format': "application/json;grid=true;typed=true"
+						// 'format': "application/json;typed=true"
+					},
+					dataType : 'json',
+					error : function(result, status, error){
+						alert("#i18n("sparql.endpoint.alert.message4")");
+					},
+					success : function(json, status){
+						var nVars = json.head.vars.length;
+						var results = json.results.bindings[0];
+						var vars = [];
+						var varsName = [];
+
+						$.each(json.head.vars, function(key, val){
+								varsName.push(val);
+							}
+						)
+
+						$.each(results, function(key, val){
+								vars.push(val.type);
+							}
+						)
+
+						##templating
+						var htmlCode = "<table style=\"width:90%;border-collapse:collapse;\">";
+
+						$.each(vars, function(key, val){
+								htmlCode = htmlCode+"<div style=\"margin:1px;width:90%;\">"+
+														"<tr style=\"border:1px solid #a6c9e2;\">"+
+															"<td style=\"text-align:center;font-weight:bold;\">"+varsName[key]+"</td>"+
+														"</tr>"+
+														"<tr>"+
+															"<td style=\"border:1px solid #a6c9e2;\">"+writeSelect(val, (key+1))+"</td>"+
+															//"<td style=\"border:1px solid #a6c9e2;\">"+rankingSelect((key+1), vars.length)+"</td>"+
+														"</tr>"+
+													"</div>";
+							}
+						)
+
+						htmlCode = htmlCode+'</table><input type="hidden" id="numberOfSelect" value="'+vars.length+'">';
+						applyScope();
+						$("#parameters").html(htmlCode);
+						$("#onParams").css("display","inline");
+						validate();
+					}
+				});
+            }
+        );
+
+
+		##Event on changing deposit graph
+		$('#default-graph-uri-visu').change(
+            function(){
+				var sel = $('#default-graph-uri-visu').val();
+				$('#default-graph-uri').val(sel);
+				$('#graphs').click();
+            }
+        );
+
+
+		##Event for close graphs content
+		$('#close_graphs_content').click(
+            function(){
+				$('#graphs_content').css('display','none');
+				$('#content').css('display','block');
+            }
+        );
+
+		##Event for back to the lists of graphs
+		$('#back_graphs_content').click(
+            function(){
+				$('#graphs_content').css('display','block');
+				$('#graphs_show_description').css('display','none');
+				if(isMapLine){
+					layers = [];
+					sessionStorage["dates"] = [];
+					sessionStorage["data"] = [];
+				}
+            }
+        );
+
+
+		##Event for close block "show description graph"
+		$('#close_show_description').click(
+            function(){
+				$('#graphs_show_description').css('display','none');
+				$('#content').css('display','block');
+				if(isMapLine){
+					layers = [];
+					sessionStorage["dates"] = [];
+					sessionStorage["data"] = [];
+				}
+            }
+        );
+
+
+		##event for save a new request
+		$('#save').click(
+            function(){
+				var requestName = prompt("#i18n("sparql.endpoint.prompt.message1")","#i18n("sparql.endpoint.prompt.message2")");
+                var requestData = $('#query').val();
+
+				var date = new Date;
+				var dd = date.getDate();
+				if (dd<10) dd="0"+dd;
+				var mm = date.getMonth();
+				if (mm<10) mm="0"+mm;
+				var yy = date.getFullYear();
+				var H = date.getHours();
+				if (H<10) H="0"+H;
+				var M = date.getMinutes();
+				if (M<10) M="0"+M;
+
+				var version = "# Datalift "+$("#version").text()+
+							  " #i18n("sparql.endpoint.created") "+dd+"/"+mm+"/"+yy+" #i18n("sparql.endpoint.at") "+H+":"+M;
+
+				requestName = requestName.replace(/(?:\:)/g, '-');
+				requestName = requestName.replace(/(?: )/g, '');
+				$.ajax({
+				   url : '${baseUri}/sparql/save-request',
+				   type : 'POST',
+				   data : 'requestName=' + requestName + '&requestData=' + requestData + '&version=' + version,
+				   dataType : 'html',
+				   error : function(result, status, eror){
+						window.alert("#i18n("sparql.endpoint.alert.message7")");
+				   },
+				   success : function(htmlCode, status){
+				   }
+				});
+            }
+        );
+
+
+
+		##event for save the open request in the same file
+		$("#resave").click(
+            function(){
+				//TODO show that button is pressed
+                var requestData = $('#query').val();
+				var requestName = $("label[for='query']").text();
+
+				requestName = requestName.replace('#i18n("sparql.endpoint.request") : ', '');
+				requestName = requestName.replace(' (#i18n("sparql.endpoint.savedRequest"))', '');
+
+				requestName = requestName.replace(/(?:\:)/g, '-');
+				requestName = requestName.replace(/(?: )/g, '');
+
+				$.ajax({
+				   url : '${baseUri}/sparql/save-request',
+				   type : 'POST',
+				   data : 'requestName=' + requestName + '&requestData=' + requestData + '&version=',
+				   dataType : 'html',
+				   error : function(result, status, error){
+						window.alert("#i18n("sparql.endpoint.alert.message1")");
+				   },
+				   success : function(htmlCode, status){
+				   }
+				});
+            }
+        );
+
+		
+		##Event for get list of a saved request
+		$('#saved_request').click(
+            function(){
+				$.ajax({
+				   url : '${baseUri}/sparql/save-request/getList/#i18n("sparql.endpoint.langage")',
+				   type : 'GET',
+				   //data : 'lang=',
+				   dataType : 'html',
+				   error : function(result, status, error){
+						window.alert("#i18n("sparql.endpoint.alert.message2")");
+				   },
+				   success : function(htmlCode, status){
+						$('#saved_request').css('display','none');
+						$('#dialog').html(htmlCode);
+				   }
+				});
+            }
+        );
+
+		##Event for get list of a saved request
+		$('#delete').click(
+            function(){
+				$.ajax({
+				   url : '${baseUri}/sparql/save-request/getList/#i18n("sparql.endpoint.langage")',
+				   type : 'GET',
+				   //data : 'lang=',
+				   dataType : 'html',
+				   error : function(result, status, error){
+						window.alert("#i18n("sparql.endpoint.alert.message2")");
+				   },
+				   success : function(htmlCode, status){
+						$('#delete').css('display','none');
+						$('#dialog1').html(htmlCode);
+				   }
+				});
+            }
+        );
+
+		##Event for show parameter graph
+		function show_parameter_graph(){
+			$('#graphs_content').css('display','none');
+			$('#content').css('display','none');
+			$('#graphs_show_description').css('display','block');
+		}
+
+		##function show graph on a new window
+		function getGraph(name)
+		{
+			$.ajax({
+				type: 'GET',
+				url: '${baseUri}/sparql/save-request/graphs',
+				dataType: 'json',
+				success: function(data) {
+					$.each(data.graphs, function(key, val) {
+						if(val.name == name){
+							show_parameter_graph();
+							if (val.author=='Sgvizler'){
+								launchSgvizler(data, key);
+							} else if (val.author=='Leaflet'){
+								launchLeaflet();
+							}else if (val.author=='Atos'){
+								launchDynamicMap();
+							} else if (val.author=='OpenLayers'){
+								if (val.name == "OMap"){
+									launchOMapChart();
+								} else {
+									launchOL();
+								}
+							} else if (val.author=='HighchartJS'){
+								$("#graphs_get_description").html("<div id=\"container\" style=\"width:100%;height:100%;\"></div>");
+								if (val.name == "HBubblesChart"){
+									launchHBubblesChart();
+								} else if(val.name == "HLinesChart"){
+									launchHLinesChart();
+								} else if(val.name == "HlinesLabelsChart"){
+									launchHlinesLabelsChart();
+								} else if(val.name == "HLogarithmicChart"){
+									launchHLogarithmicChart();
+								} else if(val.name == "HTimesSeries"){
+									launchHTimesSeries();
+								} else if(val.name == "HTimesMultipleSeries"){
+									launchHTMSeriesChart();
+								} else if(val.name == "HBarBasic"){
+									launchHBarBasicChart();
+								} else if(val.name == "HBasicColumn"){
+									launchHBasicColumnChart();
+								} else if(val.name == "HColumnRange"){
+									launchColumnRangeChart();
+								} else if(val.name == "HSemiCircleDonut"){
+									launchHSemiCircleDonutChart();
+								} else if(val.name == "HPieGradientFill"){
+									launchHPieGradientFillChart();
+								} else if(val.name == "H3DPie"){
+									launchH3DPieChart();
+								} else if(val.name == "HPolarChart"){
+									launchHPolarChart();
+								} else if(val.name == "HSpiderweb"){
+									launchHSpiderwebChart();
+								} else if(val.name == "HTreeMapLevels"){
+									launchHTreeMapLevelsChart();
+								} else if(val.name == "HTreeMap"){
+									launchHTreeMapChart();
+								} else{}
+							} else{
+								if (val.name == "OMap"){
+									launchOMapChart();
+								}
+							}
+						}
+					});
+				},
+				error : function(result, status, error){
+					alert("#i18n("sparql.endpoint.alert.message6")");
+				}
+			});
+		}
+
+
+
+		##event for choose one of the saving request
+		$('#dialog').change(
+            function(){
+				if($("#sub_diag option:selected").val()!='--')
+				{
+					//$("label[for='query']").text('#i18n("sparql.endpoint.request") : '+$("#sub_diag option:selected").text()+' (#i18n("sparql.endpoint.savedRequest"))');
+					$("#query_title").text('#i18n("sparql.endpoint.request") : '+$("#sub_diag option:selected").text()+' (#i18n("sparql.endpoint.savedRequest"))');
+					$("#resave").css('display','inline-block');
+					$.ajax({
+					   url : '${baseUri}/sparql/save-request/get/'+$("#sub_diag option:selected").text(),
+					   type : 'GET',
+					   dataType : 'html',
+					   error : function(result, status, error){
+							window.alert("#i18n("sparql.endpoint.alert.message3")");
+					   },
+					   success : function(htmlCode, status){
+							$('#query').val(htmlCode);
+							queryUpdate();
+							$('#saved_request').css('display','inline');
+							$('#dialog').html('');
+					   }
+					});
+				}
+            }
+        );
+
+
+		##event for Delete one of the saving request
+		$('#dialog1').change(
+            function(){
+				if($("#sub_diag option:selected").val()!='--')
+				{
+					$("#delete").css('display','inline-block');
+					$.ajax({
+					   url : '${baseUri}/sparql/save-request/delete/'+$("#sub_diag option:selected").text(),
+					   type : 'GET',
+					   dataType : 'html',
+					   error : function(result, status, error){
+							window.alert("#i18n("sparql.endpoint.alert.message8")");
+					   },
+					   success : function(htmlCode, status){
+							$('#delete').css('display','inline');
+							$('#dialog1').html('');
+					   }
+					});
+				}
+            }
+        );
+
+
+		##app dynamic search for a graph by keyword
+		var app = angular.module("filterApp", ['elif']);
+		
+		##search controller
+		app.controller("filterCtrl", function($scope, $http){
+			$scope.paramNumber = getNumberVariables();
+			$scope.selectedIndex = 0; // Whatever the default selected index is, use -1 for no selection
+			$scope.types=["any","any","any","any","any"];
+			$scope.isChecked=false;
+			$scope.itemClicked = function (name) {
+				//$scope.selectedIndex = $index;
+				getGraph(name);
+			};
+
+			$scope.$watch('paramNumber', function() {
+				setNumberVariables($scope);
+			});
+
+
+			##get the JSON data
+			$http.get('http://localhost:9091/sparql/save-request/graphs')
+			.success(
+				function(data)
+				{
+					$scope.lists = data;
+					$scope.paramNumber = getNumberVariables();
+				}
+			);
+		});
+
+
+		##function get the number of a variable in a query
+		function getNumberVariables()
+		{
+			var sel = $('#default-graph-uri-visu').val();
+			var q = $("#query").val();
+			q = q.split("limit");
+			qq = q[0].split("LIMIT");
+			qq[0] = qq[0] + " limit 1";
+			$.ajax({
+				url : '${baseUri}/sparql',
+				type : 'GET',
+				data : {
+					'default-graph-uri' : sel,
+					'query' : q[0],
+					//'max'   : 1,
+				},
+				dataType : 'json',
+				error : function(result, status, error){
+					//alert("#i18n("sparql.endpoint.alert.message4")");
+				},
+				success : function(json, status){
+					nVars = json.head.vars.length;
+					$("#nVars").val(nVars);
+				},
+			});
+
+			return $("#nVars").val();
+		}
+
+
+		function setNumberVariables($scope)
+		{
+			$scope.paramNumber = getNumberVariables();
+		}
+
+		##Write the list of the possibilities for the parameters
+		function writeSelect(v, k)
+		{
+			var select = "<select id=\"col_type_"+k+"\" name=\"col_type\" onchange=\"validate()\" style=\"width:100%\">"+
+						"<option value=\""+v+"\">"+v+"</option>"+
+						"<option value=\"any\">#i18n("sparql.endpoint.option.select1")</option>"+
+						"<option value=\"string\">#i18n("sparql.endpoint.option.select2")</option>"+
+						"<option value=\"int\">#i18n("sparql.endpoint.option.select3")</option>"+
+						"<option value=\"long\">#i18n("sparql.endpoint.option.select4")</option>"+
+						"<option value=\"float\">#i18n("sparql.endpoint.option.select5")</option>"+
+						"<option value=\"number+\">#i18n("sparql.endpoint.option.select6")</option>"+
+						"<option value=\"boolean\">#i18n("sparql.endpoint.option.select7")</option>"+
+						"<option value=\"date\">#i18n("sparql.endpoint.option.select8")</option>";
+						"<option value=\"date\">#i18n("sparql.endpoint.option.select10")</option>";
+
+			if(v!="uri"){
+				select = select+"<option value=\"uri\">#i18n("sparql.endpoint.option.select9")</option></select>";
+			}
+
+			if(v!="literal"){
+				select = select+"<option value=\"literal\">#i18n("sparql.endpoint.option.select10")</option></select>";
+			}
+			select = select+"</select>";
+
+			return select;
+		}
+
+		##Write the ranking select for the parameters
+		function rankingSelect(key, length){
+			var select = "<select id=\"ranking_"+key+"\" name=\"ranking\" onchange=\"validate()\">";
+			for(var i=1; i<=length; i++){
+				if (i == key) {
+					select = select + "<option value=\""+i+"\" selected=\"selected\">"+i+"</option>";
+				}
+				else {
+					select = select + "<option value=\""+i+"\">"+i+"</option>";
+				}
+			}
+			select = select+"</select>";
+			return select;
+		}
+
+		##Filter only unique values on array
+		function onlyUnique(value, index, self) {
+			return self.indexOf(value) === index;
+		}
+
+		function getTheNumberOfSelect(){
+			var t=[];
+			var length = $("#numberOfSelect").val();
+
+			for(var i=1; i<=length; i++){
+				var v = "#ranking_"+i;
+				var vl = $(v).val();
+				t.push(vl);
+			}
+			return t;
+		}
+
+		function getTheValueOfSelect(){
+			var t = [];
+			var length = $("#numberOfSelect").val();
+			for(var i=1; i<=length; i++){
+				var v = "#col_type_"+i;
+				var vl = $(v).val();
+				t.push(vl);
+			}
+			return t;
+		}
+
+		##validate the type of parameter action
+		function validate(){
+			var tab = [];
+
+			tab = getTheNumberOfSelect();
+			var unique = tab.filter(onlyUnique);
+
+			// if(unique.length != tab.length)	{
+				// alert("#i18n("sparql.endpoint.alert.message5")");
+			// } else {
+				tab = [];
+				tab = getTheValueOfSelect();
+
+				var appElement = document.querySelector('[ng-app=filterApp]');
+				var scope = angular.element(appElement).scope();
+				scope.$apply(function(){
+					scope.paramNumber = getNumberVariables();
+					scope.query = $("#query").val();
+					var length = $("#numberOfSelect").val();
+
+					for(var i=0; i<length; i++){
+						switch(tab[i]) {
+							case "string":
+								scope.types[i] = "string";
+								break;
+							case "uri":
+								scope.types[i] = "string";
+								break;
+							case "literal":
+								scope.types[i] = "literal";
+								break;
+							case "any":
+								scope.types[i] = "any";
+								break;
+							case "int":
+								scope.types[i] = "number";
+								break;
+							case "long":
+								scope.types[i] = "number";
+								break;
+							case "float":
+								scope.types[i] = "number";
+								break;
+							case "boolean":
+								scope.types[i] = "boolean";
+								break;
+							case "date":
+								scope.types[i] = "date";
+								break;
+							case "number+":
+								scope.types[i] = "number+";
+								break;
+							default:
+								scope.types[i] = "";
+						}
+					}
+				});
+			// }
+		}
+		/**
+		 * Equivalent to $apply object (change a scope in AngularJs)
+		 *
+		 * @method applyScope
+		 * @autor Zakaria Khattabi
+		 **/
+		function applyScope(){
+			var appElement = document.querySelector('[ng-app=filterApp]');
+			var $scope = angular.element(appElement).scope();
+			$scope.$apply(function(){
+				$scope.paramNumber = getNumberVariables();
+				$scope.query = $("#query").val();
+			});
+		}
+		/**
+		 * Return the position of the first 
+		 * element in Array who contains the string
+		 *
+		 * @method isExist
+		 * @param {String} str
+		 * @param {Array} arr
+		 * @return {Number} position of element, else -1
+		 * @autor Zakaria Khattabi
+		 **/
+		function isExist(str, arr){
+			return arr.indexOf(str);
+		}
+		/**
+		 * Return the language
+		 *
+		 * @method getLang
+		 * @return {String} "FR"/"EN"
+		 * @autor Zakaria Khattabi
+		 **/
+		function getLang(){
+			var userLang = "";
+			($('#print').val()=="Print")?userLang="EN":userLang="FR";
+			return userLang;
+		}
+		/**
+		 * Return the average of a table like [[],[],...,[]] 
+		 * element in Array who contains the string
+		 *
+		 * @method avg
+		 * @param {Array} tab
+		 * @param {Number} index
+		 * @return {Number} a float
+		 * @autor Zakaria Khattabi
+		 **/
+		function avg(tab, index){
+			var sum=0.0;
+			var length=tab.length;
+			for (var i=0; i<length; i++) sum+=parseFloat(tab[i][index]);
+			//alert(typeof tab[0][index]);
+			return sum/length;
+		}
+		/**
+		 * Parse string table to table number
+		 *
+		 * @method toNbr
+		 * @param {Array} tab
+		 * @return {Array} table parsing to number
+		 * @autor Zakaria Khattabi
+		 **/
+		function toNbr(tab){
+			for (var i=0; i<tab[0].length; i++){
+				for (var j=0; j<tab.length; j++){
+					tab[i][j] = parseFloat(tab[i][j]);
+				}
+			}
+			return tab;
+		}
+		/**
+		 * Launch all charts of Sgvizler
+		 *
+		 * @method launchSgvizler
+		 * @param {Object} data (JSON result)
+		 * @param {Number} key
+		 * @autor Zakaria Khattabi
+		 **/
+		function launchSgvizler(data ,key){
+			$("#graphs_get_description").html("<div id=\"sgVzl\" data-sgvizler-query=\""+$("#query").val().trim()+"\" data-sgvizler-chart=\""+data.graphs[key].dataSgvizlerChart+"\" style=\"width:100%;height:100%;\"></div>");
+			//Launching sgvizler
+			var sparqlQueryString = $("#query").val().trim(),
+			containerID = "sgVzl",
+			Q = new sgvizler.Query(),
+			sel = $('#default-graph-uri-visu').val(),
+			url = "http://localhost:9091/sparql?default-graph-uri="+sel;
+			//Note that default values may be set in the sgvizler object.
+			Q.query(sparqlQueryString)
+			.endpointURL(url)
+			.endpointOutputFormat("json")                    // Possible values 'xml', 'json', 'jsonp'.
+			.chartFunction(data.graphs[key].dataSgvizlerChart)  // The name of the function to draw the chart.
+			.chartHeight(Math.floor($("#graphs_get_description").height()))
+			.chartWidth(Math.floor($("#graphs_get_description").width()))
+			.draw(containerID)
+			.loglevel("2");
+		}
+		/**
+		 * Launch the chart of Leaflet
+		 *
+		 * @method launchLeaflet
+		 * @autor Zakaria Khattabi
+		 **/
+		function launchLeaflet(){
+			// $("#graphs_get_description").html("<div id=\"map\" style=\"width:100%;height:100%;\"></div>");
+			visu.createContainer("graphs_get_description", "map");
+			var t = [],
+			q = $("#query").val(),
+			sel = $('#default-graph-uri-visu').val();
+			$.ajax({
+				url : '${baseUri}/sparql',
+				type : 'GET',
+				data : {
+					'default-graph-uri' : sel,
+					'query' : q,
+				},
+				dataType : 'json',
+				error : function(result, status, error){
+					if(getLang()=="EN"){
+						alert("Failure to recovery parameters");
+					} else {
+						alert("Echec de récupération des paramètres");
+					}
+				},
+				success : function(json, status){
+					var nVars = json.head.vars.length;
+					if (nVars>1 || nVars<4){
+						$.each(json.results.bindings, function(key, val) {
+							t.push(new Array());
+							$.each(val, function(k, sub) {
+								t[key].push(sub.value);
+							});
+						});
+
+						var avLat = avg(t, 0);
+						var avLon = avg(t, 1);
+
+						var map = L.map('map').setView([avLat, avLon], 13);
+
+						L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
+							attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
+							maxZoom: 18,
+							id: 'dlift.b4e0fe33',
+							accessToken: 'pk.eyJ1IjoiZGxpZnQiLCJhIjoiMGRhOTQyM2NmNjkyN2E5ZDliYjdlYjhmZjk0MmRkMzQifQ.Jr2TI6X6zPRjpQAsYhX_PQ'
+						}).addTo(map);
+
+						for (var i = 0; i < t.length; i++) {
+							var s = "";
+							if(typeof t[i][2] != "undefined"){
+								if(t[i][2]) s=s+" "+t[i][2];
+								if(t[i][3]) s=s+" "+t[i][3];
+								if(t[i][4]) s=s+" "+t[i][4];
+							} else {
+								s=s+" ("+t[i][0]+","+t[i][1]+")";
+							}
+							marker = new L.marker([t[i][0], t[i][1]])
+							.bindPopup(s)
+							.addTo(map);
+						}
+					}
+				},
+			});
+		}
+		/**
+		 * Launch the chart of bubble of Highcharts
+		 *
+		 * @method launchHBubblesChart
+		 * @autor Zakaria Khattabi
+		 **/
+		function launchHBubblesChart(){
+			var t = [];
+			var q = $("#query").val();
+			var sel = $('#default-graph-uri-visu').val();
+
+			$.ajax({
+				url : '${baseUri}/sparql',
+				type : 'GET',
+				data : {
+					'default-graph-uri' : sel,
+					'query' : q,
+				},
+				dataType : 'json',
+				error : function(result, status, error){
+					if(getLang()=="EN"){
+						alert("Failure to recovery parameters");
+					} else {
+						alert("Echec de récupération des paramètres");
+					}
+				},
+				success : function(json, status){
+					var nVars = json.head.vars.length;
+					if(json.results.bindings.length==0)
+						alert("no results to show");
+					if (nVars>1 || nVars<4){
+						$.each(json.results.bindings, function(key, val) {
+							// var d = {};
+							var temp = [];
+								$.each(val, function(k, sub) {
+									$.each(sub, function(subK, subSub) {
+										if(subK == "value"){
+											// d[k] = subSub;
+											temp.push(subSub);
+										}
+									});
+								});
+							// t.push(d);
+							t.push(temp);
+						});
+
+						console.log(t);
+						toNbr(t);
+
+						$(function () {
+							$('#container').highcharts({
+								title: {
+									text: 'HBubblesChart',
+									x: -20 //center
+								},
+
+								chart: {
+									type: 'bubble',
+									zoomType: 'xy'
+								},
+
+								series: [{
+									data: t
+								}, ]
+							});
+						});
+					}
+				}
+			});
+		}
+		/**
+		 * Launch the chart of lines labels of Highcharts
+		 *
+		 * @method launchHlinesLabelsChart
+		 * @autor Zakaria Khattabi
+		 **/
+		function launchHlinesLabelsChart(){
+			var t = [];
+			var q = $("#query").val();
+			var sel = $('#default-graph-uri-visu').val();
+
+			$.ajax({
+				url : '${baseUri}/sparql',
+				type : 'GET',
+				data : {
+					'default-graph-uri' : sel,
+					'query' : q,
+				},
+				dataType : 'json',
+				error : function(result, status, error){
+					if(getLang()=="EN"){
+						alert("Failure to recovery parameters");
+					} else {
+						alert("Echec de récupération des paramètres");
+					}
+				},
+				success : function(json, status){
+					var nVars = json.head.vars.length;
+					var varNames = [];
+					if(json.results.bindings.length==0)
+						alert("no results to show");
+					if (nVars>1 || nVars<4){
+						$.each(json.results.bindings, function(key, val) {
+							// var d = {};
+							var temp = [];
+								$.each(val, function(k, sub) {
+									varNames.push(k);
+									$.each(sub, function(subK, subSub) {
+										if(subK == "value"){
+											// d[k] = subSub;
+											temp.push(subSub);
+										}									
+									});
+								});
+							// t.push(d);
+							t.push(temp);
+						});
+
+						console.log(t);
+						
+						var tab = [];
+						for(var i=0; i<t[0].length; i++){
+							var d = {};
+							var v = [];
+							for(var j=0; j<t.length; j++){
+								v.push(parseFloat(t[j][i]));
+							}
+							d["data"] = v;
+							d["name"] = varNames[i];
+							tab.push(d);
+						}
+						console.log(tab);
+						
+						$(function() {
+							$('#container').highcharts({
+								title: {
+									text: 'HlinesLabelsChart',
+									x: -20 //center
+								},
+								chart: {
+									type: 'line'
+								},
+								plotOptions: {
+									line: {
+										dataLabels: {
+											enabled: true
+										},
+										enableMouseTracking: false
+									}
+								},
+								series: tab
+							});
+						});
+					}
+				}
+			});
+		}
+		/**
+		 * Launch the chart of lines of Highcharts
+		 *
+		 * @method launchHLinesChart
+		 * @autor Zakaria Khattabi
+		 **/
+		function launchHLinesChart(){
+			var t = [];
+			var q = $("#query").val();
+			var sel = $('#default-graph-uri-visu').val();
+
+			$.ajax({
+				url : '${baseUri}/sparql',
+				type : 'GET',
+				data : {
+					'default-graph-uri' : sel,
+					'query' : q,
+				},
+				dataType : 'json',
+				error : function(result, status, error){
+					if(getLang()=="EN"){
+						alert("Failure to recovery parameters");
+					} else {
+						alert("Echec de récupération des paramètres");
+					}
+				},
+				success : function(json, status){
+					var nVars = json.head.vars.length;
+					var varNames = [];
+					if(json.results.bindings.length==0)
+						alert("no results to show");
+					if (nVars>1 || nVars<4){
+						$.each(json.results.bindings, function(key, val) {
+							// var d = {};
+							var temp = [];
+								$.each(val, function(k, sub) {
+									varNames.push(k);
+									$.each(sub, function(subK, subSub) {
+										if(subK == "value"){
+											// d[k] = subSub;
+											temp.push(subSub);
+										}									
+									});
+								});
+							// t.push(d);
+							t.push(temp);
+						});
+
+						console.log(t);
+						
+						var tab = [];
+						for(var i=0; i<t[0].length; i++){
+							var d = {};
+							var v = [];
+							for(var j=0; j<t.length; j++){
+								v.push(parseFloat(t[j][i]));
+							}
+							d["data"] = v;
+							d["name"] = varNames[i];
+							tab.push(d);
+						}
+						console.log(tab);
+						
+						$(function() {
+							$('#container').highcharts({
+								title: {
+									text: 'HLinesChart',
+									x: -20 //center
+								},
+								legend: {
+									layout: 'vertical',
+									align: 'right',
+									verticalAlign: 'middle',
+									borderWidth: 0
+								},
+								series: tab
+							});
+						});
+					}
+				}
+			});
+		}
+		/**
+		 * Launch the chart of logarithmic of Highcharts
+		 *
+		 * @method launchHLogarithmicChart
+		 * @autor Zakaria Khattabi
+		 **/
+		function launchHLogarithmicChart(){
+			var t = [];
+			var q = $("#query").val();
+			var sel = $('#default-graph-uri-visu').val();
+
+			$.ajax({
+				url : '${baseUri}/sparql',
+				type : 'GET',
+				data : {
+					'default-graph-uri' : sel,
+					'query' : q,
+				},
+				dataType : 'json',
+				error : function(result, status, error){
+					if(getLang()=="EN"){
+						alert("Failure to recovery parameters");
+					} else {
+						alert("Echec de récupération des paramètres");
+					}
+				},
+				success : function(json, status){
+					var nVars = json.head.vars.length;
+					var varNames = [];
+					if(json.results.bindings.length==0)
+						alert("no results to show");
+					if (nVars>1 || nVars<4){
+						$.each(json.results.bindings, function(key, val) {
+							var temp = [];
+								$.each(val, function(k, sub) {
+									varNames.push(k);
+									$.each(sub, function(subK, subSub) {
+										if(subK == "value"){
+											temp.push(subSub);
+										}									
+									});
+								});
+							t.push(temp);
+						});
+
+						console.log(t);
+						
+						var tab = [];
+						for(var i=0; i<t[0].length; i++){
+							var d = {};
+							var v = [];
+							for(var j=0; j<t.length; j++){
+								v.push(parseFloat(t[j][i]));
+							}
+							d["data"] = v;
+							d["name"] = varNames[i];
+							tab.push(d);
+						}
+						console.log(tab);
+						
+						$(function() {
+							$('#container').highcharts({
+								title: {
+									text: 'HLogarithmicChart'
+								},
+
+								xAxis: {
+									tickInterval: 1
+								},
+
+								yAxis: {
+									type: 'logarithmic',
+									minorTickInterval: 0.1
+								},
+
+								tooltip: {
+									headerFormat: '<b>{series.name}</b><br />',
+									pointFormat: 'x = {point.x}, y = {point.y}'
+								},
+
+								series: tab
+							});
+						});
+					}
+				}
+			});
+		}
+		/**
+		 * Launch the chart of times series of Highcharts
+		 *
+		 * @method launchHTimesSeries
+		 * @autor Zakaria Khattabi
+		 **/
+		function launchHTimesSeries(){
+			var t = [];
+			var q = $("#query").val();
+			var sel = $('#default-graph-uri-visu').val();
+
+			$.ajax({
+				url : '${baseUri}/sparql',
+				type : 'GET',
+				data : {
+					'default-graph-uri' : sel,
+					'query' : q,
+				},
+				dataType : 'json',
+				error : function(result, status, error){
+					if(getLang()=="EN"){
+						alert("Failure to recovery parameters");
+					} else {
+						alert("Echec de récupération des paramètres");
+					}
+				},
+				success : function(json, status){
+					var nVars = json.head.vars.length;
+					var varNames = [];
+					if(json.results.bindings.length==0)
+						alert("no results to show");
+					if (nVars>1 || nVars<4){
+						$.each(json.results.bindings, function(key, val) {
+							var temp = [];
+								$.each(val, function(k, sub) {
+									varNames.push(k);
+									$.each(sub, function(subK, subSub) {
+										if(subK == "value"){
+											temp.push(subSub);
+										}									
+									});
+								});
+							t.push(temp);
+						});
+
+						console.log(t);
+						
+						var tab = [];
+						for(var i=0; i<1; i++){
+							var d = {};
+							var v = [];
+							for(var j=0; j<t.length; j++){
+								v.push(parseFloat(t[j][i]));
+							}
+							d["data"] = v;
+							d["type"] = "area";
+							d["pointInterval"] = 24 * 3600 * 1000;
+							d["name"] = varNames[i];
+							tab.push(d);
+						}
+						console.log(tab);
+						
+						$(function() {
+							$('#container').highcharts({
+								title: {
+									text: 'HTimesSeries'
+								},
+								chart: {
+									zoomType: 'x'
+								},
+								xAxis: {
+									type: 'datetime',
+									minRange: 14 * 24 * 3600000 // fourteen days
+								},
+								legend: {
+									enabled: false
+								},
+								plotOptions: {
+									area: {
+										fillColor: {
+											linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1},
+											stops: [
+												[0, Highcharts.getOptions().colors[9]],
+												[1, Highcharts.Color(Highcharts.getOptions().colors[0]).setOpacity(0).get('rgba')]
+											]
+										},
+										marker: {
+											radius: 2
+										},
+										lineWidth: 1,
+										states: {
+											hover: {
+												lineWidth: 1
+											}
+										},
+										threshold: null
+									}
+								},
+								series: tab
+							});
+						});
+					}
+				}
+			});
+		}
+		/**
+		 * Launch the chart of OpenLayers map chart
+		 *
+		 * @method launchOMapChart
+		 * @autor Zakaria Khattabi
+		 **/
+		function launchOMapChart(){
+			visu.createContainer("graphs_get_description", "map");
+			
+			(function(){
+				var t = [];
+				var q = $("#query").val();
+				var sel = $('#default-graph-uri-visu').val();
+				
+				$.ajax({
+					url : '${baseUri}/sparql',
+					type : 'GET',
+					data : {
+						'default-graph-uri' : sel,
+						'query' : q,
+					},
+					dataType : 'json',
+					error : function(result, status, error){
+						if(getLang()=="EN"){
+						alert("Failure to recovery parameters");
+						} else {
+							alert("Echec de récupération des paramètres");
+						}
+					},
+					success : function(json, status){
+						var nVars = json.head.vars.length;
+						if (nVars>1 || nVars<4){
+							$.each(json.results.bindings, function(key, val) {
+								t.push(new Array());
+								$.each(val, function(k, sub) {
+									t[key].push(sub.value);
+								});
+							});
+							console.log(t);
+
+							var avLat = avg(t, 0);
+							var avLon = avg(t, 1);
+							
+							//create empty vector
+							var vectorSource = new ol.source.Vector({ 
+							});
+							
+							// create a bunch of icons and add to source vector
+							for (var i=0;i<t.length;i++){
+								var iconFeature = new ol.Feature({
+								  geometry: new  
+									ol.geom.Point(ol.proj.transform([parseFloat(t[i][1]), parseFloat(t[i][0])], 'EPSG:4326','EPSG:3857')),
+								  name: ' ' + i,
+								});
+								vectorSource.addFeature(iconFeature);
+							}
+							//create the style
+							var iconStyle = new ol.style.Style({
+							  image: new ol.style.Icon(/** @type {olx.style.IconOptions} */ ({
+								anchor: [0.5, 46],
+								anchorXUnits: 'fraction',
+								anchorYUnits: 'pixels',
+								// opacity: 0.75,
+								src: '${baseUri}/images/legacy-vizu/icons/Map-Marker.png'
+							  }))
+							});
+
+							//add the feature vector to the layer vector, and apply a style to whole layer
+							var vectorLayer = new ol.layer.Vector({
+							  source: vectorSource,
+							  style: iconStyle
+							});
+							var layerSat = new ol.layer.Tile({
+								source: new ol.source.BingMaps({
+											key: 'Ak-dzM4wZjSqTlzveKz5u0d4IQ4bRzVI309GxmkgSVr1ewS6iPSrOvOKhA-CJlm3',
+											imagerySet: 'AerialWithLabels'	
+								})	
+							});
+							var map = new ol.Map({
+							  layers: [layerSat, vectorLayer],
+							  target: document.getElementById('map'),
+							  view: new ol.View({
+								center: [parseFloat(avLat), parseFloat(avLon)],
+								// center: [0, 0],
+								zoom: 3
+							  })
+							});
+						}
+					}
+				});
+			})();
+		}
+		/**
+		 * Show the sub-group for each category who it's selected
+		 *
+		 * @method showSubGroupBy
+		 * @autor Zakaria Khattabi
+		 **/
+		function showSubGroupBy(){
+			if ($("#selectGroupBy").val()==""){
+				// $("#subGroupBy").css("display","none");
+				// $('#subGroupBy select option:eq(0)').prop('selected', true);
+				var appElement = document.querySelector('[ng-app=filterApp]');
+				var $scope = angular.element(appElement).scope();
+				$scope.$apply(function(){
+					$scope.subs = [];
+				});
+				console.log($('#subGroupBy select option:eq(0)').val());
+			} else {
+				$("#subGroupBy").css("display","inline-block");
+				
+				var appElement = document.querySelector('[ng-app=filterApp]');
+				var scope = angular.element(appElement).scope();
+				scope.$apply(function(){
+					$.ajax({
+						url : 'http://localhost:9091/sparql/save-request/graphs',
+						type : 'GET',
+						dataType : 'json',
+						success : function(json, status){
+							var val = $("#selectGroupBy").val();
+							scope.subs = #i18n("sparql.endpoint.getSubGategories");
+							// console.log($('#subGroupBy select option:eq(0)').val());
+						}
+					});
+				});
+			}
+		}
+		/**
+		 * Enable to show just graph controls
+		 * TODO :
+		 * 		To delete
+		 *
+		 * @autor Zakaria Khattabi
+		 **/
+		$("#enableGraphControl").click(
+			function(){
+				$('#graphs_content').css('display','none');
+				$("#control_graphs_content").css("display","block");
+			}
+		);
+		/**
+		 * Launch the times series of Highcharts
+		 *	TODO : to modify
+		 *	TODO : to delete
+		 *
+		 * @method launchHTMSeriesChart
+		 * @autor Zakaria Khattabi
+		 **/
+		function launchHTMSeriesChart(){
+			var t = [];
+			var q = $("#query").val();
+			var sel = $('#default-graph-uri-visu').val();
+
+			$.ajax({
+				url : '${baseUri}/sparql',
+				type : 'GET',
+				data : {
+					'default-graph-uri' : sel,
+					'query' : q,
+				},
+				dataType : 'json',
+				error : function(result, status, error){
+					if(getLang()=="EN"){
+						alert("Failure to recovery parameters");
+					} else {
+						alert("Echec de récupération des paramètres");
+					}
+				},
+				success : function(json, status){
+					var nVars = json.head.vars.length;
+					var varNames = [];
+					if(json.results.bindings.length==0)
+						alert("no results to show");
+					if (nVars>1 || nVars<4){
+						$.each(json.results.bindings, function(key, val) {
+							var temp = [];
+								$.each(val, function(k, sub) {
+									varNames.push(k);
+									$.each(sub, function(subK, subSub) {
+										if(subK == "value"){
+											temp.push(subSub);
+										}									
+									});
+								});
+							t.push(temp);
+						});
+
+						console.log(t);
+						
+						var tt = [];
+						for(var i=0; i<t[0].length; i++){
+							var temp = [];
+							for(var j=0; j<t.length; j++){
+								temp.push(parseFloat(t[j][i]));
+							}
+							tt.push(temp);
+						}
+						
+						console.log(tt);
+						
+						var seriesOptions = [];
+						for(var i=0; i<tt.length; i++){
+							var d = {};
+							d["data"] = tt[i];
+							// d["type"] = "area";
+							// d["pointInterval"] = 24 * 3600 * 1000;
+							d["name"] = varNames[i];
+							seriesOptions.push(d);
+						}
+						console.log(seriesOptions);
+						console.log("tt 0 : "+tt[0]);
+
+						$(function() {
+							// $('#container').highcharts('StockChart', {
+								// plotOptions: {
+									// series: {
+										// compare: 'percent'
+									// }
+								// },
+
+								// series: [{name:"x", data:tt[0]}]
+								// series: seriesOptions
+							// });
+							
+							
+							 var chart = new Highcharts.StockChart({
+								chart: {
+									renderTo: 'container'
+								},
+								series: [{
+									name: 'USD to EUR',
+									data: [1,2,3]
+								}]
+							});
+						});
+					}
+				}
+			});
+		}
+		/**
+		 * Launch bar basic chart of Highcharts
+		 *
+		 * @method launchHBarBasicChart
+		 * @autor Zakaria Khattabi
+		 **/
+		function launchHBarBasicChart(){
+			var t = [];
+			var q = $("#query").val();
+			var sel = $('#default-graph-uri-visu').val();
+
+			$.ajax({
+				url : '${baseUri}/sparql',
+				type : 'GET',
+				data : {
+					'default-graph-uri' : sel,
+					'query' : q,
+				},
+				dataType : 'json',
+				error : function(result, status, error){
+					if(getLang()=="EN"){
+						alert("Failure to recovery parameters");
+					} else {
+						alert("Echec de récupération des paramètres");
+					}
+				},
+				success : function(json, status){
+					var nVars = json.head.vars.length;
+					var varNames = [];
+					if(json.results.bindings.length==0)
+						alert("no results to show");
+					if (nVars>1 || nVars<4){
+						$.each(json.results.bindings, function(key, val) {
+							var temp = [];
+								$.each(val, function(k, sub) {
+									varNames.push(k);
+									$.each(sub, function(subK, subSub) {
+										if(subK == "value"){
+											temp.push(subSub);
+										}									
+									});
+								});
+							t.push(temp);
+						});
+						console.log(t);
+						
+						var tt = [];
+						for(var i=0; i<t[0].length; i++){
+							var temp = [];
+							for(var j=0; j<t.length; j++){
+								temp.push(parseFloat(t[j][i]));
+							}
+							tt.push(temp);
+						}	
+						console.log(tt);		
+						var seriesOptions = [];
+						for(var i=0; i<tt.length; i++){
+							var d = {};
+							d["data"] = tt[i];
+							d["name"] = varNames[i];
+							seriesOptions.push(d);
+						}
+						console.log(seriesOptions);		
+						configHBarBasic(seriesOptions);
+					}
+				}
+			});
+		}
+		/**
+		 * Configuration to launch bar basic chart
+		 *
+		 * @method configHBarBasic
+		 * @param {Object} seriesOptions
+		 * @autor Zakaria Khattabi
+		 **/
+		function configHBarBasic(seriesOptions){
+			$(function () {
+				$('#container').highcharts({
+					chart: {
+						type: 'bar'
+					},
+					title: {
+						text: 'HBarBasicChart'
+					},
+					plotOptions: {
+						bar: {
+							dataLabels: {
+								enabled: true
+							}
+						}
+					},
+					legend: {
+						layout: 'vertical',
+						align: 'right',
+						verticalAlign: 'top',
+						x: -40,
+						y: 80,
+						floating: true,
+						borderWidth: 1,
+						backgroundColor: ((Highcharts.theme && Highcharts.theme.legendBackgroundColor) || '#FFFFFF'),
+						shadow: true
+					},
+					credits: {
+						enabled: false
+					},
+					series: seriesOptions
+				});
+			});
+		}
+		/**
+		 * Launch basic column chart
+		 *
+		 * @method launchHBasicColumnChart
+		 * @autor Zakaria Khattabi
+		 **/
+		function launchHBasicColumnChart(){
+			var t = [];
+			var q = $("#query").val();
+			var sel = $('#default-graph-uri-visu').val();
+
+			$.ajax({
+				url : '${baseUri}/sparql',
+				type : 'GET',
+				data : {
+					'default-graph-uri' : sel,
+					'query' : q,
+				},
+				dataType : 'json',
+				error : function(result, status, error){
+					if(getLang()=="EN"){
+						alert("Failure to recovery parameters");
+					} else {
+						alert("Echec de récupération des paramètres");
+					}
+				},
+				success : function(json, status){
+					var nVars = json.head.vars.length;
+					var varNames = [];
+					if(json.results.bindings.length==0)
+						alert("no results to show");
+					if (nVars>1 || nVars<4){
+						$.each(json.results.bindings, function(key, val) {
+							var temp = [];
+								$.each(val, function(k, sub) {
+									varNames.push(k);
+									$.each(sub, function(subK, subSub) {
+										if(subK == "value"){
+											temp.push(subSub);
+										}									
+									});
+								});
+							t.push(temp);
+						});
+						console.log(t);
+						
+						var tt = [];
+						for(var i=0; i<t[0].length; i++){
+							var temp = [];
+							for(var j=0; j<t.length; j++){
+								temp.push(parseFloat(t[j][i]));
+							}
+							tt.push(temp);
+						}					
+						console.log(tt);
+						
+						var seriesOptions = [];
+						for(var i=0; i<tt.length; i++){
+							var d = {};
+							d["data"] = tt[i];
+							d["name"] = varNames[i];
+							seriesOptions.push(d);
+						}
+						console.log(seriesOptions);
+						
+						configHBasicColumn(seriesOptions);
+					}
+				}
+			});
+		}
+		/**
+		 * Configuration to launch bar basic chart
+		 *
+		 * @method configHBasicColumn
+		 * @param {Object} seriesOptions
+		 * @autor Zakaria Khattabi
+		 **/
+		function configHBasicColumn(seriesOptions){
+			$(function () {
+				$('#container').highcharts({
+					chart: {
+						type: 'column'
+					},
+					title: {
+						text: 'HBasicColumn Chart'
+					},
+					series: seriesOptions
+				});
+			});	
+		}
+		/**
+		 * Launch column range chart
+		 *
+		 * @method launchColumnRangeChart
+		 * @autor Zakaria Khattabi
+		 **/
+		function launchColumnRangeChart(){
+			var t = [];
+			var q = $("#query").val();
+			var sel = $('#default-graph-uri-visu').val();
+
+			$.ajax({
+				url : '${baseUri}/sparql',
+				type : 'GET',
+				data : {
+					'default-graph-uri' : sel,
+					'query' : q,
+				},
+				dataType : 'json',
+				error : function(result, status, error){
+					if(getLang()=="EN"){
+						alert("Failure to recovery parameters");
+					} else {
+						alert("Echec de récupération des paramètres");
+					}
+				},
+				success : function(json, status){
+					var nVars = json.head.vars.length;
+					var varNames = [];
+					if(json.results.bindings.length==0)
+						alert("no results to show");
+					if (nVars>1 || nVars<4){
+						$.each(json.results.bindings, function(key, val) {
+							var temp = [];
+								$.each(val, function(k, sub) {
+									varNames.push(k);
+									$.each(sub, function(subK, subSub) {
+										if(subK == "value"){
+											temp.push(subSub);
+										}									
+									});
+								});
+							t.push(temp);
+						});
+						console.log(t);
+						
+						for(var i=0; i<t[0].length; i++){
+							for(var j=0; j<t.length; j++){
+								t[j][i] = parseFloat(t[j][i]);
+							}
+						}					
+						console.log(t);
+						
+						var seriesOptions = [];
+						var d = {};
+						d["data"] = t;
+						d["name"] = varNames[0];
+						seriesOptions.push(d);
+						console.log(seriesOptions);
+						
+						configHColumnRange(seriesOptions);
+					}
+				}
+			});
+		}
+		/**
+		 * Configuration to launch bar basic chart
+		 *
+		 * @method configHColumnRange
+		 * @param {Object} seriesOptions
+		 * @autor Zakaria Khattabi
+		 **/
+		function configHColumnRange(seriesOptions){
+			$(function () {
+				$('#container').highcharts({
+					chart: {
+						type: 'columnrange',
+						inverted: true
+					},
+					title: {
+						text: 'HColumnRange Chart'
+					},
+					plotOptions: {
+						columnrange: {
+							dataLabels: {
+								enabled: true,
+								formatter: function () {
+									return this.y;
+								}
+							}
+						}
+					},
+					legend: {
+						enabled: false
+					},
+					series: seriesOptions
+				});
+			});
+		}
+		/**
+		 * Launch semi circle donut chart
+		 *
+		 * @method launchHSemiCircleDonutChart
+		 * @autor Zakaria Khattabi
+		 **/
+		function launchHSemiCircleDonutChart(){
+			var t = [];
+			var q = $("#query").val();
+			var sel = $('#default-graph-uri-visu').val();
+
+			$.ajax({
+				url : '${baseUri}/sparql',
+				type : 'GET',
+				data : {
+					'default-graph-uri' : sel,
+					'query' : q,
+				},
+				dataType : 'json',
+				error : function(result, status, error){
+					if(getLang()=="EN"){
+						alert("Failure to recovery parameters");
+					} else {
+						alert("Echec de récupération des paramètres");
+					}
+				},
+				success : function(json, status){
+					var nVars = json.head.vars.length;
+					var varNames = [];
+					if(json.results.bindings.length==0)
+						alert("no results to show");
+					if (nVars>1 || nVars<4){
+						$.each(json.results.bindings, function(key, val) {
+							var temp = [];
+								$.each(val, function(k, sub) {
+									varNames.push(k);
+									$.each(sub, function(subK, subSub) {
+										if(subK == "value"){
+											temp.push(subSub);
+										}									
+									});
+								});
+							t.push(temp);
+						});
+						console.log(t);
+						
+						for(var i=0; i<t[0].length; i++){
+							for(var j=0; j<t.length; j++){
+								if(i==1){
+									t[j][i] = parseFloat(t[j][i]);
+								} else {
+									t[j][i] = t[j][i];
+								}
+							}
+						}			
+						console.log(t);
+						
+						var seriesOptions = [];
+						var d = {};
+						d["data"] = t;
+						d["name"] = varNames[0];
+						d["innerSize"] = '50%';
+						d["type"] = 'pie';
+						seriesOptions.push(d);
+						console.log(seriesOptions);
+						
+						configSemiCircleDonutChart(seriesOptions);
+					}
+				}
+			});
+		}
+		/**
+		 * Configuration semi circle donuts chart
+		 *
+		 * @method configSemiCircleDonutChart
+		 * @param {Object} seriesOptions
+		 * @autor Zakaria Khattabi
+		 **/
+		function configSemiCircleDonutChart(seriesOptions){
+			$(function () {
+				$('#container').highcharts({
+					chart: {
+						plotBackgroundColor: null,
+						plotBorderWidth: 0,
+						plotShadow: false
+					},
+					title: {
+						text: 'Semi circle donut',
+						align: 'center',
+						verticalAlign: 'middle',
+						y: 40
+					},
+					tooltip: {
+						pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+					},
+					plotOptions: {
+						pie: {
+							dataLabels: {
+								enabled: true,
+								distance: -50,
+								style: {
+									fontWeight: 'bold',
+									color: 'white',
+									textShadow: '0px 1px 2px black'
+								}
+							},
+							startAngle: -90,
+							endAngle: 90,
+							center: ['50%', '75%']
+						}
+					},
+					series: seriesOptions
+				});
+			});
+		}
+		/**
+		 * Launch pie gradient fill chart
+		 *
+		 * @method launchHPieGradientFillChart
+		 * @autor Zakaria Khattabi
+		 **/
+		function launchHPieGradientFillChart(){
+			var t = [];
+			var q = $("#query").val();
+			var sel = $('#default-graph-uri-visu').val();
+
+			$.ajax({
+				url : '${baseUri}/sparql',
+				type : 'GET',
+				data : {
+					'default-graph-uri' : sel,
+					'query' : q,
+				},
+				dataType : 'json',
+				error : function(result, status, error){
+					if(getLang()=="EN"){
+						alert("Failure to recovery parameters");
+					} else {
+						alert("Echec de récupération des paramètres");
+					}
+				},
+				success : function(json, status){
+					var nVars = json.head.vars.length;
+					var varNames = [];
+					if(json.results.bindings.length==0)
+						alert("no results to show");
+					if (nVars>1 || nVars<4){
+						$.each(json.results.bindings, function(key, val) {
+							var temp = [];
+								$.each(val, function(k, sub) {
+									varNames.push(k);
+									$.each(sub, function(subK, subSub) {
+										if(subK == "value"){
+											temp.push(subSub);
+										}									
+									});
+								});
+							t.push(temp);
+						});
+						console.log(t);
+						
+						var seriesOptions = [];
+						for(var i=0; i<t.length; i++){
+							var d = {};
+							d["y"] = parseFloat(t[i][1]);
+							d["name"] = t[i][0];
+							seriesOptions.push(d);
+						}
+						console.log(seriesOptions);
+						configPieGradientFill(seriesOptions);
+					}
+				}
+			});
+		}
+		/**
+		 * Configuration pie gradient fill
+		 *
+		 * @method configSemiCircleDonutChart
+		 * @param {Object} seriesOptions
+		 * @autor Zakaria Khattabi
+		 **/
+		function configPieGradientFill(seriesOptions){
+			$(function () {
+				// Radialize the colors
+				Highcharts.getOptions().colors = Highcharts.map(Highcharts.getOptions().colors, function (color) {
+					return {
+						radialGradient: {
+							cx: 0.5,
+							cy: 0.3,
+							r: 0.7
+						},
+						stops: [
+							[0, color],
+							[1, Highcharts.Color(color).brighten(-0.3).get('rgb')] // darken
+						]
+					};
+				});
+				// Build the chart
+				$('#container').highcharts({
+					chart: {
+						plotBackgroundColor: null,
+						plotBorderWidth: null,
+						plotShadow: false,
+						type: 'pie'
+					},
+					title: {
+						text: 'Pie gradient fill'
+					},
+					tooltip: {
+						pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+					},
+					plotOptions: {
+						pie: {
+							allowPointSelect: true,
+							cursor: 'pointer',
+							dataLabels: {
+								enabled: true,
+								format: '<b>{point.name}</b>: {point.percentage:.1f} %',
+								style: {
+									color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+								},
+								connectorColor: 'silver'
+							}
+						}
+					},
+					series: [{
+						name: "Pie gradient fill",
+						colorByPoint: true,
+						data:seriesOptions
+					}]
+				});
+			});
+		}
+		/**
+		 * Launch 3D pie chart
+		 *
+		 * @method launchH3DPieChart
+		 * @autor Zakaria Khattabi
+		 **/
+		function launchH3DPieChart(){
+			var t = [];
+			var q = $("#query").val();
+			var sel = $('#default-graph-uri-visu').val();
+			$.ajax({
+				url : '${baseUri}/sparql',
+				type : 'GET',
+				data : {
+					'default-graph-uri' : sel,
+					'query' : q,
+				},
+				dataType : 'json',
+				error : function(result, status, error){
+					if(getLang()=="EN"){
+						alert("Failure to recovery parameters");
+					} else {
+						alert("Echec de récupération des paramètres");
+					}
+				},
+				success : function(json, status){
+					var nVars = json.head.vars.length;
+					var varNames = [];
+					if(json.results.bindings.length==0)
+						alert("no results to show");
+					if (nVars>1 || nVars<4){
+						$.each(json.results.bindings, function(key, val) {
+							var temp = [];
+								$.each(val, function(k, sub) {
+									varNames.push(k);
+									$.each(sub, function(subK, subSub) {
+										if(subK == "value"){
+											temp.push(subSub);
+										}									
+									});
+								});
+							t.push(temp);
+						});
+						console.log(t);
+						
+						for(var i=0; i<t[0].length; i++){
+							for(var j=0; j<t.length; j++){
+								if(i==1){
+									t[j][i] = parseFloat(t[j][i]);
+								} else {
+									t[j][i] = t[j][i];
+								}
+							}
+						}			
+						console.log(t);
+						
+						var seriesOptions = [];
+						var d = {};
+						d["data"] = t;
+						d["name"] = varNames[0];
+						d["innerSize"] = '50%';
+						d["type"] = 'pie';
+						seriesOptions.push(d);
+						console.log(seriesOptions);			
+						config3DPieChart(seriesOptions);
+					}
+				}
+			});
+		}
+		/**
+		 * Configuration 3D pie chart
+		 *
+		 * @method config3DPieChart
+		 * @param {Object} seriesOptions
+		 * @autor Zakaria Khattabi
+		 **/
+		function config3DPieChart(seriesOptions){
+			$(function () {
+				$('#container').highcharts({
+					chart: {
+						type: 'pie',
+						options3d: {
+							enabled: true,
+							alpha: 45,
+							beta: 0
+						}
+					},
+					title: {
+						text: 'Browser market shares at a specific website, 2014'
+					},
+					tooltip: {
+						pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+					},
+					plotOptions: {
+						pie: {
+							allowPointSelect: true,
+							cursor: 'pointer',
+							depth: 35,
+							dataLabels: {
+								enabled: true,
+								format: '{point.name}'
+							}
+						}
+					},
+					series:seriesOptions
+				});
+			});
+		}
+		/**
+		 * Launch polar chart of Highcharts
+		 *
+		 * @method launchH3DPieChart
+		 * @autor Zakaria Khattabi
+		 **/
+		function launchHPolarChart(){
+			var t = [];
+			var type = ["column", "line", "area"]
+			var q = $("#query").val();
+			var sel = $('#default-graph-uri-visu').val();
+
+			$.ajax({
+				url : '${baseUri}/sparql',
+				type : 'GET',
+				data : {
+					'default-graph-uri' : sel,
+					'query' : q,
+				},
+				dataType : 'json',
+				error : function(result, status, error){
+					if(getLang()=="EN"){
+						alert("Failure to recovery parameters");
+					} else {
+						alert("Echec de récupération des paramètres");
+					}
+				},
+				success : function(json, status){
+					var nVars = json.head.vars.length;
+					var varNames = [];
+					if(json.results.bindings.length==0)
+						alert("no results to show");
+					if (nVars>1 || nVars<4){
+						$.each(json.results.bindings, function(key, val) {
+							var temp = [];
+								$.each(val, function(k, sub) {
+									varNames.push(k);
+									$.each(sub, function(subK, subSub) {
+										if(subK == "value"){
+											temp.push(subSub);
+										}									
+									});
+								});
+							t.push(temp);
+						});
+						console.log(t);
+						
+						var tt = [];
+						for(var i=0; i<t[0].length; i++){
+							var temp = [];
+							for(var j=0; j<t.length; j++){
+								temp.push(parseFloat(t[j][i]));
+							}
+							tt.push(temp);
+						}	
+						console.log(tt);
+						
+						var seriesOptions = [];
+						for(var i=0; i<tt.length; i++){
+							var d = {};
+							d["data"] = tt[i];
+							d["name"] = varNames[i];
+							d["type"] = type[i];
+							if(type[i]=="column")
+								d["pointPlacement"] = 'between';
+							seriesOptions.push(d);
+						}
+						console.log(seriesOptions);	
+						configHPolar(seriesOptions);
+					}
+				}
+			});
+		}
+		/**
+		 * Configuration polar chart of highcharts
+		 *
+		 * @method config3DPieChart
+		 * @param {Object} seriesOptions
+		 * @autor Zakaria Khattabi
+		 **/
+		function configHPolar(seriesOptions){
+			$(function (){
+				$('#container').highcharts({
+					chart: {
+						polar: true
+					},
+					title: {
+						text: 'Polar Chart'
+					},
+					pane: {
+						startAngle: 0,
+						endAngle: 360
+					},
+					xAxis: {
+						tickInterval: 45,
+						min: 0,
+						max: 360,
+						labels: {
+							formatter: function () {
+								return this.value + '°';
+							}
+						}
+					},
+					plotOptions: {
+						series: {
+							pointStart: 0,
+							pointInterval: 45
+						},
+						column: {
+							pointPadding: 0,
+							groupPadding: 0
+						}
+					},
+					series: seriesOptions
+				});
+			});
+		}
+		/**
+		 * Launch spider web chart of Highcharts
+		 *
+		 * @method launchHSpiderwebChart
+		 * @autor Zakaria Khattabi
+		 **/
+		function launchHSpiderwebChart(){
+			var t = [];
+			var q = $("#query").val();
+			var sel = $('#default-graph-uri-visu').val();
+
+			$.ajax({
+				url : '${baseUri}/sparql',
+				type : 'GET',
+				data : {
+					'default-graph-uri' : sel,
+					'query' : q,
+				},
+				dataType : 'json',
+				error : function(result, status, error){
+					if(getLang()=="EN"){
+						alert("Failure to recovery parameters");
+					} else {
+						alert("Echec de récupération des paramètres");
+					}
+				},
+				success : function(json, status){
+					var nVars = json.head.vars.length;
+					var varNames = [];
+					if(json.results.bindings.length==0)
+						alert("no results to show");
+					if (nVars>1 || nVars<4){
+						$.each(json.results.bindings, function(key, val) {
+							var temp = [];
+								$.each(val, function(k, sub) {
+									varNames.push(k);
+									$.each(sub, function(subK, subSub) {
+										if(subK == "value"){
+											temp.push(subSub);
+										}									
+									});
+								});
+							t.push(temp);
+						});
+						console.log(t);
+						
+						var tt = [];
+						for(var i=0; i<t[0].length; i++){
+							var temp = [];
+							for(var j=0; j<t.length; j++){
+								if(j==0)
+									temp.push(t[j][i]);
+								else
+									temp.push(parseFloat(t[j][i]));
+							}
+							tt.push(temp);
+						}	
+						console.log(tt);
+						
+						var seriesOptions = [];
+						for(var i=1; i<tt.length; i++){
+							var d = {};
+							d["data"] = tt[i];
+							d["name"] = varNames[i];
+							d["pointPlacement"] = 'on';
+							seriesOptions.push(d);
+						}
+						console.log(seriesOptions);
+						console.log(tt[0]);
+						
+						configSpiderweb(seriesOptions, tt[0]);
+					}
+				}
+			});
+		}
+		/**
+		 * Configuration of spider web of highcharts
+		 *
+		 * @method configSpiderweb
+		 * @param {Object} seriesOptions
+		 * @autor Zakaria Khattabi
+		 **/
+		function configSpiderweb(seriesOptions, cat){
+			$(function () {
+				$('#container').highcharts({
+					chart: {
+						polar: true,
+						type: 'area'
+					},
+					title: {
+						text: 'Spiderweb',
+						x: -80
+					},
+					pane: {
+						size: '80%'
+					},
+					xAxis: {
+						categories: cat,
+						tickmarkPlacement: 'on',
+						lineWidth: 0
+					},
+					yAxis: {
+						gridLineInterpolation: 'polygon',
+						lineWidth: 0,
+						min: 0
+					},
+					tooltip: {
+						shared: true,
+						pointFormat: '<span style="color:{series.color}">{series.name}: <b>{point.y:,.0f}</b><br/>'
+					},
+					series: seriesOptions
+				});
+			});
+		}
+		/**
+		 * Launch tree map levels chart of Highcharts
+		 *
+		 * @method launchHTreeMapLevelsChart
+		 * @autor Zakaria Khattabi
+		 **/
+		function launchHTreeMapLevelsChart(){
+			var t = [];
+			var type = ["name", "parent", "value"];
+			var q = $("#query").val();
+			var sel = $('#default-graph-uri-visu').val();
+
+			$.ajax({
+				url : '${baseUri}/sparql',
+				type : 'GET',
+				data : {
+					'default-graph-uri' : sel,
+					'query' : q,
+				},
+				dataType : 'json',
+				error : function(result, status, error){
+					if(getLang()=="EN"){
+						alert("Failure to recovery parameters");
+					} else {
+						alert("Echec de récupération des paramètres");
+					}
+				},
+				success : function(json, status){
+					var nVars = json.head.vars.length;
+					var varNames = [];
+					if(json.results.bindings.length==0)
+						alert("no results to show");
+					if (nVars>1 || nVars<4){
+						$.each(json.results.bindings, function(key, val) {
+							var temp = [];
+								$.each(val, function(k, sub) {
+									varNames.push(k);
+									$.each(sub, function(subK, subSub) {
+										if(subK == "value"){
+											temp.push(subSub);
+										}									
+									});
+								});
+							t.push(temp);
+						});					
+						for(var i=0; i<t.length; i++){
+							for(var j=0; j<t[0].length; j++){
+								if(j==2)
+									t[i][j] = parseInt(t[i][j]);
+								else
+									t[i][j] = t[i][j];
+							}
+						}
+						console.log(t);	
+						var seriesOptions = [];
+						var parents = [];
+						for(var i=0; i<t.length; i++){
+							var d = {};
+							for(var j=0; j<t[0].length; j++){
+								if(j == 1 && isExist(t[i][j], parents)==-1){
+									d["id"] = t[i][j];
+									d["color"] = '#'+Math.floor(Math.random()*16777215).toString(16);
+									parents.push(t[i][j]);
+								}
+							}
+							seriesOptions.push(d);
+						}
+						console.log("parents : "+parents);
+						for(var i=0; i<t.length; i++){
+							var d = {};
+							for(var j=0; j<t[0].length; j++){
+								d[type[j]] = t[i][j];
+							}
+							seriesOptions.push(d);
+						}
+						console.log(seriesOptions);					
+						configTreeMapLevels(seriesOptions);
+					}
+				}
+			});
+		}
+		/**
+		 * Configuration of tree map levels of highcharts
+		 *
+		 * @method configTreeMapLevels
+		 * @param {Object} seriesOptions
+		 * @autor Zakaria Khattabi
+		 **/
+		function configTreeMapLevels(seriesOptions){
+			$(function () {
+				$('#container').highcharts({
+					series: [{
+						type: "treemap",
+						layoutAlgorithm: 'stripes',
+						alternateStartingDirection: true,
+						levels: [{
+							level: 1,
+							layoutAlgorithm: 'sliceAndDice',
+							dataLabels: {
+								enabled: true,
+								align: 'left',
+								verticalAlign: 'top',
+								style: {
+									fontSize: '15px',
+									fontWeight: 'bold'
+								}
+							}
+						}],
+						data:seriesOptions 
+					}],
+					title: {
+						text: 'HTreemap level'
+					}
+				});
+			});
+		}
+		/**
+		 * Launch tree map chart of Highcharts
+		 *
+		 * @method launchHTreeMapChart
+		 * @autor Zakaria Khattabi
+		 **/
+		function launchHTreeMapChart(){
+			var t = [];
+			var type = ["name", "value", "colorValue"];
+			var q = $("#query").val();
+			var sel = $('#default-graph-uri-visu').val();
+			$.ajax({
+				url : '${baseUri}/sparql',
+				type : 'GET',
+				data : {
+					'default-graph-uri' : sel,
+					'query' : q,
+				},
+				dataType : 'json',
+				error : function(result, status, error){
+					if(getLang()=="EN"){
+						alert("Failure to recovery parameters");
+					} else {
+						alert("Echec de récupération des paramètres");
+					}
+				},
+				success : function(json, status){
+					var nVars = json.head.vars.length;
+					var varNames = [];
+					if(json.results.bindings.length==0)
+						alert("no results to show");
+					if (nVars>1 || nVars<4){
+						$.each(json.results.bindings, function(key, val) {
+							var temp = [];
+								$.each(val, function(k, sub) {
+									varNames.push(k);
+									$.each(sub, function(subK, subSub) {
+										if(subK == "value"){
+											temp.push(subSub);
+										}									
+									});
+								});
+							t.push(temp);
+						});					
+						for(var i=0; i<t.length; i++){
+							for(var j=0; j<t[0].length; j++){
+								if(j==0)
+									t[i][j] = t[i][j];
+								else
+									t[i][j] = parseInt(t[i][j]);
+							}
+						}
+						console.log(t);
+						
+						var seriesOptions = [];
+						for(var i=0; i<t.length; i++){
+							var d = {};
+							for(var j=0; j<t[0].length; j++){
+								d[type[j]] = t[i][j];
+							}
+							seriesOptions.push(d);
+						}
+						console.log(seriesOptions);					
+						configTreeMap(seriesOptions);
+					}
+				}
+			});
+		}
+		/**
+		 * Configuration of tree map of highcharts
+		 *
+		 * @method configTreeMap
+		 * @param {Object} seriesOptions
+		 * @autor Zakaria Khattabi
+		 **/
+		function configTreeMap(seriesOptions){
+			$(function () {
+				$('#container').highcharts({
+					colorAxis: {
+						minColor: '#FFFFFF',
+						maxColor: Highcharts.getOptions().colors[0]
+					},
+					series: [{
+						type: "treemap",
+						layoutAlgorithm: 'squarified',
+						data: seriesOptions
+					}],
+					title: {
+						text: 'HTreemap'
+					}
+				});
+			});
+		}
+		/**
+		 * Launch OpenLayers of Highcharts
+		 *
+		 * @method launchOL
+		 * @autor Zakaria Khattabi
+		 **/
+		function launchOL(){
+			var q = $("#query").val();
+			var sel = $('#default-graph-uri-visu').val();
+			$.ajax({
+				url : '${baseUri}/sparql',
+				type : 'GET',
+				data : {
+					'default-graph-uri' : sel,
+					'query' : q,
+				},
+				dataType : 'json',
+				error : function(result, status, error){
+					if(getLang()=="EN"){
+						alert("Failure to recovery parameters");
+					} else {
+						alert("Echec de récupération des paramètres");
+					}
+				},
+				success : function(json, status){
+					visu.createContainer("graphs_get_description", "map");
+					execute(json);
+				}
+			});
+		}
+		$("#online").click(
+			function(){
+				$("#onOff").css("display","block");
+				$("#online").css("display","none");
+				var appElement = document.querySelector('[ng-app=filterApp]');
+				var scope = angular.element(appElement).scope();
+				scope.$apply(function(){
+					scope.isChecked = false;
+				});
+			}
+		);
+		$("#close_onOff").click(
+			function(){
+				$("#onOff").css("display","none");
+				$("#online").css("display","block");
+				var appElement = document.querySelector('[ng-app=filterApp]');
+				var scope = angular.element(appElement).scope();
+				scope.$apply(function(){
+					scope.isChecked = true;
+					scope.switchState = Boolean($('#myonoffswitch').is(':checked'));
+					$("#onOffText").text(" "+tab[scope.switchState]);
+				});
+			}
+		);
+		$("#myonoffswitch").change(
+			function(){
+				var tab = {"true":"#i18n("sparql.switch.online")","false":"#i18n("sparql.switch.offline")"};
+				var appElement = document.querySelector('[ng-app=filterApp]');
+				var scope = angular.element(appElement).scope();
+				scope.$apply(function(){
+					scope.switchState = Boolean($('#myonoffswitch').is(':checked'));
+					$("#onOffText").text(" "+tab[scope.switchState]);
+				});
+			}
+		);
+		/**
+		 * Launch OpenLayers of Highcharts
+		 *
+		 * @method launchDynamicMap
+		 * @autor Zakaria Khattabi
+		 **/
+		function launchDynamicMap(){
+			var q = $("#query").val();
+			var sel = $('#default-graph-uri-visu').val();
+			$.ajax({
+				url : '${baseUri}/sparql',
+				type : 'GET',
+				data : {
+					'default-graph-uri' : sel,
+					'query' : q,
+				},
+				dataType : 'json',
+				error : function(result, status, error){
+					if(getLang()=="EN"){
+						alert("Failure to recovery parameters");
+					} else {
+						alert("Echec de récupération des paramètres");
+					}
+				},
+				success : function(json, status){
+					visu.createContainer("graphs_get_description", "mapLine");
+					var nVars = json.head.vars.length;
+					var varNames = [];
+					if(json.results.bindings.length==0)
+						alert("no results to show");
+					if (nVars>1 || nVars<4){
+						var t = [];
+						$.each(json.results.bindings, function(key, val) {
+							var temp = [];
+								$.each(val, function(k, sub) {
+									varNames.push(k);
+									$.each(sub, function(subK, subSub) {
+										if(subK == "value"){
+											temp.push(subSub);
+										}									
+									});
+								});
+							t.push(temp);
+						});
+						console.log(t);
+					}
+					construct(t);
+				}
+			});
+		}
+		$("#predef").click(
+			function(){
+				var htmlCode = '<select id="predef_diag" class="form-select">';
+				htmlCode = htmlCode+'<option value="--" selected>#i18n("sparql.endpoint.option.selected")</option>';
+				#set( $counter = 0 )
+				#foreach( $q in $queries )
+					##htmlCode = htmlCode+'<option value="$!esc.html($q.label)">$esc.html($q.label)</option>';
+					htmlCode = htmlCode+'<option value="$counter">$esc.html($q.label)</option>';
+					#set( $counter = $counter + 1 )
+				#end
+				htmlCode = htmlCode+'</select>';
+				$('#predef').css('display','none');
+				$('#predefList').html(htmlCode);
+			}
+		);
+		$("#predefList").change(
+			function(){
+				var t = [];
+				#foreach( $q in $queries )
+					t.push("$esc.propertyValue($q)");
+				#end
+				if ($("#predef_diag").val()!='--')
+					$("#query").val(t[$("#predef_diag").val()]);
+				queryUpdate();
+				$('#predef').css('display','inline-block');
+				$('#predefList').html('');
+			}
+		);
 	</script>
 </body>
 </html>
