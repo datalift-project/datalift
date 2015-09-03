@@ -776,6 +776,30 @@ public interface ProjectManager
     public Event saveEvent(Event event);
     
     /**
+     * execute a workflow
+     * 
+     * @param project   The project containing the workflow
+     * @param workflow  the Workflow to execute
+     * @param variables the variables values to use
+     * @throws Exception 
+     */
+    public void executeWorkflow(Project project, Workflow workflow,
+            Map<String, String> variables) throws Exception;
+    
+    /**
+     * execute a workflow
+     * With event informations
+     * 
+     * @param project   The project containing the workflow
+     * @param workflow  the Workflow to execute
+     * @param variables the variables values to use
+     * @param eventOperation    the operation of the event
+     * @throws Exception 
+     */
+    public void executeWorkflow(Project project, Workflow workflow,
+            Map<String, String> variables, URI eventOperation) throws Exception;
+    
+    /**
      * Create a new workflow.
      * 
      * @param  url   the workflow URL.

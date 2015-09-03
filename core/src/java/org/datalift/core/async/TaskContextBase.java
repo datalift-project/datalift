@@ -1,6 +1,8 @@
 package org.datalift.core.async;
 
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.datalift.core.prov.EventImpl;
@@ -37,6 +39,13 @@ public abstract class TaskContextBase extends TaskContext{
     public abstract Event endOperation(boolean well);
     
     /**
+     * declare that a new event append
+     * 
+     * @param event the new event
+     */
+    public abstract void declareHappeningEvent(EventImpl event);
+    
+    /**
      * a class which represent an operation execution
      * 
      * @author rcabaret
@@ -44,9 +53,10 @@ public abstract class TaskContextBase extends TaskContext{
      */
     protected class OperationExecution{
         protected Project project;
-        protected EventImpl event = null;
+        protected EventImpl runningEvent = null;
         protected URI operation;
         protected Map<String, String> parameters;
+        protected List<EventImpl> events = new ArrayList<EventImpl>();
         
         public OperationExecution(Project project, URI operation,
                 Map<String, String> parameters){

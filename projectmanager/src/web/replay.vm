@@ -64,7 +64,6 @@
 	function valid(){
 		var sub = getParams();
 		console.log(sub);
-		alert(sub);
 		$.ajax({
             url: "",
             type: 'post',

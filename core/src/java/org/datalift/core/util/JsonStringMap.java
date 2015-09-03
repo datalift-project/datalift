@@ -127,7 +127,10 @@ public class JsonStringMap implements Map<String, String> {
     @Override
     public String get(Object key) {
         String k = key.toString();
-        return this.jobj.optString(k);
+        if(this.jobj.isNull(k))
+            return null;
+        else
+            return this.jobj.optString(k);
     }
 
     /** {@inheritDoc} */

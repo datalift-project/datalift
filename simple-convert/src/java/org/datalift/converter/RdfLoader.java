@@ -36,6 +36,9 @@ package org.datalift.converter;
 
 
 import java.net.URI;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 import javax.ws.rs.Consumes;
@@ -49,15 +52,16 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 
 import org.datalift.fwk.Configuration;
+import org.datalift.fwk.async.Operation;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectModule;
 import org.datalift.fwk.project.RdfFileSource;
 import org.datalift.fwk.project.RdfSource;
-import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
+import org.datalift.fwk.replay.WorkflowStep;
 import org.datalift.fwk.util.RegexUriMapper;
 import org.datalift.fwk.util.StringUtils;
 import org.datalift.fwk.util.UriMapper;
@@ -74,7 +78,7 @@ import static org.datalift.fwk.MediaTypes.*;
  * @author lbihanic
  */
 @Path(RdfLoader.MODULE_NAME)
-public class RdfLoader extends BaseConverterModule
+public class RdfLoader extends BaseConverterModule implements Operation
 {
     //-------------------------------------------------------------------------
     // Constants
@@ -82,6 +86,9 @@ public class RdfLoader extends BaseConverterModule
 
     /** The name of this module in the DataLift configuration. */
     public final static String MODULE_NAME = "rdfloader";
+    
+    public final static String OPERATION_ID =
+            "http://www.datalift.org/core/converter/operation/" + MODULE_NAME;
 
     //-------------------------------------------------------------------------
     // Class members
@@ -158,14 +165,61 @@ public class RdfLoader extends BaseConverterModule
         if (! UriParam.isSet(targetGraphParam)) {
             this.throwInvalidParamError(GRAPH_URI_PARAM, null);
         }
-        Response response = null;
-
         try {
-            // Retrieve project.
             Project p = this.getProject(projectId.toUri(PROJECT_ID_PARAM));
+            Map<String, String> params = new HashMap<String, String>();
+            params.put(WorkflowStep.PROJECT_PARAM_KEY, projectId.toUri().toString());
+            params.put(WorkflowStep.INPUT_PARAM_KEY + "source",
+                    sourceId.toUri().toString());
+            params.put(WorkflowStep.HIDDEN_PARAM_KEY + "destTitle", destTitle);
+            params.put(WorkflowStep.HIDDEN_PARAM_KEY + "targetGraphParam",
+                    targetGraphParam.toUri().toString());
+            params.put("uriPattern", uriPattern);
+            params.put("uriReplacement", uriReplacement);
+            this.taskManager.submit(p, this.getOperationId(), params);
+            return Response.seeOther(URI.create(p.getUri() + "#source")).build();
+        }
+        catch (Exception e) {
+            throw new TechnicalException(e);
+        }
+    }
+
+    //-------------------------------------------------------------------------
+    // Operation contract support
+    //-------------------------------------------------------------------------
+    
+    @Override
+    public URI getOperationId() {
+        return URI.create(OPERATION_ID);
+    }
+
+    @Override
+    public void execute(Map<String, String> parameters) throws Exception {
+        try {
+            Date start = new Date();
+            URI projectId = URI.create(parameters
+                    .get(WorkflowStep.PROJECT_PARAM_KEY));
+            URI sourceId = URI.create(parameters
+                    .get(WorkflowStep.INPUT_PARAM_KEY + "source"));
+            String destTitle;
+            if(parameters.get(WorkflowStep.HIDDEN_PARAM_KEY + "destTitle") == null)
+                destTitle = Double.toString(Math.random()).replace(".", "");
+            else
+                destTitle = parameters.get(WorkflowStep.HIDDEN_PARAM_KEY + "destTitle");
+            URI targetGraph;
+            if(parameters.get(WorkflowStep.HIDDEN_PARAM_KEY + "targetGraphParam") == null)
+                targetGraph = URI.create(sourceId.toString() +
+                        "/" + destTitle + "/loadedGraph");
+            else
+                targetGraph = URI.create(parameters
+                        .get(WorkflowStep.HIDDEN_PARAM_KEY + "targetGraphParam"));
+            String uriPattern = parameters.get("uriPattern");
+            String uriReplacement = parameters.get("uriReplacement");
+            // Retrieve project.
+            Project p = this.getProject(projectId);
             // Load input source.
             RdfSource in = (RdfSource)
-                            (p.getSource(sourceId.toUri(SOURCE_ID_PARAM)));
+                            (p.getSource(sourceId));
             if (in == null) {
                 throw new ObjectNotFoundException("project.source.not.found",
                                                   projectId, sourceId);
@@ -173,7 +227,6 @@ public class RdfLoader extends BaseConverterModule
             // Extract target named graph. It shall NOT conflict with
             // existing objects (sources, projects) otherwise it would not
             // be accessible afterwards (e.g. display, removal...).
-            URI targetGraph = targetGraphParam.toUri(GRAPH_URI_PARAM);
             this.checkUriConflict(targetGraph, GRAPH_URI_PARAM);
             // Check for URI mapping.
             UriMapper mapper = null;
@@ -198,17 +251,15 @@ public class RdfLoader extends BaseConverterModule
             if (in.getBaseUri() != null) {
                 baseUri = URI.create(in.getBaseUri());
             }
-            Source out = this.addResultSource(p, in, destTitle,
-                                                     targetGraph, baseUri);
-            // Display project source tab, including the newly created source.
-            response = this.created(out).build();
-
+            this.addResultSource(p, in, destTitle,
+                    targetGraph, baseUri, this.getOperationId(), parameters,
+                    start);
             log.info("RDF data from \"{}\" successfully loaded into \"{}\"",
                                                         sourceId, targetGraph);
         }
         catch (Exception e) {
-            this.handleInternalError(e);
+            e.printStackTrace();
+            throw new TechnicalException(e);
         }
-        return response;
     }
 }

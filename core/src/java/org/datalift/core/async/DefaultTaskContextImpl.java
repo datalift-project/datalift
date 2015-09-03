@@ -60,9 +60,9 @@ public class DefaultTaskContextImpl extends TaskContextBase{
         if(executions != null)
             if(!executions.isEmpty()){
                 int i = executions.size() - 2;
-                ev = executions.get(i + 1).event;
+                ev = executions.get(i + 1).runningEvent;
                 while(ev == null && i >= 0){
-                    ev = executions.get(i).event;
+                    ev = executions.get(i).runningEvent;
                     i--;
                 }
             }
@@ -77,8 +77,8 @@ public class DefaultTaskContextImpl extends TaskContextBase{
             return null;
         OperationExecution oe = executions.get(executions.size() - 1);
         ProjectManager pm = Configuration.getDefault().getBean(ProjectManager.class);
-        if(oe.event != null)
-            return oe.event;
+        if(oe.runningEvent != null)
+            return oe.runningEvent;
         URI operationE = oe.operation;
         if(oe.operation == null)
             operationE = URI
@@ -109,7 +109,7 @@ public class DefaultTaskContextImpl extends TaskContextBase{
                 eventTypeE, startE, null, this.getCurrentAgent(), null,
                 informerE);
         EventImpl evt = (EventImpl) pm.saveEvent(event);
-        oe.event = evt;
+        oe.runningEvent = evt;
         return evt;
     }
 
@@ -120,9 +120,9 @@ public class DefaultTaskContextImpl extends TaskContextBase{
         if(executions == null || executions.isEmpty())
             throw new RuntimeException("no current event to update");
         OperationExecution oe = executions.get(executions.size() - 1);
-        if(oe == null || oe.event == null)
+        if(oe == null || oe.runningEvent == null)
             throw new RuntimeException("no current event to update");
-        oe.event.addUsed(used);
+        oe.runningEvent.addUsed(used);
     }
 
     /** {@inheritDoc} */
@@ -132,9 +132,9 @@ public class DefaultTaskContextImpl extends TaskContextBase{
         if(executions == null || executions.isEmpty())
             throw new RuntimeException("no current event to update");
         OperationExecution oe = executions.get(executions.size() - 1);
-        if(oe == null || oe.event == null)
+        if(oe == null || oe.runningEvent == null)
             throw new RuntimeException("no current event to update");
-        oe.event.setInfluenced(influenced);
+        oe.runningEvent.setInfluenced(influenced);
     }
     
     /** {@inheritDoc} */
@@ -156,11 +156,24 @@ public class DefaultTaskContextImpl extends TaskContextBase{
         if(executions == null || executions.isEmpty())
             throw new RuntimeException("no operation to end");
         OperationExecution oe = executions.get(executions.size() - 1);
-        if(oe.event != null && well){
+        if(oe.runningEvent != null && well){
             ProjectManager pm = Configuration.getDefault().getBean(ProjectManager.class);
-            pm.saveEvent(oe.event);
+            pm.saveEvent(oe.runningEvent);
         }
         executions.remove(oe);
-        return oe.event;
+        if(oe.runningEvent == null && !oe.events.isEmpty())
+            oe.runningEvent = oe.events.get(oe.events.size() - 1);
+        return oe.runningEvent;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public void declareHappeningEvent(EventImpl event) {
+        ArrayList<OperationExecution> executions = this.threadExecutions.get();
+        if(executions != null && !executions.isEmpty()){
+            OperationExecution oe = executions.get(executions.size() - 1);
+            if(!oe.events.contains(event))
+                oe.events.add(event);
+        }
     }
 }

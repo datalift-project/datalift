@@ -40,6 +40,7 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -66,6 +67,7 @@ import static javax.ws.rs.core.Response.Status.*;
 import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.ResourceResolver;
+import org.datalift.fwk.async.TaskManager;
 import org.datalift.fwk.i18n.PreferredLocales;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.DuplicateObjectKeyException;
@@ -134,6 +136,8 @@ public abstract class BaseConverterModule
 
     /** The DataLift project manager. */
     protected ProjectManager projectManager = null;
+    /** The DataLift task manager. */
+    protected TaskManager taskManager = null;
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -221,6 +225,7 @@ public abstract class BaseConverterModule
     public void postInit(Configuration configuration) {
         super.postInit(configuration);
         this.projectManager = configuration.getBean(ProjectManager.class);
+        this.taskManager = configuration.getBean(TaskManager.class);
     }
 
     //-------------------------------------------------------------------------
@@ -395,6 +400,37 @@ public abstract class BaseConverterModule
         TransformedRdfSource newSrc =
                         this.projectManager.newTransformedRdfSource(p, uri,
                                             name, null, uri, baseUri, parent);
+        this.projectManager.saveProject(p);
+        return newSrc;
+    }
+    
+    /**
+     * Creates a new transformed RDF source and attach it to the
+     * specified project.
+     * With event informations
+     * 
+     * @param  p         the owning project.
+     * @param  parent    the parent source object.
+     * @param  name      the new source name.
+     * @param  uri       the new source URI.
+     * @param  baseUri   the URI that was used to parse RDF data or to
+     *                   compute the URIs of resources and predicates of
+     *                   the RDF source, <code>null</code> if the URIs
+     *                   within the source do not share any common base.
+     *
+     * @return the newly created transformed RDF source.
+     * @throws IOException if any error occurred creating the source.
+     */
+    protected TransformedRdfSource addResultSource(Project p, Source parent,
+                                                   String name, URI uri,
+                                                   URI baseUri, URI operation,
+                                                   Map<String, String> parameters,
+                                                   Date eventStart)
+                                                            throws IOException {
+        TransformedRdfSource newSrc =
+                        this.projectManager.newTransformedRdfSource(p, uri,
+                                            name, null, uri, baseUri, parent,
+                                            operation, parameters, eventStart);
         this.projectManager.saveProject(p);
         return newSrc;
     }

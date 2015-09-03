@@ -68,6 +68,7 @@ import com.complexible.common.util.PrefixMapping;
 import javassist.ClassPool;
 import javassist.LoaderClassPath;
 
+import org.datalift.core.async.TaskContextBase;
 import org.datalift.core.prov.EventImpl;
 import org.datalift.core.replay.WorkflowImpl;
 import org.datalift.core.replay.WorkflowStepImpl;
@@ -1094,6 +1095,8 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         Event ret = this.projectDao.save(event);
         if(event.getProject() != null)
             event.getProject().removeEvent(event);
+        ((TaskContextBase) TaskContext.getCurrent())
+                .declareHappeningEvent((EventImpl) ret);
         return ret;
     }
     
@@ -1195,11 +1198,33 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         return new WorkflowStepImpl(operation, parameters, originEvent);
     }
 
+    /** {@inheritDoc} */
+    @Override
+    public void executeWorkflow(Project project, Workflow workflow,
+            Map<String, String> variables) throws Exception {
+        this.executeWorkflow(project, workflow, variables, null);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void executeWorkflow(Project project, Workflow workflow,
+            Map<String, String> variables, URI eventOperation) throws Exception {
+        URI operationE = eventOperation;
+        if(eventOperation == null)
+            operationE = this.createDefaultMethodOperationId();
+        workflow.replay(variables);
+        this.saveEvent(project, operationE, variables, Event.REPLAY_EVENT_TYPE,
+                Event.WORKFLOW_EVENT_SUBJECT, new Date(), new Date(), null,
+                workflow.getUri());
+    }
+    
+    /** {@inheritDoc} */
     @Override
     public Event getEvent(URI uri) {
         return this.projectDao.find(EventImpl.class, uri);
     }
 
+    /** {@inheritDoc} */
     @Override
     public Map<URI, Event> getEventsAbout(URI uri) {
         RdfsClass rdfsClass = EventImpl.class.getAnnotation(RdfsClass.class);
@@ -1227,6 +1252,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         return results;
     }
 
+    /** {@inheritDoc} */
     @Override
     public Map<URI, Event> getEvents() {
         RdfsClass rdfsClass = EventImpl.class.getAnnotation(RdfsClass.class);
@@ -1252,6 +1278,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         return results;
     }
 
+    /** {@inheritDoc} */
     @Override
     public Map<URI, Event> getEvents(Project project) {
         RdfsClass rdfsClass = EventImpl.class.getAnnotation(RdfsClass.class);
@@ -1288,6 +1315,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         return results;
     }
     
+    /** {@inheritDoc} */
     @Override
     public Map<URI, Event> getOutputEvents(Project project) {
         RdfsClass rdfsClass = EventImpl.class.getAnnotation(RdfsClass.class);
@@ -1480,5 +1508,4 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         str.append(st[2].getMethodName());
         return URI.create(str.toString());
     }
-
 }

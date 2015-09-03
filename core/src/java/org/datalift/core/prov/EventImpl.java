@@ -13,7 +13,9 @@ import javax.persistence.OneToMany;
 
 import org.datalift.core.project.BaseRdfEntity;
 import org.datalift.core.util.JsonStringMap;
+import org.datalift.fwk.Configuration;
 import org.datalift.fwk.project.Project;
+import org.datalift.fwk.project.ProjectManager;
 import org.datalift.fwk.prov.Event;
 import org.datalift.fwk.prov.EventType;
 
@@ -187,6 +189,9 @@ public class EventImpl extends BaseRdfEntity implements Event{
     /** {@inheritDoc} */
     @Override
     public Project getProject() {
+        if(this.projectId != null && this.project == null)
+            this.project = Configuration.getDefault().getBean(
+                    ProjectManager.class).findProject(this.projectId);
         return this.project;
     }
     

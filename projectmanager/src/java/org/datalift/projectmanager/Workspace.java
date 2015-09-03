@@ -1192,17 +1192,17 @@ public class Workspace extends BaseModule
         // Retrieve project.
         Project p = this.loadProject(projectUri);
         Map<String, String> params = new HashMap<String, String>();
-        params.put("projectUri", p.getUri());
-        params.put("title", title);
-        params.put("description", description);
+        params.put(WorkflowStep.PROJECT_PARAM_KEY, p.getUri());
+        params.put(WorkflowStep.HIDDEN_PARAM_KEY + "title", title);
+        params.put(WorkflowStep.HIDDEN_PARAM_KEY + "description", description);
         params.put("endpointUrl", endpointUrl);
         params.put("sparqlQuery", sparqlQuery);
         params.put("defaultGraph", defaultGraph);
         params.put("user", user);
         params.put("password", password);
-        params.put("cacheDuration", Integer.toString(cacheDuration));
+        params.put(WorkflowStep.HIDDEN_PARAM_KEY + "cacheDuration",
+                Integer.toString(cacheDuration));
         try {
-            System.out.println("enter");
             this.taskManager.submit(p, new UploadSparqlSource().getOperationId(),
                     params);
         } catch (UnregisteredOperationException e) {
@@ -1215,15 +1215,28 @@ public class Workspace extends BaseModule
     public class UploadSparqlSource extends OperationBase{
         @Override
         public void execute(Map<String, String> parameters) throws Exception {
-            String projectUriString = parameters.get("projectUri");
-            String title = parameters.get("title");
-            String description = parameters.get("description");
+            Date eventStart = new Date();
+            String projectUriString = parameters.get(WorkflowStep.PROJECT_PARAM_KEY);
+            String title;
+            if(parameters.get(WorkflowStep.HIDDEN_PARAM_KEY + "title") == null)
+                title = Double.toString(Math.random()).replace(".", "");
+            else
+                title = parameters.get(WorkflowStep.HIDDEN_PARAM_KEY + "title");
+            String description;
+            if(parameters.get(WorkflowStep.HIDDEN_PARAM_KEY + "description") == null)
+                description = "";
+            else
+                description = parameters.get(WorkflowStep.HIDDEN_PARAM_KEY + "description");
             String endpointUrl = parameters.get("endpointUrl");
             String sparqlQuery = parameters.get("sparqlQuery");
             String defaultGraph = parameters.get("defaultGraph");
             String user = parameters.get("user");
             String password = parameters.get("password");
-            int cacheDuration = Integer.parseInt(parameters.get("cacheDuration"));
+            int cacheDuration;
+            if(parameters.get(WorkflowStep.HIDDEN_PARAM_KEY + "cacheDuration") == null)
+                cacheDuration = 0;
+            else
+                cacheDuration = Integer.parseInt(parameters.get(WorkflowStep.HIDDEN_PARAM_KEY + "cacheDuration"));
             // Check SPARQL query is a CONSTRUCT or DESCRIBE.
             if ((sparqlQuery == null) ||
                 (! CONSTRUCT_VALIDATION_PATTERN.matcher(sparqlQuery).find())) {
@@ -1243,7 +1256,8 @@ public class Workspace extends BaseModule
             SparqlSource src = Workspace.this.projectManager.newSparqlSource(p, sourceUri,
                                         title, description,
                                         endpointUrl, sparqlQuery,
-                                        cacheDuration);
+                                        cacheDuration, this.getOperationId(),
+                                        parameters, eventStart);
             src.setDefaultGraphUri(defaultGraph);
             src.setUser(user);
             src.setPassword(password);
@@ -2125,22 +2139,13 @@ public class Workspace extends BaseModule
                     jobj = json;
                 JSONObject jstep = new JSONObject();
                 jstep.put("operation", e.getOperation().toString());
-                JsonStringMap params = new JsonStringMap(e.getParameters());
-                if(e.getUsed() != null && !e.getUsed().isEmpty()){
-                    for(Entry<String, String> entry : params.entrySet()){
-                        URI uriVal = null;
-                        try{
-                            uriVal = URI.create(entry.getValue());
-                        } catch (Exception ex){
-                            continue;
-                        }
-                        for(URI used : e.getUsed()){
-                            if(used.equals(uriVal)){
-                                entry.setValue("$INPUT");
-                                break;
-                            }
-                        }
-                    }
+                JsonStringMap params = new JsonStringMap();
+                for(Entry<String, String> entry : e.getParameters().entrySet()){
+                    if(!entry.getKey().equals(WorkflowStep.PROJECT_PARAM_KEY) &&
+                            !entry.getKey().equals(WorkflowStep.OUTPUT_PARAM_KEY) &&
+                            !entry.getKey().startsWith(WorkflowStep.INPUT_PARAM_KEY) &&
+                            !entry.getKey().startsWith(WorkflowStep.HIDDEN_PARAM_KEY))
+                        params.put(entry.getKey(), entry.getValue());
                 }
                 jstep.put("parameters", params.getJSONObject());
                 JSONArray prev = new JSONArray();
@@ -2262,9 +2267,9 @@ public class Workspace extends BaseModule
             // detect and save changes
             if(!w.getTitle().equals(wTitle))
                 w.setTitle(wTitle);
-            if(!w.getDescription().equals(wDescription))
+            if(w.getDescription() != null && !w.getDescription().equals(wDescription))
                 w.setDescription(wDescription);
-            if(!w.getVariables().equals(wVariables)){
+            if(w.getVariables() != null && !w.getVariables().equals(wVariables)){
                 w.removeAllVariables();
                 for(Entry<String, String> v : wVariables.entrySet())
                     w.addVariable(v.getKey(), v.getValue());
@@ -2293,7 +2298,7 @@ public class Workspace extends BaseModule
         URI workflowUri = URI.create(p.getUri() + "/workflow/" + workflowId);
         Workflow w = p.getWorkflow(workflowUri);
         Map<String, String> variables = new JsonStringMap(json);
-        w.replay(variables);
+        this.projectManager.executeWorkflow(p, w, variables);
         return this.redirect(p, ProjectTab.Workflows).build();
     }
 
