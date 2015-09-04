@@ -907,4 +907,12 @@ public interface ProjectManager
      * @return the events mapped by there URI
      */
     public Map<URI, Event> getOutputEvents(Project project);
+    
+    /**
+     * clean all transitively informed events and there created entity if needed
+     * 
+     * @param parent        the parent event, it will not be destroy
+     * @param purgeEntity   true to destroy entities
+     */
+    public void purgeEventChildrens(Event parent, boolean purgeEntity);
 }

@@ -21,11 +21,8 @@ import org.datalift.fwk.async.TaskContext;
 import org.datalift.fwk.async.TaskManager;
 import org.datalift.fwk.async.TaskStatus;
 import org.datalift.fwk.log.Logger;
-import org.datalift.fwk.project.GenericRdfDao;
-import org.datalift.fwk.project.Ontology;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectManager;
-import org.datalift.fwk.project.Source;
 import org.datalift.fwk.prov.Event;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.replay.Workflow;
@@ -299,70 +296,20 @@ public class WorkflowImpl extends BaseRdfEntity implements Workflow{
             throw new RuntimeException(e);
         } finally {
             if(parentEvent != null){
-                // delete events and sources produced during the replay
-                TaskContext context = TaskContext.getCurrent();
-                project = projectManager.findProject(URI.create(project.getUri()));
-                Collection<Source> sourcesToDel = new ArrayList<Source>();
-                Collection<URI> ToDel = new ArrayList<URI>();
-                Collection<Workflow> workflowsToDel = new ArrayList<Workflow>();
-                GenericRdfDao dao = projectManager.getRdfDao();
-                Collection<Event> allEvents = this.findAllInformatedEvent(
-                        projectManager.getEvents(project).values(), parentEvent);
-                for(Event e : allEvents){
-                    if(e.getEventType() == Event.CREATION_EVENT_TYPE){
-                        if(e.getInfluenced() != null)
-                            try{
-                                if(ToDel.contains(e.getInfluenced())){
-                                    dao.delete(e);
-                                    continue;
-                                }
-                                Source s = project.getSource(e.getInfluenced());
-                                if(sourcesToDel.contains(s)){
-                                    dao.delete(e);
-                                    continue;
-                                }
-                                Workflow w = project.getWorkflow(e.getInfluenced());
-                                if(workflowsToDel.contains(w)){
-                                    dao.delete(e);
-                                    continue;
-                                }
-                                if(s != null)
-                                    sourcesToDel.add(s);
-                                else if(w != null)
-                                    workflowsToDel.add(w);
-                                else
-                                    ToDel.add(e.getInfluenced());
-                            } catch (Exception ex){
-                                Logger.getLogger().debug(
-                                        "the influenced entity {} does not exist",
-                                        e.getInfluenced());
-                            }
-                    }
-                    dao.delete(e);
-                }
-                for(Source s : sourcesToDel)
-                    project.remove(s);
-                for(Workflow w : workflowsToDel)
-                    project.removeWorkflow(w.getUri());
-                for(URI o : ToDel){
-                    Ontology onto = null;
-                    for(Ontology ponto : project.getOntologies())
-                        if(ponto.getUri().equals(o.toString()))
-                            onto = ponto;
-                    if(onto != null)
-                        project.removeOntology(onto.getTitle());
-                }
-                projectManager.saveProject(project);
-                project = projectManager.findProject(URI.create(project.getUri()));
-                allEvents = this.findAllInformatedEvent(
-                        projectManager.getEvents(project).values(), parentEvent);
-                for(Event e : allEvents)
-                    dao.delete(e);
+                projectManager.purgeEventChildrens(parentEvent, true);
                 if(fail == null)
-                    ((TaskContextBase) context).endOperation(true);
+                    ((TaskContextBase) TaskContext.getCurrent()).endOperation(true);
                 else
-                    ((TaskContextBase) context).endOperation(false);
-                dao.delete(parentEvent);
+                    ((TaskContextBase) TaskContext.getCurrent()).endOperation(false);
+                projectManager.getRdfDao().delete(parentEvent);
+                if(fail != null){
+                    Logger.getLogger()
+                            .error("the workflow {} fail during the task {}",
+                            this.uri.toString(), fail.getUri().toString());
+                    throw new RuntimeException("the workflow " + 
+                            this.uri.toString() + " fail during the task " +
+                            fail.getUri().toString());
+                }
             }
         }
     }
@@ -398,41 +345,6 @@ public class WorkflowImpl extends BaseRdfEntity implements Workflow{
             throw new RuntimeException(
                     "no used source match with the parameter : " + parameter);
         return input;
-    }
-    
-    /**
-     * return all events of the list which is directly or transitively informed by the given event
-     * 
-     * @param events    the Collection of Event to search in
-     * @param informer  informer Event
-     * @return  the Collection of informed Events
-     */
-    private Collection<Event> findAllInformatedEvent(Collection<Event> events,
-            Event informer){
-        List<URI> informers = new ArrayList<URI>();
-        List<Event> informed = new ArrayList<Event>();
-        List<Event> rejected = new ArrayList<Event>();
-        for(Event e : events)
-            if(e.getInformer() != null)
-                rejected.add(e);
-        informers.add(informer.getUri());
-        boolean found = true;
-        while(found){
-            found = false;
-            int i = 0;
-            while(i < rejected.size()){
-                Event e = rejected.get(i);
-                if(informers.contains(e.getInformer())){
-                    found = true;
-                    informers.add(e.getUri());
-                    informed.add(e);
-                    rejected.remove(i);
-                } else {
-                    i++;
-                }
-            }
-        }
-        return informed;
     }
     
     /**

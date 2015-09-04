@@ -42,12 +42,14 @@ import java.net.URI;
 import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
@@ -1350,6 +1352,80 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         return results;
     }
     
+    /** {@inheritDoc} */
+    @Override
+    public void purgeEventChildrens(Event parent, boolean purgeEntity) {
+        if(parent != null){
+            Project project = parent.getProject();
+            ((TaskContextBase) TaskContextBase.getCurrent())
+                    .startOperation(project, URI.create(
+                    "http://www.datalift.org/core/projectManager/operation/purge"),
+                    null);
+            Event root = TaskContext.getCurrent().beginAsEvent(Event.INFORMATION_EVENT_TYPE,
+                    Event.PROJECT_EVENT_SUBJECT);
+            TaskContext context = TaskContext.getCurrent();
+            Collection<Source> sourcesToDel = new ArrayList<Source>();
+            Collection<URI> ToDel = new ArrayList<URI>();
+            Collection<Workflow> workflowsToDel = new ArrayList<Workflow>();
+            Collection<Event> allEvents = this.findAllInformatedEvent(
+                    this.getEvents(project).values(), parent);
+            for(Event e : allEvents){
+                if(e.getEventType() == Event.CREATION_EVENT_TYPE){
+                    if(e.getInfluenced() != null)
+                        try{
+                            if(ToDel.contains(e.getInfluenced())){
+                                this.projectDao.delete(e);
+                                continue;
+                            }
+                            Source s = project.getSource(e.getInfluenced());
+                            if(sourcesToDel.contains(s)){
+                                this.projectDao.delete(e);
+                                continue;
+                            }
+                            Workflow w = project.getWorkflow(e.getInfluenced());
+                            if(workflowsToDel.contains(w)){
+                                this.projectDao.delete(e);
+                                continue;
+                            }
+                            if(s != null)
+                                sourcesToDel.add(s);
+                            else if(w != null)
+                                workflowsToDel.add(w);
+                            else
+                                ToDel.add(e.getInfluenced());
+                        } catch (Exception ex){
+                            Logger.getLogger().debug(
+                                    "the influenced entity {} does not exist",
+                                    e.getInfluenced());
+                        }
+                }
+                this.projectDao.delete(e);
+            }
+            if(purgeEntity){
+                for(Source s : sourcesToDel)
+                    project.remove(s);
+                for(Workflow w : workflowsToDel)
+                    project.removeWorkflow(w.getUri());
+                for(URI o : ToDel){
+                    Ontology onto = null;
+                    for(Ontology ponto : project.getOntologies())
+                        if(ponto.getUri().equals(o.toString()))
+                            onto = ponto;
+                    if(onto != null)
+                        project.removeOntology(onto.getTitle());
+                }
+                this.saveProject(project);
+                project = this.findProject(URI.create(project.getUri()));
+                allEvents = this.findAllInformatedEvent(
+                        this.getEvents(project).values(), root);
+                for(Event e : allEvents)
+                    this.projectDao.delete(e);
+            }
+            ((TaskContextBase) context).endOperation(true);
+            this.projectDao.delete(root);
+        }
+    }
+    
     //-------------------------------------------------------------------------
     // Object contract support
     //-------------------------------------------------------------------------
@@ -1364,6 +1440,41 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     //-------------------------------------------------------------------------
     // Specific implementation
     //-------------------------------------------------------------------------
+    
+    /**
+     * return all events of the list which is directly or transitively informed by the given event
+     * 
+     * @param events    the Collection of Event to search in
+     * @param informer  informer Event
+     * @return  the Collection of informed Events
+     */
+    private Collection<Event> findAllInformatedEvent(Collection<Event> events,
+            Event informer){
+        List<URI> informers = new ArrayList<URI>();
+        List<Event> informed = new ArrayList<Event>();
+        List<Event> rejected = new ArrayList<Event>();
+        for(Event e : events)
+            if(e.getInformer() != null)
+                rejected.add(e);
+        informers.add(informer.getUri());
+        boolean found = true;
+        while(found){
+            found = false;
+            int i = 0;
+            while(i < rejected.size()){
+                Event e = rejected.get(i);
+                if(informers.contains(e.getInformer())){
+                    found = true;
+                    informers.add(e.getUri());
+                    informed.add(e);
+                    rejected.remove(i);
+                } else {
+                    i++;
+                }
+            }
+        }
+        return informed;
+    }
     
     /**
      * return the namespace used
