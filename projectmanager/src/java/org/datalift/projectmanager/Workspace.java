@@ -717,7 +717,7 @@ public class Workspace extends BaseModule
             Project p = this.loadProject(projectUri);
             // Save new source data to public project storage.
             String filePath = this.getProjectFilePath(projectId, fileName);
-            localFile = this.getFileData(fileData, fileUrl, filePath, uriInfo,
+            localFile = this.getFileData(fileData, fileUrl, filePath,
                              Arrays.asList(TEXT_CSV_TYPE, APPLICATION_CSV_TYPE,
                                            TEXT_COMMA_SEPARATED_VALUES_TYPE,
                                            TEXT_PLAIN_TYPE), true);
@@ -942,7 +942,7 @@ public class Workspace extends BaseModule
             Project p = this.loadProject(projectUri);
             // Save new source data to public project storage.
             String filePath = this.getProjectFilePath(projectId, fileName);
-            localFile = this.getFileData(fileData, fileUrl, filePath, uriInfo,
+            localFile = this.getFileData(fileData, fileUrl, filePath,
                                          format.getMimeTypes(), false);
             // Initialize new source.
             RdfFileSource src = this.projectManager.newRdfSource(p, sourceUri,
@@ -1217,16 +1217,12 @@ public class Workspace extends BaseModule
         public void execute(Map<String, String> parameters) throws Exception {
             Date eventStart = new Date();
             String projectUriString = parameters.get(WorkflowStep.PROJECT_PARAM_KEY);
-            String title;
-            if(parameters.get(WorkflowStep.HIDDEN_PARAM_KEY + "title") == null)
+            String title = parameters.get(WorkflowStep.HIDDEN_PARAM_KEY + "title");
+            if(title == null)
                 title = Double.toString(Math.random()).replace(".", "");
-            else
-                title = parameters.get(WorkflowStep.HIDDEN_PARAM_KEY + "title");
-            String description;
+            String description = parameters.get(WorkflowStep.HIDDEN_PARAM_KEY + "description");
             if(parameters.get(WorkflowStep.HIDDEN_PARAM_KEY + "description") == null)
                 description = "";
-            else
-                description = parameters.get(WorkflowStep.HIDDEN_PARAM_KEY + "description");
             String endpointUrl = parameters.get("endpointUrl");
             String sparqlQuery = parameters.get("sparqlQuery");
             String defaultGraph = parameters.get("defaultGraph");
@@ -1373,101 +1369,161 @@ public class Workspace extends BaseModule
         if (! isSet(srcName)) {
             this.throwInvalidParamError("file_name", srcName);
         }
-        Response response = null;
-
-        URL fileUrl = null;
-        File localFile = null;
-        String fileName = this.toFileName(fileDisposition.getFileName());
-        if (! isBlank(sourceUrl)) {
+        URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
+        Project p = this.loadProject(projectUri);
+        String filePath = this.getProjectFilePath(projectId,
+                this.toFileName(fileDisposition.getFileName()));
+        boolean stream = !this.toFileName(
+                fileDisposition.getFileName()).trim().isEmpty();
+        if (stream) {
             try {
-                fileUrl = new URL(sourceUrl);
+                FileStore fs = this.getFileStore();
+                File destFile = fs.getFile(filePath);
+                fs.save(fileData, destFile);
+            } catch (IOException e) {
+                this.handleInternalError(e,
+                        "Failed to load xml file {}",
+                        this.toFileName(fileDisposition.getFileName()));
             }
-            catch (Exception e) {
-                log.error("Failed to parse URL {}", e, sourceUrl);
-                this.throwInvalidParamError("file_url",
-                                    sourceUrl + " (" + e.getMessage() + ')');
-            }
-            if (isBlank(fileName)) {
-                // No data uploaded. => Extract local file name from source URL.
-                fileName = this.extractFileName(fileUrl, "xml");
-                // Reset input stream to force downloading data from source URL.
-                fileData = null;
-            }
-            // Else: Read data from uploaded file but preserve source URL
-            //       to resolve external dependencies (such as DTDs).
         }
-        else if (isBlank(fileName)) {
-            this.throwInvalidParamError("source", null);
-        }
-        // Else: File data have been uploaded.
-
-        log.debug("Processing XML source creation request for {}", srcName);
-        boolean deleteFiles = false;
+        Map<String, String> params = new HashMap<String, String>();
+        params.put(WorkflowStep.PROJECT_PARAM_KEY, p.getUri());
+        params.put(WorkflowStep.HIDDEN_PARAM_KEY + "srcName", srcName);
+        params.put(WorkflowStep.HIDDEN_PARAM_KEY + "description", description);
+        params.put("sourceUrl", sourceUrl);
+        params.put(WorkflowStep.HIDDEN_PARAM_KEY + "fileName", fileDisposition.getFileName());
+        if (stream)
+            params.put(WorkflowStep.HIDDEN_PARAM_KEY + "tempFilePath", filePath);
+        else
+            params.put(WorkflowStep.HIDDEN_PARAM_KEY + "tempFilePath", "NULL");
         try {
-            // Build object URIs from request path.
-            URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
-            URI sourceUri = new URI(projectUri.getScheme(), null,
-                                    projectUri.getHost(), projectUri.getPort(),
-                                    this.newSourceId(projectUri.getPath(), srcName),
-                                    null, null);
-            // Retrieve project.
-            Project p = this.loadProject(projectUri);
-            // Save new source data to public project storage.
-            String filePath = this.getProjectFilePath(projectId, fileName);
-            localFile = this.getFileData(fileData, fileUrl, filePath, uriInfo,
-                     Arrays.asList(APPLICATION_XML_TYPE, TEXT_XML_TYPE), false);
-            // Initialize new source.
-            XmlSource src = this.projectManager.newXmlSource(p, sourceUri,
-                                            srcName, description, filePath);
-            if (fileUrl != null) {
-                src.setSourceUrl(fileUrl.toString());
-            }
-            // Parse XML file content to validate well-formedness.
-            try {
-                SAXParserFactory spf = SAXParserFactory.newInstance();
-                spf.setNamespaceAware(true);
-                spf.setValidating(false);   // Prevent DTD or schema validation.
-                XMLReader parser = spf.newSAXParser().getXMLReader();
-                parser.setContentHandler(new DefaultHandler());
-                InputSource is = new InputSource(src.getInputStream());
-                if (! isBlank(src.getSourceUrl())) {
-                    // Set the source URL to resolve DTDs, if any.
-                    is.setSystemId(src.getSourceUrl());
-                }
-                parser.parse(is);
-            }
-            catch (Exception e) {
-                throw new IOException("Invalid or empty source data", e);
-            }
-            // Persist new source.
-            this.projectManager.saveProject(p);
-            // Notify user of successful creation, redirecting HTML clients
-            // (browsers) to the source tab of the project page.
-            response = this.created(p, sourceUri, ProjectTab.Sources).build();
-
-            log.info("New XML source \"{}\" created", sourceUri);
+            this.taskManager.submit(p, new UploadXmlSource().getOperationId(),
+                    params);
+        } catch (UnregisteredOperationException e) {
+            this.handleInternalError(e, "error during operation execution");
         }
-        catch (IOException e) {
-            deleteFiles = true;
-            String src = (fileData != null)? fileName:
-                        (fileUrl != null)? fileUrl.toString(): "file_url";
-            log.fatal("Failed to save source data from {}", e, src);
-            Throwable error = (e.getCause() != null)? e.getCause(): e;
-            this.throwInvalidParamError(src, error.getLocalizedMessage());
-        }
-        catch (Exception e) {
-            deleteFiles = true;
-            this.handleInternalError(e,
-                                "Failed to create XML source for {}", srcName);
-        }
-        finally {
-            if ((deleteFiles) && (localFile != null)) {
-                this.deleteFileStorage(localFile);
-            }
-        }
-        return response;
+        // (browsers) to the source tab of the project page.
+        return this.redirect(p, ProjectTab.Sources).build();
     }
 
+    public class UploadXmlSource extends OperationBase{
+
+        /** {@inheritDoc} */
+        @Override
+        public void execute(Map<String, String> parameters) throws Exception {
+            Date eventStart = new Date();
+            String projectUriString = parameters.get(WorkflowStep.PROJECT_PARAM_KEY);
+            String srcName = parameters.get(WorkflowStep.HIDDEN_PARAM_KEY + "srcName");
+            if(srcName == null)
+                srcName = Double.toString(Math.random()).replace(".", "");
+            String description = parameters.get(WorkflowStep.HIDDEN_PARAM_KEY + "description");
+            if(description == null)
+                description = "";
+            String sourceUrl = parameters.get("sourceUrl");
+            String fileName = parameters.get(WorkflowStep.HIDDEN_PARAM_KEY + "fileName");
+            if(fileName == null)
+                fileName = "";
+            String tempFilePath = parameters.get(WorkflowStep.HIDDEN_PARAM_KEY + "tempFilePath");
+            if(tempFilePath == null)
+                tempFilePath = "NULL";
+            InputStream fileData = null;
+            File localFile = null;
+            if(!tempFilePath.equals("NULL")){
+                FileStore fs = Workspace.this.getFileStore();
+                localFile = fs.getFile(tempFilePath);
+                fileData = new FileInputStream(localFile);
+            }
+            URL fileUrl = null;
+            fileName = Workspace.this.toFileName(fileName);
+            if (! isBlank(sourceUrl)) {
+                try {
+                    fileUrl = new URL(sourceUrl);
+                }
+                catch (Exception e) {
+                    log.error("Failed to parse URL {}", e, sourceUrl);
+                    throw new TechnicalException("invalid sourceUrl : ", e);
+                }
+                if (isBlank(fileName)) {
+                    // No data uploaded. => Extract local file name from source URL.
+                    fileName = Workspace.this.extractFileName(fileUrl, "xml");
+                    // Reset input stream to force downloading data from source URL.
+                    fileData = null;
+                }
+                // Else: Read data from uploaded file but preserve source URL
+                //       to resolve external dependencies (such as DTDs).
+            }
+            else if (isBlank(fileName)) {
+                throw new TechnicalException("invalid source");
+            }
+            // Else: File data have been uploaded.
+
+            log.debug("Processing XML source creation request for {}", srcName);
+            boolean deleteFiles = false;
+            try {
+                // Build object URIs from request path.
+                URI projectUri = URI.create(projectUriString);
+                URI sourceUri = new URI(projectUri.getScheme(), null,
+                                        projectUri.getHost(), projectUri.getPort(),
+                                        Workspace.this.newSourceId(projectUri.getPath(), srcName),
+                                        null, null);
+                // Retrieve project.
+                Project p = Workspace.this.loadProject(projectUri);
+                // Save new source data to public project storage.
+                if(fileData == null){
+                    localFile = Workspace.this.getFileData(fileData, fileUrl,
+                            tempFilePath, Arrays
+                            .asList(APPLICATION_XML_TYPE, TEXT_XML_TYPE), false);
+                }
+                // Initialize new source.
+                XmlSource src = Workspace.this.projectManager.newXmlSource(p,
+                        sourceUri, srcName, description, tempFilePath,
+                        this.getOperationId(), parameters, eventStart);
+                if (fileUrl != null) {
+                    src.setSourceUrl(fileUrl.toString());
+                }
+                // Parse XML file content to validate well-formedness.
+                try {
+                    SAXParserFactory spf = SAXParserFactory.newInstance();
+                    spf.setNamespaceAware(true);
+                    spf.setValidating(false);   // Prevent DTD or schema validation.
+                    XMLReader parser = spf.newSAXParser().getXMLReader();
+                    parser.setContentHandler(new DefaultHandler());
+                    InputSource is = new InputSource(src.getInputStream());
+                    if (! isBlank(src.getSourceUrl())) {
+                        // Set the source URL to resolve DTDs, if any.
+                        is.setSystemId(src.getSourceUrl());
+                    }
+                    parser.parse(is);
+                }
+                catch (Exception e) {
+                    throw new IOException("Invalid or empty source data", e);
+                }
+                // Persist new source.
+                Workspace.this.projectManager.saveProject(p);
+                log.info("New XML source \"{}\" created", sourceUri);
+            }
+            catch (IOException e) {
+                deleteFiles = true;
+                String src = (fileData != null)? fileName:
+                            (fileUrl != null)? fileUrl.toString(): "file_url";
+                log.fatal("Failed to save source data from {}", e, src);
+                Throwable error = (e.getCause() != null)? e.getCause(): e;
+                throw new TechnicalException("invalid source : " + src, error);
+            }
+            catch (Exception e) {
+                deleteFiles = true;
+                throw new TechnicalException(
+                        "Failed to create XML source for " + srcName, e);
+            }
+            finally {
+                if ((deleteFiles) && (localFile != null)) {
+                    Workspace.this.deleteFileStorage(localFile);
+                }
+            }
+        }
+        
+    }
+    
     @POST
     @Path("{id}/xmlmodify")
     @Consumes(MULTIPART_FORM_DATA)
@@ -2839,7 +2895,7 @@ public class Workspace extends BaseModule
     private File getFileData(InputStream in, URL u, String destPath,
                              UriInfo uriInfo, MediaType mimeType)
                                                         throws IOException {
-        return this.getFileData(in, u, destPath, uriInfo,
+        return this.getFileData(in, u, destPath,
                      (mimeType != null)? Arrays.asList(mimeType): null, false);
     }
 
@@ -2868,7 +2924,7 @@ public class Workspace extends BaseModule
      *                     the file data.
      */
     private File getFileData(InputStream in, URL u, String destPath,
-                             UriInfo uriInfo, Collection<MediaType> mimeTypes,
+                             Collection<MediaType> mimeTypes,
                              boolean allowAny) throws IOException {
         Configuration cfg = Configuration.getDefault();
         FileStore fs = this.getFileStore();
