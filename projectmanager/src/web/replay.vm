@@ -34,7 +34,11 @@
 			<form class="form_formated">
 				<div style="width:100%;">
 					<p><span style="width:17.5%;font-weight:bold;display:inline-block;">title :</span>$workflow.getTitle()</p>
-					<p><span style="width:17.5%;font-weight:bold;display:inline-block;">Description :</span>$workflow.getDescription()</p>
+					<p><span style="width:17.5%;font-weight:bold;display:inline-block;">Description :</span>
+					   #if ($workflow.getDescription())
+					       $workflow.getDescription()
+					   #end
+					   </p>
 				</div>
 				<div id="inputs">
 					#foreach( $cur in $workflow.getVariables().entrySet() )
