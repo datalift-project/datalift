@@ -1192,15 +1192,15 @@ public class Workspace extends BaseModule
         // Retrieve project.
         Project p = this.loadProject(projectUri);
         Map<String, String> params = new HashMap<String, String>();
-        params.put(WorkflowStep.PROJECT_PARAM_KEY, p.getUri());
-        params.put(WorkflowStep.HIDDEN_PARAM_KEY + "title", title);
-        params.put(WorkflowStep.HIDDEN_PARAM_KEY + "description", description);
+        params.put(Operation.PROJECT_PARAM_KEY, p.getUri());
+        params.put(Operation.HIDDEN_PARAM_KEY + "title", title);
+        params.put(Operation.HIDDEN_PARAM_KEY + "description", description);
         params.put("endpointUrl", endpointUrl);
         params.put("sparqlQuery", sparqlQuery);
         params.put("defaultGraph", defaultGraph);
         params.put("user", user);
         params.put("password", password);
-        params.put(WorkflowStep.HIDDEN_PARAM_KEY + "cacheDuration",
+        params.put(Operation.HIDDEN_PARAM_KEY + "cacheDuration",
                 Integer.toString(cacheDuration));
         try {
             this.taskManager.submit(p, new UploadSparqlSource().getOperationId(),
@@ -1216,12 +1216,12 @@ public class Workspace extends BaseModule
         @Override
         public void execute(Map<String, String> parameters) throws Exception {
             Date eventStart = new Date();
-            String projectUriString = parameters.get(WorkflowStep.PROJECT_PARAM_KEY);
-            String title = parameters.get(WorkflowStep.HIDDEN_PARAM_KEY + "title");
+            String projectUriString = parameters.get(Operation.PROJECT_PARAM_KEY);
+            String title = parameters.get(Operation.HIDDEN_PARAM_KEY + "title");
             if(title == null)
                 title = Double.toString(Math.random()).replace(".", "");
-            String description = parameters.get(WorkflowStep.HIDDEN_PARAM_KEY + "description");
-            if(parameters.get(WorkflowStep.HIDDEN_PARAM_KEY + "description") == null)
+            String description = parameters.get(Operation.HIDDEN_PARAM_KEY + "description");
+            if(parameters.get(Operation.HIDDEN_PARAM_KEY + "description") == null)
                 description = "";
             String endpointUrl = parameters.get("endpointUrl");
             String sparqlQuery = parameters.get("sparqlQuery");
@@ -1229,10 +1229,11 @@ public class Workspace extends BaseModule
             String user = parameters.get("user");
             String password = parameters.get("password");
             int cacheDuration;
-            if(parameters.get(WorkflowStep.HIDDEN_PARAM_KEY + "cacheDuration") == null)
+            if(parameters.get(Operation.HIDDEN_PARAM_KEY + "cacheDuration") == null)
                 cacheDuration = 0;
             else
-                cacheDuration = Integer.parseInt(parameters.get(WorkflowStep.HIDDEN_PARAM_KEY + "cacheDuration"));
+                cacheDuration = Integer.parseInt(parameters
+                        .get(Operation.HIDDEN_PARAM_KEY + "cacheDuration"));
             // Check SPARQL query is a CONSTRUCT or DESCRIBE.
             if ((sparqlQuery == null) ||
                 (! CONSTRUCT_VALIDATION_PATTERN.matcher(sparqlQuery).find())) {
@@ -1387,15 +1388,15 @@ public class Workspace extends BaseModule
             }
         }
         Map<String, String> params = new HashMap<String, String>();
-        params.put(WorkflowStep.PROJECT_PARAM_KEY, p.getUri());
-        params.put(WorkflowStep.HIDDEN_PARAM_KEY + "srcName", srcName);
-        params.put(WorkflowStep.HIDDEN_PARAM_KEY + "description", description);
+        params.put(Operation.PROJECT_PARAM_KEY, p.getUri());
+        params.put(Operation.HIDDEN_PARAM_KEY + "srcName", srcName);
+        params.put(Operation.HIDDEN_PARAM_KEY + "description", description);
         params.put("sourceUrl", sourceUrl);
-        params.put(WorkflowStep.HIDDEN_PARAM_KEY + "fileName", fileDisposition.getFileName());
+        params.put(Operation.HIDDEN_PARAM_KEY + "fileName", fileDisposition.getFileName());
         if (stream)
-            params.put(WorkflowStep.HIDDEN_PARAM_KEY + "tempFilePath", filePath);
+            params.put(Operation.HIDDEN_PARAM_KEY + "tempFilePath", filePath);
         else
-            params.put(WorkflowStep.HIDDEN_PARAM_KEY + "tempFilePath", "NULL");
+            params.put(Operation.HIDDEN_PARAM_KEY + "tempFilePath", "NULL");
         try {
             this.taskManager.submit(p, new UploadXmlSource().getOperationId(),
                     params);
@@ -1412,18 +1413,18 @@ public class Workspace extends BaseModule
         @Override
         public void execute(Map<String, String> parameters) throws Exception {
             Date eventStart = new Date();
-            String projectUriString = parameters.get(WorkflowStep.PROJECT_PARAM_KEY);
-            String srcName = parameters.get(WorkflowStep.HIDDEN_PARAM_KEY + "srcName");
+            String projectUriString = parameters.get(Operation.PROJECT_PARAM_KEY);
+            String srcName = parameters.get(Operation.HIDDEN_PARAM_KEY + "srcName");
             if(srcName == null)
                 srcName = Double.toString(Math.random()).replace(".", "");
-            String description = parameters.get(WorkflowStep.HIDDEN_PARAM_KEY + "description");
+            String description = parameters.get(Operation.HIDDEN_PARAM_KEY + "description");
             if(description == null)
                 description = "";
             String sourceUrl = parameters.get("sourceUrl");
-            String fileName = parameters.get(WorkflowStep.HIDDEN_PARAM_KEY + "fileName");
+            String fileName = parameters.get(Operation.HIDDEN_PARAM_KEY + "fileName");
             if(fileName == null)
                 fileName = "";
-            String tempFilePath = parameters.get(WorkflowStep.HIDDEN_PARAM_KEY + "tempFilePath");
+            String tempFilePath = parameters.get(Operation.HIDDEN_PARAM_KEY + "tempFilePath");
             if(tempFilePath == null)
                 tempFilePath = "NULL";
             InputStream fileData = null;
@@ -2197,10 +2198,10 @@ public class Workspace extends BaseModule
                 jstep.put("operation", e.getOperation().toString());
                 JsonStringMap params = new JsonStringMap();
                 for(Entry<String, String> entry : e.getParameters().entrySet()){
-                    if(!entry.getKey().equals(WorkflowStep.PROJECT_PARAM_KEY) &&
-                            !entry.getKey().equals(WorkflowStep.OUTPUT_PARAM_KEY) &&
-                            !entry.getKey().startsWith(WorkflowStep.INPUT_PARAM_KEY) &&
-                            !entry.getKey().startsWith(WorkflowStep.HIDDEN_PARAM_KEY))
+                    if(!entry.getKey().equals(Operation.PROJECT_PARAM_KEY) &&
+                            !entry.getKey().equals(Operation.OUTPUT_PARAM_KEY) &&
+                            !entry.getKey().startsWith(Operation.INPUT_PARAM_KEY) &&
+                            !entry.getKey().startsWith(Operation.HIDDEN_PARAM_KEY))
                         params.put(entry.getKey(), entry.getValue());
                 }
                 jstep.put("parameters", params.getJSONObject());

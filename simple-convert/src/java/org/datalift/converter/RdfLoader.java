@@ -61,7 +61,6 @@ import org.datalift.fwk.project.RdfSource;
 import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
-import org.datalift.fwk.replay.WorkflowStep;
 import org.datalift.fwk.util.RegexUriMapper;
 import org.datalift.fwk.util.StringUtils;
 import org.datalift.fwk.util.UriMapper;
@@ -168,11 +167,11 @@ public class RdfLoader extends BaseConverterModule implements Operation
         try {
             Project p = this.getProject(projectId.toUri(PROJECT_ID_PARAM));
             Map<String, String> params = new HashMap<String, String>();
-            params.put(WorkflowStep.PROJECT_PARAM_KEY, projectId.toUri().toString());
-            params.put(WorkflowStep.INPUT_PARAM_KEY + "source",
+            params.put(Operation.PROJECT_PARAM_KEY, projectId.toUri().toString());
+            params.put(Operation.INPUT_PARAM_KEY + "source",
                     sourceId.toUri().toString());
-            params.put(WorkflowStep.HIDDEN_PARAM_KEY + "destTitle", destTitle);
-            params.put(WorkflowStep.HIDDEN_PARAM_KEY + "targetGraphParam",
+            params.put(Operation.HIDDEN_PARAM_KEY + "destTitle", destTitle);
+            params.put(Operation.HIDDEN_PARAM_KEY + "targetGraphParam",
                     targetGraphParam.toUri().toString());
             params.put("uriPattern", uriPattern);
             params.put("uriReplacement", uriReplacement);
@@ -198,21 +197,21 @@ public class RdfLoader extends BaseConverterModule implements Operation
         try {
             Date start = new Date();
             URI projectId = URI.create(parameters
-                    .get(WorkflowStep.PROJECT_PARAM_KEY));
+                    .get(Operation.PROJECT_PARAM_KEY));
             URI sourceId = URI.create(parameters
-                    .get(WorkflowStep.INPUT_PARAM_KEY + "source"));
+                    .get(Operation.INPUT_PARAM_KEY + "source"));
             String destTitle;
-            if(parameters.get(WorkflowStep.HIDDEN_PARAM_KEY + "destTitle") == null)
+            if(parameters.get(Operation.HIDDEN_PARAM_KEY + "destTitle") == null)
                 destTitle = Double.toString(Math.random()).replace(".", "");
             else
-                destTitle = parameters.get(WorkflowStep.HIDDEN_PARAM_KEY + "destTitle");
+                destTitle = parameters.get(Operation.HIDDEN_PARAM_KEY + "destTitle");
             URI targetGraph;
-            if(parameters.get(WorkflowStep.HIDDEN_PARAM_KEY + "targetGraphParam") == null)
+            if(parameters.get(Operation.HIDDEN_PARAM_KEY + "targetGraphParam") == null)
                 targetGraph = URI.create(sourceId.toString() +
                         "/" + destTitle + "/loadedGraph");
             else
                 targetGraph = URI.create(parameters
-                        .get(WorkflowStep.HIDDEN_PARAM_KEY + "targetGraphParam"));
+                        .get(Operation.HIDDEN_PARAM_KEY + "targetGraphParam"));
             String uriPattern = parameters.get("uriPattern");
             String uriReplacement = parameters.get("uriReplacement");
             // Retrieve project.

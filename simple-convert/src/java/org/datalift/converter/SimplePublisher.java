@@ -65,7 +65,6 @@ import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
-import org.datalift.fwk.replay.WorkflowStep;
 import org.datalift.fwk.sparql.AccessController;
 import org.datalift.fwk.util.web.UriParam;
 import org.datalift.fwk.view.TemplateModel;
@@ -139,8 +138,8 @@ public class SimplePublisher extends BaseConverterModule implements Operation
         try{
             Project p = this.getProject(projectId.toUri(PROJECT_ID_PARAM));
             Map<String, String> params = new HashMap<String, String>();
-            params.put(WorkflowStep.PROJECT_PARAM_KEY, projectId.toUri().toString());
-            params.put(WorkflowStep.INPUT_PARAM_KEY + "source",
+            params.put(Operation.PROJECT_PARAM_KEY, projectId.toUri().toString());
+            params.put(Operation.INPUT_PARAM_KEY + "source",
                     sourceId.toUri().toString());
             params.put("repository", repository);
             params.put("targetGraphParam", targetGraphParam.toUri().toString());
@@ -166,9 +165,9 @@ public class SimplePublisher extends BaseConverterModule implements Operation
     @Override
     public void execute(Map<String, String> parameters) throws Exception {
         Date start = new Date();
-        URI projectId = URI.create(parameters.get(WorkflowStep.PROJECT_PARAM_KEY));
+        URI projectId = URI.create(parameters.get(Operation.PROJECT_PARAM_KEY));
         URI sourceId = URI.create(parameters
-                .get(WorkflowStep.INPUT_PARAM_KEY + "source"));
+                .get(Operation.INPUT_PARAM_KEY + "source"));
         URI targetGraph = URI.create(parameters.get("targetGraphParam"));
         String repository = parameters.get("repository");
         boolean overwrite = Boolean.parseBoolean(parameters.get("overwrite"));

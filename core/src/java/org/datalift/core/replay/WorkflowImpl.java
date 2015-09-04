@@ -9,11 +9,13 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import javax.persistence.Entity;
+
 import org.datalift.core.async.TaskContextBase;
 import org.datalift.core.project.BaseRdfEntity;
 import org.datalift.core.util.JsonStringMap;
 import org.datalift.core.util.VersatileProperties;
 import org.datalift.fwk.Configuration;
+import org.datalift.fwk.async.Operation;
 import org.datalift.fwk.async.Task;
 import org.datalift.fwk.async.TaskContext;
 import org.datalift.fwk.async.TaskManager;
@@ -268,17 +270,17 @@ public class WorkflowImpl extends BaseRdfEntity implements Workflow{
                     Map<String, String> params = new HashMap<String, String>();
                     for(String param : eventParameters.keySet()){
                         String value = step.getParameters().get(param);
-                        if(param.startsWith(WorkflowStep.INPUT_PARAM_KEY)){
+                        if(param.startsWith(Operation.INPUT_PARAM_KEY)){
                             WorkflowStep prev = this
                                     .findPrevousStepUsedOnParameter(step, param);
                             params.put(param, done.get(prev).getRunningEvent()
                                     .getInfluenced().toString());
-                        } else if(param.equals(WorkflowStep.OUTPUT_PARAM_KEY)) {
+                        } else if(param.equals(Operation.OUTPUT_PARAM_KEY)) {
                             params.put(param, this
                                     .checkUriConflict(null).toString());
-                        } else if(param.equals(WorkflowStep.PROJECT_PARAM_KEY)) {
+                        } else if(param.equals(Operation.PROJECT_PARAM_KEY)) {
                             params.put(param, project.getUri());
-                        } else if(!param.startsWith(WorkflowStep.HIDDEN_PARAM_KEY)) {
+                        } else if(!param.startsWith(Operation.HIDDEN_PARAM_KEY)) {
                             params.put(param, properties.resolveVariables(value));
                         }
                     }
