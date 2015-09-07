@@ -55,8 +55,8 @@ public class WorkflowImpl extends BaseRdfEntity implements Workflow{
     @RdfProperty("datalift:variables")
     private String variabels = null;
     private JsonStringMap vars = null;
-    @RdfProperty("datalift:parameters")
-    private String parameters = null;
+    @RdfProperty("datalift:steps")
+    private String steps = null;
     private WorkflowStepImpl output = null;
     @RdfProperty("datalift:originEvent")
     private URI origin;
@@ -163,11 +163,11 @@ public class WorkflowImpl extends BaseRdfEntity implements Workflow{
                         root = true;
                 }
             this.output = (WorkflowStepImpl) outputStep;
-            this.parameters = this.output.toString();
+            this.steps = this.output.toString();
             this.origin = this.output.getOriginEvent();
         } else {
             this.output = null;
-            this.parameters = null;
+            this.steps = null;
             this.origin = null;
         }
     }
@@ -180,9 +180,9 @@ public class WorkflowImpl extends BaseRdfEntity implements Workflow{
 
     /** {@inheritDoc} */
     private void refreshJsons(){
-        if(this.parameters != null && this.output == null)
+        if(this.steps != null && this.output == null)
             try {
-                this.output = new WorkflowStepImpl(this.parameters,
+                this.output = new WorkflowStepImpl(this.steps,
                         this.getOriginEvent());
             } catch (JSONException e) {
                 throw new RuntimeException(e);
