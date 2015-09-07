@@ -20,6 +20,7 @@ import org.datalift.fwk.async.Task;
 import org.datalift.fwk.async.TaskContext;
 import org.datalift.fwk.async.TaskManager;
 import org.datalift.fwk.async.TaskStatus;
+import org.datalift.fwk.async.UnregisteredOperationException;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectManager;
@@ -107,7 +108,7 @@ public class WorkflowImpl extends BaseRdfEntity implements Workflow{
     /** {@inheritDoc} */
     @Override
     public Map<String, String> getVariables() {
-        this.refrechJsons();
+        this.refreshJsons();
         if(this.vars != null)
             return this.vars;
         else
@@ -117,7 +118,7 @@ public class WorkflowImpl extends BaseRdfEntity implements Workflow{
     /** {@inheritDoc} */
     @Override
     public void addVariable(String name, String defaultValue) {
-        this.refrechJsons();
+        this.refreshJsons();
         if(this.vars == null)
             this.vars = new JsonStringMap();
         this.vars.put(name, defaultValue);
@@ -127,7 +128,7 @@ public class WorkflowImpl extends BaseRdfEntity implements Workflow{
     /** {@inheritDoc} */
     @Override
     public WorkflowStep getOutputStep() {
-        this.refrechJsons();
+        this.refreshJsons();
         return this.output;
     }
 
@@ -135,9 +136,11 @@ public class WorkflowImpl extends BaseRdfEntity implements Workflow{
     @Override
     public void setSteps(WorkflowStep outputStep) {
         if(outputStep != null){
+            // control if the step is the last one on the oriented graph
             if(outputStep.getNextSteps() != null &&
                     !outputStep.getNextSteps().isEmpty())
                 throw new RuntimeException("the step must be the last one");
+            // control if there are several "last step" on the graph
             Collection<WorkflowStep> controled = new ArrayList<WorkflowStep>();
             List<WorkflowStep> toControl = new ArrayList<WorkflowStep>();
             toControl.add(outputStep);
@@ -176,7 +179,7 @@ public class WorkflowImpl extends BaseRdfEntity implements Workflow{
     }
 
     /** {@inheritDoc} */
-    private void refrechJsons(){
+    private void refreshJsons(){
         if(this.parameters != null && this.output == null)
             try {
                 this.output = new WorkflowStepImpl(this.parameters,
@@ -204,104 +207,38 @@ public class WorkflowImpl extends BaseRdfEntity implements Workflow{
     /** {@inheritDoc} */
     @Override
     public void replay(Map<String, String> variables){
-        this.refrechJsons();
-        List<Collection<WorkflowStep>> steps =
-                new ArrayList<Collection<WorkflowStep>>();
+        this.refreshJsons();
         ProjectManager projectManager =
                 Configuration.getDefault().getBean(ProjectManager.class);
         Event origin = projectManager.getEvent(this.origin);
         Project project = origin.getProject();
-        Task fail = null;
         Event parentEvent = null;
+        Task fail = null;
         try{
-            // build the Replay levels
-            steps.add(new ArrayList<WorkflowStep>());
-            steps.get(0).add(this.output);
-            Map<WorkflowStep, Integer> standBy =
-                    new HashMap<WorkflowStep, Integer>();
-            int i = 0;
-            while(!steps.get(i).isEmpty()){
-                steps.add(new ArrayList<WorkflowStep>());
-                for(WorkflowStep step : steps.get(i)){
-                    if(step.getPreviousSteps() != null)
-                        for(WorkflowStep prev : step.getPreviousSteps()){
-                            if(standBy.containsKey(prev)){
-                                if(standBy.get(prev) ==
-                                        prev.getNextSteps().size() - 1){
-                                    steps.get(i + 1).add(prev);
-                                    standBy.remove(prev);
-                                } else {
-                                    standBy.put(prev,
-                                            new Integer(standBy.get(prev) + 1));
-                                }
-                            } else {
-                                if(prev.getNextSteps().size() > 1)
-                                    standBy.put(prev, new Integer(1));
-                                else
-                                    steps.get(i + 1).add(prev);
-                            }
-                        }
-                }
-                i++;
-            }
-            steps.remove(i);
-            //execute steps by level
-            VersatileProperties properties = new VersatileProperties();
-            if(this.vars != null)
-                for(Entry<String, String> prop : this.vars.entrySet())
-                    properties.putString(prop.getKey(), prop.getValue());
-            Map<WorkflowStep, Task> done = new HashMap<WorkflowStep, Task>();
-            TaskManager taskManager =
-                    Configuration.getDefault().getBean(TaskManager.class);
+            // build execution levels
+            List<Collection<WorkflowStep>> steps = buildExecutionLevels();
+            // start operation on TaskContext
             TaskContext context = TaskContext.getCurrent();
             ((TaskContextBase) context).startOperation(project, URI.create(
                     "http://www.datalift.org/core/workflowImpl/operation/replay"),
                     null);
             parentEvent = context.beginAsEvent(
                     Event.INFORMATION_EVENT_TYPE, Event.WORKFLOW_EVENT_SUBJECT);
-            for(int j = steps.size() - 1; j >= 0 && fail == null; j--){
-                List<Task> tasks = new ArrayList<Task>();
-                for(WorkflowStep step : steps.get(j)){
-                    Map<String, String> eventParameters = projectManager
-                            .getEvent(step.getOriginEvent()).getParameters();
-                    Map<String, String> params = new HashMap<String, String>();
-                    for(String param : eventParameters.keySet()){
-                        String value = step.getParameters().get(param);
-                        if(param.startsWith(Operation.INPUT_PARAM_KEY)){
-                            WorkflowStep prev = this
-                                    .findPrevousStepUsedOnParameter(step, param);
-                            params.put(param, done.get(prev).getRunningEvent()
-                                    .getInfluenced().toString());
-                        } else if(param.equals(Operation.OUTPUT_PARAM_KEY)) {
-                            params.put(param, this
-                                    .checkUriConflict(null).toString());
-                        } else if(param.equals(Operation.PROJECT_PARAM_KEY)) {
-                            params.put(param, project.getUri());
-                        } else if(!param.startsWith(Operation.HIDDEN_PARAM_KEY)) {
-                            params.put(param, properties.resolveVariables(value));
-                        }
-                    }
-                    Task task = taskManager.submit(
-                            project, step.getOperation(), params);
-                    tasks.add(task);
-                    done.put(step, task);
-                }
-                for(Task t : tasks){
-                    taskManager.waitForEnding(t);
-                    if(t.getStatus() == TaskStatus.failStatus)
-                        fail = t;
-                }
-            }
+            //execute levels
+            fail = executeLevels(steps);
         } catch (Exception e){
             throw new RuntimeException(e);
         } finally {
             if(parentEvent != null){
+                // clean the replay streak
                 projectManager.purgeEventChildrens(parentEvent, true);
+                // end the operation on the TaskContext
                 if(fail == null)
                     ((TaskContextBase) TaskContext.getCurrent()).endOperation(true);
                 else
                     ((TaskContextBase) TaskContext.getCurrent()).endOperation(false);
                 projectManager.getRdfDao().delete(parentEvent);
+                // in case of failure
                 if(fail != null){
                     Logger.getLogger()
                             .error("the workflow {} fail during the task {}",
@@ -312,6 +249,130 @@ public class WorkflowImpl extends BaseRdfEntity implements Workflow{
                 }
             }
         }
+    }
+
+    /**
+     * Execute all steps from the last level to the first one
+     * 
+     * @param steps execution levels
+     * @return  null or the failed task if the execution fail
+     * @throws UnregisteredOperationException
+     */
+    private Task executeLevels(List<Collection<WorkflowStep>> steps)
+            throws UnregisteredOperationException {
+        Task fail = null;
+        VersatileProperties properties = new VersatileProperties();
+        ProjectManager projectManager =
+                Configuration.getDefault().getBean(ProjectManager.class);
+        Event origin = projectManager.getEvent(this.origin);
+        Project project = origin.getProject();
+        TaskManager taskManager =
+                Configuration.getDefault().getBean(TaskManager.class);
+        Map<WorkflowStep, Task> done = new HashMap<WorkflowStep, Task>();
+        // Initialize parameters solver with variables
+        if(this.vars != null)
+            for(Entry<String, String> prop : this.vars.entrySet())
+                properties.putString(prop.getKey(), prop.getValue());
+        for(int j = steps.size() - 1; j >= 0 && fail == null; j--){
+            List<Task> tasks = new ArrayList<Task>();
+            // for every steps of the level
+            for(WorkflowStep step : steps.get(j)){
+                //resolve parameters and submit the task
+                Map<String, String> params = resolveParameters(properties,
+                        done, step);
+                Task task = taskManager.submit(
+                        project, step.getOperation(), params);
+                tasks.add(task);
+                done.put(step, task);
+            }
+            // wait for all level tasks ending
+            for(Task t : tasks){
+                taskManager.waitForEnding(t);
+                if(t.getStatus() == TaskStatus.failStatus)
+                    fail = t;
+            }
+        }
+        return fail;
+    }
+
+    /**
+     * resolve all parameters for a Step execution
+     * 
+     * @param properties    the parameters solver
+     * @param done          the already executed steps and tasks which are associated with
+     * @param step          the step with parameters to resolve
+     * @return              the Map of resolved parameters
+     */
+    private Map<String, String> resolveParameters(VersatileProperties properties,
+            Map<WorkflowStep, Task> done, WorkflowStep step) {
+        ProjectManager projectManager =
+                Configuration.getDefault().getBean(ProjectManager.class);
+        Event origin = projectManager.getEvent(this.origin);
+        Project project = origin.getProject();
+        Map<String, String> eventParameters = projectManager
+                .getEvent(step.getOriginEvent()).getParameters();
+        Map<String, String> params = new HashMap<String, String>();
+        // for all parameters
+        for(String param : eventParameters.keySet()){
+            String value = step.getParameters().get(param);
+            if(param.startsWith(Operation.INPUT_PARAM_KEY)){
+                WorkflowStep prev = this
+                        .findPrevousStepUsedOnParameter(step, param);
+                params.put(param, done.get(prev).getRunningEvent()
+                        .getInfluenced().toString());
+            } else if(param.equals(Operation.OUTPUT_PARAM_KEY)) {
+                params.put(param, this
+                        .checkUriConflict(null).toString());
+            } else if(param.equals(Operation.PROJECT_PARAM_KEY)) {
+                params.put(param, project.getUri());
+            } else if(!param.startsWith(Operation.HIDDEN_PARAM_KEY)) {
+                params.put(param, properties.resolveVariables(value));
+            }
+        }
+        return params;
+    }
+
+    /**
+     * Build the steps of execution, the first on the list is the last to execute
+     * 
+     * @return the List of levels that are Collections of WorkflowSteps that can be executed at the same time
+     */
+    private List<Collection<WorkflowStep>> buildExecutionLevels() {
+        List<Collection<WorkflowStep>> steps =
+                new ArrayList<Collection<WorkflowStep>>();
+        steps.add(new ArrayList<WorkflowStep>());
+        //last step is the first level
+        steps.get(0).add(this.output);
+        // all steps that need to be on a higher level
+        Map<WorkflowStep, Integer> standBy =
+                new HashMap<WorkflowStep, Integer>();
+        int i = 0;
+        while(!steps.get(i).isEmpty()){
+            steps.add(new ArrayList<WorkflowStep>());
+            for(WorkflowStep step : steps.get(i)){
+                if(step.getPreviousSteps() != null)
+                    for(WorkflowStep prev : step.getPreviousSteps()){
+                        if(standBy.containsKey(prev)){
+                            if(standBy.get(prev) ==
+                                    prev.getNextSteps().size() - 1){
+                                steps.get(i + 1).add(prev);
+                                standBy.remove(prev);
+                            } else {
+                                standBy.put(prev,
+                                        new Integer(standBy.get(prev) + 1));
+                            }
+                        } else {
+                            if(prev.getNextSteps().size() > 1)
+                                standBy.put(prev, new Integer(1));
+                            else
+                                steps.get(i + 1).add(prev);
+                        }
+                    }
+            }
+            i++;
+        }
+        steps.remove(i);
+        return steps;
     }
     
     /**
