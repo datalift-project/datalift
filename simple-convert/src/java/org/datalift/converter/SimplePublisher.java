@@ -36,10 +36,9 @@ package org.datalift.converter;
 
 
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -58,6 +57,9 @@ import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.async.Operation;
+import org.datalift.fwk.async.Parameter;
+import org.datalift.fwk.async.ParameterType;
+import org.datalift.fwk.async.Parameters;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectModule;
 import org.datalift.fwk.project.Source;
@@ -135,22 +137,19 @@ public class SimplePublisher extends BaseConverterModule implements Operation
         if (! UriParam.isSet(sourceId)) {
             this.throwInvalidParamError(SOURCE_ID_PARAM, null);
         }
-        try{
-            Project p = this.getProject(projectId.toUri(PROJECT_ID_PARAM));
-            Map<String, String> params = new HashMap<String, String>();
-            params.put(Operation.PROJECT_PARAM_KEY, projectId.toUri().toString());
-            params.put(Operation.INPUT_PARAM_KEY + "source",
-                    sourceId.toUri().toString());
-            params.put("repository", repository);
-            params.put("targetGraphParam", targetGraphParam.toUri().toString());
-            params.put("overwrite", Boolean.toString(overwrite));
-    
-            this.taskManager.submit(p, this.getOperationId(), params);
-            return Response.seeOther(URI.create(p.getUri() + "#source")).build();
+        Project p = this.getProject(projectId.toUri(PROJECT_ID_PARAM));
+        Parameters params = this.getBlankParameters();
+        params.setValue("project", projectId.toUri().toString());
+        params.setValue("source", sourceId.toUri().toString());
+        params.setValue("targetGraph", targetGraphParam.toUri().toString());
+        params.setValue("repository", repository);
+        params.setValue("overwrite", Boolean.toString(overwrite));
+        try {
+            this.execute(params);
+        } catch (Exception e) {
+            this.handleInternalError(e);
         }
-        catch (Exception e) {
-            throw new TechnicalException(e);
-        }
+        return Response.seeOther(URI.create(p.getUri() + "#source")).build();
     }
 
     //-------------------------------------------------------------------------
@@ -163,14 +162,13 @@ public class SimplePublisher extends BaseConverterModule implements Operation
     }
 
     @Override
-    public void execute(Map<String, String> parameters) throws Exception {
+    public void execute(Parameters params) throws Exception {
         Date start = new Date();
-        URI projectId = URI.create(parameters.get(Operation.PROJECT_PARAM_KEY));
-        URI sourceId = URI.create(parameters
-                .get(Operation.INPUT_PARAM_KEY + "source"));
-        URI targetGraph = URI.create(parameters.get("targetGraphParam"));
-        String repository = parameters.get("repository");
-        boolean overwrite = Boolean.parseBoolean(parameters.get("overwrite"));
+        URI projectId = URI.create(params.getProjectValue());
+        URI sourceId = URI.create(params.getValue("source"));
+        URI targetGraph = URI.create(params.getValue("targetGraph"));
+        String repository = params.getValue("repository");
+        boolean overwrite = Boolean.parseBoolean(params.getValue("overwrite"));
         Configuration cfg = Configuration.getDefault();
         Repository pub = null;
         try {
@@ -218,10 +216,26 @@ public class SimplePublisher extends BaseConverterModule implements Operation
             Date end = new Date();
             // Declare event
             this.projectManager.saveOutputEvent(p, this.getOperationId(),
-                    parameters, start, end, null, sourceId);
+                    params.getValues(), start, end, null, sourceId);
         }
         catch (Exception e) {
             throw new TechnicalException(e);
         }
+    }
+    
+    @Override
+    public Parameters getBlankParameters() {
+        Collection<Parameter> paramList = new ArrayList<Parameter>();
+        paramList.add(new Parameter("project",
+                "ws.param.project", ParameterType.project));
+        paramList.add(new Parameter("source",
+                "ws.param.source", ParameterType.input_source));
+        paramList.add(new Parameter("repository",
+                "ws.param.repository", ParameterType.visible));
+        paramList.add(new Parameter("targetGraph",
+                "ws.param.targetGraph", ParameterType.visible));
+        paramList.add(new Parameter("overwrite",
+                "ws.param.overwrite", ParameterType.visible));
+        return new Parameters(paramList);
     }
 }

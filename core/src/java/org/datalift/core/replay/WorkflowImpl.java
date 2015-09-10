@@ -16,6 +16,8 @@ import org.datalift.core.util.JsonStringMap;
 import org.datalift.core.util.VersatileProperties;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.async.Operation;
+import org.datalift.fwk.async.ParameterType;
+import org.datalift.fwk.async.Parameters;
 import org.datalift.fwk.async.Task;
 import org.datalift.fwk.async.TaskContext;
 import org.datalift.fwk.async.TaskManager;
@@ -312,20 +314,24 @@ public class WorkflowImpl extends BaseRdfEntity implements Workflow{
         Map<String, String> eventParameters = projectManager
                 .getEvent(step.getOriginEvent()).getParameters();
         Map<String, String> params = new HashMap<String, String>();
-        // for all parameters
+        TaskManager taskManager =
+                Configuration.getDefault().getBean(TaskManager.class);
+        Operation op = taskManager.getOperation(step.getOperation());
+        Parameters paramPattern = op.getBlankParameters();
         for(String param : eventParameters.keySet()){
             String value = step.getParameters().get(param);
-            if(param.startsWith(Operation.INPUT_PARAM_KEY)){
+            ParameterType type = paramPattern.getParameter(param).getType();
+            if(type.equals(ParameterType.input_source)){
                 WorkflowStep prev = this
                         .findPrevousStepUsedOnParameter(step, param);
                 params.put(param, done.get(prev).getRunningEvent()
                         .getInfluenced().toString());
-            } else if(param.equals(Operation.OUTPUT_PARAM_KEY)) {
+            } else if(type.equals(ParameterType.output_source)) {
                 params.put(param, this
                         .checkUriConflict(null).toString());
-            } else if(param.equals(Operation.PROJECT_PARAM_KEY)) {
+            } else if(type.equals(ParameterType.project)) {
                 params.put(param, project.getUri());
-            } else if(!param.startsWith(Operation.HIDDEN_PARAM_KEY)) {
+            } else if(type.isVisible()) {
                 params.put(param, properties.resolveVariables(value));
             }
         }

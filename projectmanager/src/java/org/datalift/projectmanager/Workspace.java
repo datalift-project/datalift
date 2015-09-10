@@ -106,8 +106,10 @@ import org.datalift.fwk.Configuration;
 import org.datalift.fwk.FileStore;
 import org.datalift.fwk.ResourceResolver;
 import org.datalift.fwk.async.Operation;
+import org.datalift.fwk.async.Parameter;
+import org.datalift.fwk.async.ParameterType;
+import org.datalift.fwk.async.Parameters;
 import org.datalift.fwk.async.TaskManager;
-import org.datalift.fwk.async.UnregisteredOperationException;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.CachingSource;
 import org.datalift.fwk.project.CsvSource;
@@ -243,8 +245,6 @@ public class Workspace extends BaseModule
 
     /** Project Manager bean. */
     private ProjectManager projectManager = null;
-    /** Task Manager bean. */
-    private TaskManager taskManager = null;
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -287,7 +287,6 @@ public class Workspace extends BaseModule
     @Override
     public void postInit(Configuration configuration) {
         this.projectManager = configuration.getBean(ProjectManager.class);
-        this.taskManager = configuration.getBean(TaskManager.class);
     }
 
     // ------------------------------------------------------------------------
@@ -1189,23 +1188,21 @@ public class Workspace extends BaseModule
             }
         }
         URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
-        // Retrieve project.
-        Project p = this.loadProject(projectUri);
-        Map<String, String> params = new HashMap<String, String>();
-        params.put(Operation.PROJECT_PARAM_KEY, p.getUri());
-        params.put(Operation.HIDDEN_PARAM_KEY + "title", title);
-        params.put(Operation.HIDDEN_PARAM_KEY + "description", description);
-        params.put("endpointUrl", endpointUrl);
-        params.put("sparqlQuery", sparqlQuery);
-        params.put("defaultGraph", defaultGraph);
-        params.put("user", user);
-        params.put("password", password);
-        params.put(Operation.HIDDEN_PARAM_KEY + "cacheDuration",
-                Integer.toString(cacheDuration));
+        Project p = Workspace.this.loadProject(projectUri);
+        Operation op = new UploadSparqlSource();
+        Parameters params = op.getBlankParameters();
+        params.setValue("project", projectUri.toString());
+        params.setValue("title", title);
+        params.setValue("description", description);
+        params.setValue("endpointUrl", endpointUrl);
+        params.setValue("sparqlQuery", sparqlQuery);
+        params.setValue("defaultGraph", defaultGraph);
+        params.setValue("user", user);
+        params.setValue("password", password);
+        params.setValue("cacheDuration", Integer.toString(cacheDuration));
         try {
-            this.taskManager.submit(p, new UploadSparqlSource().getOperationId(),
-                    params);
-        } catch (UnregisteredOperationException e) {
+            op.execute(params);
+        } catch (Exception e) {
             this.handleInternalError(e, "error during operation execution");
         }
         // (browsers) to the source tab of the project page.
@@ -1214,26 +1211,24 @@ public class Workspace extends BaseModule
 
     public class UploadSparqlSource extends OperationBase{
         @Override
-        public void execute(Map<String, String> parameters) throws Exception {
+        public void execute(Parameters params) throws Exception {
             Date eventStart = new Date();
-            String projectUriString = parameters.get(Operation.PROJECT_PARAM_KEY);
-            String title = parameters.get(Operation.HIDDEN_PARAM_KEY + "title");
-            if(title == null)
+            String projectUriString = params.getProjectValue();
+            String title = params.getValue("title");
+            if(title == null) {
                 title = Double.toString(Math.random()).replace(".", "");
-            String description = parameters.get(Operation.HIDDEN_PARAM_KEY + "description");
-            if(parameters.get(Operation.HIDDEN_PARAM_KEY + "description") == null)
-                description = "";
-            String endpointUrl = parameters.get("endpointUrl");
-            String sparqlQuery = parameters.get("sparqlQuery");
-            String defaultGraph = parameters.get("defaultGraph");
-            String user = parameters.get("user");
-            String password = parameters.get("password");
+            }
+            String description = params.getValue("description");
+            String endpointUrl = params.getValue("endpointUrl");
+            String sparqlQuery = params.getValue("sparqlQuery");
+            String defaultGraph = params.getValue("defaultGraph");
+            String user = params.getValue("user");
+            String password = params.getValue("password");
             int cacheDuration;
-            if(parameters.get(Operation.HIDDEN_PARAM_KEY + "cacheDuration") == null)
+            if(params.getValue("cacheDuration") == null)
                 cacheDuration = 0;
             else
-                cacheDuration = Integer.parseInt(parameters
-                        .get(Operation.HIDDEN_PARAM_KEY + "cacheDuration"));
+                cacheDuration = Integer.parseInt(params.getValue("cacheDuration"));
             // Check SPARQL query is a CONSTRUCT or DESCRIBE.
             if ((sparqlQuery == null) ||
                 (! CONSTRUCT_VALIDATION_PATTERN.matcher(sparqlQuery).find())) {
@@ -1254,7 +1249,7 @@ public class Workspace extends BaseModule
                                         title, description,
                                         endpointUrl, sparqlQuery,
                                         cacheDuration, this.getOperationId(),
-                                        parameters, eventStart);
+                                        params.getValues(), eventStart);
             src.setDefaultGraphUri(defaultGraph);
             src.setUser(user);
             src.setPassword(password);
@@ -1265,6 +1260,30 @@ public class Workspace extends BaseModule
             // Persist new source.
             Workspace.this.projectManager.saveProject(p);
             log.info("New SPARQL source \"{}\" created", sourceUri);
+        }
+
+        @Override
+        public Parameters getBlankParameters() {
+            Collection<Parameter> paramList = new ArrayList<Parameter>();
+            paramList.add(new Parameter("project",
+                    "ws.param.project", ParameterType.project));
+            paramList.add(new Parameter("title",
+                    "ws.param.srcName", ParameterType.hidden));
+            paramList.add(new Parameter("description",
+                    "ws.param.description", ParameterType.hidden));
+            paramList.add(new Parameter("cacheDuration",
+                    "ws.param.fileName", ParameterType.hidden));
+            paramList.add(new Parameter("endpointUrl",
+                    "ws.param.endpointUrl", ParameterType.visible));
+            paramList.add(new Parameter("sparqlQuery",
+                    "ws.param.sparqlQuery", ParameterType.visible));
+            paramList.add(new Parameter("defaultGraph",
+                    "ws.param.defaultGraph", ParameterType.visible));
+            paramList.add(new Parameter("user",
+                    "ws.param.user", ParameterType.visible));
+            paramList.add(new Parameter("password",
+                    "ws.param.password", ParameterType.visible));
+            return new Parameters(paramList);
         }
     }
     
@@ -1374,8 +1393,8 @@ public class Workspace extends BaseModule
         Project p = this.loadProject(projectUri);
         String filePath = this.getProjectFilePath(projectId,
                 this.toFileName(fileDisposition.getFileName()));
-        boolean stream = !this.toFileName(
-                fileDisposition.getFileName()).trim().isEmpty();
+        boolean stream = ! isBlank(this.toFileName(
+                fileDisposition.getFileName()));
         if (stream) {
             try {
                 FileStore fs = this.getFileStore();
@@ -1387,20 +1406,18 @@ public class Workspace extends BaseModule
                         this.toFileName(fileDisposition.getFileName()));
             }
         }
-        Map<String, String> params = new HashMap<String, String>();
-        params.put(Operation.PROJECT_PARAM_KEY, p.getUri());
-        params.put(Operation.HIDDEN_PARAM_KEY + "srcName", srcName);
-        params.put(Operation.HIDDEN_PARAM_KEY + "description", description);
-        params.put("sourceUrl", sourceUrl);
-        params.put(Operation.HIDDEN_PARAM_KEY + "fileName", fileDisposition.getFileName());
-        if (stream)
-            params.put(Operation.HIDDEN_PARAM_KEY + "tempFilePath", filePath);
-        else
-            params.put(Operation.HIDDEN_PARAM_KEY + "tempFilePath", "NULL");
+        Operation op = new UploadXmlSource();
+        Parameters params = op.getBlankParameters();
+        params.setValue("project", p.getUri());
+        params.setValue("srcName", srcName);
+        params.setValue("description", description);
+        params.setValue("sourceUrl", sourceUrl);
+        if (stream) {
+            params.setValue("filePath", filePath);
+        }
         try {
-            this.taskManager.submit(p, new UploadXmlSource().getOperationId(),
-                    params);
-        } catch (UnregisteredOperationException e) {
+            op.execute(params);
+        } catch (Exception e) {
             this.handleInternalError(e, "error during operation execution");
         }
         // (browsers) to the source tab of the project page.
@@ -1411,31 +1428,25 @@ public class Workspace extends BaseModule
 
         /** {@inheritDoc} */
         @Override
-        public void execute(Map<String, String> parameters) throws Exception {
+        public void execute(Parameters params) throws Exception {
             Date eventStart = new Date();
-            String projectUriString = parameters.get(Operation.PROJECT_PARAM_KEY);
-            String srcName = parameters.get(Operation.HIDDEN_PARAM_KEY + "srcName");
+            String projectUriString = params.getProjectValue();
+            String srcName = params.getValue("srcName");
             if(srcName == null)
                 srcName = Double.toString(Math.random()).replace(".", "");
-            String description = parameters.get(Operation.HIDDEN_PARAM_KEY + "description");
-            if(description == null)
-                description = "";
-            String sourceUrl = parameters.get("sourceUrl");
-            String fileName = parameters.get(Operation.HIDDEN_PARAM_KEY + "fileName");
-            if(fileName == null)
-                fileName = "";
-            String tempFilePath = parameters.get(Operation.HIDDEN_PARAM_KEY + "tempFilePath");
-            if(tempFilePath == null)
-                tempFilePath = "NULL";
+            String description = params.getValue("description");
+            String sourceUrl = params.getValue("sourceUrl");
+            String filePath = params.getValue("filePath");
             InputStream fileData = null;
             File localFile = null;
-            if(!tempFilePath.equals("NULL")){
+            String fileName = null;
+            if (filePath != null) {
                 FileStore fs = Workspace.this.getFileStore();
-                localFile = fs.getFile(tempFilePath);
+                localFile = fs.getFile(filePath);
                 fileData = new FileInputStream(localFile);
+                fileName = localFile.getName();
             }
             URL fileUrl = null;
-            fileName = Workspace.this.toFileName(fileName);
             if (! isBlank(sourceUrl)) {
                 try {
                     fileUrl = new URL(sourceUrl);
@@ -1449,6 +1460,8 @@ public class Workspace extends BaseModule
                     fileName = Workspace.this.extractFileName(fileUrl, "xml");
                     // Reset input stream to force downloading data from source URL.
                     fileData = null;
+                    Workspace.this.deleteFileStorage(localFile);
+                    localFile = null;
                 }
                 // Else: Read data from uploaded file but preserve source URL
                 //       to resolve external dependencies (such as DTDs).
@@ -1471,14 +1484,18 @@ public class Workspace extends BaseModule
                 Project p = Workspace.this.loadProject(projectUri);
                 // Save new source data to public project storage.
                 if(fileData == null){
+                    String projectId = projectUriString
+                            .substring(projectUriString.lastIndexOf("/") + 1);
+                    filePath = Workspace.this.getProjectFilePath(projectId, fileName);
                     localFile = Workspace.this.getFileData(fileData, fileUrl,
-                            tempFilePath, Arrays
+                            filePath, Arrays
                             .asList(APPLICATION_XML_TYPE, TEXT_XML_TYPE), false);
+                    fileName = localFile.getName();
                 }
                 // Initialize new source.
                 XmlSource src = Workspace.this.projectManager.newXmlSource(p,
-                        sourceUri, srcName, description, tempFilePath,
-                        this.getOperationId(), parameters, eventStart);
+                        sourceUri, srcName, description, filePath,
+                        this.getOperationId(), params.getValues(), eventStart);
                 if (fileUrl != null) {
                     src.setSourceUrl(fileUrl.toString());
                 }
@@ -1521,6 +1538,22 @@ public class Workspace extends BaseModule
                     Workspace.this.deleteFileStorage(localFile);
                 }
             }
+        }
+
+        @Override
+        public Parameters getBlankParameters() {
+            Collection<Parameter> paramList = new ArrayList<Parameter>();
+            paramList.add(new Parameter("project",
+                    "ws.param.project", ParameterType.project));
+            paramList.add(new Parameter("srcName",
+                    "ws.param.srcName", ParameterType.hidden));
+            paramList.add(new Parameter("description",
+                    "ws.param.description", ParameterType.hidden));
+            paramList.add(new Parameter("filePath",
+                    "ws.param.fileName", ParameterType.hidden));
+            paramList.add(new Parameter("sourceUrl",
+                    "ws.param.sourceUrl", ParameterType.input));
+            return new Parameters(paramList);
         }
         
     }
@@ -2189,6 +2222,8 @@ public class Workspace extends BaseModule
         class paramExtractor{
             private Map<URI, Event> crs = creationByInfluenced;
             JSONObject extract(Event e, JSONObject json) throws JSONException{
+                TaskManager taskManager =
+                        Configuration.getDefault().getBean(TaskManager.class);
                 JSONObject jobj;
                 if(json == null)
                     jobj = new JSONObject();
@@ -2196,15 +2231,11 @@ public class Workspace extends BaseModule
                     jobj = json;
                 JSONObject jstep = new JSONObject();
                 jstep.put("operation", e.getOperation().toString());
-                JsonStringMap params = new JsonStringMap();
-                for(Entry<String, String> entry : e.getParameters().entrySet()){
-                    if(!entry.getKey().equals(Operation.PROJECT_PARAM_KEY) &&
-                            !entry.getKey().equals(Operation.OUTPUT_PARAM_KEY) &&
-                            !entry.getKey().startsWith(Operation.INPUT_PARAM_KEY) &&
-                            !entry.getKey().startsWith(Operation.HIDDEN_PARAM_KEY))
-                        params.put(entry.getKey(), entry.getValue());
-                }
-                jstep.put("parameters", params.getJSONObject());
+                Parameters params = taskManager.getOperation(
+                        e.getOperation()).getBlankParameters();
+                params.setValues(e.getParameters());
+                jstep.put("parameters", new JsonStringMap(
+                        params.getVisibleValues()).getJSONObject());
                 JSONArray prev = new JSONArray();
                 for(URI usedUri : e.getUsed()){
                     Event previous = this.crs.get(usedUri);

@@ -1,6 +1,7 @@
 package org.datalift.core.async;
 
 import java.net.URI;
+//import java.security.Policy.Parameters;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -15,6 +16,7 @@ import java.util.concurrent.Future;
 
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.async.Operation;
+import org.datalift.fwk.async.Parameters;
 import org.datalift.fwk.async.Task;
 import org.datalift.fwk.async.TaskContext;
 import org.datalift.fwk.async.TaskManager;
@@ -111,7 +113,9 @@ public class TaskManagerImpl implements TaskManager{
             SynchroneTask task = new SynchroneTask(op, parameters);
             try {
                 task.setStatus(TaskStatus.runStatus);
-                op.execute(parameters);
+                Parameters params = op.getBlankParameters();
+                params.setValues(parameters);
+                op.execute(params);
             } catch (Exception e) {
                 task.setStatus(TaskStatus.failStatus);
                 ((TaskContextImpl) TaskContext.getCurrent()).endOperation(false);
@@ -140,6 +144,12 @@ public class TaskManagerImpl implements TaskManager{
             return task.getStatus();
         }
     }
+    
+    /** {@inheritDoc} */
+    @Override
+    public Operation getOperation(URI uri) {
+        return this.operations.get(uri.toString());
+    }
 
     //runable class to execute a task on a different thread
     private class TaskExecution implements Runnable{
@@ -166,7 +176,9 @@ public class TaskManagerImpl implements TaskManager{
             this.task.setStatus(TaskStatus.runStatus);
             this.dao.save(this.task);
             try {
-                this.task.getOperation().execute(this.task.getParmeters());
+                Parameters params = this.task.getOperation().getBlankParameters();
+                params.setValues(this.task.getParmeters());
+                this.task.getOperation().execute(params);
                 this.task.setStatus(TaskStatus.doneStatus);
                 this.dao.delete(this.task);
                 this.task.setRunningEvent(((TaskContextImpl) TaskContext

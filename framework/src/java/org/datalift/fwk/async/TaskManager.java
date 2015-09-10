@@ -35,4 +35,12 @@ public interface TaskManager extends LifeCycle{
      * @return  the status of the task
      */
     public TaskStatus waitForEnding(Task task);
+    
+    /**
+     * Return the Operation that match with the given URI
+     * 
+     * @param uri   the Operation Id
+     * @return  the Operation
+     */
+    public Operation getOperation(URI uri);
 }

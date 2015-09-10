@@ -36,9 +36,9 @@ package org.datalift.converter;
 
 
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.regex.Pattern;
 
 import javax.ws.rs.Consumes;
@@ -53,6 +53,9 @@ import javax.ws.rs.core.Response;
 
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.async.Operation;
+import org.datalift.fwk.async.Parameter;
+import org.datalift.fwk.async.ParameterType;
+import org.datalift.fwk.async.Parameters;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectModule;
@@ -164,23 +167,20 @@ public class RdfLoader extends BaseConverterModule implements Operation
         if (! UriParam.isSet(targetGraphParam)) {
             this.throwInvalidParamError(GRAPH_URI_PARAM, null);
         }
+        Project p = this.getProject(projectId.toUri(PROJECT_ID_PARAM));
+        Parameters params = this.getBlankParameters();
+        params.setValue("project", projectId.toUri().toString());
+        params.setValue("source", sourceId.toUri().toString());
+        params.setValue("destTitle", destTitle);
+        params.setValue("targetGraph", targetGraphParam.toUri().toString());
+        params.setValue("uriPattern", uriPattern);
+        params.setValue("uriReplacement", uriReplacement);
         try {
-            Project p = this.getProject(projectId.toUri(PROJECT_ID_PARAM));
-            Map<String, String> params = new HashMap<String, String>();
-            params.put(Operation.PROJECT_PARAM_KEY, projectId.toUri().toString());
-            params.put(Operation.INPUT_PARAM_KEY + "source",
-                    sourceId.toUri().toString());
-            params.put(Operation.HIDDEN_PARAM_KEY + "destTitle", destTitle);
-            params.put(Operation.HIDDEN_PARAM_KEY + "targetGraphParam",
-                    targetGraphParam.toUri().toString());
-            params.put("uriPattern", uriPattern);
-            params.put("uriReplacement", uriReplacement);
-            this.taskManager.submit(p, this.getOperationId(), params);
-            return Response.seeOther(URI.create(p.getUri() + "#source")).build();
+            this.execute(params);
+        } catch (Exception e) {
+            this.handleInternalError(e);
         }
-        catch (Exception e) {
-            throw new TechnicalException(e);
-        }
+        return Response.seeOther(URI.create(p.getUri() + "#source")).build();
     }
 
     //-------------------------------------------------------------------------
@@ -193,27 +193,23 @@ public class RdfLoader extends BaseConverterModule implements Operation
     }
 
     @Override
-    public void execute(Map<String, String> parameters) throws Exception {
+    public void execute(Parameters params) throws Exception {
         try {
             Date start = new Date();
-            URI projectId = URI.create(parameters
-                    .get(Operation.PROJECT_PARAM_KEY));
-            URI sourceId = URI.create(parameters
-                    .get(Operation.INPUT_PARAM_KEY + "source"));
-            String destTitle;
-            if(parameters.get(Operation.HIDDEN_PARAM_KEY + "destTitle") == null)
+            URI projectId = URI.create(params.getProjectValue());
+            URI sourceId = URI.create(params.getValue("source"));
+            String destTitle = params.getValue("destTitle");
+            if (destTitle == null) {
                 destTitle = Double.toString(Math.random()).replace(".", "");
-            else
-                destTitle = parameters.get(Operation.HIDDEN_PARAM_KEY + "destTitle");
-            URI targetGraph;
-            if(parameters.get(Operation.HIDDEN_PARAM_KEY + "targetGraphParam") == null)
-                targetGraph = URI.create(sourceId.toString() +
-                        "/" + destTitle + "/loadedGraph");
-            else
-                targetGraph = URI.create(parameters
-                        .get(Operation.HIDDEN_PARAM_KEY + "targetGraphParam"));
-            String uriPattern = parameters.get("uriPattern");
-            String uriReplacement = parameters.get("uriReplacement");
+            }
+            String targetGraphStr = params.getValue("targetGraph");
+            if(targetGraphStr == null) {
+                targetGraphStr = sourceId.toString() + "/" + destTitle +
+                        "/loadedGraph";
+            }
+            URI targetGraph = URI.create(targetGraphStr);
+            String uriPattern = params.getValue("uriPattern");
+            String uriReplacement = params.getValue("uriReplacement");
             // Retrieve project.
             Project p = this.getProject(projectId);
             // Load input source.
@@ -251,7 +247,7 @@ public class RdfLoader extends BaseConverterModule implements Operation
                 baseUri = URI.create(in.getBaseUri());
             }
             this.addResultSource(p, in, destTitle,
-                    targetGraph, baseUri, this.getOperationId(), parameters,
+                    targetGraph, baseUri, this.getOperationId(), params.getValues(),
                     start);
             log.info("RDF data from \"{}\" successfully loaded into \"{}\"",
                                                         sourceId, targetGraph);
@@ -260,5 +256,23 @@ public class RdfLoader extends BaseConverterModule implements Operation
             e.printStackTrace();
             throw new TechnicalException(e);
         }
+    }
+    
+    @Override
+    public Parameters getBlankParameters() {
+        Collection<Parameter> paramList = new ArrayList<Parameter>();
+        paramList.add(new Parameter("project",
+                "ws.param.project", ParameterType.project));
+        paramList.add(new Parameter("source",
+                "ws.param.source", ParameterType.input_source));
+        paramList.add(new Parameter("destTitle",
+                "ws.param.destTitle", ParameterType.hidden));
+        paramList.add(new Parameter("targetGraph",
+                "ws.param.targetGraph", ParameterType.hidden));
+        paramList.add(new Parameter("uriPattern",
+                "ws.param.uriPattern", ParameterType.visible));
+        paramList.add(new Parameter("uriReplacement",
+                "ws.param.uriReplacement", ParameterType.visible));
+        return new Parameters(paramList);
     }
 }
