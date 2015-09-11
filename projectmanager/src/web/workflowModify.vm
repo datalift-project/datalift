@@ -1,31 +1,32 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 #load("project/resources")
 #load_core_resources
-	<title>#i18n("workspace.title") - DataLift</title>
+    <title>#i18n("workspace.title") - DataLift</title>
 #css_links
 </head>
 <body>
 #banner
-	<div id="main-menu" style="position:absolute;top:15px;right:15px;">
+    <div id="main-menu" style="position:absolute;top:15px;right:15px;">
 #foreach( $m in $mainMenu )
 #set( $entryUrl = $m.getUrl(${baseUri}) )
 #if( $m.method.name() == "GET" )
-		<a href="${entryUrl}" class="button">${m.label}</a>
+        <a href="${entryUrl}" class="button">${m.label}</a>
 #else
-		<form method="post" action="${entryUrl}"><input type="submit" class="button" value="${m.label}"/></form>
+        <form method="post" action="${entryUrl}"><input type="submit" class="button" value="${m.label}"/></form>
 #end
 #end
-	</div>
+    </div>
 
 <div id="workspace_1" class="ui-widget-content">
 #if( $current )
-	<h3 class="ui-widget-header dl-widget-header">Modification du Workflow #i18n("$current.title")</h3>
+    <h3 class="ui-widget-header dl-widget-header">Modification du Workflow #i18n("$current.title")</h3>
 #else
-	<h3 class="ui-widget-header dl-widget-header">Nouveau Workflow</h3>
+    <h3 class="ui-widget-header dl-widget-header">Nouveau Workflow</h3>
 #end
+<<<<<<< HEAD
 	<div class="dl-panel">
 		<a href="http://localhost:9091/project" style="margin:3px;">Retour à l'espace de travail</a>
 		<div id="accordion">
@@ -101,12 +102,90 @@
 			</div>
 		</div>
 	</div>
+=======
+    <div class="dl-panel">
+        <a href="http://localhost:9091/project" style="margin:3px;">Retour à l'espace de travail</a>
+        <div id="accordion">
+            <h3><a href="#"></a></h3>
+            <div>
+                <form method="post" class="form_formated">
+                    <p><label for="title">#i18n("project.upload_worflow.title"):</label>
+                    <input type="text" id="title" name="title" value="$!esc.html($current.title)" autofocus="true"/></p>
+                    <p><label for="source_url">#i18n("project.upload_worflow.description"):</label>
+                    <input type="text" id="source_url" name="source_url" value="$!esc.html($current.source)"/></p>
+                    <p id="workflow">
+                        <form>
+                            <table id="selectable_workflows">
+                                <tr><td/></tr>
+                            </table>
+                            <div id="selectable_workflows_toolbar"></div>
+                        </form>
+                    </p>
+                    <p>
+                        <input type="button" onclick="nextPage()" value="Suivant"/>
+                    #if( $current )
+                        <input type="button" onclick="next()" value="Garder le même évènement"/></p>
+                    #end
+                    </p>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="workspace_2" style="display:none;">
+#if( $current )
+    <h3 class="ui-widget-header dl-widget-header">Nouveau du projet #i18n("project") $!esc.html($current.title)</h3>
+#else
+    <h3 class="ui-widget-header dl-widget-header">Modification du projet #i18n("workspace.title")</h3>
+#end
+    <div class="dl-panel">
+        <a href="http://localhost:9091/project" class="ui-widget-content" style="border:none;">Retour à l'espace de travail</a>
+        <div id="accordion1">
+            <h3><a href="#"></a></h3>
+            <div class="group">
+                <h3 class="ui-widget-header dl-widget-header">Variables</h3>
+                <form>
+                    <div id="dynamicInput">
+                    #if( $current )
+                        #foreach( $c in $current.getVariables().entrySet() )
+                        <div style="margin:5px;">
+                            <input type="text" name="keys" style="width:15%;" value="$c.getKey()"/>
+                            <input type="text" name="values" style="width:60%;" value="$c.getValue()"/>
+                        </div>
+                        #end
+                    #end
+                        <div style="margin:5px;">
+                            <input type="text" name="keys" style="width:15%;"/>
+                            <input type="text" name="values" style="width:60%;"/>
+                        </div>
+                    </div>
+                    <input type="button" value="Ajouter" onClick="addInput('dynamicInput');" style="margin:5px;"/>
+                </form>
+                <div style="width:18%;float:left;" class="ui-widget-content">
+                    <h3 class="ui-widget-header dl-widget-header">Title</h3>
+                    <ul id="subEvents" style="list-style-type:none;padding:0px;">
+                          
+                    </ul>
+                </div>
+                <div style="width:81%;float:right;">
+                    <h3 class="ui-widget-header dl-widget-header" id="operation">Operations</h3>
+                    <form id="parameters" class="form_formated" method="post">
+                    
+                    </form>
+                    <hr/>
+                    <input type="button" id="valid" value="envoyer" class="button"/>
+                </div>
+            </div>
+        </div>
+    </div>
+>>>>>>> 38fd4b6e7c8fbfaf7a3ec69b46f6ac0c1cc625bc
 </div>
 <div style="clear:both"></div>
 #footer
 
 #script_links
 <script type="text/javascript">
+<<<<<<< HEAD
 	var sub = {};
 	$("input:submit").button();
 	$("input:button").button();
@@ -273,16 +352,232 @@
 		console.log(obj);
 		console.log(JSON.stringify(obj));
 		$.ajax({
+=======
+    var sub = {};
+    $("input:submit").button();
+    $("input:button").button();
+    $("#main-menu .button").button();
+    jQuery("#selectable_workflows").jqGrid({
+        datatype: "local",
+        colNames:['#i18n("project.p_uri")','Date','Operation','Agent','#i18n("project.p_others")'],
+        colModel:[
+            {name:'uri',   index:'uri',   sorttype:"text"},
+            {name:'date',   index:'date',   sorttype:"text"},
+            {name:'operation', index:'operation', sorttype:"text"},
+            {name:'agent', index:'agent', sorttype:"text"},
+            {name:'usedSources', index:'usedSources', sorttype:"text"} 
+        ],
+        caption: "",
+        rowNum: 10,
+        rowList: [10,20,30],
+        pager: '#selectable_workflows_toolbar',
+        gridview: true,
+        height: 250
+    });
+    var mydataWorkflow =[
+    #foreach( $curWfl in $outputs )
+        {
+            uri         : "$!esc.javascript($curWfl.getUri())",
+            date        : "$!esc.javascript($curWfl.getStartTime())",
+            operation   : "$!esc.javascript($curWfl.getOperation())",
+            agent       : "$!esc.javascript($curWfl.getAgent())",
+            usedSources : "$!esc.javascript($curWfl.getUsed().iterator().next())"
+        },
+    #end
+    ];
+    for(var i=0; i<=mydataWorkflow.length; i++){
+        jQuery("#selectable_workflows").jqGrid("addRowData",i+1,mydataWorkflow[i]);
+    }
+    jQuery("#selectable_workflows").jqGrid('hideCol',["uri"]);
+    $("#accordion").accordion({
+        autoHeight: false,
+        navigation: true
+    });
+    $("#accordion1").accordion({
+        autoHeight: false,
+        navigation: true,
+        heightStyle: "content"
+    });
+    $("#selectable_workflows").setGridWidth($("#accordion").width() - 80);
+    function nextPage(){
+        var id = jQuery("#selectable_workflows").getGridParam('selrow');
+        if(id){
+            var events = jQuery("#selectable_workflows").getRowData(id);
+            $("#workspace_1").css("display","none");
+            $("#workspace_2").css("display","block");
+            var uri = events.uri;
+            sessionStorage["origin"] = events.uri;
+            uri = uri+"/parameters";
+            uri = uri.replace("event", "output");
+            console.log(uri);
+            
+            setEvents(uri);
+            writeGraph();
+            console.log("writeGraph");
+        } else {
+            alert("#i18n("project.msg.select_row")");
+        }
+    }
+    function next(){
+        sessionStorage["result"] = '$esc.javascript($current.getOutputStep().toString())';
+        sessionStorage["origin"] = '$esc.javascript($current.getOriginEvent().toString())';
+        $("#workspace_1").css("display","none");
+        $("#workspace_2").css("display","block");
+        console.log(sessionStorage);
+        writeGraph();
+    }
+    function addInput(divName){
+        var newdiv = document.createElement('div');
+        newdiv.style.margin = "5px";
+        htmlCode = "<input type='text' name='keys' style='width:15%;margin-right:5px;'>";
+        htmlCode = htmlCode+"<input type='text' name='values' style='width:60%;'>";
+        newdiv.innerHTML = htmlCode;
+        document.getElementById(divName).appendChild(newdiv);
+    }
+    function setEvents(uri){
+        $.ajax({
+            url : uri,
+            type : 'GET',
+            error : function(){
+            },
+            success : function(result, status, error){
+                //sessionStorage["uri"] = uri;
+                console.log(result);
+                sessionStorage["result"] = result;
+            }
+        });
+    }
+    function getJSON(){
+        var json = JSON.parse(sessionStorage.getItem("result"));
+        return json;
+    }
+    function writeGraph(){
+        sub = getJSON();
+        console.log(sub);
+        var htmlCode = "";
+        var names = {};
+        $.each(sub, function(key, val) {
+            names[key] = parseInt(Math.random()*1000);
+        });
+        console.log(names);
+        $.each(sub, function(key, val) {
+            console.log(key);
+            htmlCode = htmlCode+'<li class="ui-widget-header" style="list-style-type:none;"><a href="'+key+'" onClick="go(this);return false;">step '+names[key]+'</a></li>';
+            if(val.previous!=undefined){
+                $.each(val.previous, function(k,v){
+                    console.log(v);
+                    htmlCode = htmlCode+'<li>&emsp;&emsp;&emsp;<a href="'+v+'" onClick="go(this);return false;">step '+names[v]+'</a></li>';
+                });
+            }
+        });
+        console.log(htmlCode);
+        $("#subEvents").html(htmlCode);
+    }
+    function go(p){
+        var htmlCode = "";
+        htmlCode = htmlCode + '<p style="font-weight:bold;"><span style="display:inline-block;width:22%;">operation</span>'+sub[p].operation+'</p>';
+        $.each(sub[p].parameters, function(key, val){
+            htmlCode = htmlCode + "<p><label>"+key+"</label>";              
+            htmlCode = htmlCode + '<input type="text" value="'+val+'" name="values1" onchange="setObj(\''+p+'\')"/></p>';
+            htmlCode = htmlCode + '<input type="hidden" value="'+key+'" name="keys1"/>';
+        });
+        htmlCode = htmlCode +'<input type="hidden" id="uri" value="'+p+'"/>';
+        $("#parameters").html(htmlCode);
+        $("#operation").html("<i>"+p+"</i>");
+        return false;
+    }
+    $("#valid").click(
+    function(){
+        var obj = {};
+        obj["title"] = $("#title").val();
+        obj["description"] = $("#source_url").val();
+        obj["origin"] = sessionStorage.getItem("origin");
+        obj["variables"] = getVars();
+        //var json = getJSON();
+        var uri = $("#uri").val();
+        $.each(sub, function(key, val) {
+            sub[key] = val;
+            if(key == uri){
+                sub[key]["parameters"] = getParams();
+            }
+        });
+        obj["output"] = sub;
+        console.log(obj);
+        console.log(JSON.stringify(obj));
+        
+        $.ajax({
+>>>>>>> 38fd4b6e7c8fbfaf7a3ec69b46f6ac0c1cc625bc
             url: "$posturl",
             type: 'post',
             dataType: 'json',
-			contentType : 'text/plain; charset=utf-8',
+            contentType : 'text/plain; charset=utf-8',
             data: JSON.stringify(obj),
-			cache: false,
-			complete : function(){
-				window.location = "${baseUri}/project#workflow";
-			}
+            cache: false,
+            complete : function(){
+                window.location = "${baseUri}/project#workflow";
+            }
         });
+    });
+    function getKeys(){
+        var obj = document.getElementsByName('keys');
+        var keys = [];
+        $.each(obj, function(key, val){
+            keys.push(val.value);
+        });
+        return keys;
+    }
+    function getValues(){
+        var obj = document.getElementsByName('values');
+        var values = [];
+        $.each(obj, function(key, val){
+            values.push(val.value);
+        });
+        return values;
+    }
+    function getVars(){
+        var vars = {};
+        var keys=getKeys();
+        var values=getValues();
+        for(var i=0; i<keys.length; i++){
+            if(keys[i] && values[i])
+                vars[keys[i]]=values[i];
+        }
+        return vars;
+    }
+    function getKeys1(){
+        var obj = document.getElementsByName('keys1');
+        var keys = [];
+        $.each(obj, function(key, val){
+            keys.push(val.value);
+        });
+        return keys;
+    }
+    function getValues1(){
+        var obj = document.getElementsByName('values1');
+        var values = [];
+        $.each(obj, function(key, val){
+            values.push(val.value);
+        });
+        return values;
+    }
+    function getParams(){
+        var params = {};
+        var keys=getKeys1();
+        var values=getValues1();
+        for(var i=0; i<keys.length; i++){
+            params[keys[i]]=values[i];
+        }
+        return params;
+    }
+    function setObj(p){
+        var uri = $("#uri").val();
+        $.each(sub, function(key, val) {
+            sub[key] = val;
+            if(key == uri){
+                sub[key]["parameters"] = getParams();
+            }
+        });
+<<<<<<< HEAD
 	});
 	function getKeys(){
 		var obj = document.getElementsByName('keys');
@@ -347,6 +642,9 @@
 	function isExist(str, arr){
 		return arr.indexOf(str);
 	}
+=======
+    }
+>>>>>>> 38fd4b6e7c8fbfaf7a3ec69b46f6ac0c1cc625bc
 </script>
 </body>
 </html>

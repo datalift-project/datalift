@@ -4,7 +4,6 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -16,16 +15,16 @@ import org.datalift.core.project.BaseRdfEntity;
 import org.datalift.core.util.JsonStringMap;
 import org.datalift.core.util.VersatileProperties;
 import org.datalift.fwk.Configuration;
+import org.datalift.fwk.async.Operation;
 import org.datalift.fwk.async.Task;
 import org.datalift.fwk.async.TaskContext;
 import org.datalift.fwk.async.TaskManager;
 import org.datalift.fwk.async.TaskStatus;
-import org.datalift.fwk.project.GenericRdfDao;
-import org.datalift.fwk.project.Ontology;
+import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectManager;
-import org.datalift.fwk.project.Source;
 import org.datalift.fwk.prov.Event;
+import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.replay.Workflow;
 import org.datalift.fwk.replay.WorkflowStep;
 import org.json.JSONException;
@@ -205,6 +204,7 @@ public class WorkflowImpl extends BaseRdfEntity implements Workflow{
     /** {@inheritDoc} */
     @Override
     public void replay(Map<String, String> variables){
+        this.refrechJsons();
         List<Collection<WorkflowStep>> steps =
                 new ArrayList<Collection<WorkflowStep>>();
         ProjectManager projectManager =
@@ -212,6 +212,7 @@ public class WorkflowImpl extends BaseRdfEntity implements Workflow{
         Event origin = projectManager.getEvent(this.origin);
         Project project = origin.getProject();
         Task fail = null;
+        Event parentEvent = null;
         try{
             // build the Replay levels
             steps.add(new ArrayList<WorkflowStep>());
@@ -222,61 +223,63 @@ public class WorkflowImpl extends BaseRdfEntity implements Workflow{
             while(!steps.get(i).isEmpty()){
                 steps.add(new ArrayList<WorkflowStep>());
                 for(WorkflowStep step : steps.get(i)){
-                    for(WorkflowStep prev : step.getPreviousSteps()){
-                        if(standBy.containsKey(prev)){
-                            if(standBy.get(prev) ==
-                                    prev.getNextSteps().size() - 1){
-                                steps.get(i + 1).add(prev);
-                                standBy.remove(prev);
+                    if(step.getPreviousSteps() != null)
+                        for(WorkflowStep prev : step.getPreviousSteps()){
+                            if(standBy.containsKey(prev)){
+                                if(standBy.get(prev) ==
+                                        prev.getNextSteps().size() - 1){
+                                    steps.get(i + 1).add(prev);
+                                    standBy.remove(prev);
+                                } else {
+                                    standBy.put(prev,
+                                            new Integer(standBy.get(prev) + 1));
+                                }
                             } else {
-                                standBy.put(prev,
-                                        new Integer(standBy.get(prev) + 1));
+                                if(prev.getNextSteps().size() > 1)
+                                    standBy.put(prev, new Integer(1));
+                                else
+                                    steps.get(i + 1).add(prev);
                             }
-                        } else {
-                            if(prev.getNextSteps().size() > 1)
-                                standBy.put(prev, new Integer(1));
-                            else
-                                steps.get(i + 1).add(prev);
                         }
-                    }
                 }
                 i++;
             }
             steps.remove(i);
             //execute steps by level
             VersatileProperties properties = new VersatileProperties();
-            for(Entry<String, String> prop : this.vars.entrySet())
-                properties.putString(prop.getKey(), prop.getValue());
+            if(this.vars != null)
+                for(Entry<String, String> prop : this.vars.entrySet())
+                    properties.putString(prop.getKey(), prop.getValue());
             Map<WorkflowStep, Task> done = new HashMap<WorkflowStep, Task>();
             TaskManager taskManager =
                     Configuration.getDefault().getBean(TaskManager.class);
             TaskContext context = TaskContext.getCurrent();
             ((TaskContextBase) context).startOperation(project, URI.create(
-                    "http://www.datalift.org/core/operation/replay"), null);
-            Event parentEvent = context.beginAsEvent(
+                    "http://www.datalift.org/core/workflowImpl/operation/replay"),
+                    null);
+            parentEvent = context.beginAsEvent(
                     Event.INFORMATION_EVENT_TYPE, Event.WORKFLOW_EVENT_SUBJECT);
             for(int j = steps.size() - 1; j >= 0 && fail == null; j--){
                 List<Task> tasks = new ArrayList<Task>();
                 for(WorkflowStep step : steps.get(j)){
+                    Map<String, String> eventParameters = projectManager
+                            .getEvent(step.getOriginEvent()).getParameters();
                     Map<String, String> params = new HashMap<String, String>();
-                    for(String param : step.getParameters().keySet()){
+                    for(String param : eventParameters.keySet()){
                         String value = step.getParameters().get(param);
-                        if(value.trim().equals("$INPUT") ||
-                                value.trim().equals("${INPUT}")){
-                            properties.putString("INPUT",
-                                    done.get(
-                                    this.foundPrevousStepUsedOnParameter(step,
-                                    param)).getRunningEvent().getInfluenced()
-                                    .toString());
-                        } else {
-                            if((value.contains("$INPUT") ||
-                                    value.contains("${INPUT}")) &&
-                                    step.getPreviousSteps().size() != 2)
-                                throw new RuntimeException(
-                                        "ambiguous variable INPUT on parameter : " +
-                                        value);
+                        if(param.startsWith(Operation.INPUT_PARAM_KEY)){
+                            WorkflowStep prev = this
+                                    .findPrevousStepUsedOnParameter(step, param);
+                            params.put(param, done.get(prev).getRunningEvent()
+                                    .getInfluenced().toString());
+                        } else if(param.equals(Operation.OUTPUT_PARAM_KEY)) {
+                            params.put(param, this
+                                    .checkUriConflict(null).toString());
+                        } else if(param.equals(Operation.PROJECT_PARAM_KEY)) {
+                            params.put(param, project.getUri());
+                        } else if(!param.startsWith(Operation.HIDDEN_PARAM_KEY)) {
+                            params.put(param, properties.resolveVariables(value));
                         }
-                        params.put(param, properties.resolveVariables(value));
                     }
                     Task task = taskManager.submit(
                             project, step.getOperation(), params);
@@ -289,50 +292,25 @@ public class WorkflowImpl extends BaseRdfEntity implements Workflow{
                         fail = t;
                 }
             }
-            // delete events and sources produced during the replay
-            project = projectManager.findProject(URI.create(project.getUri()));
-            Collection<Source> sourcesToDel = new ArrayList<Source>();
-            Collection<URI> ToDel = new ArrayList<URI>();
-            Collection<Workflow> workflowsToDel = new ArrayList<Workflow>();
-            GenericRdfDao dao = projectManager.getRdfDao();
-            Collection<Event> allEvents = this.foundAllInformatedEvent(
-                    projectManager.getEvents(project).values(), parentEvent);
-            for(Event e : allEvents){
-                if(e.getEventType() == Event.CREATION_EVENT_TYPE){
-                    Source s = project.getSource(e.getInfluenced());
-                    Workflow w = project.getWorkflow(e.getInfluenced());
-                    if(s != null)
-                        sourcesToDel.add(s);
-                    else if(w != null)
-                        workflowsToDel.add(w);
-                    else
-                        ToDel.add(e.getInfluenced());
-                }
-                dao.delete(e);
-            }
-            for(Source s : sourcesToDel)
-                project.remove(s);
-            for(Workflow w : workflowsToDel)
-                project.removeWorkflow(w.getUri());
-            for(URI o : ToDel){
-                Ontology onto = null;
-                for(Ontology ponto : project.getOntologies())
-                    if(ponto.getUri().equals(o.toString()))
-                        onto = ponto;
-                if(onto != null)
-                    project.removeOntology(onto.getTitle());
-            }
-            projectManager.saveProject(project);
-            allEvents = this.foundAllInformatedEvent(
-                    projectManager.getEvents(project).values(), parentEvent);
-            for(Event e : allEvents)
-                dao.delete(e);
-            if(fail == null)
-                ((TaskContextBase) context).endOperation(true);
-            else
-                ((TaskContextBase) context).endOperation(false);
         } catch (Exception e){
             throw new RuntimeException(e);
+        } finally {
+            if(parentEvent != null){
+                projectManager.purgeEventChildrens(parentEvent, true);
+                if(fail == null)
+                    ((TaskContextBase) TaskContext.getCurrent()).endOperation(true);
+                else
+                    ((TaskContextBase) TaskContext.getCurrent()).endOperation(false);
+                projectManager.getRdfDao().delete(parentEvent);
+                if(fail != null){
+                    Logger.getLogger()
+                            .error("the workflow {} fail during the task {}",
+                            this.uri.toString(), fail.getUri().toString());
+                    throw new RuntimeException("the workflow " + 
+                            this.uri.toString() + " fail during the task " +
+                            fail.getUri().toString());
+                }
+            }
         }
     }
     
@@ -343,7 +321,7 @@ public class WorkflowImpl extends BaseRdfEntity implements Workflow{
      * @param parameter the name of the parameter that point to the previous step
      * @return  the previous step
      */
-    private WorkflowStep foundPrevousStepUsedOnParameter(
+    private WorkflowStep findPrevousStepUsedOnParameter(
             WorkflowStep step,
             String parameter){
         ProjectManager projectManager =
@@ -370,35 +348,38 @@ public class WorkflowImpl extends BaseRdfEntity implements Workflow{
     }
     
     /**
-     * return all events of the list which is directly or transitively informed by the given event
+     * build an uri that is never used as subject in the internal repository
      * 
-     * @param events    the Collection of Event to search in
-     * @param informer  informer Event
-     * @return  the Collection of informed Events
+     * @param  targetUri        an URI to try
+     * @return URI              the usable uri
      */
-    private Collection<Event> foundAllInformatedEvent(Collection<Event> events,
-            Event informer){
-        Collection<URI> informers = new ArrayList<URI>();
-        Collection<Event> informed = new ArrayList<Event>();
-        Collection<Event> rejected = new ArrayList<Event>();
-        for(Event e : events)
-            if(e.getInformer() != null)
-                rejected.add(e);
-        informers.add(informer.getUri());
-        boolean found = true;
-        while(found){
-            found = false;
-            Iterator<Event> i = rejected.iterator();
-            while(i.hasNext()){
-                Event e = i.next();
-                if(informers.contains(e.getInformer())){
-                    found = true;
-                    informers.add(e.getUri());
-                    informed.add(e);
-                    i.remove();
-                }
-            }
+    private URI checkUriConflict(URI targetUri){
+        Repository r = Configuration.getDefault().getInternalRepository();
+        URI tryed;
+        String base;
+        if(targetUri != null){
+            base = targetUri.toString();
+            tryed = targetUri;
+        } else {
+            base = "http://www.datalift.org/core/replay/temp/source/";
+            tryed = URI.create(base +
+                    Double.toString(Math.random()).substring(1, 8));
         }
-        return informed;
+        boolean found = false;
+        do {
+            if(found){
+                tryed = URI.create(base +
+                        Double.toString(Math.random()).substring(1, 8));
+            }
+            try {
+                Map<String,Object> bindings = new HashMap<String,Object>();
+                bindings.put("uri", tryed);
+                found = r.ask("ASK { ?uri ?p ?o . }", bindings);
+            }
+            catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        } while (found);
+        return tryed;
     }
 }

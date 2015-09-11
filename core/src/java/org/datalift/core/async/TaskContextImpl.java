@@ -52,12 +52,14 @@ public class TaskContextImpl extends TaskContextBase{
     @Override
     public Event endOperation(boolean well){
         OperationExecution oe = this.executions.get(this.executions.size() - 1);
-        if(oe.event != null && well){
+        if(oe.runningEvent != null && well){
             ProjectManager pm = Configuration.getDefault().getBean(ProjectManager.class);
-            pm.saveEvent(oe.event);
+            pm.saveEvent(oe.runningEvent);
         }
         this.executions.remove(oe);
-        return oe.event;
+        if(oe.runningEvent == null && !oe.events.isEmpty())
+            oe.runningEvent = oe.events.get(oe.events.size() - 1);
+        return oe.runningEvent;
     }
     
     /** {@inheritDoc} */
@@ -79,12 +81,14 @@ public class TaskContextImpl extends TaskContextBase{
         Event ev = this.informer;
         if(!this.executions.isEmpty()){
             int i = this.executions.size() - 2;
-            ev = this.executions.get(i + 1).event;
+            ev = this.executions.get(i + 1).runningEvent;
             while(ev == null && i >= 0){
-                ev = this.executions.get(i).event;
+                ev = this.executions.get(i).runningEvent;
                 i--;
             }
         }
+        if(this.informer != null && ev == null)
+            return this.informer;
         return ev;
     }
 
@@ -93,8 +97,8 @@ public class TaskContextImpl extends TaskContextBase{
     public Event beginAsEvent(EventType eventType, EventSubject eventSubject) {
         OperationExecution oe = this.executions.get(this.executions.size() - 1);
         ProjectManager pm = Configuration.getDefault().getBean(ProjectManager.class);
-        if(oe.event != null)
-            return oe.event;
+        if(oe.runningEvent != null)
+            return oe.runningEvent;
         URI operationE = oe.operation;
         if(oe.operation == null)
             operationE = URI
@@ -125,7 +129,7 @@ public class TaskContextImpl extends TaskContextBase{
                 eventTypeE, startE, null, this.getCurrentAgent(), null,
                 informerE);
         EventImpl evt = (EventImpl) pm.saveEvent(event);
-        oe.event = evt;
+        oe.runningEvent = evt;
         return evt;
     }
     
@@ -137,7 +141,7 @@ public class TaskContextImpl extends TaskContextBase{
         OperationExecution oe = this.executions.get(this.executions.size() - 1);
         if(oe == null)
             throw new RuntimeException("no current event to update");
-        oe.event.addUsed(used);
+        oe.runningEvent.addUsed(used);
     }
 
     /** {@inheritDoc} */
@@ -148,6 +152,16 @@ public class TaskContextImpl extends TaskContextBase{
         OperationExecution oe = this.executions.get(this.executions.size() - 1);
         if(oe == null)
             throw new RuntimeException("no current event to update");
-        oe.event.setInfluenced(influenced);
+        oe.runningEvent.setInfluenced(influenced);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void declareHappeningEvent(EventImpl event) {
+        if(!this.executions.isEmpty()){
+            OperationExecution oe = this.executions.get(this.executions.size() - 1);
+            if(!oe.events.contains(event))
+                oe.events.add(event);
+        }
     }
 }

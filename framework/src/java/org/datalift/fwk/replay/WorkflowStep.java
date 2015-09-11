@@ -12,7 +12,7 @@ import java.util.Map;
  *
  */
 public interface WorkflowStep {
-
+ 
     /**
      * return the operation to execute during the step
      * 

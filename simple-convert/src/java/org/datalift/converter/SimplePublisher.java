@@ -57,6 +57,7 @@ import javax.ws.rs.core.UriInfo;
 import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 
 import org.datalift.fwk.Configuration;
+import org.datalift.fwk.async.Operation;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectModule;
 import org.datalift.fwk.project.Source;
@@ -79,7 +80,7 @@ import static org.datalift.fwk.util.StringUtils.isSet;
  * @author lbihanic
  */
 @Path(SimplePublisher.MODULE_NAME)
-public class SimplePublisher extends BaseConverterModule
+public class SimplePublisher extends BaseConverterModule implements Operation
 {
     //-------------------------------------------------------------------------
     // Constants
@@ -128,13 +129,48 @@ public class SimplePublisher extends BaseConverterModule
                         @Context Request request,
                         @HeaderParam(ACCEPT) String acceptHdr)
                                                 throws WebApplicationException {
-        Date eventStart = new Date();
         if (! UriParam.isSet(projectId)) {
             this.throwInvalidParamError(PROJECT_ID_PARAM, null);
         }
         if (! UriParam.isSet(sourceId)) {
             this.throwInvalidParamError(SOURCE_ID_PARAM, null);
         }
+        try{
+            Project p = this.getProject(projectId.toUri(PROJECT_ID_PARAM));
+            Map<String, String> params = new HashMap<String, String>();
+            params.put(Operation.PROJECT_PARAM_KEY, projectId.toUri().toString());
+            params.put(Operation.INPUT_PARAM_KEY + "source",
+                    sourceId.toUri().toString());
+            params.put("repository", repository);
+            params.put("targetGraphParam", targetGraphParam.toUri().toString());
+            params.put("overwrite", Boolean.toString(overwrite));
+    
+            this.taskManager.submit(p, this.getOperationId(), params);
+            return Response.seeOther(URI.create(p.getUri() + "#source")).build();
+        }
+        catch (Exception e) {
+            throw new TechnicalException(e);
+        }
+    }
+
+    //-------------------------------------------------------------------------
+    // Operation contract support
+    //-------------------------------------------------------------------------
+    
+    @Override
+    public URI getOperationId() {
+        return URI.create(OPERATION_ID);
+    }
+
+    @Override
+    public void execute(Map<String, String> parameters) throws Exception {
+        Date start = new Date();
+        URI projectId = URI.create(parameters.get(Operation.PROJECT_PARAM_KEY));
+        URI sourceId = URI.create(parameters
+                .get(Operation.INPUT_PARAM_KEY + "source"));
+        URI targetGraph = URI.create(parameters.get("targetGraphParam"));
+        String repository = parameters.get("repository");
+        boolean overwrite = Boolean.parseBoolean(parameters.get("overwrite"));
         Configuration cfg = Configuration.getDefault();
         Repository pub = null;
         try {
@@ -144,19 +180,16 @@ public class SimplePublisher extends BaseConverterModule
         catch (Exception e) {
             this.throwInvalidParamError(REPOSITORY_PARAM, repository);
         }
-        Response response = null;
-
         try {
             // Retrieve project.
-            Project p = this.getProject(projectId.toUri(PROJECT_ID_PARAM));
+            Project p = this.getProject(projectId);
             // Load input source.
             TransformedRdfSource in = (TransformedRdfSource)
-                            (p.getSource(sourceId.toUri(SOURCE_ID_PARAM)));
+                            (p.getSource(sourceId));
             if (in == null) {
                 throw new ObjectNotFoundException("project.source.not.found",
                                                   projectId, sourceId);
             }
-            URI targetGraph = targetGraphParam.toUri(GRAPH_URI_PARAM);
             if (targetGraph == null) {
                 // Get the source (CSV, RDF/XML, database...) at the origin of
                 // the transformations and use its name as target named graph.
@@ -168,7 +201,7 @@ public class SimplePublisher extends BaseConverterModule
                                                 (TransformedRdfSource)origin: null;
                 }
                 targetGraph = (origin != null)? new URI(origin.getUri()):
-                                                projectId.toUri();
+                                                projectId;
             }
             // Publish input source triples in target repository.
             if (overwrite) {
@@ -182,23 +215,13 @@ public class SimplePublisher extends BaseConverterModule
                 }
                 catch (Exception e) { /* Ignore... */ }
             }
-            // Display generated triples.
-            response = this.displayGraph(pub, targetGraph,
-                                         uriInfo, request, acceptHdr);
-            //save event
-            Map<String, String> parameters = new HashMap<String, String>();
-            parameters.put("projectId", projectId.toUri().toString());
-            parameters.put("sourceId", sourceId.toUri().toString());
-            parameters.put("repository", repository);
-            parameters.put("targetGraphParam", targetGraphParam.toUri().toString());
-            parameters.put("overwrite", Boolean.toString(overwrite));
-            URI operation = URI.create(OPERATION_ID);
-            this.projectManager.saveOutputEvent(p, operation, parameters,
-                    eventStart, new Date(), null, sourceId.toUri());
+            Date end = new Date();
+            // Declare event
+            this.projectManager.saveOutputEvent(p, this.getOperationId(),
+                    parameters, start, end, null, sourceId);
         }
         catch (Exception e) {
-            this.handleInternalError(e);
+            throw new TechnicalException(e);
         }
-        return response;
     }
 }

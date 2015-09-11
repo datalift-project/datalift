@@ -29,10 +29,12 @@
 			<h3 class="ui-widget-header dl-widget-header">Variables</h3>
 			<form class="form_formated">
 				<div style="width:100%;">
-					<p><span style="width:17.5%;font-weight:bold;display:inline-block;">title :</span>$!esc.html($workflow.getTitle())</p>
-					#if( $workflow.getDescription() )
-					<p><span style="width:17.5%;font-weight:bold;display:inline-block;">Description :</span>$!esc.html($workflow.getDescription())</p>
-					#end
+					<p><span style="width:17.5%;font-weight:bold;display:inline-block;">title :</span>$workflow.getTitle()</p>
+					<p><span style="width:17.5%;font-weight:bold;display:inline-block;">Description :</span>
+					   #if ($workflow.getDescription())
+					       $!esc.html($workflow.getDescription())
+					   #end
+					</p>
 				</div>
 				<div id="inputs">
 					#foreach( $cur in $workflow.getVariables().entrySet() )
@@ -62,7 +64,6 @@
 	function valid(){
 		var sub = getParams();
 		console.log(sub);
-		alert(window.location.href);
 		$.ajax({
             url: window.location.href,
             type: 'post',

@@ -58,6 +58,8 @@ public class TaskManagerImpl implements TaskManager{
         Collection<Operation> ops = configuration.getBeans(Operation.class);
         for(Operation op : ops){
             this.operations.put(op.getOperationId().toString(), op);
+            Logger.getLogger().info("Operation registered : {}",
+                    op.getOperationId().toString());
         }
     }
 
@@ -173,7 +175,8 @@ public class TaskManagerImpl implements TaskManager{
                 this.task.setStatus(TaskStatus.failStatus);
                 this.dao.save(this.task);
                 ((TaskContextImpl) TaskContext.getCurrent()).endOperation(false);
-                Logger.getLogger().error("the task fail", e);
+                Logger.getLogger().error("the task fail : " +
+                        this.task.getUri().toString(), e);
                 throw new RuntimeException("error during task execution" + e);
             }
         }
