@@ -26,16 +26,18 @@
 	<div id="accordion">
 		<h3><a href="#"></a></h3>
 		<div class="group">
-			<h3 class="ui-widget-header dl-widget-header">Variables</h3>
 			<form class="form_formated">
 				<div style="width:100%;">
-					<p><span style="width:17.5%;font-weight:bold;display:inline-block;">title :</span>$workflow.getTitle()</p>
+					<p><span style="width:17.5%;font-weight:bold;display:inline-block;">#i18n("project.upload_worflow.title") :</span>$workflow.getTitle()</p>
 					<p><span style="width:17.5%;font-weight:bold;display:inline-block;">Description :</span>
 					   #if ($workflow.getDescription())
 					       $!esc.html($workflow.getDescription())
 					   #end
 					</p>
 				</div>
+				#if ( $workflow.getVariables().isEmpty()==false )			
+				<h3 class="ui-widget-header dl-widget-header">Variables</h3>
+				#end
 				<div id="inputs">
 					#foreach( $cur in $workflow.getVariables().entrySet() )
 						<p><label>$!esc.html($cur.getKey())</label>
