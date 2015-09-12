@@ -204,8 +204,7 @@ public class RdfLoader extends BaseConverterModule implements Operation
             }
             String targetGraphStr = params.getValue("targetGraph");
             if(targetGraphStr == null) {
-                targetGraphStr = sourceId.toString() + "/" + destTitle +
-                        "/loadedGraph";
+                targetGraphStr = sourceId.toString() + "/" + destTitle;
             }
             URI targetGraph = URI.create(targetGraphStr);
             String uriPattern = params.getValue("uriPattern");

@@ -277,8 +277,7 @@ public class XsltXmlConverter extends BaseConverterModule implements Operation
         }
         String targetGraphStr = params.getValue("targetGraph");
         if(targetGraphStr == null) {
-            targetGraphStr = sourceId.toString() + "/" + destTitle +
-                    "/loadedGraph";
+            targetGraphStr = sourceId.toString() + "/" + destTitle;
         }
         URI targetGraph = URI.create(targetGraphStr);
         String stylesheet = params.getValue("stylesheet");
