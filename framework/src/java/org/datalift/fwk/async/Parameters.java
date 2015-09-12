@@ -204,4 +204,30 @@ public class Parameters {
         }
         return ret;
     }
+    
+    /**
+     * return all labels of parameters which is of the given type
+     * 
+     * @param type  the ParameterType of wanted parameters
+     * @return      the Collection of labels
+     */
+    public Collection<String> getTypedLabels(ParameterType type){
+        Collection<String> ret = new ArrayList<String>();
+        if (type.equals(ParameterType.project)) {
+            ret.add(this.project);
+            return ret;
+        }
+        else if (type.equals(ParameterType.output_source)) {
+            ret.add(this.output);
+            return ret;
+        }
+        else {
+            for (Entry<String, Parameter> entry : this.parametersMap.entrySet()) {
+                if (entry.getValue().getType().equals(type)) {
+                    ret.add(entry.getKey());
+                }
+            }
+            return ret;
+        }
+    }
 }

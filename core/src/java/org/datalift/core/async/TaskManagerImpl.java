@@ -1,7 +1,6 @@
 package org.datalift.core.async;
 
 import java.net.URI;
-//import java.security.Policy.Parameters;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -140,7 +139,10 @@ public class TaskManagerImpl implements TaskManager{
         } else {
             try {
                 f.get();
-            } catch (Exception e) {}
+            }
+            catch (Exception e) {
+                throw new RuntimeException(e);
+            }
             return task.getStatus();
         }
     }

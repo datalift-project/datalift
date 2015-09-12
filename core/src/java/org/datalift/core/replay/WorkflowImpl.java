@@ -10,6 +10,10 @@ import java.util.Map.Entry;
 
 import javax.persistence.Entity;
 
+import org.apache.commons.vfs2.FileObject;
+import org.apache.commons.vfs2.FileSystemManager;
+import org.apache.commons.vfs2.FileType;
+import org.apache.commons.vfs2.VFS;
 import org.datalift.core.async.TaskContextBase;
 import org.datalift.core.project.BaseRdfEntity;
 import org.datalift.core.util.JsonStringMap;
@@ -210,6 +214,72 @@ public class WorkflowImpl extends BaseRdfEntity implements Workflow{
     @Override
     public void replay(Map<String, String> variables){
         this.refreshJsons();
+        List<List<IterableInput>> itInput =
+                this.extractIterableInputs(variables);
+        //vvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+        //SINGLE ITERATION LIMITATION
+        int numberOfMultiValueInput = 0;
+        for (List<IterableInput> it : itInput) {
+            if (it.size() > 1) {
+                numberOfMultiValueInput++;
+            }
+        }
+        if (numberOfMultiValueInput > 1) {
+            StringBuilder msg = new StringBuilder("the worflow cant iterate on ");
+            msg.append(numberOfMultiValueInput).append(" inputs : ");
+            for (List<IterableInput> it : itInput) {
+                if (it.size() > 1) {
+                    msg.append(it.get(0).getStep().getOperation().toString())
+                            .append(" : ").append(it.get(0).getParam())
+                            .append(" ; ");
+                }
+            }
+            msg.delete(msg.length() - 3, msg.length());
+            throw new RuntimeException(msg.toString());
+        }
+        //^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        // execute without iterations
+        if (itInput.isEmpty()) {
+            this.replay(variables, (IterableInput[]) null);
+        }
+        // execute with several iterable inputs
+        else {
+            List<Integer> inputs = new ArrayList<Integer>();
+            for (int i = 0; i < itInput.size(); i++) {
+                inputs.add(new Integer(0));
+            }
+            int i = 0;
+            while (i != inputs.size()) {
+                // rebuild iteration configuration
+                int j = inputs.size() - 1;
+                while (inputs.get(j) == itInput.get(j).size()) {
+                    inputs.set(j, new Integer(0));
+                    j--;
+                    inputs.set(j, inputs.get(j) + 1);
+                }
+                // detect the last fully executed input
+                if ((i == j) && (inputs.get(j) == itInput.get(j).size() - 1)) {
+                    i++;
+                }
+                // replay
+                IterableInput[] iteration = new IterableInput[inputs.size()];
+                for (int k = 0; k < inputs.size(); k++) {
+                    iteration[k] = itInput.get(j).get(inputs.get(k));
+                }
+                this.replay(variables, iteration);
+                // go to the next iteration
+                inputs.set(inputs.size() - 1, inputs.get(inputs.size() - 1) + 1);
+            }
+        }
+    }
+    
+    /**
+     * execute the workflow for one iteration
+     * 
+     * @param variables variables to resolve parameters
+     * @param iteration  the Iteration values to change for every iterable input
+     */
+    private void replay(Map<String, String> variables, IterableInput... iteration){
         ProjectManager projectManager =
                 Configuration.getDefault().getBean(ProjectManager.class);
         Event origin = projectManager.getEvent(this.origin);
@@ -227,7 +297,7 @@ public class WorkflowImpl extends BaseRdfEntity implements Workflow{
             parentEvent = context.beginAsEvent(
                     Event.INFORMATION_EVENT_TYPE, Event.WORKFLOW_EVENT_SUBJECT);
             //execute levels
-            fail = executeLevels(steps);
+            fail = executeLevels(steps, variables, iteration);
         } catch (Exception e){
             throw new RuntimeException(e);
         } finally {
@@ -257,11 +327,14 @@ public class WorkflowImpl extends BaseRdfEntity implements Workflow{
      * Execute all steps from the last level to the first one
      * 
      * @param steps execution levels
+     * @param iteration  the Iteration values to change
      * @return  null or the failed task if the execution fail
      * @throws UnregisteredOperationException
      */
-    private Task executeLevels(List<Collection<WorkflowStep>> steps)
-            throws UnregisteredOperationException {
+    private Task executeLevels(
+            List<Collection<WorkflowStep>> steps,
+            Map<String, String> variables,
+            IterableInput... iteration) throws UnregisteredOperationException {
         Task fail = null;
         VersatileProperties properties = new VersatileProperties();
         ProjectManager projectManager =
@@ -272,8 +345,8 @@ public class WorkflowImpl extends BaseRdfEntity implements Workflow{
                 Configuration.getDefault().getBean(TaskManager.class);
         Map<WorkflowStep, Task> done = new HashMap<WorkflowStep, Task>();
         // Initialize parameters solver with variables
-        if(this.vars != null)
-            for(Entry<String, String> prop : this.vars.entrySet())
+        if(variables != null)
+            for(Entry<String, String> prop : variables.entrySet())
                 properties.putString(prop.getKey(), prop.getValue());
         for(int j = steps.size() - 1; j >= 0 && fail == null; j--){
             List<Task> tasks = new ArrayList<Task>();
@@ -281,7 +354,7 @@ public class WorkflowImpl extends BaseRdfEntity implements Workflow{
             for(WorkflowStep step : steps.get(j)){
                 //resolve parameters and submit the task
                 Map<String, String> params = resolveParameters(properties,
-                        done, step);
+                        done, step, iteration);
                 Task task = taskManager.submit(
                         project, step.getOperation(), params);
                 tasks.add(task);
@@ -303,10 +376,12 @@ public class WorkflowImpl extends BaseRdfEntity implements Workflow{
      * @param properties    the parameters solver
      * @param done          the already executed steps and tasks which are associated with
      * @param step          the step with parameters to resolve
+     * @param iteration  the Iteration values to change
      * @return              the Map of resolved parameters
      */
     private Map<String, String> resolveParameters(VersatileProperties properties,
-            Map<WorkflowStep, Task> done, WorkflowStep step) {
+            Map<WorkflowStep, Task> done, WorkflowStep step,
+            IterableInput... iteration) {
         ProjectManager projectManager =
                 Configuration.getDefault().getBean(ProjectManager.class);
         Event origin = projectManager.getEvent(this.origin);
@@ -318,22 +393,52 @@ public class WorkflowImpl extends BaseRdfEntity implements Workflow{
                 Configuration.getDefault().getBean(TaskManager.class);
         Operation op = taskManager.getOperation(step.getOperation());
         Parameters paramPattern = op.getBlankParameters();
+        // scan all parameters of the origin event
         for(String param : eventParameters.keySet()){
             String value = step.getParameters().get(param);
             ParameterType type = paramPattern.getParameter(param).getType();
+            //if the parameter is an input source
+            //find the good source on previous steps execution result
             if(type.equals(ParameterType.input_source)){
                 WorkflowStep prev = this
                         .findPrevousStepUsedOnParameter(step, param);
                 params.put(param, done.get(prev).getRunningEvent()
                         .getInfluenced().toString());
-            } else if(type.equals(ParameterType.output_source)) {
+            }
+            //if the parameter is an output source
+            // generate a random uri
+            else if(type.equals(ParameterType.output_source)) {
                 params.put(param, this
                         .checkUriConflict(null).toString());
-            } else if(type.equals(ParameterType.project)) {
+            }
+            // set the project parameter
+            else if(type.equals(ParameterType.project)) {
                 params.put(param, project.getUri());
-            } else if(type.isVisible()) {
+            }
+            // if the parameter is an iterable input
+            else if (type.equals(ParameterType.input)) {
+                boolean iterate = false;
+                // find if the parameter is use for this iteration
+                if (iteration != null) {
+                    for (IterableInput it : iteration) {
+                        if (it.getStep() == step && param.equals(it.getParam())) {
+                            // put the iteration value
+                            params.put(param, it.getVal());
+                            iterate = true;
+                            break;
+                        }
+                    }
+                }
+                // the parameter is not used for iterate
+                if (! iterate) {
+                    params.put(param, properties.resolveVariables(value));
+                }
+            }
+            // if the parameter is an other visible one
+            else if(type.isVisible()) {
                 params.put(param, properties.resolveVariables(value));
             }
+            // else : the other no visible parameters are optional
         }
         return params;
     }
@@ -448,5 +553,111 @@ public class WorkflowImpl extends BaseRdfEntity implements Workflow{
             }
         } while (found);
         return tryed;
+    }
+    
+    private List<List<IterableInput>> extractIterableInputs(
+            Map<String, String> variables) {
+        List<List<IterableInput>> ret = new ArrayList<List<IterableInput>>();
+        List<IterableInput> inputs = new ArrayList<IterableInput>();
+        TaskManager tm =
+                Configuration.getDefault().getBean(TaskManager.class);
+        VersatileProperties properties = new VersatileProperties();
+        // Initialize parameters solver with variables
+        if (variables != null) {
+            for (Entry<String, String> prop : variables.entrySet()) {
+                properties.putString(prop.getKey(), prop.getValue());
+            }
+        }
+        // find iterables inputs
+        List<WorkflowStep> steps = new ArrayList<WorkflowStep>();
+        steps.add(this.output);
+        for (int i = 0; i < steps.size(); i++) {
+            if (steps.get(i).getPreviousSteps() != null) {
+                for (WorkflowStep prev : steps.get(i).getPreviousSteps()) {
+                    if (!steps.contains(prev)) {
+                        steps.add(prev);
+                        Parameters params = tm.getOperation(prev.getOperation())
+                                .getBlankParameters();
+                        for (String param :
+                                params.getTypedLabels(ParameterType.input)) {
+                            inputs.add(new IterableInput(prev, param,
+                                    properties.resolveVariables(
+                                    prev.getParameters().get(param))));
+                        }
+                    }
+                }
+            }
+        }
+        // folder detection
+        for (IterableInput input : inputs) {
+            try {
+                FileSystemManager fsManager = VFS.getManager();
+                FileObject root = fsManager.resolveFile(input.getVal());
+                List<FileObject> all = new ArrayList<FileObject>();
+                all.add(root);
+                List<FileObject> files = new ArrayList<FileObject>();
+                // extract all files
+                if (root.getType().equals(FileType.FOLDER)) {
+                    for (int i = 0; i < all.size(); i++) {
+                        if (all.get(i).getType().equals(FileType.FOLDER)) {
+                            for (FileObject f : all.get(i).getChildren()) {
+                                all.add(f);
+                            }
+                        }
+                        else {
+                            files.add(all.get(i));
+                        }
+                    }
+                }
+                else {
+                    System.out.println("not iterable : " + input.getVal());
+                    break;
+                }
+                List<IterableInput> iterations = new ArrayList<IterableInput>();
+                for (FileObject f : files) {
+                    iterations.add(new IterableInput(input.getStep(),
+                            input.getParam(),
+                            f.getURL().toString()));
+                    System.out.println("iteration : " + f.getURL().toString());
+                }
+                ret.add(iterations);
+            }
+            catch (Exception e) {
+                throw new RuntimeException("input unreachable : " +
+                        input.getStep().getOperation().toString() + " " +
+                        input.getParam() + " : " +
+                        input.getVal(), e);
+            }
+        }
+        return ret;
+    }
+    
+    /**
+     * an input or a precise value of iteration for an input
+     * 
+     * @author rcabaret
+     */
+    private class IterableInput {
+        private WorkflowStep step;
+        private String param;
+        private String val;
+        
+        public IterableInput(WorkflowStep step, String param, String val) {
+            this.step = step;
+            this.param = param;
+            this.val = val;
+        }
+        
+        public WorkflowStep getStep() {
+            return step;
+        }
+        
+        public String getParam() {
+            return param;
+        }
+        
+        public String getVal() {
+            return val;
+        }
     }
 }
