@@ -82,10 +82,7 @@ public abstract class TaskContext {
      * @param context   the TaskContext
      */
     public static void defineContext(TaskContext context){
-        if(TaskContext.isDefined())
-            throw new RuntimeException("Task Context already defined");
-        else
-            TaskContext.curent.set(context);
+        TaskContext.curent.set(context);
     }
     
     /**

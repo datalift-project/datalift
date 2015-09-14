@@ -1,19 +1,33 @@
 package org.datalift.fwk.async;
 
 import java.net.URI;
-import java.util.Map;
 
+/**
+ * the interface for Datalift operations
+ * 
+ * @author rcabaret
+ */
 public interface Operation {
-
-    /** key for the project parameter */
-    public static final String PROJECT_PARAM_KEY = "DATALIFT_PROJECT";
-    /** base for keys of used sources parameters */
-    public static final String INPUT_PARAM_KEY = "DATALIFT_USED_";
-    /** key for the influenced source parameter */
-    public static final String OUTPUT_PARAM_KEY = "DATALIFT_OUTPUT";
-    /** base for keys of hidden parameters that the operation can provide */
-    public static final String HIDDEN_PARAM_KEY = "DATALIFT_HIDDEN_";
     
+    /**
+     * Return the uri that identify the Operation
+     * 
+     * @return the URI
+     */
     public URI getOperationId();
-    public void execute(Map<String, String> parameters) throws Exception;
+    
+    /**
+     * Execute the Operation
+     * 
+     * @param parameters    the parameters
+     * @throws Exception
+     */
+    public void execute(Parameters parameters) throws Exception;
+    
+    /**
+     * Return the parameters pattern that the operation need to be executed without values
+     * 
+     * @return  the Parameters
+     */
+    public Parameters getBlankParameters();
 }

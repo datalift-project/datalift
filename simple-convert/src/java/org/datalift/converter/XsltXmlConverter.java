@@ -37,9 +37,9 @@ package org.datalift.converter;
 
 import java.net.URI;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -62,7 +62,9 @@ import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.rio.rdfxml.RDFXMLParser;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.async.Operation;
-import org.datalift.fwk.async.UnregisteredOperationException;
+import org.datalift.fwk.async.Parameter;
+import org.datalift.fwk.async.ParameterType;
+import org.datalift.fwk.async.Parameters;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectModule;
@@ -75,6 +77,7 @@ import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.util.web.UriParam;
 import org.datalift.fwk.view.TemplateModel;
+
 import static org.datalift.fwk.MediaTypes.*;
 import static org.datalift.fwk.util.PrimitiveUtils.wrap;
 import static org.datalift.fwk.util.StringUtils.*;
@@ -239,22 +242,18 @@ public class XsltXmlConverter extends BaseConverterModule implements Operation
             this.throwInvalidParamError(BASE_URI_PARAM, null);
         }
         Project p = this.getProject(projectId.toUri(PROJECT_ID_PARAM));
-        Map<String, String> params = new HashMap<String, String>();
-        params.put(Operation.PROJECT_PARAM_KEY, p.getUri());
-        params.put(Operation.INPUT_PARAM_KEY + "sourceId",
-                sourceId.toUri(SOURCE_ID_PARAM).toString());
-        params.put(Operation.HIDDEN_PARAM_KEY + "destTitle", destTitle);
-        params.put("stylesheet", stylesheet);
-        params.put("baseUri", baseUriParam.toUri(BASE_URI_PARAM).toString());
-        params.put(Operation.HIDDEN_PARAM_KEY + "targetGraph",
-                targetGraphParam.toUri(GRAPH_URI_PARAM).toString());
+        Parameters params = this.getBlankParameters();
+        params.setValue("project", projectId.toUri().toString());
+        params.setValue("source", sourceId.toUri().toString());
+        params.setValue("destTitle", destTitle);
+        params.setValue("targetGraph", targetGraphParam.toUri().toString());
+        params.setValue("baseUri", baseUriParam.toUri(BASE_URI_PARAM).toString());
+        params.setValue("stylesheet", stylesheet);
         try {
-            this.taskManager.submit(p, this.getOperationId(),
-                    params);
-        } catch (UnregisteredOperationException e) {
+            this.execute(params);
+        } catch (Exception e) {
             this.handleInternalError(e);
         }
-        // (browsers) to the source tab of the project page.
         return Response.seeOther(URI.create(p.getUri() + "#source")).build();
     }
 
@@ -268,21 +267,21 @@ public class XsltXmlConverter extends BaseConverterModule implements Operation
     }
 
     @Override
-    public void execute(Map<String, String> parameters) throws Exception {
+    public void execute(Parameters params) throws Exception {
         Date eventStart = new Date();
-        String projectId = parameters.get(Operation.PROJECT_PARAM_KEY);
-        String sourceId = parameters.get(Operation.INPUT_PARAM_KEY + "sourceId");
-        String destTitle = parameters.get(Operation.HIDDEN_PARAM_KEY + "destTitle");
-        if(destTitle == null)
+        String projectId = params.getProjectValue();
+        String sourceId = params.getValue("source");
+        String destTitle = params.getValue("destTitle");
+        if (destTitle == null) {
             destTitle = Double.toString(Math.random()).replace(".", "");
-        String stylesheet = parameters.get("stylesheet");
-        URI baseUri = URI.create(parameters.get("baseUri"));
-        URI targetGraph;
-        if(parameters.get(Operation.HIDDEN_PARAM_KEY + "targetGraph") == null)
-            targetGraph = URI.create(sourceId.toString() +
-                    "/" + destTitle + "/loadedGraph");
-        else
-            targetGraph = URI.create(parameters.get(Operation.HIDDEN_PARAM_KEY + "targetGraph"));
+        }
+        String targetGraphStr = params.getValue("targetGraph");
+        if(targetGraphStr == null) {
+            targetGraphStr = sourceId.toString() + "/" + destTitle;
+        }
+        URI targetGraph = URI.create(targetGraphStr);
+        String stylesheet = params.getValue("stylesheet");
+        URI baseUri = URI.create(params.getValue("baseUri"));
         try {
             // Retrieve project.
             Project p = this.getProject(URI.create(projectId));
@@ -321,7 +320,7 @@ public class XsltXmlConverter extends BaseConverterModule implements Operation
                              targetGraph, baseUri, xslt);
             // Register new transformed RDF source.
             this.addResultSource(p, in, destTitle, targetGraph, baseUri,
-                    this.getOperationId(), parameters, eventStart);
+                    this.getOperationId(), params.getValues(), eventStart);
 
             log.info("XML data from \"{}\" successfully mapped to \"{}\"",
                                                         sourceId, targetGraph);
@@ -495,5 +494,23 @@ public class XsltXmlConverter extends BaseConverterModule implements Operation
         public String toString() {
             return this.id;
         }
+    }
+    
+    @Override
+    public Parameters getBlankParameters() {
+        Collection<Parameter> paramList = new ArrayList<Parameter>();
+        paramList.add(new Parameter("project",
+                "ws.param.project", ParameterType.project));
+        paramList.add(new Parameter("source",
+                "ws.param.source", ParameterType.input_source));
+        paramList.add(new Parameter("destTitle",
+                "ws.param.destTitle", ParameterType.hidden));
+        paramList.add(new Parameter("targetGraph",
+                "ws.param.targetGraph", ParameterType.hidden));
+        paramList.add(new Parameter("stylesheet",
+                "ws.param.stylesheet", ParameterType.visible));
+        paramList.add(new Parameter("baseUri",
+                "ws.param.baseUri", ParameterType.visible));
+        return new Parameters(paramList);
     }
 }

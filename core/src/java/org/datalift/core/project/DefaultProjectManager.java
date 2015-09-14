@@ -1356,7 +1356,8 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     @Override
     public void purgeEventChildrens(Event parent, boolean purgeEntity) {
         if(parent != null){
-            Project project = parent.getProject();
+            Project project =
+                    this.findProject(URI.create(parent.getProject().getUri()));
             ((TaskContextBase) TaskContextBase.getCurrent())
                     .startOperation(project, URI.create(
                     "http://www.datalift.org/core/projectManager/operation/purge"),
