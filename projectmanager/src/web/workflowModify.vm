@@ -6,6 +6,7 @@
 #load_core_resources
 	<title>#i18n("workspace.title") - DataLift</title>
 #css_links
+	##<link rel="stylesheet" type="text/css" href="${baseUri}/css/legacy-vizu/closeInterface.css"/>
 </head>
 <body>
 #banner
@@ -74,15 +75,19 @@
 						<div style="margin:5px;">
 							<input type="text" name="keys" style="width:15%;" value="$c.getKey()"/>
 							<input type="text" name="values" style="width:60%;" value="$c.getValue()"/>
+							<button class="btnRemove" onClick="dlt(this);return false;">X</button>
+							<button class="btnRemove" onclick="dltAll(this);return false;">Supprimer tous les champs vides</button>
 						</div>
 						#end
 					#end
 						<div style="margin:5px;">
 							<input type="text" name="keys" style="width:15%;"/>
 							<input type="text" name="values" style="width:60%;"/>
+							<button class="btnRemove" onClick="dlt(this);return false;">X</button>
+							<button class="btnRemove" onclick="dltAll(this);return false;">Supprimer tous les champs vides</button>
 						</div>
 					</div>
-					<input type="button" value="Ajouter" onClick="addInput('dynamicInput');" style="margin:5px;"/>
+					<input type="button" value="#i18n("project.wf_add")" onClick="addInput('dynamicInput');" style="margin:5px;"/>
 				</form>
 				<div style="width:18%;float:left;" class="ui-widget-content">
 					<h3 class="ui-widget-header dl-widget-header">#i18n("project.wf_events")</h3>
@@ -108,8 +113,11 @@
 #script_links
 <script type="text/javascript">
 	var sub = {};
+	var t = [];
 	$("input:submit").button();
 	$("input:button").button();
+	$("").button();
+	$(".dltAll").button();
 	$("#main-menu .button").button();
 	jQuery("#selectable_workflows").jqGrid({
 		datatype: "local",
@@ -185,6 +193,8 @@
 		newdiv.style.margin = "5px";
 		htmlCode = "<input type='text' name='keys' style='width:15%;margin-right:5px;'>";
 		htmlCode = htmlCode+"<input type='text' name='values' style='width:60%;'>";
+		htmlCode = htmlCode+"<button class='btnRemove' onClick=\"dlt(this);return false;\">X</button>";
+		htmlCode = htmlCode+'<button class="btnRemove" onclick="dltAll(this);return false;">Supprimer tous les champs vides</button>';
 		newdiv.innerHTML = htmlCode;
 		document.getElementById(divName).appendChild(newdiv);
 	}
@@ -232,13 +242,7 @@
 		$("#subEvents").html(htmlCode);
 	}
 	function go(p){
-		// var htmlCode = "";
-		// htmlCode = htmlCode + '<p style="font-weight:bold;"><span style="display:inline-block;width:22%;">operation</span>'+sub[p].operation+'</p>';
-		// $.each(sub[p].parameters, function(key, val){
-			// htmlCode = htmlCode + "<p><label>"+key+"</label>";				
-			// htmlCode = htmlCode + '<input type="text" value="'+val+'" name="values1" onchange="setObj(\''+p+'\')"/></p>';
-			// htmlCode = htmlCode + '<input type="hidden" value="'+key+'" name="keys1"/>';
-		// });
+		refreshGraph(p);
 		var htmlCode = "<table cellspacing=\"10\">";
 		htmlCode = htmlCode + '<tr style="margin:0px 5px;"><td style="font-weight:bold;">#i18n("project.wf_event")</td><td>'+p+'</td></tr>';
 		htmlCode = htmlCode + '<tr style="margin:0px 5px;"><td style="font-weight:bold;">#i18n("project.wf_operation")</td><td>'+sub[p].operation+'</td></tr>';
@@ -250,9 +254,25 @@
 		htmlCode = htmlCode + "</table>";
 		htmlCode = htmlCode +'<input type="hidden" id="uri" value="'+p+'"/>';
 		$("#parameters").html(htmlCode);
-		console.log(p);
 		$("#operation").html("<i>"+p.getAttribute('alt')+"</i>");
 		return false;
+	}
+	function refreshGraph(p){
+		$.each(t, function(key, val){
+			$(val).removeClass("ui-widget-header");
+			$(val).css("background-color","#FFFF00");
+		});
+		$.each($("#subEvents").children(), function(key, val){
+			$.each(val.childNodes, function(k, v){
+				if(v.nodeName != "#text"){
+					if(v.href == p){
+						$(v.parentNode).removeClass("ui-widget-header");
+						$(v.parentNode).css("background-color","#00FF00");
+						t.push(v.parentNode);
+					}
+				}
+			});
+		});
 	}
 	$("#valid").click(
 	function(){
@@ -310,6 +330,20 @@
 		}
 		return vars;
 	}
+	function getInput(){
+		var vars = {};
+		var obj = {};
+		var keys=getKeys();
+		var values=getValues();
+		for(var i=0; i<keys.length; i++){
+			if (keys[i] == "") keys[i] = i.toString();
+			// vars[keys[i]]=values[i];
+			var obj={};
+			obj[keys[i]]=values[i];
+			vars[i.toString()]=obj;
+		}
+		return vars;
+	}
 	function getKeys1(){
 		var obj = document.getElementsByName('keys1');
 		var keys = [];
@@ -346,6 +380,44 @@
 	}
 	function isExist(str, arr){
 		return arr.indexOf(str);
+	}
+	function dlt(p){
+		var vars = getInput();
+		var htmlCode = "";
+		console.log(vars);
+		console.log(p);
+		$.each(vars, function(key, val){
+			$.each(val, function(k, v){
+				if (k != p.parentNode.children[0].value){
+					htmlCode = htmlCode+'<div style="margin:5px;">'+
+						'<input name="keys" style="width:15%;" value="'+k+'" type="text">'+
+						'<input name="values" style="width:60%;" value="'+v+'" type="text">'+
+						'<button class="btnRemove" onclick="dlt(this);return false;">X</button>'+
+						'<button class="btnRemove" onclick="dltAll(this);return false;">Supprimer tous les champs vides</button>'+
+					'</div>';
+				}
+			});
+		});
+		$("#dynamicInput").html(htmlCode);
+	}
+	function dltAll(p){
+		var vars = getInput();
+		var htmlCode = "";
+		console.log(vars);
+		$.each(vars, function(key, val){
+			$.each(val, function(k, v){
+				if (k != p.parentNode.children[0].value
+				&& v != p.parentNode.children[1].value){
+					htmlCode = htmlCode+'<div style="margin:5px;">'+
+						'<input name="keys" style="width:15%;" value="'+k+'" type="text">'+
+						'<input name="values" style="width:60%;" value="'+v+'" type="text">'+
+						'<button class="btnRemove" onclick="dlt(this);return false;">X</button>'+
+						'<button class="btnRemove" onclick="dltAll(this);return false;">Supprimer tous les champs vides</button>'+
+					'</div>';
+				}
+			});
+		});
+		$("#dynamicInput").html(htmlCode);
 	}
 </script>
 </body>

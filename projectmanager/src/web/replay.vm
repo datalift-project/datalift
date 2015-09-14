@@ -21,7 +21,7 @@
 	</div>
 
 <div id="workspace">
-	<h3 class="ui-widget-header dl-widget-header">Execution de workflow </h3>
+	<h3 class="ui-widget-header dl-widget-header">Execution de workflow</h3>
 	<a href="http://localhost:9091/project" style="margin:3px;">Retour à l'espace de travail</a>
 	<div id="accordion">
 		<h3><a href="#"></a></h3>
@@ -45,7 +45,7 @@
 						<input type="text" value="$!esc.html($cur.getValue())" name="values"/></p>
 					#end
 				</div>
-				<input type="button" value="Démarrer" onClick="valid()"/>
+				<input type="button" value="#i18n("project.wf_execute")" onClick="valid()"/>
 			</form>
 		</div>
 	</div>
