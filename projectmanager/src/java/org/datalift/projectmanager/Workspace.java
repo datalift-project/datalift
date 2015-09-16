@@ -666,118 +666,224 @@ public class Workspace extends BaseModule
         if (! isSet(separator)) {
             this.throwInvalidParamError("separator", separator);
         }
-        Charset encoding = null;
         if (isSet(charset)) {
             try {
-                encoding = Charset.forName(charset);
+                Charset.forName(charset);
             }
             catch (Exception e) {
                 this.throwInvalidParamError("charset", charset);
             }
         }
-        Response response = null;
-
-        String fileName = null;
-        URL fileUrl = null;
-        File localFile = null;
-        if (! isBlank(sourceUrl)) {
-            // Not uploaded data. => A file URL must be provided.
+        
+        
+        URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
+        Project p = this.loadProject(projectUri);
+        String filePath = this.getProjectFilePath(projectId,
+                this.toFileName(fileDisposition.getFileName()));
+        boolean stream = ! isBlank(this.toFileName(
+                fileDisposition.getFileName()));
+        if (stream) {
             try {
-                fileUrl = new URL(sourceUrl);
-                fileName = this.extractFileName(fileUrl, "csv");
-                // Reset input stream to force downloading data from URL.
-                fileData = null;
-            }
-            catch (Exception e) {
-                // Conversion of source base URI to URL failed.
-                log.error("Failed to parse URL {}", e, sourceUrl);
-                this.throwInvalidParamError("file_url",
-                                    sourceUrl + " (" + e.getMessage() + ')');
+                FileStore fs = this.getFileStore();
+                File destFile = fs.getFile(filePath);
+                fs.save(fileData, destFile);
+            } catch (IOException e) {
+                this.handleInternalError(e,
+                        "Failed to load xml file {}",
+                        this.toFileName(fileDisposition.getFileName()));
             }
         }
-        else {
-            fileName = this.toFileName(fileDisposition.getFileName());
-            if (isBlank(fileName)) {
-                this.throwInvalidParamError("source", null);
-            }
+        Operation op = new UploadCsvSource();
+        Parameters params = op.getBlankParameters();
+        params.setValue("project", p.getUri());
+        params.setValue("srcName", srcName);
+        params.setValue("description", description);
+        params.setValue("sourceUrl", sourceUrl);
+        if (stream) {
+            params.setValue("filePath", filePath);
         }
-        // Else: File data have been uploaded.
-
-        log.debug("Processing CSV source creation request for {}", srcName);
-        boolean deleteFiles = false;
+        params.setValue("charset", charset);
+        params.setValue("separator", separator);
+        params.setValue("quote", quote);
+        params.setValue("titleRow", Integer.toString(titleRow));
+        params.setValue("firstRow", Integer.toString(firstRow));
+        params.setValue("lastRow", Integer.toString(lastRow));
         try {
-            // Build object URIs from request path.
-            URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
-            URI sourceUri = new URI(projectUri.getScheme(), null,
-                                    projectUri.getHost(), projectUri.getPort(),
-                                    this.newSourceId(projectUri.getPath(), srcName),
-                                    null, null);
-            // Retrieve project.
-            Project p = this.loadProject(projectUri);
-            // Save new source data to public project storage.
-            String filePath = this.getProjectFilePath(projectId, fileName);
-            localFile = this.getFileData(fileData, fileUrl, filePath,
-                             Arrays.asList(TEXT_CSV_TYPE, APPLICATION_CSV_TYPE,
-                                           TEXT_COMMA_SEPARATED_VALUES_TYPE,
-                                           TEXT_PLAIN_TYPE), true);
+            op.execute(params);
+        } catch (Exception e) {
+            this.handleInternalError(e, "error during operation execution");
+        }
+        // (browsers) to the source tab of the project page.
+        return this.redirect(p, ProjectTab.Sources).build();
+    }
+    
+    public class UploadCsvSource extends OperationBase {
 
-            Separator sep = Separator.valueOf(separator);
-            // Initialize new source.
-            CsvSource src = this.projectManager.newCsvSource(p, sourceUri,
-                                                    srcName, description,
-                                                    filePath, sep.getValue());
-            if (fileUrl != null) {
-                src.setSourceUrl(fileUrl.toString());
+        @Override
+        public void execute(Parameters params) throws Exception {
+            Date eventStart = new Date();
+            String projectUriString = params.getProjectValue();
+            String srcName = params.getValue("srcName");
+            if(srcName == null)
+                srcName = Double.toString(Math.random()).replace(".", "");
+            String description = params.getValue("description");
+            String sourceUrl = params.getValue("sourceUrl");
+            String filePath = params.getValue("filePath");
+            InputStream fileData = null;
+            File localFile = null;
+            String fileName = null;
+            if (filePath != null) {
+                FileStore fs = Workspace.this.getFileStore();
+                localFile = fs.getFile(filePath);
+                fileData = new FileInputStream(localFile);
+                fileName = localFile.getName();
             }
-            if (encoding != null) {
-                src.setEncoding(encoding.name());
-            }
-            src.setFirstDataRow(firstRow);
-            src.setLastDataRow(lastRow);
-            src.setTitleRow(titleRow);
-            src.setQuote(quote);
-            // Iterate on source content to validate uploaded file.
-            int n = 0;
-            CloseableIterator<?> i = src.iterator();
-            try {
-                for (; i.hasNext(); ) {
-                    n++;
-                    if (n > 1000) break;        // 1000 lines is enough!
-                    i.next();   // Throws TechnicalException if data is invalid.
+            URL fileUrl = null;
+            String charset = params.getValue("charset");
+            String separator = params.getValue("separator");
+            String quote = params.getValue("quote");
+            int titleRow = Integer.parseInt(params.getValue("titleRow"));
+            int firstRow = Integer.parseInt(params.getValue("firstRow"));
+            int lastRow = Integer.parseInt(params.getValue("lastRow"));
+            Charset encoding = null;
+            if (isSet(charset)) {
+                try {
+                    encoding = Charset.forName(charset);
+                }
+                catch (Exception e) {
+                    Workspace.this.throwInvalidParamError("charset", charset);
                 }
             }
+            if (! isBlank(sourceUrl)) {
+                try {
+                    fileUrl = new URL(sourceUrl);
+                }
+                catch (Exception e) {
+                    log.error("Failed to parse URL {}", e, sourceUrl);
+                    throw new TechnicalException("invalid sourceUrl : ", e);
+                }
+                if (isBlank(fileName)) {
+                    // No data uploaded. => Extract local file name from source URL.
+                    fileName = Workspace.this.extractFileName(fileUrl, "csv");
+                    // Reset input stream to force downloading data from source URL.
+                    fileData = null;
+                    Workspace.this.deleteFileStorage(localFile);
+                    localFile = null;
+                }
+                // Else: Read data from uploaded file but preserve source URL
+                //       to resolve external dependencies (such as DTDs).
+            }
+            else if (isBlank(fileName)) {
+                throw new TechnicalException("invalid source");
+            }
+            // Else: File data have been uploaded.
+            log.debug("Processing CSV source creation request for {}", srcName);
+            boolean deleteFiles = false;
+            try {
+                // Build object URIs from request path.
+                URI projectUri = URI.create(projectUriString);
+                URI sourceUri = new URI(projectUri.getScheme(), null,
+                                        projectUri.getHost(), projectUri.getPort(),
+                                        Workspace.this.newSourceId(projectUri.getPath(), srcName),
+                                        null, null);
+                // Retrieve project.
+                Project p = Workspace.this.loadProject(projectUri);
+                // Save new source data to public project storage.
+                if (fileData == null) {
+                    String projectId = projectUriString
+                            .substring(projectUriString.lastIndexOf("/") + 1);
+                    filePath = Workspace.this.getProjectFilePath(projectId, fileName);
+                    localFile = Workspace.this.getFileData(fileData, fileUrl, filePath,
+                                     Arrays.asList(TEXT_CSV_TYPE, APPLICATION_CSV_TYPE,
+                                                   TEXT_COMMA_SEPARATED_VALUES_TYPE,
+                                                   TEXT_PLAIN_TYPE), true);
+                    fileName = localFile.getName();
+                }
+                Separator sep = Separator.valueOf(separator);
+                // Initialize new source.
+                CsvSource src = Workspace.this.projectManager.newCsvSource(p,
+                        sourceUri, srcName, description, filePath,
+                        sep.getValue(), this.getOperationId(), params.getValues(),
+                        eventStart);
+                if (fileUrl != null) {
+                    src.setSourceUrl(fileUrl.toString());
+                }
+                if (encoding != null) {
+                    src.setEncoding(encoding.name());
+                }
+                src.setFirstDataRow(firstRow);
+                src.setLastDataRow(lastRow);
+                src.setTitleRow(titleRow);
+                src.setQuote(quote);
+                // Iterate on source content to validate uploaded file.
+                int n = 0;
+                CloseableIterator<?> i = src.iterator();
+                try {
+                    for (; i.hasNext(); ) {
+                        n++;
+                        if (n > 1000) break;        // 1000 lines is enough!
+                        i.next();   // Throws TechnicalException if data is invalid.
+                    }
+                }
+                catch (Exception e) {
+                    throw new IOException("Invalid or empty source data", e);
+                }
+                finally {
+                    i.close();
+                }
+                // Persist new source.
+                Workspace.this.projectManager.saveProject(p);
+                // Notify user of successful creation, redirecting HTML clients
+                log.info("New CSV source \"{}\" created", sourceUri);
+            }
+            catch (IOException e) {
+                deleteFiles = true;
+                String src = (fileData != null)? fileName:
+                             (fileUrl != null)? fileUrl.toString(): "file_url";
+                log.fatal("Failed to save source data from {}", e, src);
+                throw new TechnicalException("Failed to save source data from "
+                        + src, e);
+            }
             catch (Exception e) {
-                throw new IOException("Invalid or empty source data", e);
+                deleteFiles = true;
+                throw new TechnicalException("Failed to create CVS source for "
+                        + srcName, e);
             }
             finally {
-                i.close();
+                if ((deleteFiles) && (localFile != null)) {
+                    Workspace.this.deleteFileStorage(localFile);
+                }
             }
-            // Persist new source.
-            this.projectManager.saveProject(p);
-            // Notify user of successful creation, redirecting HTML clients
-            // (browsers) to the source tab of the project page.
-            response = this.created(p, sourceUri, ProjectTab.Sources).build();
+        }
 
-            log.info("New CSV source \"{}\" created", sourceUri);
+        @Override
+        public Parameters getBlankParameters() {
+            Collection<Parameter> paramList = new ArrayList<Parameter>();
+            paramList.add(new Parameter("project",
+                    "ws.param.project", ParameterType.project));
+            paramList.add(new Parameter("srcName",
+                    "ws.param.srcName", ParameterType.hidden));
+            paramList.add(new Parameter("description",
+                    "ws.param.description", ParameterType.hidden));
+            paramList.add(new Parameter("filePath",
+                    "ws.param.fileName", ParameterType.hidden));
+            paramList.add(new Parameter("sourceUrl",
+                    "ws.param.sourceUrl", ParameterType.input));
+            paramList.add(new Parameter("charset",
+                    "ws.param.charset", ParameterType.visible));
+            paramList.add(new Parameter("separator",
+                    "ws.param.separator", ParameterType.visible));
+            paramList.add(new Parameter("quote",
+                    "ws.param.quote", ParameterType.visible));
+            paramList.add(new Parameter("titleRow",
+                    "ws.param.titleRow", ParameterType.visible));
+            paramList.add(new Parameter("firstRow",
+                    "ws.param.firstRow", ParameterType.visible));
+            paramList.add(new Parameter("lastRow",
+                    "ws.param.lastRow", ParameterType.visible));
+            return new Parameters(paramList);
         }
-        catch (IOException e) {
-            deleteFiles = true;
-            String src = (fileData != null)? fileName:
-                         (fileUrl != null)? fileUrl.toString(): "file_url";
-            log.fatal("Failed to save source data from {}", e, src);
-            this.throwInvalidParamError(src, e.getLocalizedMessage());
-        }
-        catch (Exception e) {
-            deleteFiles = true;
-            this.handleInternalError(e,
-                                "Failed to create CVS source for {}", srcName);
-        }
-        finally {
-            if ((deleteFiles) && (localFile != null)) {
-                this.deleteFileStorage(localFile);
-            }
-        }
-        return response;
+        
     }
 
     @POST
@@ -1470,7 +1576,6 @@ public class Workspace extends BaseModule
                 throw new TechnicalException("invalid source");
             }
             // Else: File data have been uploaded.
-
             log.debug("Processing XML source creation request for {}", srcName);
             boolean deleteFiles = false;
             try {

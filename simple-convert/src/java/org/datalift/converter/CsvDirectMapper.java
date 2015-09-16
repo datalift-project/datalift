@@ -43,10 +43,14 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.regex.Pattern;
 
 import static java.util.Calendar.*;
@@ -73,14 +77,16 @@ import org.openrdf.model.Value;
 import org.openrdf.model.ValueFactory;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.repository.RepositoryConnection;
-
 import org.datalift.fwk.Configuration;
+import org.datalift.fwk.async.Operation;
+import org.datalift.fwk.async.Parameter;
+import org.datalift.fwk.async.ParameterType;
+import org.datalift.fwk.async.Parameters;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.CsvSource;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectModule;
 import org.datalift.fwk.project.Row;
-import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
@@ -105,7 +111,7 @@ import static org.datalift.fwk.MediaTypes.*;
  * @author lbihanic
  */
 @Path(CsvDirectMapper.MODULE_NAME)
-public class CsvDirectMapper extends BaseConverterModule
+public class CsvDirectMapper extends BaseConverterModule implements Operation
 {
     //-------------------------------------------------------------------------
     // CSV column type mapping enumeration
@@ -167,6 +173,9 @@ public class CsvDirectMapper extends BaseConverterModule
 
     /** The name of this module in the DataLift configuration. */
     public final static String MODULE_NAME = "csvdirectmapper";
+    
+    public final static String OPERATION_ID =
+            "http://www.datalift.org/core/converter/operation/" + MODULE_NAME;
 
     /**
      * The regex pattern to match possible separators in numbers
@@ -256,12 +265,11 @@ public class CsvDirectMapper extends BaseConverterModule
                 @FormParam(DATE_FORMAT_PARAM) String dateFormat,
                 @FormParam(KEY_COLUMN_PARAM) @DefaultValue("-1") int keyColumn,
                 @FormParam(TYPE_URI_PARAM) String targetType,
-                MultivaluedMap<String,String> params)
+                MultivaluedMap<String,String> paramsMap)
                                                 throws WebApplicationException {
         // Note: There a bug in Jersey that cause the MultivalueMap to be
         //       empty unless at least one @FormParm annotation is present.
         // See: http://jersey.576304.n2.nabble.com/POST-parameters-not-injected-via-MultivaluedMap-td6434341.html
-
         if (! UriParam.isSet(projectId)) {
             this.throwInvalidParamError(PROJECT_ID_PARAM, null);
         }
@@ -271,40 +279,122 @@ public class CsvDirectMapper extends BaseConverterModule
         if (! UriParam.isSet(targetGraphParam)) {
             this.throwInvalidParamError(GRAPH_URI_PARAM, null);
         }
-        Response response = null;
+        StringBuilder paramsStr = new StringBuilder();
+        for (String k : paramsMap.keySet()) {
+            if (k.startsWith(COLUMN_MAPPING_PREFIX)) {
+                try {
+                    int col = Integer.parseInt(k.substring(4));
+                    Mapping m  = Mapping.fromString(paramsMap.getFirst(k));
+                    if (log.isTraceEnabled()) {
+                        log.trace("Type mapping: Column #{} -> {}",
+                                                            wrap(col), m);
+                    }
+                    if (paramsStr.length() != 0) {
+                        paramsStr.append(";");
+                    }
+                    paramsStr.append(col).append(":").append(m.getLabel());
+                }
+                catch (Exception e) { /* Ignore... */ }
+            }
+            // Else: Ignore, not a column type mapping description.
+        }
+        Project p = this.getProject(projectId.toUri(PROJECT_ID_PARAM));
+        Parameters params = this.getBlankParameters();
+        params.setValue("project", projectId.toUri().toString());
+        params.setValue("source", sourceId.toUri().toString());
+        params.setValue("destTitle", destTitle);
+        params.setValue("targetGraph", targetGraphParam.toUri().toString());
+        params.setValue("baseUri", baseUriParam.toUri(BASE_URI_PARAM).toString());
+        params.setValue("trueValues", trueValues);
+        params.setValue("dateFormat", dateFormat);
+        params.setValue("targetType", targetType);
+        params.setValue("colParams", paramsStr.toString());
+        params.setValue("keyColumn", Integer.toString(keyColumn));
+        try {
+            this.execute(params);
+        } catch (Exception e) {
+            this.handleInternalError(e);
+        }
+        return Response.seeOther(URI.create(p.getUri() + "#source")).build();
+    }
+    
+    //-------------------------------------------------------------------------
+    // Operation contract support
+    //-------------------------------------------------------------------------
+    
+    @Override
+    public URI getOperationId() {
+        return URI.create(OPERATION_ID);
+    }
 
+    @Override
+    public void execute(Parameters params) throws Exception {
+        Date eventStart = new Date();
+        String projectId = params.getProjectValue();
+        String sourceId = params.getValue("source");
+        String destTitle = params.getValue("destTitle");
+        if (destTitle == null) {
+            destTitle = Double.toString(Math.random()).replace(".", "");
+        }
+        String targetGraphStr = params.getValue("targetGraph");
+        if(targetGraphStr == null) {
+            targetGraphStr = sourceId.toString() + "/" + destTitle;
+        }
+        URI targetGraph = URI.create(targetGraphStr);
+        String trueValues = params.getValue("trueValues");
+        URI baseUri = URI.create(params.getValue("baseUri"));
+        String dateFormat = params.getValue("dateFormat");
+        String targetType = params.getValue("targetType");
+        String colParams = params.getValue("colParams");
+        int keyColumn = Integer.parseInt(params.getValue("keyColumn"));
         try {
             // Retrieve project.
-            Project p = this.getProject(projectId.toUri(PROJECT_ID_PARAM));
+            Project p = this.getProject(URI.create(projectId));
             // Load input source.
             CsvSource in = (CsvSource)
-                            (p.getSource(sourceId.toUri(SOURCE_ID_PARAM)));
+                            (p.getSource(URI.create(sourceId)));
             if (in == null) {
                 throw new ObjectNotFoundException("project.source.not.found",
                                                   projectId, sourceId);
             }
             // Load datatype mapping for each column.
-            Mapping[] typeMappings = new Mapping[params.size()];
-            for (String k : params.keySet()) {
-                if (k.startsWith(COLUMN_MAPPING_PREFIX)) {
-                    try {
-                        int col = Integer.parseInt(k.substring(4));
-                        Mapping m  = Mapping.fromString(params.getFirst(k));
-                        if (log.isTraceEnabled()) {
-                            log.trace("Type mapping: Column #{} -> {}",
-                                                                wrap(col), m);
-                        }
-                        typeMappings[col] = m;
+            Map<Integer, Mapping> paramsMap = new HashMap<Integer, Mapping>();
+            int nbrCol = 0;
+            if (colParams != null) {
+                int strPt = 0;
+                while (strPt < colParams.length()) {
+                    int sep = colParams.indexOf(":", strPt);
+                    int col = Integer.parseInt(colParams.substring(strPt, sep));
+                    if (col + 1 > nbrCol) {
+                        nbrCol = col + 1;
                     }
-                    catch (Exception e) { /* Ignore... */ }
+                    Mapping mapp;
+                    int end = colParams.indexOf(";", strPt);
+                    if (end == -1) {
+                        mapp = Mapping.fromString(colParams.substring(sep + 1));
+                        strPt = colParams.length();
+                    }
+                    else {
+                        mapp = Mapping.fromString(
+                                colParams.substring(sep + 1, end));
+                        strPt = end + 1;
+                    }
+                    paramsMap.put(col, mapp);
                 }
-                // Else: Ignore, not a column type mapping description.
             }
-            URI baseUri = UriParam.valueOf(baseUriParam, BASE_URI_PARAM);
+            Mapping[] typeMappings = new Mapping[nbrCol];
+            for (int k = 0; k < nbrCol; k++) {
+                Mapping mapp = paramsMap.get(new Integer(k));
+                if (mapp != null) {
+                    typeMappings[k] = mapp;
+                }
+                else {
+                    typeMappings[k] = null;
+                }
+            }
             // Extract target named graph. It shall NOT conflict with
             // existing objects (sources, projects) otherwise it would not
             // be accessible afterwards (e.g. display, removal...).
-            URI targetGraph = targetGraphParam.toUri(GRAPH_URI_PARAM);
             this.checkUriConflict(targetGraph, GRAPH_URI_PARAM);
             // Extract column mapping configuration.
             MappingDesc desc = null;
@@ -329,20 +419,42 @@ public class CsvDirectMapper extends BaseConverterModule
                           join(errors, "\n\t- "));
             }
             // Register new transformed RDF source.
-            Source out = this.addResultSource(p, in, destTitle,
-                                                     targetGraph, baseUri);
-            // Display project source tab, including the newly created source.
-            response = this.created(out).build();
-
+            this.addResultSource(p, in, destTitle, targetGraph, baseUri,
+                    this.getOperationId(), params.getValues(), eventStart);
             log.info("CSV data from \"{}\" successfully mapped to \"{}\"",
                                                         sourceId, targetGraph);
         }
         catch (Exception e) {
             this.handleInternalError(e);
         }
-        return response;
     }
-
+    
+    @Override
+    public Parameters getBlankParameters() {
+        Collection<Parameter> paramList = new ArrayList<Parameter>();
+        paramList.add(new Parameter("project",
+                "ws.param.project", ParameterType.project));
+        paramList.add(new Parameter("source",
+                "ws.param.source", ParameterType.input_source));
+        paramList.add(new Parameter("destTitle",
+                "ws.param.destTitle", ParameterType.hidden));
+        paramList.add(new Parameter("targetGraph",
+                "ws.param.targetGraph", ParameterType.hidden));
+        paramList.add(new Parameter("trueValues",
+                "ws.param.trueValues", ParameterType.visible));
+        paramList.add(new Parameter("baseUri",
+                "ws.param.baseUri", ParameterType.visible));
+        paramList.add(new Parameter("dateFormat",
+                "ws.param.dateFormat", ParameterType.visible));
+        paramList.add(new Parameter("targetType",
+                "ws.param.targetType", ParameterType.visible));
+        paramList.add(new Parameter("keyColumn",
+                "ws.param.keyColumn", ParameterType.visible));
+        paramList.add(new Parameter("colParams",
+                "ws.param.colParams", ParameterType.hidden));
+        return new Parameters(paramList);
+    }
+    
     //-------------------------------------------------------------------------
     // Specific implementation
     //-------------------------------------------------------------------------
