@@ -330,6 +330,24 @@ public class XsltXmlConverter extends BaseConverterModule implements Operation
         }
     }
     
+    @Override
+    public Parameters getBlankParameters() {
+        Collection<Parameter> paramList = new ArrayList<Parameter>();
+        paramList.add(new Parameter("project",
+                "ws.param.project", ParameterType.project));
+        paramList.add(new Parameter("source",
+                "ws.param.source", ParameterType.input_source));
+        paramList.add(new Parameter("destTitle",
+                "ws.param.destTitle", ParameterType.hidden));
+        paramList.add(new Parameter("targetGraph",
+                "ws.param.targetGraph", ParameterType.hidden));
+        paramList.add(new Parameter("stylesheet",
+                "ws.param.stylesheet", ParameterType.visible));
+        paramList.add(new Parameter("baseUri",
+                "ws.param.baseUri", ParameterType.visible));
+        return new Parameters(paramList);
+    }
+    
     //-------------------------------------------------------------------------
     // Specific implementation
     //-------------------------------------------------------------------------
@@ -494,23 +512,5 @@ public class XsltXmlConverter extends BaseConverterModule implements Operation
         public String toString() {
             return this.id;
         }
-    }
-    
-    @Override
-    public Parameters getBlankParameters() {
-        Collection<Parameter> paramList = new ArrayList<Parameter>();
-        paramList.add(new Parameter("project",
-                "ws.param.project", ParameterType.project));
-        paramList.add(new Parameter("source",
-                "ws.param.source", ParameterType.input_source));
-        paramList.add(new Parameter("destTitle",
-                "ws.param.destTitle", ParameterType.hidden));
-        paramList.add(new Parameter("targetGraph",
-                "ws.param.targetGraph", ParameterType.hidden));
-        paramList.add(new Parameter("stylesheet",
-                "ws.param.stylesheet", ParameterType.visible));
-        paramList.add(new Parameter("baseUri",
-                "ws.param.baseUri", ParameterType.visible));
-        return new Parameters(paramList);
     }
 }
