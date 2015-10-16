@@ -67,9 +67,6 @@ public abstract class BaseModule implements Module
 
     /**
      * Creates a new module.
-     * <p>
-     * This constructor is a shortcut to
-     * <code>new BaseModule(name, false)</code>.
      * @param  name   the module name.
      *
      * @throws IllegalArgumentException if <code>name</code> is
