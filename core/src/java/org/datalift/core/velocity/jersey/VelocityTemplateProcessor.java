@@ -81,7 +81,6 @@ import org.apache.velocity.tools.view.WebappResourceLoader;
 import static org.apache.velocity.app.VelocityEngine.*;
 import static org.apache.velocity.runtime.log.Log4JLogChute.*;
 
-import org.datalift.core.velocity.i18n.I18nDirective;
 import org.datalift.core.velocity.i18n.I18nTool;
 import org.datalift.core.velocity.i18n.LoadDirective;
 import org.datalift.core.velocity.sparql.SparqlTool;
@@ -636,8 +635,9 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
     /**
      * Registers the Velocity directives provided by Datalift Core.
      */
+    @SuppressWarnings("deprecation")
     private static void registerCoreDirectives() {
         addDirective(LoadDirective.class);
-        addDirective(I18nDirective.class);
+        addDirective(org.datalift.core.velocity.i18n.I18nDirective.class);
     }
 }
