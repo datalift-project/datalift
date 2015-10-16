@@ -329,7 +329,8 @@ public final class SparqlTool
     /**
      * Executes a DESCRIBE query for the specified RDF resource against
      * the {@link #getDefaultRepository() default RDF store}.
-     * @param  uri   the URI of the RDF resource to describe.
+     * @param  queryOrUri   a SPARQL describe query or the URI of the
+     *                      RDF resource to retrieve.
      *
      * @return the query result as a {@link DescribeResult} object.
      * @throws RdfQueryException if any error occurred executing the
@@ -337,8 +338,8 @@ public final class SparqlTool
      *
      * @see    #describe(String, Object)
      */
-    public DescribeResult describe(Object uri) {
-       return this.describe(this.defaultRepository, uri);
+    public DescribeResult describe(Object queryOrUri) {
+       return this.describe(this.defaultRepository, queryOrUri);
     }
 
     /**
@@ -348,14 +349,15 @@ public final class SparqlTool
      *                      specified in Datalift configuration or
      *                      <code>null</code> to query the
      *                      {@link #getDefaultRepository() default RDF store}.
-     * @param  uri          the URI of the RDF resource to describe.
+     * @param  queryOrUri   a SPARQL describe query or the URI of the
+     *                      RDF resource to retrieve.
      *
      * @return the query result as a {@link DescribeResult} object.
      * @throws RdfQueryException if any error occurred executing the
      *         query or processing the result.
      */
-    public DescribeResult describe(String repository, Object uri) {
-        return this.describe(this.cfg.getRepository(repository), uri);
+    public DescribeResult describe(String repository, Object queryOrUri) {
+        return this.describe(this.cfg.getRepository(repository), queryOrUri);
     }
 
     /**
@@ -678,18 +680,27 @@ public final class SparqlTool
      * Executes a DESCRIBE query for the specified RDF resource against
      * the specified Datalift RDF store.
      * @param  repository   the Datalift RDF store to query.
-     * @param  uri          the URI of the RDF resource to retrieve.
+     * @param  queryOrUri   a SPARQL describe query or the URI of the
+     *                      RDF resource to retrieve.
      *
      * @return the query result as a {@link DescribeResult} object.
      * @throws RdfQueryException if any error occurred executing the
      *         query or processing the result.
      */
-    private DescribeResult describe(Repository repository, Object uri) {
-        if (uri == null) {
-            throw new IllegalArgumentException("uri");
+    private DescribeResult describe(Repository repository, Object queryOrUri) {
+        if (queryOrUri == null) {
+            throw new IllegalArgumentException("queryOrUri");
         }
-        String u = uri.toString();
-        String query = "DESCRIBE <" + this.resolvePrefixes(u, false) + '>';
+        String query = null;
+        String uri   = null;
+        if ((queryOrUri instanceof String) &&
+            ((String)queryOrUri).toUpperCase().contains("DESCRIBE")) {
+            query = queryOrUri.toString();
+        }
+        else {
+            uri   = queryOrUri.toString();
+            query = "DESCRIBE <" + this.resolvePrefixes(uri, false) + '>';
+        }
         QueryDescription queryDesc = new QueryDescription(query);
 
         RepositoryConnection cnx = null;
@@ -702,7 +713,7 @@ public final class SparqlTool
             this.setBindings(q);
             q.setIncludeInferred(this.includeInferred);
 
-            DescribeResult result = new DescribeResult(u, q.evaluate());
+            DescribeResult result = new DescribeResult(uri, q.evaluate());
             if (log.isDebugEnabled()) {
                 if (this.bindings.isEmpty()) {
                     log.debug("\"{}\" on RDF store: {} -> {} triples",
@@ -1117,14 +1128,11 @@ public final class SparqlTool
      */
     public final class DescribeResult extends HashMap<String,Collection<Value>>
     {
-        private final String uri;
+        private String uri;
         private final Map<String, DescribeResult> otherSubjects;
 
         private DescribeResult(String uri,
-                               Map<String, DescribeResult> otherSubjects) {
-            if (! isSet(uri)) {
-                throw new IllegalArgumentException("uri");
-            }
+                               Map<String,DescribeResult> otherSubjects) {
             if (otherSubjects == null) {
                 throw new IllegalArgumentException("otherSubjects");
             }
@@ -1134,17 +1142,23 @@ public final class SparqlTool
 
         private DescribeResult(String uri, GraphQueryResult result)
                                         throws QueryEvaluationException {
-            this(uri, new HashMap<String,SparqlTool.DescribeResult>());
+            this(uri, new HashMap<String,DescribeResult>());
             try {
                 // Register namespace prefix mappings for this query.
                 registerNamespaceMappings(result);
                 // Parse results.
-                URIImpl u = new URIImpl(uri);
+                org.openrdf.model.URI u = (uri != null)? new URIImpl(uri): null;
                 for (; result.hasNext(); ) {
                     Statement s = result.next();
                     DescribeResult m = this;
                     Resource r = s.getSubject();
-                    if (! u.equals(r)) {
+                    if ((u == null) && (r instanceof org.openrdf.model.URI)) {
+                        // No target URI provided (i.e. WHERE clause present).
+                        // => Use first retrieved subject as main result URI.
+                        u = (org.openrdf.model.URI)r;
+                        this.uri = u.stringValue();
+                    }
+                    if (! r.equals(u)) {
                         String subject = r.toString();
                         m = this.otherSubjects.get(subject);
                         if (m == null) {
