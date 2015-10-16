@@ -119,12 +119,17 @@ public class MediaTypes extends MediaType
     public final static String APPLICATION_TRIX = "application/trix";
     /** "application/trix" */
     public final static MediaType APPLICATION_TRIX_TYPE =
-                                            MediaType.valueOf(APPLICATION_TRIX);
-    /** "application/x-trig" */
-    public final static String APPLICATION_TRIG = "application/x-trig";
-    /** "application/x-trig" */
+                                        MediaType.valueOf(APPLICATION_TRIX);
+    /** "application/trig" */
+    public final static String APPLICATION_TRIG = "application/trig";
+    /** "application/trig" */
     public final static MediaType APPLICATION_TRIG_TYPE =
-                                            MediaType.valueOf(APPLICATION_TRIG);
+                                        MediaType.valueOf(APPLICATION_TRIG);
+    /** "application/x-trig" */
+    public final static String APPLICATION_X_TRIG = "application/x-trig";
+    /** "application/x-trig" */
+    public final static MediaType APPLICATION_X_TRIG_TYPE =
+                                        MediaType.valueOf(APPLICATION_X_TRIG);
 
     /** "text/x-nquads" */
     public final static String TEXT_NQUADS = "text/x-nquads";

@@ -88,8 +88,9 @@ public enum RdfFormat
     /** "application/n-triples" */
     NTRIPLES    ("N-Triples", RDFFormat.NTRIPLES, "nt",
                  APPLICATION_NTRIPLES_TYPE),
-    /** "application/trix" */
-    TRIG        ("TriG", RDFFormat.TRIG, "trig", APPLICATION_TRIG_TYPE),
+    /** "application/trig" */
+    TRIG        ("TriG", RDFFormat.TRIG, "trig",
+                 APPLICATION_TRIG_TYPE, APPLICATION_X_TRIG_TYPE),
     /** "application/x-trig" */
     TRIX        ("TriX", RDFFormat.TRIX, "trix", APPLICATION_TRIX_TYPE),
     /** "application/x-trig" */
