@@ -824,7 +824,7 @@ public final class SparqlTool
      *
      * @return the URI with any known namespace prefix replaced.
      */
-    private String resolvePrefixes(String uri, boolean predicate) {
+    public String resolvePrefixes(String uri, boolean predicate) {
         if (predicate && "a".equals(uri)) {
             uri = RDF.TYPE.toString();
         }
@@ -1142,7 +1142,7 @@ public final class SparqlTool
 
         private DescribeResult(String uri, GraphQueryResult result)
                                         throws QueryEvaluationException {
-            this(uri, new HashMap<String,DescribeResult>());
+            this(uri, new LinkedHashMap<String,DescribeResult>());
             try {
                 // Register namespace prefix mappings for this query.
                 registerNamespaceMappings(result);
@@ -1152,12 +1152,6 @@ public final class SparqlTool
                     Statement s = result.next();
                     DescribeResult m = this;
                     Resource r = s.getSubject();
-                    if ((u == null) && (r instanceof org.openrdf.model.URI)) {
-                        // No target URI provided (i.e. WHERE clause present).
-                        // => Use first retrieved subject as main result URI.
-                        u = (org.openrdf.model.URI)r;
-                        this.uri = u.stringValue();
-                    }
                     if (! r.equals(u)) {
                         String subject = r.toString();
                         m = this.otherSubjects.get(subject);
