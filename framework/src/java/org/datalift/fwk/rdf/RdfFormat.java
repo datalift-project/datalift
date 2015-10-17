@@ -55,7 +55,6 @@ import org.openrdf.rio.RDFFormat;
 import org.openrdf.rio.RDFParser;
 import org.openrdf.rio.RDFWriter;
 import org.openrdf.rio.Rio;
-import org.semarglproject.sesame.rdf.rdfa.RDFaFormat;
 import org.semarglproject.sesame.rdf.rdfa.SesameRDFaParser;
 
 import org.datalift.fwk.MediaTypes;
@@ -99,7 +98,7 @@ public enum RdfFormat
     // RDF_JSON    ("RDF/JSON", RDFFormat.RDFJSON, "json",
     //              APPLICATION_RDF_JSON_TYPE, APPLICATION_JSON_TYPE),
     /** RDFa (text/html) */
-    RDFA        ("RDFa", RDFaFormat.RDFA, false,
+    RDFA        ("RDFa", RDFFormat.RDFA, false,
                  new String[] { "html", "xhtml", "htm" },
                  APPLICATION_XHTML_XML_TYPE, TEXT_HTML_TYPE) {
             @Override
