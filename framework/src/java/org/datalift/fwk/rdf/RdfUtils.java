@@ -40,7 +40,9 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
+import java.util.Calendar;
 import java.util.Collections;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -1073,6 +1075,12 @@ public final class RdfUtils
         }
         else if (o instanceof Byte) {
             v = valueFactory.createLiteral(((Byte)o).byteValue());
+        }
+        else if (o instanceof Date) {
+            v = valueFactory.createLiteral((Date)o);
+        }
+        else if (o instanceof Calendar) {
+            v = valueFactory.createLiteral(((Calendar)o).getTime());
         }
         else if (o instanceof URL) {
             v = valueFactory.createURI(o.toString());

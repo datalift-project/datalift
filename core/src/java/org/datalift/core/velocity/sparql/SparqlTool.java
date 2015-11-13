@@ -202,7 +202,10 @@ public final class SparqlTool
      *         defined for the object Java type.
      */
     public void bind(String name, Object value) {
-        this.bindings.put(name, RdfUtils.mapBinding(value));
+        Value v = RdfUtils.mapBinding(value);
+        if (v != null) {
+            this.bindings.put(name, v);
+        }
     }
 
     /**
@@ -214,7 +217,10 @@ public final class SparqlTool
      * @see    #bind(String, Object)
      */
     public void bindUri(String name, String uri) {
-        this.bindings.put(name, new URIImpl(this.resolvePrefixes(uri, false)));
+        if (! isBlank(uri)) {
+            this.bindings.put(name,
+                              new URIImpl(this.resolvePrefixes(uri, false)));
+        }
     }
 
     /**
@@ -743,7 +749,9 @@ public final class SparqlTool
     private void setBindings(Query query) {
         if (! this.bindings.isEmpty()) {
             for (Entry<String,Value> e : this.bindings.entrySet()) {
-                query.setBinding(e.getKey(), e.getValue());
+                if ((e.getKey() != null) && (e.getValue() != null)) {
+                    query.setBinding(e.getKey(), e.getValue());
+                }
             }
         }
     }
