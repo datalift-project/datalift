@@ -75,30 +75,30 @@ public enum RdfFormat
     //-------------------------------------------------------------------------
 
     /** "application/rdf+xml" */
-    RDF_XML     ("RDF/XML", RDFFormat.RDFXML,
+    RDF_XML     ("RDF/XML", RDFFormat.RDFXML, false,
                  new String[] { "rdf", "rdfs", "owl", "xml" },
                  APPLICATION_RDF_XML_TYPE, APPLICATION_XML_TYPE),
     /** "text/turtle" */
-    TURTLE      ("Turtle", RDFFormat.TURTLE, "ttl",
+    TURTLE      ("Turtle", RDFFormat.TURTLE, false, "ttl",
                  TEXT_TURTLE_TYPE, APPLICATION_TURTLE_TYPE),
     /** "text/n3" */
-    N3          ("N3", RDFFormat.N3, "n3",
+    N3          ("N3", RDFFormat.N3, false, "n3",
                  TEXT_N3_TYPE, TEXT_RDF_N3_TYPE, APPLICATION_N3_TYPE),
     /** "application/n-triples" */
-    NTRIPLES    ("N-Triples", RDFFormat.NTRIPLES, "nt",
+    NTRIPLES    ("N-Triples", RDFFormat.NTRIPLES, false, "nt",
                  APPLICATION_NTRIPLES_TYPE),
     /** "application/trig" */
-    TRIG        ("TriG", RDFFormat.TRIG, "trig",
+    TRIG        ("TriG", RDFFormat.TRIG, true, "trig",
                  APPLICATION_TRIG_TYPE, APPLICATION_X_TRIG_TYPE),
     /** "application/x-trig" */
-    TRIX        ("TriX", RDFFormat.TRIX, "trix", APPLICATION_TRIX_TYPE),
+    TRIX        ("TriX", RDFFormat.TRIX, true, "trix", APPLICATION_TRIX_TYPE),
     /** "application/x-trig" */
-    NQUADS      ("N-Quads", RDFFormat.NQUADS, "nq", TEXT_NQUADS_TYPE),
+    NQUADS      ("N-Quads", RDFFormat.NQUADS, true, "nq", TEXT_NQUADS_TYPE),
     // /** "application/rdf+json" */
     // RDF_JSON    ("RDF/JSON", RDFFormat.RDFJSON, "json",
     //              APPLICATION_RDF_JSON_TYPE, APPLICATION_JSON_TYPE),
     /** RDFa (text/html) */
-    RDFA        ("RDFa", RDFFormat.RDFA, false,
+    RDFA        ("RDFa", RDFFormat.RDFA, false, false,
                  new String[] { "html", "xhtml", "htm" },
                  APPLICATION_XHTML_XML_TYPE, TEXT_HTML_TYPE) {
             @Override
@@ -137,7 +137,9 @@ public enum RdfFormat
     private final RDFFormat format;
     /** Whether outputting to this format is support. */
     private final boolean canOutput;
-    /** The file extensions. */
+    /** Whether this format supports named graphs. */
+    private final boolean supportsGraphs;
+    /** Known file extensions. */
     public final List<String> extensions;
     /** The MIME types that map to the official type. */
     public final List<MediaType> mimeTypes;
@@ -172,11 +174,12 @@ public enum RdfFormat
      *                     element being the official/preferred MIME
      *                     type.
      *
-     * @see    #RdfFormat(String, RDFFormat, boolean, String[], MediaType...)
+     * @see    #RdfFormat(String, RDFFormat, boolean, boolean, String[], MediaType...)
      */
-    RdfFormat(String name, RDFFormat format,
+    RdfFormat(String name, RDFFormat format, boolean supportsGraphs,
                            String extension, MediaType... mimeTypes) {
-        this(name, format, true, new String[] { extension }, mimeTypes);
+        this(name, format, true, supportsGraphs,
+                                 new String[] { extension }, mimeTypes);
     }
 
     /**
@@ -188,26 +191,28 @@ public enum RdfFormat
      *                      element being the official/preferred MIME
      *                      type.
      *
-     * @see    #RdfFormat(String, RDFFormat, boolean, String[], MediaType...)
+     * @see    #RdfFormat(String, RDFFormat, boolean, boolean, String[], MediaType...)
      */
-    RdfFormat(String name, RDFFormat format,
+    RdfFormat(String name, RDFFormat format, boolean supportsGraphs,
                            String[] extensions, MediaType... mimeTypes) {
-        this(name, format, true, extensions, mimeTypes);
+        this(name, format, true, supportsGraphs, extensions, mimeTypes);
     }
 
     /**
      * Creates a new RdfFormat instance.
-     * @param  name         the format display name.
-     * @param  format       the Sesame RDF format descriptor.
-     * @param  canOutput    whether outputting to this format is
-     *                      supported.
-     * @param  extensions   the file extensions for the format.
-     * @param  mimeTypes    the MIME types for the format, the first
-     *                      element being the official/preferred MIME
-     *                      type.
+     * @param  name             the format display name.
+     * @param  format           the Sesame RDF format descriptor.
+     * @param  canOutput        whether outputting to this format is
+     *                          supported.
+     * @param  supportsGraphs   whether the format supports named graphs.
+     * @param  extensions       the file extensions for the format.
+     * @param  mimeTypes        the MIME types for the format, the first
+     *                          element being the official/preferred MIME
+     *                          type.
      */
     RdfFormat(String name, RDFFormat format, boolean canOutput,
-                           String[] extensions, MediaType... mimeTypes) {
+                           boolean supportsGraphs, String[] extensions,
+                           MediaType... mimeTypes) {
         if (StringUtils.isBlank(name)) {
             throw new IllegalArgumentException("name");
         }
@@ -220,12 +225,13 @@ public enum RdfFormat
         if ((mimeTypes == null) || (mimeTypes.length == 0)) {
             throw new IllegalArgumentException("mimeTypes");
         }
-        this.name       = name;
-        this.format     = format;
-        this.canOutput  = canOutput;
-        this.extensions = Collections.unmodifiableList(
+        this.name           = name;
+        this.format         = format;
+        this.canOutput      = canOutput;
+        this.supportsGraphs = supportsGraphs;
+        this.extensions     = Collections.unmodifiableList(
                                                     Arrays.asList(extensions));
-        this.mimeTypes  = Collections.unmodifiableList(
+        this.mimeTypes      = Collections.unmodifiableList(
                                                     Arrays.asList(mimeTypes));
     }
 
@@ -298,6 +304,15 @@ public enum RdfFormat
      */
     public boolean canOutput() {
         return this.canOutput;
+    }
+
+    /**
+     * Returns whether this format natively supports named graphs.
+     * @return <code>true</code> if this format supports named graphs;
+     *         <code>false</code> otherwise.
+     */
+    public boolean supportsGraphs() {
+        return this.supportsGraphs;
     }
 
     /**
