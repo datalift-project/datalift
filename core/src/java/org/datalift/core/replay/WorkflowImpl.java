@@ -249,6 +249,9 @@ public class WorkflowImpl extends BaseRdfEntity implements Workflow{
                 inputs.add(new Integer(0));
             }
             int i = 0;
+            int nbrIt = 0;
+            HashMap<Exception, IterableInput[]> except =
+                    new HashMap<Exception, IterableInput[]>();
             while (i != inputs.size()) {
                 // rebuild iteration configuration
                 int j = inputs.size() - 1;
@@ -266,9 +269,31 @@ public class WorkflowImpl extends BaseRdfEntity implements Workflow{
                 for (int k = 0; k < inputs.size(); k++) {
                     iteration[k] = itInput.get(j).get(inputs.get(k));
                 }
-                this.replay(variables, iteration);
+                try {
+                    this.replay(variables, iteration);
+                }
+                catch (Exception e) {
+                    except.put(e, iteration);
+                }
+                nbrIt++;
                 // go to the next iteration
                 inputs.set(inputs.size() - 1, inputs.get(inputs.size() - 1) + 1);
+            }
+            if (except.size() == nbrIt) {
+                throw new RuntimeException(except.entrySet().iterator().next().getKey());
+            }
+            else {
+                for (Entry<Exception, IterableInput[]> e : except.entrySet()) {
+                    StringBuilder msg = new StringBuilder("a file is un readable at iteration : ");
+                    for (IterableInput it : e.getValue()) {
+                        msg.append(it.step.getOperation().toString()).append(" ")
+                                .append(it.param).append(" -> ").append(it.val)
+                                .append(", ");
+                    }
+                    msg.deleteCharAt(msg.length() - 1);
+                    msg.deleteCharAt(msg.length() - 1);
+                    Logger.getLogger().info(msg.toString());
+                }
             }
         }
     }
@@ -610,7 +635,6 @@ public class WorkflowImpl extends BaseRdfEntity implements Workflow{
                     }
                 }
                 else {
-                    System.out.println("not iterable : " + input.getVal());
                     break;
                 }
                 List<IterableInput> iterations = new ArrayList<IterableInput>();
@@ -618,7 +642,6 @@ public class WorkflowImpl extends BaseRdfEntity implements Workflow{
                     iterations.add(new IterableInput(input.getStep(),
                             input.getParam(),
                             f.getURL().toString()));
-                    System.out.println("iteration : " + f.getURL().toString());
                 }
                 ret.add(iterations);
             }
