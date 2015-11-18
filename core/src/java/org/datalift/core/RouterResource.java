@@ -393,13 +393,13 @@ public class RouterResource implements LifeCycle, ResourceResolver
         Response response = null;
 
         // Get relative resource path
-        String path = uriInfo.getPath();
+        String path = uriInfo.getPath(false);
         if (path.startsWith("/")) {
             path = path.substring(1);
         }
         log.trace("Resolving unmapped resource: {}", path);
         // Normalize path, e.g. to resolve relative directories ("x/../y").
-        path = URI.create(path).normalize().toString();
+        path = URI.create(path).normalize().getPath();
 
         try {
             if (bundle != null) {
