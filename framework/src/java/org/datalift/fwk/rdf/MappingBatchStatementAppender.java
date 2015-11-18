@@ -86,7 +86,12 @@ public final class MappingBatchStatementAppender extends BatchStatementAppender
             p = this.mapUri(p);
             o = this.mapValue(o);
         }
-        this.cnx.add(s, p, o, this.targetGraph);
+        if (this.targetGraph != null) {
+            this.cnx.add(s, p, o, this.targetGraph);
+        }
+        else {
+            this.cnx.add(s, p, o, stmt.getContext());
+        }
     }
 
     //-------------------------------------------------------------------------
@@ -99,7 +104,7 @@ public final class MappingBatchStatementAppender extends BatchStatementAppender
             if (l.getDatatype() == null) {
                 String s = l.stringValue();
                 if (! isValidStringLiteral(s)) {
-                    v = valueFactory.createLiteral(
+                    v = this.valueFactory.createLiteral(
                                 removeInvalidDataCharacter(s), l.getLanguage());
                 }
             }

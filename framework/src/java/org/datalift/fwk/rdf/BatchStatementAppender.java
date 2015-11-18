@@ -188,6 +188,11 @@ public class BatchStatementAppender extends RDFHandlerBase
      *         the triple through the repository connection.
      */
     protected void addStatement(Statement stmt) throws RepositoryException {
-        this.cnx.add(stmt, this.targetGraph);
+        if (this.targetGraph != null) {
+            this.cnx.add(stmt, this.targetGraph);
+        }
+        else {
+            this.cnx.add(stmt);
+        }
     }
 }
