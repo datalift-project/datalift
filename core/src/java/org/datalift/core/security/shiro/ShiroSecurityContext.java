@@ -71,7 +71,7 @@ public class ShiroSecurityContext extends SecurityContext
                 principal = String.valueOf(o);
             }
         }
-        return principal;
+        return this.checkSurrogateUser(principal);
     }
 
     /** {@inheritDoc} */
@@ -96,8 +96,8 @@ public class ShiroSecurityContext extends SecurityContext
                 hasRole = s.isPermitted(role);
             }
         }
-        if (log.isDebugEnabled()) {
-            log.debug("{} has role {}: {}", s.getPrincipal(), role,
+        if (log.isTraceEnabled()) {
+            log.trace("{} has role {}: {}", s.getPrincipal(), role,
                                                     Boolean.valueOf(hasRole));
         }
         return hasRole;

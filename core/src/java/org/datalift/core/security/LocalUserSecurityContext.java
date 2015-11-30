@@ -57,7 +57,7 @@ public class LocalUserSecurityContext extends SecurityContext
      */
     @Override
     public String getPrincipal() {
-        return System.getProperty("user.name");
+        return this.checkSurrogateUser(System.getProperty("user.name"));
     }
 
     /**

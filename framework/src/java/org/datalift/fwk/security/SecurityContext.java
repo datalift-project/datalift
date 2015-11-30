@@ -38,7 +38,12 @@ package org.datalift.fwk.security;
 import java.util.Iterator;
 import java.util.ServiceLoader;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.datalift.fwk.log.Logger;
+import org.datalift.fwk.util.web.RequestContext;
+
+import static org.datalift.fwk.util.StringUtils.isBlank;
 
 
 /**
@@ -49,6 +54,15 @@ import org.datalift.fwk.log.Logger;
  */
 public abstract class SecurityContext
 {
+    //-------------------------------------------------------------------------
+    // Constants
+    //-------------------------------------------------------------------------
+
+    /** User delegation HTTP header. */
+    public final static String ACTING_AS_HEADER = "X-ActingAs";
+    /** User delegation role. */
+    public final static String DELEGATION_ROLE = "delegation";
+
     //-------------------------------------------------------------------------
     // Class members
     //-------------------------------------------------------------------------
@@ -105,6 +119,40 @@ public abstract class SecurityContext
      *         the specified role; <code>false</code> otherwise.
      */
     abstract public boolean hasRole(String role);
+
+    /**
+     * Returns the being-processed HTTP Servlet request
+     * @return the being-processed HTTP Servlet request or
+     *         <code>null</code> if not available.
+     */
+    protected final HttpServletRequest getRequestContext() {
+        RequestContext ctx = RequestContext.get();
+        return (ctx != null)? ctx.request: null;
+    }
+
+    /**
+     * Checks whether the current user is allowed to
+     * {@link #DELEGATION_ROLE act on behalf} of
+     * {@link #ACTING_AS_HEADER another user} and, if it does,
+     * returns the surrogate user.
+     * @param  principal   the login name of the user performing
+     *                     the request.
+     * @return the surrogate user, if allowed and specified,
+     *         otherwise the current user.
+     */
+    protected final String checkSurrogateUser(String principal) {
+        if (this.hasRole(DELEGATION_ROLE)) {
+            // User is allowed to delegate access to a surrogate user.
+            HttpServletRequest req = this.getRequestContext();
+            if (req != null) {
+                String surrogateUser = req.getHeader(ACTING_AS_HEADER);
+                if (! isBlank(surrogateUser)) {
+                    principal = surrogateUser.trim();
+                }
+            }
+        }
+        return principal;
+    }
 
     //-------------------------------------------------------------------------
     // Static shortcut methods to SecurityContext singleton method

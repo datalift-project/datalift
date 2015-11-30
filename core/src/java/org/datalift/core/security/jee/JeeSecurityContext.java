@@ -29,7 +29,7 @@ public class JeeSecurityContext extends SecurityContext
         if ((req != null) && (req.getUserPrincipal() != null)) {
             principal = req.getUserPrincipal().getName();
         }
-        return principal;
+        return this.checkSurrogateUser(principal);
     }
 
     /** {@inheritDoc} */
@@ -41,19 +41,5 @@ public class JeeSecurityContext extends SecurityContext
             hasRole = req.isUserInRole(role);
         }
         return hasRole;
-    }
-
-    //-------------------------------------------------------------------------
-    // Specific implementation
-    //-------------------------------------------------------------------------
-
-    /**
-     * Returns the being-processed HTTP Servlet request
-     * @return the being-processed HTTP Servlet request or
-     *         <code>null</code> if not available.
-     */
-    private HttpServletRequest getRequestContext() {
-        RequestContext ctx = RequestContext.get();
-        return (ctx != null)? ctx.request: null;
     }
 }
