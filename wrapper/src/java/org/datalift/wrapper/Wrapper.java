@@ -201,12 +201,14 @@ public final class Wrapper
         // the Java app to accept all incoming connections by forcing the
         // HTTP server to listen only to loopback interface.
         boolean loopbackOnly = (CURRENT_OS == MacOS);
+        boolean headlessMode = false;
         try {
             // Parse command-line arguments.
             CmdLineParser parser  = new CmdLineParser();
-            Option portOption     = parser.addIntegerOption('p', "port");
+            Option backgrndOption = parser.addBooleanOption('b', "background");
             Option externalOption = parser.addBooleanOption('e', "external");
             Option homeDirOption  = parser.addStringOption('h',  "home-dir");
+            Option portOption     = parser.addIntegerOption('p', "port");
             Option rootAppOption  = parser.addStringOption('r',  "root-app");
             Option mainPageOption = parser.addStringOption('w',  "welcome-page");
             parser.parse(args);
@@ -219,7 +221,10 @@ public final class Wrapper
             // 3. Datalift home directory.
             homeDir = (String)(parser.getOptionValue(homeDirOption,
                                 System.getProperty(DATALIFT_HOME)));
-            // 4. Root web application.
+            // 4. Whether to display a browser window or not.
+            headlessMode = ((Boolean)(parser.getOptionValue(backgrndOption,
+                                new Boolean(headlessMode)))).booleanValue();
+            // 5. Root web application.
             rootWebAppPath = (String)(parser.getOptionValue(rootAppOption,
                                                             rootWebAppPath));
             if (rootWebAppPath.endsWith(WAR_EXTENSION)) {
@@ -229,6 +234,10 @@ public final class Wrapper
             // 5. Welcome page
             welcomePage = (String)(parser.getOptionValue(mainPageOption,
                                                          welcomePage));
+            if (welcomePage.length() != 0) {
+                // Welcome page set. => Display it!
+                headlessMode = false;
+            }
             // Parse other arguments.
             String[] otherArgs = parser.getRemainingArgs();
             // 3. DataLift installation directory.
@@ -243,6 +252,7 @@ public final class Wrapper
         catch (Exception e) {
             System.err.println(e.toString());
             System.err.println("Usage: java " + Wrapper.class.getName() +
+                               " [{-b,--background}]" +
                                " [{-e,--external}]" +
                                " [{-h,--home-dir} <directory>]" +
                                " [{-p,--port} <port>]" +
@@ -362,14 +372,16 @@ public final class Wrapper
         httpServer.start();
         System.out.println("DataLift server started on port " +
                                                 Integer.valueOf(httpPort));
-        // Open new browser window on user's display.
-        try {
-            BareBonesBrowserLaunch.openUrl(
+        if (! headlessMode) {
+            // Open new browser window on user's display.
+            try {
+                BareBonesBrowserLaunch.openUrl(
                     "http://" + LOCALHOST + ':' + httpPort + '/' + welcomePage);
-        }
-        catch (IOException e) {
-            // No web browser found. => Continue in headless mode...
-            System.err.println("WARNING: " + e.getLocalizedMessage());
+            }
+            catch (IOException e) {
+                // No web browser found. => Continue in headless mode...
+                System.err.println("WARNING: " + e.getLocalizedMessage());
+            }
         }
         // Wait for server termination.
         httpServer.join();
