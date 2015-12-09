@@ -340,14 +340,20 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
             String screen = buf.toString();
             // Check for layout, after merging the screen template so the
             // template can overrule any layout set in the model.
-            final Object layout = context.get(TemplateModel.LAYOUT_KEY);
+            Template layout = null;
+            final Object layoutName = context.get(TemplateModel.LAYOUT_KEY);
+            if (layoutName != null) {
+                layout = resolve(layoutName.toString());
+                if (layout == null) {
+                    log.error("Failed to resolve layout {} for template {}",
+                              layoutName, t.getName());
+                }
+            }
             if (layout != null) {
-                String srcTemplateName = t.getName();
-                t = resolve(layout.toString());
                 context.put(TemplateModel.SCREEN_CONTENT_KEY, screen);
-                t.merge(context, w);
+                layout.merge(context, w);
                 log.trace("Completed rendering template {} with layout {}",
-                          srcTemplateName, t.getName());
+                          t.getName(), layout.getName());
             }
             else {
                 w.write(screen);
