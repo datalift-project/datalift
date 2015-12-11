@@ -375,8 +375,11 @@ public final class Wrapper
         if (! headlessMode) {
             // Open new browser window on user's display.
             try {
+                if (! (welcomePage.charAt(0) == '/')) {
+                    welcomePage = "/" + welcomePage;
+                }
                 BareBonesBrowserLaunch.openUrl(
-                    "http://" + LOCALHOST + ':' + httpPort + '/' + welcomePage);
+                    "http://" + LOCALHOST + ':' + httpPort + welcomePage);
             }
             catch (IOException e) {
                 // No web browser found. => Continue in headless mode...
