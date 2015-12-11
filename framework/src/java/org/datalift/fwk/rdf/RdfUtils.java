@@ -1170,9 +1170,11 @@ public final class RdfUtils
      */
     private static String getFileExtension(String fileName) {
         String ext = "";
-        int i = fileName.lastIndexOf('.');
-        if ((i > 0) && (i < fileName.length() - 1)) {
-            ext = fileName.substring(i+1);
+        if (! isBlank(fileName)) {
+            int i = fileName.lastIndexOf('.');
+            if ((i > 0) && (i < fileName.length() - 1)) {
+                ext = fileName.substring(i+1);
+            }
         }
         return ext;
     }
