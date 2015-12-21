@@ -406,8 +406,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                 response = Response.ok(this.newView("constructResult.vm", model));
             }
             else {
-                MediaType expectedType =
-                        (isSet(format))? MediaType.valueOf(format): mediaType;
+                MediaType expectedType = this.parseFormat(format, mediaType);
 
                 StreamingOutput out = this.getConstructHandlerOutput(repo,
                                         controlledQuery, startOffset, endOffset,
