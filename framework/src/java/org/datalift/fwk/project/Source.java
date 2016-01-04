@@ -35,6 +35,10 @@
 package org.datalift.fwk.project;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.datalift.fwk.util.StringUtils.isBlank;
 
 
 /**
@@ -49,19 +53,74 @@ public interface Source
     // SourceType enumeration
     //-------------------------------------------------------------------------
 
-    /**
-     * The supported DataLift source types.
-     */
-    public enum SourceType {
-        RdfFileSource,
-        CsvSource,
-        SqlQuerySource,
-        SqlDatabaseSource,
-        TransformedRdfSource,
-        SparqlSource,
-        XmlSource,
-        ShpSource,
-        GmlSource;
+    /** The supported DataLift source types. */
+    public static final class SourceType
+    {
+        private final static Map<String,SourceType> srcTypes =
+                                            new HashMap<String,SourceType>();
+
+        public static final SourceType RdfFileSource =
+                            new SourceType("datalift.rdf.file.source",
+                                           "source.rdf.file.label");
+        public static final SourceType CsvSource =
+                            new SourceType("datalift.csv.file.source",
+                                           "source.csv.file.label");
+        public static final SourceType SqlQuerySource =
+                            new SourceType("datalift.sql.query.source",
+                                           "source.sql.query.label");
+        public static final SourceType SqlDatabaseSource =
+                            new SourceType("datalift.sql.db.source",
+                                           "source.sql.db.label");
+        public static final SourceType TransformedRdfSource =
+                            new SourceType("datalift.internal.source",
+                                           "source.internal.label");
+        public static final SourceType SparqlSource =
+                            new SourceType("datalift.sparl.query.source",
+                                           "source.sparql.query.label");
+        public static final SourceType XmlSource =
+                            new SourceType("datalift.xml.file.source",
+                                           "source.xml.file.label");
+        public static final SourceType ShpSource =
+                            new SourceType("datalift.shp.file.source",
+                                           "source.shp.file.label");
+        public static final SourceType GmlSource =
+                            new SourceType("datalift.gml.file.source",
+                                           "source.gml.file.label");
+
+        private final String id;
+        private final String label;
+
+        private SourceType(String id, String label) {
+            if (isBlank(id)) {
+                throw new IllegalArgumentException("id");
+            }
+            if (isBlank(label)) {
+                throw new IllegalArgumentException("label");
+            }
+            this.id    = id;
+            this.label = label;
+            srcTypes.put(id, this);
+        }
+
+        public String getId() {
+            return this.id;
+        }
+
+        public String getLabel() {
+            return this.label;
+        }
+
+        public static SourceType getType(String id) {
+            return getType(id, null);
+        }
+
+        public static SourceType getType(String id, String label) {
+            SourceType t = srcTypes.get(id);
+            if ((t == null) && (! isBlank(label))) {
+                t = new SourceType(id, label);
+            }
+            return t;
+        }
     }
 
     //-------------------------------------------------------------------------

@@ -201,11 +201,12 @@
 		/* Sources */
 		jQuery("#selectable_sources").jqGrid({
 			datatype: "local",
-			colNames:['#i18n("project.p_uri")','#i18n("project.p_title")','#i18n("project.p_others")'],
+			colNames:['#i18n("project.p_uri")','#i18n("project.p_title")','#i18n("project.p_type")','#i18n("project.p_others")'],
 			colModel:[
-				{name:'uri',   index:'uri',   sorttype:"text"},
-				{name:'title', index:'title', sorttype:"text"},
-				{name:'infos', index:'infos', sorttype:"text"} ],
+				{name:'uri',   index:'uri',   sorttype:"text", width:10},
+				{name:'title', index:'title', sorttype:"text", width:200},
+				{name:'type',  index:'type',  sorttype:"text", width:100, align:'center'},
+				{name:'infos', index:'infos', sorttype:"text", width:400} ],
 			caption: "",
 			rowNum:10, rowList:[10,20,30], pager: '#selectable_sources_toolbar',
 			gridview: true,
@@ -216,6 +217,7 @@
 #foreach($curSrc in $current.getSources())
 		{
 			uri:   "$!esc.javascript($curSrc.uri)",
+			type:  "$i18n.javascript($curSrc.type.label)",
 			title: "<a href='$!esc.javascript($curSrc.uri)'>$curSrc.title</a>",
 	#if( $curSrc.getType() == $field.CsvSource )
 		#set( $sep = "csv.source.${curSrc.separator}.separator" )
