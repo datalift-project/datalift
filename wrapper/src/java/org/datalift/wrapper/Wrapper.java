@@ -375,7 +375,8 @@ public final class Wrapper
         if (! headlessMode) {
             // Open new browser window on user's display.
             try {
-                if (! (welcomePage.charAt(0) == '/')) {
+                if ((welcomePage.length() != 0) &&
+                                            (welcomePage.charAt(0) != '/')) {
                     welcomePage = "/" + welcomePage;
                 }
                 BareBonesBrowserLaunch.openUrl(
