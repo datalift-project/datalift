@@ -73,7 +73,6 @@ import org.apache.velocity.runtime.log.Log4JLogChute;
 import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
 import org.apache.velocity.tools.ToolContext;
 import org.apache.velocity.tools.generic.DateTool;
-import org.apache.velocity.tools.generic.EscapeTool;
 import org.apache.velocity.tools.generic.FieldTool;
 import org.apache.velocity.tools.generic.LinkTool;
 import org.apache.velocity.tools.view.WebappResourceLoader;
@@ -81,6 +80,7 @@ import org.apache.velocity.tools.view.WebappResourceLoader;
 import static org.apache.velocity.app.VelocityEngine.*;
 import static org.apache.velocity.runtime.log.Log4JLogChute.*;
 
+import org.datalift.core.velocity.EscapeTool;
 import org.datalift.core.velocity.i18n.I18nTool;
 import org.datalift.core.velocity.i18n.LoadDirective;
 import org.datalift.core.velocity.sparql.SparqlTool;
