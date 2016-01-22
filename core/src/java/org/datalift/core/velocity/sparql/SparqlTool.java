@@ -48,6 +48,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.MissingResourceException;
 import java.util.Map.Entry;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.velocity.tools.config.DefaultKey;
 import org.openrdf.OpenRDFException;
@@ -74,6 +76,7 @@ import org.openrdf.repository.RepositoryConnection;
 import static org.openrdf.query.QueryLanguage.SPARQL;
 
 import org.datalift.core.rdf.QueryException;
+import org.datalift.core.velocity.EscapeTool;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.i18n.LocaleComparable;
 import org.datalift.fwk.i18n.PreferredLocales;
@@ -113,9 +116,15 @@ public final class SparqlTool
     private final static String HTTP_URL_PREFIX         = "http://";
     private final static String HTTPS_URL_PREFIX        = "https://";
 
+    /** Regex to identify native XML schema data types. */
+    private final static Pattern NATIVE_TYPES_PATTERN =
+                                            Pattern.compile(".[#/](.[^#/]*)$");
+
     //-------------------------------------------------------------------------
     // Class members
     //-------------------------------------------------------------------------
+
+    private final static EscapeTool escape = new EscapeTool();
 
     private final static Logger log = Logger.getLogger();
 
@@ -490,6 +499,41 @@ public final class SparqlTool
             s = v.stringValue();
         }
         return s;
+    }
+
+    /**
+     * Returns a JSON representation of the specified RDF value.
+     * <p>
+     * This method handles the following cases:</p>
+     * <dl>
+     *  <dt>URIs</dt>
+     *  <dd>the URI value with known prefixes resolved</dd>
+     *  <dt>{@link #isBNode(Value) Blank nodes}</dt>
+     *  <dd>JSON <code>null</code></dd>
+     *  <dt>{@link #isNative(Value) Native literal values}</dt>
+     *  <dd>the value as a JSON value (number or boolean),</dd>
+     *  <dt>String values</dt>
+     *  <dd>the value enclosed in double quotes, followed by the
+     *      language tag, if any</dd>
+     *  <dt>null values</dt>
+     *  <dd>JSON <code>null</code></dd>
+     * </dl>
+     * @param  v   a RDF value.
+     *
+     * @return the JSON representation of the specified RDF value.
+     */
+    public String json(Value v) {
+        Object o = null;
+        if (v instanceof org.openrdf.model.URI) {
+            o = resolveNamespace(v);
+        }
+        else if (v instanceof Literal) {
+            o = this.getLitteralValue(v);
+        }
+        else if ((v != null) && (! (v instanceof BNode))) {
+            o = v.stringValue();
+        }
+        return escape.asJson(o);
     }
 
     /**
@@ -873,6 +917,45 @@ public final class SparqlTool
                 this.queryPrefixes.put(e.getValue(), e.getKey());
             }
         }
+    }
+
+    private Object getLitteralValue(Value v) {
+        Object value = null;
+        if (v instanceof Literal) {
+            Literal l = (Literal)v;
+            String dt = getLiteralDatatype(l);
+            if (dt != null) {
+                Matcher m = NATIVE_TYPES_PATTERN.matcher(dt);
+                dt = (m.find())? dt = m.group(1).toLowerCase(): null;
+            }
+            if (dt != null) {
+                if ("boolean".equals(dt)) {
+                    value = Boolean.valueOf(l.booleanValue());
+                }
+                else if ("double".equals(dt) || ("float".equals(dt))
+                                             || ("decimal".equals(dt))) {
+                    value = Double.valueOf(l.doubleValue());
+                }
+                else if (dt.endsWith("integer") || (dt.endsWith("long")) ||
+                         dt.endsWith("short")   || (dt.endsWith("byte")) ||
+                         dt.endsWith("int")) {
+                    value = Long.valueOf(l.longValue());
+                }
+            }
+            if (value == null) {
+                value = l.stringValue();
+            }
+        }
+        else {
+            value = ((v != null) && (! (v instanceof BNode)))?
+                                                        v.stringValue(): null;
+        }
+        return value;
+    }
+
+    private String getLiteralDatatype(Literal l) {
+        org.openrdf.model.URI dt = (l != null)? l.getDatatype(): null;
+        return (dt != null)? dt.toString(): null;
     }
 
     /**
