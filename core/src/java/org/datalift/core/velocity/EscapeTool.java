@@ -49,7 +49,7 @@ public class EscapeTool extends org.apache.velocity.tools.generic.EscapeTool
         else if (o instanceof Boolean) {
             json = ((Boolean)o).toString();
         }
-        else {
+        else if (o != null) {
             json = '"' + this.json(o) + '"';
         }
         return json;
