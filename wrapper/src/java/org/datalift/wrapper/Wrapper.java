@@ -376,7 +376,8 @@ public final class Wrapper
             // Open new browser window on user's display.
             try {
                 BareBonesBrowserLaunch.openUrl(
-                    "http://" + LOCALHOST + ':' + httpPort + '/' + welcomePage);
+                		//"http://" + LOCALHOST + ':' + httpPort + '/' + welcomePage);
+                		"http://" + LOCALHOST + ':' + httpPort + '/' + "rmes/home");
             }
             catch (IOException e) {
                 // No web browser found. => Continue in headless mode...

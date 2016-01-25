@@ -33,8 +33,10 @@
   <property name="datalift.root" location="${basedir}/.."/>
   <property file="${datalift.root}/build.properties"/>
 
+  <!-- property name="datalift.wrapper.modules"
+            value="flint-endpoint,insee-rmes,projectmanager,simple-convert,database-directmapper,geomrdf,lov/api,lov/catalogue,data2ontology,virtuoso-connector,allegrograph-connector,stringtouri,silk-interlinker,incubator/ontology-mapper"/ -->
   <property name="datalift.wrapper.modules"
-            value="flint-endpoint,projectmanager,simple-convert,database-directmapper,geomrdf,lov/api,lov/catalogue,data2ontology,virtuoso-connector,allegrograph-connector,stringtouri,silk-interlinker,incubator/ontology-mapper"/>
+            value="sparql-endpoint,insee-rmes,projectmanager,simple-convert,data2ontology,stringtouri,incubator/ontology-mapper"/>
   <property name="security.context.class"
             value="org.datalift.core.security.LocalUserSecurityContext"/>
 
