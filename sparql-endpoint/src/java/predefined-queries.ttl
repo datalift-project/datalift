@@ -50,8 +50,8 @@ _:4 a datalift:SparqlQuery ;
 
 _:5 a datalift:SparqlQuery ;
     rdfs:label
-        "Links" ,
-        "Liens \"owl#sameAs\""@fr ;
+        "Links (owl#sameAs)" ,
+        "Liens (owl#sameAs)"@fr ;
     datalift:position 20 ;
     dcterms:description
         "Lists all links (owl#sameAs) between objects in the repository" ,

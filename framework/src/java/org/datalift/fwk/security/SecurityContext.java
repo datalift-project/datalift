@@ -217,7 +217,7 @@ public abstract class SecurityContext
                         ServiceLoader.load(SecurityContext.class).iterator();
             if (i.hasNext()) {
                 instance = i.next();
-                log.info("Using security context implementation: {}",
+                log.trace("Using security context implementation: {}",
                           instance.getClass().getSimpleName());
             }
             else {

@@ -44,7 +44,7 @@
 				<input type="radio" id="rdf_format" name="format" value="application/sparql-results+xml, application/rdf+xml, text/plain; q=0.5"/><label for="rdf_format">RDF/XML</label>
 				<input type="radio" id="turtle_format" name="format" value="text/turtle, text/plain; q=0.5"/><label for="turtle_format">N3/Turtle</label>
 				<input type="radio" id="ntriples_format" name="format" value="application/n-triples, text/plain; q=0.5"/><label for="ntriples_format">NTriples</label>
-				<input type="radio" id="trig_format" name="format" value="application/x-trig, text/plain; q=0.5"/><label for="trig_format">TriG</label>
+				<input type="radio" id="trig_format" name="format" value="application/trig, application/x-trig, text/plain; q=0.5"/><label for="trig_format">TriG</label>
 				<input type="radio" id="trix_format" name="format" value="application/trix, text/plain; q=0.5"/><label for="trix_format">TriX</label>
 				<input type="radio" id="csv_format" name="format" value="text/csv, text/plain; q=0.5"/><label for="csv_format">CSV</label>
 				<input type="hidden" id="format_save"/>

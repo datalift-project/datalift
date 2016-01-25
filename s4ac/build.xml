@@ -96,7 +96,7 @@
    -->
 
   <property name="app.name"             value="s4ac"/>
-  <property name="app.version"          value="0.8.3"/>
+  <property name="app.version"          value="0.8.5"/>
   <property name="app.path"             value="/${app.name}"/>
   <property name="app.long.name"        value="Sample s4ac module for DataLift"/>
 

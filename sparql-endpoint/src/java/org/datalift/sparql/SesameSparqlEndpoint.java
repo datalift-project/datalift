@@ -177,6 +177,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                     new Variant(APPLICATION_N3_TYPE, null, null),
                     new Variant(APPLICATION_NTRIPLES_TYPE, null, null),
                     new Variant(APPLICATION_TRIG_TYPE, null, null),
+                    new Variant(APPLICATION_X_TRIG_TYPE, null, null),
                     new Variant(APPLICATION_TRIX_TYPE, null, null),
                     new Variant(APPLICATION_SPARQL_RESULT_JSON_TYPE, null, null),
                     new Variant(APPLICATION_JSON_LD_TYPE, null, null),
@@ -406,8 +407,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                 response = Response.ok(this.newView("constructResult.vm", model));
             }
             else {
-                MediaType expectedType =
-                        (isSet(format))? MediaType.valueOf(format): mediaType;
+                MediaType expectedType = this.parseFormat(format, mediaType);
 
                 StreamingOutput out = this.getConstructHandlerOutput(repo,
                                         controlledQuery, startOffset, endOffset,
