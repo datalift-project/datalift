@@ -61,7 +61,7 @@
    -->
 
   <property name="app.name"             value="datalift-wrapper"/>
-  <property name="app.version"          value="0.8.5"/>
+  <property name="app.version"          value="0.9.0"/>
   <property name="app.long.name"        value="${app.name}"/>
 
   <property name="build.home"           location="${basedir}/build"/>

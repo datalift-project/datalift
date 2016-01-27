@@ -4,9 +4,9 @@
     <key>CFBundleName</key>
     <string>DataLift</string>
     <key>CFBundleShortVersionString</key>
-    <string>0.8</string>
+    <string>0.9</string>
     <key>CFBundleGetInfoString</key>
-    <string>DataLift 0.8 Beta</string>
+    <string>DataLift 0.9 Beta</string>
     <key>CFBundleAllowMixedLocalizations</key>
     <string>false</string>
     <key>CFBundleInfoDictionaryVersion</key>
