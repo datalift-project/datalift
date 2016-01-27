@@ -380,8 +380,7 @@ public final class Wrapper
                     welcomePage = "/" + welcomePage;
                 }
                 BareBonesBrowserLaunch.openUrl(
-                		//"http://" + LOCALHOST + ':' + httpPort + '/' + welcomePage);
-                		"http://" + LOCALHOST + ':' + httpPort + '/' + "rmes/home");
+                    "http://" + LOCALHOST + ':' + httpPort + welcomePage);
             }
             catch (IOException e) {
                 // No web browser found. => Continue in headless mode...
