@@ -98,7 +98,7 @@
    -->
 
   <property name="app.name"             value="sparql2viz-endpoint"/>
-  <property name="app.version"          value="0.8.5"/>
+  <property name="app.version"          value="0.8.3"/>
   <property name="app.path"             value="/${app.name}"/>
   <property name="app.long.name"        value="SPARQL endpoint with data visualization"/>
   <property name="full.app.version"     value="${app.version}"/>
@@ -343,7 +343,8 @@
     <jar jarfile="${jar.path}" update="true">
       <fileset dir="${classes.dir}"/>
       <service type="org.datalift.fwk.Module">
-        <provider classname="org.datalift.flint.FlintSparqlEditor"/>
+		<provider classname="org.datalift.sparql2viz.Sparql2VizEndpoint"/>
+      	<provider classname="org.datalift.sparql2viz.SaveSparqlQuery"/>
       </service>
     </jar>
   </target>
