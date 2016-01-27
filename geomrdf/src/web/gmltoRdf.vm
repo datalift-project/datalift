@@ -1,0 +1,107 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+#load("gmltordf/resources")
+#load_core_resources
+	<title>#i18n("gmltordf.title") - DataLift</title>
+#css_links
+</head>
+<body>
+#banner
+<div class="ui-widget-content converter_main" id="workspace">
+	<h3 class="ui-widget-header dl-widget-header">#i18n("gmltordf.title") - #i18n("project.label") ${it.title}</h3>
+
+	<form id="converter_form" method="post" action="${baseUri}/gmltordf">
+		<input type="hidden" name="project" id="project" value="${it.uri}"/>
+		<p><label for="source">#i18n("source.to_convert"):</label>
+		<select name="source" id="source">
+#foreach( $curSrc in $it.getSources() )
+	#set( $count = 1 )
+	#if( $converter.canHandle($curSrc) )
+		#foreach( $source in $it.getSources() )
+			#if( $source.getType() == $field.TransformedRdfSource && $source.getParent().uri == $curSrc.uri )
+				#set( $count = $count + 1 )
+			#end
+		#end
+			<option value="${curSrc.uri}" name="${curSrc.title}" count="$count">$esc.html($curSrc.title)</option>
+	#end
+#end
+		</select></p>
+		<p><label for="dest_title">#i18n("dest.title"):</label>
+		<input type="text" name="dest_title" id="dest_title" value=""/></p>
+		<p><label for="dest_graph_uri" class="hidden">#i18n("dest.uri"):</label>
+		<input type="text" name="dest_graph_uri" id="dest_graph_uri" title="#i18n('dest.graph.help')" value=""/></p>
+		<p><label for="base_uri">#i18n("dest.base_uri"): </label>
+		<input type="text" id="base_uri" name="base_uri" title="#i18n('dest.base_uri.help')" value=""/></p>
+		<p><label for="dest_type">#i18n("dest.type_uri"): </label>
+		<input type="text" id="dest_type" name="dest_type" title="#i18n('dest.type_uri.help')" placeholder="myClass" value=""/></p>
+		<p><label for="separator">#i18n("dest.crs"): </label>
+		<select id="crs" name="crs">
+#foreach( $s in $crs )
+#set( $label = "shp.${s.name()}.crs" )
+#if( $foreach.count == 1 )
+			<option value="$esc.html($s.name())" selected="true">#i18n($label)</option>
+#else
+			<option value="$esc.html($s.name())">#i18n($label)</option>
+#end
+#end
+		</select></p>
+		<input type="submit" id="source_submit" value="#i18n('submit.label')"/>
+	</form>
+</div>
+
+#script_links
+<script type="text/javascript">
+	$(function() {
+		$("#source_submit").button();
+
+		$("#source").change(function(){
+			$("#source option:selected").each(function() {
+				var name  = $(this).attr("name");
+				var uri   = $(this).attr("value");
+				var count = $(this).attr("count");
+				$("#dest_title").attr("value", getTargetSrcName(name, count));
+				$("#dest_graph_uri").attr("value", getTargetGraphUri(uri, count));
+				$("#base_uri").attr("value", getTargetBaseUri(uri, count));
+			});
+		});
+		$("#source").change();
+	});
+
+	function getTargetSrcName(parentSrc, count) {
+		if (parentSrc.match(/\(RDF #[0-9-]+\)/)) {
+			return parentSrc.replace(/\((RDF #[0-9-]+)\)/, "(\$1-" + count + ")");
+		}
+		else {
+			return parentSrc + " (RDF #" + count + ")";
+		}
+	}
+
+	function getTargetGraphUri(parentUri, count) {
+		var sep = "-";
+		if (parentUri.endsWith("/")) sep = "";
+		return parentUri + encodeURIComponent(sep + count);
+	}
+
+	function getTargetBaseUri(parentUri, count) {
+		var sep = "-";
+		if (parentUri.endsWith("/")) sep = "";
+		var suffix = "";
+		var n = parseInt(count, 10);
+		if (isNaN(n) || n > 1) {
+			suffix = encodeURIComponent(sep + count);
+		}
+		return parentUri.replace(/\/project\//g, "/")
+		                .replace(/\/source\//g, "/") + suffix;
+	}
+
+	/* Make sure the endsWith() function is defined. */
+	if (typeof String.prototype.endsWith !== 'function') {
+	    String.prototype.endsWith = function(suffix) {
+	        return this.indexOf(suffix, this.length - suffix.length) !== -1;
+	    };
+	}
+</script>
+</body>
+</html>
