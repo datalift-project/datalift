@@ -82,6 +82,7 @@ import static org.apache.velocity.runtime.log.Log4JLogChute.*;
 
 import org.datalift.core.velocity.EscapeTool;
 import org.datalift.core.velocity.i18n.I18nTool;
+import org.datalift.core.velocity.i18n.I18ncludeDirective;
 import org.datalift.core.velocity.i18n.LoadDirective;
 import org.datalift.core.velocity.sparql.SparqlTool;
 import org.datalift.fwk.i18n.PreferredLocales;
@@ -644,6 +645,7 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
     @SuppressWarnings("deprecation")
     private static void registerCoreDirectives() {
         addDirective(LoadDirective.class);
+        addDirective(I18ncludeDirective.class);
         addDirective(org.datalift.core.velocity.i18n.I18nDirective.class);
     }
 }
