@@ -39,9 +39,9 @@ import java.text.MessageFormat;
 import java.util.List;
 import java.util.Locale;
 
-import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.velocity.tools.config.DefaultKey;
 
+import org.datalift.core.velocity.EscapeTool;
 import org.datalift.fwk.i18n.PreferredLocales;
 import org.datalift.fwk.log.Logger;
 
@@ -80,6 +80,8 @@ public final class I18nTool
     // ------------------------------------------------------------------------
     // Class members
     // ------------------------------------------------------------------------
+
+    private final static EscapeTool escape = new EscapeTool();
 
     private static final Logger log = Logger.getLogger();
 
@@ -201,8 +203,7 @@ public final class I18nTool
      *         page.
      */
     public String html(String key, Object... args) {
-        String s = this.format(key, args);
-        return (s != null)? StringEscapeUtils.escapeHtml(s): null;
+        return escape.html(this.format(key, args));
     }
 
     /**
@@ -216,8 +217,7 @@ public final class I18nTool
      *         Javascript code.
      */
     public String javascript(String key, Object... args) {
-        String s = this.format(key, args);
-        return (s != null)? StringEscapeUtils.escapeJavaScript(s): null;
+        return escape.javascript(this.format(key, args));
     }
 
     /**
@@ -234,6 +234,20 @@ public final class I18nTool
 
     /**
      * Formats the specified internationalized message with the
+     * specified arguments and escape the resulting string using
+     * JSON String rules.
+     * @param  key    the message identifier.
+     * @param  args   the message arguments.
+     *
+     * @return the formatted message, escaped for inserting in
+     *         JSON data.
+     */
+    public String json(String key, Object... args) {
+        return escape.json(this.format(key, args));
+    }
+
+    /**
+     * Formats the specified internationalized message with the
      * specified arguments and escape the resulting string using XML
      * entities.
      * @param  key    the message identifier.
@@ -243,8 +257,7 @@ public final class I18nTool
      *         document.
      */
     public String xml(String key, Object... args) {
-        String s = this.format(key, args);
-        return (s != null)? StringEscapeUtils.escapeXml(s): null;
+        return escape.xml(this.format(key, args));
     }
 
     /**
