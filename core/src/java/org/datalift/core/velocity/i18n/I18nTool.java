@@ -101,13 +101,13 @@ public final class I18nTool
      * @return the user's preferred {@link Locale locale}.
      */
     public Locale getLocale() {
-	Locale locale = null;
+        Locale locale = null;
 
-	List<Locale> l = PreferredLocales.get();
-	if ((l != null) && (! l.isEmpty())) {
-	    locale = l.get(0);
-	}
-	return locale;
+        List<Locale> l = PreferredLocales.get();
+        if ((l != null) && (! l.isEmpty())) {
+            locale = l.get(0);
+        }
+        return locale;
     }
 
     /**
@@ -118,13 +118,13 @@ public final class I18nTool
      *         available.
      */
     public String getLanguage() {
-	String lang = "en";
+        String lang = "en";
 
-	Locale l = getLocale();
-	if (l != null) {
-	    lang = l.getLanguage();
-	}
-	return lang;
+        Locale l = getLocale();
+        if (l != null) {
+            lang = l.getLanguage();
+        }
+        return lang;
     }
 
     /**
@@ -135,13 +135,13 @@ public final class I18nTool
      *         or the locale has no country code.
      */
     public String getCountry() {
-	String c = "";
+        String c = "";
 
-	Locale l = getLocale();
-	if (l != null) {
-	    c = l.getCountry();
-	}
-	return c;
+        Locale l = getLocale();
+        if (l != null) {
+            c = l.getCountry();
+        }
+        return c;
     }
 
     /**
@@ -153,32 +153,35 @@ public final class I18nTool
      * @return the formatted message.
      */
     public String format(String key, Object... args) {
-	String msg = key;
+        String msg = key;
 
-	if (! this.bundles.isEmpty()) {
-	    // Get message text from bundles.
-	    msg = this.bundles.getValue(key);
-	    if (msg == null) {
-		// No entry found. => Use key as message format.
-		msg = key;
-	    }
-	    final int params = (args != null)? args.length: 0;
-	    if ((params > 0) && (msg != null) && (msg.indexOf('{') != -1)) {
-		// Replaces message format parameters with arguments.
-		MessageFormat fmt = new MessageFormat(msg);
-		// Use user's preferred locale when formatting dates, numbers...
-                Locale l = this.getLocale();
-		if (l != null) {
-		    fmt.setLocale(l);
-		}
-		msg = fmt.format(args);
-	    }
-	    log.trace("I18N: Rendered \"{}\" -> \"{}\"", key, msg);
-	} else {
-	    log.warn("I18N: Failed to resolved key \"{}\"" +
-		     ": no bundle defined in template", key);
-	}
-	return msg;
+        if (key != null) {
+            if (! this.bundles.isEmpty()) {
+                // Get message text from bundles.
+                msg = this.bundles.getValue(key);
+                if (msg == null) {
+                    // No entry found. => Use key as message format.
+                    msg = key;
+                }
+                final int params = (args != null)? args.length: 0;
+                if ((params > 0) && (msg != null) && (msg.indexOf('{') != -1)) {
+                    // Replaces message format parameters with arguments.
+                    MessageFormat fmt = new MessageFormat(msg);
+                    // Use user's preferred locale to format dates, numbers...
+                    Locale l = this.getLocale();
+                    if (l != null) {
+                        fmt.setLocale(l);
+                    }
+                    msg = fmt.format(args);
+                }
+                log.trace("I18N: Rendered \"{}\" -> \"{}\"", key, msg);
+            }
+            else {
+                log.warn("I18N: Failed to resolved key \"{}\"" +
+                         ": no bundle defined in template", key);
+            }
+        }
+        return msg;
     }
 
     /**
