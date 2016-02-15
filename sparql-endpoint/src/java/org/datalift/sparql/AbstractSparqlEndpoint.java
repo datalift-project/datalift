@@ -1050,13 +1050,15 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
 
     protected final void handleError(String query, Exception e)
                                                 throws WebApplicationException {
+        final String msg = e.getMessage();
         if (e instanceof WebApplicationException) {
             throw (WebApplicationException)e;
         }
         else if (e instanceof SecurityException) {
             this.sendError(FORBIDDEN, null);
         }
-        else if (e.getCause() instanceof QueryInterruptedException) {
+        else if ((e.getCause() instanceof QueryInterruptedException) ||
+                 (msg.contains(QueryInterruptedException.class.getSimpleName()))){
             // Query processing was interrupted as it was taking too much time.
             // => Return HTTP status 408 (Request Timeout).
             TechnicalException error = new TechnicalException(
@@ -1064,7 +1066,10 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
             // No constant for 408 provided by Jersey. => Using Servlet API.
             this.sendError(SC_REQUEST_TIMEOUT, error.getLocalizedMessage());
         }
-        else if (e.getCause() instanceof QueryDoneException) {
+        // Note: Virtuoso Sesame driver does not chain exceptions,
+        //       hence we need to look for cause in the message text.
+        else if ((e.getCause() instanceof QueryDoneException) ||
+                 (msg.contains(QueryDoneException.class.getSimpleName()))) {
             // End of requested range (start/end offset) successfully reached.
         }
         else {
