@@ -48,6 +48,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.MissingResourceException;
 import java.util.Map.Entry;
+import java.util.NoSuchElementException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -1098,7 +1099,7 @@ public final class SparqlTool
                 }
             }
             catch (Exception e) {
-                log.error("Unexpected error while browsing result of:\n{}", e,
+                log.error("Unexpected error while browsing results of:\n{}", e,
                           this.query);
                 // Do not propagate error to prevent page rendering failure.
             }
@@ -1115,7 +1116,12 @@ public final class SparqlTool
                 }
                 return bindings;
             }
+            catch (NoSuchElementException e) {
+                throw e;
+            }
             catch (Exception e) {
+                log.error("Unexpected error while reading results of:\n{}", e,
+                          this.query);
                 throw new RuntimeException("Result reading error for: " +
                                                                this.query, e);
             }
@@ -1175,7 +1181,7 @@ public final class SparqlTool
                 }
             }
             catch (Exception e) {
-                log.error("Unexpected error while browsing result of:\n{}", e,
+                log.error("Unexpected error while browsing results of:\n{}", e,
                           this.query);
                 // Do not propagate error to prevent page rendering failure.
             }
@@ -1188,7 +1194,12 @@ public final class SparqlTool
             try {
                 return this.result.next();
             }
+            catch (NoSuchElementException e) {
+                throw e;
+            }
             catch (Exception e) {
+                log.error("Unexpected error while reading results of:\n{}", e,
+                          this.query);
                 throw new RuntimeException("Result reading error for: " +
                                                                 this.query, e);
             }
