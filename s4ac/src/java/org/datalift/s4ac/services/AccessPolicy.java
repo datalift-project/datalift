@@ -20,7 +20,7 @@ import org.datalift.s4ac.utils.CRUDType;
 
 
 /**
- * Access policy business objct.
+ * Access policy business object.
  *
  * @author Serena Villata (INRIA - Sophia-Antipolis)
  */
