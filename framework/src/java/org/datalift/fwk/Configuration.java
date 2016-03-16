@@ -387,7 +387,7 @@ public abstract class Configuration
      * @return the current configuration.
      */
     public static Configuration getDefault() {
-        if (defaultConfiguration != null) {
+        if (defaultConfiguration == null) {
             throw new IllegalStateException("No configuration set");
         }
         return defaultConfiguration;
