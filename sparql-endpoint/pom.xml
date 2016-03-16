@@ -81,9 +81,12 @@
 
   <build>
     <sourceDirectory>src/java</sourceDirectory>
+    <filters>
+      <filter>${basedir}/../build.properties</filter>
+    </filters>
     <resources>
       <resource>
-        <directory>${basedir}/src/java</directory>
+        <directory>src/java</directory>
         <excludes>
           <exclude>**/*.java</exclude>
         </excludes>
@@ -114,6 +117,35 @@
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>1.8</version>
+        <executions>
+          <execution>
+            <id>datalift-version</id>
+            <phase>compile</phase>
+            <configuration>
+              <target>
+                <property file="${basedir}/../build.properties"/>
+                <!-- Copy web application page templates and resources -->
+                <copy todir="${project.build.outputDirectory}"
+                      encoding="UTF-8" includeEmptyDirs="false"
+                      preservelastmodified="true" overwrite="true">
+                  <fileset dir="${basedir}/src/web" includes="**/*.vm"/>
+                  <filterset>
+                    <filter token="full.app.version"
+                            value="${full.app.version}"/>
+                  </filterset>
+                </copy>
+              </target>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
         <executions>
           <execution>
@@ -123,7 +155,7 @@
               <goal>copy-dependencies</goal>
             </goals>
             <configuration>
-              <outputDirectory>${project.build.directory}/classes</outputDirectory>
+              <outputDirectory>${project.build.outputDirectory}</outputDirectory>
               <includeGroupIds>
                 com.github.jsonld-java,com.fasterxml.jackson.core,org.apache.httpcomponents
               </includeGroupIds>

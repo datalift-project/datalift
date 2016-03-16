@@ -15,11 +15,6 @@
 
   <name>Datalift Core</name>
 
-  <properties>
-    <!-- Datalift configuration -->
-    <datalift.root>${basedir}/..</datalift.root>
-  </properties>
-
   <profiles>
     <profile>
       <id>dev</id>
@@ -232,11 +227,6 @@
 
   <build>
     <sourceDirectory>${basedir}/src/java</sourceDirectory>
-    <filters>
-      <filter>${user.home}/datalift-build.properties</filter>
-      <filter>${datalift.root}/build.properties</filter>
-      <!-- filter>build.properties</filter -->
-    </filters>
     <resources>
       <resource>
         <directory>${basedir}/src/java</directory>
