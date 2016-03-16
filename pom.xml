@@ -51,6 +51,14 @@
 
   </properties>
 
+
+  <repositories>
+    <repository>
+      <id>datalift-local</id>
+      <url>file:///${project.basedir}/../mvn-repo</url>
+    </repository>
+  </repositories>
+
   <modules>
     <!-- Datalift Core -->
     <module>framework</module>

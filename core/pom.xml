@@ -297,11 +297,4 @@
     </plugins>
 
   </build>
-
-  <repositories>
-    <repository>
-      <id>empire-local</id>
-      <url>file:///${project.basedir}/../mvn-repo</url>
-    </repository>
-  </repositories>
 </project>

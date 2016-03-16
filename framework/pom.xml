@@ -90,7 +90,7 @@
     <!-- BZip compression support -->
     <dependency>
       <groupId>org.itadaki</groupId>
-      <artifactId>bzip2</artifactId>
+      <artifactId>bzip2-jdk1.6</artifactId>
       <version>${bzip2.version}</version>
     </dependency>
     <!-- Unit tests -->
