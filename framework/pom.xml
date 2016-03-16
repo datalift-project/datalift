@@ -21,13 +21,11 @@
       <groupId>javax.servlet</groupId>
       <artifactId>servlet-api</artifactId>
       <version>${servlet.version}</version>
-      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>javax.ws.rs</groupId>
       <artifactId>jsr311-api</artifactId>
       <version>${jax-rs.version}</version>
-      <scope>provided</scope>
     </dependency>
     <!-- Sesame API dependencies -->
     <dependency>

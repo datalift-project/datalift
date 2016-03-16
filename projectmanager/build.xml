@@ -308,9 +308,10 @@
     <!-- Create module JAR file -->
     <jar jarfile="${jar.path}">
       <fileset dir="${classes.dir}"/>
-      <service type="org.datalift.fwk.Module">
+      <!-- Switching to Maven: using a pre-defined service provider list. -->
+      <!-- service type="org.datalift.fwk.Module">
         <provider classname="org.datalift.projectmanager.Workspace"/>
-      </service>
+      </service -->
     </jar>
   </target>
 

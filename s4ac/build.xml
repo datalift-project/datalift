@@ -290,11 +290,12 @@
     <!-- Create module JAR file -->
     <jar jarfile="${jar.path}" update="true">
       <fileset dir="${classes.dir}"/>
-      <service type="org.datalift.fwk.Module">
+      <!-- Switching to Maven: using a pre-defined service provider list. -->
+      <!-- service type="org.datalift.fwk.Module">
         <provider classname="org.datalift.s4ac.services.S4acAccessController"/>
         <provider classname="org.datalift.s4ac.services.SecurityAccessContextProvider"/>
         <provider classname="org.datalift.s4ac.services.SparqlAccessContextProvider"/>
-      </service>
+      </service -->
     </jar>
   </target>
 
