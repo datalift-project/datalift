@@ -108,6 +108,8 @@
   <property name="deploy.lib.home"      location="${lib.home}/deploy"/>
   <property name="run.lib.home"         location="${lib.home}/runtime"/>
 
+  <property name="local.mvn.repo"       location="${basedir}/../mvn-repo"/>
+
   <property name="fwk.version"          value="${app.version}"/>
   <property name="fwk.src.home"         location="${fwk.home}/src/java"/>
   <property name="fwk.web.home"         location="${fwk.home}/src/web"/>
@@ -188,6 +190,9 @@
       <include name="**/*.jar"/>
     </fileset>
     <fileset dir="${fwk.dist.home}">
+      <include name="**/*.jar"/>
+    </fileset>
+    <fileset dir="${local.mvn.repo}">
       <include name="**/*.jar"/>
     </fileset>
   </path>
@@ -352,7 +357,7 @@
     <!-- Copy web application static content and context definition -->
     <copy todir="${web-inf.dir}" encoding="UTF-8" preservelastmodified="true">
       <fileset dir="${conf.home}" includes="web.xml,wro.xml"/>
-      <filterset>
+      <filterset begintoken="${" endtoken="}">
         <filterset refid="webapp.param.filters"/>
         <filter token="http.cache.duration" value="${http.cache.duration}"/>
         <filter token="velocity.cache.duration"
@@ -362,7 +367,7 @@
     <copy todir="${web-inf.dir}" encoding="ISO-8859-1"
                                  preservelastmodified="true">
       <fileset dir="${conf.home}" includes="wro.properties"/>
-      <filterset>
+      <filterset begintoken="${" endtoken="}">
         <filterset refid="webapp.param.filters"/>
         <filter token="http.cache.duration" value="${http.cache.duration}"/>
         <filter token="wro4j.debug"         value="${wro4j.debug}"/>
@@ -375,9 +380,10 @@
     </copy>
     <!-- Copy external dependencies as required -->
     <copy todir="${lib.dir}" preservelastmodified="true" flatten="true">
-      <fileset dir="${fwk.run.libs}"  includes="**/*.jar"/>
-      <fileset dir="${run.lib.home}"  includes="**/*.jar"/>
-      <fileset dir="${fwk.dist.home}" includes="**/*.jar"/>
+      <fileset dir="${fwk.run.libs}"   includes="**/*.jar"/>
+      <fileset dir="${run.lib.home}"   includes="**/*.jar"/>
+      <fileset dir="${fwk.dist.home}"  includes="**/*.jar"/>
+      <fileset dir="${local.mvn.repo}" includes="**/*.jar"/>
     </copy>
     <!-- Create build directories as needed -->
     <mkdir dir="${dist.home}"/>
