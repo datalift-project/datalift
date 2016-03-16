@@ -387,6 +387,9 @@ public abstract class Configuration
      * @return the current configuration.
      */
     public static Configuration getDefault() {
+        if (defaultConfiguration != null) {
+            throw new IllegalStateException("No configuration set");
+        }
         return defaultConfiguration;
     }
 
@@ -399,7 +402,7 @@ public abstract class Configuration
      */
     public static void setDefault(Configuration configuration) {
         if (defaultConfiguration != null) {
-            throw new IllegalStateException();
+            throw new IllegalStateException("Configuration already set");
         }
         defaultConfiguration = configuration;
     }
