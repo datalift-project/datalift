@@ -249,7 +249,26 @@
         <directory>${basedir}/tests/conf</directory>
       </testResource>
     </testResources>
+
     <plugins>
+      <plugin>
+        <groupId>com.coderplus.maven.plugins</groupId>
+        <artifactId>copy-rename-maven-plugin</artifactId>
+        <version>1.0</version>
+        <executions>
+          <execution>
+            <id>copy-file</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>copy</goal>
+            </goals>
+            <configuration>
+              <sourceFile>src/web/WEB-INF/templates/core/resources_${locale.default}.properties</sourceFile>
+              <destinationFile>${project.build.directory}/${project.build.finalName}/WEB-INF/templates/core/resources.properties</destinationFile>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-war-plugin</artifactId>
@@ -257,6 +276,8 @@
         <configuration>
           <!-- Install Core JAR in addition to the WAR file. -->
           <attachClasses>true</attachClasses>
+          <!-- Remove version information from WAR file name. -->
+          <fileNameMapping>no-version</fileNameMapping>
           <webResources>
             <resource>
               <directory>${basedir}/conf</directory>
@@ -276,20 +297,21 @@
           </webResources>
         </configuration>
       </plugin>
+
       <plugin>
         <groupId>com.coderplus.maven.plugins</groupId>
         <artifactId>copy-rename-maven-plugin</artifactId>
         <version>1.0</version>
         <executions>
           <execution>
-            <id>copy-file</id>
-            <phase>generate-sources</phase>
+            <id>rename-war</id>
+            <phase>install</phase>
             <goals>
               <goal>copy</goal>
             </goals>
             <configuration>
-              <sourceFile>src/web/WEB-INF/templates/core/resources_${locale.default}.properties</sourceFile>
-              <destinationFile>${project.build.directory}/${project.build.finalName}/WEB-INF/templates/core/resources.properties</destinationFile>
+              <sourceFile>${project.build.directory}/${project.artifactId}-${project.version}.war</sourceFile>
+              <destinationFile>${project.build.directory}/datalift.war</destinationFile>
             </configuration>
           </execution>
         </executions>
@@ -297,4 +319,5 @@
     </plugins>
 
   </build>
+
 </project>

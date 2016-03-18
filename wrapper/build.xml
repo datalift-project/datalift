@@ -95,7 +95,7 @@
   <property name="core.home"            location="${datalift.root}/core"/>
   <property name="datalift.war.name"    value="datalift.war"/>
   <property name="datalift.war.path"
-            location="${core.home}/dist/${datalift.war.name}"/>
+            location="${core.home}/target/${datalift.war.name}"/>
 
 
   <!-- ================ Compilation Control Options ======================= -->
