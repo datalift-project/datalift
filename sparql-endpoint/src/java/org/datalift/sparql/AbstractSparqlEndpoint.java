@@ -1058,7 +1058,8 @@ abstract public class AbstractSparqlEndpoint extends BaseModule
             this.sendError(FORBIDDEN, null);
         }
         else if ((e.getCause() instanceof QueryInterruptedException) ||
-                 (msg.contains(QueryInterruptedException.class.getSimpleName()))){
+                 ((msg != null) &&
+                  (msg.contains(QueryInterruptedException.class.getSimpleName())))){
             // Query processing was interrupted as it was taking too much time.
             // => Return HTTP status 408 (Request Timeout).
             TechnicalException error = new TechnicalException(
