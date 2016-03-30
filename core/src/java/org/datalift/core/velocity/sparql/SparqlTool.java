@@ -1088,6 +1088,15 @@ public final class SparqlTool
             return sortedResults;
         }
 
+        /**
+         * Convenience method to access the next result.
+         * @return the next available result or <code>null</code> if no
+         *         more results are available.
+         */
+        public Map<String,Value> nextResult() {
+            return (this.hasNext())? this.next(): null;
+        }
+
         /** {@inheritDoc} */
         @Override
         public boolean hasNext() {
