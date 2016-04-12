@@ -274,7 +274,7 @@
         <artifactId>maven-war-plugin</artifactId>
         <version>2.1.1</version>
         <configuration>
-          <!-- Install Core JAR in addition to the WAR file. -->
+          <!-- Install classes JAR artifact in addition to the WAR file. -->
           <attachClasses>true</attachClasses>
           <!-- Remove version information from WAR file name. -->
           <fileNameMapping>no-version</fileNameMapping>
