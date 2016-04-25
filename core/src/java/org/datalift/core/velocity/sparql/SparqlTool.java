@@ -289,7 +289,7 @@ public final class SparqlTool
      *
      * @see    #select(String, String)
      */
-    public Iterator<Map<String,Value>> select(String query) {
+    public SelectResultIterator select(String query) {
         return this.select(this.defaultRepository, query);
     }
 
@@ -306,7 +306,7 @@ public final class SparqlTool
      * @throws RdfQueryException if any error occurred executing the
      *         query or processing the result.
      */
-    public Iterator<Map<String,Value>> select(String repository, String query) {
+    public SelectResultIterator select(String repository, String query) {
         return this.select(this.cfg.getRepository(repository), query);
     }
 
@@ -641,8 +641,7 @@ public final class SparqlTool
      * @throws RdfQueryException if any error occurred executing the
      *         query or processing the result.
      */
-    private Iterator<Map<String,Value>> select(Repository repository,
-                                               String query) {
+    private SelectResultIterator select(Repository repository, String query) {
         if (! isSet(query)) {
             throw new IllegalArgumentException("query");
         }
