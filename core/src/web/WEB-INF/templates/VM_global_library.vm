@@ -12,7 +12,7 @@
 #macro( banner )
 	<div id="banner" class="dl-banner">
 		<img id="datalift-logo" src="${baseUri}/images/datalift-logo.png"/>
-		<span id="datalift-title">DataLift</span>
+		<span id="datalift-title">Datalift</span>
 		<img id="datalift-partenaire" src="${baseUri}/images/logo-partenaire.png"/>
 	</div>
 #end
