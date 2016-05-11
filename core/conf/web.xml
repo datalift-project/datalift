@@ -285,7 +285,7 @@
   </mime-mapping>
   <mime-mapping>
     <extension>trig</extension>
-    <mime-type>application/x-trig</mime-type>
+    <mime-type>application/trig</mime-type>
   </mime-mapping>
   <mime-mapping>
     <extension>trix</extension>
