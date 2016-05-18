@@ -79,20 +79,52 @@
      </dependency>
   </dependencies>
 
+  <profiles>
+    <profile>
+      <id>build-config-present</id>
+      <activation>
+        <file><exists>${basedir}/../build.properties</exists></file>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-resources-plugin</artifactId>
+            <version>2.5</version>
+            <configuration>
+              <encoding>UTF-8</encoding>
+              <filters>
+                <filter>${basedir}/../build.properties</filter>
+              </filters>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>no-build-config</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <properties>
+        <full.app.version>${project.version}</full.app.version>
+      </properties>
+    </profile>
+  </profiles>
+
   <build>
     <sourceDirectory>src/java</sourceDirectory>
-    <filters>
-      <filter>${basedir}/../build.properties</filter>
-    </filters>
     <resources>
       <resource>
         <directory>src/java</directory>
+        <filtering>false</filtering>
         <excludes>
           <exclude>**/*.java</exclude>
         </excludes>
       </resource>
       <resource>
         <directory>src/web</directory>
+        <filtering>true</filtering>
       </resource>
     </resources>
 
