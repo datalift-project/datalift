@@ -295,6 +295,7 @@
               <directory>${basedir}/../framework/src/web</directory>
             </resource>
           </webResources>
+          <failOnMissingWebXml>false</failOnMissingWebXml>
         </configuration>
       </plugin>
 

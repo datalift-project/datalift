@@ -98,7 +98,7 @@ public class GmlParser {
 				parsexsd();
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
-				log.error(e.getLocalizedMessage());
+				log.error("XSD parse failed", e);
 			}
 		}
 		else {
@@ -190,7 +190,7 @@ public class GmlParser {
 		DocumentBuilder db = DocumentBuilderFactory.newInstance().newDocumentBuilder();
 		Document dGml = db.parse(gml);
 
-		this.crs = dGml.getElementsByTagName("gml:Box").item(0).getAttributes().getNamedItem("srsName").getNodeValue();
+		//this.crs = dGml.getElementsByTagName("gml:Box").item(0).getAttributes().getNamedItem("srsName").getNodeValue();
 		gml.close();
 
 	}

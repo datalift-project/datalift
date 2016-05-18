@@ -78,6 +78,7 @@ import org.datalift.fwk.util.Env;
 import org.datalift.fwk.util.UriBuilder;
 import org.datalift.fwk.util.io.FileUtils;
 
+
 import static org.datalift.fwk.rdf.ElementType.RdfType;
 import static org.datalift.fwk.util.PrimitiveUtils.wrap;
 import static org.datalift.fwk.util.StringUtils.*;
@@ -195,6 +196,7 @@ public class ShptoRdf extends BaseConverterModule
 		}
 		return response;
 	}
+
 
 	private File createWorkingDirectory(FileSource s) {
 		String relPath = new File(s.getFilePath()).getParent();

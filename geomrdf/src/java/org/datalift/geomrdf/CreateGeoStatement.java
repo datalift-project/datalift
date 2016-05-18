@@ -54,6 +54,30 @@ public class CreateGeoStatement {
 	Statement geoStatement;
 	List<Statement> aboutGeometry = new ArrayList<Statement>();
 
+	public ValueFactory getVf() {
+		return vf;
+	}
+
+	public void setVf(ValueFactory vf) {
+		this.vf = vf;
+	}
+
+	public Statement getGeoStatement() {
+		return geoStatement;
+	}
+
+	public void setGeoStatement(Statement geoStatement) {
+		this.geoStatement = geoStatement;
+	}
+
+	public List<Statement> getAboutGeometry() {
+		return aboutGeometry;
+	}
+
+	public void setAboutGeometry(List<Statement> aboutGeometry) {
+		this.aboutGeometry = aboutGeometry;
+	}
+
 	public void createStatement (GeometryProperty gp, ValueFactory vf, URI feature, URI geomFeature, String geoType, String crs){
 
 		this.vf = vf;
