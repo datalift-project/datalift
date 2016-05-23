@@ -82,7 +82,7 @@ public class WfsParser {
 		fr.ign.datalift.model.AbstractFeature ft = new AbstractFeature();
         
         
-        /******FayÃ§al's readfeaturecollection method + some edits***/
+        /******Façal's readfeaturecollection method + some edits***/
         Collection<Property> propColl = sf.getProperties();
 		for (Iterator<Property> iterator = propColl.iterator(); iterator.hasNext();) {
 			Property prop = iterator.next();

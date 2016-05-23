@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration xmlns="http://jakarta.apache.org/log4j/">
+
+  <!-- ===== Appenders ===== -->
+  <!-- Default log file -->
+  <appender name="defaultLog" class="org.apache.log4j.ConsoleAppender"/>
+
+  <!-- ===== Loggers ===== -->
+  <!-- Datalift modules -->
+  <logger name="org.datalift">
+    <level value="debug"/>
+  </logger>
+  <!-- Datalift framework and core classes -->
+  <logger name="org.datalift.framework">
+    <level value="info"/>
+  </logger>
+  <logger name="org.datalift.core">
+    <level value="info"/>
+  </logger>
+
+  <!-- Jersey & JAX-RS -->
+  <logger name="javax.ws.rs">
+    <level value="info"/>
+  </logger>
+  <logger name="com.sun.jersey">
+    <level value="warn"/>
+  </logger>
+  <!-- Sesame Client API -->
+  <logger name="org.apache.commons.httpclient">
+    <level value="warn"/>
+  </logger>
+  <!-- Apache Velocity template engine (and view processor) -->
+  <logger name="org.apache.velocity">
+    <level value="warn"/>
+  </logger>
+  <logger name="org.datalift.core.velocity.jersey">
+    <level value="info"/>
+  </logger>
+  <!-- Apache Shiro security framework (and integration classes) -->
+  <logger name="org.apache.shiro">
+    <level value="warn"/>
+  </logger>
+  <logger name="org.datalift.core.security">
+    <level value="warn"/>
+  </logger>
+  <!-- Empire RDF JPA provider -->
+  <logger name="com.clarkparsia.empire">
+    <level value="info"/>
+  </logger>
+  <!-- Web Resource (CSS & JS) Optimizer filter -->
+  <logger name="ro.isdc.wro">
+    <level value="warn"/>
+  </logger>
+
+</configuration>

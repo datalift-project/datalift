@@ -1,16 +1,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-
-  <parent>
-    <groupId>org.datalift</groupId>
-    <artifactId>datalift-parent</artifactId>
-    <version>0.9.1-beta-1</version>
-  </parent>
+  <groupId>org.datalift</groupId>
   <artifactId>wfsrdf</artifactId>
   <version>0.0.1-SNAPSHOT</version>
-  <properties>
-	<datalift.version>0.9.1-beta-1</datalift.version>
-  </properties>
+  
   <repositories>
       <repository>
           <id>maven2-repository.dev.java.net</id>
@@ -32,7 +25,6 @@
             <version>4.11</version>
             <scope>test</scope>
         </dependency>
-        <!-- GeoTools dependencies -->
         <dependency>
             <groupId>org.geotools</groupId>
             <artifactId>gt-shapefile</artifactId>
@@ -54,44 +46,23 @@
         	<version>13.2</version>
     	</dependency>
     	<!-- Datalift dependencies -->
-     	<dependency>
-      		<groupId>org.datalift</groupId>
-      		<artifactId>datalift-framework</artifactId>
-      		<version>${datalift.version}</version>
-    	</dependency>
-	   	<dependency>
-      		<groupId>org.datalift</groupId>
-      		<artifactId>datalift-core</artifactId>
-      		<version>${datalift.version}</version>
-      		<classifier>classes</classifier>
-    	</dependency>
-    	<dependency>
-      		<groupId>org.datalift</groupId>
-      		<artifactId>geomrdf</artifactId>
-      		<version>${datalift.version}</version>
-      		<exclusions>
-        		<exclusion>
-          			<groupId>org.geotools</groupId>
-			        <artifactId>gt-main</artifactId>
-        		</exclusion>
-        		<exclusion>
-          			<groupId>org.geotools</groupId>
-			        <artifactId>gt-data</artifactId>
-        		</exclusion>
-        		<exclusion>
-          			<groupId>org.geotools</groupId>
-			        <artifactId>gt-xml</artifactId>
-        		</exclusion>
-        		<exclusion>
-          			<groupId>org.geotools</groupId>
-			        <artifactId>gt-metadata</artifactId>
-        		</exclusion>
-        		<exclusion>
-          			<groupId>org.geotools</groupId>
-			        <artifactId>gt-opengis</artifactId>
-        		</exclusion>
-      		</exclusions>
-    	</dependency>
-    
+
+    <!-- Use Datalift Core rather than Framework for access to
+
+         Core utility classes such as SparqlTool -->
+
+    <dependency>
+
+      <groupId>org.datalift</groupId>
+
+      <artifactId>datalift-core</artifactId>
+
+      <version>0.9.1-beta-1</version>
+
+      <classifier>classes</classifier>
+
+    </dependency>
+
+    	
     </dependencies>
 </project>
