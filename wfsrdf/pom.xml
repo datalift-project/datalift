@@ -10,6 +10,7 @@
   <version>0.0.1-SNAPSHOT</version>
   <properties>
 	<datalift.version>0.9.1-beta-1</datalift.version>
+	<geotools.version>13.2</geotools.version>
   </properties>
   <repositories>
       <repository>
@@ -36,22 +37,22 @@
         <dependency>
             <groupId>org.geotools</groupId>
             <artifactId>gt-shapefile</artifactId>
-            <version>13.2</version>
+            <version>${geotools.version}</version>
         </dependency>
         <dependency>
             <groupId>org.geotools</groupId>
             <artifactId>gt-swing</artifactId>
-            <version>13.2</version>
+            <version>${geotools.version}</version>
         </dependency>
         <dependency>
             <groupId>org.geotools</groupId>
             <artifactId>gt-wfs-ng</artifactId>
-            <version>13.2</version>
+            <version>${geotools.version}</version>
         </dependency>
         <dependency>
         	<groupId>org.geotools</groupId>
         	<artifactId>gt-epsg-hsql</artifactId>
-        	<version>13.2</version>
+        	<version>${geotools.version}</version>
     	</dependency>
     	<!-- Datalift dependencies -->
      	<dependency>
