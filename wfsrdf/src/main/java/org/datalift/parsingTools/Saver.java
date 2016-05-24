@@ -11,7 +11,7 @@ import org.openrdf.repository.RepositoryException;
 import org.openrdf.repository.http.HTTPRepository;
 
 public class Saver {
-	// tu déclares ton repo, pour toi c'était une autre adresse
+	// tu dï¿½clares ton repo, pour toi c'ï¿½tait une autre adresse
 	String sesameServer = "	http://localhost:9091/openrdf-sesame";
 	String repositoryID = "internal";
 	Repository repo = new HTTPRepository(sesameServer, repositoryID);
@@ -25,12 +25,12 @@ public class Saver {
 			cnx = this.repo.getConnection();
 			factory = cnx.getValueFactory();
 			// pour utiliser un contexte
-			URI context = factory.createURI("http://example.org/hanane/");
+			URI context = factory.createURI("http://localhost:9091/project/initkiosques/source/regions-nouvelles-shp-2/");
 			URI bob = factory.createURI("http://example.org/hanane");
 			URI name = factory.createURI("http://example.org/name");
 			Literal bobsName = factory.createLiteral("Hanane");
 			Statement nameStatement = factory.createStatement(bob, name, bobsName, context);
-			// sinon tu peux créer une liste de statements et insérer d'un coup
+			// sinon tu peux crï¿½er une liste de statements et insï¿½rer d'un coup
 			cnx.add(nameStatement);
 		} catch (RepositoryException e) {
 			// TODO Auto-generated catch block

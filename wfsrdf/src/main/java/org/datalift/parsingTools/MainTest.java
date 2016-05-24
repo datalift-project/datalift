@@ -18,7 +18,7 @@ public class MainTest {
 		
 		URI targetGraph;
 		try {
-			targetGraph = new URI("http://localhost:9091/project/initkiosques/sources/regions-nouvelles-shp-1");
+			targetGraph = new URI("http://localhost:9091/project/initkiosques/source/regions-nouvelles-shp-1");
 			URI baseUri=new URI("http://localhost:9091/initkiosques/regions-nouvelles-shp");
 			String targetType="regions-nouvelles-shp";
 			String src="none";
