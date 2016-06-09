@@ -1,21 +1,38 @@
 package org.datalift.parsingTools;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Properties;
 
 import org.datalift.core.DefaultConfiguration;
 import org.datalift.fwk.Configuration;
+import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.util.DefaultUriBuilder;
+import org.geotools.data.DataStore;
+import org.geotools.data.DataStoreFinder;
+import org.geotools.data.DefaultQuery;
+import org.geotools.data.FeatureSource;
+import org.geotools.data.Query;
+import org.geotools.data.simple.SimpleFeatureCollection;
+import org.geotools.data.simple.SimpleFeatureIterator;
+import org.geotools.data.simple.SimpleFeatureSource;
+import org.geotools.feature.FeatureCollection;
+import org.opengis.feature.Feature;
+import org.opengis.feature.simple.SimpleFeature;
+import org.opengis.feature.simple.SimpleFeatureType;
 
 public class MainTest {
 	
 	public static void main(String[] args)
-	{
+	{	
+		Logger log = Logger.getLogger();
+		log.trace(">>>>> Coucou");
 		initDataliftConfig();
-		//WfsParser webParser=new WfsParser();
-		//webParser.getDataWFS("http://127.0.0.1:8081/geoserver/wfs?REQUEST=GetCapabilities&version=1.0.0");
-		
+
 		URI targetGraph;
 		try {
 			targetGraph = new URI("http://localhost:9091/project/initkiosques/source/regions-nouvelles-shp-1");
@@ -35,7 +52,49 @@ public class MainTest {
 			e.printStackTrace();
 		}
 		
+		/*try {
+			tryGetDataStore();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}*/
 		
+	}
+	
+	public static void tryGetDataStore() throws IOException
+	{
+		//String getCapabilities = "http://ogc.geo-ide.developpement-durable.gouv.fr/cartes/mapserv?map=/opt/data/carto/geoide-catalogue/REG042A/JDD.www.map&service=WfS&request=GetCapabilities&version=1.1.0";
+		String getCapabilities = "http://ows.region-bretagne.fr/geoserver/rb/wfs?service=wfs&request=getcapabilities&version=1.0.0";
+		
+		//String getCapabilities = "http://cartographie.aires-marines.fr/wfs?service=wfs&request=getcapabilities&version=2.0.0";
+			Map connectionParameters = new HashMap();
+		connectionParameters.put("WFSDataStoreFactory:GET_CAPABILITIES_URL", getCapabilities );
+		connectionParameters.put("WFSDataStoreFactory:WFS_STRATEGY", "geoserver");
+
+		// Step 2 - connection
+		DataStore data = DataStoreFinder.getDataStore( connectionParameters );
+
+		// Step 3 - discouvery
+		String typeNames[] = data.getTypeNames();
+		String typeName = typeNames[0];
+		SimpleFeatureType schema = data.getSchema( typeName );
+
+		// Step 4 - target
+		SimpleFeatureSource source = data.getFeatureSource(typeName);
+		//System.out.println( "Metadata Bounds:"+ source.getBounds() );
+
+		// Step 5 - query
+		
+
+		Query query = new Query(  );
+		 SimpleFeatureCollection fc = source.getFeatures(query); //describeft
+		    SimpleFeatureIterator  fiterator=fc.features();
+		    while(fiterator.hasNext()){
+		    	SimpleFeature sf = fiterator.next();
+		    	
+		    	System.out.println(sf.getName());		         
+		    }
+		   
 	}
 
 	public final static String REPOSITORY_URIS = "datalift.rdf.repositories";
