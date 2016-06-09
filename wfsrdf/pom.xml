@@ -10,7 +10,7 @@
   <version>0.0.1-SNAPSHOT</version>
   <properties>
 	<datalift.version>0.9.1-beta-1</datalift.version>
-	<geotools.version>13.2</geotools.version>
+	<geotools.version>14.3</geotools.version>
   </properties>
   <repositories>
       <repository>
@@ -35,20 +35,48 @@
         </dependency>
         <!-- GeoTools dependencies -->
         <dependency>
-            <groupId>org.geotools</groupId>
-            <artifactId>gt-shapefile</artifactId>
-            <version>${geotools.version}</version>
+         	<groupId>org.geotools.xsd</groupId>
+  		 	<artifactId>gt-xsd-core</artifactId>  		 	
+  		 	<version>${geotools.version}</version> 
+        </dependency>
+        
+        <!-- <dependency>
+         	<groupId>org.geotools.xsd</groupId>
+  		 	<artifactId>gt-xsd-gml3</artifactId>
+  		 	<version>13.3-SNAPSHOT</version> 
+        </dependency> -->
+        
+        <dependency>
+         	<groupId>org.geotools.xsd</groupId>
+  		 	<artifactId>gt-xsd-filter</artifactId>
+  		 	<version>${geotools.version}</version>
+        </dependency>
+           
+        <dependency>
+         	<groupId>org.geotools.xsd</groupId>
+  		 	<artifactId>gt-xsd-fes</artifactId>
+  		 	<version>${geotools.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.geotools</groupId>
-            <artifactId>gt-swing</artifactId>
-            <version>${geotools.version}</version>
+         	<groupId>org.geotools.xsd</groupId>
+  		 	<artifactId>gt-xsd-ows</artifactId>
+  		 	<version>${geotools.version}</version>
         </dependency>
+          
+         
+      
+    	
+       
+         
         <dependency>
             <groupId>org.geotools</groupId>
             <artifactId>gt-wfs-ng</artifactId>
             <version>${geotools.version}</version>
         </dependency>
+    
+           
+        
+        
         <dependency>
         	<groupId>org.geotools</groupId>
         	<artifactId>gt-epsg-hsql</artifactId>
@@ -90,9 +118,114 @@
         		<exclusion>
           			<groupId>org.geotools</groupId>
 			        <artifactId>gt-opengis</artifactId>
+        		</exclusion>        		
+        		<exclusion>
+          			<groupId>org.geotools</groupId>
+			        <artifactId>gt-referencing</artifactId>
+        		</exclusion>
+        		<exclusion>
+          			<groupId>org.geotools</groupId>
+			        <artifactId>gt-shapefile</artifactId>
+        		</exclusion>
+        		<exclusion>
+          			<groupId>org.geotools.xsd</groupId>
+			        <artifactId>gt-xsd-core</artifactId>
+        		</exclusion>
+        		<exclusion>
+          			<groupId>org.geotools.xsd</groupId>
+			        <artifactId>gt-xsd-filter</artifactId>
+        		</exclusion>
+        		<exclusion>
+          			<groupId>org.geotools.xsd</groupId>
+			        <artifactId>gt-xsd-gml2</artifactId>
+        		</exclusion>
+        		<exclusion>
+          			<groupId>org.geotools.xsd</groupId>
+			        <artifactId>gt-xsd-gml3</artifactId>
+        		</exclusion>
+        		<exclusion>
+          			<groupId>org.geotools.xsd</groupId>
+			        <artifactId>gt-xsd-wfs</artifactId>
         		</exclusion>
       		</exclusions>
     	</dependency>
     
     </dependencies>
+  <build>
+	<pluginManagement>
+    <plugins>
+      <!--plugin>
+        <groupId>com.coderplus.maven.plugins</groupId>
+        <artifactId>copy-rename-maven-plugin</artifactId>
+        <version>1.0</version>
+        <executions>
+          <execution>
+            <id>copy-file</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>copy</goal>
+            </goals>
+            <configuration>
+              <sourceFile>src/web/resources_${locale.default}.properties</sourceFile>
+              <destinationFile>${project.build.outputDirectory}/resources.properties</destinationFile>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>1.8</version>
+        <executions>
+          <execution>
+            <id>datalift-version</id>
+            <phase>compile</phase>
+            <configuration>
+              <target>
+                <property file="${basedir}/../build.properties"/ -->
+                <!-- Copy web application page templates and resources -->
+                <!--copy todir="${project.build.outputDirectory}"
+                      encoding="UTF-8" includeEmptyDirs="false"
+                      preservelastmodified="true" overwrite="true">
+                  <fileset dir="${basedir}/src/web" includes="**/*.vm"/>
+                  <filterset>
+                    <filter token="full.app.version"
+                            value="${full.app.version}"/>
+                  </filterset>
+                </copy>
+              </target>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy-dependencies</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>copy-dependencies</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.outputDirectory}</outputDirectory>
+              <includeGroupIds>
+                org.geotools.xsd, org.geotools
+              </includeGroupIds>
+              <overWriteReleases>false</overWriteReleases>
+              <overWriteSnapshots>false</overWriteSnapshots>
+              <overWriteIfNewer>true</overWriteIfNewer>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+    </pluginManagement>
+
+  </build>
+
 </project>

@@ -5,23 +5,25 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.geotools.data.DataStore;
 import org.geotools.data.DataStoreFinder;
-import org.geotools.data.FeatureSource;
 import org.geotools.data.Query;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.data.simple.SimpleFeatureSource;
-import org.opengis.feature.simple.SimpleFeatureType;
+
 import org.opengis.feature.type.Name;
-import org.opengis.geometry.MismatchedDimensionException;
+import org.opengis.filter.FilterFactory2;
+import org.opengis.filter.identity.FeatureId;
 import org.opengis.referencing.ReferenceIdentifier;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
-import org.opengis.referencing.operation.TransformException;
+
 
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.LineString;
@@ -41,15 +43,19 @@ import org.opengis.feature.Property;
 //import fr.ign.datalift.model.AbstractFeature;
 
 import org.opengis.feature.simple.SimpleFeature;
+import org.opengis.feature.simple.SimpleFeatureType;
 import org.geotools.data.wfs.WFSDataStore;
 import org.geotools.data.wfs.WFSDataStoreFactory;
+import org.geotools.factory.CommonFactoryFinder;
+import org.geotools.factory.GeoTools;
 import org.geotools.feature.type.GeometryTypeImpl;
-import org.geotools.geometry.jts.JTS;
+import org.geotools.filter.identity.FeatureIdImpl;
+
 
 
 public class WfsParser {
 	
-	private final long connectionTimeout=1000000;
+
 	private ArrayList<AbstractFeature> features;
 	private final Charset UTF8_CHARSET = Charset.forName("UTF-8");
 	
@@ -209,24 +215,43 @@ public class WfsParser {
 				//"http://geoservices.brgm.fr/risques?service=WFS&version=1.0.0&request=GetCapabilities"
 		Map connectionParameters = new HashMap();
 		connectionParameters.put("WFSDataStoreFactory:GET_CAPABILITIES_URL", getCapabilities);
+		connectionParameters.put("WFSDataStoreFactory:WFS_STRATEGY", "mapserver");
 		WFSDataStoreFactory  dsf = new WFSDataStoreFactory();
 		try {
 		    WFSDataStore dataStore = dsf.createDataStore(connectionParameters);
+		    //getdatastore
 		   
 		    List<Name> list= dataStore.getNames();
 		    
-		    SimpleFeatureSource source = dataStore.getFeatureSource("hanane_workspace_regions_nouvelles");
-		    Query query = new Query(); 
+		    //SimpleFeatureSource source = dataStore.getFeatureSource("ef_EnvironmentalMonitoringFacility");
+		    //SimpleFeatureSource source = dataStore.getFeatureSource("hanane_workspace_regions_nouvelles");
+		     SimpleFeatureSource source = dataStore.getFeatureSource("ms_JDD_2060139");
+		  
+		    
+		    /* FilterFactory2 ff = CommonFactoryFinder.getFilterFactory2();
+	        Set<FeatureId> fids = new HashSet<FeatureId>();
+	        fids.add(new FeatureIdImpl("Piezometre.1.01143X0062-F"));
+	        Query query = new Query("ef_EnvironmentalMonitoringFacility", ff.id(fids));*/
+	        
+	        Query query = new Query();
+		    //query.setMaxFeatures(1);
+		    
+		    //FilterFactory2 ff = CommonFactoryFinder.getFilterFactory2( GeoTools.getDefaultHints() );
+		    //FeatureId id= ff.featureId("Piezometre.1.01143X0062-F");
+		    
+		    //query.setFilter(ff.id(id));
+		    //query.setStartIndex(1);
+		    //query.setTypeName("ef_EnvironmentalMonitoringFacility");
+		    	    
 		    CoordinateReferenceSystem crs=source.getInfo().getCRS();
-		    query.setCoordinateSystem(source.getInfo().getCRS()); 
-		    SimpleFeatureCollection fc = source.getFeatures(query);
+		    query.setCoordinateSystem(source.getInfo().getCRS());
+		  
+		    SimpleFeatureCollection fc = source.getFeatures(query); //describeft
 		    SimpleFeatureIterator  fiterator=fc.features();
 		    while(fiterator.hasNext()){
 		    	SimpleFeature sf = fiterator.next();
 		    	addFeature(sf,crs);
-		    	
-		    	System.out.println(sf.getName());
-		         
+		    	System.out.println(sf.getName());		         
 		    }
 		   
 		} catch (IOException ex) {
@@ -235,6 +260,50 @@ public class WfsParser {
 	
 		   
 	}
+	
+		public  void tryGetDataStore() throws IOException
+	{
+		//String getCapabilities = "http://ogc.geo-ide.developpement-durable.gouv.fr/cartes/mapserv?map=/opt/data/carto/geoide-catalogue/REG042A/JDD.www.map&service=WfS&request=GetCapabilities&version=1.1.0"; //enmptyfeaturereader
+		//String getCapabilities = "http://ows.region-bretagne.fr/geoserver/rb/wfs?service=wfs&request=getcapabilities&version=1.0.0"; //ok 
+		//String getCapabilities = "http://geoservices.brgm.fr/risques?service=WFS&request=Getcapabilities"; //ok
+		//String getCapabilities = "https://wfspoc.brgm-rec.fr/geoserver/ows?service=wfs&version=2.0.0&request=GetCapabilities"; //net.opengis.wfs20.impl.WFSCapabilitiesTypeImpl cannot be cast to net.opengis.wfs.WFSCapabilitiesType
+		//String getCapabilities = "http://cartographie.aires-marines.fr/wfs?service=wfs&request=getcapabilities&version=2.0.0"; //client does not support any of the server supported output format
+		String getCapabilities = "http://ids.craig.fr/wxs/public/wfs?request=getcapabilities";  //ok for v1.1 and v1.0
+		Map connectionParameters = new HashMap();
+		connectionParameters.put("WFSDataStoreFactory:GET_CAPABILITIES_URL", getCapabilities );
+		connectionParameters.put("WFSDataStoreFactory:WFS_STRATEGY", "geoserver");
+		//map.put (WFSDataStoreFactory.URL.key, "....");
+
+		// Step 2 - connection
+		DataStore data = DataStoreFinder.getDataStore( connectionParameters );
+
+		// Step 3 - discouvery
+		String typeNames[] = data.getTypeNames();
+		String typeName = typeNames[0];
+		SimpleFeatureType schema = data.getSchema( typeName );
+
+		// Step 4 - target
+		SimpleFeatureSource source = data.getFeatureSource(typeName);
+		//System.out.println( "Metadata Bounds:"+ source.getBounds() );
+
+		// Step 5 - query
+		
+
+		Query query = new Query(  );
+		 CoordinateReferenceSystem crs=source.getInfo().getCRS();
+		    query.setCoordinateSystem(crs);
+		    query.setMaxFeatures(100);
+		    
+		 SimpleFeatureCollection fc = source.getFeatures(query); //describeft
+		    SimpleFeatureIterator  fiterator=fc.features();
+		    while(fiterator.hasNext()){
+		    	SimpleFeature sf = fiterator.next();
+		    	addFeature(sf,crs);
+		    	System.out.println(sf.getName());		         
+		    }
+		   
+	}
+
 	protected void parseMultiPolygon(GeometryProperty gp, MultiPolygon mp){
 		int numGeometries = mp.getNumGeometries();
 		gp.setNumGeometries(numGeometries);

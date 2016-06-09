@@ -247,7 +247,7 @@ public class WfsConverter {
 				}
 				catch (Exception e2) { /* Ignore... */ }
 
-				throw new TechnicalException("shp.conversion.failed", e);
+				throw new TechnicalException("wfs.conversion.failed", e);
 			}
 			finally {
 				// Commit pending data (including graph removal in case of error).

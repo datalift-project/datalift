@@ -2,37 +2,22 @@ package org.datalift.parsingTools;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_XHTML_XML;
 import static javax.ws.rs.core.MediaType.TEXT_HTML;
-import static org.apache.velocity.runtime.RuntimeConstants.RESOURCE_LOADER;
-import static org.apache.velocity.runtime.RuntimeConstants.RUNTIME_LOG_LOGSYSTEM_CLASS;
-import static org.apache.velocity.runtime.log.Log4JLogChute.RUNTIME_LOG_LOG4J_LOGGER;
-import static org.datalift.core.DefaultConfiguration.PRIVATE_STORAGE_PATH;
-import static org.datalift.core.DefaultConfiguration.REPOSITORY_DEFAULT_FLAG;
-import static org.datalift.core.DefaultConfiguration.REPOSITORY_URIS;
-import static org.datalift.core.DefaultConfiguration.REPOSITORY_URL;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Properties;
 
-import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Response;
+
 
 import org.apache.velocity.app.VelocityEngine;
-import org.apache.velocity.runtime.log.Log4JLogChute;
-import org.apache.velocity.runtime.resource.loader.StringResourceLoader;
-import org.apache.velocity.runtime.resource.util.StringResourceRepositoryImpl;
-import org.datalift.core.DefaultConfiguration;
+
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.log.Logger;
-import org.datalift.fwk.project.Source.SourceType;
-import org.datalift.geomrdf.BaseConverterModule;
-import org.openrdf.repository.Repository;
-import org.openrdf.repository.sail.SailRepository;
-import org.openrdf.sail.memory.MemoryStore;
+
 
 import fr.ign.datalift.model.AbstractFeature;
 
@@ -53,7 +38,11 @@ public class WfsToRdf /*extends BaseConverterModule*/ {
 	public final static String MODULE_NAME = "wfstordf";
 	
 	/***Deprecated****/
-	public final static  String URLWFS="http://127.0.0.1:8081/geoserver/wfs?REQUEST=GetCapabilities&version=1.0.0";
+	//public final static  String URLWFS= "https://wfspoc.brgm-rec.fr/geoserver/ows?service=wfs&version=2.0.0&request=GetCapabilities";
+	//public final static  String URLWFS="http://127.0.0.1:8081/geoserver/wfs?REQUEST=GetCapabilities&version=1.0.0";
+	public final static  String URLWFS="http://ogc.geo-ide.developpement-durable.gouv.fr/cartes/mapserv?map=/opt/data/carto/geoide-catalogue/REG042A/JDD.www.map&service=WfS&request=GetCapabilities&version=1.1.0";
+									
+			//
 
 	private static VelocityEngine engine = null;
 	//-------------------------------------------------------------------------
@@ -100,7 +89,7 @@ public class WfsToRdf /*extends BaseConverterModule*/ {
 			e.printStackTrace();
 		}
 	}
-	//this is a temporary prototype of what should be in the future the web service responding to a conversion request
+	//this is a temporary prototype of what should be in the future the web service response to a conversion request
 	public void convertWfsToRdf(
 			 URI projectId,
 			 URI sourceId,
@@ -116,7 +105,13 @@ public class WfsToRdf /*extends BaseConverterModule*/ {
 		WfsParser parser=new WfsParser();
 		//4-call the method getwfsdata of the parser using the wfs URL of the source mentioned above. A list of features is created. 
 		//each element of the list contains all the information associated to each feature member of wfs response
-		parser.getDataWFS(URLWFS);
+		//parser.getDataWFS(URLWFS);
+		try {
+			parser.tryGetDataStore();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		ArrayList<AbstractFeature> featuresToConvert=parser.getFeatures();
 		//5-create an instance of wfsConverter 
 		WfsConverter converter=new WfsConverter();
