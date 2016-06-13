@@ -81,6 +81,7 @@ import static org.apache.velocity.runtime.log.Log4JLogChute.*;
 
 import org.datalift.core.velocity.DateTool;
 import org.datalift.core.velocity.EscapeTool;
+import org.datalift.core.velocity.NumberTool;
 import org.datalift.core.velocity.i18n.I18nTool;
 import org.datalift.core.velocity.i18n.I18ncludeDirective;
 import org.datalift.core.velocity.i18n.LoadDirective;
@@ -119,6 +120,8 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
     public final static String CTX_LINK_TOOL        = "link";
     /** The context key for Velocity Date tool. */
     public final static String CTX_DATE_TOOL        = "date";
+    /** The context key for Velocity Number tool. */
+    public final static String CTX_NUMBER_TOOL      = "number";
     /** The context key for Velocity Field tool. */
     public final static String CTX_FIELD_TOOL       = "field";
     /** The context key for Datalift SPARQL tool. */
@@ -323,6 +326,9 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
                                                 PreferredLocales.get().get(0));
                 dateTool.configure(config);
                 ctx.put(CTX_DATE_TOOL, dateTool);
+            }
+            if (! ctx.containsKey(CTX_NUMBER_TOOL)) {
+                ctx.put(CTX_NUMBER_TOOL, new NumberTool());
             }
             if (! ctx.containsKey(CTX_FIELD_TOOL)) {
                 ctx.put(CTX_FIELD_TOOL, fieldTool);
