@@ -117,8 +117,7 @@ public class DateTool extends org.apache.velocity.tools.generic.DateTool
         try {
             // Literal.calendarValue() sometimes returns incorrect values
             // while the literal text (label) is correct. => Parse label.
-            c = dt.newXMLGregorianCalendar(((Literal)l).getLabel())
-                  .toGregorianCalendar();
+            c = dt.newXMLGregorianCalendar(l.getLabel()).toGregorianCalendar();
         }
         catch (Exception e) {
             // Not a date.
