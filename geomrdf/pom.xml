@@ -181,7 +181,7 @@
             <configuration>
               <outputDirectory>${project.build.outputDirectory}</outputDirectory>
               <includeGroupIds>
-                com.github.jsonld-java,com.fasterxml.jackson.core,org.apache.httpcomponents
+                org.geotools, org.geotools.xsd, commons-lang
               </includeGroupIds>
               <overWriteReleases>false</overWriteReleases>
               <overWriteSnapshots>false</overWriteSnapshots>
