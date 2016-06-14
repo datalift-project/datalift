@@ -86,6 +86,9 @@ public interface Source
         public static final SourceType GmlSource =
                             new SourceType("datalift.gml.file.source",
                                            "source.gml.file.label");
+        public static final SourceType WfsSource =
+                new SourceType("datalift.wfs.service.source",
+                               "source.wfs.service.label");
 
         private final String id;
         private final String label;
