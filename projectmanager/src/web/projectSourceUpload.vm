@@ -14,6 +14,7 @@
 	#set( $target_xml = "${it.uri}/xmlmodify" )
 	#set( $target_shp = "${it.uri}/shpmodify" )
 	#set( $target_gml = "${it.uri}/gmlmodify" )
+	#set( $target_ogc = "${it.uri}/ogcmodify" )
 #else
 	#set( $title = "project.title.add_dataset" )
 	#set( $submit = "create" )
@@ -24,6 +25,7 @@
 	#set( $target_xml = "${it.uri}/xmlupload" )
 	#set( $target_shp = "${it.uri}/shpupload" )
 	#set( $target_gml = "${it.uri}/gmlupload" )
+	#set( $target_ogc = "${it.uri}/ogcupload" )
 #end
 	<title>#i18n($title) - #i18n("workspace.title") - DataLift</title>
 #css_links
@@ -244,6 +246,55 @@
 		<input type="file" name="source1" size="64"/><br />
 		<p><label for="file">#i18n("project.upload_xsd"): </label>
 		<input type="file" name="source2" size="64"/><br />
+#else
+		<input type="hidden" name="current_source" value="$current.uri"/>
+		<p>#i18n("project.update_gml"): <a href="$current.uri">$esc.html($current.title)</a>#if( $current.sourceUrl ) (#i18n('project.update_source.src_url'): <a href='${current.sourceUrl}'>$!esc.html($current.sourceUrl)</a>)#end</p>
+#end
+		<p><label for="description">#i18n("project.upload_source.description"): </label>
+		<input type="text" id="description" name="description" value="$!esc.html($current.description)"/></p>
+		<input type="submit" value="#i18n("$submit")"/>
+	</form>
+#end
+	</div>
+	
+		<h3><a href="#">Web Service OGC</a></h3>
+	<div>
+#if( (!$current) || ($current.getType() == $field.GmlSource) )
+	<form method="post" action="$target_ogc" enctype="multipart/form-data" class="form_formated">
+#if( !$current )
+		<p><label for="service_type">#i18n("project.upload_service_type")*: </label>
+		#foreach( $v in $services )
+			#if( $v == 'WFS' )
+			<input type="radio" name="service_type" value="$v" style="width:inherit" checked> $esc.html($v)
+			#else
+			<input type="radio" name="service_type" value="$v" style="width:inherit"> $esc.html($v)
+			#end
+			#end
+		</p>			
+		<p><label for="service_url">#i18n("project.upload_service_url")*: </label>
+		<input type="text" class="control-input" placeholder= "http://..." id="service_url" name="service_url" title="#i18n("project.upload_source.tooltip.wfs_url")"/></p>
+		<p><label class="control-label" for="service_name">#i18n("project.upload_source.name")*: </label>
+		<input type="text" id="service_name" class="control-input" placeholder="#i18n("project.source.placeholder.file_name")" name="service_name" title="#i18n("project.source.placeholder.file_name")" /></p>
+		<p><label for="version">#i18n("project.upload_service_version"): </label>
+		<select name="version" id="version" title="#i18n("project.source.tooltip.version")">
+			#foreach( $v in $versions )
+			#if( $v == '1.0.0' )  )
+			<option value="$v" selected="true">$esc.html($v)</option>
+			#else
+			<option value="$v">$esc.html($v)</option>
+			#end
+			#end			
+		</select> </p>
+		<p><label for="server">#i18n("project.upload_service_server"): </label>
+		<select name="server" id="version" title="#i18n("project.source.tooltip.server")">
+			#foreach( $s in $servers )
+			#if( $s == 'geoserver' )  )
+			<option value="$s" selected="true">$esc.html($s)</option>
+			#else
+			<option value="$ss">$esc.html($s)</option>
+			#end
+			#end	
+		</select> </p>
 #else
 		<input type="hidden" name="current_source" value="$current.uri"/>
 		<p>#i18n("project.update_gml"): <a href="$current.uri">$esc.html($current.title)</a>#if( $current.sourceUrl ) (#i18n('project.update_source.src_url'): <a href='${current.sourceUrl}'>$!esc.html($current.sourceUrl)</a>)#end</p>
