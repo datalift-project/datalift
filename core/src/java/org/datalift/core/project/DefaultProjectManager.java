@@ -78,10 +78,13 @@ import org.datalift.fwk.project.ShpSource;
 import org.datalift.fwk.project.GmlSource;
 import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.TransformedRdfSource;
+import org.datalift.fwk.project.WfsSource;
 import org.datalift.fwk.project.XmlSource;
 import org.datalift.fwk.project.CsvSource.Separator;
 import org.datalift.fwk.rdf.RdfNamespace;
 import org.datalift.fwk.security.SecurityContext;
+//import org.geotools.data.DataStore;
+//import org.geotools.data.DataStoreFinder;
 
 import static org.datalift.fwk.util.StringUtils.*;
 
@@ -325,6 +328,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
                                                     uri, project.getTitle());
         return src;
     }
+    
 
     /** {@inheritDoc} */
     @Override
@@ -432,6 +436,65 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
                                                     uri, project.getTitle());
         return src;
     }
+    
+    @Override
+	public WfsSource newWfsSource(Project project, URI uri, String serviceUrl, String title,
+            String description, String version, String serverStrategy  ) throws IOException {
+		// TODO Auto-generated method stub
+    	// TODOcheck if parameters entered (url, version, strategy) are valide before creating the source 
+    	if(validService(serviceUrl,version,serverStrategy))
+    	{
+    		// Create new WFS source.
+    		WfsSourceImpl src = new WfsSourceImpl(uri.toString(), project);
+            // Set source parameters.
+            this.initSource(src, title, description);
+            
+            src.setSourceUrl(serviceUrl);
+            src.setVersion(version);
+            src.setServerType(serverStrategy);
+            // Add source to project.
+            project.add(src);
+            log.debug("New WFS source <{}> added to project \"{}\"",
+                                                        uri, project.getTitle());
+            return src;
+    	}
+    	else
+    		return null;
+		
+       
+	}
+    private boolean validService(String serviceUrl, String version, String serverStrategy)
+    {
+//    	String getCapabilities = serviceUrl;  
+//		Map connectionParameters = new HashMap();
+//		connectionParameters.put("WFSDataStoreFactory:GET_CAPABILITIES_URL", getCapabilities );
+//		if(!version.equals("2.0.0") && !serverStrategy.equals("none"))
+//			//then take into account care about the strategy type
+//		{
+//			connectionParameters.put("WFSDataStoreFactory:WFS_STRATEGY", serverStrategy);
+//		}
+//			
+//		
+//		//map.put (WFSDataStoreFactory.URL.key, "....");
+//
+//		// try connection to the server with given parameters
+//		try {
+//			DataStore data = DataStoreFinder.getDataStore( connectionParameters );
+//			if (data==null)
+//			{
+//				log.warn("The connection to WFS server failed ! Bad parameters : URL {} and/or version {} and/or strategy {}", serviceUrl,version, serverStrategy);
+//				return false;
+//			}
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			log.warn("The connection to WFS server {} failed", serviceUrl);
+//			log.error(e.getMessage());
+//			return false;
+//			
+//		}
+
+		return true;
+    }
 
     /** {@inheritDoc} */
     @Override
@@ -460,6 +523,8 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         log.debug("Source <{}> removed from project \"{}\"",
                                                 source.getUri(), p.getTitle());
     }
+
+	
 
     /** {@inheritDoc} */
     @Override
@@ -634,7 +699,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
                     CsvSourceImpl.class, RdfFileSourceImpl.class,
                     SqlQuerySourceImpl.class, SqlDatabaseSourceImpl.class, SparqlSourceImpl.class,
                     XmlSourceImpl.class,
-                    TransformedRdfSourceImpl.class, ShpSourceImpl.class, GmlSourceImpl.class));
+                    TransformedRdfSourceImpl.class, ShpSourceImpl.class, GmlSourceImpl.class, WfsSource.class));
         return classes;
     }
 
@@ -719,5 +784,6 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         }
     }
 
+	
 
 }
