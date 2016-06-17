@@ -166,8 +166,8 @@ public class LocaleComparable<T> implements Comparable<LocaleComparable<T>>
                 result = this.elts[i].compareTo(o.elts[i]);
             }
             else {
-                // Not the same type. => Integers come before strings.
-                result = (this.elts[i] instanceof Integer)? -1: 1;
+                // Not the same type. => Numbers come before strings.
+                result = (this.elts[i] instanceof Number)? -1: 1;
             }
             i++;
         }
@@ -197,14 +197,27 @@ public class LocaleComparable<T> implements Comparable<LocaleComparable<T>>
         int i = 0;
         while (m.find()) {
             // Numeric value found.
+            int k = i;
             int j = m.start();
-            if (i != j) {
-                // String prefix.
-                l.add(c.getCollationKey(this.normalize(s.substring(i, j))));
-            }
-            // Numeric value
             i = m.end();
-            l.add(Integer.valueOf(s.substring(j, i).trim(), 10));
+            Long numValue = null;
+            try {
+                // Ensure found numeric value is valid.
+                numValue = Long.valueOf(s.substring(j, i).trim(), 10);
+            }
+            catch (Exception e) { /* Ignore... */ }
+
+            if (numValue != null) {
+                if (k != j) {
+                    // String prefix.
+                    l.add(c.getCollationKey(this.normalize(s.substring(k, j))));
+                }
+                l.add(numValue);
+            }
+            else {
+                // Not a valid long. => Consider globally as a string.
+                l.add(c.getCollationKey(this.normalize(s.substring(k, i))));
+            }
         }
         int n = s.length();
         if (i != n) {
