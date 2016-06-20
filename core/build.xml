@@ -193,7 +193,9 @@
       <include name="**/*.jar"/>
     </fileset>
     <fileset dir="${local.mvn.repo}">
-      <include name="**/*.jar"/>
+      <!-- Empire -->
+      <include name="com/complexible/**/*.jar"/>
+      <include name="com/clarkparsia/**/*.jar"/>
     </fileset>
   </path>
 
@@ -383,7 +385,9 @@
       <fileset dir="${fwk.run.libs}"   includes="**/*.jar"/>
       <fileset dir="${run.lib.home}"   includes="**/*.jar"/>
       <fileset dir="${fwk.dist.home}"  includes="**/*.jar"/>
-      <fileset dir="${local.mvn.repo}" includes="**/*.jar"/>
+      <!-- Empire -->
+      <fileset dir="${local.mvn.repo}"
+          includes="com/clarkparsia/**/*.jar,com/complexible/**/*.jar"/>
     </copy>
     <!-- Create build directories as needed -->
     <mkdir dir="${dist.home}"/>
