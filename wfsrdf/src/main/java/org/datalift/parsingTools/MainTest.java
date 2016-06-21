@@ -8,7 +8,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 
-import org.datalift.core.DefaultConfiguration;
+//import org.datalift.core.DefaultConfiguration;
+//import org.datalift.core.DefaultConfiguration;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.util.DefaultUriBuilder;
@@ -29,28 +30,31 @@ public class MainTest {
 	
 	public static void main(String[] args)
 	{	
-		Logger log = Logger.getLogger();
-		log.trace(">>>>> Coucou");
-		initDataliftConfig();
-
-		URI targetGraph;
-		try {
-			targetGraph = new URI("http://localhost:9091/project/initkiosques/source/regions-nouvelles-shp-1");
-			URI baseUri=new URI("http://localhost:9091/initkiosques/regions-nouvelles-shp");
-			String targetType="regions-nouvelles-shp";
-			String src="none";
-			URI projectId=new URI("project/toto/titi");
-			URI sourceID=new URI("");
-			
-			
-			WfsToRdf wfsToRdf=new WfsToRdf();
-			wfsToRdf.convertWfsToRdf(projectId,sourceID, "destination_title", targetGraph, baseUri, targetType);
-			System.out.println("done");
-			
-		} catch (URISyntaxException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		
+		WfsParser wp=new WfsParser();
+		wp.getfeatureTypeDescription();
+//		Logger log = Logger.getLogger();
+//		log.trace(">>>>> Coucou");
+//		initDataliftConfig();
+//
+//		URI targetGraph;
+//		try {
+//			targetGraph = new URI("http://localhost:9091/project/initkiosques/source/regions-nouvelles-wfs-1");
+//			URI baseUri=new URI("http://localhost:9091/initkiosques/regions-nouvelles-wfs");
+//			String targetType="regions-nouvelles-wfs";
+//			String src="none";
+//			URI projectId=new URI("project/toto/titi");
+//			URI sourceID=new URI("");
+//			
+//			
+//			WfsToRdf wfsToRdf=new WfsToRdf();
+//			wfsToRdf.convertWfsToRdf(projectId,sourceID, "destination_title", targetGraph, baseUri, targetType);
+//			System.out.println("done");
+//			
+//		} catch (URISyntaxException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
 		
 		/*try {
 			tryGetDataStore();
@@ -107,7 +111,7 @@ public class MainTest {
 	/** The property to define the private file storage directory path. */
 	public final static String PRIVATE_STORAGE_PATH =
 	                                            "datalift.private.storage.path";
-	public static void initDataliftConfig()
+	/*public static void initDataliftConfig()
 	{
 		// Configure Datalift with an in-memory RDF store.
        Properties config = new Properties();
@@ -120,5 +124,5 @@ public class MainTest {
        Configuration.setDefault(cfg);
        cfg.init();
        cfg.registerBean(new DefaultUriBuilder());
-	}
+	}*/
 }

@@ -5,7 +5,7 @@ public interface WfsSource extends ServiceSource {
 	
 	/**
 	 * Supported server types.
-	 */
+	 
 	public enum serverType {
 		auto("auto"), geoserver("geoserver"),mapserver("mapserver");
 
@@ -18,15 +18,13 @@ public interface WfsSource extends ServiceSource {
 		public String getValue() {
 			return value;
 		}
-	}
+	}*/
 
 	//-------------------------------------------------------------------------
 		// Methods
 		//-------------------------------------------------------------------------
 	
-	public String getServerType();
 	
-	public void setServerType(String server);
 	
 	public boolean isCompliantInspire();
 	

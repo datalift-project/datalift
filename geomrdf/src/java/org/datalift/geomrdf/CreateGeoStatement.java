@@ -61,7 +61,8 @@ public class CreateGeoStatement {
 		geoStatement = vf.createStatement(feature, Geometrie.GEOMETRIE, geomFeature);
 		aboutGeometry.add(geoStatement);
 
-		geoStatement = vf.createStatement(geomFeature, GeoSPARQL.ASWKT, vf.createLiteral("<" + CRS.IGNFCRS + "> " + gp.getValue(),GeoSPARQL.WKTLITERAL));
+		//geoStatement = vf.createStatement(geomFeature, GeoSPARQL.ASWKT, vf.createLiteral("<" + CRS.IGNFCRS + "> " + gp.getValue(),GeoSPARQL.WKTLITERAL));
+		geoStatement = vf.createStatement(geomFeature, GeoSPARQL.ASWKT, vf.createLiteral("<http://www.opengis.net/gml/srs/epsg.xml#" + crs + "> " + gp.getValue(),GeoSPARQL.WKTLITERAL));
 		aboutGeometry.add(geoStatement);
 
 		/*if (geoType.equals("MultiPolygon")){

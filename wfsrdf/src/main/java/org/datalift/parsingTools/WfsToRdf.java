@@ -113,11 +113,12 @@ public class WfsToRdf /*extends BaseConverterModule*/ {
 			e.printStackTrace();
 		}
 		ArrayList<AbstractFeature> featuresToConvert=parser.getFeatures();
+		String crs=parser.getCRs();
 		//5-create an instance of wfsConverter 
 		WfsConverter converter=new WfsConverter();
 		//6-call the method convertFeaturesToRdf of WfsConverter using the list of features created in step 4
 		org.datalift.fwk.rdf.Repository target = Configuration.getDefault().getInternalRepository();
-		converter.ConvertFeaturesToRDF("les_regions", featuresToConvert,target , targetGraph, baseUri, targetType);
+		converter.ConvertFeaturesToRDF("les_regions", featuresToConvert,target , targetGraph, baseUri, targetType,crs);
 		
 	}
 

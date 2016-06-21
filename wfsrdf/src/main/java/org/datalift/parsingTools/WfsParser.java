@@ -14,6 +14,7 @@ import java.util.Set;
 import org.geotools.data.DataStore;
 import org.geotools.data.DataStoreFinder;
 import org.geotools.data.Query;
+import org.geotools.data.ResourceInfo;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.data.simple.SimpleFeatureSource;
@@ -57,6 +58,7 @@ public class WfsParser {
 	
 
 	private ArrayList<AbstractFeature> features;
+	private String crs;
 	private final Charset UTF8_CHARSET = Charset.forName("UTF-8");
 	
 	public WfsParser() {
@@ -261,17 +263,76 @@ public class WfsParser {
 		   
 	}
 	
-		public  void tryGetDataStore() throws IOException
+	public List<FeatureTypeDescription> getfeatureTypeDescription()
+	{
+		List<FeatureTypeDescription> descriptor=new ArrayList<FeatureTypeDescription>();
+		//String getCapabilitiesUrl="https://ids.craig.fr/wxs/public/wfs?request=getcapabilities"; // Exception in thread "main" java.lang.UnsupportedOperationException: implement! : 177 response returned!
+		//String getCapabilitiesUrl="http://geoservices.brgm.fr/risques?service=WFS&request=Getcapabilities"; //18
+		//String getCapabilitiesUrl="https://wfspoc.brgm-rec.fr/geoserver/ows?service=wfs&request=GetCapabilities";
+		String getCapabilitiesUrl="http://ows.region-bretagne.fr/geoserver/rb/wfs?service=wfs&request=getcapabilities&version=1.0.0";
+		String version="1.0.0";
+		String strategy="geoserver";
+
+		Map connectionParameters = new HashMap();
+		connectionParameters.put("WFSDataStoreFactory:GET_CAPABILITIES_URL", getCapabilitiesUrl+"&version="+version );
+
+		if(!version.equals("2.0.0"))
+			connectionParameters.put("WFSDataStoreFactory:WFS_STRATEGY", strategy); // if not specified for a mapserver => error: noxsdelement declaration found for {http://www.opengis.net/wfs}REM_NAPPE_SEDIM
+		// Step 2 - connection
+		DataStore data;
+		try {
+			data = DataStoreFinder.getDataStore( connectionParameters );
+			// Step 3 - discouvery
+			String typeNames[] = data.getTypeNames();
+			for (String typeName : typeNames) {
+				SimpleFeatureSource source = data.getFeatureSource(typeName); 
+				ResourceInfo inf= source.getInfo();
+				FeatureTypeDescription ftd=new FeatureTypeDescription();
+				Iterator<ReferenceIdentifier> i = inf.getCRS().getIdentifiers().iterator();
+				if(i.hasNext())
+					ftd.setEpsgSrs(i.next().getCode());
+				ftd.setName(inf.getName()); //name pattern ns_featuretypename
+				ftd.setSummary(inf.getDescription());
+				ftd.setTitle(inf.getTitle());
+				int numberreturned;
+				try{
+				numberreturned=source.getCount(null);
+				ftd.setNumberFeature(numberreturned);
+				}catch (Exception ee)
+				{	//oups! i can't execute the request to get feature number! Bad version has been specified
+					ftd.setNumberFeature(-1);
+					
+				}
+				//only add the feature type if it is available using the parameter specified (version and strategy)
+				if(ftd.getNumberFeature()!=-1)
+					descriptor.add(ftd);
+
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+
+
+		return descriptor;
+	}
+
+
+	public  void tryGetDataStore() throws IOException
 	{
 		//String getCapabilities = "http://ogc.geo-ide.developpement-durable.gouv.fr/cartes/mapserv?map=/opt/data/carto/geoide-catalogue/REG042A/JDD.www.map&service=WfS&request=GetCapabilities&version=1.1.0"; //enmptyfeaturereader
 		//String getCapabilities = "http://ows.region-bretagne.fr/geoserver/rb/wfs?service=wfs&request=getcapabilities&version=1.0.0"; //ok 
 		//String getCapabilities = "http://geoservices.brgm.fr/risques?service=WFS&request=Getcapabilities"; //ok
 		//String getCapabilities = "https://wfspoc.brgm-rec.fr/geoserver/ows?service=wfs&version=2.0.0&request=GetCapabilities"; //net.opengis.wfs20.impl.WFSCapabilitiesTypeImpl cannot be cast to net.opengis.wfs.WFSCapabilitiesType
 		//String getCapabilities = "http://cartographie.aires-marines.fr/wfs?service=wfs&request=getcapabilities&version=2.0.0"; //client does not support any of the server supported output format
-		String getCapabilities = "http://ids.craig.fr/wxs/public/wfs?request=getcapabilities";  //ok for v1.1 and v1.0
+		//String getCapabilities = "http://ids.craig.fr/wxs/public/wfs?request=getcapabilitie&version=2.0.0";  //ok for v1.1 and v1.0
+		String getCapabilities = "http://localhost:8081/geoserver/hanane_workspace/ows?service=WFS&version=2.0.0&request=Getcapabilities";  
 		Map connectionParameters = new HashMap();
+		String version="";
+		String code="";
 		connectionParameters.put("WFSDataStoreFactory:GET_CAPABILITIES_URL", getCapabilities );
-		connectionParameters.put("WFSDataStoreFactory:WFS_STRATEGY", "geoserver");
+		//connectionParameters.put("WFSDataStoreFactory:WFS_STRATEGY", "geoserver");
 		//map.put (WFSDataStoreFactory.URL.key, "....");
 
 		// Step 2 - connection
@@ -283,7 +344,7 @@ public class WfsParser {
 		SimpleFeatureType schema = data.getSchema( typeName );
 
 		// Step 4 - target
-		SimpleFeatureSource source = data.getFeatureSource(typeName);
+		SimpleFeatureSource source = data.getFeatureSource("hanane_workspace_regions_nouvelles");
 		//System.out.println( "Metadata Bounds:"+ source.getBounds() );
 
 		// Step 5 - query
@@ -291,6 +352,17 @@ public class WfsParser {
 
 		Query query = new Query(  );
 		 CoordinateReferenceSystem crs=source.getInfo().getCRS();
+		 Iterator<ReferenceIdentifier> i = crs.getIdentifiers().iterator();
+			if(i.hasNext())
+				i.next().getCode();
+			if (version.equals("1.1.0") || version.equals("2.0.0"))
+			{
+				this.crs="urn:x-ogc:def:crs:EPSG:"+code;
+			}
+			else
+			{
+				this.crs="http://www.opengis.net/gml/srs/epsg.xml#"+code;
+			}
 		    query.setCoordinateSystem(crs);
 		    query.setMaxFeatures(100);
 		    
@@ -351,6 +423,12 @@ public class WfsParser {
 	protected void parsePoint(GeometryProperty gp, Point p){
 		Double[] pt = { Double.valueOf(p.getX()), Double.valueOf(p.getY()) };
 		gp.setPointsLists(pt);
+	}
+
+
+	public String getCRs() {
+		// TODO Auto-generated method stub
+		return crs;
 	}
 
 }

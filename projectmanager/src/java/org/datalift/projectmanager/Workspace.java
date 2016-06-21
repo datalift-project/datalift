@@ -52,6 +52,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -140,6 +141,7 @@ import org.datalift.fwk.util.web.MainMenu;
 import org.datalift.fwk.util.web.Menu;
 import org.datalift.fwk.view.TemplateModel;
 import org.datalift.fwk.view.ViewFactory;
+
 
 import static org.datalift.fwk.MediaTypes.*;
 import static org.datalift.fwk.project.SparqlSource.*;
@@ -595,6 +597,22 @@ public class Workspace extends BaseModule
         }
         return response;
     }
+    private List<FeatureTypeDescription> getfeatureTypeDescription() throws IOException
+	{
+		List<FeatureTypeDescription> descriptor=new ArrayList<FeatureTypeDescription>();
+		for (int i = 0; i < 3; i++) {
+			FeatureTypeDescription ftd=new FeatureTypeDescription();
+			ftd.setEpsgSrs("fds");
+			ftd.setName("sdfsf");
+			ftd.setTitle("title");
+			ftd.setNumberFeature(i);
+	    	descriptor.add(ftd);
+			
+		}
+		return descriptor;
+	}
+
+
 
     @GET
     @Path("{id}/source/modify")
@@ -603,39 +621,64 @@ public class Workspace extends BaseModule
                                            @QueryParam("uri") URI srcUri,
                                            @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
-        Response response = null;
-        URI prjUri = this.getProjectId(uriInfo.getBaseUri(), id);
-        Project p = null;
-        try {
-            p = this.loadProject(prjUri);
-        }
-        catch (Exception e) {
-            this.handleInternalError(e, "Failed to load project {}", prjUri);
-        }
-        try {
-            // Prepare model for building view.
-            TemplateModel view = this.newView("projectSourceUpload.vm", p);
-            view.put("charsets", Charsets.availableCharsets);
-            view.put("rdfFormats", RdfFormat.values());
-            view.put("sep", Separator.values());
-            view.put("versions", availableWfsVersion);
-            view.put("servers", availableServerStrategy);
-            view.put("services", supportedServices);
-            // Search for requested source in project (if specified).
-            if (srcUri != null) {
-                Source src = p.getSource(srcUri);
-                if (src == null) {
-                    // Not found.
-                    this.sendError(NOT_FOUND, srcUri.toString());
-                }
-                view.put("current", src);
-            }
-            response = Response.ok(view, TEXT_HTML + ";charset=utf-8").build();
-        }
-        catch (Exception e) {
-            this.handleInternalError(e, "Failed to load source {}", srcUri);
-        }
-        return response;
+    	Response response = null;
+//    	URI prjUri = this.getProjectId(uriInfo.getBaseUri(), id);
+//    	Project p = null;
+//    	try {
+//    		p = this.loadProject(prjUri);
+//    	}
+//    	catch (Exception e) {
+//    		this.handleInternalError(e, "Failed to load project {}", prjUri);
+//    	}
+//
+//
+//    	TemplateModel view = this.newView("availableFeatureTypes.vm", p);
+//    	view.put("source", "http://test.test");
+//    	try {
+//    		List <FeatureTypeDescription> types= this.getfeatureTypeDescription();
+//    		view.put("types", types);
+//
+//    	} catch (IOException e) {
+//    		// TODO Auto-generated catch block
+//    		log.error("An error has occured when attempting to get the list of features types "
+//    				+ "related to the source ");
+//    		e.printStackTrace();
+//
+//    	}
+//    	response = Response.ok(view, TEXT_HTML + ";charset=utf-8").build();
+
+    	        URI prjUri = this.getProjectId(uriInfo.getBaseUri(), id);
+    	        Project p = null;
+    	        try {
+    	            p = this.loadProject(prjUri);
+    	        }
+    	        catch (Exception e) {
+    	            this.handleInternalError(e, "Failed to load project {}", prjUri);
+    	        }
+    	        try {
+    	            // Prepare model for building view.
+    	            TemplateModel view = this.newView("projectSourceUpload.vm", p);
+    	            view.put("charsets", Charsets.availableCharsets);
+    	            view.put("rdfFormats", RdfFormat.values());
+    	            view.put("sep", Separator.values());
+    	            view.put("versions", availableWfsVersion);
+    	            view.put("servers", availableServerStrategy);
+    	            view.put("services", supportedServices);
+    	            // Search for requested source in project (if specified).
+    	            if (srcUri != null) {
+    	                Source src = p.getSource(srcUri);
+    	                if (src == null) {
+    	                    // Not found.
+    	                    this.sendError(NOT_FOUND, srcUri.toString());
+    	                }
+    	                view.put("current", src);
+    	            }
+    	            response = Response.ok(view, TEXT_HTML + ";charset=utf-8").build();
+    	        }
+    	        catch (Exception e) {
+    	           this.handleInternalError(e, "Failed to load source {}", srcUri);
+    	        }
+    	return response;
     }
 
     @POST
@@ -1765,7 +1808,7 @@ public class Workspace extends BaseModule
     @POST
     @Path("{id}/wfsmodify")
     @Consumes(MULTIPART_FORM_DATA)
-    public Response modifyWfsSource(
+    public Response modifyOgcSource(
             @PathParam("id") String projectId,
             @FormDataParam("description") String description,
             @FormDataParam("service_type") String serviceType,

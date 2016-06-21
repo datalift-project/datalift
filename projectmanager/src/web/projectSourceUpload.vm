@@ -291,7 +291,7 @@
 			#if( $s == 'geoserver' )  )
 			<option value="$s" selected="true">$esc.html($s)</option>
 			#else
-			<option value="$ss">$esc.html($s)</option>
+			<option value="$s">$esc.html($s)</option>
 			#end
 			#end	
 		</select> </p>

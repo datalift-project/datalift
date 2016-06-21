@@ -32,17 +32,9 @@ public class WfsSourceImpl extends BaseServiceSource
 		super(SourceType.WfsSource, uri, project);
 	}
 
-	@Override
-	public String getServerType() {
-		// TODO Auto-generated method stub
-		return null;
-	}
 
-	@Override
-	public void setServerType(String server) {
-		// TODO Auto-generated method stub
-		
-	}
+
+
 
 	@Override
 	public boolean isCompliantInspire() {
@@ -55,5 +47,6 @@ public class WfsSourceImpl extends BaseServiceSource
 		// TODO Auto-generated method stub
 		
 	}
+	
 
 }

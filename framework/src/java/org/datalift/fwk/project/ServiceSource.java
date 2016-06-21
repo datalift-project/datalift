@@ -25,7 +25,13 @@ public interface ServiceSource extends Source{
 	 * 
 	 * @param
 	 */
-	public void setPublisher(String publisher);
+	public void setserverTypeStrategy(String s);
 	
-
+	public String getserverTypeStrategy();
+				  
+	/**
+	 * 
+	 * @param
+	 */
+	public void setPublisher(String publisher);
 }

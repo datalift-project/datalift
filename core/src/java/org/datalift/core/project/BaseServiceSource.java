@@ -26,7 +26,8 @@ public abstract class BaseServiceSource extends BaseSource
     private String version;
     @RdfProperty("dc:publisher")
     private String publisher;
-     
+    @RdfProperty("datalift:serverTypeStrategy")
+    private String serverTypeStrategy;
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -74,8 +75,14 @@ public abstract class BaseServiceSource extends BaseSource
 		this.publisher = publisher;
 	}
 	
-
-   
+	public void setserverTypeStrategy(String server)
+	{
+		serverTypeStrategy=server;
+	}
+   public String getserverTypeStrategy()
+   {
+	   return serverTypeStrategy;
+   }
 	
 	
 }

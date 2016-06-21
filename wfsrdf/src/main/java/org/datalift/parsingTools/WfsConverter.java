@@ -84,7 +84,7 @@ public class WfsConverter {
 	}
 	
 	public void ConvertFeaturesToRDF(String wfsSource, ArrayList<AbstractFeature> featuresToConvert, 
-			org.datalift.fwk.rdf.Repository target, URI targetGraph, URI baseUri, String targetType)
+			org.datalift.fwk.rdf.Repository target, URI targetGraph, URI baseUri, String targetType,String crs)
 	{
 
 		final UriBuilder uriBuilder = Configuration.getDefault()
@@ -115,7 +115,7 @@ public class WfsConverter {
 				// Create target RDF type.
 				if (! isSet(targetType)) {
 					targetType = uriBuilder.urlify(wfsSource);
-					targetType="regions-nouvelles-shp";
+					targetType="regions-nouvelles-wfs";
 				}
 				org.openrdf.model.URI rdfType = null;
 				try {
@@ -154,8 +154,8 @@ public class WfsConverter {
 							GeometryProperty gp = (GeometryProperty)fp;
 							String geoType = gp.getType();
 							org.openrdf.model.URI geomFeature = vf.createURI(sbjUri, geoType + "_" + count);
-
-							cgs.createStatement(gp, vf, feature, geomFeature, geoType, "crs");
+							
+							cgs.createStatement(gp, vf, feature, geomFeature, geoType, "2154");
 							aboutGeometry = cgs.getAboutGeometry();
 
 						} else {

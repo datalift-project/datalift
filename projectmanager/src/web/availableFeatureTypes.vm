@@ -1,0 +1,132 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+#load("wfstordf/resources")
+#load_core_resources
+	<title>#i18n("wfstordf.title") - DataLift</title>
+#css_links
+	<link rel="stylesheet" type="text/css" href="${baseUri}/project/static/css/validation.css"/>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+</head>
+<body>
+#banner
+	<div id="main-menu" style="position:absolute;top:15px;right:15px;">
+#foreach( $m in $mainMenu )
+#set( $entryUrl = $m.getUrl(${baseUri}) )
+#if( $m.method.name() == "GET" )
+		<a href="${entryUrl}" class="button">${m.label}</a>
+#else
+		<form method="post" action="${entryUrl}"><input type="submit" class="button" value="${m.label}"/></form>
+#end
+#end
+	</div>
+<div class="ui-widget-content dl-main-panel" id="availableFeatureTypes">
+	<h3 class="ui-widget-header dl-widget-header">#i18n("wfstordf.title") - #i18n("project.label") ${it.title}</h3>
+	<div class="dl-panel">
+		<div id="accordion">
+			<h3><a href="#">Choisir les données à transformer</a></h3>
+			<div id="tabs" style="margin:0;">
+				<table id="selectable_types">
+					<tr><td/></tr>
+				</table>
+				<div id="selectable_sources_toolbar"></div>
+			</div>
+			
+			<h3><a href="#">Choisir les options de transformation</a></h3>
+			<div id="tabs" style="margin:0;">
+				<input type="hidden" name="project" id="project" value="${it.uri}"/>
+				<input type="hidden" name="source" id="project" value="${source}"/>
+				<p><label class="control-label" for="graphe">Graphe généré: </label>
+				<select id="graphe" name="graphe" title="graphe">
+					<option value="0" selected="true">Un seul graphe pour tous les types</option>
+					<option value="1" >Un graphe par type</option>
+				</select>
+			</div>
+	
+			
+		</div>
+		<input type="button" id="source_submit" class="button" value="Transformer"/>
+	</div>
+</div>
+
+#script_links
+<script type="text/javascript">
+
+$(function() {
+	loadGridTypes();
+	$(window).bind('resize', function() {
+			$("#selectable_types").setGridWidth($("#tabs").width() - 30);
+		}).trigger('resize');
+	});
+	$(".button").button();
+	$("input:submit").button();
+	$("#accordion").accordion({
+			autoHeight: false,
+			navigation: true,
+			collapsible: true,
+			event: ""
+		});
+	$("#accordion h3").click(function() {
+			var idx = $("#accordion h3").index(this);
+			
+				$("#accordion").accordion("activate", idx);
+			
+		});
+	function loadGridTypes() {
+		/* Types */
+		jQuery("#selectable_types").jqGrid({
+			datatype: "local",
+			colNames:['name','Titre','Description','CRS','Nombre'],
+			colModel:[
+				{name:'name', key:true, index:'name',   sorttype:"text", width:50},
+				{name:'Titre', index:'title', sorttype:"text", width:200},
+				{name:'Description',  index:'desc',  sorttype:"text", width:400, align:'center'},
+				{name:'CRS', index:'src', sorttype:"text", width:80},
+				{name:'Nombre', index:'nbr', sorttype:"text", width:100}
+			],
+			caption: "",
+			rowNum:10, rowList:[10,20,30], pager: '#selectable_sources_toolbar',
+			gridview: true,
+			height: 250,
+			multiselect: true,
+			multiboxonly: true
+		});
+
+		var mydata = [
+#foreach($ft in $types)
+		{
+			name:"$!esc.javascript($ft.getName())",
+			Titre:"$!esc.javascript($ft.getTitle())",
+			Description:"$!esc.javascript($ft.getSummary())",
+			CRS:"$!esc.javascript($ft.getEpsgSrs())",
+			Nombre:"$!esc.javascript($ft.getNumberFeature())"
+		},
+#end
+		];
+
+		for(var i=0;i<=mydata.length;i++) {
+			jQuery("#selectable_types").jqGrid('addRowData',i+1,mydata[i]);
+		}
+
+		jQuery("#selectable_types").jqGrid('navGrid', '#selectable_sources_toolbar',
+			{edit:false,add:false,del:false, refresh:false, search:false})
+			.navButtonAdd(
+				'#selectable_sources_toolbar',	{
+					caption:" Valider ",
+					onClickButton:function(){
+						var selIds = $('#selectable_types').jqGrid('getGridParam', 'selarrrow'), i, n, cellValues = [];
+						for (i = 0, n = selIds.length; i < n; i++) {
+						    cellValues.push($('#selectable_types').jqGrid('getCell', selIds[i], 'name'));
+						}
+						alert(cellValues.join(','));
+					}	
+				}
+			);
+		
+		jQuery("#selectable_types").jqGrid('hideCol',["name"]);
+	}
+	
+</script>
+</body>
+</html>
