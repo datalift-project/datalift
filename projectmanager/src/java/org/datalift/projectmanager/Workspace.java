@@ -1761,7 +1761,7 @@ public class Workspace extends BaseModule
          // Else: File data have been uploaded.
 
          log.debug("Processing OGC source creation request for {}", srcName);
-         boolean deleteFiles = false;
+         
          
              // Build object URIs from request path.
              URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
@@ -1806,17 +1806,36 @@ public class Workspace extends BaseModule
     	  
 }
     @POST
-    @Path("{id}/wfsmodify")
+    @Path("{id}/ogcmodify")
     @Consumes(MULTIPART_FORM_DATA)
     public Response modifyOgcSource(
-            @PathParam("id") String projectId,
+    		@FormDataParam("current_source") URI sourceUri,
+    		@PathParam("id") String projectId,
             @FormDataParam("description") String description,
             @FormDataParam("service_type") String serviceType,
             @FormDataParam("service_url") String serviceUrl,
             @FormDataParam("version") String version,
+            @FormDataParam("server") String serverStrategy,
+            @FormDataParam("service_name") String srcName,
             @Context UriInfo uriInfo){
     	 Response response = null;
-    	 return response; 
+         try {
+             // Retrieve source.
+             Project p = this.loadProject(uriInfo, projectId);
+             WfsSource s = this.loadSource(p, sourceUri, WfsSource.class);
+             // Update source data.
+             s.setDescription(description);
+             // Save updated source.
+             this.projectManager.saveProject(p);
+             // Notify user of successful update, redirecting HTML clients
+             // (browsers) to the source tab of the project page.
+             response = this.redirect(p, ProjectTab.Sources).build();
+         }
+         catch (Exception e) {
+             this.handleInternalError(e,
+                 "Could not modify WFS source {}", sourceUri);
+         }
+         return response; 
 }
     @GET
     @Path("{id}/{filename}")

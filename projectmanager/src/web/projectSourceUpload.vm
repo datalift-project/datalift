@@ -259,7 +259,7 @@
 	
 		<h3><a href="#">Web Service OGC</a></h3>
 	<div>
-#if( (!$current) || ($current.getType() == $field.GmlSource) )
+#if( (!$current) || ($current.getType() == $field.WfsSource) )
 	<form method="post" action="$target_ogc" enctype="multipart/form-data" class="form_formated">
 #if( !$current )
 		<p><label for="service_type">#i18n("project.upload_service_type")*: </label>
@@ -275,6 +275,11 @@
 		<input type="text" class="control-input" placeholder= "http://..." id="service_url" name="service_url" title="#i18n("project.upload_source.tooltip.wfs_url")"/></p>
 		<p><label class="control-label" for="service_name">#i18n("project.upload_source.name")*: </label>
 		<input type="text" id="service_name" class="control-input" placeholder="#i18n("project.source.placeholder.file_name")" name="service_name" title="#i18n("project.source.placeholder.file_name")" /></p>
+		
+#else
+		<input type="hidden" name="current_source" value="$current.uri"/>
+		<p>#i18n("project.update_service"): <a href="$current.uri">$esc.html($current.title)</a></p>
+#end
 		<p><label for="version">#i18n("project.upload_service_version"): </label>
 		<select name="version" id="version" title="#i18n("project.source.tooltip.version")">
 			#foreach( $v in $versions )
@@ -295,10 +300,6 @@
 			#end
 			#end	
 		</select> </p>
-#else
-		<input type="hidden" name="current_source" value="$current.uri"/>
-		<p>#i18n("project.update_gml"): <a href="$current.uri">$esc.html($current.title)</a>#if( $current.sourceUrl ) (#i18n('project.update_source.src_url'): <a href='${current.sourceUrl}'>$!esc.html($current.sourceUrl)</a>)#end</p>
-#end
 		<p><label for="description">#i18n("project.upload_source.description"): </label>
 		<input type="text" id="description" name="description" value="$!esc.html($current.description)"/></p>
 		<input type="submit" value="#i18n("$submit")"/>
@@ -510,6 +511,8 @@
 		select_panel = 5;
 	#elseif( $current.getType() == $field.GmlSource )
 		select_panel = 6;	
+	#elseif( $current.getType() == $field.WfsSource )
+		select_panel = 7;	
 	#end
 		if (select_panel != 0) {
 			$("#accordion").accordion("option", "active", select_panel);
