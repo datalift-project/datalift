@@ -200,6 +200,13 @@ public final class SparqlTool
     }
 
     /**
+     * Removes all registered namespace prefixes.
+     */
+    public void clearPrefixes() {
+        this.prefixes.clear();
+    }
+
+    /**
      * Binds the specified value to the specified SPARQL query variable.
      * If the value is a native Java object (URI, URL, Integer, Boolean,
      * Byte...) it is first {@link RdfUtils#mapBinding(Object) converted}
@@ -212,6 +219,9 @@ public final class SparqlTool
      *         defined for the object Java type.
      */
     public void bind(String name, Object value) {
+        if (value == null) {
+            this.bindings.remove(name);
+        }
         Value v = RdfUtils.mapBinding(value);
         if (v != null) {
             this.bindings.put(name, v);
@@ -244,6 +254,13 @@ public final class SparqlTool
         for (Map.Entry<String,Object> e : bindings.entrySet()) {
             this.bind(e.getKey(), e.getValue());
         }
+    }
+
+    /**
+     * Removes all variable bindings.
+     */
+    public void clearBindings() {
+        this.bindings.clear();
     }
 
     /**
