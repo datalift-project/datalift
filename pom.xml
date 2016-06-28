@@ -28,6 +28,7 @@
     <tagsoup.version>1.2.1</tagsoup.version>
 
     <jersey.version>1.9.1</jersey.version>
+    <jackson.version>2.3.3</jackson.version>
     <velocity.version>1.7</velocity.version>
     <velocity.tools.version>2.0</velocity.tools.version>
     <shiro.version>1.1.0</shiro.version>

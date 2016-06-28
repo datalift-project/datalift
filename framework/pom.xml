@@ -41,6 +41,11 @@
           <groupId>org.openrdf.sesame</groupId>
           <artifactId>sesame-sail-rdbms</artifactId>
         </exclusion>
+        <!-- Exclude outdated dependencies for Jackson JSON library. -->
+        <exclusion>
+          <groupId>com.fasterxml.jackson.core</groupId>
+          <artifactId>jackson-core</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <!-- RDFa support -->
@@ -63,6 +68,18 @@
       <groupId>org.ccil.cowan.tagsoup</groupId>
       <artifactId>tagsoup</artifactId>
       <version>${tagsoup.version}</version>
+    </dependency>
+    <!-- Force version of Jackson JSON libraries (Core and Databind)
+         to override older version from Sesame dependency. -->
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-core</artifactId>
+      <version>${jackson.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>${jackson.version}</version>
     </dependency>
     <!-- Logging dependencies using Log4J API -->
     <dependency>
