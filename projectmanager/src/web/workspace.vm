@@ -244,7 +244,7 @@
 			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.javascript($curSrc.description)<br />#end#i18n('project.upload_source.file'): $!esc.javascript($curSrc.filePath)<br />#i18n('project.upload_source.created'): $!date.format('medium', $curSrc.creationDate)"
 	#elseif( $curSrc.getType() == $field.WfsSource )
 			title: "<a href='$curSrc.getSourceUrl()'>$esc.javascript($curSrc.title)</a>",
-			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.javascript($curSrc.description)<br />#end#i18n('project.upload_source.service'): $!esc.javascript($curSrc.getSourceUrl())<br />#i18n('project.upload_source.created'): $!date.format('medium', $curSrc.creationDate)"
+			infos: "#if( $curSrc.description )#i18n('project.upload_source.description'): $!esc.javascript($curSrc.description)<br />#end#i18n('project.upload_source.service'): $!esc.javascript($curSrc.getSourceUrl())<br />#i18n('project.upload_source.wfs.version'): $!esc.javascript($curSrc.getVersion())<br />#i18n('project.upload_source.wfs.strategy'): $!esc.javascript($curSrc.getserverTypeStrategy())<br />#i18n('project.upload_source.created'): $!date.format('medium', $curSrc.creationDate)"
 	#end
 		},
 #end

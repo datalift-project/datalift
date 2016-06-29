@@ -61,8 +61,7 @@ public class CreateGeoStatement {
 		geoStatement = vf.createStatement(feature, Geometrie.GEOMETRIE, geomFeature);
 		aboutGeometry.add(geoStatement);
 
-		//geoStatement = vf.createStatement(geomFeature, GeoSPARQL.ASWKT, vf.createLiteral("<" + CRS.IGNFCRS + "> " + gp.getValue(),GeoSPARQL.WKTLITERAL));
-		geoStatement = vf.createStatement(geomFeature, GeoSPARQL.ASWKT, vf.createLiteral("<http://www.opengis.net/gml/srs/epsg.xml#" + crs + "> " + gp.getValue(),GeoSPARQL.WKTLITERAL));
+		geoStatement = vf.createStatement(geomFeature, GeoSPARQL.ASWKT, vf.createLiteral("<" + CRS.IGNFCRS + "> " + gp.getValue(),GeoSPARQL.WKTLITERAL));
 		aboutGeometry.add(geoStatement);
 
 		/*if (geoType.equals("MultiPolygon")){
@@ -111,13 +110,6 @@ public class CreateGeoStatement {
 		this.geoStatement = geoStatement;
 	}
 
-	public List<Statement> getAboutGeometry() {
-		return aboutGeometry;
-	}
-
-	public void setAboutGeometry(List<Statement> aboutGeometry) {
-		this.aboutGeometry = aboutGeometry;
-	}
 
 	protected void serializeMultipolygon(GeometryProperty gp, Resource geomFeature, String crs){
 		geoStatement = vf.createStatement(geomFeature, RDF.TYPE, Geometrie.MULTIPOLYGON);

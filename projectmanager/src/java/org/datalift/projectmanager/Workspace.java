@@ -597,22 +597,6 @@ public class Workspace extends BaseModule
         }
         return response;
     }
-    private List<FeatureTypeDescription> getfeatureTypeDescription() throws IOException
-	{
-		List<FeatureTypeDescription> descriptor=new ArrayList<FeatureTypeDescription>();
-		for (int i = 0; i < 3; i++) {
-			FeatureTypeDescription ftd=new FeatureTypeDescription();
-			ftd.setEpsgSrs("fds");
-			ftd.setName("sdfsf");
-			ftd.setTitle("title");
-			ftd.setNumberFeature(i);
-	    	descriptor.add(ftd);
-			
-		}
-		return descriptor;
-	}
-
-
 
     @GET
     @Path("{id}/source/modify")
@@ -622,30 +606,7 @@ public class Workspace extends BaseModule
                                            @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
     	Response response = null;
-//    	URI prjUri = this.getProjectId(uriInfo.getBaseUri(), id);
-//    	Project p = null;
-//    	try {
-//    		p = this.loadProject(prjUri);
-//    	}
-//    	catch (Exception e) {
-//    		this.handleInternalError(e, "Failed to load project {}", prjUri);
-//    	}
-//
-//
-//    	TemplateModel view = this.newView("availableFeatureTypes.vm", p);
-//    	view.put("source", "http://test.test");
-//    	try {
-//    		List <FeatureTypeDescription> types= this.getfeatureTypeDescription();
-//    		view.put("types", types);
-//
-//    	} catch (IOException e) {
-//    		// TODO Auto-generated catch block
-//    		log.error("An error has occured when attempting to get the list of features types "
-//    				+ "related to the source ");
-//    		e.printStackTrace();
-//
-//    	}
-//    	response = Response.ok(view, TEXT_HTML + ";charset=utf-8").build();
+
 
     	        URI prjUri = this.getProjectId(uriInfo.getBaseUri(), id);
     	        Project p = null;
@@ -1824,6 +1785,8 @@ public class Workspace extends BaseModule
              Project p = this.loadProject(uriInfo, projectId);
              WfsSource s = this.loadSource(p, sourceUri, WfsSource.class);
              // Update source data.
+             s.setserverTypeStrategy(serverStrategy);
+             s.setVersion(version);
              s.setDescription(description);
              // Save updated source.
              this.projectManager.saveProject(p);

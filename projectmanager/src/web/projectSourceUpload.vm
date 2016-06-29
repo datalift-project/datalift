@@ -265,20 +265,24 @@
 		<p><label for="service_type">#i18n("project.upload_service_type")*: </label>
 		#foreach( $v in $services )
 			#if( $v == 'WFS' )
-			<input type="radio" name="service_type" value="$v" style="width:inherit" checked> $esc.html($v)
-			#else
-			<input type="radio" name="service_type" value="$v" style="width:inherit"> $esc.html($v)
+			<input type="radio" name="service_type" value="$v" style="width:inherit" title="#i18n("project.source.tooltip.wfs")" checked> $esc.html($v)
 			#end
+			#if( $v == 'WCS' )
+			<input type="radio" disabled  name="service_type" value="$v" style="width:inherit" title="#i18n("project.source.tooltip.wcs")"> $esc.html($v)
 			#end
+			#if( $v == 'SOS' )
+			<input type="radio" disabled  name="service_type" value="$v" style="width:inherit" title="#i18n("project.source.tooltip.sos")"> $esc.html($v)
+			#end
+		#end
 		</p>			
 		<p><label for="service_url">#i18n("project.upload_service_url")*: </label>
-		<input type="text" class="control-input" placeholder= "http://..." id="service_url" name="service_url" title="#i18n("project.upload_source.tooltip.wfs_url")"/></p>
+		<input type="text" class="control-input" placeholder= '#i18n("source.placeholder.ogc.url")' id="service_url" name="service_url" title="#i18n("project.upload_source.tooltip.wfs_url")"/></p>
 		<p><label class="control-label" for="service_name">#i18n("project.upload_source.name")*: </label>
 		<input type="text" id="service_name" class="control-input" placeholder="#i18n("project.source.placeholder.file_name")" name="service_name" title="#i18n("project.source.placeholder.file_name")" /></p>
 		
 #else
 		<input type="hidden" name="current_source" value="$current.uri"/>
-		<p>#i18n("project.update_service"): <a href="$current.uri">$esc.html($current.title)</a></p>
+		<p>#i18n("project.update_service"): <a href="$current.getSourceUrl()">$esc.html($current.title)</a></p>
 #end
 		<p><label for="version">#i18n("project.upload_service_version"): </label>
 		<select name="version" id="version" title="#i18n("project.source.tooltip.version")">
