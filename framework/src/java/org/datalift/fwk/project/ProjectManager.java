@@ -37,6 +37,7 @@ package org.datalift.fwk.project;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URL;
 import java.util.Collection;
 
 import org.datalift.fwk.MediaTypes;
@@ -229,6 +230,23 @@ public interface ProjectManager
                                   String description, String filePath)
                                                             throws IOException;
 
+    /**
+     * Creates a new XML source object.
+     * @param  project       the owning project.
+     * @param  uri           the source URI.
+     * @param sUrl 
+     * @param  title         the source label.
+     * @param  description   the description of the source content or
+     *                       intent.
+     * @param  filePath      the XML file path in the public storage.
+     *
+     * @return a new XML source, associated to the specified project.
+     * @throws IOException if any error occurred creating the source
+     *         or accessing the specified file.
+     */
+    public WfsSource newWfsSource(Project project, URI uri, String sUrl, String title,
+            String description, String version, String serverStrategy )
+                                      throws IOException;
     /**
      * Creates a new transformed RDF source object.
      * @param  project       the owning project.

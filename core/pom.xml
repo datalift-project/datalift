@@ -14,7 +14,6 @@
   <packaging>war</packaging>
 
   <name>Datalift Core</name>
-
   <profiles>
     <profile>
       <id>dev</id>
@@ -43,14 +42,15 @@
       </properties>
     </profile>
   </profiles>
-
   <dependencies>
+
     <!-- Datalift dependencies -->
     <dependency>
       <groupId>org.datalift</groupId>
       <artifactId>datalift-framework</artifactId>
       <version>${project.version}</version>
     </dependency>
+
     <!-- JEE & JAX-RS dependencies -->
     <dependency>
       <groupId>javax.servlet</groupId>
@@ -295,6 +295,7 @@
               <directory>${basedir}/../framework/src/web</directory>
             </resource>
           </webResources>
+          <failOnMissingWebXml>false</failOnMissingWebXml>
         </configuration>
       </plugin>
 

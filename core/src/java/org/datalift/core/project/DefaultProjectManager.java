@@ -78,10 +78,12 @@ import org.datalift.fwk.project.ShpSource;
 import org.datalift.fwk.project.GmlSource;
 import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.TransformedRdfSource;
+import org.datalift.fwk.project.WfsSource;
 import org.datalift.fwk.project.XmlSource;
 import org.datalift.fwk.project.CsvSource.Separator;
 import org.datalift.fwk.rdf.RdfNamespace;
 import org.datalift.fwk.security.SecurityContext;
+
 
 import static org.datalift.fwk.util.StringUtils.*;
 
@@ -325,6 +327,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
                                                     uri, project.getTitle());
         return src;
     }
+    
 
     /** {@inheritDoc} */
     @Override
@@ -432,8 +435,34 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
                                                     uri, project.getTitle());
         return src;
     }
-
-    /** {@inheritDoc} */
+    
+    @Override
+	public WfsSource newWfsSource(Project project, URI uri, String serviceUrl, String title,
+            String description, String version, String serverStrategy  ) throws IOException {
+		// TODO Auto-generated method stub
+    	// TODOcheck if parameters entered (url, version, strategy) are valide before creating the source 
+    //	if(validService(serviceUrl,version,serverStrategy))
+    	{
+    		// Create new WFS source.
+    		WfsSourceImpl src = new WfsSourceImpl(uri.toString(), project);
+            // Set source parameters.
+            this.initSource(src, title, description);
+            
+            src.setSourceUrl(serviceUrl);
+            src.setVersion(version);
+            src.setserverTypeStrategy(serverStrategy);
+            // Add source to project.
+            project.add(src);
+            log.debug("New WFS source <{}> added to project \"{}\"",
+                                                        uri, project.getTitle());
+            return src;
+    	}
+//    	else
+//    		return null;
+//		
+       
+	}
+      /** {@inheritDoc} */
     @Override
     public void delete(Source source) {
         this.delete(source, true);
@@ -460,6 +489,8 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         log.debug("Source <{}> removed from project \"{}\"",
                                                 source.getUri(), p.getTitle());
     }
+
+	
 
     /** {@inheritDoc} */
     @Override
@@ -634,7 +665,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
                     CsvSourceImpl.class, RdfFileSourceImpl.class,
                     SqlQuerySourceImpl.class, SqlDatabaseSourceImpl.class, SparqlSourceImpl.class,
                     XmlSourceImpl.class,
-                    TransformedRdfSourceImpl.class, ShpSourceImpl.class, GmlSourceImpl.class));
+                    TransformedRdfSourceImpl.class, ShpSourceImpl.class, GmlSourceImpl.class, WfsSourceImpl.class));
         return classes;
     }
 
@@ -719,5 +750,6 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         }
     }
 
+	
 
 }
