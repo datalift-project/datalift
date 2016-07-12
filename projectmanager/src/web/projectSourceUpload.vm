@@ -300,7 +300,11 @@
 			#if( $s == 'geoserver' )  )
 			<option value="$s" selected="true">$esc.html($s)</option>
 			#else
-			<option value="$s">$esc.html($s)</option>
+				#if($s == 'autre')
+					<option value="$s">#i18n("wfs.serverType")</option>
+				#else
+					<option value="$s">$esc.html($s)</option>
+				#end
 			#end
 			#end	
 		</select> </p>
