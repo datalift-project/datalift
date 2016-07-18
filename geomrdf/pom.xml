@@ -182,6 +182,7 @@
               <outputDirectory>${project.build.outputDirectory}</outputDirectory>
               <includeGroupIds>
                 org.geotools, org.geotools.xsd, commons-lang
+
               </includeGroupIds>
               <overWriteReleases>false</overWriteReleases>
               <overWriteSnapshots>false</overWriteSnapshots>
@@ -191,6 +192,7 @@
         </executions>
       </plugin>
     </plugins>
+
 
   </build>
 
