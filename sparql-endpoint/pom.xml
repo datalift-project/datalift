@@ -125,6 +125,16 @@
       <resource>
         <directory>src/web</directory>
         <filtering>true</filtering>
+        <excludes>
+          <exclude>**/*.properties</exclude>
+        </excludes>
+      </resource>
+      <resource>
+        <directory>src/web</directory>
+        <filtering>false</filtering>
+        <includes>
+          <include>**/*.properties</include>
+        </includes>
       </resource>
     </resources>
 
