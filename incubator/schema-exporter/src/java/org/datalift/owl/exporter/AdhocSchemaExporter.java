@@ -264,6 +264,11 @@ public class AdhocSchemaExporter extends BaseModule
                     q.setBinding("u", namedGraph);
                     q.setBinding("p", p);
                     rs = q.evaluate();
+                    if (! rs.hasNext()) {
+                        log.warn("Can't define domain for property {}: " +
+                                 "no subject with defined RDF type found.", p);
+                        continue;
+                    }
                     BindingSet b = rs.next();
 
                     URI type  = null;
