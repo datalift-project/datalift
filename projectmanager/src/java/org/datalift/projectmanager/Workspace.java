@@ -1714,7 +1714,6 @@ public class Workspace extends BaseModule
             @FormDataParam("service_name") String srcName,
             @Context UriInfo uriInfo){
     	 Response response = null;
-    	 log.info("<<<<<<<"+projectId+description+serviceType+version+"<<<<<<<<<<<<<<");
     	 if (! isSet(srcName)) {
              this.throwInvalidParamError("file_name", srcName);
          }          

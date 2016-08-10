@@ -324,6 +324,18 @@
 </head>
 <script type="text/javascript">
 	$(function() {
+	
+		$('#version').change(function() {
+  			if($('#version').val()=='2.0.0')
+  			{
+  				$('#server').attr("disabled","disabled");
+  			}
+  			else
+  			{
+  				$('#server').attr("disabled","");
+  			}
+  			
+		});
 		$('#csv_src').change(function () {
 			$('#csv_name').val('');
 			var tmp=$('#csv_src').val();
