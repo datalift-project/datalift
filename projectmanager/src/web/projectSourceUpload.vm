@@ -295,7 +295,7 @@
 			#end			
 		</select> </p>
 		<p><label for="server">#i18n("project.upload_service_server"): </label>
-		<select name="server" id="version" title="#i18n("project.source.tooltip.server")">
+		<select name="server" id="server" title="#i18n("project.source.tooltip.server")">
 			#foreach( $s in $servers )
 			#if( $s == 'geoserver' )  )
 			<option value="$s" selected="true">$esc.html($s)</option>
@@ -333,8 +333,7 @@
   			else
   			{
   				$('#server').attr("disabled","");
-  			}
-  			
+  			}			
 		});
 		$('#csv_src').change(function () {
 			$('#csv_name').val('');
