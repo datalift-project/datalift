@@ -4,7 +4,6 @@ import javax.persistence.Entity;
 
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.WfsSource;
-import org.datalift.fwk.project.Source.SourceType;
 
 import com.clarkparsia.empire.annotation.RdfsClass;
 
@@ -15,7 +14,6 @@ public class WfsSourceImpl extends BaseServiceSource
 
 	public WfsSourceImpl() {
 		super(SourceType.WfsSource);
-		// TODO Auto-generated constructor stub
 	}
 	/**
 	 * Creates a new Shapefile source with the specified identifier and
