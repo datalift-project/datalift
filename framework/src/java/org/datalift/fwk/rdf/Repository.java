@@ -43,6 +43,7 @@ import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.rio.RDFHandler;
 
 import org.datalift.fwk.TechnicalException;
+import org.datalift.fwk.util.Env;
 
 import static org.datalift.fwk.util.StringUtils.isBlank;
 
@@ -394,6 +395,15 @@ public abstract class Repository
      * Shuts down this repository.
      */
     abstract public void shutdown();
+
+    /**
+     * Returns the RDF batch size for this repository.
+     * Defaults to: {@link Env#getRdfBatchSize()}
+     * @return the RDF batch size, as a number of triples.
+     */
+    public int getRdfBatchSize() {
+        return Env.getRdfBatchSize();
+    }
 
     //-------------------------------------------------------------------------
     // Helper methods

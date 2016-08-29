@@ -85,7 +85,6 @@ import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.rdf.UriCachingValueFactory;
-import org.datalift.fwk.util.Env;
 import org.datalift.fwk.util.UriBuilder;
 import org.datalift.fwk.util.web.UriParam;
 
@@ -409,7 +408,7 @@ public class CsvDirectMapper extends BaseConverterModule
             // Load triples.
             long statementCount = 0L;
             long duration = 0L;
-            int  batchSize = Env.getRdfBatchSize();
+            int  batchSize = target.getRdfBatchSize();
             i = 1;                              // Start line numbering at 1.
             Map<org.openrdf.model.URI,Value> statements =
                             new LinkedHashMap<org.openrdf.model.URI,Value>();

@@ -41,6 +41,7 @@ import java.net.URI;
 import org.openrdf.OpenRDFException;
 import org.openrdf.repository.http.HTTPRepository;
 import org.openrdf.repository.sail.SailRepository;
+import org.openrdf.repository.sparql.SPARQLRepository;
 import org.openrdf.sail.memory.MemoryStore;
 
 import org.datalift.core.TechnicalException;
@@ -49,6 +50,7 @@ import org.datalift.core.rdf.RepositoryFactory;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.rdf.Repository;
+import org.datalift.fwk.util.Env;
 
 import static org.datalift.fwk.util.StringUtils.*;
 
@@ -87,6 +89,12 @@ public final class SesameRepositoryFactory extends RepositoryFactory
      * repositories in configuration.
      */
     public final static String SESAME_REPOSITORY_TYPE = "sesame";
+    /**
+     * The (optional) type string to
+     * {@link BaseRepository#REPOSITORY_TYPE flag} remote SPARQL 1.1
+     * repositories in configuration.
+     */
+    public final static String SPARQL_REPOSITORY_TYPE = "sparql";
 
     //-------------------------------------------------------------------------
     // Class members
@@ -117,7 +125,11 @@ public final class SesameRepositoryFactory extends RepositoryFactory
                 }
                 // Else: Not a Sesame repository.
             }
-            // Else: Not a Sesame repository.
+            else if ((SPARQL_REPOSITORY_TYPE.equals(type)) &&
+                     (url.startsWith(HTTP_URL_SCHEME))) {
+                r = new SesameSparqlRepository(name, url, configuration);
+            }
+            // Else: Not a Sesame nor SPARQL repository.
         }
         catch (Exception e) {
             // Repository not available or not a native Sesame repository
@@ -134,7 +146,7 @@ public final class SesameRepositoryFactory extends RepositoryFactory
 
     /**
      * A Repository implementation to access remote Sesame repositories
-     * repositories over HTTP.
+     * over HTTP.
      */
     public final static class SesameHttpRepository extends BaseRepository
     {
@@ -276,6 +288,88 @@ public final class SesameRepositoryFactory extends RepositoryFactory
                                         this.name, this.url, e.getMessage());
             }
             return repository;
+        }
+    }
+
+    //-------------------------------------------------------------------------
+    // SesameSparqlRepository nested class
+    //-------------------------------------------------------------------------
+
+    /**
+     * A Repository implementation to access remote SPARQL 1.1
+     * repositories.
+     */
+    public final static class SesameSparqlRepository extends BaseRepository
+    {
+        //---------------------------------------------------------------------
+        // Constructors
+        //---------------------------------------------------------------------
+
+        /**
+         * Build a new DataLift repository accessing a remote SPARQL 1.1
+         * repository.
+         * @param  name            the repository name in DataLift
+         *                         configuration.
+         * @param  url             the repository URL.
+         * @param  configuration   the DataLift configuration.
+         *
+         * @throws IllegalArgumentException if either <code>name</code>
+         *         or <code>configuration</code> is null.
+         * @throws RuntimeException if any error occurred connecting the
+         *         repository.
+         */
+        public SesameSparqlRepository(String name, String url,
+                                                 Configuration configuration) {
+            super(name, url, configuration);
+        }
+
+        //---------------------------------------------------------------------
+        // BaseRepository contract support
+        //---------------------------------------------------------------------
+
+        /** {@inheritDoc} */
+        @Override
+        protected org.openrdf.repository.Repository
+                            newNativeRepository(Configuration configuration) {
+            SPARQLRepository repository = null;
+
+            String username = trimToNull(configuration.getProperty(
+                                            this.name + REPOSITORY_USERNAME));
+            String password = trim(configuration.getProperty(
+                                            this.name + REPOSITORY_PASSWORD));
+            try {
+                repository = new SPARQLRepository(this.url);
+                if (username != null) {
+                    repository.setUsernameAndPassword(username, password);
+                }
+                repository.initialize();
+                if (isSet(this.name)) {
+                    log.info("SPARQL repository \"{}\" successfully connected at: {}",
+                             this.name, this.url);
+                }
+                else {
+                    log.info("SPARQL repository successfully connected: {}",
+                             this.url);
+                }
+            }
+            catch (OpenRDFException e) {
+                throw new TechnicalException("repository.connect.error", e,
+                                        this.name, this.url, e.getMessage());
+            }
+            return repository;
+        }
+
+        /**
+         * {@inheritDoc}
+         * <p>
+         * This implementation limits triple batch size for RDF insert
+         * and delete operations to 1000 triples as some triple stores
+         * (such as Jena-based Parliament) do not support HTTP POST
+         * forms larger than 200 KB for SPARQL Updates.</p>
+         */
+        @Override
+        public int getRdfBatchSize() {
+            return Env.MIN_RDF_IO_BATCH_SIZE;
         }
     }
 }
