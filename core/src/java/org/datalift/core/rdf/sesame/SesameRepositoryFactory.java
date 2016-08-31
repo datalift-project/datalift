@@ -50,6 +50,7 @@ import org.datalift.core.rdf.RepositoryFactory;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.rdf.Repository;
+import org.datalift.fwk.util.Env;
 
 import static org.datalift.fwk.util.StringUtils.*;
 
@@ -357,5 +358,19 @@ public final class SesameRepositoryFactory extends RepositoryFactory
             }
             return repository;
         }
+
+        /**
+         * {@inheritDoc}
+         * <p>
+         * This implementation limits triple batch size for RDF insert
+         * and delete operations to 1000 triples as some triple stores
+         * (such as Jena-based Parliament) do not support HTTP POST
+         * forms larger than 200 KB for SPARQL Updates.</p>
+         */
+        @Override
+        public int getRdfBatchSize() {
+            return Env.MIN_RDF_IO_BATCH_SIZE;
+        }
+
     }
 }

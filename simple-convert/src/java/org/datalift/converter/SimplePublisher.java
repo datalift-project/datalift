@@ -164,10 +164,7 @@ public class SimplePublisher extends BaseConverterModule
                                                 projectId.toUri();
             }
             // Publish input source triples in target repository.
-            if (overwrite) {
-                RdfUtils.clearGraph(pub, targetGraph);
-            }
-            RdfUtils.upload(in, pub, targetGraph, null, false);
+            RdfUtils.upload(in, pub, targetGraph, null, overwrite);
             // Notify all access controllers (if any) that new graphs appeared.
             for (AccessController acs : cfg.getBeans(AccessController.class)) {
                 try {

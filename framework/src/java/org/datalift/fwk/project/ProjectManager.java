@@ -37,7 +37,6 @@ package org.datalift.fwk.project;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.URL;
 import java.util.Collection;
 
 import org.datalift.fwk.MediaTypes;

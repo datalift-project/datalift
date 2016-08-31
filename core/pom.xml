@@ -290,9 +290,11 @@
             </resource>
             <resource>
               <directory>${basedir}/src/web</directory>
+              <filtering>false</filtering>
             </resource>
             <resource>
               <directory>${basedir}/../framework/src/web</directory>
+              <filtering>false</filtering>
             </resource>
           </webResources>
           <failOnMissingWebXml>false</failOnMissingWebXml>

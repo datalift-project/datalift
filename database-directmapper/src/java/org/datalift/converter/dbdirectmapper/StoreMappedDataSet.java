@@ -13,8 +13,6 @@ import org.openrdf.model.ValueFactory;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
 
-import static org.datalift.fwk.util.Env.*;
-
 /**
  * Class to handle the triples resulting from the database mapping and to save 
  * them directly to the DataLift RDF Store in batches of configurable size.
@@ -48,7 +46,7 @@ public class StoreMappedDataSet extends SesameDataSet {
 	 * @param targetUri the base uri of the resulting mapped graph
 	 */
 	public StoreMappedDataSet(Repository repository, String targetUri){
-		this(repository,targetUri,getRdfBatchSize());
+		this(repository,targetUri,repository.getRdfBatchSize());
 	}
 	
 	/**
