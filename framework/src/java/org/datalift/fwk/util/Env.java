@@ -68,7 +68,7 @@ public final class Env
     /** The default batch size for RDF I/Os: 10000 uncommitted triples. */
     public final static int DEFAULT_RDF_IO_BATCH_SIZE = 10000;
     /** The minimum batch size for RDF I/Os: 1000 uncommitted triples. */
-    public final static int MIN_RDF_IO_BATCH_SIZE = 1000;
+    public final static int MIN_RDF_IO_BATCH_SIZE = 1;
 
     //-------------------------------------------------------------------------
     // Class members

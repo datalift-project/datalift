@@ -10,12 +10,14 @@ import org.apache.xerces.xs.XSTypeDefinition;
 import org.openrdf.model.Resource;
 
 import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.Point;
 
 public class ComplexFeature extends Attribute{
 	
 	public List <Attribute> itsAttr;
 	public MyGeometry geom;
 	public Geometry vividgeom;
+	public Point representativePoint;
 	private Resource id;
 	private ComplexFeature parent;
 	private ComplexFeature childFound;
@@ -136,5 +138,6 @@ public class ComplexFeature extends Attribute{
 		}*/
 		
 	}
+	
 	
 }

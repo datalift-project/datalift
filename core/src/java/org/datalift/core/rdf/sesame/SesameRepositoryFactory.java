@@ -369,7 +369,7 @@ public final class SesameRepositoryFactory extends RepositoryFactory
          */
         @Override
         public int getRdfBatchSize() {
-            return Env.MIN_RDF_IO_BATCH_SIZE;
+            return 50;
         }
 
     }

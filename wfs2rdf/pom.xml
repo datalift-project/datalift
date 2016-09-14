@@ -50,7 +50,7 @@
   			<version>${apacheHttp.version}</version>
 		</dependency>
 		<!-- JSON support using GSON -->
-		   <!-- <dependency>
+		    <dependency>
 			<groupId>org.datalift</groupId>
 			<artifactId>datalift-core</artifactId>
 			<version>${datalift.version}</version>
@@ -66,7 +66,7 @@
       <groupId>com.google.code.gson</groupId>
       <artifactId>gson</artifactId>
       <version>${gson.version}</version>
-    </dependency>		-->
+    </dependency>		
 	</dependencies>
 	
 	  <build>	        

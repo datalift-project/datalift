@@ -42,6 +42,16 @@
 				<p><label class="control-label" for="graphe">#i18n("graph_label.option"): </label>
 				<input type="radio" name="graph_option" value="0" style="width:inherit" title="#i18n("multiple_graph.option_tooltip")" checked> #i18n("multiple_graph.option")
 				<input type="radio" disabled name="graph_option" value="1" style="width:inherit" title="#i18n("unique_graph.option_tooltip")"> #i18n("unique_graph.option")			
+				
+				<p><label class="control-label" for="ontology">#i18n("ontology_label.option"): </label>
+				<!--<input type="radio" name="ontology_option" value="0" style="width:inherit" title="#i18n("default_ontology.option_tooltip")" checked> #i18n("default_ontology.option")
+				<input type="radio" disabled name="ontology_option" value="1" style="width:inherit" title="#i18n("emf_ontology.option_tooltip")"> #i18n("emf_ontology.option")			
+				-->
+				<select name="ontology_option" id="ontology_option">
+					<option value="0"  title="#i18n("default_ontology.option_tooltip")">#i18n("default_ontology.option")</option>
+					<option value="1"  title="#i18n("emf_ontology.option_tooltip")">#i18n("emf_ontology.option")</option>
+				</select>
+			
 			</div>
 		</div>
 		
@@ -98,7 +108,8 @@ $(function() {
 				   project : $("#project").val(),
 				   source : $("#source").val(),
 				   values : cellValues,
-				   graphOption : $("input:radio[name='graph_option']:checked").val()
+				   graphOption : $("input:radio[name='graph_option']:checked").val(),
+				   ontologyOption : $('#ontology_option').val()
 				  }),
 			 dataType : 'text',
 			 contentType : 'application/json',
@@ -122,15 +133,16 @@ $(function() {
 		});
 	function loadGridTypes() {
 		/************************* Types ******************************/
-		jQuery("#selectable_types").jqGrid({
+		var grid = $("#selectable_types");
+		grid.jqGrid({
 			datatype: "local",
-			colNames:['name','#i18n("grid.featureTypes.title")','#i18n("grid.featureTypes.description")','#i18n("grid.featureTypes.src")','#i18n("grid.featureTypes.nbr")'],
+			colNames:['name','#i18n("grid.featureTypes.title")','#i18n("grid.featureTypes.description")','#i18n("grid.featureTypes.src")'/*,'#i18n("grid.featureTypes.nbr")'*/],
 			colModel:[
-				{name:'name', key:true, index:'name',   sorttype:"text", width:50},
-				{name:'Title', index:'title', sorttype:"text", sortable:true, width:200},
-				{name:'Description',  index:'desc',  sorttype:"text", sortable:true, width:400},
-				{name:'CRS', index:'src', sorttype:"text", sortable:true, width:80},
-				{name:'Number', index:'nbr', sorttype:"int", sortable:true, width:100}
+				{name:'nm', key:true, index:'nm', width:50},
+				{name:'Title', index:'title',  width:200},
+				{name:'Description',  index:'descr',   width:500},
+				{name:'CRS', index:'crs', width:80}
+				//{name:'Number', index:'nbr',  width:100}
 			],
 			caption: "",
 			rowNum:10, rowList:[10,20,30], pager: '#selectable_sources_toolbar',
@@ -138,17 +150,32 @@ $(function() {
 			height: 250,
 			multiselect: true,
 			multiboxonly: true,
-			sortable: true
+			ignoreCase: true,
+            sortname: 'Title',
+            sortorder: "desc"
 		});
+		
+        console.log(grid.jqGrid("getGridParam", "data"));
+        console.log("===========================");
+        console.log("===========================");
+		
+        console.log(grid.jqGrid("getGridParam", "data"));
+        console.log("+++++++++++++++++++++++++");
+        console.log("+++++++++++++++++++++++++");
+		grid.trigger("reloadGrid");
+		console.log(grid.jqGrid("getGridParam", "data"));
+        console.log("===========================");
+        console.log("===========================");
 
+   /**************data needed to fill the grid *****************/
 		var mydata = [
 #foreach($ft in $types)
 		{
-			name:"$!esc.javascript($ft.getName())",
+			nm:"$!esc.javascript($ft.getName())",
 			Title:"$!esc.javascript($ft.getTitle())",
 			Description:"$!esc.javascript($ft.getSummary())",
-			CRS:"$!esc.javascript($ft.getDefaultSrs())",
-			Number:"$!esc.javascript($ft.getNumberFeature())"
+			CRS:"$!esc.javascript($ft.getDefaultSrs())"
+			//Number:"$!esc.javascript($ft.getNumberFeature())"
 		},
 #end
 		];
@@ -157,7 +184,7 @@ $(function() {
 			jQuery("#selectable_types").jqGrid('addRowData',i+1,mydata[i]);
 		}
 
-		jQuery("#selectable_types").jqGrid('navGrid', '#selectable_sources_toolbar',
+		grid.jqGrid('navGrid', '#selectable_sources_toolbar',
 			{edit:false,add:false,del:false, refresh:false, search:false})
 			.navButtonAdd(
 				'#selectable_sources_toolbar',	{
@@ -166,7 +193,7 @@ $(function() {
 						var selIds = $('#selectable_types').jqGrid('getGridParam', 'selarrrow'), i, n;
 						cellValues=[];
 						for (i = 0, n = selIds.length; i < n; i++) {
-						    cellValues.push($('#selectable_types').jqGrid('getCell', selIds[i], 'name'));
+						    cellValues.push($('#selectable_types').jqGrid('getCell', selIds[i], 'nm'));
 						}
 						var e = $('#typenames_submit');
 						if(n>0){
@@ -194,7 +221,7 @@ $(function() {
 		});
 			
 		
-		jQuery("#selectable_types").jqGrid('hideCol',["name"]);
+		jQuery("#selectable_types").jqGrid('hideCol',["nm"]);
 	}
 	
 </script>

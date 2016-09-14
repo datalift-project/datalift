@@ -1,6 +1,8 @@
 package org.datalift.wfs;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -12,13 +14,19 @@ import java.util.Map;
 import org.datalift.fwk.log.Logger;
 import org.geotools.data.DataStore;
 import org.geotools.data.DataStoreFinder;
+import org.geotools.data.DefaultQuery;
 import org.geotools.data.Query;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.data.simple.SimpleFeatureSource;
+import org.geotools.feature.FeatureCollection;
+import org.geotools.feature.FeatureIterator;
 import org.geotools.feature.type.GeometryTypeImpl;
+import org.geotools.referencing.crs.DefaultGeographicCRS;
+import org.opengis.feature.Feature;
 import org.opengis.feature.Property;
-
+import org.opengis.feature.simple.SimpleFeatureType;
+import org.geotools.data.FeatureSource;
 
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.referencing.ReferenceIdentifier;
@@ -45,45 +53,44 @@ public class WfsParser {
 	private final static Map<String,DataStore> cache = new HashMap<String, DataStore>();
 	
 	//SimpleCache
-	private final static Logger log = Logger.getLogger();
+	//private final static Logger log = Logger.getLogger();
 	private String ftCrs;
 	private DataStore dataStore;
 	private String version;
 	private final Charset UTF8_CHARSET = Charset.forName("UTF-8");
 
 	public WfsParser() {
-
-		// TODO Auto-generated constructor stub
-		
-		
 	}
 
 	public WfsParser(String url, String version, String serverTypeStrategy )
 	{
 		this.version=version;
-		String getCapabilities = url;
+		String getCapabilities = url+"?service=wfs&request=getCapabilities&version="+version;
 		String cacheKey = getCapabilities;
 		if(!version.equals("2.0.0")) {
 			cacheKey += "/" + serverTypeStrategy;
 		}
 		DataStore ds = cache.get(cacheKey);
 		if (ds == null) {
-		Map connectionParameters = new HashMap();
-		connectionParameters.put("WFSDataStoreFactory:GET_CAPABILITIES_URL", getCapabilities );
-		connectionParameters.put("WFSDataStoreFactory:WFSDataStoreFactory:TIMEOUT",10000000);
-		if(!version.equals("2.0.0") && !serverTypeStrategy.equals("autre") )
-			connectionParameters.put("WFSDataStoreFactory:WFS_STRATEGY", serverTypeStrategy); // if not specified for a mapserver => error: noxsdelement declaration found for {http://www.opengis.net/wfs}REM_NAPPE_SEDIM
-		// initialisation - connection
-		try {
-			log.debug("getting the datastore in process...");
-			ds = DataStoreFinder.getDataStore( connectionParameters );
-			log.debug("got the datastore");
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			log.error("failed to create parser for : {} {} {}", url,version,serverTypeStrategy);
-			e.printStackTrace();
-		}
-		cache.put(cacheKey, ds);
+			Map connectionParameters = new HashMap();
+			connectionParameters.put("WFSDataStoreFactory:GET_CAPABILITIES_URL", getCapabilities );
+			connectionParameters.put("WFSDataStoreFactory:WFSDataStoreFactory:TIMEOUT",10000000);
+			connectionParameters.put("WFSDataStoreFactory:ENCODING","UTF-8");
+			if(!version.equals("2.0.0") && !serverTypeStrategy.equals("autre"))
+				connectionParameters.put("WFSDataStoreFactory:WFS_STRATEGY", serverTypeStrategy); // if not specified for a mapserver => error: noxsdelement declaration found for {http://www.opengis.net/wfs}REM_NAPPE_SEDIM
+			// initialisation - connection
+			try {
+				System.out.println("getting the datastore in process...");
+				ds = DataStoreFinder.getDataStore( connectionParameters );
+				//log.debug("got the datastore");
+				System.out.println("got the datastore");
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				//log.error("failed to create parser for : {} {} {}", url,version,serverTypeStrategy);
+				
+				e.printStackTrace();
+			}
+			cache.put(cacheKey, ds);
 		}
 		this.dataStore = ds ;
 	}
@@ -114,6 +121,41 @@ public class WfsParser {
 	}
 
 
+//	public static void main (String [] args) throws IOException, URISyntaxException
+//	{
+////		WfsParser p=new WfsParser("http://ws.carmencarto.fr/WFS/119/fxx_grille", "1.1.0", "mapserver");
+////		ArrayList<AbstractFeature> myFeatures=p.loadFeature("ms_L93_5x5");
+////		System.out.println(myFeatures.size());
+//		String getCapabilities = "http://ws.carmencarto.fr/WFS/119/fxx_grille?service=wfs&REQUEST=GetCapabilities&version=1.1.0";
+//
+//		Map connectionParameters = new HashMap();
+//		connectionParameters.put("WFSDataStoreFactory:GET_CAPABILITIES_URL", getCapabilities );
+//		connectionParameters.put("WFSDataStoreFactory:WFS_STRATEGY", "mapserver");
+//
+//		// Step 2 - connection
+//		DataStore data = DataStoreFinder.getDataStore( connectionParameters );
+//
+//		// Step 3 - discouvery
+//		String typeNames[] = data.getTypeNames();
+//		String typeName = typeNames[0];
+//		// Step 4 - target
+//		
+//		
+//
+//		//Iterator<SimpleFeature> iterator = ((ArrayList<SimpleFeature>) features).iterator();
+//		try {
+//		    while( fi.hasNext() )
+//		    {
+//		        Feature feature = (Feature) fi.next();
+//		        System.out.println(feature.getName());  
+//		    }		 
+//		}catch (Exception e)
+//		{
+//			e.printStackTrace();
+//		}
+//	
+//
+//	}
 	public ArrayList<AbstractFeature> loadFeature(String typeName) throws IOException {
 		// TODO Auto-generated method stub
 		ArrayList<AbstractFeature> features = new ArrayList<AbstractFeature>();
@@ -126,10 +168,10 @@ public class WfsParser {
 			Iterator<ReferenceIdentifier> i = crs.getIdentifiers().iterator();
 			if(i.hasNext())
 				code=i.next().getCode();
-			if (this.version.equals("1.1.0") || this.version.equals("2.0.0"))
-				this.ftCrs="urn:x-ogc:def:crs:EPSG:"+code;
-			else
-				this.ftCrs="http://www.opengis.net/gml/srs/epsg.xml#"+code;
+//			if (this.version.equals("1.1.0") || this.version.equals("2.0.0"))
+//				this.ftCrs="urn:x-ogc:def:crs:EPSG:"+code;
+//			else
+				this.ftCrs=code;
 			query.setCoordinateSystem(crs);
 			//query.setMaxFeatures(100);
 	
@@ -138,7 +180,7 @@ public class WfsParser {
 			while(fiterator.hasNext()){
 				SimpleFeature sf = fiterator.next();
 				addFeature(sf,crs,features);
-				System.out.println(sf.getName());		         
+				//System.out.println(sf.getName());		         
 			}
 	}
 		return features;

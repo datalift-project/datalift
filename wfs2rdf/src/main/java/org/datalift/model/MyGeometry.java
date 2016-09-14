@@ -9,6 +9,7 @@ public class MyGeometry {
 	public QName type;
 	public String gml_id;
 	public boolean isEmpty;
+	public int dimension;
 	public MyGeometry()
 	{
 		isEmpty=true;

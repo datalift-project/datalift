@@ -267,9 +267,6 @@
 			#if( $v == 'WFS' )
 			<input type="radio" name="service_type" value="$v" style="width:inherit" title="#i18n("project.source.tooltip.wfs")" checked> $esc.html($v)
 			#end
-			#if( $v == 'WCS' )
-			<input type="radio" disabled  name="service_type" value="$v" style="width:inherit" title="#i18n("project.source.tooltip.wcs")"> $esc.html($v)
-			#end
 			#if( $v == 'SOS' )
 			<input type="radio" disabled  name="service_type" value="$v" style="width:inherit" title="#i18n("project.source.tooltip.sos")"> $esc.html($v)
 			#end

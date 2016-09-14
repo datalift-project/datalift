@@ -140,5 +140,29 @@ public class Const {
 	public static QName MetadataURL= new QName("http://www.opengis.net/wfs/2.0","MetadataURL");
 	public static QName MetadataURLType= new QName("http://www.opengis.net/wfs/2.0","MetadataURLType");
 	
+	public static QName CurvePropertyType= new QName("http://www.opengis.net/gml/3.2","CurvePropertyType");
+	public static QName Curve= new QName("http://www.opengis.net/gml/3.2","Curve");
+	public static QName CurveType= new QName("http://www.opengis.net/gml/3.2","CurveType");
+	public static QName segments= new QName("http://www.opengis.net/gml/3.2","segments");
+	public static QName CurveSegmentArrayPropertyType= new QName("http://www.opengis.net/gml/3.2","CurveSegmentArrayPropertyType");
+	public static QName LineStringSegment= new QName("http://www.opengis.net/gml/3.2","LineStringSegment");
+	public static QName LineStringSegmentType= new QName("http://www.opengis.net/gml/3.2","LineStringSegmentType");
+	public static QName posList= new QName("http://www.opengis.net/gml/3.2","posList");
+	public static QName DirectPositionListType= new QName("http://www.opengis.net/gml/3.2","DirectPositionListType");
+
+	
+	public static QName Polygon= new QName("http://www.opengis.net/gml/3.2","Polygon");
+	public static QName PolygonType= new QName("http://www.opengis.net/gml/3.2","PolygonType");
+	public static QName exterior= new QName("http://www.opengis.net/gml/3.2","exterior");
+	public static QName AbstractRingPropertyType= new QName("http://www.opengis.net/gml/3.2","AbstractRingPropertyType");
+	
+	
+	/***geometry aggregation types****/
+	
+	public static QName MultiSurfacePropertyType= new QName("http://www.opengis.net/gml/3.2","MultiSurfacePropertyType");
+	public static QName MultiSurface= new QName("http://www.opengis.net/gml/3.2","MultiSurface");
+	public static QName MultiSurfaceType= new QName("http://www.opengis.net/gml/3.2","MultiSurfaceType");
+	public static QName SurfacePropertyType=new QName("http://www.opengis.net/gml/3.2","SurfacePropertyType");
+
 
 }

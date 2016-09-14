@@ -40,18 +40,20 @@ import org.openrdf.model.impl.ValueFactoryImpl;
 public class GeoSPARQL {
 
 	public static String NS = "http://www.opengis.net/ont/geosparql#";
-
+	public static String NSTYPE = "http://www.opengis.net/ont/sf#"; //http://schemas.opengis.net/sf/1.0/simple_features_geometries.rdf#
 	public static URI ASWKT;
 
 	public static URI ASGML;
 	
 	public static URI WKTLITERAL;
+	public static URI GEOMETRY;
 
 	static {
 		ValueFactory vf = ValueFactoryImpl.getInstance(); 
 		ASWKT = vf.createURI(NS, "asWKT");
 		ASGML = vf.createURI(NS, "asGML");
-		WKTLITERAL = vf.createURI(NS, "wktLiteral");
+		WKTLITERAL = vf.createURI(NSTYPE, "wktLiteral");
+		GEOMETRY=vf.createURI(NSTYPE,"geometry");
 	}
 
 }

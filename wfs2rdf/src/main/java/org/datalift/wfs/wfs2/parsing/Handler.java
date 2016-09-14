@@ -30,20 +30,21 @@ import org.xml.sax.helpers.DefaultHandler;
 public class Handler extends DefaultHandler {
  
     //List to hold object
-    private List<ComplexFeature> empList = new ArrayList<ComplexFeature>();
-    private ComplexFeature emp = null;
+    private List<ComplexFeature> tmpList = new ArrayList<ComplexFeature>();
+    private ComplexFeature tmp = null;
     private PSVIProvider psvi ;
     private SAXParser parser;
     Stack<ComplexFeature> stack = new Stack<ComplexFeature>();
+    StringBuilder currentCoordinateValues= new StringBuilder();
  
     public Handler(SAXParser p) throws SAXException {
     	this.parser=p;
     	this.psvi = (PSVIProvider)p.getXMLReader();
     }
  
-    //getter method for employee list
+    //getter method for tmployee list
     public List<ComplexFeature> getCfList() {
-        return empList;
+        return tmpList;
     }
 
  
@@ -52,14 +53,14 @@ public class Handler extends DefaultHandler {
     public void startElement(String uri, String localName, String qName, Attributes attributes)
     		throws SAXException {
     	boolean foundit;
-    	if(localName.equals("FeatureTypeList"))
+    	if(localName.equals("representativePoint"))
     		foundit=true;
-
+    	currentCoordinateValues.delete(0, currentCoordinateValues.length());
     	ElementPSVI elt=psvi.getElementPSVI();
 
     	//initialize cmplx object and set its attribute
-    	emp = new ComplexFeature();
-    	emp.name=new QName(uri, localName);
+    	tmp = new ComplexFeature();
+    	tmp.name=new QName(uri, localName);
     	XSElementDeclaration dec= elt.getElementDeclaration();
     	XSTypeDefinition td=null;
 
@@ -67,7 +68,7 @@ public class Handler extends DefaultHandler {
     	{
     		td=dec.getTypeDefinition();
     	}
-    	emp.attrType=td;
+    	tmp.attrType=td;
     	for (int i=0;i<attributes.getLength();i++)
     	{
     		Attribute a=new Attribute();
@@ -79,11 +80,11 @@ public class Handler extends DefaultHandler {
     		Feature f = new Feature();
     		f.typeTitle=psvia.getAttributeDeclaration().getTypeDefinition().getName();
     		a.attrType=mtd;
-    		emp.itsAttr.add(a);
+    		tmp.itsAttr.add(a);
     	}
     	if(!stack.isEmpty()) //ajoute l'élément courant comme ATTRIBUT du dernier élément (encore ouvert ) dans la pile
     	{
-    		if(emp.getTypeName().equals(Const.GeometryPropertyType) || emp.getTypeName().equals(Const.PointType))
+    		if(tmp.getTypeName().equals(Const.GeometryPropertyType) || tmp.getTypeName().equals(Const.PointPropertyType) || tmp.getTypeName().equals(Const.CurvePropertyType)|| tmp.getTypeName().equals(Const.MultiSurfacePropertyType))
 
     			//creeate a geometry proprety
     		{
@@ -94,18 +95,18 @@ public class Handler extends DefaultHandler {
 
     		}
     		else {
-    			// stack.peek().itsAttr.add(emp);
+    			// stack.peek().itsAttr.add(tmp);
     			ComplexFeature parent = (stack.isEmpty())? null: stack.peek();
     			if (parent != null) {
-    				parent.itsAttr.add(emp);
-    				emp.setParent(parent);
+    				parent.itsAttr.add(tmp);
+    				tmp.setParent(parent);
     			}
-    			//pile.get(pile.size()-1).itsAttr.add(emp);
+    			//pile.get(pile.size()-1).itsAttr.add(tmp);
     		}
     	}
     	// else //sinon ajoute l'élément comme nouvel element racine
-    	//pile.add(emp);
-    	stack.push(emp);
+    	//pile.add(tmp);
+    	stack.push(tmp);
     }
 
 
@@ -123,18 +124,19 @@ public class Handler extends DefaultHandler {
 		if(!stack.isEmpty())
     	{
     		ComplexFeature lastcurrentElt=stack.peek();
+    		stack.peek().value=currentCoordinateValues.toString();
     				//pile.get(pile.size()-1);
     		QName currentQname=new QName(uri,localName);
     		//if(currentQname.equals(pile.get(pile.size()-1).name))
     		if(currentQname.equals(lastcurrentElt.name))
     		{
    			 if (stack.size()==1)
-    			empList.add(lastcurrentElt);
+    			tmpList.add(lastcurrentElt);
    			 stack.pop();
     		 //pile.remove(pile.size()-1);
     		}
 //    		ComplexFeature f = stack.pop();
-//    		if (stack.isEmpty()) {
+//    		if (stack.istmpty()) {
 //    			
 //    		}
     	}
@@ -151,9 +153,15 @@ public class Handler extends DefaultHandler {
     			//ComplexFeature lastcurrentElt=pile.get(pile.size()-1);
     			//if(lastcurrentElt.attrType!=null)
     				  // if(lastcurrentElt.attrType.getName()!=null ) if not commented, mobile value becames null as the attributetype name is null in this case 
-    					stack.peek().value=val;
+    					
+    					currentCoordinateValues.append(ch,start,length);
+    					if(currentCoordinateValues.toString().trim().length()==0)
+    						{
+    							currentCoordinateValues.delete(0, currentCoordinateValues.length());				
+    						}
 
     		}
+    	
 
     }
 }

@@ -2,6 +2,9 @@ package org.datalift.wfs.wfs2.mapping;
 
 import org.openrdf.model.Resource;
 import org.datalift.model.ComplexFeature;
+
+import javax.xml.namespace.QName;
+
 import org.datalift.geoutility.Context;
 
 
@@ -30,5 +33,29 @@ public class ObservationPropertyTypeMapper extends BaseMapper {
 		ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(ctx.nsDatalift+capitalize(ctx.referencedObjectType.getLocalPart()))));
 		ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(ctx.nsOml+ctx.observationType.getLocalPart())));
 	}
-
+	@Override
+	protected void setCfId(ComplexFeature cf, Context ctx) {
+		/******give the feature an identifier****/
+		Resource os;
+		int count=0;		
+		if(cf.getId()!=null)
+			{
+				alreadyLinked=true;
+				return;
+			}
+		if(isReferencedObject(cf))
+		{
+			QName type=ctx.referencedObjectType;//Const.ReferenceType;
+			count =ctx.getInstanceOccurences(type);
+			os=ctx.vf.createURI(ctx.nsProject+type.getLocalPart()+"_"+count);
+		}
+		else
+		{
+			count=ctx.getInstanceOccurences(new QName("","Observation"));
+			os=ctx.vf.createURI(ctx.nsProject+"Observation_"+count);
+		}
+		
+		cf.setId(os);
+		alreadyLinked=false;		
+	}
 }

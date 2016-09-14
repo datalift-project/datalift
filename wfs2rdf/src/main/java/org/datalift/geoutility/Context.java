@@ -1,5 +1,8 @@
 package org.datalift.geoutility;
 
+import static org.datalift.fwk.util.PrimitiveUtils.wrap;
+import static org.datalift.fwk.util.TimeUtils.asSeconds;
+
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -28,7 +31,15 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.datalift.fwk.Configuration;
+import org.datalift.fwk.log.Logger;
+import org.datalift.fwk.rdf.RdfUtils;
+import org.datalift.fwk.rdf.Repository;
+import org.datalift.fwk.rdf.UriCachingValueFactory;
+import org.datalift.fwk.util.Env;
+import org.datalift.fwk.util.UriBuilder;
 import org.datalift.model.Const;
+import org.datalift.wfs.TechnicalException;
 import org.datalift.wfs.wfs2.mapping.AnyTypeMapper;
 import org.datalift.wfs.wfs2.mapping.AnyURIMapper;
 import org.datalift.wfs.wfs2.mapping.BaseMapper;
@@ -41,13 +52,16 @@ import org.datalift.wfs.wfs2.mapping.ObservationPropertyTypeMapper;
 import org.datalift.wfs.wfs2.mapping.ReferenceTypeMapper;
 import org.datalift.wfs.wfs2.mapping.StringOrRefTypeMapper;
 import org.datalift.wfs.wfs2.mapping.TimePeriodMapper;
-import org.datalift.wfs.wfs2.parsing.WFS2Parser;
 import org.openrdf.model.Model;
 import org.openrdf.model.Resource;
+import org.openrdf.model.Statement;
 import org.openrdf.model.URI;
 import org.openrdf.model.ValueFactory;
 import org.openrdf.model.impl.LinkedHashModel;
 import org.openrdf.model.impl.ValueFactoryImpl;
+import org.openrdf.model.vocabulary.RDF;
+import org.openrdf.repository.RepositoryConnection;
+import org.openrdf.repository.RepositoryException;
 import org.openrdf.rio.RDFFormat;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.Rio;
@@ -55,8 +69,13 @@ import org.openrdf.rio.Rio;
 
 import com.sun.xml.internal.txw2.Document;
 
+import fr.ign.datalift.model.AbstractFeature;
+import fr.ign.datalift.model.FeatureProperty;
+import fr.ign.datalift.model.GeometryProperty;
+
 public class Context {
 
+	private final static Logger log = Logger.getLogger();
 
 	public static URI DefaultSubjectURI = null;
 	public Model model;
@@ -88,33 +107,15 @@ public class Context {
 	public URI rdfTypeURI;
 	static {
 		mappers.put(null, new BaseMapper());
-		Mapper m=new StringOrRefTypeMapper();
 		mappers.put(new QName("geometry"),new GeomMapper());
-		mappers.put(Const.string, m);
-		mappers.put(Const.StringOrRefType, m);
-		mappers.put(Const.ReferenceType, new ReferenceTypeMapper());
-		mappers.put(Const.EnvironmentalMonitoringFacilityType, new EmfMapper());
-		mappers.put(Const.TimePeriodType, new TimePeriodMapper());
-		Mapper m2= new AnyTypeMapper(); 
-		mappers.put(Const.anyType,m2);
-		mappers.put(Const.AbstractMemberType,m2);
-		mappers.put(Const.OM_ObservationPropertyType,new ObservationPropertyTypeMapper());
-		mappers.put(Const.bool,new MobileMapper());
-		mappers.put(Const.anyURI,new AnyURIMapper());
-		mappers.put(Const.inspireCodeList,new CodeListMapper());
-		//add codeList to be considered
-		registredCodeList.add(Const.clInspire);
-		registredCodeList.add(Const.clSandre);
-		
 	}
 	public Context()
 	{
-		
 		hm=new HashMap <QName,Integer>();
 		codeListOccurences=new HashMap <String,Resource>();
 		vf = new ValueFactoryImpl();
 		model = new LinkedHashModel();
-		
+
 		model.setNamespace("dl_ef", nsDatalift);
 		model.setNamespace("pjt", nsProject);
 		model.setNamespace("ign", nsIGN);
@@ -160,42 +161,42 @@ public class Context {
 	}
 
 
-//	public static void main(String[] args) throws Exception {
-//		// Default conversion
-//		String fileExport="C:/Users/A631207/Documents/my_resources/";
-//		String fileData="src/main/resources/wfs_response.xml";
-//		
-//		Map <String,String> piezoToConvert= new HashMap <String,String>();
-//		piezoToConvert.put("geoservices_rem_napp_socl.ttl"	,"http://ids.craig.fr/wxs/public/wfs?request=getCapabilities&version=2.0.0");
-////			piezoToConvert.put("geoservices_rem_napp_socl.ttl"	,"http://localhost:8081/geoserver/hanane_workspace/ows?service=WFS&version=2.0.0&request=GetFeature&typeName=hanane_workspace:regions_nouvelles_rest");
-//	//piezoToConvert.put("geoservices_rem_napp_socl.ttl"	,"http://ids.craig.fr/wxs/public/wfs?request=getfeature&version=2.0.0&typename=public:ARDTA_PNR_2015_GEOFLA");
-////		piezoToConvert.put("Piezometre/00463X0036/H1/PZ/2.ttl"	,"http://ressource.brgm-rec.fr/data/Piezometre/00463X0036/H1/PZ/2");
-////		piezoToConvert.put("Piezometre/00487X0015/S1/PZ/2.ttl","http://ressource.brgm-rec.fr/data/Piezometre/00487X0015/S1/PZ/2");
-////		piezoToConvert.put("Piezometre/00636X0020/P/PZ/2.ttl"	,"http://ressource.brgm-rec.fr/data/Piezometre/00636X0020/P/PZ/2");
-////		piezoToConvert.put("Piezometre/06288X0096/SB/PZ/2.ttl"	,"http://ressource.brgm-rec.fr/data/Piezometre/06288X0096/SB/PZ/2");
-////		piezoToConvert.put("Piezometre/06987A0186/S/PZ/2.ttl","http://ressource.brgm-rec.fr/data/Piezometre/06987A0186/S/PZ/2");
-////		piezoToConvert.put("Piezometre/06993X0087/F6/PZ/2.ttl","http://ressource.brgm-rec.fr/data/Piezometre/06993X0087/F6/PZ/2");
-//
-//		try {
-//			
-//			for (String piezo : piezoToConvert.keySet()) {
-//				Map<QName,Mapper> mappers = new HashMap<QName,Mapper>();
-//				WFS2Parser mp=new WFS2Parser();
-//				Context ctx=new Context();
-//
-//				InputStream in= doGet(piezoToConvert.get(piezo));
-//				//mp.doParse(in, ctx);
-//				mp.getCapabilities(piezoToConvert.get(piezo), ctx);
-//				piezo=piezo.replace("/", "_");
-//				ctx.exportTtl(fileExport+piezo);				
-//			}
-//			
-//			//System.out.println(in);
-//		} catch (Exception e) {
-//			// TODO: handle exception
-//			throw new RuntimeException(e);
-//		}
-//	}
+	//	public static void main(String[] args) throws Exception {
+	//		// Default conversion
+	//		String fileExport="C:/Users/A631207/Documents/my_resources/";
+	//		String fileData="src/main/resources/wfs_response.xml";
+	//		
+	//		Map <String,String> piezoToConvert= new HashMap <String,String>();
+	//		piezoToConvert.put("geoservices_rem_napp_socl.ttl"	,"http://ids.craig.fr/wxs/public/wfs?request=getCapabilities&version=2.0.0");
+	////			piezoToConvert.put("geoservices_rem_napp_socl.ttl"	,"http://localhost:8081/geoserver/hanane_workspace/ows?service=WFS&version=2.0.0&request=GetFeature&typeName=hanane_workspace:regions_nouvelles_rest");
+	//	//piezoToConvert.put("geoservices_rem_napp_socl.ttl"	,"http://ids.craig.fr/wxs/public/wfs?request=getfeature&version=2.0.0&typename=public:ARDTA_PNR_2015_GEOFLA");
+	////		piezoToConvert.put("Piezometre/00463X0036/H1/PZ/2.ttl"	,"http://ressource.brgm-rec.fr/data/Piezometre/00463X0036/H1/PZ/2");
+	////		piezoToConvert.put("Piezometre/00487X0015/S1/PZ/2.ttl","http://ressource.brgm-rec.fr/data/Piezometre/00487X0015/S1/PZ/2");
+	////		piezoToConvert.put("Piezometre/00636X0020/P/PZ/2.ttl"	,"http://ressource.brgm-rec.fr/data/Piezometre/00636X0020/P/PZ/2");
+	////		piezoToConvert.put("Piezometre/06288X0096/SB/PZ/2.ttl"	,"http://ressource.brgm-rec.fr/data/Piezometre/06288X0096/SB/PZ/2");
+	////		piezoToConvert.put("Piezometre/06987A0186/S/PZ/2.ttl","http://ressource.brgm-rec.fr/data/Piezometre/06987A0186/S/PZ/2");
+	////		piezoToConvert.put("Piezometre/06993X0087/F6/PZ/2.ttl","http://ressource.brgm-rec.fr/data/Piezometre/06993X0087/F6/PZ/2");
+	//
+	//		try {
+	//			
+	//			for (String piezo : piezoToConvert.keySet()) {
+	//				Map<QName,Mapper> mappers = new HashMap<QName,Mapper>();
+	//				WFS2Parser mp=new WFS2Parser();
+	//				Context ctx=new Context();
+	//
+	//				InputStream in= doGet(piezoToConvert.get(piezo));
+	//				//mp.doParse(in, ctx);
+	//				mp.getCapabilities(piezoToConvert.get(piezo), ctx);
+	//				piezo=piezo.replace("/", "_");
+	//				ctx.exportTtl(fileExport+piezo);				
+	//			}
+	//			
+	//			//System.out.println(in);
+	//		} catch (Exception e) {
+	//			// TODO: handle exception
+	//			throw new RuntimeException(e);
+	//		}
+	//	}
 	public static InputStream doGet(String getUrl) throws ClientProtocolException, IOException
 	{
 		HttpClient client = HttpClientBuilder.create().build();
@@ -206,11 +207,117 @@ public class Context {
 		HttpResponse response = client.execute(request);
 
 		System.out.println("Response Code : " 
-	                + response.getStatusLine().getStatusCode());
+				+ response.getStatusLine().getStatusCode());
 
 		return response.getEntity().getContent();
-//		 InputStream in = new FileInputStream("src/main/resources/wfs_response.xml");
-//		 return in;
+		//		 InputStream in = new FileInputStream("src/main/resources/wfs_response.xml");
+		//		 return in;
 	}
-	
+
+	public boolean exportTS(Repository target, java.net.URI targetGraph, java.net.URI baseUri, String targetType) {
+		final UriBuilder uriBuilder = Configuration.getDefault()
+				.getBean(UriBuilder.class);
+		final RepositoryConnection cnx = target.newConnection();
+		org.openrdf.model.URI ctx = null;
+
+		try {
+			final ValueFactory vf =
+					new UriCachingValueFactory(cnx.getValueFactory());
+
+			// Clear target named graph, if any.
+			if (targetGraph != null) {
+				ctx = vf.createURI(targetGraph.toString());
+				cnx.clear(ctx);
+			}
+			// Create URIs for subjects and predicates.
+			if (baseUri == null) {
+				baseUri = targetGraph;
+			}
+			String sbjUri  = RdfUtils.getBaseUri((baseUri != null)? baseUri.toString(): null, '/');
+			//"http://localhost:9091/initkiosques/regions-nouvelles-shp/";
+
+			String typeUri = RdfUtils.getBaseUri((baseUri != null)? baseUri.toString(): null, '#');
+			//"http://localhost:9091/initkiosques/regions-nouvelles-shp#";
+
+
+			org.openrdf.model.URI rdfType = null;
+			try {
+				// Assume target type is an absolute URI.
+				rdfType = vf.createURI(targetType);
+			}
+			catch (Exception e) {
+				// Oops, targetType is a relative URI. => Append namespace URI.
+				rdfType = vf.createURI(typeUri, targetType);
+			}
+
+			long startTime = System.currentTimeMillis();
+			long duration = -1L;
+			long statementCount = 0L;
+			int  batchSize = Env.getRdfBatchSize();
+
+			try {
+				// Prevent transaction commit for each triple inserted.
+				cnx.begin();
+			}
+			catch (RepositoryException e) {
+				throw new RuntimeException("RDF triple insertion failed", e);
+			}
+
+			for (Statement at:model){
+				try {
+					cnx.add(at, ctx);
+
+					// Commit transaction according to the configured batch size.
+					statementCount++;
+					if ((statementCount % batchSize) == 0) {
+						cnx.commit();
+						cnx.begin();
+					}
+				}
+				catch (RepositoryException e) {
+					throw new RuntimeException("RDF triple insertion failed", e);
+				}
+			}
+			try {
+				cnx.commit();
+				duration = System.currentTimeMillis() - startTime;
+			}
+			catch (RepositoryException e) {
+				throw new RuntimeException("RDF triple insertion failed", e);
+
+			}
+
+			log.info("Inserted {} RDF triples into <{}> in {} seconds",
+					wrap(statementCount), targetGraph,
+					wrap(asSeconds(duration)));
+		}
+		catch (TechnicalException e) {
+			throw e;
+
+		}
+
+		catch (Exception e) {
+			try {
+				// Forget pending triples.
+				cnx.rollback();
+				// Clear target named graph, if any.
+				if (ctx != null) {
+					cnx.clear(ctx);
+				}
+			}
+			catch (Exception e2) { /* Ignore... */ }
+
+			throw new TechnicalException("wfs.conversion.failed", e);
+		}
+		finally {
+			// Commit pending data (including graph removal in case of error).
+			try { cnx.commit(); } catch (Exception e) { /* Ignore... */}
+			// Close repository connection.
+			try { cnx.close();  } catch (Exception e) { /* Ignore...  */}
+		}			
+		return true; //other cases to be handled later...
+
+
+	}
+
 }
