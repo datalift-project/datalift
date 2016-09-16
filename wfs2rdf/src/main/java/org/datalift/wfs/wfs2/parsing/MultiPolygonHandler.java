@@ -29,7 +29,7 @@ public class MultiPolygonHandler extends DefaultHandler{
 	private SAXParser parser;
     private GeoHandler fHandler;
     private Stack <ComplexFeature> fpile;
-    private Stack<ComplexFeature> stack = new Stack<>();
+    private Stack<ComplexFeature> stack = new Stack<ComplexFeature>();
     private String localNameRetrieved;
     private List <String> multiPolygoneParts= new ArrayList<String>();
     

@@ -2,9 +2,6 @@ package org.datalift.wfs.wfs2.mapping;
 
 
 
-
-import javax.xml.datatype.DatatypeFactory;
-import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.namespace.QName;
 
 import org.datalift.model.ComplexFeature;
@@ -17,16 +14,6 @@ import org.openrdf.model.Resource;
 
 public class BaseMapper implements Mapper {
 	
-	private final static DatatypeFactory df;
-	
-	static {
-		try {
-			df = DatatypeFactory.newInstance();
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
 	
 	boolean alreadyLinked=false;
 	protected boolean ignore(ComplexFeature f)
@@ -37,7 +24,7 @@ public class BaseMapper implements Mapper {
 	protected boolean isEmpty(ComplexFeature f)
 	{
 		boolean empty=false;
-		if(f.value==null)
+		if(f.value==null || f.value.equals(""))
 			{
 				empty=true;
 			}
@@ -48,40 +35,6 @@ public class BaseMapper implements Mapper {
 			}
 		}
 		return empty;
-	}
-
-
-	protected XMLGregorianCalendar getDate(String value) {
-		if(value==null) return null;
-		XMLGregorianCalendar d = df.newXMLGregorianCalendar(value);
-		return d;
-		/*new ValueFactoryImpl().createLiteral(d);
-		
-		if(value==null) return null;
-		Date dob=null;
-		DateFormat df=new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss.SSX");
-		try {
-			dob=df.parse( value );
-			GregorianCalendar cal = new GregorianCalendar();
-			cal.setTime(dob);
-			XMLGregorianCalendar xmlDate2 = DatatypeFactory.newInstance().newXMLGregorianCalendar(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH)+1, cal.get(Calendar.DAY_OF_MONTH), dob.getHours(),dob.getMinutes(),dob.getSeconds(),DatatypeConstants.FIELD_UNDEFINED, cal.getTimeZone().LONG).normalize();
-			return xmlDate2;
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			df=new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ssX");
-			try {
-				dob=df.parse(value);
-				GregorianCalendar cal = new GregorianCalendar();
-				cal.setTime(dob);
-				XMLGregorianCalendar xmlDate2 = DatatypeFactory.newInstance().newXMLGregorianCalendar(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH)+1, cal.get(Calendar.DAY_OF_MONTH), dob.getHours(),dob.getMinutes(),dob.getSeconds(),DatatypeConstants.FIELD_UNDEFINED, cal.getTimeZone().LONG).normalize();
-				return xmlDate2;
-			} catch (Exception e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
-			
-		}
-		return null;*/
 	}
 
 
@@ -146,7 +99,7 @@ public class BaseMapper implements Mapper {
 			if(! (a instanceof ComplexFeature) && !a.name.equals(SosConst.frame))
 			{
 				
-				if(a.getTypeName().equals(Const.bool) && !a.name.equals(Const.owns) && !a.name.equals(Const.nil))
+				if(a.getTypeName().equals(Const.xsdBoolan) && !a.name.equals(Const.owns) && !a.name.equals(Const.nil))
 				{
 					boolean value=Boolean.valueOf(a.value);
 					ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.vf.createURI(ctx.nsDatalift+a.name.getLocalPart()), ctx.vf.createLiteral(value)));
@@ -175,11 +128,9 @@ public class BaseMapper implements Mapper {
 				{
 					String value=a.value;
 					ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.vf.createURI(ctx.nsDcTerms+"title"), ctx.vf.createLiteral(value)));
-				} 
-	
+				} 	
 			}
 		}
-		
 	}
 	protected boolean isIntermediateFeature(ComplexFeature cf)
 	{
@@ -236,10 +187,9 @@ public class BaseMapper implements Mapper {
 		for (Attribute a : cf.itsAttr) {
 			if (a instanceof ComplexFeature) {
 				ComplexFeature f = (ComplexFeature)a;
-				ctx.getMapper(f.getTypeName()).map(f, ctx);
+				ctx.getMapper(f.getTypeName()).map(f, ctx); 
 			}
 		}
-
 		this.mapFeatureSimpleAttributes(cf, ctx);
 		
 	}

@@ -34,4 +34,20 @@ public class Attribute {
 		}
 		return null; // i didn't find any type! i will return null :/ 
 	}
+	
+	public QName getBaseTypeName()
+	{	
+		XSTypeDefinition type=attrType;
+		if(type==null)
+			{
+			return null;
+			}
+		type=type.getBaseType();
+		if(type.getName()!=null) 
+			{
+			return new QName(type.getNamespace(),type.getName());
+			}
+		return null; // i didn't find any type! 
+	}
+
 }

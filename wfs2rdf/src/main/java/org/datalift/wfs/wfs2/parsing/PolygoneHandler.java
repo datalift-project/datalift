@@ -24,7 +24,7 @@ public class PolygoneHandler extends DefaultHandler{
     private SAXParser parser;
     private GeoHandler fHandler;
     private Stack <ComplexFeature> fpile;
-    private Stack<ComplexFeature> stack = new Stack<>();
+    private Stack<ComplexFeature> stack = new Stack<ComplexFeature>();
     private String localNameRetrieved;
     private List <String> polygoneParts= new ArrayList<String>();
 	private StringBuilder currentCoordinateValues= new StringBuilder();

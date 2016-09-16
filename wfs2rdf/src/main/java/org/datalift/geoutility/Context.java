@@ -9,27 +9,23 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.rmi.server.ExportException;
+
 import java.util.ArrayList;
-import java.util.Collections;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
 
 import javax.xml.namespace.QName;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 
-import org.apache.http.HttpEntity;
+
+
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.impl.client.DefaultHttpClient;
+
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.log.Logger;
@@ -40,18 +36,12 @@ import org.datalift.fwk.util.Env;
 import org.datalift.fwk.util.UriBuilder;
 import org.datalift.model.Const;
 import org.datalift.wfs.TechnicalException;
-import org.datalift.wfs.wfs2.mapping.AnyTypeMapper;
 import org.datalift.wfs.wfs2.mapping.AnyURIMapper;
 import org.datalift.wfs.wfs2.mapping.BaseMapper;
-import org.datalift.wfs.wfs2.mapping.CodeListMapper;
-import org.datalift.wfs.wfs2.mapping.EmfMapper;
 import org.datalift.wfs.wfs2.mapping.GeomMapper;
 import org.datalift.wfs.wfs2.mapping.Mapper;
 import org.datalift.wfs.wfs2.mapping.MobileMapper;
-import org.datalift.wfs.wfs2.mapping.ObservationPropertyTypeMapper;
-import org.datalift.wfs.wfs2.mapping.ReferenceTypeMapper;
-import org.datalift.wfs.wfs2.mapping.StringOrRefTypeMapper;
-import org.datalift.wfs.wfs2.mapping.TimePeriodMapper;
+import org.datalift.wfs.wfs2.mapping.SimpleTypeMapper;
 import org.openrdf.model.Model;
 import org.openrdf.model.Resource;
 import org.openrdf.model.Statement;
@@ -59,7 +49,6 @@ import org.openrdf.model.URI;
 import org.openrdf.model.ValueFactory;
 import org.openrdf.model.impl.LinkedHashModel;
 import org.openrdf.model.impl.ValueFactoryImpl;
-import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
 import org.openrdf.rio.RDFFormat;
@@ -67,11 +56,6 @@ import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.Rio;
 
 
-import com.sun.xml.internal.txw2.Document;
-
-import fr.ign.datalift.model.AbstractFeature;
-import fr.ign.datalift.model.FeatureProperty;
-import fr.ign.datalift.model.GeometryProperty;
 
 public class Context {
 
@@ -84,7 +68,7 @@ public class Context {
 	public Map<QName, Integer> hm;
 	public Map<String, Resource> codeListOccurences;
 	/*****registred mappers and code list****/
-	public static Map<QName,Mapper> mappers = new HashMap<QName,Mapper>();
+	public Map<QName,Mapper> mappers = new HashMap<QName,Mapper>();
 	public static List <String>registredCodeList = new ArrayList<String>();
 	//*******ns******//
 	public static final String nsDatalift = "http://www.datalift.org/ont/inspire#";
@@ -105,10 +89,10 @@ public class Context {
 	public static final QName referencedCodeListType=new QName(nsDatalift, "ReferencedCodeList");
 	public static final QName observationType=new QName(nsOml, "Observation");
 	public URI rdfTypeURI;
-	static {
-		mappers.put(null, new BaseMapper());
-		mappers.put(new QName("geometry"),new GeomMapper());
-	}
+//	static {
+//		mappers.put(null, new BaseMapper());
+//		mappers.put(new QName("geometry"),new GeomMapper());
+//	}
 	public Context()
 	{
 		hm=new HashMap <QName,Integer>();
@@ -130,6 +114,18 @@ public class Context {
 		model.setNamespace("smod", nsSmod);
 		rdfTypeURI=vf.createURI(nsRDF2+"type");
 		DefaultSubjectURI=vf.createURI(nsProject+"root");
+		/***Initialize default mappers****/
+		Mapper m=new SimpleTypeMapper();
+		mappers.put(null, new BaseMapper());
+		mappers.put(new QName("geometry"),new GeomMapper());
+		mappers.put(Const.string, m);
+		mappers.put(Const.xsdDate, m);
+		mappers.put(Const.xsdDouble, m);
+		mappers.put(Const.xsdFloat, m);
+		mappers.put(Const.xsdInteger, m);
+		mappers.put(Const.xsdDecimal, m);
+		mappers.put(Const.xsdBoolan,new MobileMapper());
+		mappers.put(Const.anyURI,new AnyURIMapper());
 	}
 
 	public Mapper getMapper(QName type) {

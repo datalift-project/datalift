@@ -142,6 +142,7 @@ public class Wfstordf extends BaseConverterModule{
 		String source=o.get("source").getAsString();
 		int optionGraph= Integer.parseInt(o.get("graphOption").getAsString());
 		int optionOntology= Integer.parseInt(o.get("ontologyOption").getAsString());
+		boolean optionWGS84= Boolean.valueOf((o.get("convertSrsOption").getAsString()));
 		if(isSet(project) && isSet(source))
 		{	Project p=null;
 		// Retrieve project
@@ -169,11 +170,11 @@ public class Wfstordf extends BaseConverterModule{
 				String destination_title=typeName+"(RDF# )"+countGraph; //count to be added later
 				if(s.getVersion().equals("2.0.0"))
 				{
-					convertFeatureTypeToRdf2(projectUri,s, destination_title, targetGraph, baseUri, targetType,typeName,optionOntology );
+					convertFeatureTypeToRdf2(projectUri,s, destination_title, targetGraph, baseUri, targetType,typeName,optionOntology, optionWGS84 );
 				}
 				else
 				{
-					convertFeatureTypeToRdf(projectUri,s, destination_title, targetGraph, baseUri, targetType,typeName );
+					convertFeatureTypeToRdf(projectUri,s, destination_title, targetGraph, baseUri, targetType,typeName,optionWGS84 );
 				}
 				System.out.println("done for "+typeName);
 				// Register new transformed RDF source.
@@ -269,10 +270,18 @@ public class Wfstordf extends BaseConverterModule{
 		}
 	}
 	private boolean convertFeatureTypeToRdf(URI projectUri, WfsSource s, String destination_title, URI targetGraph,
-			URI baseUri, String targetType, String typeName) {
+			URI baseUri, String targetType, String typeName, boolean optionWGS84) {
 		try {
 			WfsParser parser=new WfsParser(s.getSourceUrl(),s.getVersion(),s.getserverTypeStrategy());
-			ArrayList<AbstractFeature> featuresToConvert=parser.loadFeature(typeName);
+			ArrayList<AbstractFeature> featuresToConvert;
+			if (optionWGS84)
+			{
+				featuresToConvert=parser.loadFeature(typeName);
+			}
+			else
+			{
+				featuresToConvert=parser.loadFeature(typeName);
+			}
 			if (featuresToConvert==null || featuresToConvert.size()==0) 
 				{
 					return false; //in this case, there is no features in this feature type!!!
@@ -407,10 +416,15 @@ private List<FeatureTypeDescription> getfeatureTypeDescription2(String sourceUrl
 
 }
 private boolean convertFeatureTypeToRdf2(URI projectUri, WfsSource s, String destination_title, URI targetGraph,
-		URI baseUri, String targetType, String typeName, int ontologyOption) throws SAXException, ParserConfigurationException {
+		URI baseUri, String targetType, String typeName, int ontologyOption, boolean covertSrs) throws SAXException, ParserConfigurationException {
 	try {
+		String srs=null;
+		if(covertSrs)
+		{
+			srs="EPSG:4326";
+		}
 		WFS2Client client=new WFS2Client(s.getSourceUrl());
-		client.getFeatureType(typeName);
+		client.getFeatureType(typeName,srs);
 		//return a list of parsed features contained in typeName
 		ComplexFeature featureCollectionToConvert=client.getFeatureCollection(typeName);
 

@@ -120,7 +120,9 @@ public class Handler extends DefaultHandler {
 	@Override
     public void endElement(String uri, String localName, String qName) throws SAXException {
       
-    	//if(pile.size()!=0)
+    	boolean found;
+		if(localName.equals("FeatureCollection")) 
+    		found =true;
 		if(!stack.isEmpty())
     	{
     		ComplexFeature lastcurrentElt=stack.peek();
@@ -131,7 +133,9 @@ public class Handler extends DefaultHandler {
     		if(currentQname.equals(lastcurrentElt.name))
     		{
    			 if (stack.size()==1)
-    			tmpList.add(lastcurrentElt);
+    			{
+   				 tmpList.add(lastcurrentElt);
+    			}
    			 stack.pop();
     		 //pile.remove(pile.size()-1);
     		}

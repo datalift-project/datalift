@@ -18,7 +18,7 @@ public class Const {
 	public static  QName ReferenceType= new QName("http://www.opengis.net/gml/3.2","ReferenceType");
 	public static  QName hrefType= new QName("http://www.w3.org/1999/xlink","hrefType");
 	public static  QName titleAttrType= new QName("http://www.w3.org/1999/xlink","titleAttrType");
-	public static  QName bool= new QName("http://www.w3.org/2001/XMLSchema","boolean");
+	public static  QName xsdBoolan= new QName("http://www.w3.org/2001/XMLSchema","boolean");
 	
 	public static  QName AbstractMemberType= new QName("http://www.opengis.net/gml/3.2","AbstractMemberType");
 	
@@ -163,6 +163,14 @@ public class Const {
 	public static QName MultiSurface= new QName("http://www.opengis.net/gml/3.2","MultiSurface");
 	public static QName MultiSurfaceType= new QName("http://www.opengis.net/gml/3.2","MultiSurfaceType");
 	public static QName SurfacePropertyType=new QName("http://www.opengis.net/gml/3.2","SurfacePropertyType");
+	
+	/****Simple types*****/
+	public static QName xsdDouble= new QName("http://www.w3.org/2001/XMLSchema","double");
+	public static QName xsdInteger= new QName("http://www.w3.org/2001/XMLSchema","integer");
+	public static QName xsdDecimal= new QName("http://www.w3.org/2001/XMLSchema","decimal");
+	public static QName xsdFloat= new QName("http://www.w3.org/2001/XMLSchema","float");
+	public static QName xsdDate= new QName("http://www.w3.org/2001/XMLSchema","date");
+
 
 
 }

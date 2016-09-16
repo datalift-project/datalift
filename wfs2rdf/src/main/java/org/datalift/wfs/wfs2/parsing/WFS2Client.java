@@ -45,12 +45,21 @@ public class WFS2Client {
 	//		WFS2Parser mp=new WFS2Parser("http://geoservices.brgm.fr/risques?service=WFS&version=1.1.0&request=getCapabilities");
 	//		mp.doParse(mp.url);
 	//	}
-	public void getFeatureType(String FeatureName) throws ClientProtocolException, IOException, SAXException, ParserConfigurationException
+	public void getFeatureType(String FeatureName, String srs) throws ClientProtocolException, IOException, SAXException, ParserConfigurationException
 	{
-		Store ds=cache.get(url);
+		Store ds=null;
+				//cache.get(url); url is not a suitbale key (should think about a proper key including options (srs)
 		if(ds==null || ds.getFtParsed.size()==0)
-		{
-			List<ComplexFeature> ft=parser.doParse(url+"?service=wfs&request=getFeature&typename="+FeatureName);
+		{ 
+			List<ComplexFeature> ft;
+			if(srs!=null)
+			{
+				ft=parser.doParse(url+"?service=wfs&version=2.0.0&request=getFeature&typename="+FeatureName+"&srsName="+srs);
+			}
+			else
+			{
+				ft=parser.doParse(url+"?service=wfs&version=2.0.0&request=getFeature&typename="+FeatureName);
+			}
 			if(ds==null)
 			{
 				ds=new Store();

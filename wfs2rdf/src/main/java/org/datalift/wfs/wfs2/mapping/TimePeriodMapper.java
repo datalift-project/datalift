@@ -7,6 +7,7 @@ import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.datalift.model.ComplexFeature;
 import org.datalift.geoutility.Context;
+import org.datalift.geoutility.Helper;
 import org.datalift.model.Attribute;
 import org.datalift.model.Const;
 import org.datalift.model.SosConst;
@@ -23,7 +24,7 @@ public class TimePeriodMapper extends BaseMapper{
 		for (Attribute a : cf.itsAttr) {
 			if (a instanceof ComplexFeature) {
 				ComplexFeature position=(ComplexFeature) a;
-				XMLGregorianCalendar d=getDate(position.value);
+				XMLGregorianCalendar d=Helper.getDate(position.value);
 				if(d!=null)
 				{
 					Value v5=ctx.vf.createLiteral(d);

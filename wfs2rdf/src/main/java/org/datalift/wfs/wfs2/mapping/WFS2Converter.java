@@ -19,11 +19,9 @@ public class WFS2Converter {
 	public WFS2Converter(int i)
 	{
 		ctx=new Context();
-		if(i==1) //we assume taht 1 is the id to say we shoul use EMF group mappers
+		if(i==1) //we assume that 1 is the id to say we should use EMF group mappers
 		{
-			Mapper m=new StringOrRefTypeMapper();
-			ctx.mappers.put(new QName("geometry"),new GeomMapper());
-			ctx.mappers.put(Const.string, m);
+			Mapper m=new SimpleTypeMapper();
 			ctx.mappers.put(Const.StringOrRefType, m);
 			ctx.mappers.put(Const.ReferenceType, new ReferenceTypeMapper());
 			ctx.mappers.put(Const.EnvironmentalMonitoringFacilityType, new EmfMapper());
@@ -32,10 +30,7 @@ public class WFS2Converter {
 			ctx.mappers.put(Const.anyType,m2);
 			ctx.mappers.put(Const.AbstractMemberType,m2);
 			ctx.mappers.put(Const.OM_ObservationPropertyType,new ObservationPropertyTypeMapper());
-			ctx.mappers.put(Const.bool,new MobileMapper());
-			ctx.mappers.put(Const.anyURI,new AnyURIMapper());
 			ctx.mappers.put(Const.inspireCodeList,new CodeListMapper());
-
 		}
 	}
 	public void ConvertFeaturesToRDF(ComplexFeature fc, org.datalift.fwk.rdf.Repository target , URI targetGraph, URI baseUri, String targetType)
@@ -51,6 +46,7 @@ public class WFS2Converter {
 						{
 							ComplexFeature ef =(ComplexFeature)aa;
 							ctx.getMapper(ef.getTypeName()).map(ef, ctx);
+							
 						}
 					}
 				}

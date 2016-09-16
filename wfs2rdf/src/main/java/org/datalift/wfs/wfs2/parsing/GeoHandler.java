@@ -18,8 +18,11 @@ import org.datalift.model.Const;
 import org.datalift.model.Feature;
 import org.datalift.model.Attribute;
 import org.datalift.model.MyGeometry;
+import org.geotools.factory.Hints;
 import org.geotools.geometry.jts.JTS;
 import org.geotools.geometry.jts.JTSFactoryFinder;
+import org.geotools.geometry.jts.WKTReader2;
+
 import com.vividsolutions.jts.geom.Point;
 import org.geotools.referencing.CRS;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
@@ -57,59 +60,12 @@ public class GeoHandler  extends DefaultHandler{
 	    	this.tmp=new ComplexFeature();
 	    } 
 		
-		
+
 		
 		@Override
 		public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
-			
-			if(goBack)
-				{
-				GeometryFactory geometryFactory = JTSFactoryFinder.getGeometryFactory( null );
-				WKTReader reader = new WKTReader( geometryFactory );
-				try {
-					vg =  reader.read(g.WKT);
-					String code  = "4326"; //default srs
-					if(g.SRS!=null) 
-						{
-							code=g.SRS;
-						}
-					vg.setSRID(Integer.parseInt(code));
-					fpile.peek().geom=g;
-//					if(localNameRetrieved.equals(Const.representativePoint.getLocalPart() || (fpile.peek().vividgeom)))
-//					{ i
-//						
-//					}
-					if(fpile.peek().vividgeom==null)
-					{
-						fpile.peek().vividgeom=vg;
-					}
-					else
-					{
-						if(vg.getGeometryType().equals("Point"))
-						{
-							fpile.peek().representativePoint=(Point) vg;
-						}
-					}
-//					CoordinateReferenceSystem sourceCRS = CRS.decode("EPSG:"+vg.getSRID());
-//					CoordinateReferenceSystem targetCRS = CRS.decode("EPSG:2154");
 
-					/*MathTransform transform = CRS.findMathTransform(sourceCRS, targetCRS);
-					Geometry targetGeometry = JTS.transform( vg, transform);
-					System.out.println(targetGeometry.getCoordinate().toString());*/
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-					fpile.peek().vividgeom=null;
-				}
-				if(isRepPoint)
-					{
-						fpile.pop();
-					}
-				parser.getXMLReader().setContentHandler(fHandler);	
-				fHandler.startElement(uri, localName, qName,attributes);
-				}
-			else
-			{
+
 				ElementPSVI elt=psvi.getElementPSVI();
 		    	//initialize cmplx object and set its attribute
 		    	tmp = new ComplexFeature();
@@ -185,7 +141,7 @@ public class GeoHandler  extends DefaultHandler{
 		    		}
 
 		    	}
-			}
+			
 		}
 
 
@@ -195,9 +151,59 @@ public class GeoHandler  extends DefaultHandler{
 
 			if(localName.equals(localNameRetrieved)) //if we have fionished the building of geometric feature, the feature is added to pile and removed from geo_pile, so go back 
 				{
-					goBack=true;
-					fpile.pop();
-				}
+					//goBack=true;
+					//fpile.pop();
+					//geoback from here
+					
+					
+						GeometryFactory geometryFactory = JTSFactoryFinder.getGeometryFactory( null );
+						WKTReader reader = new WKTReader( geometryFactory );
+						int index=fpile.size()-2;
+						try {
+							vg =  reader.read(g.WKT);
+							String code  = "4326"; //default srs
+							if(g.SRS!=null) 
+								{
+									code=g.SRS;
+								}
+							vg.setSRID(Integer.parseInt(code));
+							
+							fpile.get(index).geom=g;
+							
+//							if(localNameRetrieved.equals(Const.representativePoint.getLocalPart() || (fpile.peek().vividgeom)))
+//							{ i
+//								
+//							}
+							if(fpile.peek().vividgeom==null)
+							{
+								fpile.get(index).vividgeom=vg;
+							}
+							else
+							{
+								if(vg.getGeometryType().equals("Point"))
+								{
+									fpile.get(index).representativePoint=(Point) vg;
+								}
+							}
+//							CoordinateReferenceSystem sourceCRS = CRS.decode("EPSG:"+vg.getSRID());
+//							CoordinateReferenceSystem targetCRS = CRS.decode("EPSG:2154");
+
+							/*MathTransform transform = CRS.findMathTransform(sourceCRS, targetCRS);
+							Geometry targetGeometry = JTS.transform( vg, transform);
+							System.out.println(targetGeometry.getCoordinate().toString());*/
+						} catch (Exception e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+							fpile.get(index).vividgeom=null;
+						}
+						if(isRepPoint)
+							{
+								fpile.pop();
+							}
+						parser.getXMLReader().setContentHandler(fHandler);	
+						fHandler.endElement(uri, localName, qName);
+						}
+				
 		}
 
 		@Override

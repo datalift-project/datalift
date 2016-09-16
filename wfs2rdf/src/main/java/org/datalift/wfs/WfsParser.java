@@ -19,6 +19,7 @@ import org.geotools.data.Query;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.data.simple.SimpleFeatureSource;
+import org.geotools.factory.Hints;
 import org.geotools.feature.FeatureCollection;
 import org.geotools.feature.FeatureIterator;
 import org.geotools.feature.type.GeometryTypeImpl;
@@ -164,6 +165,8 @@ public class WfsParser {
 			SimpleFeatureSource source = dataStore.getFeatureSource(typeName);
 			String code="";
 			Query query = new Query();
+			
+			
 			CoordinateReferenceSystem crs=source.getInfo().getCRS();
 			Iterator<ReferenceIdentifier> i = crs.getIdentifiers().iterator();
 			if(i.hasNext())

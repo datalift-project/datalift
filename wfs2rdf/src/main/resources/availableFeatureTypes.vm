@@ -42,7 +42,7 @@
 				<p><label class="control-label" for="graphe">#i18n("graph_label.option"): </label>
 				<input type="radio" name="graph_option" value="0" style="width:inherit" title="#i18n("multiple_graph.option_tooltip")" checked> #i18n("multiple_graph.option")
 				<input type="radio" disabled name="graph_option" value="1" style="width:inherit" title="#i18n("unique_graph.option_tooltip")"> #i18n("unique_graph.option")			
-				
+				</p>
 				<p><label class="control-label" for="ontology">#i18n("ontology_label.option"): </label>
 				<!--<input type="radio" name="ontology_option" value="0" style="width:inherit" title="#i18n("default_ontology.option_tooltip")" checked> #i18n("default_ontology.option")
 				<input type="radio" disabled name="ontology_option" value="1" style="width:inherit" title="#i18n("emf_ontology.option_tooltip")"> #i18n("emf_ontology.option")			
@@ -51,6 +51,11 @@
 					<option value="0"  title="#i18n("default_ontology.option_tooltip")">#i18n("default_ontology.option")</option>
 					<option value="1"  title="#i18n("emf_ontology.option_tooltip")">#i18n("emf_ontology.option")</option>
 				</select>
+				</p>
+				<p>
+					<input type="checkbox"  id="convertSrs_option" value="WGS84" style="width:inherit" title="#i18n("convert_wgs84.option_tooltip")"> #i18n("convert_wgs84.option")
+				</p>
+				
 			
 			</div>
 		</div>
@@ -109,7 +114,8 @@ $(function() {
 				   source : $("#source").val(),
 				   values : cellValues,
 				   graphOption : $("input:radio[name='graph_option']:checked").val(),
-				   ontologyOption : $('#ontology_option').val()
+				   ontologyOption : $('#ontology_option').val(),
+				   convertSrsOption : $("#convertSrs_option").is(":checked")
 				  }),
 			 dataType : 'text',
 			 contentType : 'application/json',

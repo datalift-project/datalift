@@ -24,7 +24,7 @@ public class PolygonMemberHandler extends DefaultHandler{
     private SAXParser parser;
     private MultiPolygonHandler fHandler;
     private Stack <ComplexFeature> fpile;
-    private Stack<ComplexFeature> stack = new Stack<>();
+    private Stack<ComplexFeature> stack = new Stack<ComplexFeature>();
     private String localNameRetrieved;
     private List <String> polygoneParts= new ArrayList<String>();
     private Boolean newPart=true;

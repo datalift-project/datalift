@@ -22,7 +22,7 @@ public class PointHandler extends DefaultHandler{
     private SAXParser parser;
     private GeoHandler fHandler;
     private Stack <ComplexFeature> fpile;
-    private Stack<ComplexFeature> stack = new Stack<>();
+    private Stack<ComplexFeature> stack = new Stack<ComplexFeature>();
     private String localNameRetrieved;
     StringBuilder currentCoordinateValues= new StringBuilder();
 
