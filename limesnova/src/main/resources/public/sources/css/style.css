@@ -1,0 +1,116 @@
+/*
+** UTILS
+*/
+
+#ExportName {
+  font-size: 17px;
+}
+
+#ExportNameDiv {
+  display: none;
+  margin-top: 15px;
+}
+.btn-toolbar-centered {
+  text-align: center !important;
+}
+
+.btn-toolbar-centered .btn-group {
+  float: none !important;
+}
+
+.btn {
+  text-align: center !important;
+  margin: auto !important;
+}
+
+.input-group > .input-group-btn:last-child > .selectpicker {
+    border-top-right-radius: 5px !important;
+    border-bottom-right-radius: 5px !important;
+}
+
+.input-group > .input-group-btn:first-child > .selectpicker {
+    border-top-left-radius: 5px !important;
+    border-bottom-left-radius: 5px !important;
+}
+
+#download {
+    margin-top: 20px;
+}
+
+input {
+  text-align: left;
+}
+
+.hide {
+  display: none;
+}
+
+.display {
+  display: block;
+}
+
+.align-button {
+  padding-top: 8px;
+}
+
+.divider {
+  padding-top: 5px;
+}
+
+.metric {
+  padding-top: 20px;
+  padding-bottom: 15px
+}
+
+.prefix {
+  margin-top: 10px;
+}
+
+.acceptance, .review {
+  margin-top: 10px;
+}
+
+.target-responsive {
+  margin-top: 20px;
+}
+
+@media only screen and (min-width: 992px) {
+  .target-responsive {
+    margin-top: 0px;
+  }
+}
+
+input[name="sourceId"],
+input[name="sourceGraph"],
+input[name="sourceVar"],
+input[name="sourcePagesize"],
+input[name="targetId"],
+input[name="targetGraph"],
+input[name="targetVar"],
+input[name="targetPagesize"] {
+  margin : 2px 2px 2px 0px;
+}
+
+input[name="sourceRestriction"],
+input[name="targetRestriction"] {
+  margin : 2px 2px 2px 0px;
+}
+
+input[name="acceptanceFile"],
+input[name="acceptanceThreshold"],
+input[name="acceptanceRelation"],
+input[name="reviewFile"],
+input[name="reviewThreshold"],
+input[name="reviewRelation"] {
+  margin : 2px 2px 2px 0px;
+}
+
+textarea {
+  border: none;
+  height: 100%;
+  width: 95%;
+  padding: 5px;
+  font-family: Tahoma, sans-serif;
+  background-position: bottom right;
+  background-repeat: no-repeat;
+}

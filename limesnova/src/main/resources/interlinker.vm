@@ -1,0 +1,270 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	#load_core_resources
+	<meta http-equiv="content-type" content="text/html;charset=utf-8"/>
+	<title>Interlinker - DataLift</title>
+	<!-- CSS
+	--------------------->
+	#css_links
+	<link rel="stylesheet" href="${baseUri}/interlinker/sources/css/bootstrap.min.css">
+	<link rel="stylesheet" href="${baseUri}/interlinker/sources/css/style.css" />
+</head>
+<body>
+	<!-- BANNER
+	--------------------->
+	<div class="container">
+		#banner
+		<div id="main-menu" style="position:absolute;top:15px;right:15px;">
+			#foreach($m in $mainMenu)
+			#set($entryUrl = $m.getUrl(${baseUri}))
+			#if($m.method.name() == "GET")
+			<a href="${entryUrl}" class="button">${m.label}</a>
+			#else
+			<form method="post" action="${entryUrl}"><input type="submit" class="button" value="${m.label}"/></form>
+			#end
+			#end
+		</div>
+	</div>
+
+	<!-- CONTENT
+	--------------------->
+	<div class="container">
+		<hr class="divider">
+		<div class="btn-toolbar btn-toolbar-centered" role="toolbar">
+			<div class="btn-group" role="group">
+				<button type="button" id="reset" class="btn btn-default">Reset&ensp;<span class="glyphicon glyphicon-trash" aria-hidden="true"></span></button>
+			</div>
+			<div class="btn-group" role="group">
+				<button class="btn btn-default" onclick="$(this).parent().find('input[type=file]').click();">Load Configuration&ensp;<span class="glyphicon glyphicon-file" aria-hidden="true"></span></button>
+				<input type="file" name="loadXml" style="display: none;"/>
+				<button type="button" id="vizualize" class="btn btn-default">Vizualize&ensp;<span class="glyphicon glyphicon-eye-open" aria-hidden="true"></span></button>
+				<div class="modal fade" id="visualizeModal" role="dialog">
+					<div class="modal-dialog">
+						<div class="modal-content">
+							<div class="modal-header">
+								<button type="button" class="close" data-dismiss="modal">&times;</button>
+								<h4 class="modal-title" id='ModalExportName'>LIMES CONFIGURATION FILE</h4>
+							</div>
+							<div class="modal-body">
+								<textarea rows="50"></textarea>
+							</div>
+						</div>
+					</div>
+				</div>
+				<button type="button" id="save" class="btn btn-default">Save&ensp;<span class="glyphicon glyphicon-save" aria-hidden="true"></span></button>
+			</div>
+			<div class="btn-group back" role="group">
+				<button type="button" id="submit" class="btn btn-primary" data-loading-text="Loading...">Link&ensp;<span class="glyphicon glyphicon-upload" aria-hidden="true"></span></button>
+			</div>
+		</div>
+		<div id='ExportNameDiv' class="row text-center">
+			<p id='ExportName' class="label label-default text-center"></p>
+		</div>
+		<div class="row" id="download">
+			<div class="input-group col-md-offset-3 col-md-6">
+				<a class="input-group-addon" id="downloadFile"><span class="glyphicon glyphicon-save" aria-hidden="true"></span></a>
+				<select id="select" class="selectpicker form-control" data-live-search="true" title="Please select a lunch ...">
+					<option id="acceptance"></option>
+					<option id="review"></option>
+				</select>
+			</div>
+		</div>
+		<hr class="divider">
+		<form id="form" enctype="multipart/form-data" method="POST">
+			<div class="row vdivide">
+				<div class="col-md-6 left text-center">
+					<div class="row">
+						<div class="form-group">
+							<div class="col-xs-10 col-xs-offset-1 col-md-10 col-md-offset-1 input-group">
+								<div id="sourceType" name="sparqlEndpoint" class="input-group-addon">Endpoint&ensp;<span class="glyphicon glyphicon-globe" aria-hidden="true">&ensp;</span><span class="glyphicon glyphicon-file" aria-hidden="true"></span></div>
+								<input name="sourceEndpoint" type="text" class="form-control" style="text-align:center">
+								<div name="file" class="input-group-addon" style="font-weight:bold">&ensp;SOURCE&ensp;</span></div>
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-xs-8 col-xs-offset-2 col-sm-offset-2 col-sm-8">
+								<input type="text" name="sourceId" class="form-control" placeholder="ID" />
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-xs-8 col-xs-offset-2 col-sm-offset-2 col-sm-8">
+								<input type="text" name="sourceVar" class="form-control" placeholder="Var name">
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-xs-8 col-xs-offset-2 col-sm-offset-2 col-sm-8">
+								<input type="text" name="sourcePagesize" class="form-control" placeholder="Pagesize">
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-xs-8 col-xs-offset-2 col-sm-offset-2 col-sm-8">
+								<input type="text" name="sourceRestriction" class="form-control" placeholder="Restriction">
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-xs-8 col-xs-offset-2 col-sm-offset-2 col-sm-8">
+								<div class="input-group">
+									<input type="text" name="sourceProperties" class="form-control" placeholder="Properties" aria-describedby="sizing-addon1">
+									<span class="sourceProperties input-group-addon btn-add">+</span>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-6 right text-center">
+					<div class="row">
+						<div class="form-group">
+							<div class="col-xs-10 col-xs-offset-1 col-md-10 col-md-offset-1 input-group target-responsive">
+								<div id="targetType" name="sparqlEndpoint" class="input-group-addon">Endpoint&ensp;<span class="glyphicon glyphicon-globe" aria-hidden="true">&ensp;</span><span class="glyphicon glyphicon-file" aria-hidden="true"></span></div>
+								<input name="targetEndpoint" type="text" class="form-control" style="text-align:center">
+								<div name="file" class="input-group-addon" style="font-weight:bold">&ensp;TARGET&ensp;</div>
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-xs-8 col-xs-offset-2 col-sm-offset-2 col-sm-8">
+								<input type="text" name="targetId" class="form-control" placeholder="ID" />
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-xs-8 col-xs-offset-2 col-sm-offset-2 col-sm-8">
+								<input type="text" name="targetVar" class="form-control" placeholder="Var name">
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-xs-8 col-xs-offset-2 col-sm-offset-2 col-sm-8">
+								<input type="text" name="targetPagesize" class="form-control" placeholder="Pagesize">
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-xs-8 col-xs-offset-2 col-sm-offset-2 col-sm-8">
+								<input type="text" name="targetRestriction" class="form-control" placeholder="Restriction">
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-xs-8 col-xs-offset-2 col-sm-offset-2 col-sm-8">
+								<div class="input-group">
+									<input type="text" name="targetProperties" class="form-control" placeholder="Properties" aria-describedby="sizing-addon1">
+									<span class="targetProperties input-group-addon btn-add">+</span>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="form-group metric">
+				<label class="col-xs-1 col-xs-offset-1 col-sm-1 col-sm-offset-1 col-md-1 col-md-offset-1 col-lg-1 col-lg-offset-1" style="padding-top:7px">Metric</label>
+				<div class="col-xs-8 col-xs-offset-0 col-sm-8 col-sm-offset-0 col-md-9 col-md-offset-0 col-lg-9 col-lg-offset-0 text-center">
+					<input type="text" name="metric" class="form-control" placeholder="Metric">
+				</div>
+			</div></br>
+			<div class="col-sm-6 col-xs-6 right text-center">
+				<div class="row">
+					<div class="btn-group">
+						<span name="execution" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" href="#">Select an Execution&ensp;<span class="caret"></span></span>
+						<ul name="execution" class="dropdown-menu">
+							<li><a href="#">SIMPLE</a></li>
+							<li><a href="#">FILTER</a></li>
+						</ul>
+					</div>
+				</div>
+			</div>
+			<div class="col-sm-6 col-xs-6 right text-center">
+				<div class="row">
+					<div class="btn-group">
+						<span name="output" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" href="#">Select an Output&ensp;<span class="caret"></span></span>
+						<ul name="output" class="dropdown-menu">
+							<li><a href="#">N3</a></li>
+							<li><a href="#">TAB</a></li>
+						</ul>
+					</div>
+				</div>
+			</div></br>
+			<div class="row vdivide">
+				<div class="col-md-6 left text-center acceptance">
+					<div class="row">
+						<h4>Acceptance</h4>
+						<div class="form-group">
+							<div class="col-xs-8 col-xs-offset-2 col-sm-offset-2 col-sm-8">
+								<input type="text" name="acceptanceFile" class="form-control" placeholder="File">
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-xs-8 col-xs-offset-2 col-sm-offset-2 col-sm-8">
+								<input type="text" name="acceptanceThreshold" class="form-control" placeholder="Threshold">
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-xs-8 col-xs-offset-2 col-sm-offset-2 col-sm-8">
+								<input type="text" name="acceptanceRelation" class="form-control" placeholder="Relation">
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-6 right text-center review">
+					<div class="row">
+						<h4>Review</h4>
+						<div class="form-group">
+							<div class="col-xs-8 col-xs-offset-2 col-sm-offset-2 col-sm-8">
+								<input type="text" name="reviewFile" class="form-control" placeholder="File">
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-xs-8 col-xs-offset-2 col-sm-offset-2 col-sm-8">
+								<input type="text" name="reviewThreshold" class="form-control" placeholder="Threshold">
+							</div>
+						</div>
+						<div class="form-group">
+							<div class="col-xs-8 col-xs-offset-2 col-sm-offset-2 col-sm-8">
+								<input type="text" name="reviewRelation" class="form-control" placeholder="Relation">
+							</div>
+						</div>
+					</div>
+				</div>
+			</div><br/>
+			<div class="row text-center">
+				<div class="form-group prefix">
+					<label name="prefix" class="col-xs-3 col-xs-offset-1 col-sm-3 col-sm-offset-1 col-md-3 col-md-offset-1 col-lg-3 col-lg-offset-1 text-center align-button control-label prefix-property-0">Label</label>
+					<div class="col-xs-6 col-xs-offset-0 col-sm-6 col-sm-offset-0 col-md-6 col-md-offset-0 col-lg-6 col-lg-offset-0">
+						<div class="input-group">
+							<input type="text" name="prefixProperties" class="form-control" placeholder="Namespace" aria-describedby="sizing-addon1">
+							<span class="input-group-addon btn-add">+</span>
+						</div>
+					</div>
+				</div>
+			</div>
+		</form>
+	</div>
+</br>
+<!-- THANKS
+--------------------->
+<div class="row text-center">
+	<h5>
+		This module integrate the <a href="http://aksw.org/Projects/LIMES.html">Limes Framework</a> and works, in part, thanks to them.
+	</h5>
+</div>
+<hr class="divider">
+<!-- FOOTER
+--------------------->
+<footer class="footer">
+	<div class="container-fluid">
+		#footer
+	</div>
+</footer>
+
+<!-- SCRIPTS JS
+--------------------->
+#script_links
+<script type="text/javascript">$("input:submit, .button").button();$("button, .button").button();</script>
+<script src="${baseUri}/interlinker/sources/js/jquery.min.js"></script>
+<script type="text/javascript" src="${baseUri}/interlinker/sources/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="${baseUri}/interlinker/sources/js/notify.min.js"></script>
+<script type="text/javascript" src="${baseUri}/interlinker/sources/js/FileSaver.min.js"></script>
+<script type="text/javascript" src="${baseUri}/interlinker/sources/js/xmlWriter.js"></script>
+<script type="text/javascript" src="${baseUri}/interlinker/js/form.js"></script>
+<script type="text/javascript" src="${baseUri}/interlinker/js/createXml.js"></script>
+<script type="text/javascript" src="${baseUri}/interlinker/js/load.js"></script>
+<script type="text/javascript" src="${baseUri}/interlinker/js/main.js"></script>
+</body>
+</html>

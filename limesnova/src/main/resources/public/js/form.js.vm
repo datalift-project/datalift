@@ -1,0 +1,78 @@
+function fillFormValuesIntoArray(values) {
+  var sourceProperties = false;
+  var targetProperties = false;
+
+  $.each($('#form').serializeArray(), function(i, field) {
+    if (i === 0) {
+      values["sourceEndpoint"] = field.value;
+    } else if (field.name == "input" && i !== 0){
+      values["targetEndpoint"] = field.value;
+    } else if (field.name == "sourceProperties" && field.value !== "") {
+      if ("sourceProperties" in values) {
+        values[field.name].push(field.value);
+      } else {
+        values[field.name] = [];
+        values[field.name].push(field.value);
+      }
+    } else if (field.name == "targetProperties" && field.value !== "") {
+      if ("targetProperties" in values) {
+        values[field.name].push(field.value);
+      } else {
+        values[field.name] = [];
+        values[field.name].push(field.value);
+      }
+    } else {
+      values[field.name] = field.value;
+    }
+  });
+
+  // Load Prefixes
+  var data = $('div[class*="prefix"] > div > div > input[name="prefixProperties"]').serializeArray();
+  values["prefixProperties"] = [];
+  for (var i = 0; i < data.length; i++) {
+    if (data[i].value !== "") {
+      values["prefixProperties"].push(data[i].value);
+      values["prefixProperties"].push($('div[class*="prefix"] > label[class*="prefix-property-' + i + '"]').text());
+    }
+  }
+  // Load special form span inputs
+  values["execution"] = ($('span[name="execution"]').text());
+  values["output"] = ($('span[name="output"]').text());
+  values["sourceType"] = $("#sourceType").text();
+  values["targetType"] = $("#targetType").text();
+}
+
+
+$("#submit").click(function() {
+  var values = {};
+  var $btn = $(this);
+
+  $(this).button('loading');
+  fillFormValuesIntoArray(values);
+
+  console.log(values);
+
+  $.ajax({
+    url:'${baseUri}/interlinker/link',
+    data: JSON.stringify(values),
+    cache:false,
+    dataType:'json',
+    contentType:"application/json",
+    processData:false,
+    type:'POST',
+    success: function(data) {
+      $btn.button('reset');
+      $.notify("Process terminated well", "success");
+      $("#download").show();
+      $("#acceptance").text($("input[name='acceptanceFile']").val());
+      $("#review").text($("input[name='reviewFile']").val());
+    },
+    error: function(XMLHttpRequest, textStatus, errorThrown) {
+      $btn.button('reset');
+      $("#download").hide();
+      $.notify("Process do not ended well", "warn");
+      $.notify(textStatus + " : " + errorThrown, "error");
+      alert("Error: " + errorThrown);
+    }
+  });
+});

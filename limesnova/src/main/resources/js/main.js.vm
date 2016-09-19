@@ -1,0 +1,117 @@
+/* COMMON */
+function RemoveClassRegex(regex) {
+  return function (index, classes) {
+    return classes.split(/\s+/).filter(function (el) {return regex.test(el);}).join(' ');
+  }
+}
+
+/* VIEW FOR BOOTSTRAP DROPDOWNS */
+
+$(".dropdown-menu li a").click(function(){
+  var selText = $(this).text();
+  $(this).parents('.btn-group').find('.dropdown-toggle').html(selText+' <span class="caret"></span>');
+});
+
+/* INITIATE FIELDS AND LABELS */
+
+function labelToInput(name) {
+//name=prefix-property-0 txt=Namespace labelName=prefix
+  $(document).on("click", "label." + name, function () {
+    console.log("LABEL");
+    var txt = $("." + name).text();
+
+    $("." + name).replaceWith("<input class='" + name + " col-xs-3 col-xs-offset-1 col-sm-3 col-sm-offset-1 col-md-3 col-md-offset-1 col-lg-3 col-lg-offset-1 text-center' style='border: 1px solid #000000' />");
+    $("." + name).val(txt);
+    $("." + name).focus();
+  });
+  $(document).on("blur", "input." + name, function () {
+    var txt = $(this).val();
+    $(this).replaceWith("<label name=\"prefix\" class='col-xs-3 col-xs-offset-1 col-sm-3 col-sm-offset-1 col-md-3 col-md-offset-1 col-lg-3 col-lg-offset-1 text-center align-button control-label " + name + "'></label>");
+    $("." + name).text(txt);
+    $("." + name).parent().find('input[name="prefixProperties"]').attr("label", txt);
+  });
+}
+
+function multipleFields(name) {
+  $(document).on('click', ".btn-add", function (event) {
+    event.preventDefault();
+    var field = $(this).closest('.form-group');
+
+    if (field.find('input').attr("name") == name + "Properties") {
+      var field_new = field.clone();
+
+      $(this)
+      .toggleClass('btn-default')
+      .toggleClass('btn-add')
+      .toggleClass('btn-remove')
+      .html('–');
+
+      if (field.find('input').attr("name") == "prefixProperties") {
+        field_new.find('label').removeClass(RemoveClassRegex(/property/));
+        field_new.find('label').addClass(name + "-property-" + $("input[name='" + name + "Properties']").length);
+        field_new.find('input').val('');
+        field_new.find('label').html("Label");
+        field_new.insertAfter(field);
+        labelToInput(name + "-property-" + ($("input[name='" + name + "Properties']").length - 1));
+      } else {
+        field_new.find('input').val('');
+        field_new.find('label').html(field.find('label').text());
+        field_new.insertAfter(field);
+      }
+    }
+  });
+
+  $(document).on('click', ".btn-remove", function (event) {
+    event.preventDefault();
+    $(this).closest('.form-group').remove();
+
+    $('div[class*="prefix"] > label').each(function(i, obj) {
+      $(this).removeClass(RemoveClassRegex(/prefix-property/)).addClass("prefix-property-" + i);
+    });
+  });
+}
+
+function validURL(textval) {
+  var urlregex = /^(https?|ftp):\/\/(((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:)*@)?(((\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5]))|((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?)(:\d*)?)(\/((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)+(\/(([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)*)*)?)?(\?((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|[\uE000-\uF8FF]|\/|\?)*)?(\#((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|\/|\?)*)?$/;
+  return urlregex.test(textval);
+}
+
+function handleEndpointsType(endpointProperty, displayProperty) {
+  $(endpointProperty).blur(function() {
+    var text = $(endpointProperty).val();
+
+    if (text.substr(text.length - 4) == ".csv") {
+      $(displayProperty).text("CSV");
+    } else if (text.substr(text.length - 4) == ".ttl") {
+      $(displayProperty).text("TURTLE");
+    } else if (text.substr(text.length - 3) == ".n3") {
+      $(displayProperty).text("N-TRIPLE");
+    } else if (validURL(text) === true) {
+      $(displayProperty).text("SPARQL");
+    } else {
+      $(displayProperty).text("Format not recognized");
+    }
+  });
+}
+
+$("#downloadFile").click(function(event) {
+  if ($('#select').find(":selected").text() === $("#acceptance").text()) {
+    window.location = "{baseUri}/interlinker/download/acceptance"
+  } else {
+    window.location = "{baseUri}/interlinker/download/review"
+  }
+});
+
+
+$(document).ready(function() {
+
+  $("#download").hide();
+
+  multipleFields("source");
+  multipleFields("target");
+  multipleFields("prefix");
+  handleEndpointsType("input[name='sourceEndpoint']","#sourceType");
+  handleEndpointsType("input[name='targetEndpoint']","#targetType");
+  labelToInput("prefix-property-0");
+
+});

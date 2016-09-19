@@ -1,0 +1,131 @@
+class CreateXml {
+
+  constructor() {
+    this.conf = new XMLWriter('UTF-8');
+    this.conf.writeStartDocument();
+    this.conf.writeDocType('"limes.dtd"');
+    this.createConfiguration();
+  }
+
+  getConfiguration() {
+    return this.conf.flush();
+  }
+
+  createConfiguration() {
+    this.conf.writeStartElement('LIMES');
+    this.Prefixes();
+    this.SourceEndpoint();
+    this.TargetEndpoint();
+    this.conf.writeElementString('METRIC', $('input[name="metric"]').val());
+    this.Acceptance();
+    this.Review();
+    this.conf.writeElementString('EXECUTION', $('span[name="execution"]').text());
+    this.conf.writeElementString('OUTPUT', $('span[name="output"]').text());
+    this.conf.writeEndElement();
+    this.conf.writeEndDocument();
+  }
+
+  Prefixes() {
+    var data = $('div[class*="prefix"] > div > div > input[name="prefixProperties"]').serializeArray();
+
+    for (var i = 0; i < data.length; i++) {
+      if (data[i].value !== "") {
+        this.conf.writeStartElement('PREFIX');
+        this.conf.writeElementString('NAMESPACE', data[i].value);
+        this.conf.writeElementString('LABEL', $('div[class*="prefix"] > label[class*="prefix-property-' + i + '"]').text());
+        this.conf.writeEndElement();
+      }
+    }
+  }
+
+  SourceEndpoint() {
+    this.conf.writeStartElement('SOURCE');
+    this.conf.writeElementString('ENDPOINT', $('input[name="sourceEndpoint"]').val());
+    this.conf.writeElementString('ID', $('input[name="sourceId"]').val());
+    this.conf.writeElementString('VAR', $('input[name="sourceVar"]').val());
+    this.conf.writeElementString('PAGESIZE', $('input[name="sourcePagesize"]').val());
+    this.conf.writeElementString('RESTRICTION', $('input[name="sourceRestriction"]').val());
+    var data = $('input[name="sourceProperties"]').serializeArray();
+    for (var i = 0; i < data.length; i++) {
+      if (data[i].value !== "")
+      this.conf.writeElementString('PROPERTY', data[i].value);
+    }
+    this.conf.writeElementString('TYPE', $('#sourceType').text());
+    this.conf.writeEndElement();
+  }
+
+  TargetEndpoint() {
+    this.conf.writeStartElement('TARGET');
+    this.conf.writeElementString('ENDPOINT', $('input[name="targetEndpoint"]').val());
+    this.conf.writeElementString('ID', $('input[name="targetId"]').val());
+    this.conf.writeElementString('VAR', $('input[name="targetVar"]').val());
+    this.conf.writeElementString('PAGESIZE', $('input[name="targetPagesize"]').val());
+    this.conf.writeElementString('RESTRICTION', $('input[name="targetRestriction"]').val());
+    var data = $('input[name="targetProperties"]').serializeArray();
+    for (var i = 0; i < data.length; i++) {
+      if (data[i].value !== "")
+      this.conf.writeElementString('PROPERTY', data[i].value);
+    }
+    this.conf.writeElementString('TYPE', $('#targetType').text());
+    this.conf.writeEndElement();
+  }
+
+  Acceptance() {
+    this.conf.writeStartElement('ACCEPTANCE');
+    this.conf.writeElementString('FILE', $('input[name="acceptanceFile"]').val());
+    this.conf.writeElementString('THRESHOLD', $('input[name="acceptanceThreshold"]').val());
+    this.conf.writeElementString('RELATION', $('input[name="acceptanceRelation"]').val());
+    this.conf.writeEndElement();
+  }
+
+  Review() {
+    this.conf.writeStartElement('REVIEW');
+    this.conf.writeElementString('FILE', $('input[name="reviewFile"]').val());
+    this.conf.writeElementString('THRESHOLD', $('input[name="reviewThreshold"]').val());
+    this.conf.writeElementString('RELATION', $('input[name="reviewRelation"]').val());
+    this.conf.writeEndElement();
+  }
+}
+
+$("#save").click(function(event) {
+
+  var file = new CreateXml();
+  var filename = "limes.xml";
+  if ($('#ExportName').is(':visible'))
+    filename = $('#ExportName').text();
+  var save = new File([file.getConfiguration()], filename, {type: "text/plain;charset=utf-8"});
+  saveAs(save);
+});
+
+$("#vizualize").click(function() {
+  var file = new CreateXml();
+
+  console.log(file.getConfiguration());
+  $(".modal-body").find("textarea").text(file.getConfiguration());
+  $('#visualizeModal').modal('show');
+});
+
+$("#reset").click(function() {
+  // Downloads
+  $("#download").hide();
+  // Inputs
+  $('#form :input').val("");
+  // File load name
+  $('#ModalExportName').text('LIMES CONFIGURATION FILE');
+  $('#ExportNameDiv').hide();
+  // Prefixes
+  $('.btn-remove').click();
+  $('label[class*="prefix-property-0"]').text("Label");
+  // Special inputs
+  $('span[name="execution"]').html("Select an Execution ");
+  $('span[name="output"]').html("Select an Output ");
+  $('span[name="execution"]').append('<span class="caret"></span>');
+  $('span[name="output"]').append('<span class="caret"></span>');
+  // Endpoint Types
+  $('#sourceType').html("Endpoint ");
+  $('#sourceType').append('<span class="glyphicon glyphicon-globe" aria-hidden="true"> </span>');
+  $('#sourceType').append('<span class="glyphicon glyphicon-file" aria-hidden="true"></span>');
+  $('#targetType').html("Endpoint ");
+  $('#targetType').append('<span class="glyphicon glyphicon-globe" aria-hidden="true"> </span>');
+  $('#targetType').append('<span class="glyphicon glyphicon-file" aria-hidden="true"></span>');
+});
