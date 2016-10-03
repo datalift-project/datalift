@@ -4,7 +4,7 @@
 <head>
 #load("wfs2rdf/resources")
 #load_core_resources
-	<title>#i18n("wfs2rdf.title") - DataLift</title>
+	<title>#i18n("sos2rdf.title") - DataLift</title>
 #css_links
 	<link rel="stylesheet" type="text/css" href="${baseUri}/project/static/css/validation.css"/>
 	<!--<link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.min.css" rel="stylesheet">-->
@@ -38,21 +38,13 @@
 			
 			<h3><a href="#"> #i18n("ft.chooseTransformationOption")</a></h3>
 			<div id="tabs" style="margin:0;">
-				
-				<p><label class="control-label" for="graphe">#i18n("graph_label.option"): </label>
-				<input type="radio" name="graph_option" value="0" style="width:inherit" title="#i18n("multiple_graph.option_tooltip")" checked> #i18n("multiple_graph.option")
-				<input type="radio" disabled name="graph_option" value="1" style="width:inherit" title="#i18n("unique_graph.option_tooltip")"> #i18n("unique_graph.option")			
-				</p>
+			
 				<p><label class="control-label" for="ontology">#i18n("ontology_label.option"): </label>				
 				<select name="ontology_option" id="ontology_option">
 					<option value="0"  title="#i18n("default_ontology.option_tooltip")">#i18n("default_ontology.option")</option>
 					<option value="1"  title="#i18n("emf_ontology.option_tooltip")">#i18n("emf_ontology.option")</option>
 				</select>
 				</p>
-				<p>
-					<input type="checkbox"  id="convertSrs_option" value="WGS84" style="width:inherit" title="#i18n("convert_wgs84.option_tooltip")"> #i18n("convert_wgs84.option")
-				</p>
-
 			</div>
 		</div>
 		
@@ -68,11 +60,11 @@
 
 #script_links
 
-  <script src="${baseUri}/wfs2rdf/js/loading-plugin.js"></script>
+<script src="${baseUri}/wfs2rdf/js/loading-plugin.js"></script>
 <script type="text/javascript">
 
 $(function() {
-	cellValues = [];
+	idValues = [];
 	loadGridTypes();
 	$(window).bind('resize', function() {
 			$("#selectable_types").setGridWidth($("#tabs").width() - 30);
@@ -103,15 +95,13 @@ $(function() {
         
 	      $.ajax({
 			//The URL to process the request
-			  url  : '${baseUri}/wfs2rdf/postSelectedTypes',
+			  url  : '${baseUri}/sos2rdf/TransformSelectedObservations',
 			  type : 'POST',
 			  data : JSON.stringify({
 				   project : $("#project").val(),
 				   source : $("#source").val(),
-				   values : cellValues,
-				   graphOption : $("input:radio[name='graph_option']:checked").val(),
-				   ontologyOption : $('#ontology_option').val(),
-				   convertSrsOption : $("#convertSrs_option").is(":checked")
+				   values : idValues,
+				   ontologyOption : $('#ontology_option').val()
 				  }),
 			 dataType : 'text',
 			 contentType : 'application/json',
@@ -134,17 +124,18 @@ $(function() {
 				$("#accordion").accordion("activate", idx);		
 		});
 	function loadGridTypes() {
-		/************************* Types ******************************/
+		/************************* Observations ******************************/
 		var grid = $("#selectable_types");
 		grid.jqGrid({
 			datatype: "local",
-			colNames:['name','#i18n("grid.featureTypes.title")','#i18n("grid.featureTypes.description")','#i18n("grid.featureTypes.src")'/*,'#i18n("grid.featureTypes.nbr")'*/],
+			colNames:['id','#i18n("grid.availableObservations.name")','#i18n("grid.availableObservations.description")','#i18n("grid.availableObservations.begin")','#i18n("grid.availableObservations.end")','#i18n("grid.availableObservations.format")'],
 			colModel:[
-				{name:'nm', key:true, index:'nm', width:50},
-				{name:'Title', index:'title',  width:200},
-				{name:'Description',  index:'descr',   width:500},
-				{name:'CRS', index:'crs', width:80}
-				//{name:'Number', index:'nbr',  width:100}
+				{name:'id', key:true, index:'id', width:50},
+				{name:'Title', index:'title',  width:100},
+				{name:'Description',  index:'descr',   width:380},
+				{name:'begin', index:'begin', width:140},
+				{name:'end', index:'end',  width:140},
+				{name:'format', index:'format',  width:200}
 			],
 			caption: "",
 			rowNum:10, rowList:[10,20,30], pager: '#selectable_sources_toolbar',
@@ -171,16 +162,21 @@ $(function() {
 
    /**************data needed to fill the grid *****************/
 		var mydata = [
-#foreach($ft in $types)
+#foreach($obs in $observationsOffering)
 		{
-			nm:"$!esc.javascript($ft.getName())",
-			Title:"$!esc.javascript($ft.getTitle())",
-			Description:"$!esc.javascript($ft.getSummary())",
-			CRS:"$!esc.javascript($ft.getDefaultSrs())"
-			//Number:"$!esc.javascript($ft.getNumberFeature())"
+			id:"$!esc.javascript($obs.getIdentifier())",
+			Title:"$!esc.javascript($obs.getName())",
+			Description:"$!esc.javascript($obs.getDescription())",
+			begin:"$!esc.javascript($obs.getPhonomenonTimeBegin())",
+			end:"$!esc.javascript($obs.getPhonomenonTimeEnd())",
+			format:"$!esc.javascript($obs.getVailableFormat().get(0))",
 		},
 #end
 		];
+		
+		//console.log("observationOffering : ",$observationsOffering);
+		console.log("+++++++++++");
+		console.log("mydata : ",mydata);
 
 		for(var i=0;i<=mydata.length;i++) {
 			jQuery("#selectable_types").jqGrid('addRowData',i+1,mydata[i]);
@@ -193,9 +189,9 @@ $(function() {
 					caption:'#i18n("grid.featureTypes.validate")',
 					onClickButton:function(){
 						var selIds = $('#selectable_types').jqGrid('getGridParam', 'selarrrow'), i, n;
-						cellValues=[];
+						idValues=[];
 						for (i = 0, n = selIds.length; i < n; i++) {
-						    cellValues.push($('#selectable_types').jqGrid('getCell', selIds[i], 'nm'));
+						    idValues.push({id:$('#selectable_types').jqGrid('getCell', selIds[i], 'id'), begin :$('#selectable_types').jqGrid('getCell', selIds[i], 'begin'), end: $('#selectable_types').jqGrid('getCell', selIds[i], 'end'),format:$('#selectable_types').jqGrid('getCell', selIds[i], 'format')});
 						}
 						var e = $('#typenames_submit');
 						if(n>0){
@@ -215,7 +211,7 @@ $(function() {
 			{
 			caption:'#i18n("grid.featureTypes.cancel")',
 			onClickButton:function() {
-				cellValues=[];
+				idValues=[];
 				 $('#selectable_types').jqGrid('resetSelection');
 				 $('#typenames_submit').attr('disabled','true');
 				 $('#typenames_submit').addClass("ui-state-disabled")

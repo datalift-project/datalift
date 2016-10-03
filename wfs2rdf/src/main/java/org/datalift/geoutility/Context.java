@@ -42,6 +42,7 @@ import org.datalift.wfs.wfs2.mapping.GeomMapper;
 import org.datalift.wfs.wfs2.mapping.Mapper;
 import org.datalift.wfs.wfs2.mapping.MobileMapper;
 import org.datalift.wfs.wfs2.mapping.SimpleTypeMapper;
+import org.datalift.wfs.wfs2.mapping.StatementSaver;
 import org.openrdf.model.Model;
 import org.openrdf.model.Resource;
 import org.openrdf.model.Statement;
@@ -59,11 +60,13 @@ import org.openrdf.rio.Rio;
 
 public class Context {
 
-	private final static Logger log = Logger.getLogger();
+	//private final static Logger log = Logger.getLogger();
 
 	public static URI DefaultSubjectURI = null;
 	public Model model;
 	public ValueFactory vf = new ValueFactoryImpl();
+	//attributes needs to avoid storing statements in memory
+	public StatementSaver saver;
 	/*****attributes for counting occurences****/
 	public Map<QName, Integer> hm;
 	public Map<String, Resource> codeListOccurences;
@@ -95,11 +98,12 @@ public class Context {
 //	}
 	public Context()
 	{
+		saver= new StatementSaver();
+		
 		hm=new HashMap <QName,Integer>();
 		codeListOccurences=new HashMap <String,Resource>();
 		vf = new ValueFactoryImpl();
 		model = new LinkedHashModel();
-
 		model.setNamespace("dl_ef", nsDatalift);
 		model.setNamespace("pjt", nsProject);
 		model.setNamespace("ign", nsIGN);
@@ -206,8 +210,8 @@ public class Context {
 				+ response.getStatusLine().getStatusCode());
 
 		return response.getEntity().getContent();
-		//		 InputStream in = new FileInputStream("src/main/resources/wfs_response.xml");
-		//		 return in;
+//			 InputStream in = new FileInputStream("src/main/resources/sos_capabilities.xml");
+//		     return in;
 	}
 
 	public boolean exportTS(Repository target, java.net.URI targetGraph, java.net.URI baseUri, String targetType) {
@@ -283,9 +287,9 @@ public class Context {
 
 			}
 
-			log.info("Inserted {} RDF triples into <{}> in {} seconds",
-					wrap(statementCount), targetGraph,
-					wrap(asSeconds(duration)));
+//			log.info("Inserted {} RDF triples into <{}> in {} seconds",
+//					wrap(statementCount), targetGraph,
+//					wrap(asSeconds(duration)));
 		}
 		catch (TechnicalException e) {
 			throw e;

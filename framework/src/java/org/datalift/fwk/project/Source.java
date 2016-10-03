@@ -89,6 +89,9 @@ public interface Source
         public static final SourceType WfsSource =
                 new SourceType("datalift.wfs.service.source",
                                "source.wfs.service.label");
+        public static final SourceType SosSource =
+                new SourceType("datalift.sos.service.source",
+                               "source.sos.service.label");
 
         private final String id;
         private final String label;

@@ -6,8 +6,10 @@ import java.util.regex.Pattern;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 
-public class Helper {
+import org.datalift.fwk.log.Logger;
 
+public class Helper {
+	//private final static Logger log = Logger.getLogger();
 	private final static DatatypeFactory df;
 	
 	static {
@@ -30,7 +32,14 @@ public class Helper {
 	}
 	public static XMLGregorianCalendar getDate(String value) {
 		if(value==null) return null;
-		XMLGregorianCalendar d = df.newXMLGregorianCalendar(value);
+		XMLGregorianCalendar d=null ;
+		//log.debug("this is the value to be parsed "+value);
+		try {
+			 d = df.newXMLGregorianCalendar(value);
+		} catch (Exception e) {
+			// TODO: handle exception
+			System.out.println(value);
+		}
 		return d;
 	}
 }

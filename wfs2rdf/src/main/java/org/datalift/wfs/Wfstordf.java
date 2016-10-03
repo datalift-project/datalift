@@ -48,9 +48,9 @@ import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.project.WfsSource;
 import org.datalift.fwk.view.TemplateModel;
-import org.datalift.geoutility.FeatureTypeDescription;
 import org.datalift.geoutility.Helper;
 import org.datalift.model.ComplexFeature;
+import org.datalift.model.FeatureTypeDescription;
 import org.datalift.wfs.wfs2.parsing.WFS2Client;
 import org.datalift.wfs.wfs2.mapping.WFS2Converter;
 import org.geotools.data.DataStore;
@@ -124,7 +124,7 @@ public class Wfstordf extends BaseConverterModule{
 	}
 	/**
 	 * get the list of selected feature types selected by the user to be converted
-	 * @param json the json representation of the array containing the feeatures to be converted
+	 * @param json the json representation of the array containing the features to be converted
 	 * @return the URL of the source project's page to be used by ajax to redirect the user
 	 */
 	@POST
@@ -387,16 +387,20 @@ public Response getFeatureTypes(
 		List <FeatureTypeDescription> types;
 		if(src.getVersion().equals("2.0.0"))
 		{
-			types= this.getfeatureTypeDescription2(src.getSourceUrl(),src.getVersion(),src.getserverTypeStrategy());			
+			types= this.getfeatureTypeDescription2(src.getSourceUrl(),src.getVersion());			
 		}
 		else
 		{
 			types= this.getfeatureTypeDescription(src.getSourceUrl(),src.getVersion(),src.getserverTypeStrategy());
 		}
 		if(types!=null) 
-			view.put("types", types);
+			{
+				view.put("types", types);
+			}
 		else
+			{
 			types=new ArrayList<FeatureTypeDescription>();
+			}
 		response = Response.ok(view);
 
 	} catch (Exception e) {
@@ -407,8 +411,7 @@ public Response getFeatureTypes(
 	}
 	return response.build();
 }
-private List<FeatureTypeDescription> getfeatureTypeDescription2(String sourceUrl, String version,
-		String getserverTypeStrategy) throws ClientProtocolException, IOException, SAXException, ParserConfigurationException {
+private List<FeatureTypeDescription> getfeatureTypeDescription2(String sourceUrl, String version) throws ClientProtocolException, IOException, SAXException, ParserConfigurationException {
 
 	WFS2Client mp=new WFS2Client(sourceUrl);
 	mp.getCapabilities();
@@ -439,7 +442,7 @@ private boolean convertFeatureTypeToRdf2(URI projectUri, WfsSource s, String des
 		org.datalift.fwk.rdf.Repository target = Configuration.getDefault().getInternalRepository();
 		converter.ConvertFeaturesToRDF(featureCollectionToConvert,target , targetGraph, baseUri, targetType);
 		//converter.StoreRDF();
-		converter.StoreRdfTS(target , targetGraph, baseUri, targetType);
+		//converter.StoreRdfTS(target , targetGraph, baseUri, targetType);
 
 		
 		

@@ -6,15 +6,20 @@ import java.net.URI;
 import javax.xml.namespace.QName;
 
 import org.datalift.fwk.rdf.Repository;
+import org.datalift.fwk.rdf.UriCachingValueFactory;
 import org.datalift.geoutility.Context;
 import org.datalift.model.Attribute;
 import org.datalift.model.ComplexFeature;
 import org.datalift.model.Const;
+import org.openrdf.model.ValueFactory;
+import org.openrdf.repository.RepositoryConnection;
+import org.openrdf.repository.RepositoryException;
 import org.openrdf.rio.RDFHandlerException;
 
 public class WFS2Converter {
 	
 	private Context ctx;
+	 
 	
 	public WFS2Converter(int i)
 	{
@@ -33,8 +38,9 @@ public class WFS2Converter {
 			ctx.mappers.put(Const.inspireCodeList,new CodeListMapper());
 		}
 	}
-	public void ConvertFeaturesToRDF(ComplexFeature fc, org.datalift.fwk.rdf.Repository target , URI targetGraph, URI baseUri, String targetType)
+	public void ConvertFeaturesToRDF(ComplexFeature fc, org.datalift.fwk.rdf.Repository target , URI targetGraph, URI baseUri, String targetType) throws FileNotFoundException, RDFHandlerException
 	{
+		//ctx.saver.initConnexion(target, targetGraph, baseUri, targetType);
 		for (Attribute a : fc.itsAttr) {
 			if(a instanceof ComplexFeature)
 			{
@@ -46,18 +52,21 @@ public class WFS2Converter {
 						{
 							ComplexFeature ef =(ComplexFeature)aa;
 							ctx.getMapper(ef.getTypeName()).map(ef, ctx);
-							
+							//flush model if needed
+							//ctx.saver.flush(this.ctx.model);									
+								storeRdfTS(target, targetGraph, baseUri, targetType);
 						}
 					}
 				}
 			}
-		}	
+		}
+		//ctx.saver.close();
 	}
 	public void StoreRDF() throws FileNotFoundException, RDFHandlerException
 	{
 		this.ctx.exportTtl("C:/Users/A631207/Documents/my_resources/emf1.ttl");
 	}
-	public void StoreRdfTS(Repository target, URI targetGraph, URI baseUri, String targetType) throws FileNotFoundException, RDFHandlerException
+	public void storeRdfTS(Repository target, URI targetGraph, URI baseUri, String targetType) throws FileNotFoundException, RDFHandlerException
 	{
 		this.ctx.exportTS(target, targetGraph, baseUri, targetType);
 	}

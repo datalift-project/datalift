@@ -1,4 +1,4 @@
-package org.datalift.geoutility;
+package org.datalift.model;
 
 import java.util.ArrayList;
 import java.util.List;

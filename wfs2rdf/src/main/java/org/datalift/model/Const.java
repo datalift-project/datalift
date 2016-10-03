@@ -170,6 +170,24 @@ public class Const {
 	public static QName xsdDecimal= new QName("http://www.w3.org/2001/XMLSchema","decimal");
 	public static QName xsdFloat= new QName("http://www.w3.org/2001/XMLSchema","float");
 	public static QName xsdDate= new QName("http://www.w3.org/2001/XMLSchema","date");
+	
+	/*****sos temp***/
+	public static QName ContentsType= new QName("http://www.opengis.net/sos/2.0","ContentsType");
+	
+	public static QName offering= new QName("http://www.opengis.net/swes/2.0","offering");
+	
+	public static QName ObservationOffering= new QName("http://www.opengis.net/sos/2.0","ObservationOffering");
+	public static QName ObservationOfferingType= new QName("http://www.opengis.net/sos/2.0","ObservationOfferingType");
+	public static QName descriptionSWES= new QName("http://www.opengis.net/swes/2.0","description");
+	public static QName identifierSWES= new QName("http://www.opengis.net/swes/2.0","identifier");
+	public static QName nameSWES= new QName("http://www.opengis.net/swes/2.0","name");
+	public static QName responseFormat= new QName("http://www.opengis.net/sos/2.0","responseFormat");
+	 
+	
+
+	
+	
+	
 
 
 

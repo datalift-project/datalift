@@ -75,6 +75,7 @@ import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectManager;
 import org.datalift.fwk.project.RdfFileSource;
 import org.datalift.fwk.project.ShpSource;
+import org.datalift.fwk.project.SosSource;
 import org.datalift.fwk.project.GmlSource;
 import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.TransformedRdfSource;
@@ -462,6 +463,26 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
 //		
        
 	}
+    @Override
+	public SosSource newSosSource(Project project, URI uri, String serviceUrl, String title,
+            String description, String version ) throws IOException {
+
+    	{
+    		// Create new WFS source.
+    		SosSourceImpl src = new SosSourceImpl(uri.toString(), project);
+            // Set source parameters.
+            this.initSource(src, title, description);
+            
+            src.setSourceUrl(serviceUrl);
+            src.setVersion(version);
+            // Add source to project.
+            project.add(src);
+            log.debug("New SOS source <{}> added to project \"{}\"",
+                                                        uri, project.getTitle());
+            return src;
+    	}
+      
+	}
       /** {@inheritDoc} */
     @Override
     public void delete(Source source) {
@@ -665,7 +686,8 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
                     CsvSourceImpl.class, RdfFileSourceImpl.class,
                     SqlQuerySourceImpl.class, SqlDatabaseSourceImpl.class, SparqlSourceImpl.class,
                     XmlSourceImpl.class,
-                    TransformedRdfSourceImpl.class, ShpSourceImpl.class, GmlSourceImpl.class, WfsSourceImpl.class));
+                    TransformedRdfSourceImpl.class, ShpSourceImpl.class, GmlSourceImpl.class, 
+                    WfsSourceImpl.class, SosSourceImpl.class));
         return classes;
     }
 

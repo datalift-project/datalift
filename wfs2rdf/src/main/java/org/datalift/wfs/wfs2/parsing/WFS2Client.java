@@ -18,11 +18,11 @@ import javax.xml.validation.SchemaFactory;
 import org.apache.http.client.ClientProtocolException;
 //import org.datalift.core.util.*;
 import org.datalift.geoutility.Context;
-import org.datalift.geoutility.FeatureTypeDescription;
 import org.datalift.geoutility.Helper;
 import org.datalift.model.Attribute;
 import org.datalift.model.ComplexFeature;
 import org.datalift.model.Const;
+import org.datalift.model.FeatureTypeDescription;
 import org.datalift.model.Store;
 
 import org.xml.sax.SAXException;
@@ -71,17 +71,17 @@ public class WFS2Client {
 		this.dataStore=ds;
 		this.dataStore.getFtParsed=ds.getFtParsed;
 	}
-public ComplexFeature getFeatureCollection(String typeName)
-{
-	List<ComplexFeature> elements = dataStore.getFtParsed.get(typeName);
-	ComplexFeature fc=null;
-	if(elements!=null && elements.size()!=0)
+	public ComplexFeature getFeatureCollection(String typeName)
 	{
-		fc=elements.get(0);
-		
+		List<ComplexFeature> elements = dataStore.getFtParsed.get(typeName);
+		ComplexFeature fc=null;
+		if(elements!=null && elements.size()!=0)
+		{
+			fc=elements.get(0);
+			
+		}
+		return fc;
 	}
-	return fc;
-}
 	public void getCapabilities() throws ClientProtocolException, IOException, SAXException, ParserConfigurationException
 	{
 		Store ds=cache.get(url);

@@ -86,6 +86,51 @@ public class ComplexFeature extends Attribute{
 		}
 		return null;
 	}
+	public ComplexFeature findChildByType( QName childType)
+	{
+		ComplexFeature child=null;
+		for (Attribute attribute : this.itsAttr) {
+			if(attribute instanceof ComplexFeature)
+			{
+				if(/*attribute.name.equals(childName) && */attribute.getTypeName().equals(childType))
+				{
+					child=(ComplexFeature)attribute;
+				}
+				else
+				{
+					child=((ComplexFeature)attribute).findChildByType(childType);
+				}
+			}
+			if(child!=null)
+			{
+				break;
+			}
+		}
+		return child; 
+	}
+	
+	public ComplexFeature findChildByName( QName childName)
+	{
+		ComplexFeature child=null;
+		for (Attribute attribute : this.itsAttr) {
+			if(attribute instanceof ComplexFeature)
+			{
+				if(attribute.name.equals(childName) )
+				{
+					child=(ComplexFeature)attribute;
+				}
+				else
+				{
+					child=((ComplexFeature)attribute).findChildByName(childName);
+				}
+			}
+			if(child!=null)
+			{
+				break;
+			}
+		}
+		return child; 
+	}
 	public List<ComplexFeature> findChildren(QName name) {
 		// TODO Auto-generated method stub
 		List<ComplexFeature> children=new ArrayList<ComplexFeature>();

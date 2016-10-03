@@ -16,7 +16,7 @@ public class WfsSourceImpl extends BaseServiceSource
 		super(SourceType.WfsSource);
 	}
 	/**
-	 * Creates a new Shapefile source with the specified identifier and
+	 * Creates a new WFS source with the specified identifier and
 	 * owning project.
 	 * @param  uri       the source unique identifier (URI) or
 	 *                   <code>null</code> if not known at this stage.
@@ -29,10 +29,6 @@ public class WfsSourceImpl extends BaseServiceSource
 	public WfsSourceImpl(String uri, Project project) {
 		super(SourceType.WfsSource, uri, project);
 	}
-
-
-
-
 
 	@Override
 	public boolean isCompliantInspire() {

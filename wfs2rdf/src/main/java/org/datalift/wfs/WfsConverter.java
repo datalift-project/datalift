@@ -28,7 +28,7 @@ import org.datalift.fwk.util.Env;
 import org.datalift.fwk.util.UriBuilder;
 
 import org.datalift.geoutility.CreateGeoStatement;
-import org.datalift.geoutility.FeatureTypeDescription;
+import org.datalift.model.FeatureTypeDescription;
 
 import static org.datalift.fwk.util.PrimitiveUtils.wrap;
 import static org.datalift.fwk.util.TimeUtils.asSeconds;
