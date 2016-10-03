@@ -1,0 +1,382 @@
+//@author : Zakaria Khattabi
+//Script for launching mapline map with Open Layer
+layers = new Array;
+isMapLine = true;
+function construct(data){
+	(function(){
+		//initialisation of parameters
+		var colorSelect = "#4ff7f7";
+		var raster = new ol.layer.Tile({
+						source: new ol.source.OSM()
+					})
+		layers[0] = raster;
+		// define style by default to polygone
+		var style = new ol.style.Style({ 
+			fill: new ol.style.Fill({
+				color: colorSelect+"",
+			}),
+			stroke: new ol.style.Stroke({
+				width: 1,
+				color: "#0094ff"
+			})
+		});
+		var code = '<div style="width:100%;height:88%;"><div id="map" class="map" style="width:100%;height:100%;margin:auto;"></div></div><div style= "width:30%;height:3%;margin:auto;"><input id="range" type="range" value="0" max="5" min="5" step="5" style="width:280px;margin:auto;"/></div><div style= "width:30%;height:5%;margin:auto;"><table><tr><table><tr><td><button id="anterior" onclick="anterior()"><img src="${baseUri}/sparql/viz/images/icons/anterior.png"/></button></td><td><button id="rewind" onclick="rewind()"><img src="${baseUri}/sparql/viz/images/icons/rewind.png"/></button></td><td><button id="stop2" style="display:none;" onclick="stop2()"><img src="${baseUri}/sparql/viz/images/icons/stop.png"/></button></td><td><button id="pause2" style="display:none;" onclick="pause2()"><img src=" ${baseUri}/sparql/viz/images/icons/pause.png"/></button></td><td><button id="back" onclick="back()"><img src="${baseUri}/sparql/viz/images/icons/back.png"/></button></td><td><button id="play" onclick="play()"><img src="${baseUri}/sparql/viz/images/icons/play.png"/></button></td><td><button id="pause1" style="display:none;" onclick="pause1()"><img src="${baseUri}/sparql/viz/images/icons/pause.png"/></button></td><td><button id="stop1" style="display:none;" onclick="stop1()"><img src="${baseUri}/sparql/viz/images/icons/stop.png"/></button></td><td><button id="forward" onclick="forward()"><img src="${baseUri}/sparql/viz/images/icons/forward.png"/></button></td><td><button id="skip" onclick="skip()"><img src="${baseUri}/sparql/viz/images/icons/skip.png"/></button></td></tr></table></tr> </table><input type="text" value="1.0" id="iteration" style="width:10%;"/><span>&emsp;&emsp;&emsp;&emsp;</span><span id="date">2015</span></div><input id="val" type="hidden" value="0"/>';
+		$("#mapLine").html(code);
+		//center the forms
+		var coor = toCoor(data[0][0]);
+		var minX = [], minY = [], maxX = [], maxY = [];
+		$.each(data,function(index,value){
+			var coor = toCoor(value[0]);
+			minX.push(Math.min.apply(null, coor.x));
+			minY.push(Math.min.apply(null, coor.y));
+			maxX.push(Math.max.apply(null, coor.x));
+			maxY.push(Math.max.apply(null, coor.y));
+		});
+		var minTotX = Math.min.apply(null, minX);
+		var minTotY = Math.min.apply(null, minY);
+		var maxTotX = Math.max.apply(null, maxX);
+		var maxTotY = Math.max.apply(null, maxY);
+		var centreX = minTotX+(maxTotX-minTotX)/2;
+		var centreY = minTotY+(maxTotY-minTotY)/2;
+		//transform features and browse the dates
+		var FS = {};
+		var dates = [];
+		var features = [];
+		$.each(data,function(index,value){
+			if(isExist(value[1],dates)==-1)
+				dates.push(value[1]);
+			var feature = transformOP(value[0]);
+			if(value[2]!=undefined){
+				var s = new ol.style.Style({ 
+					fill: new ol.style.Fill({
+						color:value[2]+"",
+					}),
+					stroke: new ol.style.Stroke({
+						width: 5,
+						color: value[2]+""
+				   })
+				});
+				var vector = createVector(feature, s);
+			} else	var vector = createVector(feature, style);
+			layers.push(vector);
+		});
+		// sort the dates and saves it in session storage
+		//dates.sort();
+		sessionStorage["dates"] = JSON.stringify(dates);
+		sessionStorage["data"] = JSON.stringify(data);
+		var map = new ol.Map({
+		  layers: layers,
+		  target: 'map',
+		  view: new ol.View({
+			center: ol.proj.transform([parseFloat(centreX),parseFloat(centreY)],'EPSG:4326','EPSG:3857'),
+			zoom:4 
+		  })
+		});
+		var dates = JSON.parse(sessionStorage.getItem("dates"));
+		$("#range").attr("max",(dates.length)*5);
+		var pos = getPositon(dates[0]);
+		var n = getNTimes(dates[0]);
+		layer2Show(pos,n);
+		$("#date").html(dates[0]);
+		function transformOP(WKT) {
+			var format = new ol.format.WKT();
+			var feature = format.readFeature(WKT);
+			feature.getGeometry().transform('EPSG:4326', 'EPSG:3857');
+			return feature;
+		}
+		function createVector(feature, style){
+			var vector = new ol.layer.Vector({
+				style:style,
+				source: new ol.source.Vector({
+					features: [feature]
+				})
+			});
+			vector.setOpacity(0.5);
+			return vector;
+		}
+		function toCoor(WKT){
+			var pointD = WKT.split(/\({3}|\){3}/g);	// tableau pour decomposition par regex
+			var pointD2 = JSON.stringify(pointD);
+			pointD = pointD2.split(/[^0-9\.]/g);
+			pointD = pointD.filter(function(e){return e});
+			
+			var C = {};C.x=[];C.y=[];
+			for(var a=0;a < pointD.length;a++){
+				if (a%2 == 0){
+					C.x.push(parseFloat(pointD[a]));
+				}else{
+					C.y.push(parseFloat(pointD[a]));	
+				}		
+			}
+			return C;
+		}
+		function layer2Show(p,n){
+			for(i=1; i<layers.length; i++){
+				layers[i].setOpacity(0);
+			}
+			for(i=p+1; i<=(p+n); i++){
+				layers[i].setOpacity(0.5);
+			}
+		}
+		function getPositon(d){
+			var pos=0;
+			var isFirst = false;
+			$.each(data, function(i,val){
+				if (val[1] == d && !isFirst) {
+					pos=i; isFirst=true;
+				}
+			});
+			console.log("date : "+d);
+			console.log("position : "+pos);
+			return pos;
+		}
+		function getNTimes(d){
+			var n=0;
+			$.each(data, function(i,val){
+				if (val[1] == d) n+=1;
+			});
+			console.log("n times : "+n);
+			return n;
+		}
+	})();
+}
+isClicked = false;
+function getTimeOfIteration(){
+	return parseFloat($("#iteration").val())*1000;
+}
+function stop(){
+	var dates = JSON.parse(sessionStorage.getItem("dates"));
+	$("#play").css("display","block");
+	$("#pause1").css("display","none");
+	$("#stop1").css("display","none");
+	$('#back').attr("disabled", false);
+	layer22Show(getPositon(dates[0]),getNTimes(dates[0]));
+	$("#date").html(dates[0]);
+	$("#range").val(5);
+}
+function stopRev(){
+	var dates = JSON.parse(sessionStorage.getItem("dates"));
+	$("#back").css("display","block");
+	$("#pause2").css("display","none");
+	$("#stop2").css("display","none");
+	$('#play').attr("disabled", false);
+	layer22Show(getPositon(dates[dates.length-1]),getNTimes(dates[dates.length-1]));
+	$("#date").html(dates[dates.length-1]);
+	$("#range").val(dates.length*5);
+}
+function anterior(){
+	var dates = JSON.parse(sessionStorage.getItem("dates"));
+	layer22Show(getPositon(dates[0]),getNTimes(dates[0]));
+	$("#date").html(dates[0]);
+	$("#range").val(5);
+}
+function skip(){
+	var dates = JSON.parse(sessionStorage.getItem("dates"));
+	layer22Show(getPositon(dates[dates.length-1]),getNTimes(dates[dates.length-1]));
+	$("#date").html(dates[dates.length-1]);
+	$("#range").val(dates.length*5);
+}
+function rewind(){
+	var dates = JSON.parse(sessionStorage.getItem("dates"));
+	var v = (parseFloat($("#range").val())/5);
+	if($("#range").val()>10){
+		$("#range").val(parseFloat($("#range").val())-5);
+		layer22Show(getPositon(dates[v-2]),getNTimes(dates[v-2]));
+		$("#date").html(dates[v-2]);
+	} else {
+		$("#range").val(5);
+		layer22Show(getPositon(dates[0]),getNTimes(dates[0]));
+		$("#date").html(dates[0]);
+	}
+}
+function forward(){
+	var dates = JSON.parse(sessionStorage.getItem("dates"));
+	var v = parseFloat($("#range").val())/5;
+	if($("#range").val()<(dates.length*5)){
+		$("#range").val(parseFloat($("#range").val())+5);
+		layer22Show(getPositon(dates[v]),getNTimes(dates[v]));
+		$("#date").html(dates[v]);
+	} else {
+		layer2Show(getPositon(dates[dates.length-1]),getNTimes(dates[dates.length-1]));
+		$("#date").html(dates[dates.length-1]);
+	}
+}
+function play(){
+	var dates = JSON.parse(sessionStorage.getItem("dates"));
+	$("#pause1").css("display","block");
+	$("#stop1").css("display","block");
+	$("#play").css("display","none");
+	$('#back').attr("disabled", true);
+	layer22Show(getPositon(dates[0]),getNTimes(dates[0]));
+	$("#date").html(dates[0]);
+	$("#range").val(5);
+	var i = 1;//set counter
+	function myLoop() {//  create a loop function
+		setTimeout(function () {//  call a 3s setTimeout when the loop is called
+			$("#range").val(parseFloat($("#range").val())+5);
+			var v = $("#range").val();
+			var pos = getPositon(dates[(v/5)-1]);
+			var n = getNTimes(dates[(v/5)-1]);
+			layer22Show(pos,n);
+			$("#date").html(dates[(v/5)-1]);
+			i++;                   //  increment the counter
+			if (i < dates.length &&
+			$('#pause1').css('display') != 'none'){//  if the counter is inferior  
+				myLoop();         //  to the array table
+			} else if(i==dates.length){
+				stop();
+			} else if(isClicked){
+				stop();
+				isClicked = false;
+			} else {
+				$("#play").css("display","block");
+				$("#pause1").css("display","none");
+				$("#stop1").css("display","none");
+			}
+		}, getTimeOfIteration());
+	}
+	myLoop();
+}
+function pause1(){
+	$("#play").css("display","block");
+	$("#pause1").css("display","none");
+	$("#stop1").css("display","none");
+}
+function stop1(){
+	stop();
+	isClicked = true;
+}
+function back(){
+	var dates = JSON.parse(sessionStorage.getItem("dates"));
+	$("#pause2").css("display","block");
+	$("#stop2").css("display","block");
+	$("#back").css("display","none");
+	$('#play').attr("disabled", true);
+	layer22Show(getPositon(dates[dates.length-1]),getNTimes(dates[dates.length-1]));
+	$("#date").html(dates[dates.length-1]);
+	$("#range").val(dates.length*5);
+	var i = dates.length;//set counter
+	function myLoop() {//  create a loop function
+		setTimeout(function () {//  call a 3s setTimeout when the loop is called
+			$("#range").val(parseFloat($("#range").val())-5);
+			var v = parseFloat($("#range").val());
+			console.log("value of range :"+v);
+			layer22Show(getPositon(dates[(v/5)-1]),getNTimes(dates[(v/5)-1]));
+			console.log("value of range 1 :"+(v-1));
+			$("#date").html(dates[(v/5)-1]);
+			i--;                   //  decrementy the counter
+			if (i > 0 &&
+			$('#pause2').css('display') != 'none'){//  if the counter is inferior  
+				myLoop();         //  to the array table
+			} else if(i==0){
+				stop2();
+			} else if(isClicked){
+				stop2();
+				isClicked = false;
+			}else {
+				$("#back").css("display","block");
+				$("#pause2").css("display","none");
+				$("#stop2").css("display","none");
+			}
+		}, getTimeOfIteration());
+	}
+	myLoop();
+}
+function pause2(){
+	$("#back").css("display","block");
+	$("#pause2").css("display","none");
+	$("#stop2").css("display","none");
+}
+function stop2(){
+	stopRev();
+	isClicked = true;
+}
+$("#range").change(
+	function(){
+		var dates = JSON.parse(sessionStorage.getItem("dates"));
+		var v = $("#range").val();
+		if(v==0)v+=5;
+		var pos = getPositon(dates[(v/5)-1]);
+		var n = getNTimes(dates[(v/5)-1]);
+		layer22Show(pos,n);
+		$("#date").html(dates[(v/5)-1]);
+	}
+);
+function getStyle(){
+	var colorSelect = "#4ff7f7";
+	var style = new ol.style.Style({ 
+		fill: new ol.style.Fill({
+			color: colorSelect+"",
+		}),
+		stroke: new ol.style.Stroke({
+			width: 1,
+			color: "#0094ff"
+		})
+	});
+	return style;
+}
+function transformOP(WKT){
+	var format = new ol.format.WKT();
+	var feature = format.readFeature(WKT);
+	feature.getGeometry().transform('EPSG:4326', 'EPSG:3857');
+	return feature;
+}
+function createVector(feature, style){
+	var vector = new ol.layer.Vector({
+		style:style,
+		source: new ol.source.Vector({
+			features: [feature]
+		})
+	});
+	vector.setOpacity(0.5);
+	return vector;
+}
+function toCoor(WKT){
+	var pointD = WKT.split(/\({3}|\){3}/g);	// tableau pour decomposition par regex
+	var pointD2 = JSON.stringify(pointD);
+	pointD = pointD2.split(/[^0-9\.]/g);
+	pointD = pointD.filter(function(e){return e});
+	
+	var C = {};C.x=[];C.y=[];
+	for(var a=0;a < pointD.length;a++){
+		if (a%2 == 0){
+			C.x.push(parseFloat(pointD[a]));
+		}else{
+			C.y.push(parseFloat(pointD[a]));	
+		}		
+	}
+	return C;
+}
+function layer22Show(p,n){
+	for(i=1; i<layers.length; i++){
+		layers[i].setOpacity(0);
+	}
+	for(i=p+1; i<=(p+n); i++){
+		layers[i].setOpacity(0.5);
+	}
+}
+function getPositon(d){
+	var pos=0;
+	var isFirst = false;
+	var data = getData();
+	$.each(data, function(i,val){
+		if (val[1] == d && !isFirst) {
+			pos=i; isFirst=true;
+		}
+	});
+	console.log("date : "+d);
+	console.log("position : "+pos);
+	return pos;
+}
+function getNTimes(d){
+	var n=0;
+	var data = getData();
+	$.each(data, function(i,val){
+		if (val[1] == d) n+=1;
+	});
+	console.log("n times : "+n);
+	return n;
+}
+function getData(){
+	return JSON.parse(sessionStorage.getItem("data"));
+}
