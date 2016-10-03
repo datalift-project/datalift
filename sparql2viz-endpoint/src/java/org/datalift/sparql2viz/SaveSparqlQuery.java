@@ -41,6 +41,7 @@ package org.datalift.sparql2viz;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -54,15 +55,21 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.FileStore;
 import org.datalift.fwk.i18n.PreferredLocales;
 import org.datalift.fwk.log.Logger;
+import org.datalift.fwk.view.TemplateModel;
+import org.datalift.fwk.view.ViewFactory;
 import org.datalift.sparql.AbstractSparqlEndpoint;
 import org.datalift.sparql.TechnicalException;
+
+import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 
 /**
  * Collect the sending request and save it in the local
@@ -79,6 +86,25 @@ public class SaveSparqlQuery extends BaseModule {
 	public SaveSparqlQuery() {
 		super("save-request");
 	}
+	
+	//-------------------------------------------------------------------------
+    // Web service utility methods
+    //-------------------------------------------------------------------------
+
+    /**
+     * Return a model for the specified template view, populated with
+     * the specified model object.
+     * <p>
+     * The template name shall be relative to the module, the module
+     * name is automatically prepended.</p>
+     * @param  templateName   the relative template name.
+     * @param  it             the model object to pass on to the view.
+     *
+     * @return a populated template model.
+     */
+    protected final TemplateModel newView(String template, Object it) {
+        return ViewFactory.newView("/" + this.getName() + '/' + template, it);
+    }
 	
 	/**
      * Loads the available predefined SPARQL queries from the RDF
@@ -111,7 +137,23 @@ public class SaveSparqlQuery extends BaseModule {
                 // No query definition file specified. => Use default.
                 log.info("No visualization configuration file specified, using default");
                 in = this.getClass().getClassLoader().getResourceAsStream(path);
+                
+                FileOutputStream fos = new FileOutputStream(f);
+                try {
+                	byte[] buffer = new byte[4096];
+                	int bytesRead;
+                	while ((bytesRead = in.read(buffer)) != -1) {
+                		fos.write(buffer, 0, bytesRead);
+                	}
+                } catch (IOException e) {
+                	e.printStackTrace();
+                } finally {
+                	if (fos != null) {
+                		try { fos.close(); } catch (Exception e) { /* Ignore... */ }
+                	}
+                }
             }
+
             Reader r = new InputStreamReader(in, "UTF-8");
             StringBuilder buf = new StringBuilder(4096);
             char[] c = new char[1024];
@@ -140,9 +182,6 @@ public class SaveSparqlQuery extends BaseModule {
 	public void saveRequest(@FormParam("requestName") String requestName,
 			@FormParam("requestData") String requestData,
 			@FormParam("version") String version) throws IOException {
-		System.out.println(requestName);
-		System.out.println(requestData);
-		System.out.println(version);
 		FileStore fs = Configuration.getDefault().getPrivateStorage();
 		File dir = new File("sparql/requests");
 		File f = fs.getFile(new File(dir, requestName).getPath());
@@ -156,13 +195,15 @@ public class SaveSparqlQuery extends BaseModule {
 		fs.save(in, f);
 	}
 	
+	/**
+     * Save a new request
+     */
 	@Path("{requestName}")
 	@GET
 	@Consumes(MediaType.TEXT_PLAIN)
 	public String saveRequest(@PathParam("requestName") String requestName) throws IOException {
 		FileStore fs = Configuration.getDefault().getPrivateStorage();
 		File dir = new File("sparql/requests");
-		//File f = fs.getFile(new File(dir, requestName + ".txt").getPath());
 		File f = fs.getFile(new File(dir, requestName).getPath());
 		
 		InputStream in = fs.getInputStream(f);
@@ -179,6 +220,9 @@ public class SaveSparqlQuery extends BaseModule {
 		return requestData;
 	}
 	
+	/**
+     * get the list of requests
+     */
 	@GET
 	@Consumes(MediaType.TEXT_PLAIN)
 	public String getListRequests() throws IOException {
@@ -198,6 +242,9 @@ public class SaveSparqlQuery extends BaseModule {
 		return files.append("</select>").toString();
 	}
 	
+	/**
+     * Delete request file
+     */
 	@Path("{requestName}")
 	@DELETE
 	@Consumes(MediaType.TEXT_PLAIN)
@@ -206,7 +253,17 @@ public class SaveSparqlQuery extends BaseModule {
 		File dir = new File("sparql/requests");
 		//File f = fs.getFile(new File(dir, requestName + ".txt").getPath());
 		File f = fs.getFile(new File(dir, requestName).getPath());
-		System.out.println(f.isFile());
 		f.delete();
 	}
+	
+	/**
+     * Load mapline script
+     */
+	@Path("mapline.js")
+	@GET
+    @Produces(TEXT_PLAIN)
+    public Response loadMapLineScript() {
+    	TemplateModel view = this.newView("js/mapline.js.vm", null);
+    	return Response.ok(view, TEXT_PLAIN).build();
+    }
 }

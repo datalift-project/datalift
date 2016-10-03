@@ -1,16 +1,3 @@
-## Edited By Zakaria Khattabi
-##--------->Edition Started in 13 April 2014
-##	-Add comments
-##  -Split the pieces of the page by two carriage returns
-##  -Add of the button "clear", "paste", "save" and "show the saved request"
-##  -Add the button "print"
-##  -Add the chart's choose functionality
-##  -Change the position of head title
-##  (make it outside the div block having id value "content")
-##  -Customize the print Menu
-##  -Replace the character "_" by "-" in the saving request
-##  -Customize the list of all request
-##  -View the list of all graphs
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -30,6 +17,7 @@
 	<link rel="stylesheet" type="text/css" href="${baseUri}/sparql/viz/css/ol.css"/>
 	<!--Code mirror-->
 	<link rel="stylesheet" type="text/css" href="${baseUri}/sparql/viz/css/codeMirror/codemirror.css"/>
+	<link rel="stylesheet" type="text/css" href="${baseUri}/sparql/viz/css/codeMirror/xq-light.css"/>
 </head>
 <body>
 
@@ -424,10 +412,15 @@
 	<script language="javascript" src="${baseUri}/sparql/viz/js/executeContextMenu.js"></script>
 	<!-- Library Leaflet javascript -->
 	<script language="javascript" src="${baseUri}/sparql/viz/js/leaflet/leaflet.js"></script>
+	<!-- Library codemirror javascript -->
+	<script language="javascript" src="${baseUri}/sparql/viz/js/codeMirror/codemirror.js"></script>
+	<script language="javascript" src="${baseUri}/sparql/viz/js/codeMirror/matchbrackets.js"></script>
+	<script language="javascript" src="${baseUri}/sparql/viz/js/codeMirror/sparql.js"></script>
 	<!-- interface for legacy visu javascript -->
 	<script language="javascript" src="${baseUri}/sparql/viz/js/legacy-visu.js"></script>
 	<script language="javascript" src="${baseUri}/sparql/viz/js/launchWKT.js"></script>
-	<script src="${baseUri}/sparql/viz/js/mapline.js"></script>
+	<!-- <script src="${baseUri}/sparql/viz/js/mapline.js"></script> -->
+	<script src="${baseUri}/sparql/save-request/mapline.js"></script>
 	<script>
 		var JQ = $.noConflict(true);
 	</script>
@@ -436,15 +429,24 @@
 		var searchData = new Array();
 		var responsePtr;
 		var isMapLine = false;
+		var editor = CodeMirror.fromTextArea(document.getElementById("query"), {
+			mode: "application/sparql-query",
+			lineNumbers: true,
+            theme : 'xq-light',
+			matchBrackets: true
+		});
 
 		#foreach( $q in $queries )
-			$("#query").val("$esc.propertyValue($q)");
+			var textArea = document.getElementById('code');
+			editor.getDoc().setValue('$esc.propertyValue($q)');
+			// $("#query").val("$esc.propertyValue($q)");
 		#end
 		
 		function queryUpdate() {
 			var disableSelect = true;
 			var disableConstruct = true;
-			var s = $("#query").val();
+			// var s = $("#query").val();
+			var s = editor.getDoc().getValue();
 			if (s.match(/(^|\s+)(CONSTRUCT|DESCRIBE)\s+/i)) {
 				disableConstruct = false;
 			}
@@ -464,12 +466,14 @@
 			$("#result_format").buttonset();
 
 			
-			$("#query").keyup(function() {
+			// $("#query").keyup(function() {
+			$(".CodeMirror").keyup(function() {
 				queryUpdate();
 			});
 
 
-			$("#query_form").keydown(function(e) {
+			$(".CodeMirror").keydown(function(e) {
+			// $("#query_form").keydown(function(e) {
 				if (e.keyCode == 13 && (e.metaKey || e.ctrlKey)) {
 					$("#query_form").submit();
 				}
@@ -477,7 +481,8 @@
 
 			$("#query_form").submit(function(e) {
 				// Switch to POST for large queries
-				var query = $("#query").val();
+				var query = editor.getDoc().getValue();
+				// var query = $("#query").val();
 				var method = (query.length > 1900)? "post": "get";
 
 				var fmt = $("input[name=format]:checked").val();
@@ -564,7 +569,7 @@
 				myColModel[i] = [];
 				myColModel[i].name = response.head.vars[i];
 				##add row to search select
-				options[options.length] = new Option(response.head[i], response.head[i], false, false);
+				options[options.length] = new Option(response.head.vars[i], response.head.vars[i], false, false);
 			}
 			$("#table_results").GridUnload();
 			// initializing jqGrid
@@ -581,6 +586,7 @@
 				rows.push(sObj);
 			});
 			
+			// console.log(myColModel);
 			$("#table_results").jqGrid({
 				datatype: "local",
 				// colNames: response.head,
@@ -670,7 +676,8 @@
 		##Event for clear a request
 		$('#clear').click(
             function(){
-                $('#query').val('');
+                editor.getDoc().setValue('');
+                // $('#query').val('');
             }
         );
 
@@ -679,7 +686,8 @@
 		$('#print').click(
             function(){
 				var popUp = window.open("", "MsgWindow", "width=800, height=600");
-				var req = $('#query').val().trim();
+				var req = editor.getDoc().getValue();
+				// var req = $('#query').val().trim();
 				req = stringProcessing(req);
 				popUp.document.write(req);
 				popUp.print();
@@ -726,10 +734,12 @@
 				var $scope = angular.element(appElement).scope();
 				$scope.$apply(function(){
 					$scope.paramNumber = getNumberVariables();
-					$scope.query = $("#query").val();
+					$scope.query = editor.getDoc().getValue();
+					// $scope.query = $("#query").val();
 				});
 
-				var q = $('#query').val();
+				var q = editor.getDoc().getValue();
+				// var q = $('#query').val();
 				q = q.split("limit");
 				qq = q[0].split("LIMIT");
 				q = qq[0].split("# Datalift");
@@ -854,7 +864,8 @@
 		$('#save').click(
             function(){
 				var requestName = prompt("#i18n("sparql.endpoint.prompt.message1")","#i18n("sparql.endpoint.prompt.message2")");
-                var requestData = $('#query').val();
+                var requestData = editor.getDoc().getValue();
+                // var requestData = $('#query').val();
 
 				var date = new Date;
 				var dd = date.getDate();
@@ -892,7 +903,8 @@
 		$("#resave").click(
             function(){
 				//TODO show that button is pressed
-                var requestData = $('#query').val();
+                var requestData = editor.getDoc().getValue();
+                // var requestData = $('#query').val();
 				var requestName = $("#query_title").text();
 
 				requestName = requestName.replace('#i18n("sparql.endpoint.request") : ', '');
@@ -924,6 +936,7 @@
 						Accept : "text/plain; charset=utf-8"
 					},
 					url : '${baseUri}/sparql/save-request',
+					cache : false,
 					type : 'GET',
 					dataType : 'html',
 					error : function(result, status, error){
@@ -946,6 +959,7 @@
 					},
 					url : '${baseUri}/sparql/save-request',
 					type : 'GET',
+					cache : false,
 					dataType : 'html',
 					error : function(result, status, error){
 						window.alert("#i18n("sparql.endpoint.alert.message2")");
@@ -1050,8 +1064,7 @@
 		##event for choose one of the saving request
 		$('#dialog').change(
             function(){
-				if($("#sub_diag option:selected").val()!='--')
-				{
+				if($("#sub_diag option:selected").val()!='--') {
 					$("#query_title").text('#i18n("sparql.endpoint.request") : '+$("#sub_diag option:selected").text()+' (#i18n("sparql.endpoint.savedRequest"))');
 					$("#resave").css('display','inline-block');
 					$.ajax({
@@ -1062,12 +1075,17 @@
 							window.alert("#i18n("sparql.endpoint.alert.message3")");
 					   },
 					   success : function(htmlCode, status){
-							$('#query').val(htmlCode);
+							var textArea = document.getElementById('query');
+							editor.getDoc().setValue(htmlCode);
+							// $('#query').val(htmlCode);
 							queryUpdate();
 							$('#saved_request').css('display','inline');
 							$('#dialog').html('');
 					   }
 					});
+				} else {
+					$('#saved_request').css('display','inline');
+					$('#dialog').html('');
 				}
             }
         );
@@ -1076,8 +1094,7 @@
 		##event for Delete one of the saving request
 		$('#dialog1').change(
             function(){
-				if($("#sub_diag option:selected").val()!='--')
-				{
+				if($("#sub_diag option:selected").val()!='--') {
 					$("#delete").css('display','inline-block');
 					$.ajax({
 					   url : '${baseUri}/sparql/save-request/'+$("#sub_diag option:selected").text(),
@@ -1091,6 +1108,9 @@
 							$('#dialog1').html('');
 					   }
 					});
+				} else {
+					$('#delete').css('display','inline');
+					$('#dialog1').html('');
 				}
             }
         );
@@ -1132,7 +1152,8 @@
 		function getNumberVariables()
 		{
 			var sel = $('#default-graph-uri-visu').val();
-			var q = $("#query").val();
+			var q = editor.getDoc().getValue();
+			// var q = $("#query").val();
 			q = q.split("limit");
 			qq = q[0].split("LIMIT");
 			qq[0] = qq[0] + " limit 1";
@@ -1141,7 +1162,7 @@
 				type : 'GET',
 				data : {
 					'default-graph-uri' : sel,
-					'query' : q[0],
+					'query' : q[0], /////////////////////////////////////////////////---------------------------------------------to resee --------------------///////////////////////
 					//'max'   : 1,
 				},
 				dataType : 'json',
@@ -1239,7 +1260,8 @@
 				var scope = angular.element(appElement).scope();
 				scope.$apply(function(){
 					scope.paramNumber = getNumberVariables();
-					scope.query = $("#query").val();
+					scope.query = editor.getDoc().getValue();
+					// scope.query = $("#query").val();
 					var length = $("#numberOfSelect").val();
 
 					for(var i=0; i<length; i++){
@@ -1274,7 +1296,7 @@
 			var $scope = angular.element(appElement).scope();
 			$scope.$apply(function(){
 				$scope.paramNumber = getNumberVariables();
-				$scope.query = $("#query").val();
+				$scope.query = editor.getDoc().getValue();
 			});
 		}
 		/**
@@ -1344,9 +1366,11 @@
 		 * @autor Zakaria Khattabi
 		 **/
 		function launchSgvizler(data, key){
-			$("#graphs_get_description").html("<div id=\"sgVzl\" data-sgvizler-query=\""+$("#query").val().trim()+"\" data-sgvizler-chart=\""+data.graphs[key].dataSgvizlerChart+"\" style=\"width:100%;height:100%;\"></div>");
+			$("#graphs_get_description").html("<div id=\"sgVzl\" data-sgvizler-query=\""+editor.getDoc().getValue().trim()+"\" data-sgvizler-chart=\""+data.graphs[key].dataSgvizlerChart+"\" style=\"width:100%;height:100%;\"></div>");
+			// $("#graphs_get_description").html("<div id=\"sgVzl\" data-sgvizler-query=\""+$("#query").val().trim()+"\" data-sgvizler-chart=\""+data.graphs[key].dataSgvizlerChart+"\" style=\"width:100%;height:100%;\"></div>");
 			//Launching sgvizler
-			var sparqlQueryString = $("#query").val().trim(),
+			var sparqlQueryString = editor.getDoc().getValue().trim(),
+			// var sparqlQueryString = $("#query").val().trim(),
 			containerID = "sgVzl",
 			Q = new sgvizler.Query(),
 			sel = $('#default-graph-uri-visu').val(),
@@ -1371,7 +1395,8 @@
 			// $("#graphs_get_description").html("<div id=\"map\" style=\"width:100%;height:100%;\"></div>");
 			visu.createContainer("graphs_get_description", "map");
 			var t = [],
-			q = $("#query").val(),
+			q = editor.getDoc().getValue(),
+			// q = $("#query").val(),
 			sel = $('#default-graph-uri-visu').val();
 			$.ajax({
 				url : '${baseUri}/sparql',
@@ -1436,7 +1461,8 @@
 		 **/
 		function launchHBubblesChart(){
 			var t = [];
-			var q = $("#query").val();
+			var q = editor.getDoc().getValue();
+			// var q = $("#query").val();
 			var sel = $('#default-graph-uri-visu').val();
 
 			$.ajax({
@@ -1519,7 +1545,8 @@
 		 **/
 		function launchHlinesLabelsChart(){
 			var t = [];
-			var q = $("#query").val();
+			var q = editor.getDoc().getValue();
+			// var q = $("#query").val();
 			var sel = $('#default-graph-uri-visu').val();
 
 			$.ajax({
@@ -1625,7 +1652,8 @@
 		 **/
 		function launchHLinesChart(){
 			var t = [];
-			var q = $("#query").val();
+			var q = editor.getDoc().getValue();
+			// var q = $("#query").val();
 			var sel = $('#default-graph-uri-visu').val();
 
 			$.ajax({
@@ -1725,7 +1753,8 @@
 		 **/
 		function launchHLogarithmicChart(){
 			var t = [];
-			var q = $("#query").val();
+			var q = editor.getDoc().getValue();
+			// var q = $("#query").val();
 			var sel = $('#default-graph-uri-visu').val();
 
 			$.ajax({
@@ -1823,7 +1852,8 @@
 			$("#graphs_get_description").html(htmlCode);
 			(function(){
 				var t = [];
-				var q = $("#query").val();
+				var q = editor.getDoc().getValue();
+				// var q = $("#query").val();
 				var sel = $('#default-graph-uri-visu').val();
 				
 				$.ajax({
@@ -1989,7 +2019,8 @@
 		 **/
 		function launchHBarBasicChart(){
 			var t = [];
-			var q = $("#query").val();
+			var q = editor.getDoc().getValue();
+			// var q = $("#query").val();
 			var sel = $('#default-graph-uri-visu').val();
 
 			$.ajax({
@@ -2026,6 +2057,7 @@
 							t.push(temp);
 						});
 						console.log(t);
+						console.log(varNames);
 						
 						var tt = [];
 						var categories = [];
@@ -2045,7 +2077,7 @@
 						for(var i=0; i<tt.length; i++){
 							var d = {};
 							d["data"] = tt[i];
-							d["name"] = varNames[i];
+							d["name"] = varNames[i+1];
 							seriesOptions.push(d);
 						}
 						console.log(seriesOptions);		
@@ -2109,7 +2141,8 @@
 		 **/
 		function launchHBasicColumnChart(){
 			var t = [];
-			var q = $("#query").val();
+			var q = editor.getDoc().getValue();
+			// var q = $("#query").val();
 			var sel = $('#default-graph-uri-visu').val();
 
 			$.ajax({
@@ -2166,7 +2199,7 @@
 						for(var i=0; i<tt.length; i++){
 							var d = {};
 							d["data"] = tt[i];
-							d["name"] = varNames[i];
+							d["name"] = varNames[i+1];
 							seriesOptions.push(d);
 						}
 						console.log(seriesOptions);
@@ -2221,7 +2254,8 @@
 		 **/
 		function launchColumnRangeChart(){
 			var t = [];
-			var q = $("#query").val();
+			var q = editor.getDoc().getValue();
+			// var q = $("#query").val();
 			var sel = $('#default-graph-uri-visu').val();
 
 			$.ajax({
@@ -2345,7 +2379,8 @@
 		 **/
 		function launchHSemiCircleDonutChart(){
 			var t = [];
-			var q = $("#query").val();
+			var q = editor.getDoc().getValue();
+			// var q = $("#query").val();
 			var sel = $('#default-graph-uri-visu').val();
 
 			$.ajax({
@@ -2460,7 +2495,8 @@
 		 **/
 		function launchHPieGradientFillChart(){
 			var t = [];
-			var q = $("#query").val();
+			var q = editor.getDoc().getValue();
+			// var q = $("#query").val();
 			var sel = $('#default-graph-uri-visu').val();
 
 			$.ajax({
@@ -2578,7 +2614,8 @@
 		 **/
 		function launchH3DPieChart(){
 			var t = [];
-			var q = $("#query").val();
+			var q = editor.getDoc().getValue();
+			// var q = $("#query").val();
 			var sel = $('#default-graph-uri-visu').val();
 			$.ajax({
 				url : '${baseUri}/sparql',
@@ -2687,7 +2724,8 @@
 		function launchHPolarChart(){
 			var t = [];
 			var type = ["column", "line", "area"]
-			var q = $("#query").val();
+			var q = editor.getDoc().getValue();
+			// var q = $("#query").val();
 			var sel = $('#default-graph-uri-visu').val();
 
 			$.ajax({
@@ -2803,7 +2841,8 @@
 		 **/
 		function launchHSpiderwebChart(){
 			var t = [];
-			var q = $("#query").val();
+			var q = editor.getDoc().getValue();
+			// var q = $("#query").val();
 			var sel = $('#default-graph-uri-visu').val();
 
 			$.ajax({
@@ -2918,7 +2957,8 @@
 		function launchHTreeMapLevelsChart(){
 			var t = [];
 			var type = ["name", "parent", "value"];
-			var q = $("#query").val();
+			var q = editor.getDoc().getValue();
+			// var q = $("#query").val();
 			var sel = $('#default-graph-uri-visu').val();
 
 			$.ajax({
@@ -3034,7 +3074,8 @@
 		function launchHTreeMapChart(){
 			var t = [];
 			var type = ["name", "value", "colorValue"];
-			var q = $("#query").val();
+			var q = editor.getDoc().getValue();
+			// var q = $("#query").val();
 			var sel = $('#default-graph-uri-visu').val();
 			$.ajax({
 				url : '${baseUri}/sparql',
@@ -3125,7 +3166,8 @@
 		 * @autor Zakaria Khattabi
 		 **/
 		function launchOL(){
-			var q = $("#query").val();
+			var q = editor.getDoc().getValue();
+			// var q = $("#query").val();
 			var sel = $('#default-graph-uri-visu').val();
 			$.ajax({
 				url : '${baseUri}/sparql',
@@ -3190,7 +3232,8 @@
 		 * @autor Zakaria Khattabi
 		 **/
 		function launchDynamicMap(){
-			var q = $("#query").val();
+			var q = editor.getDoc().getValue();
+			// var q = $("#query").val();
 			var sel = $('#default-graph-uri-visu').val();
 			$.ajax({
 				url : '${baseUri}/sparql',
@@ -3241,7 +3284,8 @@
 		 **/
 		function launchH3DBubblesChart(){
 			var t = [];
-			var q = $("#query").val();
+			var q = editor.getDoc().getValue();
+			// var q = $("#query").val();
 			var sel = $('#default-graph-uri-visu').val();
 
 			$.ajax({
@@ -3333,7 +3377,8 @@
 		 **/
 		function launchHAreaSplineChart(){
 			var t = [];
-			var q = $("#query").val();
+			var q = editor.getDoc().getValue();
+			// var q = $("#query").val();
 			var sel = $('#default-graph-uri-visu').val();
 
 			$.ajax({
@@ -3447,7 +3492,8 @@
 		 **/
 		function launchHScatterChart(){
 			var t = [];
-			var q = $("#query").val();
+			var q = editor.getDoc().getValue();
+			// var q = $("#query").val();
 			var sel = $('#default-graph-uri-visu').val();
 
 			$.ajax({
@@ -3587,16 +3633,23 @@
 				#foreach( $q in $queries )
 					t.push("$esc.propertyValue($q)");
 				#end
-				if ($("#predef_diag").val()!='--')
-					$("#query").val(t[$("#predef_diag").val()]);
-				queryUpdate();
-				$('#predef').css('display','inline-block');
-				$('#predefList').html('');
+				var textArea = document.getElementById('query');
+				if ($("#predef_diag").val()!='--'){
+					editor.getDoc().setValue(t[$("#predef_diag").val()]);
+					// $("#query").val(t[$("#predef_diag").val()]);
+					queryUpdate();
+					$('#predef').css('display','inline-block');
+					$('#predefList').html('');
+				} else {
+					$('#predef').css('display','inline-block');
+					$('#predefList').html('');
+				}
 			}
 		);
 		function launchHPolygonSeriesChart(){
 			var t = [];
-			var q = $("#query").val();
+			var q = editor.getDoc().getValue();
+			// var q = $("#query").val();
 			var sel = $('#default-graph-uri-visu').val();
 
 			$.ajax({
@@ -3689,7 +3742,8 @@
 		}
 		function launchH3DScatterChart(){
 			var t = [];
-			var q = $("#query").val();
+			var q = editor.getDoc().getValue();
+			// var q = $("#query").val();
 			var sel = $('#default-graph-uri-visu').val();
 
 			$.ajax({

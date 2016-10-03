@@ -103,6 +103,8 @@
   <property name="deploy.lib.home"      location="${lib.home}/deploy"/>
   <property name="run.lib.home"         location="${lib.home}/runtime"/>
 
+  <property name="local.mvn.repo"       location="${basedir}/../mvn-repo"/>
+
   <property name="docs.dir"             location="${dist.home}/docs"/>
   <property name="classes.dir"          location="${build.home}/classes"/>
 
@@ -150,6 +152,9 @@
     <!-- Include all JAR files that will be included in webapp WAR -->
     <fileset dir="${run.lib.home}">
       <include name="**/*.jar"/>
+    </fileset>
+    <fileset dir="${local.mvn.repo}">
+      <include name="org/itadaki/bzip2-jdk1.6/0.9.1/**/*.jar"/>
     </fileset>
   </path>
 
