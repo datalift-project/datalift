@@ -455,7 +455,8 @@ public final class RdfUtils
             targetGraph = getGraphUri(namedGraph, cnx, clearTargetGraph);
             // Load triples, mapping URIs on the fly.
             BatchStatementAppender appender =
-                    new MappingBatchStatementAppender(cnx, targetGraph, mapper);
+                    new MappingBatchStatementAppender(cnx, targetGraph, mapper,
+                                                      target.getRdfBatchSize());
             appender.startRDF();
             for (Statement stmt : source) {
                 appender.handleStatement(stmt);

@@ -72,7 +72,6 @@ import org.apache.velocity.runtime.directive.Directive;
 import org.apache.velocity.runtime.log.Log4JLogChute;
 import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
 import org.apache.velocity.tools.ToolContext;
-import org.apache.velocity.tools.generic.DateTool;
 import org.apache.velocity.tools.generic.FieldTool;
 import org.apache.velocity.tools.generic.LinkTool;
 import org.apache.velocity.tools.view.WebappResourceLoader;
@@ -80,7 +79,9 @@ import org.apache.velocity.tools.view.WebappResourceLoader;
 import static org.apache.velocity.app.VelocityEngine.*;
 import static org.apache.velocity.runtime.log.Log4JLogChute.*;
 
+import org.datalift.core.velocity.DateTool;
 import org.datalift.core.velocity.EscapeTool;
+import org.datalift.core.velocity.NumberTool;
 import org.datalift.core.velocity.i18n.I18nTool;
 import org.datalift.core.velocity.i18n.I18ncludeDirective;
 import org.datalift.core.velocity.i18n.LoadDirective;
@@ -119,6 +120,8 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
     public final static String CTX_LINK_TOOL        = "link";
     /** The context key for Velocity Date tool. */
     public final static String CTX_DATE_TOOL        = "date";
+    /** The context key for Velocity Number tool. */
+    public final static String CTX_NUMBER_TOOL      = "number";
     /** The context key for Velocity Field tool. */
     public final static String CTX_FIELD_TOOL       = "field";
     /** The context key for Datalift SPARQL tool. */
@@ -282,7 +285,10 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
                                                        fieldTool);
             log.trace("Merging template {} with context {}", t.getName(), ctx);
             // Add predefined variable for base URI.
-            UriInfo uriInfo = this.httpContext.getUriInfo();
+            UriInfo uriInfo = null;
+            if (this.httpContext != null) {
+                uriInfo = this.httpContext.getUriInfo();
+            }
             if (uriInfo != null) {
                 if (! ctx.containsKey(CTX_BASE_URI)) {
                     String baseUri = uriInfo.getBaseUri().toString();
@@ -320,6 +326,9 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
                                                 PreferredLocales.get().get(0));
                 dateTool.configure(config);
                 ctx.put(CTX_DATE_TOOL, dateTool);
+            }
+            if (! ctx.containsKey(CTX_NUMBER_TOOL)) {
+                ctx.put(CTX_NUMBER_TOOL, new NumberTool());
             }
             if (! ctx.containsKey(CTX_FIELD_TOOL)) {
                 ctx.put(CTX_FIELD_TOOL, fieldTool);
@@ -381,8 +390,11 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
      *         if no character set information can be retrieved.
      */
     private String getCharset() {
-        MediaType m = this.httpContext.getResponse().getMediaType();
-        String cs = (m == null)? null: m.getParameters().get("charset");
+        String cs = null;
+        if (this.httpContext != null) {
+            MediaType m = this.httpContext.getResponse().getMediaType();
+            cs = (m == null)? null: m.getParameters().get("charset");
+        }
         return (cs == null)? UTF8_CHARSET: cs;
     }
 
@@ -452,13 +464,15 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
 
             // Check for template cache activation.
             long updateInterval = 0L;
-            try {
-                String s = ctx.getInitParameter(TEMPLATES_CACHE_DURATION);
-                if (s != null) {
-                    updateInterval = Long.parseLong(s);
+            if (ctx != null) {
+                try {
+                    String s = ctx.getInitParameter(TEMPLATES_CACHE_DURATION);
+                    if (s != null) {
+                        updateInterval = Long.parseLong(s);
+                    }
                 }
+                catch (Exception e) { /* Ignore... */ }
             }
-            catch (Exception e) { /* Ignore... */ }
 
             if (log.isDebugEnabled()) {
                 if (updateInterval < 0L) {
@@ -477,9 +491,11 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
             // Add default template path for web application.
             fileSources.add(getAbsolutePath(TEMPLATES_WEBAPP_DEFAULT_PATH));
             // Check for configured template path is specified.
-            String path = ctx.getInitParameter(TEMPLATES_BASE_PATH);
-            if (! isBlank(path)) {
-                fileSources.add(getAbsolutePath(path));
+            if (ctx != null) {
+                String path = ctx.getInitParameter(TEMPLATES_BASE_PATH);
+                if (! isBlank(path)) {
+                    fileSources.add(getAbsolutePath(path));
+                }
             }
             // Add all registered template root paths.
             if (! fileSources.isEmpty()) {
@@ -545,7 +561,10 @@ public class VelocityTemplateProcessor implements ViewProcessor<Template>
                                join(loaders, CONFIG_ELTS_SEPARATOR));
 
             // Configure template encoding, if specified.
-            String encoding = ctx.getInitParameter(TEMPLATES_ENCODING);
+            String encoding = null;
+            if (ctx != null) {
+                encoding = ctx.getInitParameter(TEMPLATES_ENCODING);
+            }
             config.setProperty(INPUT_ENCODING,
                                     isBlank(encoding)? UTF8_CHARSET: encoding);
             // Configure custom Directives for Velocity.

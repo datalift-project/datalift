@@ -64,7 +64,7 @@ public class CreateGeoStatement {
 		geoStatement = vf.createStatement(geomFeature, GeoSPARQL.ASWKT, vf.createLiteral("<" + CRS.IGNFCRS + "> " + gp.getValue(),GeoSPARQL.WKTLITERAL));
 		aboutGeometry.add(geoStatement);
 
-		if (geoType.equals("MultiPolygon")){
+		/*if (geoType.equals("MultiPolygon")){
 			this.serializeMultipolygon(gp,geomFeature,crs);
 		}
 
@@ -89,10 +89,27 @@ public class CreateGeoStatement {
 		}
 		if (geoType.equals("Point")){
 			this.serializePoint(gp,geomFeature,crs,0);
-		}
+		}*/
 	}
 
 	// serialize Geometry Features into RDF
+
+	public ValueFactory getVf() {
+		return vf;
+	}
+
+	public void setVf(ValueFactory vf) {
+		this.vf = vf;
+	}
+
+	public Statement getGeoStatement() {
+		return geoStatement;
+	}
+
+	public void setGeoStatement(Statement geoStatement) {
+		this.geoStatement = geoStatement;
+	}
+
 
 	protected void serializeMultipolygon(GeometryProperty gp, Resource geomFeature, String crs){
 		geoStatement = vf.createStatement(geomFeature, RDF.TYPE, Geometrie.MULTIPOLYGON);

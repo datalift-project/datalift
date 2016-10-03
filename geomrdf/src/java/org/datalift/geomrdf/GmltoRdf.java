@@ -74,7 +74,6 @@ import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.rdf.UriCachingValueFactory;
-import org.datalift.fwk.util.Env;
 import org.datalift.fwk.util.UriBuilder;
 import org.datalift.fwk.util.io.FileUtils;
 
@@ -307,7 +306,7 @@ public class GmltoRdf extends BaseConverterModule
 			long startTime = System.currentTimeMillis();
 			long duration = -1L;
 			long statementCount = 0L;
-			int  batchSize = Env.getRdfBatchSize();
+			int  batchSize = target.getRdfBatchSize();
 
 			try {
 				// Prevent transaction commit for each triple inserted.

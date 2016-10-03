@@ -78,11 +78,13 @@ import java.util.Properties;
      */
     public String getValue(String key) {
         String value = key;
-        for (Bundle b : this.bundles) {
-            String v = b.get(key);
-            if (v != null) {
-                value = v;
-                break;
+        if (key != null) {
+            for (Bundle b : this.bundles) {
+                String v = b.get(key);
+                if (v != null) {
+                    value = v;
+                    break;
+                }
             }
         }
         return value;

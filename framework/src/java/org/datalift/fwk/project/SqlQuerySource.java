@@ -13,8 +13,8 @@ import org.datalift.fwk.util.CloseableIterable;
  */
 public interface SqlQuerySource extends SqlSource, CloseableIterable<Row<Object>>
 {
-	public String getQuery();
-	
+    public String getQuery();
+
     public void setQuery(String query);
 
     /**

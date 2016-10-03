@@ -255,7 +255,7 @@ public class ApplicationLoader extends LogServletContextListener
         catch (Throwable e) {
             TechnicalException error = new TechnicalException(
                                 "configuration.load.error", e, e.getMessage());
-            log.fatal(error.getMessage(), e);
+            log.fatal(error.getMessage(), error);
             throw error;
         }
         finally {

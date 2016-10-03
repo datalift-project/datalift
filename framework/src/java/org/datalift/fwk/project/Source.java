@@ -34,6 +34,8 @@
 
 package org.datalift.fwk.project;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -60,54 +62,89 @@ public interface Source
                                             new HashMap<String,SourceType>();
 
         public static final SourceType RdfFileSource =
-                            new SourceType("datalift.rdf.file.source",
-                                           "source.rdf.file.label");
+                new SourceType("datalift.rdf.file.source",
+                               "RdfFileSource", "source.rdf.file.label");
         public static final SourceType CsvSource =
-                            new SourceType("datalift.csv.file.source",
-                                           "source.csv.file.label");
+                new SourceType("datalift.csv.file.source",
+                               "CsvSource", "source.csv.file.label");
         public static final SourceType SqlQuerySource =
-                            new SourceType("datalift.sql.query.source",
-                                           "source.sql.query.label");
+                new SourceType("datalift.sql.query.source",
+                               "SqlQuerySource", "source.sql.query.label");
         public static final SourceType SqlDatabaseSource =
-                            new SourceType("datalift.sql.db.source",
-                                           "source.sql.db.label");
+                new SourceType("datalift.sql.db.source",
+                               "SqlDatabaseSource", "source.sql.db.label");
         public static final SourceType TransformedRdfSource =
-                            new SourceType("datalift.internal.source",
-                                           "source.internal.label");
+                new SourceType("datalift.internal.source",
+                               "TransformedRdfSource", "source.internal.label");
         public static final SourceType SparqlSource =
-                            new SourceType("datalift.sparl.query.source",
-                                           "source.sparql.query.label");
+                new SourceType("datalift.sparl.query.source",
+                               "SparqlSource", "source.sparql.query.label");
         public static final SourceType XmlSource =
-                            new SourceType("datalift.xml.file.source",
-                                           "source.xml.file.label");
+                new SourceType("datalift.xml.file.source",
+                               "XmlSource", "source.xml.file.label");
         public static final SourceType ShpSource =
-                            new SourceType("datalift.shp.file.source",
-                                           "source.shp.file.label");
+                new SourceType("datalift.shp.file.source",
+                               "ShpSource", "source.shp.file.label");
         public static final SourceType GmlSource =
-                            new SourceType("datalift.gml.file.source",
-                                           "source.gml.file.label");
+                new SourceType("datalift.gml.file.source",
+                               "GmlSource", "source.gml.file.label");
+        public static final SourceType WfsSource =
+                new SourceType("datalift.wfs.service.source",
+                               "WfsSource", "source.wfs.service.label");
 
         private final String id;
+        private final String name;
         private final String label;
 
-        private SourceType(String id, String label) {
+        private SourceType(String id, String name, String label) {
             if (isBlank(id)) {
                 throw new IllegalArgumentException("id");
+            }
+            if (isBlank(name)) {
+                throw new IllegalArgumentException("name");
             }
             if (isBlank(label)) {
                 throw new IllegalArgumentException("label");
             }
             this.id    = id;
+            this.name  = name;
             this.label = label;
             srcTypes.put(id, this);
         }
 
-        public String getId() {
+        public final String getId() {
             return this.id;
         }
 
-        public String getLabel() {
+        public final String getName() {
+            return this.name;
+        }
+
+        public final String getLabel() {
             return this.label;
+        }
+
+        public final String name() {
+            return this.getName();
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public String toString() {
+            return this.name();
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public int hashCode() {
+            return this.id.hashCode();
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public boolean equals(Object o) {
+            return (o instanceof SourceType) &&
+                   (this.id.equals(((SourceType)o).id));
         }
 
         public static SourceType getType(String id) {
@@ -117,9 +154,13 @@ public interface Source
         public static SourceType getType(String id, String label) {
             SourceType t = srcTypes.get(id);
             if ((t == null) && (! isBlank(label))) {
-                t = new SourceType(id, label);
+                t = new SourceType(id, id, label);
             }
             return t;
+        }
+
+        public static Collection<SourceType> values() {
+            return Collections.unmodifiableCollection(srcTypes.values());
         }
     }
 

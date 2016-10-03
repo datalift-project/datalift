@@ -48,6 +48,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.MissingResourceException;
 import java.util.Map.Entry;
+import java.util.NoSuchElementException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -199,6 +200,13 @@ public final class SparqlTool
     }
 
     /**
+     * Removes all registered namespace prefixes.
+     */
+    public void clearPrefixes() {
+        this.prefixes.clear();
+    }
+
+    /**
      * Binds the specified value to the specified SPARQL query variable.
      * If the value is a native Java object (URI, URL, Integer, Boolean,
      * Byte...) it is first {@link RdfUtils#mapBinding(Object) converted}
@@ -211,6 +219,9 @@ public final class SparqlTool
      *         defined for the object Java type.
      */
     public void bind(String name, Object value) {
+        if (value == null) {
+            this.bindings.remove(name);
+        }
         Value v = RdfUtils.mapBinding(value);
         if (v != null) {
             this.bindings.put(name, v);
@@ -243,6 +254,13 @@ public final class SparqlTool
         for (Map.Entry<String,Object> e : bindings.entrySet()) {
             this.bind(e.getKey(), e.getValue());
         }
+    }
+
+    /**
+     * Removes all variable bindings.
+     */
+    public void clearBindings() {
+        this.bindings.clear();
     }
 
     /**
@@ -288,7 +306,7 @@ public final class SparqlTool
      *
      * @see    #select(String, String)
      */
-    public Iterator<Map<String,Value>> select(String query) {
+    public SelectResultIterator select(String query) {
         return this.select(this.defaultRepository, query);
     }
 
@@ -305,7 +323,7 @@ public final class SparqlTool
      * @throws RdfQueryException if any error occurred executing the
      *         query or processing the result.
      */
-    public Iterator<Map<String,Value>> select(String repository, String query) {
+    public SelectResultIterator select(String repository, String query) {
         return this.select(this.cfg.getRepository(repository), query);
     }
 
@@ -640,8 +658,7 @@ public final class SparqlTool
      * @throws RdfQueryException if any error occurred executing the
      *         query or processing the result.
      */
-    private Iterator<Map<String,Value>> select(Repository repository,
-                                               String query) {
+    private SelectResultIterator select(Repository repository, String query) {
         if (! isSet(query)) {
             throw new IllegalArgumentException("query");
         }
@@ -1087,6 +1104,15 @@ public final class SparqlTool
             return sortedResults;
         }
 
+        /**
+         * Convenience method to access the next result.
+         * @return the next available result or <code>null</code> if no
+         *         more results are available.
+         */
+        public Map<String,Value> nextResult() {
+            return (this.hasNext())? this.next(): null;
+        }
+
         /** {@inheritDoc} */
         @Override
         public boolean hasNext() {
@@ -1098,7 +1124,7 @@ public final class SparqlTool
                 }
             }
             catch (Exception e) {
-                log.error("Unexpected error while browsing result of:\n{}", e,
+                log.error("Unexpected error while browsing results of:\n{}", e,
                           this.query);
                 // Do not propagate error to prevent page rendering failure.
             }
@@ -1115,7 +1141,12 @@ public final class SparqlTool
                 }
                 return bindings;
             }
+            catch (NoSuchElementException e) {
+                throw e;
+            }
             catch (Exception e) {
+                log.error("Unexpected error while reading results of:\n{}", e,
+                          this.query);
                 throw new RuntimeException("Result reading error for: " +
                                                                this.query, e);
             }
@@ -1175,7 +1206,7 @@ public final class SparqlTool
                 }
             }
             catch (Exception e) {
-                log.error("Unexpected error while browsing result of:\n{}", e,
+                log.error("Unexpected error while browsing results of:\n{}", e,
                           this.query);
                 // Do not propagate error to prevent page rendering failure.
             }
@@ -1188,7 +1219,12 @@ public final class SparqlTool
             try {
                 return this.result.next();
             }
+            catch (NoSuchElementException e) {
+                throw e;
+            }
             catch (Exception e) {
+                log.error("Unexpected error while reading results of:\n{}", e,
+                          this.query);
                 throw new RuntimeException("Result reading error for: " +
                                                                 this.query, e);
             }

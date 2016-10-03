@@ -37,6 +37,7 @@ package org.datalift.sparql;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.SocketException;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Collection;
@@ -916,6 +917,37 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
         return fmt;
     }
 
+    /**
+     * Handles errors that occurred during outputting query results to
+     * the client directly on the HTTP connection in streaming mode. In
+     * this case it is no longer possible to return an HTTP error to the
+     * client as all HTTP headers have been sent; the only option is to
+     * abort the connection.
+     * @param  query   the query that was being processed.
+     * @param  e       the error.
+     * @throws WebApplicationException if force closing the HTTP
+     *         connection.
+     */
+    protected final void handleResultError(String query, Exception e)
+                                                throws WebApplicationException {
+        boolean socketError = false;
+        // Check that the error was not caused by the remote
+        // closing the socket connection.
+        Throwable t = e.getCause();
+        while (t != null) {
+            if (t instanceof SocketException) {
+                socketError = true;
+                break;
+            }
+            t = t.getCause();
+        }
+        if (! socketError) {
+            // Local error. => Abort HTTP connection.
+            this.handleError(query, e);
+        }
+        // Else: Ignore error, connection has been closed.
+    }
+
     //-------------------------------------------------------------------------
     // ConstructStreamingOutput nested class
     //-------------------------------------------------------------------------
@@ -959,7 +991,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                 this.evalTime = System.currentTimeMillis() - startTime;
             }
             catch (OpenRDFException e) {
-                handleError(query, e);
+                handleResultError(query, e);
             }
             finally {
                 Repository.closeQuietly(cnx);
@@ -1061,7 +1093,7 @@ public class SesameSparqlEndpoint extends AbstractSparqlEndpoint
                 this.evalTime = System.currentTimeMillis() - startTime;
             }
             catch (OpenRDFException e) {
-                handleError(query, e);
+                handleResultError(query, e);
             }
             finally {
                 Repository.closeQuietly(cnx);

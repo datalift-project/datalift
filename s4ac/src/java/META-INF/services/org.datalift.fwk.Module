@@ -1,0 +1,3 @@
+org.datalift.s4ac.services.S4acAccessController
+org.datalift.s4ac.services.SecurityAccessContextProvider
+org.datalift.s4ac.services.SparqlAccessContextProvider

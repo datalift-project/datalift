@@ -103,7 +103,7 @@ public class S4acAccessController extends BaseModule
             "SELECT DISTINCT ?g WHERE { GRAPH ?g { ?s ?p ?o . } }";
 
     private final static Pattern QUERY_TYPE_PATTERN = Pattern.compile(
-            "(^|\\s)(" + ASK.name() + '|' + CONSTRUCT.name() + '|' +
+            "(^|\\s|>)(" + ASK.name() + '|' + CONSTRUCT.name() + '|' +
                          DESCRIBE.name() + '|' + SELECT.name() + ")\\s",
             Pattern.CASE_INSENSITIVE);
 
@@ -290,6 +290,10 @@ public class S4acAccessController extends BaseModule
         Set<String> graphs = null;
         // Parse query to extract query type.
         QueryType type = this.getQueryType(query);
+        if (type == QueryType.UNKNOWN) {
+            throw new SecurityException(
+                                "Unrecognized query type for: " + query);
+        }
 
         if (this.isSecured(repository)) {
             // Get accessible graphs for the currently logged user.
@@ -487,7 +491,7 @@ public class S4acAccessController extends BaseModule
     }
 
     private QueryType getQueryType(String query) {
-        QueryType type = null;
+        QueryType type = UNKNOWN;
         Matcher m = QUERY_TYPE_PATTERN.matcher(query);
         if (m.find()) {
             String t = m.group(2).toUpperCase();

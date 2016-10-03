@@ -15,7 +15,7 @@ public interface SqlDatabaseSource extends SqlSource {
      * Returns the Database name based on the JDBC URL.
      * @return the Database name based on the JDBC URL.
      */
-    public String getDatabaseName();	
+    public String getDatabaseName();
 
     /**
      * Returns the number of tables included in the database

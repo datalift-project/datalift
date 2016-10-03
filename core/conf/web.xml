@@ -7,8 +7,8 @@
         http://java.sun.com/xml/ns/j2ee
           http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
 
-  <display-name>@app.name@</display-name>
-  <description>@app.long.name@</description>
+  <display-name>datalift</display-name>
+  <description>Datalift</description>
 
   <!-- ===== Lifecycle event listeners ===== -->
 
@@ -28,7 +28,7 @@
        updates, N = check template files for update every N seconds). -->
   <context-param>
     <param-name>velocity.templates.update.check</param-name>
-    <param-value>@velocity.cache.duration@</param-value>
+    <param-value>${velocity.cache.duration}</param-value>
   </context-param>
 
   <!-- ===== Filter definitions & URL mappings ===== -->
@@ -141,7 +141,7 @@
     </filter-class>
     <init-param>
       <param-name>Cache-Control</param-name>
-      <param-value>public, max-age=@http.cache.duration@</param-value>
+      <param-value>public, max-age=${http.cache.duration}</param-value>
     </init-param>
   </filter>
   <!-- Cache all static resource for a week -->
@@ -285,7 +285,7 @@
   </mime-mapping>
   <mime-mapping>
     <extension>trig</extension>
-    <mime-type>application/x-trig</mime-type>
+    <mime-type>application/trig</mime-type>
   </mime-mapping>
   <mime-mapping>
     <extension>trix</extension>

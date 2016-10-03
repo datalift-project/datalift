@@ -107,7 +107,10 @@ public enum RdfNamespace
                                 "W3C PROV (provenance) Ontology"),
     /** ldp: &lt;http://www.w3.org/ns/ldp#&gt; */
     LDP         ("ldp",         "http://www.w3.org/ns/ldp#",
-                                "Linked Data Platform");
+                                "Linked Data Platform"),
+	/** ldp: &lt;http://purl.org/pav#&gt; */
+    PAV         ("pav",         "http://purl.org/pav/", 
+                                "PAV Ontology");//ns to check!
 
     //-------------------------------------------------------------------------
     // Class members

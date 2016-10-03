@@ -61,7 +61,7 @@ import org.openrdf.model.ValueFactory;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
-
+import org.openrdf.repository.RepositoryResult;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.FileSource;
@@ -74,7 +74,6 @@ import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.rdf.UriCachingValueFactory;
-import org.datalift.fwk.util.Env;
 import org.datalift.fwk.util.UriBuilder;
 import org.datalift.fwk.util.io.FileUtils;
 
@@ -307,7 +306,7 @@ public class ShptoRdf extends BaseConverterModule
 			long startTime = System.currentTimeMillis();
 			long duration = -1L;
 			long statementCount = 0L;
-			int  batchSize = Env.getRdfBatchSize();
+			int  batchSize = target.getRdfBatchSize();
 
 			try {
 				// Prevent transaction commit for each triple inserted.
@@ -381,10 +380,24 @@ public class ShptoRdf extends BaseConverterModule
 			// Commit pending data (including graph removal in case of error).
 			try { cnx.commit(); } catch (Exception e) { /* Ignore... */ }
 			// Close repository connection.
-			try { cnx.close();  } catch (Exception e) { /* Ignore... */ }
+			try { cnx.close();  view();} catch (Exception e) { /* Ignore... */ }
 		}
 
 	}
+	
+	 public static void view() throws Exception {
+	        RepositoryConnection cnx = Configuration.getDefault().getDefaultRepository().newConnection();
+	        try {
+                    RepositoryResult<Statement> i = cnx.getStatements(null, null, null, false);
+	                
+	                for (; i.hasNext(); ) {
+	                        System.out.println(i.next());
+	                }
+	        }
+	        finally {
+	                cnx.close();
+	        }
+	    }
 
 	protected String cleanUpString(String str) {
 		if (str.contains(":"))

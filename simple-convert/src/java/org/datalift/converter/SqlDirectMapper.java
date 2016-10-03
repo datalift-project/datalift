@@ -73,7 +73,6 @@ import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.project.SqlQuerySource;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
-import org.datalift.fwk.util.Env;
 import org.datalift.fwk.util.UriBuilder;
 import org.datalift.fwk.util.web.UriParam;
 
@@ -348,7 +347,7 @@ public class SqlDirectMapper extends BaseConverterModule
             // Load triples
             long statementCount = 0L;
             long duration = 0L;
-            int  batchSize = Env.getRdfBatchSize();
+            int  batchSize = target.getRdfBatchSize();
             i = 1;                              // Start numbering lines at 1.
             for (Row<Object> row : src) {
                 String key = (keyColumn != null)? row.getString(keyColumn):
