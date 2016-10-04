@@ -62,10 +62,11 @@ import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.rdf.RdfException;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
+import org.datalift.fwk.util.Env;
 
 import static org.datalift.core.DefaultConfiguration.REPOSITORY_DEFAULT_FLAG;
 import static org.datalift.fwk.util.PrimitiveUtils.wrap;
-import static org.datalift.fwk.util.StringUtils.isBlank;
+import static org.datalift.fwk.util.StringUtils.*;
 
 
 /**
@@ -99,6 +100,8 @@ abstract public class BaseRepository extends Repository
                                                     ".repository.sparql.url";
     /** The property suffix for repository type. */
     public final static String REPOSITORY_TYPE = ".repository.type";
+    /** The property suffix for repository batch size. */
+    public final static String REPOSITORY_BATCH_SIZE = ".repository.batch.size";
 
     /** The list of predefined RDF store names for Datalift usage. */
     private final static Collection<String> WELL_KNOWN_REPOSITORIES =
@@ -120,6 +123,8 @@ abstract public class BaseRepository extends Repository
     private final org.openrdf.repository.Repository target;
     /** The value factory to map initial bindings. */
     private final ValueFactory valueFactory;
+    /** The maximum size of RDF statement batches for write operations. */
+    private final int rdfBatchSize;
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -156,6 +161,19 @@ abstract public class BaseRepository extends Repository
         this.endpointUrl = (isBlank(sparqlEndpoint))? this.url: sparqlEndpoint;
         this.target = this.newNativeRepository(configuration);
         this.valueFactory = this.target.getValueFactory();
+
+        int batchSize = Env.getRdfBatchSize();
+        String param = name + REPOSITORY_BATCH_SIZE;
+        String sz = configuration.getProperty(param);
+        if (isSet(sz)) {
+            try {
+                batchSize = Integer.parseInt(sz);
+            }
+            catch (Exception e) {
+                throw new IllegalArgumentException(param + ": " + sz, e);
+            }
+        }
+        this.rdfBatchSize = batchSize;
     }
 
     //-------------------------------------------------------------------------
@@ -303,6 +321,12 @@ abstract public class BaseRepository extends Repository
             log.warn("Failed to properly shut down repository {}", e,
                      this.name);
         }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public int getRdfBatchSize() {
+        return this.rdfBatchSize;
     }
 
     //-------------------------------------------------------------------------
