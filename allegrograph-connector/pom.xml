@@ -11,7 +11,7 @@
     <version>0.9.1-beta-1</version>
   </parent>
 
-  <artifactId>allegrograph-connector</artifactId>
+  <artifactId>datalift-allegrograph-connector</artifactId>
   <packaging>jar</packaging>
 
   <name>AllegroGraph Connector for Datalift</name>

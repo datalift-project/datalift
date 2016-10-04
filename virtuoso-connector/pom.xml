@@ -11,7 +11,7 @@
     <version>0.9.1-beta-1</version>
   </parent>
 
-  <artifactId>virtuoso-connector</artifactId>
+  <artifactId>datalift-virtuoso-connector</artifactId>
   <packaging>jar</packaging>
 
   <name>Virtuoso Connector for Datalift</name>
