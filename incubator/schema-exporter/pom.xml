@@ -27,6 +27,27 @@
       <artifactId>datalift-framework</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <!-- OpenRDF Sesame dependencies -->
+    <dependency>
+      <groupId>org.openrdf.sesame</groupId>
+      <artifactId>sesame-rio-rdfxml</artifactId>
+      <version>${sesame.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.openrdf.sesame</groupId>
+          <artifactId>sesame-sail-rdbms</artifactId>
+        </exclusion>
+        <!-- Exclude outdated dependencies for Jackson JSON library. -->
+        <exclusion>
+          <groupId>com.fasterxml.jackson.core</groupId>
+          <artifactId>jackson-core</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
   </dependencies>
 
   <build>
