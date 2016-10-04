@@ -108,6 +108,8 @@
   <property name="lib.home"             location="${basedir}/lib"/>
   <property name="run.lib.home"         location="${lib.home}/runtime"/>
 
+  <property name="local.mvn.repo"       location="${basedir}/../mvn-repo"/>
+
   <property name="fwk.web.home"         location="${fwk.home}/src/web"/>
   <property name="fwk.lib.home"         location="${fwk.home}/lib"/>
   <property name="fwk.dist.home"        location="${fwk.home}/dist"/>
@@ -157,6 +159,11 @@
    -->
 
   <path id="runtime.classpath">
+    <fileset dir="${local.mvn.repo}">
+      <include name="de/fuberlin/wiwiss/silk/**/2.5.3/*.jar"/>
+      <include name="org/semanticweb/owl/**/4.5/*.jar"/>
+      <include name="fr/inrialpes/exmo/**/4.5/*.jar"/>
+    </fileset>
     <fileset dir="${run.lib.home}">
       <include name="**/*.jar"/>
     </fileset>
@@ -288,6 +295,11 @@
     <copy todir="${classes.dir}" flatten="true">
       <fileset dir="${run.lib.home}">
         <include name="**/*.jar"/>
+      </fileset>
+      <fileset dir="${local.mvn.repo}">
+        <include name="de/fuberlin/wiwiss/silk/**/2.5.3/*.jar"/>
+        <include name="org/semanticweb/owl/**/4.5/*.jar"/>
+        <include name="fr/inrialpes/exmo/**/4.5/*.jar"/>
       </fileset>
     </copy>
     <!-- Create build directories as needed -->
