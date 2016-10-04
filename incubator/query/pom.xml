@@ -17,7 +17,7 @@
 
   <properties>
     <!-- Datalift configuration -->
-    <datalift.root>${basedir}/..</datalift.root>
+    <datalift.root>${basedir}/../..</datalift.root>
   </properties>
 
   <dependencies>

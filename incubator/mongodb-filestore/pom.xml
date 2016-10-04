@@ -18,7 +18,7 @@
 
   <properties>
     <!-- Datalift configuration -->
-    <datalift.root>${basedir}/..</datalift.root>
+    <datalift.root>${basedir}/../..</datalift.root>
 
     <mongodb.version>2.10.1</mongodb.version>
   </properties>
