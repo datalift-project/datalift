@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.datalift</groupId>
+    <artifactId>datalift-parent</artifactId>
+    <version>0.9.1-beta-1</version>
+  </parent>
+  <artifactId>datalift-sparql-grammar</artifactId>
+  <packaging>jar</packaging>
+
+  <name>Datalift SPARQL Query Grammar</name>
+
+  <properties>
+    <!-- Datalift configuration -->
+    <datalift.root>${basedir}/..</datalift.root>
+  </properties>
+
+  <dependencies>
+    <!-- Datalift dependencies -->
+    <dependency>
+      <groupId>org.datalift</groupId>
+      <artifactId>datalift-framework</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <sourceDirectory>src/java</sourceDirectory>
+    <resources>
+      <resource>
+        <directory>src/java</directory>
+        <filtering>false</filtering>
+        <excludes>
+          <exclude>**/*.java</exclude>
+        </excludes>
+      </resource>
+    </resources>
+  </build>
+
+</project>
