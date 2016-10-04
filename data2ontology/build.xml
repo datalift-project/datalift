@@ -110,11 +110,6 @@
   <property name="fwk.build.libs"       location="${fwk.lib.home}/buildtime"/>
   <property name="fwk.run.libs"         location="${fwk.lib.home}/runtime"/>
 
-<!-- is this needed ? -->
-  <property name="query.home"
-            location="${datalift.root}/incubator/query"/>
-  <property name="query.dist.home"      location="${query.home}/dist"/>
-
   <property name="classes.dir"          location="${build.home}/classes"/>
   <property name="docs.dir"             location="${dist.home}/docs"/>
 
@@ -162,9 +157,6 @@
       <include name="**/*.jar"/>
     </fileset>
     <fileset dir="${fwk.dist.home}">
-      <include name="**/*.jar"/>
-    </fileset>
-    <fileset dir="${query.dist.home}">
       <include name="**/*.jar"/>
     </fileset>
   </path>
@@ -234,13 +226,7 @@
     into object files in the appropriate location in the build directory.
    -->
 
-  <target name="build-query">
-    <subant target="dist">
-      <filelist dir="${query.home}" files="build.xml"/>
-    </subant>
-  </target>
-
-  <target name="compile" depends="prepare,build-query"
+  <target name="compile" depends="prepare"
                          description="Compiles Java sources">
     <!-- Compile Java classes as necessary -->
     <javac srcdir="${src.home}"
@@ -284,9 +270,6 @@
     <!-- Copy runtime JARs to embed in distribution -->
     <copy todir="${classes.dir}" flatten="true">
       <fileset dir="${run.lib.home}">
-        <include name="**/*.jar"/>
-      </fileset>
-      <fileset dir="${query.dist.home}">
         <include name="**/*.jar"/>
       </fileset>
     </copy>
