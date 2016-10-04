@@ -45,7 +45,8 @@
     <sourceDirectory>src/java</sourceDirectory>
     <resources>
       <resource>
-        <directory>${basedir}/src/java</directory>
+        <directory>src/java</directory>
+        <filtering>false</filtering>
         <excludes>
           <exclude>**/*.java</exclude>
         </excludes>

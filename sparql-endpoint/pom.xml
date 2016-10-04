@@ -146,7 +146,7 @@
         <executions>
           <execution>
             <id>copy-file</id>
-            <phase>generate-sources</phase>
+            <phase>process-resources</phase>
             <goals>
               <goal>copy</goal>
             </goals>

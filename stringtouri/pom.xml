@@ -29,7 +29,7 @@
       <artifactId>datalift-framework</artifactId>
       <version>${project.version}</version>
     </dependency>
-    <!-- OpenRDF Sesame dependencies -->
+    <!-- String to URI -->
     <dependency>
       <groupId>me.assembla</groupId>
       <artifactId>stringtouri</artifactId>
@@ -84,35 +84,6 @@
               <sourceFile>src/web/resources_${locale.default}.properties</sourceFile>
               <destinationFile>${project.build.outputDirectory}/resources.properties</destinationFile>
             </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-antrun-plugin</artifactId>
-        <version>1.8</version>
-        <executions>
-          <execution>
-            <id>datalift-version</id>
-            <phase>compile</phase>
-            <configuration>
-              <target>
-                <property file="${basedir}/../build.properties"/>
-                <!-- Copy web application page templates and resources -->
-                <copy todir="${project.build.outputDirectory}"
-                      encoding="UTF-8" includeEmptyDirs="false"
-                      preservelastmodified="true" overwrite="true">
-                  <fileset dir="${basedir}/src/web" includes="**/*.vm"/>
-                  <filterset>
-                    <filter token="full.app.version"
-                            value="${full.app.version}"/>
-                  </filterset>
-                </copy>
-              </target>
-            </configuration>
-            <goals>
-              <goal>run</goal>
-            </goals>
           </execution>
         </executions>
       </plugin>
