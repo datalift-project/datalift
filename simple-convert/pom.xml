@@ -66,16 +66,29 @@
     <sourceDirectory>src/java</sourceDirectory>
     <resources>
       <resource>
-        <directory>${basedir}/src/java</directory>
+        <directory>src/java</directory>
+        <filtering>false</filtering>
         <excludes>
           <exclude>**/*.java</exclude>
         </excludes>
       </resource>
       <resource>
         <directory>src/web</directory>
+        <filtering>true</filtering>
+        <excludes>
+          <exclude>**/*.properties</exclude>
+        </excludes>
+      </resource>
+      <resource>
+        <directory>src/web</directory>
+        <filtering>false</filtering>
+        <includes>
+          <include>**/*.properties</include>
+        </includes>
       </resource>
       <resource>
         <directory>src/resources</directory>
+        <filtering>false</filtering>
       </resource>
     </resources>
 
@@ -99,7 +112,6 @@
         </executions>
       </plugin>
     </plugins>
-
   </build>
 
 </project>
