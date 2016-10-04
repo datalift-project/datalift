@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.datalift</groupId>
+    <artifactId>datalift-parent</artifactId>
+    <version>0.9.1-beta-1</version>
+  </parent>
+  <artifactId>sparql2viz-endpoint</artifactId>
+  <packaging>jar</packaging>
+
+  <name>SPARQL Endpoint with Data Visualization</name>
+
+  <properties>
+    <!-- Datalift configuration -->
+    <datalift.root>${basedir}/..</datalift.root>
+  </properties>
+
+  <dependencies>
+    <!-- Datalift dependencies -->
+    <dependency>
+      <groupId>org.datalift</groupId>
+      <artifactId>sparql-endpoint</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+  </dependencies>
+
+  <profiles>
+    <profile>
+      <id>build-config-present</id>
+      <activation>
+        <file><exists>${basedir}/../build.properties</exists></file>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-resources-plugin</artifactId>
+            <version>2.5</version>
+            <configuration>
+              <encoding>UTF-8</encoding>
+              <filters>
+                <filter>${basedir}/../build.properties</filter>
+              </filters>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>no-build-config</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <properties>
+        <full.app.version>${project.version}</full.app.version>
+      </properties>
+    </profile>
+  </profiles>
+
+  <build>
+    <sourceDirectory>src/java</sourceDirectory>
+    <resources>
+      <resource>
+        <directory>src/java</directory>
+        <filtering>false</filtering>
+        <excludes>
+          <exclude>**/*.java</exclude>
+        </excludes>
+      </resource>
+      <resource>
+        <directory>src/web</directory>
+        <filtering>true</filtering>
+        <excludes>
+          <exclude>**/*.properties</exclude>
+        </excludes>
+      </resource>
+      <resource>
+        <directory>src/web</directory>
+        <filtering>false</filtering>
+        <includes>
+          <include>**/*.properties</include>
+        </includes>
+      </resource>
+    </resources>
+
+    <plugins>
+      <plugin>
+        <groupId>com.coderplus.maven.plugins</groupId>
+        <artifactId>copy-rename-maven-plugin</artifactId>
+        <version>1.0</version>
+        <executions>
+          <execution>
+            <id>copy-file</id>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>copy</goal>
+            </goals>
+            <configuration>
+              <sourceFile>src/web/resources_${locale.default}.properties</sourceFile>
+              <destinationFile>${project.build.outputDirectory}/resources.properties</destinationFile>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>1.8</version>
+        <executions>
+          <execution>
+            <id>datalift-version</id>
+            <phase>compile</phase>
+            <configuration>
+              <target>
+                <property file="${basedir}/../build.properties"/>
+                <!-- Copy web application page templates and resources -->
+                <copy todir="${project.build.outputDirectory}"
+                      encoding="UTF-8" includeEmptyDirs="false"
+                      preservelastmodified="true" overwrite="true">
+                  <fileset dir="${basedir}/src/web" includes="**/*.vm"/>
+                  <filterset>
+                    <filter token="full.app.version"
+                            value="${full.app.version}"/>
+                  </filterset>
+                </copy>
+              </target>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>unpack</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>unpack</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>org.datalift</groupId>
+                  <artifactId>sparql-endpoint</artifactId>
+                  <version>${project.version}</version>
+                  <type>jar</type>
+                  <overWrite>false</overWrite>
+                  <outputDirectory>${project.build.outputDirectory}</outputDirectory>
+                  <excludes>META-INF/services/**,resources*</excludes>
+                </artifactItem>
+              </artifactItems>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>
