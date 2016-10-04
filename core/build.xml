@@ -196,6 +196,7 @@
       <!-- Empire -->
       <include name="com/complexible/**/*.jar"/>
       <include name="com/clarkparsia/**/*.jar"/>
+      <include name="org/itadaki/bzip2-jdk1.6/0.9.1/**/*.jar"/>
     </fileset>
   </path>
 
@@ -387,7 +388,7 @@
       <fileset dir="${fwk.dist.home}"  includes="**/*.jar"/>
       <!-- Empire -->
       <fileset dir="${local.mvn.repo}"
-          includes="com/clarkparsia/**/*.jar,com/complexible/**/*.jar"/>
+          includes="com/clarkparsia/**/*.jar,com/complexible/**/*.jar,org/itadaki/bzip2-jdk1.6/0.9.1/**/*.jar"/>
     </copy>
     <!-- Create build directories as needed -->
     <mkdir dir="${dist.home}"/>
