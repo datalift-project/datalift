@@ -376,16 +376,8 @@ public final class SesameRepositoryFactory extends RepositoryFactory
          */
         @Override
         public int getRdfBatchSize() {
-
-
-           // return 50;
-
-
-
             int batchSize = super.getRdfBatchSize();
             return (this.jenaBasedStore && batchSize > 500)? 500: batchSize;
-
         }
-
     }
 }

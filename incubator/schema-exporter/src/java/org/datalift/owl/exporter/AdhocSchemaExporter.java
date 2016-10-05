@@ -154,6 +154,7 @@ public class AdhocSchemaExporter extends BaseModule
         private final Repository repository;
         private final URI namedGraph;
         private final RdfFormat format;
+
         private RDFWriter writer = null;
 
         public OwlExporter(Repository repository, String namedGraph,
@@ -161,7 +162,6 @@ public class AdhocSchemaExporter extends BaseModule
             this.repository = repository;
             this.namedGraph = new URIImpl(namedGraph);
             this.format     = format;
-
         }
 
         @Override
@@ -265,14 +265,9 @@ public class AdhocSchemaExporter extends BaseModule
                     q.setBinding("p", p);
                     rs = q.evaluate();
                     if (! rs.hasNext()) {
-<<<<<<< HEAD
-                    	log.warn("No RDF type available for subjects of predicate {}", p);
-                    	continue;
-=======
                         log.warn("Can't define domain for property {}: " +
                                  "no subject with defined RDF type found.", p);
                         continue;
->>>>>>> 53d53b322cdb7bc101618c6f661937274c4c5ee7
                     }
                     BindingSet b = rs.next();
 
