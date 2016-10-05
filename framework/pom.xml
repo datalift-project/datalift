@@ -121,6 +121,7 @@
 
   <build>
     <sourceDirectory>src/java</sourceDirectory>
+    <!-- Resources in src/web are handled by Core module POM. -->
     <testSourceDirectory>tests/src/java</testSourceDirectory>
   </build>
 

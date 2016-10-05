@@ -226,27 +226,29 @@
   </dependencies>
 
   <build>
-    <sourceDirectory>${basedir}/src/java</sourceDirectory>
+    <sourceDirectory>src/java</sourceDirectory>
     <resources>
       <resource>
-        <directory>${basedir}/src/java</directory>
+        <directory>src/java</directory>
+        <filtering>false</filtering>
         <excludes>
           <exclude>**/*.java</exclude>
         </excludes>
       </resource>
       <resource>
-        <directory>${basedir}/conf</directory>
+        <directory>conf</directory>
         <excludes>
           <exclude>datalift/**</exclude>
           <exclude>web.xml</exclude>
           <exclude>wro.*</exclude>
         </excludes>
       </resource>
+      <!-- Resources in src/web are handled by Maven WAR plug-in below. -->
     </resources>
-    <testSourceDirectory>${basedir}/tests/src/java</testSourceDirectory>
+    <testSourceDirectory>tests/src/java</testSourceDirectory>
     <testResources>
       <testResource>
-        <directory>${basedir}/tests/conf</directory>
+        <directory>tests/conf</directory>
       </testResource>
     </testResources>
 
@@ -258,7 +260,7 @@
         <executions>
           <execution>
             <id>copy-file</id>
-            <phase>generate-sources</phase>
+            <phase>process-resources</phase>
             <goals>
               <goal>copy</goal>
             </goals>
@@ -291,7 +293,7 @@
           <fileNameMapping>no-version</fileNameMapping>
           <webResources>
             <resource>
-              <directory>${basedir}/conf</directory>
+              <directory>conf</directory>
               <includes>
                 <include>web.xml</include>
                 <include>wro.*</include>
@@ -300,7 +302,7 @@
               <filtering>true</filtering>
             </resource>
             <resource>
-              <directory>${basedir}/src/web</directory>
+              <directory>src/web</directory>
               <filtering>false</filtering>
             </resource>
             <resource>
