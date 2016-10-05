@@ -10,15 +10,10 @@
     <artifactId>datalift-parent</artifactId>
     <version>0.9.1-beta-1</version>
   </parent>
-  <artifactId>simple-converters</artifactId>
+  <artifactId>datalift-simple-converters</artifactId>
   <packaging>jar</packaging>
 
   <name>Base RDF Converters</name>
-
-  <properties>
-    <!-- Datalift configuration -->
-    <datalift.root>${basedir}/..</datalift.root>
-  </properties>
 
   <dependencies>
     <!-- Datalift dependencies -->
@@ -32,6 +27,21 @@
       <groupId>org.openrdf.sesame</groupId>
       <artifactId>sesame-rio-rdfxml</artifactId>
       <version>${sesame.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.openrdf.sesame</groupId>
+          <artifactId>sesame-sail-rdbms</artifactId>
+        </exclusion>
+        <!-- Exclude outdated dependencies for Jackson JSON library. -->
+        <exclusion>
+          <groupId>com.fasterxml.jackson.core</groupId>
+          <artifactId>jackson-core</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <!-- OpenCSV dependencies -->
     <dependency>
@@ -51,16 +61,29 @@
     <sourceDirectory>src/java</sourceDirectory>
     <resources>
       <resource>
-        <directory>${basedir}/src/java</directory>
+        <directory>src/java</directory>
+        <filtering>false</filtering>
         <excludes>
           <exclude>**/*.java</exclude>
         </excludes>
       </resource>
       <resource>
         <directory>src/web</directory>
+        <filtering>true</filtering>
+        <excludes>
+          <exclude>**/*.properties</exclude>
+        </excludes>
+      </resource>
+      <resource>
+        <directory>src/web</directory>
+        <filtering>false</filtering>
+        <includes>
+          <include>**/*.properties</include>
+        </includes>
       </resource>
       <resource>
         <directory>src/resources</directory>
+        <filtering>false</filtering>
       </resource>
     </resources>
 
@@ -84,7 +107,6 @@
         </executions>
       </plugin>
     </plugins>
-
   </build>
 
 </project>

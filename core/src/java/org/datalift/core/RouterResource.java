@@ -321,6 +321,19 @@ public class RouterResource implements LifeCycle, ResourceResolver
         return response;
     }
 
+    /**
+     * Attempts to resolve the request path against the static resources
+     * of the specified Datalift module.
+     * @param  module      the Datalift module.
+     * @param  uriInfo     the request URI data.
+     * @param  request     the JAX-RS request object.
+     * @param  acceptHdr   the HTTP "Accept" header value.
+     *
+     * @return a {@link Response service response} with the resolved
+     *         module static resource data.
+     * @throws WebApplicationException if any error occurred resolving
+     *         the resource or accessing it.
+     */
     public Response resolveModuleResource(String module,
                                           UriInfo uriInfo, Request request,
                                           String acceptHdr)
@@ -343,10 +356,10 @@ public class RouterResource implements LifeCycle, ResourceResolver
      * @param  request     the JAX-RS request object (injected).
      * @param  acceptHdr   the HTTP "Accept" header value.
      *
-     * @return a JAX-RS response if the request was resolved to a local
-     *         file or RDF resource, <code>null</code> otherwise.
-     * @throws WebApplicationException if any error occurred while
-     *         accessing the resolved resource.
+     * @return a {@link Response service response} with the resource
+     *         (static resource or file or RDF resource) data.
+     * @throws WebApplicationException if any error occurred resolving
+     *         the resource or accessing it.
      */
     @Path("{path: .*$}")
     public ResponseWrapper resourceForwarding(
@@ -446,10 +459,11 @@ public class RouterResource implements LifeCycle, ResourceResolver
                 // => Try to match a file on public storage.
                 response = this.resolveStaticResource(path, request);
             }
-            // Else: Return null to notify that no match was found.
-
             if (response == null) {
                 log.warn("Failed to resolve resource: {}", uriInfo.getPath());
+                // Force status to no found otherwise client will received
+                // a kind-of-success status: 204 (No Content)...
+                this.sendError(NOT_FOUND, null);
             }
         }
         catch (WebApplicationException e) {

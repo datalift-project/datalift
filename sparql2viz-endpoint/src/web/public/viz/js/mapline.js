@@ -1,7 +1,8 @@
 //@author : Zakaria Khattabi
 //Script for launching mapline map with Open Layer
-layers = new Array;
+layers = [];
 isMapLine = true;
+var dynamicLayers = []; // Array contains all dynamics layers
 function construct(data){
 	(function(){
 		//initialisation of parameters
@@ -22,22 +23,6 @@ function construct(data){
 		});
 		var code = '<div style="width:100%;height:88%;"><div id="map" class="map" style="width:100%;height:100%;margin:auto;"></div></div><div style= "width:30%;height:3%;margin:auto;"><input id="range" type="range" value="0" max="5" min="5" step="5" style="width:280px;margin:auto;"/></div><div style= "width:30%;height:5%;margin:auto;"><table><tr><table><tr><td><button id="anterior" onclick="anterior()"><img src="http://localhost:9091/sparql/editor/images/icons/anterior.png"/></button></td><td><button id="rewind" onclick="rewind()"><img src="http://localhost:9091/sparql/editor/images/icons/rewind.png"/></button></td><td><button id="stop2" style="display:none;" onclick="stop2()"><img src="http://localhost:9091/sparql/editor/images/icons/stop.png"/></button></td><td><button id="pause2" style="display:none;" onclick="pause2()"><img src=" http://localhost:9091/sparql/editor/images/icons/pause.png"/></button></td><td><button id="back" onclick="back()"><img src="http://localhost:9091/sparql/editor/images/icons/back.png"/></button></td><td><button id="play" onclick="play()"><img src="http://localhost:9091/sparql/editor/images/icons/play.png"/></button></td><td><button id="pause1" style="display:none;" onclick="pause1()"><img src="http://localhost:9091/sparql/editor/images/icons/pause.png"/></button></td><td><button id="stop1" style="display:none;" onclick="stop1()"><img src="http://localhost:9091/sparql/editor/images/icons/stop.png"/></button></td><td><button id="forward" onclick="forward()"><img src="http://localhost:9091/sparql/editor/images/icons/forward.png"/></button></td><td><button id="skip" onclick="skip()"><img src="http://localhost:9091/sparql/editor/images/icons/skip.png"/></button></td></tr></table></tr> </table><input type="text" value="1.0" id="iteration" style="width:10%;"/><span>&emsp;&emsp;&emsp;&emsp;</span><span id="date">2015</span></div><input id="val" type="hidden" value="0"/>';
 		$("#mapLine").html(code);
-		//center the forms
-		var coor = toCoor(data[0][0]);
-		var minX = [], minY = [], maxX = [], maxY = [];
-		$.each(data,function(index,value){
-			var coor = toCoor(value[0]);
-			minX.push(Math.min.apply(null, coor.x));
-			minY.push(Math.min.apply(null, coor.y));
-			maxX.push(Math.max.apply(null, coor.x));
-			maxY.push(Math.max.apply(null, coor.y));
-		});
-		var minTotX = Math.min.apply(null, minX);
-		var minTotY = Math.min.apply(null, minY);
-		var maxTotX = Math.max.apply(null, maxX);
-		var maxTotY = Math.max.apply(null, maxY);
-		var centreX = minTotX+(maxTotX-minTotX)/2;
-		var centreY = minTotY+(maxTotY-minTotY)/2;
 		//transform features and browse the dates
 		var FS = {};
 		var dates = [];
@@ -59,6 +44,7 @@ function construct(data){
 				var vector = createVector(feature, s);
 			} else	var vector = createVector(feature, style);
 			layers.push(vector);
+			dynamicLayers.push(vector);
 		});
 		// sort the dates and saves it in session storage
 		//dates.sort();
@@ -68,10 +54,16 @@ function construct(data){
 		  layers: layers,
 		  target: 'map',
 		  view: new ol.View({
-			center: ol.proj.transform([parseFloat(centreX),parseFloat(centreY)],'EPSG:4326','EPSG:3857'),
+			center: ol.proj.transform([0,0],'EPSG:4326','EPSG:3857'),
 			zoom:4 
 		  })
 		});
+		// center the map in the existing vector
+		var extent = ol.extent.createEmpty();
+		dynamicLayers.forEach(function(layer) {
+			ol.extent.extend(extent, layer.getSource().getExtent());
+		})
+		// parse dates
 		var dates = JSON.parse(sessionStorage.getItem("dates"));
 		$("#range").attr("max",(dates.length)*5);
 		var pos = getPositon(dates[0]);

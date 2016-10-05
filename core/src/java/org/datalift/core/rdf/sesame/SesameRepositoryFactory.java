@@ -301,6 +301,12 @@ public final class SesameRepositoryFactory extends RepositoryFactory
     public final static class SesameSparqlRepository extends BaseRepository
     {
         //---------------------------------------------------------------------
+        // Instance members
+        //---------------------------------------------------------------------
+
+        private final boolean jenaBasedStore;
+
+        //---------------------------------------------------------------------
         // Constructors
         //---------------------------------------------------------------------
 
@@ -320,6 +326,8 @@ public final class SesameRepositoryFactory extends RepositoryFactory
         public SesameSparqlRepository(String name, String url,
                                                  Configuration configuration) {
             super(name, url, configuration);
+
+            this.jenaBasedStore = (url.indexOf("/parliament/") != -1);
         }
 
         //---------------------------------------------------------------------
@@ -369,8 +377,13 @@ public final class SesameRepositoryFactory extends RepositoryFactory
         @Override
         public int getRdfBatchSize() {
 
+
            // return 50;
-            return 500;
+
+
+
+            int batchSize = super.getRdfBatchSize();
+            return (this.jenaBasedStore && batchSize > 500)? 500: batchSize;
 
         }
 

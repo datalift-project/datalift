@@ -265,17 +265,17 @@
     <!-- Production mode: cache static resources for a week -->
     <property name="http.cache.duration"     value="604800"/> <!-- 1 week -->
     <property name="velocity.cache.duration" value="0"/> <!-- Infinite -->
-   </target>
+  </target>
   <target name="development-deployment" if="${datalift.test.mode}">
     <!-- Development mode: disable client-side caching -->
     <property name="http.cache.duration"     value="0"/>  <!-- No cache -->
     <property name="velocity.cache.duration" value="-1"/> <!-- No cache -->
-   </target>
+  </target>
   <target name="deployment-mode"
           depends="production-deployment,development-deployment">
   </target>
 
-  <target name="prepare-dist" depends="compile,build-modules,deployment-mode">
+  <target name="prepare-dist" depends="compile,deployment-mode">
     <mkdir dir="${dist.home}"/>
     <mkdir dir="${gen.dist.dir}"/>
     <!-- Creates directory for potential native libraries. -->
@@ -311,8 +311,8 @@
       <fileset dir="${tmp.build.dir}"/>
     </jar>
     <delete dir="${tmp.build.dir}" quiet="true"/>
-    <!-- Copy default Datalift modules -->
-    <pathconvert property="modules.jars" refid="build.modules" pathsep=",">
+    <!-- Copy default Datalift modules (Ant) -->
+    <pathconvert property="ant.modules.jars" refid="build.modules" pathsep=",">
       <mapper>
         <chainedmapper>
           <globmapper from="${datalift.root}/*"
@@ -323,7 +323,21 @@
     </pathconvert>
     <copy todir="${gen.dist.dir}/modules" flatten="true"
                                           preservelastmodified="true">
-      <fileset dir="${datalift.root}" includes="${modules.jars}"/>
+      <fileset dir="${datalift.root}" includes="${ant.modules.jars}"/>
+    </copy>
+    <!-- Copy default Datalift modules (Maven) -->
+    <pathconvert property="mvn.modules.jars" refid="build.modules" pathsep=",">
+      <mapper>
+        <chainedmapper>
+          <globmapper from="${datalift.root}/*"
+                        to="*/target" handledirsep="true"/>
+          <regexpmapper from="^(.*)$" to="\1/*.jar"/>
+        </chainedmapper>
+      </mapper>
+    </pathconvert>
+    <copy todir="${gen.dist.dir}/modules" flatten="true"
+                                          preservelastmodified="true">
+      <fileset dir="${datalift.root}" includes="${mvn.modules.jars}"/>
     </copy>
     <!-- Creates the wrapper executable JAR -->
     <pathconvert property="jar.classpath"

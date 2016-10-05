@@ -100,8 +100,6 @@
   <property name="dist.home"            location="${basedir}/dist"/>
 
   <property name="src.home"             location="${basedir}/src/java"/>
-  <property name="lib.home"             location="${basedir}/lib"/>
-  <property name="run.lib.home"         location="${lib.home}/runtime"/>
 
   <property name="fwk.lib.home"         location="${fwk.home}/lib"/>
   <property name="fwk.dist.home"        location="${fwk.home}/dist"/>
@@ -109,6 +107,8 @@
   <property name="fwk.run.libs"         location="${fwk.lib.home}/runtime"/>
   <property name="core.classes.dir"     location="${core.home}/build/WEB-INF/classes"/>
   <property name="core.run.libs"        location="${core.home}/lib/runtime"/>
+
+  <property name="local.mvn.repo"       location="${basedir}/../mvn-repo"/>
 
   <property name="classes.dir"          location="${build.home}/classes"/>
   <property name="docs.dir"             location="${dist.home}/docs"/>
@@ -150,8 +150,8 @@
    -->
 
   <path id="runtime.classpath">
-    <fileset dir="${run.lib.home}">
-      <include name="**/*.jar"/>
+    <fileset dir="${local.mvn.repo}">
+      <include name="com/openlinksw/virtuoso/*/7.2.2/*.jar"/>
     </fileset>
     <fileset dir="${fwk.run.libs}">
       <include name="**/*.jar"/>
@@ -273,8 +273,8 @@
   <target name="prepare-dist" depends="prepare">
     <!-- Copy runtime JARs to embed in distribution -->
     <copy todir="${classes.dir}" flatten="true">
-      <fileset dir="${run.lib.home}">
-        <include name="**/*.jar"/>
+      <fileset dir="${local.mvn.repo}">
+        <include name="com/openlinksw/virtuoso/*/7.2.2/*.jar"/>
       </fileset>
     </copy>
     <!-- Create build directories as needed -->

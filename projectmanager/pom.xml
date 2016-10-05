@@ -10,15 +10,10 @@
     <artifactId>datalift-parent</artifactId>
     <version>0.9.1-beta-1</version>
   </parent>
-  <artifactId>project-manager</artifactId>
+  <artifactId>datalift-project-manager</artifactId>
   <packaging>jar</packaging>
 
   <name>Project Manager</name>
-
-  <properties>
-    <!-- Datalift configuration -->
-    <datalift.root>${basedir}/..</datalift.root>
-  </properties>
 
   <dependencies>
     <!-- Datalift dependencies -->
@@ -94,7 +89,6 @@
         </executions>
       </plugin>
     </plugins>
-
   </build>
 
 </project>

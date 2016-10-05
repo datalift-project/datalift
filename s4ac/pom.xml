@@ -10,15 +10,10 @@
     <artifactId>datalift-parent</artifactId>
     <version>0.9.1-beta-1</version>
   </parent>
-  <artifactId>s4ac</artifactId>
+  <artifactId>datalift-s4ac</artifactId>
   <packaging>jar</packaging>
 
   <name>S4AC Security Manager</name>
-
-  <properties>
-    <!-- Datalift configuration -->
-    <datalift.root>${basedir}/..</datalift.root>
-  </properties>
 
   <dependencies>
     <!-- Datalift dependencies -->
@@ -33,13 +28,25 @@
     <sourceDirectory>src/java</sourceDirectory>
     <resources>
       <resource>
-        <directory>${basedir}/src/java</directory>
+        <directory>src/java</directory>
+        <filtering>false</filtering>
         <excludes>
           <exclude>**/*.java</exclude>
         </excludes>
       </resource>
       <resource>
         <directory>src/web</directory>
+        <filtering>true</filtering>
+        <excludes>
+          <exclude>**/*.properties</exclude>
+        </excludes>
+      </resource>
+      <resource>
+        <directory>src/web</directory>
+        <filtering>false</filtering>
+        <includes>
+          <include>**/*.properties</include>
+        </includes>
       </resource>
     </resources>
 
@@ -51,7 +58,7 @@
         <executions>
           <execution>
             <id>copy-file</id>
-            <phase>generate-sources</phase>
+            <phase>process-resources</phase>
             <goals>
               <goal>copy</goal>
             </goals>
@@ -63,7 +70,6 @@
         </executions>
       </plugin>
     </plugins>
-
   </build>
 
 </project>

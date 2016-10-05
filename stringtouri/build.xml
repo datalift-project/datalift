@@ -108,14 +108,14 @@
   <property name="lib.home"             location="${basedir}/lib"/>
   <property name="run.lib.home"         location="${lib.home}/runtime"/>
 
+  <property name="local.mvn.repo"       location="${basedir}/../mvn-repo"/>
+
   <property name="fwk.web.home"         location="${fwk.home}/src/web"/>
   <property name="fwk.lib.home"         location="${fwk.home}/lib"/>
   <property name="fwk.dist.home"        location="${fwk.home}/dist"/>
   <property name="fwk.build.libs"       location="${fwk.lib.home}/buildtime"/>
   <property name="fwk.run.libs"         location="${fwk.lib.home}/runtime"/>
   <property name="core.run.libs"        location="${core.home}/lib/runtime"/>
-
-
 
   <property name="classes.dir"          location="${build.home}/classes"/>
   <property name="docs.dir"             location="${dist.home}/docs"/>
@@ -159,6 +159,9 @@
   <path id="runtime.classpath">
     <fileset dir="${run.lib.home}">
       <include name="**/*.jar"/>
+    </fileset>
+    <fileset dir="${local.mvn.repo}">
+      <include name="me/assembla/stringtouri/1.2.6/*.jar"/>
     </fileset>
     <!-- Include all JAR files that will be included in webapp WAR -->
     <fileset dir="${fwk.run.libs}">
@@ -288,6 +291,9 @@
     <copy todir="${classes.dir}" flatten="true">
       <fileset dir="${run.lib.home}">
         <include name="**/*.jar"/>
+      </fileset>
+      <fileset dir="${local.mvn.repo}">
+        <include name="me/assembla/stringtouri/1.2.6/*.jar"/>
       </fileset>
     </copy>
     <!-- Create build directories as needed -->

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.datalift</groupId>
+    <artifactId>datalift-parent</artifactId>
+    <version>0.9.1-beta-1</version>
+  </parent>
+  <artifactId>schema-exporter</artifactId>
+  <packaging>jar</packaging>
+
+  <name>Datalift Ad-hoc RDF Schema Exporter</name>
+
+  <dependencies>
+    <!-- Datalift dependencies -->
+    <dependency>
+      <groupId>org.datalift</groupId>
+      <artifactId>datalift-framework</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <!-- OpenRDF Sesame dependencies -->
+    <dependency>
+      <groupId>org.openrdf.sesame</groupId>
+      <artifactId>sesame-rio-rdfxml</artifactId>
+      <version>${sesame.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.openrdf.sesame</groupId>
+          <artifactId>sesame-sail-rdbms</artifactId>
+        </exclusion>
+        <!-- Exclude outdated dependencies for Jackson JSON library. -->
+        <exclusion>
+          <groupId>com.fasterxml.jackson.core</groupId>
+          <artifactId>jackson-core</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <sourceDirectory>src/java</sourceDirectory>
+    <resources>
+      <resource>
+        <directory>${basedir}/src/java</directory>
+        <excludes>
+          <exclude>**/*.java</exclude>
+        </excludes>
+      </resource>
+    </resources>
+  </build>
+
+</project>

@@ -10,14 +10,12 @@
     <artifactId>datalift-parent</artifactId>
     <version>0.9.1-beta-1</version>
   </parent>
-  <artifactId>geomrdf</artifactId>
+  <artifactId>datalift-geomrdf</artifactId>
   <packaging>jar</packaging>
 
   <name>GeomRDF module</name>
 
   <properties>
-    <!-- Datalift configuration -->
-    <datalift.root>${basedir}/..</datalift.root>
     <!-- External dependencies -->
     <geotools.version>8.4</geotools.version>
   </properties>
@@ -111,12 +109,24 @@
     <resources>
       <resource>
         <directory>src/java</directory>
+        <filtering>false</filtering>
         <excludes>
           <exclude>**/*.java</exclude>
         </excludes>
       </resource>
       <resource>
         <directory>src/web</directory>
+        <filtering>true</filtering>
+        <excludes>
+          <exclude>**/*.properties</exclude>
+        </excludes>
+      </resource>
+      <resource>
+        <directory>src/web</directory>
+        <filtering>false</filtering>
+        <includes>
+          <include>**/*.properties</include>
+        </includes>
       </resource>
     </resources>
 
@@ -128,7 +138,7 @@
         <executions>
           <execution>
             <id>copy-file</id>
-            <phase>generate-sources</phase>
+            <phase>process-resources</phase>
             <goals>
               <goal>copy</goal>
             </goals>
@@ -136,35 +146,6 @@
               <sourceFile>src/web/resources_${locale.default}.properties</sourceFile>
               <destinationFile>${project.build.outputDirectory}/resources.properties</destinationFile>
             </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-antrun-plugin</artifactId>
-        <version>1.8</version>
-        <executions>
-          <execution>
-            <id>datalift-version</id>
-            <phase>compile</phase>
-            <configuration>
-              <target>
-                <property file="${basedir}/../build.properties"/>
-                <!-- Copy web application page templates and resources -->
-                <copy todir="${project.build.outputDirectory}"
-                      encoding="UTF-8" includeEmptyDirs="false"
-                      preservelastmodified="true" overwrite="true">
-                  <fileset dir="${basedir}/src/web" includes="**/*.vm"/>
-                  <filterset>
-                    <filter token="full.app.version"
-                            value="${full.app.version}"/>
-                  </filterset>
-                </copy>
-              </target>
-            </configuration>
-            <goals>
-              <goal>run</goal>
-            </goals>
           </execution>
         </executions>
       </plugin>
@@ -181,8 +162,7 @@
             <configuration>
               <outputDirectory>${project.build.outputDirectory}</outputDirectory>
               <includeGroupIds>
-                org.geotools, org.geotools.xsd, commons-lang
-
+                org.geotools,org.geotools.xsd,commons-lang
               </includeGroupIds>
               <overWriteReleases>false</overWriteReleases>
               <overWriteSnapshots>false</overWriteSnapshots>
@@ -192,8 +172,6 @@
         </executions>
       </plugin>
     </plugins>
-
-
   </build>
 
 </project>

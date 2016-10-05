@@ -15,11 +15,6 @@
 
   <name>SPARQL Endpoint</name>
 
-  <properties>
-    <!-- Datalift configuration -->
-    <datalift.root>${basedir}/..</datalift.root>
-  </properties>
-
   <dependencies>
     <!-- Datalift dependencies -->
     <dependency>
@@ -146,7 +141,7 @@
         <executions>
           <execution>
             <id>copy-file</id>
-            <phase>generate-sources</phase>
+            <phase>process-resources</phase>
             <goals>
               <goal>copy</goal>
             </goals>
@@ -209,7 +204,6 @@
         </executions>
       </plugin>
     </plugins>
-
   </build>
 
 </project>
