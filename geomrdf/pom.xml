@@ -16,8 +16,6 @@
   <name>GeomRDF module</name>
 
   <properties>
-    <!-- Datalift configuration -->
-    <datalift.root>${basedir}/..</datalift.root>
     <!-- External dependencies -->
     <geotools.version>8.4</geotools.version>
   </properties>

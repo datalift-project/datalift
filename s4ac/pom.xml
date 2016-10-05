@@ -15,11 +15,6 @@
 
   <name>S4AC Security Manager</name>
 
-  <properties>
-    <!-- Datalift configuration -->
-    <datalift.root>${basedir}/..</datalift.root>
-  </properties>
-
   <dependencies>
     <!-- Datalift dependencies -->
     <dependency>

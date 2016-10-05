@@ -16,8 +16,6 @@
   <name>Silk Interlinker module for Datalift</name>
 
   <properties>
-    <!-- Datalift configuration -->
-    <datalift.root>${basedir}/..</datalift.root>
     <!-- External dependencies -->
     <edoal.version>4.5</edoal.version>
     <silk.version>2.5.3</silk.version>

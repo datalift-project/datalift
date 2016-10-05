@@ -16,8 +16,6 @@
   <name>Datalift Database Direct Mapper</name>
 
   <properties>
-    <!-- Datalift configuration -->
-    <datalift.root>${basedir}/..</datalift.root>
     <!-- External dependencies -->
     <commons-cli.version>1.2</commons-cli.version>
   </properties>

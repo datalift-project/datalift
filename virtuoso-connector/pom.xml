@@ -17,9 +17,7 @@
   <name>Virtuoso Connector for Datalift</name>
 
   <properties>
-    <!-- Datalift configuration -->
-    <datalift.root>${basedir}/..</datalift.root>
-
+    <!-- Virtuoso Sesame Driver version -->
     <virtuoso.version>7.2.2</virtuoso.version>
   </properties>
 

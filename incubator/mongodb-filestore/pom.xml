@@ -17,9 +17,7 @@
   <name>MongoDB GridFS Filestore for Datalift</name>
 
   <properties>
-    <!-- Datalift configuration -->
-    <datalift.root>${basedir}/../..</datalift.root>
-
+    <!-- MongoDB Java Driver version -->
     <mongodb.version>2.10.1</mongodb.version>
   </properties>
 

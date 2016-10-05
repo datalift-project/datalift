@@ -17,9 +17,7 @@
   <name>AllegroGraph Connector for Datalift</name>
 
   <properties>
-    <!-- Datalift configuration -->
-    <datalift.root>${basedir}/..</datalift.root>
-
+    <!-- AllegroGraph Java client version -->
     <agraph.version>1.0.0</agraph.version>
   </properties>
 

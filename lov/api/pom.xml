@@ -15,11 +15,6 @@
 
   <name>LinkedOpenVocabularies API Client for Datalift</name>
 
-  <properties>
-    <!-- Datalift configuration -->
-    <datalift.root>${basedir}/../..</datalift.root>
-  </properties>
-
   <dependencies>
     <!-- Datalift dependencies -->
     <dependency>

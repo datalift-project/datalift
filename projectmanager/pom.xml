@@ -15,11 +15,6 @@
 
   <name>Project Manager</name>
 
-  <properties>
-    <!-- Datalift configuration -->
-    <datalift.root>${basedir}/..</datalift.root>
-  </properties>
-
   <dependencies>
     <!-- Datalift dependencies -->
     <!-- Use Datalift Core rather than Framework for access to
