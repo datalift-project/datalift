@@ -10,8 +10,6 @@ import org.datalift.geoutility.Context;
 
 public class ObservationPropertyTypeMapper extends BaseMapper {
 
-
-
 	@Override
 	protected void addParentLinkStatements(ComplexFeature cf, Context ctx) {
 

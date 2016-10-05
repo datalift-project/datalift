@@ -17,7 +17,7 @@ import org.xml.sax.SAXException;
 
 public class GMLParser32 {
 
-	public  List<ComplexFeature> doParse(String completeUrl) throws SAXException, ParserConfigurationException, IOException
+	public  ComplexFeature doParse(String completeUrl) throws SAXException, ParserConfigurationException, IOException
 	{
 		InputStream in=Context.doGet(completeUrl);			
 		SchemaFactory sf = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI,"org.apache.xerces.jaxp.validation.XMLSchemaFactory",this.getClass().getClassLoader());
@@ -31,6 +31,6 @@ public class GMLParser32 {
 		Handler handler = new Handler(saxParser);
 		saxParser.parse(in, handler);
 		//Get feature list
-		return handler.getCfList();
+		return handler.getRoot();
 	}
 }

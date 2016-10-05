@@ -42,4 +42,9 @@ public class Helper {
 		}
 		return d;
 	}
+	public static  boolean isSet(String s)
+	{
+		if (s==null || s.equals("")) return false;
+		return true;
+	}
 }

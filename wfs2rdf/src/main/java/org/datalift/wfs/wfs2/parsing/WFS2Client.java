@@ -20,6 +20,7 @@ import org.apache.http.client.ClientProtocolException;
 import org.datalift.geoutility.Context;
 import org.datalift.geoutility.Helper;
 import org.datalift.model.Attribute;
+import org.datalift.model.BaseServiceClient;
 import org.datalift.model.ComplexFeature;
 import org.datalift.model.Const;
 import org.datalift.model.FeatureTypeDescription;
@@ -27,17 +28,12 @@ import org.datalift.model.Store;
 
 import org.xml.sax.SAXException;
 
-public class WFS2Client {
-	private final static Map<String,Store> cache = new HashMap<String, Store>();
-	//10, 3 * 3600
-	public Store dataStore;
-	private String url;
-	private GMLParser32 parser;
+public class WFS2Client extends BaseServiceClient{
 
 	public WFS2Client(String sourceUrl) {
 		// TODO Auto-generated constructor stub	
-		url=sourceUrl;
-		parser=new GMLParser32();
+		super (sourceUrl);
+		serviceType="WFS";
 	}
 
 	//	public static void main (String[] args) throws SAXException, ParserConfigurationException, IOException
@@ -51,19 +47,19 @@ public class WFS2Client {
 				//cache.get(url); url is not a suitbale key (should think about a proper key including options (srs)
 		if(ds==null || ds.getFtParsed.size()==0)
 		{ 
-			List<ComplexFeature> ft;
+			ComplexFeature ft;
 			if(srs!=null)
 			{
-				ft=parser.doParse(url+"?service=wfs&version=2.0.0&request=getFeature&typename="+FeatureName+"&srsName="+srs);
+				ft=parser.doParse(baseUrl+"?service=wfs&version=2.0.0&request=getFeature&typename="+FeatureName+"&srsName="+srs);
 			}
 			else
 			{
-				ft=parser.doParse(url+"?service=wfs&version=2.0.0&request=getFeature&typename="+FeatureName);
+				ft=parser.doParse(baseUrl+"?service=wfs&version=2.0.0&request=getFeature&typename="+FeatureName);
 			}
 			if(ds==null)
 			{
 				ds=new Store();
-				cache.put(url, ds);
+				cache.put(baseUrl+serviceType, ds);
 			}
 			//Get feature list
 			ds.getFtParsed.put(FeatureName, ft);
@@ -71,41 +67,13 @@ public class WFS2Client {
 		this.dataStore=ds;
 		this.dataStore.getFtParsed=ds.getFtParsed;
 	}
-	public ComplexFeature getFeatureCollection(String typeName)
-	{
-		List<ComplexFeature> elements = dataStore.getFtParsed.get(typeName);
-		ComplexFeature fc=null;
-		if(elements!=null && elements.size()!=0)
-		{
-			fc=elements.get(0);
-			
-		}
-		return fc;
-	}
-	public void getCapabilities() throws ClientProtocolException, IOException, SAXException, ParserConfigurationException
-	{
-		Store ds=cache.get(url);
-		if(ds==null || ds.getCapParsed==null || ds.getCapParsed.size()==0)
-		{
-			List<ComplexFeature> caps=parser.doParse(url+"?service=wfs&request=getCapabilities");
-			//Get feature list
-			if(ds==null)
-			{
-				ds=new Store();
-				cache.put(url, ds);
-			}
-			ds.getCapParsed=caps;	
-		}
-		this.dataStore=ds;
-		this.dataStore.getCapParsed = ds.getCapParsed;
-	}
 
 	public List<FeatureTypeDescription> getFeatureTypeDescription() {
 		// 
 		List<FeatureTypeDescription> types=new ArrayList<FeatureTypeDescription>();
 		if(this.dataStore!=null && this.dataStore.getCapParsed!=null)
 		{
-			ComplexFeature fc=this.dataStore.getCapParsed.get(0);
+			ComplexFeature fc=this.dataStore.getCapParsed;
 
 			if(fc!=null)
 			{

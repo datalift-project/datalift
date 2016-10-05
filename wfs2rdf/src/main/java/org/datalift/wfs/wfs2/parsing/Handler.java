@@ -42,9 +42,13 @@ public class Handler extends DefaultHandler {
     	this.psvi = (PSVIProvider)p.getXMLReader();
     }
  
-    //getter method for tmployee list
-    public List<ComplexFeature> getCfList() {
-        return tmpList;
+    //getter method for getting the root of the XML/GML document
+    public ComplexFeature getRoot() {
+        if(tmpList!=null && tmpList.size()>0)
+        {
+        	return tmpList.get(0);        
+        }
+        return null;
     }
 
  

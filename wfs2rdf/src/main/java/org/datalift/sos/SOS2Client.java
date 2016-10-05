@@ -12,6 +12,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.apache.http.client.ClientProtocolException;
 import org.datalift.geoutility.Helper;
 import org.datalift.model.Attribute;
+import org.datalift.model.BaseServiceClient;
 import org.datalift.model.ComplexFeature;
 import org.datalift.model.Const;
 import org.datalift.model.FeatureTypeDescription;
@@ -20,43 +21,21 @@ import org.datalift.sos.model.ObservationMetaData;
 import org.datalift.wfs.wfs2.parsing.GMLParser32;
 import org.xml.sax.SAXException;
 
-public class SOS2Client {
+public class SOS2Client extends BaseServiceClient{
 
-	private final static Map<String,Store> cache = new HashMap<String, Store>();
-	//10, 3 * 3600
-	public Store dataStore;
-	private String serverUrl;
-	private GMLParser32 parser;
-	
 	public SOS2Client(String url)
 	{
-		serverUrl=url;
-		parser=new GMLParser32();
+		super(url);
+		serviceType="SOS";
 	}
-	public void getCapabilities() throws ClientProtocolException, IOException, SAXException, ParserConfigurationException
-	{
-		Store ds=cache.get(serverUrl);
-		if(ds==null || ds.getCapParsed==null || ds.getCapParsed.size()==0)
-		{
-			List<ComplexFeature> caps=parser.doParse(serverUrl+"?service=SOS&request=GetCapabilities");
-			//Get feature list
-			if(ds==null)
-			{
-				ds=new Store();
-				cache.put(serverUrl, ds);
-			}
-			ds.getCapParsed=caps;	
-		}
-		this.dataStore=ds;
-		this.dataStore.getCapParsed = ds.getCapParsed;
-	}
-	
+
+
 	public List<ObservationMetaData> getObservationOffering() {
 		// 
 		List<ObservationMetaData> observationOffering= new ArrayList<ObservationMetaData>();
 		if(this.dataStore!=null && this.dataStore.getCapParsed!=null)
 		{
-			ComplexFeature root=this.dataStore.getCapParsed.get(0);
+			ComplexFeature root=this.dataStore.getCapParsed;
 
 			if(root!=null)
 			{
@@ -76,12 +55,12 @@ public class SOS2Client {
 								ComplexFeature  timePeriod= ObservationOffering.findChildByType(Const.TimePeriodType);
 								ComplexFeature beginPosition=null,endPosition=null;
 								if(timePeriod!=null)
-									{
-										 beginPosition= timePeriod.findChildByName(Const.beginPosition);
-										 endPosition= timePeriod.findChildByName(Const.endPosition);
-									}
+								{
+									beginPosition= timePeriod.findChildByName(Const.beginPosition);
+									endPosition= timePeriod.findChildByName(Const.endPosition);
+								}
 								List<ComplexFeature> responsFormats= ObservationOffering.findChildren(Const.responseFormat);
-								
+
 
 								if(name!=null)
 								{
@@ -107,13 +86,13 @@ public class SOS2Client {
 								if(beginPosition!=null)
 								{
 									ftd.setPhonomenonTimeBegin(Helper.getDate(beginPosition.value));
-									
+
 								}
 								if(endPosition!=null)
 								{
 									ftd.setPhonomenonTimeEnd(Helper.getDate(endPosition.value));
 								}
-								
+
 								observationOffering.add(ftd);
 							}
 						}
@@ -126,34 +105,44 @@ public class SOS2Client {
 		return observationOffering;
 	}
 
-	
-		public static void main (String[] args) throws SAXException, ParserConfigurationException, IOException
-		{
-			SOS2Client c=new SOS2Client("");
-//			ComplexFeature testRoot=new ComplexFeature();
-//			
-//			ComplexFeature A=new ComplexFeature();
-//			A.name=new QName("aa","AA");
-//			
-//			
-//			testRoot.itsAttr.add(A);
-//			ComplexFeature B=new ComplexFeature();
-//			
-//			B.name=new QName("bb","BB");
-//			ComplexFeature Bf=new ComplexFeature();
-//			
-//			Bf.name=new QName("bbf","BBf");
-//			B.itsAttr.add(Bf);
-//ComplexFeature Bf2=new ComplexFeature();
-//			
-//			Bf2.name=new QName("bbf2","BBf2");
-//			B.itsAttr.add(Bf2);
-//			testRoot.itsAttr.add(B);
-//			ComplexFeature child=testRoot.findChild(new QName("bbf2","BBf2"), new QName("aa","AA"));
-			
-			c.getCapabilities();
-			c.getObservationOffering();
-			
+
+	public static void main (String[] args) throws SAXException, ParserConfigurationException, IOException
+	{
+		SOS2Client c=new SOS2Client("");	
+		c.getCapabilities();
+		c.getObservationOffering();
+
+	}
+
+
+	public void getObservation(String id, String begin, String end, String format) throws SAXException, ParserConfigurationException, IOException {
+		Store ds=null;
+		if(ds==null || ds.getFtParsed.size()==0)
+		{ 
+			ComplexFeature root;
+			if(!Helper.isSet(begin) || !Helper.isSet(end) ||!Helper.isSet(format) )
+			{
+				return;
+			}
+			else
+			{
+				//the parameter om:phonomenonTime could be generalized
+				root=parser.doParse(baseUrl+"?service=SOS&version=2.0.0&request=GetObservation&responseFormat=http://www.opengis.net/waterml/2.0"+/*format+*/"&temporalFilter=om:phenomenonTime,"+
+			begin+"/"+end+"&featureOfInterest="+id);
+				
+			if(ds==null)
+			{
+				ds=new Store();
+				cache.put(baseUrl+serviceType, ds);
+			}
+			//Get feature list
+			ds.getFtParsed.put(id, root);
 		}
-	
+		this.dataStore=ds;
+		this.dataStore.getFtParsed=ds.getFtParsed;
+	}
+	}
+
+
+
 }

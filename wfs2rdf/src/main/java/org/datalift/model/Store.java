@@ -7,10 +7,10 @@ import java.util.Map;
 
 
 public class Store {
-	public List<ComplexFeature> getCapParsed;
-	public Map <String, List<ComplexFeature>> getFtParsed;
+	public ComplexFeature getCapParsed;
+	public Map <String, ComplexFeature> getFtParsed;
 	public Store()
 	{
-		getFtParsed=new HashMap<String, List<ComplexFeature>>(); 
+		getFtParsed=new HashMap<String, ComplexFeature>(); 
 	}
 }

@@ -143,7 +143,7 @@ public class Wfstordf extends BaseConverterModule{
 		int optionGraph= Integer.parseInt(o.get("graphOption").getAsString());
 		int optionOntology= Integer.parseInt(o.get("ontologyOption").getAsString());
 		boolean optionWGS84= Boolean.valueOf((o.get("convertSrsOption").getAsString()));
-		if(isSet(project) && isSet(source))
+		if(Helper.isSet(project) && Helper.isSet(source))
 		{	Project p=null;
 		// Retrieve project
 		URI projectUri;
@@ -350,11 +350,7 @@ private int getOccurenceGraph(Project p,String candidate)
 
 }
 
-private boolean isSet(String s)
-{
-	if (s==null || s.equals("")) return false;
-	return true;
-}
+
 
 
 /**
@@ -429,7 +425,7 @@ private boolean convertFeatureTypeToRdf2(URI projectUri, WfsSource s, String des
 		WFS2Client client=new WFS2Client(s.getSourceUrl());
 		client.getFeatureType(typeName,srs);
 		//return a list of parsed features contained in typeName
-		ComplexFeature featureCollectionToConvert=client.getFeatureCollection(typeName);
+		ComplexFeature featureCollectionToConvert=client.getUtilData(typeName);
 
 		if (featureCollectionToConvert==null ) 
 		{

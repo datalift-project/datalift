@@ -5,6 +5,7 @@ package org.datalift.wfs.wfs2.mapping;
 import javax.xml.namespace.QName;
 
 import org.datalift.model.ComplexFeature;
+import org.datalift.fwk.log.Logger;
 import org.datalift.geoutility.Context;
 import org.datalift.model.Attribute;
 import org.datalift.model.Const;
@@ -14,10 +15,12 @@ import org.openrdf.model.Resource;
 
 public class BaseMapper implements Mapper {
 	
-	
-	boolean alreadyLinked=false;
+	private final String baseURI="http://changeMe.org/";
+	protected final static Logger log = Logger.getLogger();
+	protected boolean alreadyLinked=false;
 	protected boolean ignore(ComplexFeature f)
 	{	
+		//include the case where the element is just a wrapper, exp: member 
 		return (isEmpty(f) || f.name.equals(Const.identifier) || f.name.equals(Const.inspireId))? true:false;
 
 	}
@@ -90,7 +93,7 @@ public class BaseMapper implements Mapper {
 		
 		ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(ctx.nsDatalift+capitalize(cf.name.getLocalPart()))));
 		if(isReferencedObject(cf))
-			ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(ctx.nsDatalift+capitalize(ctx.referencedObjectType.getLocalPart()))));
+			{ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(ctx.nsDatalift+capitalize(ctx.referencedObjectType.getLocalPart()))));}
 	}
 
 	protected void mapFeatureSimpleAttributes(ComplexFeature cf, Context ctx) {
@@ -121,8 +124,16 @@ public class BaseMapper implements Mapper {
 				}
 				if(a.getTypeName().equals(Const.hrefType) || a.getTypeName().equals(Const.anyURI))
 				{
-					ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.vf.createURI(ctx.nsRDFS+"isDefinedBy"), ctx.vf.createURI(a.value)));
+					try{
+						ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.vf.createURI(ctx.nsRDFS+"isDefinedBy"), ctx.vf.createURI(a.value)));
+						
+					}catch (IllegalArgumentException e)
+					{
+						log.error(e.getMessage());
+						ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.vf.createURI(ctx.nsRDFS+"isDefinedBy"), ctx.vf.createURI(baseURI+a.value)));
+					}
 					
+
 				}
 				if(a.getTypeName().equals(Const.titleAttrType))
 				{

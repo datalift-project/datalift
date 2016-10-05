@@ -38,9 +38,13 @@ public class WFS2Converter {
 			ctx.mappers.put(Const.inspireCodeList,new CodeListMapper());
 		}
 	}
-	public void ConvertFeaturesToRDF(ComplexFeature fc, org.datalift.fwk.rdf.Repository target , URI targetGraph, URI baseUri, String targetType) throws FileNotFoundException, RDFHandlerException
+	public boolean ConvertFeaturesToRDF(ComplexFeature fc, org.datalift.fwk.rdf.Repository target , URI targetGraph, URI baseUri, String targetType) throws FileNotFoundException, RDFHandlerException
 	{
 		//ctx.saver.initConnexion(target, targetGraph, baseUri, targetType);
+		if(fc.name.equals(Const.exception) || fc.name.equals(Const.exceptionReport))
+		{
+			return false;
+		}
 		for (Attribute a : fc.itsAttr) {
 			if(a instanceof ComplexFeature)
 			{
@@ -54,12 +58,14 @@ public class WFS2Converter {
 							ctx.getMapper(ef.getTypeName()).map(ef, ctx);
 							//flush model if needed
 							//ctx.saver.flush(this.ctx.model);									
-								storeRdfTS(target, targetGraph, baseUri, targetType);
+							storeRdfTS(target, targetGraph, baseUri, targetType);
+							StoreRDF();
 						}
 					}
 				}
 			}
 		}
+		return true;
 		//ctx.saver.close();
 	}
 	public void StoreRDF() throws FileNotFoundException, RDFHandlerException

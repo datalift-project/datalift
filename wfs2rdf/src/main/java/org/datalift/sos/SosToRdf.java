@@ -48,10 +48,12 @@ import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.project.WfsSource;
 import org.datalift.fwk.view.TemplateModel;
+import org.datalift.model.ComplexFeature;
 import org.datalift.model.FeatureTypeDescription;
 import org.datalift.sos.model.ObservationMetaData;
 import org.datalift.wfs.BaseConverterModule;
 import org.datalift.wfs.TechnicalException;
+import org.datalift.wfs.wfs2.mapping.WFS2Converter;
 import org.datalift.wfs.wfs2.parsing.WFS2Client;
 import org.openrdf.rio.RDFHandlerException;
 import org.xml.sax.SAXException;
@@ -75,6 +77,7 @@ public class SosToRdf extends BaseConverterModule {
 		private final static Logger log = Logger.getLogger();
 		/** The name of this module in the DataLift configuration. */
 		public final static String MODULE_NAME = "sos2rdf";
+		private final static Map<String,List<ObservationMetaData>> cache = new HashMap<String, List<ObservationMetaData>>();
 		
 		//-------------------------------------------------------------------------
 		// Constructors
@@ -193,32 +196,44 @@ public class SosToRdf extends BaseConverterModule {
 				projectUri = new URI(project);
 				p = this.getProject(projectUri);
 				// Retrieve source.
-				WfsSource s = (WfsSource)(p.getSource(source));
+				SosSource s = (SosSource)(p.getSource(source));
 
 				JsonArray j = o.get("values").getAsJsonArray();
 
 				Iterator<JsonElement> i = j.iterator();
 
 				while ( i.hasNext() ){
-					String typeName = i.next().getAsString();
-					String potentialtargetGraph=s.getUri()+"/"+typeName;
+					JsonObject obj= i.next().getAsJsonObject();
+					String id = obj.get("id").getAsString();
+					String begin = obj.get("begin").getAsString();
+					String end = obj.get("end").getAsString();
+					String format = obj.get("format").getAsString();
+					
+					String potentialtargetGraph=s.getUri()+"/"+id;
 					int countGraph=getOccurenceGraph(p, potentialtargetGraph);
-					URI targetGraph = constructTargetGraphURI(p,potentialtargetGraph);
+					URI targetGraph = constructTargetGraphURI(p,potentialtargetGraph);	
 					countGraph++;
 					URI baseUri=createBaseUri(targetGraph);
-					String targetType=typeName+"-wfs";
-					String destination_title=typeName+"(RDF# )"+countGraph; //count to be added later					
-					System.out.println("done for "+typeName);
+					String targetType=id+"-sos";
+					String destination_title=id+"(RDF# )"+countGraph; //count to be added later
+					try {
+						boolean done=convertObservations2Rdf(projectUri,s, destination_title, targetGraph, baseUri, targetType,id,begin, end, format, optionOntology);
+						if(!done)
+						{
+							throw new Exception();
+						}
+					
+					System.out.println("done for "+id);
 					// Register new transformed RDF source.
 					Source out;
-					try {
+					
 						out = this.addResultSource(p, s,
-								"RDF mapping of " + s.getTitle()+"("+typeName+")", targetGraph);
+								"RDF mapping of " + s.getTitle()+"("+id+")", targetGraph);
 						// Display project source tab, including the newly created source.
 						response = this.created(out);
-					} catch (IOException e) {
+					} catch (Exception e) {
 						// TODO Auto-generated catch block
-						e.printStackTrace();		
+						log.error(e.getMessage());		
 					}					
 				} 
 			}catch (URISyntaxException e1) {
@@ -231,6 +246,46 @@ public class SosToRdf extends BaseConverterModule {
 		}
 
 		
+		private boolean convertObservations2Rdf(URI projectUri, SosSource s, String destination_title, URI targetGraph,
+				URI baseUri, String targetType, String id,  String begin, String end, String format, int optionOntology) throws SAXException, ParserConfigurationException {
+			try {
+				String srs=null;
+				
+				SOS2Client client=new SOS2Client(s.getSourceUrl());
+				client.getObservation(id,begin,end,format);
+				//return a list of parsed features contained in typeName
+				ComplexFeature observationDataToConvert=client.getUtilData(id);
+
+				if (observationDataToConvert==null ) 
+				{
+					return false;
+				}
+				//0: default converter
+				//1: EMF group Converter
+				WFS2Converter converter=new WFS2Converter(optionOntology);
+				
+				org.datalift.fwk.rdf.Repository target = Configuration.getDefault().getInternalRepository();
+				//handle exception
+				if(!converter.ConvertFeaturesToRDF(observationDataToConvert,target , targetGraph, baseUri, targetType))
+						{
+							return false;
+						}
+				//converter.StoreRDF();
+				//converter.StoreRdfTS(target , targetGraph, baseUri, targetType);
+
+				
+				
+			} catch (IOException e) {
+				TechnicalException error = new TechnicalException("convertFeatureTypeFailed", e, id);
+				log.error(error.getMessage(), e);
+				return false;
+			} catch (RDFHandlerException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return true;
+			
+		}
 		/****the end of web services***/
 		
 	private URI createBaseUri(URI targetGraph) throws URISyntaxException {

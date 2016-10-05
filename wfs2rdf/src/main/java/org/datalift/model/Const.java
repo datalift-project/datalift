@@ -182,6 +182,10 @@ public class Const {
 	public static QName identifierSWES= new QName("http://www.opengis.net/swes/2.0","identifier");
 	public static QName nameSWES= new QName("http://www.opengis.net/swes/2.0","name");
 	public static QName responseFormat= new QName("http://www.opengis.net/sos/2.0","responseFormat");
+	
+	/******exception****/
+	public static QName exception= new QName("http://schemas.opengis.net/ows/1.1.0/owsExceptionReport.xsd","Exception");
+	public static QName exceptionReport= new QName("http://www.opengis.net/ows/1.1","ExceptionReport");
 	 
 	
 
