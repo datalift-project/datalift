@@ -27,5 +27,6 @@ public class GeomMapper extends BaseMapper{
 		}
 
 		ctx.model.add(ctx.vf.createStatement(geomType, ctx.vf.createURI(ctx.nsGeoSparql+"asWKT"), ctx.vf.createLiteral("<" + crs + "> " + cf.vividgeom.toString(),GeoSPARQL.WKTLITERAL)));
+	    this.rememberGmlId(cf,ctx);
 	}
 }

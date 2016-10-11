@@ -11,6 +11,10 @@ import org.datalift.geoutility.Context;
 import org.datalift.model.Attribute;
 import org.datalift.model.ComplexFeature;
 import org.datalift.model.Const;
+import org.datalift.sos.mapping.FeatureOfInterestMapper;
+import org.datalift.sos.mapping.MeasurmentTimeSeriesMapper;
+import org.datalift.sos.mapping.ObservationCollectionMapper;
+import org.datalift.sos.mapping.OmResultMapper;
 import org.openrdf.model.ValueFactory;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
@@ -36,6 +40,13 @@ public class WFS2Converter {
 			ctx.mappers.put(Const.AbstractMemberType,m2);
 			ctx.mappers.put(Const.OM_ObservationPropertyType,new ObservationPropertyTypeMapper());
 			ctx.mappers.put(Const.inspireCodeList,new CodeListMapper());
+			//to be replaced later by a new bunch of mappers
+			ctx.mappers.put(Const.OM_ObservationPropertyType,new ObservationCollectionMapper());
+			ctx.mappers.put(Const.FeaturePropertyType,new FeatureOfInterestMapper());
+			ctx.mappers.put(Const.observedProperty,new ObservationPropertyTypeMapper());
+			ctx.mappers.put(Const.MeasurementTimeseriesType,new MeasurmentTimeSeriesMapper());
+			ctx.mappers.put(Const.omResult,new OmResultMapper());
+			
 		}
 	}
 	public boolean ConvertFeaturesToRDF(ComplexFeature fc, org.datalift.fwk.rdf.Repository target , URI targetGraph, URI baseUri, String targetType) throws FileNotFoundException, RDFHandlerException
@@ -57,9 +68,10 @@ public class WFS2Converter {
 							ComplexFeature ef =(ComplexFeature)aa;
 							ctx.getMapper(ef.getTypeName()).map(ef, ctx);
 							//flush model if needed
-							//ctx.saver.flush(this.ctx.model);									
-							storeRdfTS(target, targetGraph, baseUri, targetType);
+							//ctx.saver.flush(this.ctx.model);		
 							StoreRDF();
+							storeRdfTS(target, targetGraph, baseUri, targetType);
+							
 						}
 					}
 				}

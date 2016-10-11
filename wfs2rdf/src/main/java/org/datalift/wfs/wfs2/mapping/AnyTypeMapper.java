@@ -5,6 +5,7 @@ import javax.xml.namespace.QName;
 import org.openrdf.model.Resource;
 import org.datalift.model.ComplexFeature;
 import org.datalift.geoutility.Context;
+import org.datalift.geoutility.Helper;
 import org.datalift.model.Attribute;
 import org.datalift.model.Const;
 import org.datalift.model.SosConst;
@@ -17,62 +18,52 @@ public class AnyTypeMapper extends BaseMapper{
 		if(cf.name.equals(Const.belongsTo))
 			found=true;
 		if(ignore(cf))
-			{
-				return;
-			}
-		if(isIntermediateFeature(cf))
 		{
-			//do specific mapping : rac
-			this.setCfId(cf,ctx);			
-			for (Attribute a : cf.itsAttr) {
-				if (a instanceof ComplexFeature) {
-					ComplexFeature f = (ComplexFeature)a;
-					//exceptionnellement ici!!
-				    setCfId(f,ctx);
-				    addChildLinkedStatement(cf,f,ctx);							
-					//insert type of f if f will not be mappedwith basic mapper
-					ctx.getMapper(f.getTypeName()).map(f, ctx);
-				}
-			}
+			return;
+		}
+		if(cf.name.equals(Const.omResult))
+		{
+			ctx.getMapper(Const.omResult).map(cf, ctx);
 		}
 		else
+		{
+			if(isIntermediateFeature(cf))
 			{
-			
-			if(ignore(cf))
-				{
-					return;
+				//do specific mapping : rac
+				this.setCfId(cf,ctx);			
+				for (Attribute a : cf.itsAttr) {
+					if (a instanceof ComplexFeature) {
+						ComplexFeature f = (ComplexFeature)a;
+						//exceptionnellement ici!!
+						setCfId(f,ctx);
+						addChildLinkedStatement(cf,f,ctx);		
+						this.rememberGmlId(cf,ctx);
+						//insert type of f if f will not be mappedwith basic mapper
+						ctx.getMapper(f.getTypeName()).map(f, ctx);
+					}
 				}
-			this.setCfId(cf,ctx);
-
-
-			if(!alreadyLinked)
+			}
+			else
+			{				
+				this.setCfId(cf,ctx);
+				if(!alreadyLinked)
 				{
 					this.addParentLinkStatements(cf, ctx);
 				}
-			this.addRdfTypes(cf, ctx);
-			if(cf.vividgeom!=null)
-			{
-				ctx.getMapper(new QName("geometry")).map(cf, ctx);
-			}
-			
-			for (Attribute a : cf.itsAttr) {
-				if (a instanceof ComplexFeature) {
-					ComplexFeature f = (ComplexFeature)a;
-					ctx.getMapper(f.getTypeName()).map(f, ctx);
+				this.addRdfTypes(cf, ctx);
+				if(cf.vividgeom!=null)
+				{
+					ctx.getMapper(new QName("geometry")).map(cf, ctx);
 				}
+				for (Attribute a : cf.itsAttr) {
+					if (a instanceof ComplexFeature) {
+						ComplexFeature f = (ComplexFeature)a;
+						ctx.getMapper(f.getTypeName()).map(f, ctx);
+					}
+				}
+				this.mapFeatureSimpleAttributes(cf, ctx,null);
 			}
-			/*if(cf.value!=null && !cf.value.equals("\n"))
-			{
-				addCfContent(cf,ctx);
-			}*/
-
-			this.mapFeatureSimpleAttributes(cf, ctx);
-			}
-
-		/*if(cf.value!=null && !cf.value.equals("\n"))
-		{
-			addCfContent(cf,ctx);
-		}*/
+		}	
 	}
 	/**
 	 * inserts special predicate whish links directely the current feature with its child : the shortcut
@@ -83,11 +74,10 @@ public class AnyTypeMapper extends BaseMapper{
 	private void addChildLinkedStatement(ComplexFeature cf, ComplexFeature f, Context ctx) {
 		// TODO Auto-generated method stub
 		ctx.model.add(ctx.vf.createStatement(cf.getParent().getId(), ctx.vf.createURI(ctx.nsDatalift+cf.name.getLocalPart()), f.getId()));
-		
 	}
 	@Override
 	protected void addParentLinkStatements(ComplexFeature cf, Context ctx) {
-		
+
 		/****add the parentlinked statement****/
 		if(cf.name.equals(Const.belongsTo))
 		{
@@ -102,27 +92,24 @@ public class AnyTypeMapper extends BaseMapper{
 			}
 			ctx.model.add(ctx.vf.createStatement(subjectURI, ctx.vf.createURI(ctx.nsDatalift+cf.name.getLocalPart()), cf.getId()));			
 		}
-		
 		else
-			{
+		{
 			super.addParentLinkStatements(cf, ctx);
-			}
+		}
 	}
-	
+
 	@Override
 	protected void addRdfTypes(ComplexFeature cf, Context ctx) {
-
-		
 		if(isReferencedObject(cf))
 		{
-			ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(ctx.nsDatalift+capitalize(ctx.referencedObjectType.getLocalPart()))));
+			ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(ctx.nsDatalift+Helper.capitalize(ctx.referencedObjectType.getLocalPart()))));
 			if(cf.name.equals(Const.belongsTo))
 			{
 				return;
 			}
 		}
-		ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(ctx.nsDatalift+capitalize(cf.name.getLocalPart()))));
-				
-		}
-	
+		ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(ctx.nsDatalift+Helper.capitalize(cf.name.getLocalPart()))));
+
+	}
+
 }

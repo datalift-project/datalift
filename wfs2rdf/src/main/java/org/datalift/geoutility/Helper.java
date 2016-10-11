@@ -7,6 +7,10 @@ import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 
 import org.datalift.fwk.log.Logger;
+import org.datalift.model.Attribute;
+import org.datalift.model.ComplexFeature;
+import org.datalift.model.Const;
+import org.datalift.model.SosConst;
 
 public class Helper {
 	//private final static Logger log = Logger.getLogger();
@@ -46,5 +50,25 @@ public class Helper {
 	{
 		if (s==null || s.equals("")) return false;
 		return true;
+	}
+	public static String capitalize(String className)
+	{
+		return className.substring(0, 1).toUpperCase() + className.substring(1);
+	}
+	
+	public static boolean isEmpty(ComplexFeature f)
+	{
+		boolean empty=false;
+		if(f.value==null)
+			{
+				empty=true;
+			}
+		for (Attribute a : f.itsAttr) {
+			if(!a.name.equals(Const.type) && !a.name.equals(Const.owns) && !a.name.equals(SosConst.frame) && !a.name.equals(Const.nil)&& !a.name.equals(Const.nilReason))
+			{
+				return false;		 
+			}
+		}
+		return empty;
 	}
 }

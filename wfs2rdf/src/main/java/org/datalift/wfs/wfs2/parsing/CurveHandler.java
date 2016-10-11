@@ -37,7 +37,7 @@ public class CurveHandler extends DefaultHandler {
 	@Override
 	public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
 
-		currentCoordinateValues.delete(0, currentCoordinateValues.length());
+		currentCoordinateValues.setLength(0);
 		if(localName.equals(pointCf.name.getLocalPart()))
 		{
 			initCurve();
@@ -68,7 +68,7 @@ public class CurveHandler extends DefaultHandler {
 	public void endElement(String uri, String localName, String qName) throws SAXException {
 		if(localName.equals(localNameRetrieved)) //if we have fionished the building of geometric feature, the feature is added to pile and removed from geo_pile, so go back 
 		{
-			String val=currentCoordinateValues.toString();
+			String val=currentCoordinateValues.toString().trim().replaceAll("\\s+", " ");
 			handleCharacters(val);
 			parser.getXMLReader().setContentHandler(fHandler);	
 			fHandler.endElement(uri, localName, qName);
@@ -78,10 +78,6 @@ public class CurveHandler extends DefaultHandler {
 	@Override
 	public void characters(char[] ch, int start, int length) throws SAXException {
 		currentCoordinateValues.append(ch,start,length);
-		if(currentCoordinateValues.toString().trim().length()==0)
-		{
-			currentCoordinateValues.delete(0, currentCoordinateValues.length());				
-		}
 	}
 	private void handleCharacters(String val)
 	{

@@ -10,14 +10,25 @@ import org.datalift.geoutility.Context;
 import org.datalift.model.Attribute;
 import org.datalift.model.Const;
 import org.datalift.model.SosConst;
+/**
+ * 
+ * @author a631207*
+ * This class handles features that have as a type : xsd:referenceType
+ * NB: the project defines another specific type called "referencedObject" as an xml element which has an "href" attribute. don't confuse  the two types please
+ *
+ */
 public class ReferenceTypeMapper extends BaseMapper{
 
 	@Override
 	public void map(ComplexFeature cf, Context ctx) {
-		// TODO Auto-generated method stub
+		//Here we customize the mapping of some specific features which have as a type : xsd:referenceType
 		if(isCodeList(cf,ctx))
 		{
 			ctx.getMapper(Const.inspireCodeList).map(cf, ctx);	
+		}
+		if(isSosObservedProperty(cf,ctx))
+		{
+			ctx.getMapper(Const.observedProperty).map(cf, ctx);	
 		}
 		else
 		{
@@ -25,8 +36,15 @@ public class ReferenceTypeMapper extends BaseMapper{
 		}
 	}
 
+	private boolean isSosObservedProperty(ComplexFeature cf, Context ctx) {
+		if(cf.name.equals(Const.observedProperty))
+		{
+			return true;
+		}
+		return false;
+	}
+
 	private boolean isCodeList(ComplexFeature cf, Context ctx) {
-		// TODO Auto-generated method stub
 		String potentielCodeList=cf.getAttributeValue(Const.href);
 		if(potentielCodeList!=null)
 		{

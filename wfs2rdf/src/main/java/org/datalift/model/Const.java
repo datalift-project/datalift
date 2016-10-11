@@ -183,6 +183,42 @@ public class Const {
 	public static QName nameSWES= new QName("http://www.opengis.net/swes/2.0","name");
 	public static QName responseFormat= new QName("http://www.opengis.net/sos/2.0","responseFormat");
 	
+	public static QName OM_Observation= new QName("http://www.opengis.net/om/2.0","OM_Observation");
+	public static QName OM_ObservationType= new QName("http://www.opengis.net/om/2.0","OM_ObservationType");
+	public static QName phenomenonTime= new QName("http://www.opengis.net/om/2.0","phenomenonTime");
+	public static QName TimeObjectPropertyType= new QName("http://www.opengis.net/om/2.0","TimeObjectPropertyType");
+	public static QName resultTime= new QName("http://www.opengis.net/om/2.0","resultTime");
+	public static QName TimeInstantPropertyType= new QName("http://www.opengis.net/gml/3.2","TimeInstantPropertyType");
+	public static QName observedProperty= new QName("http://www.opengis.net/om/2.0","observedProperty");
+
+	public static QName procedure= new QName("http://www.opengis.net/om/2.0","procedure");
+	public static QName OM_ProcessPropertyType= new QName("http://www.opengis.net/om/2.0","OM_ProcessPropertyType");
+	public static QName parameter= new QName("http://www.opengis.net/om/2.0","parameter");
+	public static QName NamedValuePropertyType= new QName("http://www.opengis.net/om/2.0","NamedValuePropertyType");
+
+	public static QName featureOfInterest= new QName("http://www.opengis.net/om/2.0","featureOfInterest");
+
+	public static QName result= new QName("http://www.opengis.net/om/2.0","result");
+	public static QName MeasurementTimeseries= new QName("http://www.opengis.net/waterml/2.0","MeasurementTimeseries");
+	public static QName MeasurementTimeseriesType= new QName("http://www.opengis.net/waterml/2.0","MeasurementTimeseriesType");
+	public static QName metadata= new QName("http://www.opengis.net/waterml/2.0","metadata");
+	public static QName TimeseriesMetadataPropertyType= new QName("http://www.opengis.net/waterml/2.0","TimeseriesMetadataPropertyType");
+	public static QName defaultPointMetadata= new QName("http://www.opengis.net/waterml/2.0","defaultPointMetadata");
+	public static QName TVPDefaultMetadataPropertyType= new QName("http://www.opengis.net/waterml/2.0","TVPDefaultMetadataPropertyType");
+	public static QName point= new QName("http://www.opengis.net/waterml/2.0","point");
+	public static QName omResult= new QName("http://www.opengis.net/om/2.0","result");
+	public static QName MeasurementTVP= new QName("http://www.opengis.net/waterml/2.0","MeasurementTVP");
+	public static QName MeasureTVPType= new QName("http://www.opengis.net/waterml/2.0","MeasureTVPType");
+	public static QName uom= new QName("http://www.opengis.net/waterml/2.0","uom");
+	public static QName UnitReference= new QName("http://www.opengis.net/swe/2.0","UnitReference");
+	public static QName interpolationType= new QName("http://www.opengis.net/waterml/2.0","interpolationType");
+	public static QName wmlTime= new QName("http://www.opengis.net/waterml/2.0","time");
+	
+	public static QName wmlValue= new QName("http://www.opengis.net/waterml/2.0","value");
+	public static QName MeasureType= new QName("http://www.opengis.net/waterml/2.0","MeasureType");
+	public static QName UomSymbol= new QName("http://www.opengis.net/swe/2.0","UomSymbol");
+
+	
 	/******exception****/
 	public static QName exception= new QName("http://schemas.opengis.net/ows/1.1.0/owsExceptionReport.xsd","Exception");
 	public static QName exceptionReport= new QName("http://www.opengis.net/ows/1.1","ExceptionReport");

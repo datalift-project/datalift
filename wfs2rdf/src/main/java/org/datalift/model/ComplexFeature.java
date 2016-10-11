@@ -7,13 +7,14 @@ import java.util.List;
 import javax.xml.namespace.QName;
 
 import org.apache.xerces.xs.XSTypeDefinition;
+import org.geotools.math.Complex;
 import org.openrdf.model.Resource;
 
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
 
 public class ComplexFeature extends Attribute{
-	
+
 	public List <Attribute> itsAttr;
 	public MyGeometry geom;
 	public Geometry vividgeom;
@@ -21,7 +22,7 @@ public class ComplexFeature extends Attribute{
 	private Resource id;
 	private ComplexFeature parent;
 	private ComplexFeature childFound;
-	
+
 	public ComplexFeature getChild(QName n) {
 		//findChild(n);
 		return childFound;
@@ -33,14 +34,14 @@ public class ComplexFeature extends Attribute{
 	public ComplexFeature()
 	{
 		itsAttr=new ArrayList<Attribute>();
-		
+
 	}
 
 	public String getLiteral() {
 		// TODO Auto-generated method stub
 		for (Attribute attribute : itsAttr) {
 			if (attribute.name.equals(Const.title))
-					return attribute.value;
+				return attribute.value;
 		}
 		return null;
 	}
@@ -48,7 +49,7 @@ public class ComplexFeature extends Attribute{
 		// TODO Auto-generated method stub
 		for (Attribute attribute : itsAttr) {
 			if (attribute.name.equals(Const.href))
-					return attribute.value;
+				return attribute.value;
 		}
 		return null;
 	}
@@ -56,19 +57,19 @@ public class ComplexFeature extends Attribute{
 	{		
 		for (Attribute attribute : itsAttr) {
 			if(attribute.name.equals(attributeName))
-					return attribute.value;			
+				return attribute.value;			
 		}
 		return null;		
 	}
 
 	public Resource getId() {
 		// TODO Auto-generated method stub
-		
+
 		return id;
 	}
 	public void setId(Resource identifier) {
 		// TODO Auto-generated method stub
-		
+
 		this.id=identifier;
 	}
 
@@ -108,7 +109,7 @@ public class ComplexFeature extends Attribute{
 		}
 		return child; 
 	}
-	
+
 	public ComplexFeature findChildByName( QName childName)
 	{
 		ComplexFeature child=null;
@@ -137,52 +138,88 @@ public class ComplexFeature extends Attribute{
 		for (Attribute attribute : itsAttr) {
 			if(attribute instanceof ComplexFeature && attribute.name.equals(name))
 			{
-				  children.add(((ComplexFeature) attribute)) ;
+				children.add(((ComplexFeature) attribute)) ;
 			}
 		}
 		return children;
-			/*if(this.name.equals(name))
-			{
-				childFound = new ComplexFeature();
-				childFound=this;
-				
-			}
-		for (Attribute attribute : itsAttr) {
-			if(attribute instanceof ComplexFeature)
-			{
-				 ((ComplexFeature) attribute).findchild(name);
-			}
-		}*/
-		
-		/*for (Attribute attribute : itsAttr) {
-			if(attribute instanceof ComplexFeature)
-			{
-				ComplexFeature fc=(ComplexFeature) attribute;
-				if(fc.name.equals(name))
-				{
-					return fc;
-				}
-				else
-				{
-					for (Attribute attribute2 : fc.itsAttr) {
-						if(attribute2 instanceof ComplexFeature)
-						{
-							ComplexFeature fcc=(ComplexFeature) attribute2;
-							if(fcc.name.equals(name))
-							{
-								return fcc;
-							}
-							else
-							{
-								fcc.getchild(name);
-							}
-						}
-					}
-				}
-			}
-		}*/
-		
 	}
-	
-	
+	/**
+	 * returns true int the following cases :
+	 * 1- Contains only one util simple attribute
+	 * OR
+	 * 2-No util attribute but a simple content. expl : <toto> titi</toto>
+	 * @return
+	 */
+	public boolean isSimple() {
+		int nbrUtilAttri=0;
+		for (Attribute a : this.itsAttr) {
+			if(!a.name.equals(Const.type) && !a.name.equals(Const.owns) && !a.name.equals(SosConst.frame) && !a.name.equals(Const.nil)&& !a.name.equals(Const.nilReason))
+			{
+				if(a instanceof ComplexFeature)
+					{
+						return false;
+					}
+				nbrUtilAttri++;
+			}
+			if(nbrUtilAttri>1)
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+	public Resource getIdTypedParent(QName parentType) {
+		Resource id=null;
+//		while(parent!=null)
+//		{
+//			if(parent.getTypeName().equals(parentType))
+//			{
+//				id=parent.id;
+//			}
+//			else
+//			{
+//				id=parent.getIdTypedParent(parentType);
+//			}
+//			if(id!=null)
+//			{
+//				break;
+//			}
+//		}
+		return parent.parent.parent.id;	}
+	public ComplexFeature test(QName parentType) {
+		ComplexFeature id=null;
+		while(parent!=null)
+		{
+			if(parent.name.equals(parentType))
+			{
+				id=parent;
+			}
+			else
+			{
+				id=parent.test(parentType);
+			}
+			if(id!=null)
+			{
+				break;
+			}
+		}
+		return id;
+	}
+	public static void main (String [] args)
+	{
+		ComplexFeature root=new ComplexFeature();
+		root.name=new QName("rrr");
+		
+		ComplexFeature a=new ComplexFeature();
+		a.name=new QName("aaa");
+		ComplexFeature b=new ComplexFeature();
+		b.name=new QName("bbb");
+		ComplexFeature c=new ComplexFeature();
+		c.name=new QName("ccc");
+		b.parent=a;
+		c.parent=b;
+		a.parent=root;
+		ComplexFeature f=c.test(new QName("aaa"));
+		System.out.println(f.name);
+	}
 }

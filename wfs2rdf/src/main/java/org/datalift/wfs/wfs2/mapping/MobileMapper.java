@@ -24,6 +24,7 @@ public class MobileMapper extends BaseMapper {
 		{
 			this.addParentLinkStatements(cf, ctx);
 		}
+    this.rememberGmlId(cf,ctx);
 	}
 	protected void addParentLinkStatements(ComplexFeature cf, Context ctx) {
 		Resource subjectURI;

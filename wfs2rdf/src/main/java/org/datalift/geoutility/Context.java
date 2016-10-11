@@ -1,10 +1,6 @@
 package org.datalift.geoutility;
 
-import static org.datalift.fwk.util.PrimitiveUtils.wrap;
-import static org.datalift.fwk.util.TimeUtils.asSeconds;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -28,7 +24,7 @@ import org.apache.http.client.methods.HttpGet;
 
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.datalift.fwk.Configuration;
-import org.datalift.fwk.log.Logger;
+
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.rdf.UriCachingValueFactory;
@@ -73,6 +69,11 @@ public class Context {
 	/*****registred mappers and code list****/
 	public Map<QName,Mapper> mappers = new HashMap<QName,Mapper>();
 	public static List <String>registredCodeList = new ArrayList<String>();
+	/****handle cross referencing using gml ids*/
+	 public Map<String,String> referenceCatalogue;
+	 public final String baseURI="http://changeMe.org/";
+	 /***utils for sos****/
+	 public Map<QName, String> sosMetaData=new HashMap<QName, String>();
 	//*******ns******//
 	public static final String nsDatalift = "http://www.datalift.org/ont/inspire#";
 	public static final String nsSmod = "https://www.w3.org/2015/03/inspire/ef#";
@@ -86,7 +87,8 @@ public class Context {
 	public static final String  nsDcTerms ="http://purl.org/dc/terms/";
 	public static final String nsSkos="http://www.w3.org/2008/05/skos#";
 	public static final String nsOml="http://def.seegrid.csiro.au/ontology/om/om-lite#";
-	public static final String nsIsoTP="http://def.seegrid.csiro.au/isotc211/iso19108/2002/temporal#"; //should be replaced by a local version of the ontology  
+	public static final String nsIsoTP="http://def.seegrid.csiro.au/isotc211/iso19108/2002/temporal#"; //should be replaced by a local version of the ontology
+	public static final String nsw3Time="https://www.w3.org/TR/2016/WD-owl-time-20160712/#";
 	/*****new RDF classe definitions ****/
 	public static final QName referencedObjectType=new QName(nsDatalift, "ReferencedObject");
 	public static final QName referencedCodeListType=new QName(nsDatalift, "ReferencedCodeList");
@@ -130,6 +132,9 @@ public class Context {
 		mappers.put(Const.xsdDecimal, m);
 		mappers.put(Const.xsdBoolan,new MobileMapper());
 		mappers.put(Const.anyURI,new AnyURIMapper());
+		
+		this.referenceCatalogue = new HashMap<String, String>();
+		this.referenceCatalogue.put(null, baseURI);
 	}
 
 	public Mapper getMapper(QName type) {

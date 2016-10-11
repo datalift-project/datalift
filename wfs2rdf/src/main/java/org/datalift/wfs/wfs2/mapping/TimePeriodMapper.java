@@ -19,11 +19,13 @@ public class TimePeriodMapper extends BaseMapper{
 		if(ignore(cf))
 			return;
 		this.setCfId(cf,ctx);
-		//this.addParentLinkStatements(cf, ctx);
+		this.addParentLinkStatements(cf, ctx);
+	    this.rememberGmlId(cf,ctx);
 		this.addRdfTypes(cf, ctx);
 		for (Attribute a : cf.itsAttr) {
 			if (a instanceof ComplexFeature) {
 				ComplexFeature position=(ComplexFeature) a;
+			    this.rememberGmlId(position,ctx);
 				XMLGregorianCalendar d=Helper.getDate(position.value);
 				if(d!=null)
 				{
@@ -31,16 +33,26 @@ public class TimePeriodMapper extends BaseMapper{
 					int indexPosition=position.name.getLocalPart().indexOf("Position");
 					String p=position.name.getLocalPart().substring(0, indexPosition);
 					URI preperty=ctx.vf.createURI(ctx.nsIsoTP+p);
+					if(p.contains("begin"))
+					{
+						preperty=ctx.vf.createURI(ctx.nsw3Time+"hasBeginning");
+					}
+					if(p.contains("end"))
+					{
+						preperty=ctx.vf.createURI(ctx.nsw3Time+"hasEnd");	
+					}
+					
 					ctx.model.add(ctx.vf.createStatement(cf.getId(), preperty, v5));
 				}  
 			}
 		}
-		this.mapFeatureSimpleAttributes(cf, ctx);
+		this.mapFeatureSimpleAttributes(cf, ctx,null);
 	}
 	@Override
 	protected void addRdfTypes(ComplexFeature cf, Context ctx) {	
-		ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(ctx.nsDatalift+capitalize(cf.name.getLocalPart()))));
+		ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(ctx.nsDatalift+Helper.capitalize(cf.name.getLocalPart()))));
 		ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(ctx.nsIsoTP+"TM_Period")));
+		URI typeIntervalURI = ctx.vf.createURI(ctx.nsw3Time+"ProperInterval");
+		ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI,typeIntervalURI));
 		}
-	
 }

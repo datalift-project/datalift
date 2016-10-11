@@ -7,6 +7,7 @@ import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.datalift.model.ComplexFeature;
 import org.datalift.geoutility.Context;
+import org.datalift.geoutility.Helper;
 import org.datalift.model.Attribute;
 import org.datalift.model.Const;
 import org.datalift.model.SosConst;
@@ -29,10 +30,11 @@ public class CodeListMapper extends BaseMapper{
 			{
 				this.addParentLinkStatements(cf, ctx);
 			}
+		    this.rememberGmlId(cf,ctx);
 		if(!clAlreadyDefined)
 			{
 				this.addRdfTypes(cf, ctx);
-				this.mapFeatureSimpleAttributes(cf, ctx);
+				this.mapFeatureSimpleAttributes(cf, ctx,null);
 			}
 		}
 
@@ -53,7 +55,7 @@ public class CodeListMapper extends BaseMapper{
 			}
 	}
 	@Override
-	protected void mapFeatureSimpleAttributes(ComplexFeature cf, Context ctx) {
+	protected void mapFeatureSimpleAttributes(ComplexFeature cf, Context ctx, Resource id) {
 		// TODO Auto-generated method stub
 		for (Attribute a : cf.itsAttr) {
 			if(! (a instanceof ComplexFeature) && !a.name.equals(SosConst.frame))
@@ -101,7 +103,7 @@ public class CodeListMapper extends BaseMapper{
 		alreadyLinked=false;		
 	}
 	protected void addRdfTypes(ComplexFeature cf, Context ctx) {		
-		ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(ctx.nsDatalift+capitalize(cf.name.getLocalPart()))));
+		ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(ctx.nsDatalift+Helper.capitalize(cf.name.getLocalPart()))));
 		ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(ctx.nsSkos+"Concept")));
 	}
 }

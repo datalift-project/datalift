@@ -17,7 +17,7 @@ public class SimpleTypeMapper extends BaseMapper{
 			return;
 		this.setCfId(cf,ctx);
 		this.addParentLinkStatements(cf, ctx);
-		
+	    this.rememberGmlId(cf,ctx);
 	}
 
 	@Override
@@ -70,20 +70,6 @@ public class SimpleTypeMapper extends BaseMapper{
 			ctx.model.add(ctx.vf.createStatement(subjectURI, ctx.vf.createURI(ctx.nsDatalift+cf.name.getLocalPart()), ctx.vf.createLiteral(cf.value)));
 		} 
 	}
-	protected boolean isEmpty(ComplexFeature f)
-	{
-		boolean empty=false;
-		if(f.value==null)
-			{
-				empty=true;
-			}
-		for (Attribute a : f.itsAttr) {
-			if(!a.name.equals(Const.type) && !a.name.equals(Const.owns) && !a.name.equals(SosConst.frame) && !a.name.equals(Const.nil)&& !a.name.equals(Const.nilReason))
-			{
-				return false;		 
-			}
-		}
-		return empty;
-	}
+
 
 }

@@ -61,7 +61,6 @@ public class Handler extends DefaultHandler {
     		foundit=true;
     	currentCoordinateValues.delete(0, currentCoordinateValues.length());
     	ElementPSVI elt=psvi.getElementPSVI();
-
     	//initialize cmplx object and set its attribute
     	tmp = new ComplexFeature();
     	tmp.name=new QName(uri, localName);
@@ -89,8 +88,8 @@ public class Handler extends DefaultHandler {
     	if(!stack.isEmpty()) //ajoute l'élément courant comme ATTRIBUT du dernier élément (encore ouvert ) dans la pile
     	{
     		if(tmp.getTypeName().equals(Const.GeometryPropertyType) || tmp.getTypeName().equals(Const.PointPropertyType) || tmp.getTypeName().equals(Const.CurvePropertyType)|| tmp.getTypeName().equals(Const.MultiSurfacePropertyType))
-
-    			//creeate a geometry proprety
+    			
+    			//create a geometry proprety
     		{
     			/**Call the geoHandler**/
     			GeoHandler gh=new GeoHandler(parser, this,stack);
@@ -130,7 +129,7 @@ public class Handler extends DefaultHandler {
 		if(!stack.isEmpty())
     	{
     		ComplexFeature lastcurrentElt=stack.peek();
-    		stack.peek().value=currentCoordinateValues.toString();
+    		lastcurrentElt.value=currentCoordinateValues.toString().trim().replaceAll("\\s+"," ");
     				//pile.get(pile.size()-1);
     		QName currentQname=new QName(uri,localName);
     		//if(currentQname.equals(pile.get(pile.size()-1).name))
@@ -141,15 +140,8 @@ public class Handler extends DefaultHandler {
    				 tmpList.add(lastcurrentElt);
     			}
    			 stack.pop();
-    		 //pile.remove(pile.size()-1);
     		}
-//    		ComplexFeature f = stack.pop();
-//    		if (stack.istmpty()) {
-//    			
-//    		}
     	}
-       
-       
     }
 	
 		
@@ -157,19 +149,7 @@ public class Handler extends DefaultHandler {
     public void characters(char ch[], int start, int length) throws SAXException {
     	if(!stack.isEmpty())
     		{
-    			String val=String.copyValueOf(ch, start, length);
-    			//ComplexFeature lastcurrentElt=pile.get(pile.size()-1);
-    			//if(lastcurrentElt.attrType!=null)
-    				  // if(lastcurrentElt.attrType.getName()!=null ) if not commented, mobile value becames null as the attributetype name is null in this case 
-    					
-    					currentCoordinateValues.append(ch,start,length);
-    					if(currentCoordinateValues.toString().trim().length()==0)
-    						{
-    							currentCoordinateValues.delete(0, currentCoordinateValues.length());				
-    						}
-
+    			currentCoordinateValues.append(ch,start,length);
     		}
-    	
-
     }
 }

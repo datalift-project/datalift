@@ -76,6 +76,7 @@
     <module>lov/api</module>
     <module>lov/catalogue</module>
     <!-- RDF transformation modules -->
+    <module>wfs2rdf</module>
     <module>data2ontology</module>
     <!-- Interconnection modules -->
     <module>stringtouri</module>
