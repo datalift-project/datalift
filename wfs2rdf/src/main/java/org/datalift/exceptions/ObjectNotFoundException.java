@@ -32,7 +32,7 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 
-package org.datalift.wfs;
+package org.datalift.exceptions;
 
 
 import java.text.MessageFormat;

@@ -1,4 +1,4 @@
-package org.datalift.geoutility;
+package org.datalift.utilities;
 
 import java.io.IOException;
 import java.util.HashMap;

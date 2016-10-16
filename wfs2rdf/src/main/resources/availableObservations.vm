@@ -135,7 +135,8 @@ $(function() {
 				{name:'Description',  index:'descr',   width:380},
 				{name:'begin', index:'begin', width:140},
 				{name:'end', index:'end',  width:140},
-				{name:'format', index:'format',  width:200}
+				{name:'format', index:'format',  width:200, /*editable:true, cellEdit:true,edittype:'select',formatter: 'select',
+                                            editoptions:{value: getAllSelectOptions()}*/}
 			],
 			caption: "",
 			rowNum:10, rowList:[10,20,30], pager: '#selectable_sources_toolbar',
@@ -147,6 +148,14 @@ $(function() {
             sortname: 'Title',
             sortorder: "desc"
 		});
+		
+		function getAllSelectOptions(){
+		 	var states = {};
+	console.log("**********");
+	//console.log($observationsOffering);
+  return states;
+
+}
 		
         console.log(grid.jqGrid("getGridParam", "data"));
         console.log("===========================");
@@ -217,8 +226,6 @@ $(function() {
 				 $('#typenames_submit').addClass("ui-state-disabled")
 			}
 		});
-			
-		
 		jQuery("#selectable_types").jqGrid('hideCol',["nm"]);
 	}
 	

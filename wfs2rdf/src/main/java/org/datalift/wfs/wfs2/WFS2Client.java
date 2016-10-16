@@ -1,4 +1,4 @@
-package org.datalift.wfs.wfs2.parsing;
+package org.datalift.wfs.wfs2;
 
 
 import java.io.IOException;
@@ -16,16 +16,14 @@ import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
 import org.apache.http.client.ClientProtocolException;
-//import org.datalift.core.util.*;
-import org.datalift.geoutility.Context;
-import org.datalift.geoutility.Helper;
 import org.datalift.model.Attribute;
 import org.datalift.model.BaseServiceClient;
 import org.datalift.model.ComplexFeature;
-import org.datalift.model.Const;
 import org.datalift.model.FeatureTypeDescription;
 import org.datalift.model.Store;
-
+import org.datalift.utilities.Const;
+import org.datalift.utilities.Context;
+import org.datalift.utilities.Helper;
 import org.xml.sax.SAXException;
 
 public class WFS2Client extends BaseServiceClient{
@@ -41,7 +39,7 @@ public class WFS2Client extends BaseServiceClient{
 	//		WFS2Parser mp=new WFS2Parser("http://geoservices.brgm.fr/risques?service=WFS&version=1.1.0&request=getCapabilities");
 	//		mp.doParse(mp.url);
 	//	}
-	public void getFeatureType(String FeatureName, String srs) throws ClientProtocolException, IOException, SAXException, ParserConfigurationException
+	public void getFeatureType(String FeatureName, String srs) throws Exception
 	{
 		Store ds=null;
 				//cache.get(url); url is not a suitbale key (should think about a proper key including options (srs)

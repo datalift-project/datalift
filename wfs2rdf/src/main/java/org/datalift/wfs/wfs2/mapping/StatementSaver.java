@@ -5,12 +5,12 @@ import static org.datalift.fwk.util.TimeUtils.asSeconds;
 
 import java.net.URI;
 
+import org.datalift.exceptions.TechnicalException;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.rdf.UriCachingValueFactory;
 import org.datalift.fwk.util.Env;
-import org.datalift.wfs.TechnicalException;
 import org.openrdf.model.Model;
 import org.openrdf.model.Statement;
 import org.openrdf.model.ValueFactory;

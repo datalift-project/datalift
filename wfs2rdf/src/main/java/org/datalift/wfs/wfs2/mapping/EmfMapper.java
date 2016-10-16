@@ -5,11 +5,11 @@ import javax.xml.namespace.QName;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.datalift.model.ComplexFeature;
-import org.datalift.geoutility.Context;
-import org.datalift.geoutility.Helper;
+import org.datalift.utilities.Const;
+import org.datalift.utilities.Context;
+import org.datalift.utilities.Helper;
+import org.datalift.utilities.SosConst;
 import org.datalift.model.Attribute;
-import org.datalift.model.Const;
-import org.datalift.model.SosConst;
 
 public class EmfMapper extends BaseMapper {
 

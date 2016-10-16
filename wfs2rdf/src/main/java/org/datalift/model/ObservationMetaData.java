@@ -1,4 +1,4 @@
-package org.datalift.sos.model;
+package org.datalift.model;
 
 import java.util.List;
 

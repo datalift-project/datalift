@@ -2,40 +2,37 @@ package org.datalift.sos.mapping;
 
 import javax.xml.namespace.QName;
 
-import org.datalift.geoutility.Context;
-import org.datalift.geoutility.Helper;
 import org.datalift.model.Attribute;
 import org.datalift.model.ComplexFeature;
-import org.datalift.model.Const;
+import org.datalift.utilities.Const;
+import org.datalift.utilities.Context;
 import org.datalift.wfs.wfs2.mapping.BaseMapper;
-import org.eclipse.xsd.ecore.MapBuilder.Mapper;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 
 public class ObservationMemberMapper extends BaseMapper {
 	@Override
 	protected void addRdfTypes(ComplexFeature cf, Context ctx) {
-
-		ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(ctx.nsDatalift+"Member")));
-		if(isReferencedObject(cf))
-		{
-			ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(ctx.nsDatalift+Helper.capitalize(ctx.referencedObjectType.getLocalPart()))));
-		}
-
-		URI typeSmodURI = ctx.vf.createURI(ctx.nsOml+"Observation");
+		URI typeSmodURI = ctx.vf.createURI(Context.nsOml+"Observation");
 		ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI,typeSmodURI));	
 	}
 
 	@Override
-	public void map(ComplexFeature cf, Context ctx) {
-		boolean found=false;
-		if(cf.name.getLocalPart().equals("result"))
-			found=true;
-		if(ignore(cf))
-		{
-			return;
+	protected void mapComplexChildren(ComplexFeature cf, Context ctx) {
+		for (Attribute a : cf.itsAttr) {
+			if (a instanceof ComplexFeature) {
+				ComplexFeature f = (ComplexFeature)a;
+				if(f.getTypeName().equals(Const.MeasureTVPType))
+				{
+					BaseMapper m=new SimpleMeasureMapper();
+					m.map(f, ctx);
+				}
+			}
 		}
-		this.setCfId(cf,ctx);
+	}
+
+	@Override
+	protected void mapWithParent(ComplexFeature cf, Context ctx) {
 		if(!alreadyLinked)
 		{
 			if(cf.isSimple())
@@ -47,31 +44,18 @@ public class ObservationMemberMapper extends BaseMapper {
 				this.addParentLinkStatements(cf, ctx);
 			}
 		}
-		this.rememberGmlId(cf,ctx);
-		this.addRdfTypes(cf, ctx);
-		for (Attribute a : cf.itsAttr) {
-			if (a instanceof ComplexFeature) {
-				ComplexFeature f = (ComplexFeature)a;
-				if(f.getTypeName().equals(Const.MeasureTVPType))
-				{
-					BaseMapper m=new SimpleMeasureMapper();
-					m.map(f, ctx);
-				}
-			}
-		}
-		this.mapFeatureSimpleAttributes(cf, ctx,null);
-
 	}
+
 	//here we want to link the current feature not with the parent but with the observationcollection 
 	@Override
 	protected void addParentLinkStatements(ComplexFeature cf, Context ctx) {
 		Resource idCollection=cf.getIdTypedParent(Const.OM_ObservationPropertyType);
 		if(idCollection==null)
 		{
-			idCollection=ctx.DefaultSubjectURI;
+			idCollection=Context.DefaultSubjectURI;
 		}
 		/****add the parentlinked statement****/
-		ctx.model.add(ctx.vf.createStatement(idCollection, ctx.vf.createURI(ctx.nsOml+"member"), cf.getId()));
+		ctx.model.add(ctx.vf.createStatement(idCollection, ctx.vf.createURI(Context.nsOml+"member"), cf.getId()));
 	}
 	@Override
 	protected void setCfId(ComplexFeature cf, Context ctx) {
@@ -89,15 +73,15 @@ public class ObservationMemberMapper extends BaseMapper {
 		{
 			if(isReferencedObject(cf))
 			{
-				QName type=ctx.referencedObjectType;//Const.ReferenceType;
+				QName type=Context.referencedObjectType;//Const.ReferenceType;
 				count =ctx.getInstanceOccurences(type);
-				os=ctx.vf.createURI(ctx.nsProject+type.getLocalPart()+"_"+count);
+				os=ctx.vf.createURI(Context.nsProject+type.getLocalPart()+"_"+count);
 			}
 			else
 			{
 				QName name=new QName ("member");
 				count=ctx.getInstanceOccurences(name);
-				os=ctx.vf.createURI(ctx.nsProject+name.getLocalPart()+"_"+count);
+				os=ctx.vf.createURI(Context.nsProject+name.getLocalPart()+"_"+count);
 			}		
 			cf.setId(os);
 		}

@@ -6,11 +6,11 @@ import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
 import org.datalift.model.ComplexFeature;
-import org.datalift.geoutility.Context;
-import org.datalift.geoutility.Helper;
+import org.datalift.utilities.Const;
+import org.datalift.utilities.Context;
+import org.datalift.utilities.Helper;
+import org.datalift.utilities.SosConst;
 import org.datalift.model.Attribute;
-import org.datalift.model.Const;
-import org.datalift.model.SosConst;
 
 public class CodeListMapper extends BaseMapper{
 	boolean clAlreadyDefined=false;
@@ -24,7 +24,7 @@ public class CodeListMapper extends BaseMapper{
 				return;
 			}
 		this.setCfId(cf,ctx);
-		if(!cf.name.equals(Const.mediaMonitored))
+		if(cf.name.equals(Const.mediaMonitored))
 		{
 			if(!alreadyLinked)
 			{

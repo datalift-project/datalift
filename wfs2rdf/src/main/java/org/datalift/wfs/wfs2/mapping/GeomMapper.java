@@ -7,14 +7,15 @@ import org.openrdf.model.URI;
 import fr.ign.datalift.constants.GeoSPARQL;
 
 import org.datalift.model.ComplexFeature;
-import org.datalift.geoutility.Context;
-import org.datalift.geoutility.CreateGeoStatement;
+import org.datalift.utilities.Context;
+import org.datalift.utilities.CreateGeoStatement;
 
 
 public class GeomMapper extends BaseMapper{
 
 	@Override
-	public void map(ComplexFeature cf, Context ctx) {
+	protected void mapGeometryProperty(ComplexFeature cf, Context ctx)
+	{
 		int count=0;
 		count=ctx.getInstanceOccurences(new QName(cf.vividgeom.getGeometryType()));
 		URI geomType=ctx.vf.createURI(ctx.nsProject+cf.vividgeom.getGeometryType()+"_"+count);
@@ -27,6 +28,6 @@ public class GeomMapper extends BaseMapper{
 		}
 
 		ctx.model.add(ctx.vf.createStatement(geomType, ctx.vf.createURI(ctx.nsGeoSparql+"asWKT"), ctx.vf.createLiteral("<" + crs + "> " + cf.vividgeom.toString(),GeoSPARQL.WKTLITERAL)));
-	    this.rememberGmlId(cf,ctx);
+
 	}
 }

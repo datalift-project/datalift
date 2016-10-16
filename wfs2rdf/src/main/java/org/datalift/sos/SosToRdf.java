@@ -37,6 +37,7 @@ import javax.ws.rs.core.UriInfo;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.http.client.ClientProtocolException;
+import org.datalift.exceptions.TechnicalException;
 //import org.datalift.core.util.SimpleCache;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.MediaTypes;
@@ -48,13 +49,12 @@ import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.project.WfsSource;
 import org.datalift.fwk.view.TemplateModel;
+import org.datalift.model.BaseConverterModule;
 import org.datalift.model.ComplexFeature;
 import org.datalift.model.FeatureTypeDescription;
-import org.datalift.sos.model.ObservationMetaData;
-import org.datalift.wfs.BaseConverterModule;
-import org.datalift.wfs.TechnicalException;
+import org.datalift.model.ObservationMetaData;
+import org.datalift.wfs.wfs2.WFS2Client;
 import org.datalift.wfs.wfs2.mapping.WFS2Converter;
-import org.datalift.wfs.wfs2.parsing.WFS2Client;
 import org.openrdf.rio.RDFHandlerException;
 import org.xml.sax.SAXException;
 
@@ -164,7 +164,7 @@ public class SosToRdf extends BaseConverterModule {
 			}
 			return response.build();
 		}
-		private List<ObservationMetaData> getObservationOffering(String sourceUrl, String version) throws ClientProtocolException, IOException, SAXException, ParserConfigurationException {
+		private List<ObservationMetaData> getObservationOffering(String sourceUrl, String version) throws Exception {
 
 			SOS2Client mp=new SOS2Client(sourceUrl);
 			mp.getCapabilities();
@@ -275,13 +275,10 @@ public class SosToRdf extends BaseConverterModule {
 
 				
 				
-			} catch (IOException e) {
+			} catch (Exception e) {
 				TechnicalException error = new TechnicalException("convertFeatureTypeFailed", e, id);
 				log.error(error.getMessage(), e);
 				return false;
-			} catch (RDFHandlerException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
 			}
 			return true;
 			

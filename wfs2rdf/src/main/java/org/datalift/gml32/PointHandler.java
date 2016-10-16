@@ -1,4 +1,4 @@
-package org.datalift.wfs.wfs2.parsing;
+package org.datalift.gml32;
 
 import java.util.Stack;
 
@@ -6,11 +6,11 @@ import javax.xml.parsers.SAXParser;
 
 
 import org.datalift.model.ComplexFeature;
-import org.datalift.geoutility.Helper;
 import org.datalift.model.Attribute;
-import org.datalift.model.Const;
 import org.datalift.model.Feature;
 import org.datalift.model.MyGeometry;
+import org.datalift.utilities.Const;
+import org.datalift.utilities.Helper;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -37,7 +37,7 @@ public class PointHandler extends DefaultHandler{
 
 	@Override
 	public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
-		currentCoordinateValues.delete(0, currentCoordinateValues.length());
+		currentCoordinateValues.setLength(0);
 		if(localName.equals(pointCf.name.getLocalPart()))
 		{
 			initPoint();
@@ -47,7 +47,7 @@ public class PointHandler extends DefaultHandler{
 	{
 		g.type=pointCf.name;
 		for (Attribute a : pointCf.itsAttr) {
-			if(a.attrType.getName().equals(Const.ID))
+			if(a.attrType.getName().equals(Const.ID) || a.name.equals(Const.id))
 				{
 					g.gml_id=a.value;
 				}
@@ -68,6 +68,7 @@ public class PointHandler extends DefaultHandler{
 		if(localName.equals(localNameRetrieved)) //if we have fionished the building of geometric feature, the feature is added to pile and removed from geo_pile, so go back 
 		{
 			String val=currentCoordinateValues.toString();
+			currentCoordinateValues.setLength(0);
 			handleCharacters(val);
 			parser.getXMLReader().setContentHandler(fHandler);	
 			fHandler.endElement(uri, localName, qName);

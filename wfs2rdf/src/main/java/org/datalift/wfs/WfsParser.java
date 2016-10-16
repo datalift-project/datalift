@@ -1,8 +1,6 @@
 package org.datalift.wfs;
 
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -14,21 +12,13 @@ import java.util.Map;
 import org.datalift.fwk.log.Logger;
 import org.geotools.data.DataStore;
 import org.geotools.data.DataStoreFinder;
-import org.geotools.data.DefaultQuery;
 import org.geotools.data.Query;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.data.simple.SimpleFeatureSource;
-import org.geotools.factory.Hints;
-import org.geotools.feature.FeatureCollection;
-import org.geotools.feature.FeatureIterator;
 import org.geotools.feature.type.GeometryTypeImpl;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
-import org.opengis.feature.Feature;
 import org.opengis.feature.Property;
-import org.opengis.feature.simple.SimpleFeatureType;
-import org.geotools.data.FeatureSource;
-
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.referencing.ReferenceIdentifier;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
@@ -51,10 +41,8 @@ import fr.ign.datalift.model.GeometryProperty;
 
 public class WfsParser {
 
-	private final static Map<String,DataStore> cache = new HashMap<String, DataStore>();
-	
-	//SimpleCache
-	//private final static Logger log = Logger.getLogger();
+	private final static Map<String,DataStore> cache = new HashMap<String, DataStore>();	//SimpleCache
+	private final static Logger log = Logger.getLogger();
 	private String ftCrs;
 	private DataStore dataStore;
 	private String version;
@@ -73,22 +61,18 @@ public class WfsParser {
 		}
 		DataStore ds = cache.get(cacheKey);
 		if (ds == null) {
-			Map connectionParameters = new HashMap();
+			Map<Object, Object> connectionParameters = new HashMap<>();
 			connectionParameters.put("WFSDataStoreFactory:GET_CAPABILITIES_URL", getCapabilities );
-			connectionParameters.put("WFSDataStoreFactory:WFSDataStoreFactory:TIMEOUT",10000000);
+			connectionParameters.put("WFSDataStoreFactory:WFSDataStoreFactory:TIMEOUT",900000000);
 			connectionParameters.put("WFSDataStoreFactory:ENCODING","UTF-8");
 			if(!version.equals("2.0.0") && !serverTypeStrategy.equals("autre"))
 				connectionParameters.put("WFSDataStoreFactory:WFS_STRATEGY", serverTypeStrategy); // if not specified for a mapserver => error: noxsdelement declaration found for {http://www.opengis.net/wfs}REM_NAPPE_SEDIM
 			// initialisation - connection
 			try {
-				System.out.println("getting the datastore in process...");
 				ds = DataStoreFinder.getDataStore( connectionParameters );
-				//log.debug("got the datastore");
-				System.out.println("got the datastore");
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				//log.error("failed to create parser for : {} {} {}", url,version,serverTypeStrategy);
-				
+				log.error("failed to create parser for : {} {} {}", url,version,serverTypeStrategy);
+
 				e.printStackTrace();
 			}
 			cache.put(cacheKey, ds);
@@ -96,101 +80,40 @@ public class WfsParser {
 		this.dataStore = ds ;
 	}
 
-	public String getFtCrs() {
-		return ftCrs;
-	}
-
-	public void setFtCrs(String ftCrs) {
-		this.ftCrs = ftCrs;
-	}
-
-	public DataStore getDataStore() {
-		return dataStore;
-	}
-
-	public void getDataStore(DataStore data) {
-		this.dataStore = data;
-	}
-
-	public String getVersion() {
-		return version;
-	}
-
-	public void setVersion(String version) {
-		// TODO Auto-generated method stub
-		this.version=version;
-	}
-
-
-//	public static void main (String [] args) throws IOException, URISyntaxException
-//	{
-////		WfsParser p=new WfsParser("http://ws.carmencarto.fr/WFS/119/fxx_grille", "1.1.0", "mapserver");
-////		ArrayList<AbstractFeature> myFeatures=p.loadFeature("ms_L93_5x5");
-////		System.out.println(myFeatures.size());
-//		String getCapabilities = "http://ws.carmencarto.fr/WFS/119/fxx_grille?service=wfs&REQUEST=GetCapabilities&version=1.1.0";
-//
-//		Map connectionParameters = new HashMap();
-//		connectionParameters.put("WFSDataStoreFactory:GET_CAPABILITIES_URL", getCapabilities );
-//		connectionParameters.put("WFSDataStoreFactory:WFS_STRATEGY", "mapserver");
-//
-//		// Step 2 - connection
-//		DataStore data = DataStoreFinder.getDataStore( connectionParameters );
-//
-//		// Step 3 - discouvery
-//		String typeNames[] = data.getTypeNames();
-//		String typeName = typeNames[0];
-//		// Step 4 - target
-//		
-//		
-//
-//		//Iterator<SimpleFeature> iterator = ((ArrayList<SimpleFeature>) features).iterator();
-//		try {
-//		    while( fi.hasNext() )
-//		    {
-//		        Feature feature = (Feature) fi.next();
-//		        System.out.println(feature.getName());  
-//		    }		 
-//		}catch (Exception e)
-//		{
-//			e.printStackTrace();
-//		}
-//	
-//
-//	}
-	public ArrayList<AbstractFeature> loadFeature(String typeName) throws IOException {
+	public ArrayList<AbstractFeature> loadFeature(String typeName, boolean optionWGS84) throws IOException {
 		// TODO Auto-generated method stub
 		ArrayList<AbstractFeature> features = new ArrayList<AbstractFeature>();
 		if(dataStore!=null)
 		{
 			SimpleFeatureSource source = dataStore.getFeatureSource(typeName);
-			String code="";
+			String code="4326";
 			Query query = new Query();
-			
-			
 			CoordinateReferenceSystem crs=source.getInfo().getCRS();
 			Iterator<ReferenceIdentifier> i = crs.getIdentifiers().iterator();
 			if(i.hasNext())
-				code=i.next().getCode();
-//			if (this.version.equals("1.1.0") || this.version.equals("2.0.0"))
-//				this.ftCrs="urn:x-ogc:def:crs:EPSG:"+code;
-//			else
-				this.ftCrs=code;
-			query.setCoordinateSystem(crs);
-			//query.setMaxFeatures(100);
-	
+			{
+				code=i.next().getCode();		
+			}
+			this.ftCrs=code;
+			if(optionWGS84)
+			{	
+				query.setCoordinateSystem(DefaultGeographicCRS.WGS84);
+			}else
+			{
+				query.setCoordinateSystem(crs);
+			}
 			SimpleFeatureCollection fc = source.getFeatures(query); //describeft
 			SimpleFeatureIterator  fiterator=fc.features();
 			while(fiterator.hasNext()){
 				SimpleFeature sf = fiterator.next();
-				addFeature(sf,crs,features);
-				//System.out.println(sf.getName());		         
+				addFeature(sf,crs,features);        
 			}
-	}
+		}
 		return features;
 	}
 
 	public void addFeature(SimpleFeature sf,CoordinateReferenceSystem crs,ArrayList<AbstractFeature> features){
-	
+
 		/******Fayçal's readfeaturecollection method + some edits***/
 		fr.ign.datalift.model.AbstractFeature ft = new AbstractFeature();
 
@@ -230,48 +153,38 @@ public class WfsParser {
 							gp.setType(new StringBuilder(new String(mls.getGeometryType().getBytes(),UTF8_CHARSET)).toString());
 							parseMultiLineString(gp,mls);
 						}
-
 						// Parse MultiPoint
 						if (geom instanceof MultiPoint) {
 							MultiPoint mpt = (MultiPoint) geom;
 							gp.setType(new StringBuilder(new String(mpt.getGeometryType().getBytes(),UTF8_CHARSET)).toString());
 							parseMultiPoint(gp,mpt);
 						}
-
 						// Parse Polygon
 						if (geom instanceof Polygon) {
 							Polygon polygon = (Polygon) geom;
 							gp.setType(new StringBuilder(new String(polygon.getGeometryType().getBytes(),UTF8_CHARSET)).toString());
 							parsePolygon(gp,polygon);
 						}
-
 						// Parse LineString
 						if (geom instanceof LineString) {							
 							LineString ls = (LineString) geom;
 							gp.setType(new StringBuilder(new String(ls.getGeometryType().getBytes(),UTF8_CHARSET)).toString());
 							parseLineString(gp,ls);
 						}
-
 						// Parse LinearRing
 						if (geom instanceof LinearRing) {							
 							LinearRing lr = (LinearRing) geom;
 							gp.setType(new StringBuilder(new String(lr.getGeometryType().getBytes(),UTF8_CHARSET)).toString());
 							parseLineString(gp,lr);
 						}
-
 						// Parse Point							
 						if (geom instanceof Point) {
 							Point pt = (Point) geom;
 							gp.setType(new StringBuilder(new String(pt.getGeometryType().getBytes(),UTF8_CHARSET)).toString());
 							parsePoint(gp,pt);
 						}
-
-
 						gp.setName(new StringBuilder(new String(prop.getName().toString().getBytes(),UTF8_CHARSET)).toString());
 						gp.setValue(new StringBuilder(new String(geom.toString().getBytes(),UTF8_CHARSET)).toString());
-
-						//gp.setValue(new StringBuilder(new String(prop.getValue().toString().getBytes(),UTF8_CHARSET)).toString());
-						//gp.setType(new StringBuilder(new String(prop.getDescriptor().getType().getBinding().getSimpleName().getBytes(),UTF8_CHARSET)).toString());
 
 						ft.addProperty(gp);
 
@@ -303,14 +216,11 @@ public class WfsParser {
 					}
 				}
 			} 
-
 		}
 		features.add(ft);
 	}
 
-	
-
-	
+	/***geometry parsers****/
 	protected void parseMultiPolygon(GeometryProperty gp, MultiPolygon mp){
 		int numGeometries = mp.getNumGeometries();
 		gp.setNumGeometries(numGeometries);
@@ -360,5 +270,29 @@ public class WfsParser {
 		gp.setPointsLists(pt);
 	}
 
+	/******getters and setters***/
+	public String getFtCrs() {
+		return ftCrs;
+	}
+
+	public void setFtCrs(String ftCrs) {
+		this.ftCrs = ftCrs;
+	}
+
+	public DataStore getDataStore() {
+		return dataStore;
+	}
+
+	public void getDataStore(DataStore data) {
+		this.dataStore = data;
+	}
+
+	public String getVersion() {
+		return version;
+	}
+
+	public void setVersion(String version) {
+		this.version=version;
+	}
 
 }

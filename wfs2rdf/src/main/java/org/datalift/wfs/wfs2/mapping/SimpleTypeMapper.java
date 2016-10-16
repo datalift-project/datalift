@@ -5,12 +5,16 @@ import javax.xml.namespace.QName;
 
 import org.openrdf.model.Resource;
 import org.datalift.model.ComplexFeature;
-import org.datalift.geoutility.Context;
-import org.datalift.geoutility.Helper;
+import org.datalift.utilities.Const;
+import org.datalift.utilities.Context;
+import org.datalift.utilities.Helper;
+import org.datalift.utilities.SosConst;
 import org.datalift.model.Attribute;
-import org.datalift.model.Const;
-import org.datalift.model.SosConst;
-
+/**
+ * exemple : description
+ * @author a631207
+ *
+ */
 public class SimpleTypeMapper extends BaseMapper{
 	public void map(ComplexFeature cf, Context ctx) {
 		if(ignore(cf))
@@ -45,7 +49,7 @@ public class SimpleTypeMapper extends BaseMapper{
 			ctx.model.add(ctx.vf.createStatement(subjectURI, ctx.vf.createURI(ctx.nsDatalift+cf.name.getLocalPart()), ctx.vf.createLiteral(cf.value)));
 		} 
 		//boolean
-		if(cf.attrType!=null && cf.getTypeName().equals(Const.xsdBoolan))
+		if(cf.attrType!=null && cf.getTypeName().equals(Const.xsdBoolean))
 		{
 			boolean object=Boolean.getBoolean(cf.value);
 			ctx.model.add(ctx.vf.createStatement(subjectURI, ctx.vf.createURI(ctx.nsDatalift+cf.name.getLocalPart()), ctx.vf.createLiteral(cf.value)));

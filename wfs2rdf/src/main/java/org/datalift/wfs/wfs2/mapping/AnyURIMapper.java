@@ -1,10 +1,10 @@
 package org.datalift.wfs.wfs2.mapping;
 
 import org.openrdf.model.Resource;
-import org.datalift.geoutility.Context;
 import org.datalift.model.ComplexFeature;
+import org.datalift.utilities.Context;
 
-
+//exemple online resource
 public class AnyURIMapper extends BaseMapper {
 
 	@Override

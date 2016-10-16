@@ -1,9 +1,11 @@
-package org.datalift.wfs.wfs2.parsing;
+package org.datalift.gml32;
 
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Stack;
 
 import javax.xml.namespace.QName;
@@ -17,18 +19,16 @@ import org.apache.xerces.xs.XSSimpleTypeDefinition;
 import org.apache.xerces.xs.XSTypeDefinition;
 import org.datalift.model.Attribute;
 import org.datalift.model.ComplexFeature;
-import org.datalift.model.Const;
 import org.datalift.model.Feature;
+import org.datalift.utilities.Const;
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
  
 
- 
- 
+
 public class Handler extends DefaultHandler {
- 
     //List to hold object
     private List<ComplexFeature> tmpList = new ArrayList<ComplexFeature>();
     private ComplexFeature tmp = null;
@@ -50,16 +50,14 @@ public class Handler extends DefaultHandler {
         }
         return null;
     }
-
- 
- 
     @Override
     public void startElement(String uri, String localName, String qName, Attributes attributes)
     		throws SAXException {
+    	String explicitType="";
     	boolean foundit;
-    	if(localName.equals("representativePoint"))
+    	if(localName.equals("value"))
     		foundit=true;
-    	currentCoordinateValues.delete(0, currentCoordinateValues.length());
+    	currentCoordinateValues.setLength(0);
     	ElementPSVI elt=psvi.getElementPSVI();
     	//initialize cmplx object and set its attribute
     	tmp = new ComplexFeature();
@@ -69,7 +67,16 @@ public class Handler extends DefaultHandler {
 
     	if(dec!=null)
     	{
-    		td=dec.getTypeDefinition();
+    		td=dec.getTypeDefinition(); 
+//    		if (td!=null && td.getName()!=null && td.getName().equals("anyType")) {
+//    			String xsiType = attributes.getValue(Const.explicitType.getNamespaceURI(), "type");
+//    			if (xsiType != null) {
+//    				String[] parts = xsiType.split(":");
+//    				//String eltType = this.getNs(parts[0]);
+//    				String eltType = Const.GML_3_2_NS_URI;
+//    				td = elt.getSchemaInformation().getTypeDefinition(parts[1], eltType);
+//    			}
+//    		}
     	}
     	tmp.attrType=td;
     	for (int i=0;i<attributes.getLength();i++)
@@ -84,15 +91,21 @@ public class Handler extends DefaultHandler {
     		f.typeTitle=psvia.getAttributeDeclaration().getTypeDefinition().getName();
     		a.attrType=mtd;
     		tmp.itsAttr.add(a);
-    	}
+    		if(a.name.equals(Const.explicitType))
+    		{			
+    			explicitType=a.value;
+    			explicitType=explicitType.substring(explicitType.indexOf(":")+1);
+    		}
+    	} 
     	if(!stack.isEmpty()) //ajoute l'élément courant comme ATTRIBUT du dernier élément (encore ouvert ) dans la pile
     	{
-    		if(tmp.getTypeName().equals(Const.GeometryPropertyType) || tmp.getTypeName().equals(Const.PointPropertyType) || tmp.getTypeName().equals(Const.CurvePropertyType)|| tmp.getTypeName().equals(Const.MultiSurfacePropertyType))
-    			
+    		if(tmp.getTypeName().equals(Const.GeometryPropertyType)  /*|| explicitType.equals(Const.GeometryPropertyType.getLocalPart())*/ 
+    				|| tmp.getTypeName().equals(Const.PointPropertyType) || tmp.getTypeName().equals(Const.CurvePropertyType)
+    				|| tmp.getTypeName().equals(Const.MultiSurfacePropertyType))    			
     			//create a geometry proprety
     		{
     			/**Call the geoHandler**/
-    			GeoHandler gh=new GeoHandler(parser, this,stack);
+    			GeoHandler gh=new GeoHandler(parser, this,stack,explicitType );
     			parser.getXMLReader().setContentHandler(gh);
     			gh.startElement(uri, localName, qName, attributes);
 
@@ -104,14 +117,11 @@ public class Handler extends DefaultHandler {
     				parent.itsAttr.add(tmp);
     				tmp.setParent(parent);
     			}
-    			//pile.get(pile.size()-1).itsAttr.add(tmp);
     		}
     	}
-    	// else //sinon ajoute l'élément comme nouvel element racine
-    	//pile.add(tmp);
+
     	stack.push(tmp);
     }
-
 
     @Override
 	public InputSource resolveEntity(String publicId, String systemId) throws IOException, SAXException {
@@ -130,6 +140,7 @@ public class Handler extends DefaultHandler {
     	{
     		ComplexFeature lastcurrentElt=stack.peek();
     		lastcurrentElt.value=currentCoordinateValues.toString().trim().replaceAll("\\s+"," ");
+    		currentCoordinateValues.setLength(0);
     				//pile.get(pile.size()-1);
     		QName currentQname=new QName(uri,localName);
     		//if(currentQname.equals(pile.get(pile.size()-1).name))
@@ -143,7 +154,6 @@ public class Handler extends DefaultHandler {
     		}
     	}
     }
-	
 		
 	@Override
     public void characters(char ch[], int start, int length) throws SAXException {
@@ -152,4 +162,32 @@ public class Handler extends DefaultHandler {
     			currentCoordinateValues.append(ch,start,length);
     		}
     }
+
+	private Map<String,Stack<String>> nsMappings = new HashMap<>();
+
+	@Override
+	public void startPrefixMapping(String prefix, String uri) throws SAXException {
+		Stack<String> s = nsMappings.get(prefix);
+		if (s == null) {
+			s = new Stack<>();
+			nsMappings.put(prefix, s);
+		}
+		s.push(uri);
+	}
+
+	@Override
+	public void endPrefixMapping(String prefix) throws SAXException {
+		Stack<String> s = nsMappings.get(prefix);
+		if (s != null) {
+			s.pop();
+			if (s.isEmpty()) {
+				nsMappings.remove(prefix);
+			}
+		}
+	}
+
+	private String getNs(String prefix) {
+		Stack<String> s = nsMappings.get(prefix);
+		return (s != null)? s.peek(): null;
+	}
 }

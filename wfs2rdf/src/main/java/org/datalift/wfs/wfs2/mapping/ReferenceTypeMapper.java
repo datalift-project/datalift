@@ -1,15 +1,9 @@
 package org.datalift.wfs.wfs2.mapping;
 
-import javax.xml.namespace.QName;
-
-import org.openrdf.model.Resource;
-import org.openrdf.model.URI;
-import org.openrdf.model.Value;
 import org.datalift.model.ComplexFeature;
-import org.datalift.geoutility.Context;
-import org.datalift.model.Attribute;
-import org.datalift.model.Const;
-import org.datalift.model.SosConst;
+import org.datalift.utilities.Const;
+import org.datalift.utilities.Context;
+import org.openrdf.model.Resource;
 /**
  * 
  * @author a631207*
@@ -48,8 +42,12 @@ public class ReferenceTypeMapper extends BaseMapper{
 		String potentielCodeList=cf.getAttributeValue(Const.href);
 		if(potentielCodeList!=null)
 		{
-			if(potentielCodeList.startsWith(Const.clInspire) || potentielCodeList.startsWith(Const.clSandre))
-				return true;
+			for (String code : Context.codeList) {
+				if(potentielCodeList.startsWith(code))
+				{
+					return true;
+				}
+			}
 		}
 		return false;
 	}
@@ -58,19 +56,19 @@ public class ReferenceTypeMapper extends BaseMapper{
 	protected void addParentLinkStatements(ComplexFeature cf, Context ctx) {
 		// TODO Auto-generated method stub
 		if(cf.getTypeName().equals(Const.OM_ObservationPropertyType))
+		{
+			Resource subjectURI;
+			if(cf.getParent()!=null)
 			{
-				Resource subjectURI;
-				if(cf.getParent()!=null)
-				{
-					subjectURI= cf.getParent().getId();
-				}
-				else 
-				{
-					subjectURI=ctx.DefaultSubjectURI;
-				}
-				/****add the parentlinked statement****/
-				ctx.model.add(ctx.vf.createStatement(subjectURI, ctx.vf.createURI(ctx.nsDatalift+cf.name.getLocalPart()), cf.getId()));
+				subjectURI= cf.getParent().getId();
 			}
+			else 
+			{
+				subjectURI=ctx.DefaultSubjectURI;
+			}
+			/****add the parentlinked statement****/
+			ctx.model.add(ctx.vf.createStatement(subjectURI, ctx.vf.createURI(ctx.nsDatalift+cf.name.getLocalPart()), cf.getId()));
+		}
 		else
 		{
 			super.addParentLinkStatements(cf, ctx);

@@ -2,23 +2,17 @@ package org.datalift.sos;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import javax.xml.namespace.QName;
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.apache.http.client.ClientProtocolException;
-import org.datalift.geoutility.Helper;
 import org.datalift.model.Attribute;
 import org.datalift.model.BaseServiceClient;
 import org.datalift.model.ComplexFeature;
-import org.datalift.model.Const;
-import org.datalift.model.FeatureTypeDescription;
+import org.datalift.model.ObservationMetaData;
 import org.datalift.model.Store;
-import org.datalift.sos.model.ObservationMetaData;
-import org.datalift.wfs.wfs2.parsing.GMLParser32;
+import org.datalift.utilities.Const;
+import org.datalift.utilities.Helper;
 import org.xml.sax.SAXException;
 
 public class SOS2Client extends BaseServiceClient{
@@ -106,7 +100,7 @@ public class SOS2Client extends BaseServiceClient{
 	}
 
 
-	public static void main (String[] args) throws SAXException, ParserConfigurationException, IOException
+	public static void main (String[] args) throws Exception
 	{
 		SOS2Client c=new SOS2Client("");	
 		c.getCapabilities();
@@ -115,7 +109,7 @@ public class SOS2Client extends BaseServiceClient{
 	}
 
 
-	public void getObservation(String id, String begin, String end, String format) throws SAXException, ParserConfigurationException, IOException {
+	public void getObservation(String id, String begin, String end, String format) throws Exception {
 		Store ds=null;
 		if(ds==null || ds.getFtParsed.size()==0)
 		{ 

@@ -1,4 +1,4 @@
-package org.datalift.wfs.wfs2.parsing;
+package org.datalift.gml32;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,9 +14,9 @@ import org.apache.xerces.xs.XSTypeDefinition;
 
 import org.datalift.model.ComplexFeature;
 import org.datalift.model.Attribute;
-import org.datalift.model.Const;
 import org.datalift.model.Feature;
 import org.datalift.model.MyGeometry;
+import org.datalift.utilities.Const;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;

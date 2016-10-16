@@ -38,6 +38,7 @@ import javax.ws.rs.core.UriInfo;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.http.client.ClientProtocolException;
+import org.datalift.exceptions.TechnicalException;
 //import org.datalift.core.util.SimpleCache;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.MediaTypes;
@@ -48,10 +49,11 @@ import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.project.WfsSource;
 import org.datalift.fwk.view.TemplateModel;
-import org.datalift.geoutility.Helper;
+import org.datalift.model.BaseConverterModule;
 import org.datalift.model.ComplexFeature;
 import org.datalift.model.FeatureTypeDescription;
-import org.datalift.wfs.wfs2.parsing.WFS2Client;
+import org.datalift.utilities.Helper;
+import org.datalift.wfs.wfs2.WFS2Client;
 import org.datalift.wfs.wfs2.mapping.WFS2Converter;
 import org.geotools.data.DataStore;
 import org.geotools.data.Query;
@@ -126,12 +128,13 @@ public class Wfstordf extends BaseConverterModule{
 	 * get the list of selected feature types selected by the user to be converted
 	 * @param json the json representation of the array containing the features to be converted
 	 * @return the URL of the source project's page to be used by ajax to redirect the user
+	 * @throws Exception 
 	 */
 	@POST
 	@Path("postSelectedTypes")
 	@Produces(MediaType.TEXT_PLAIN)
 	@Consumes(MediaType.APPLICATION_JSON)
-	public String postSelectedTypes(String json)
+	public String postSelectedTypes(String json) throws Exception
 	{
 		String response = null;
 		JsonParser parser = new JsonParser();
@@ -274,14 +277,10 @@ public class Wfstordf extends BaseConverterModule{
 		try {
 			WfsParser parser=new WfsParser(s.getSourceUrl(),s.getVersion(),s.getserverTypeStrategy());
 			ArrayList<AbstractFeature> featuresToConvert;
-			if (optionWGS84)
-			{
-				featuresToConvert=parser.loadFeature(typeName);
-			}
-			else
-			{
-				featuresToConvert=parser.loadFeature(typeName);
-			}
+
+				featuresToConvert=parser.loadFeature(typeName,optionWGS84);
+
+
 			if (featuresToConvert==null || featuresToConvert.size()==0) 
 				{
 					return false; //in this case, there is no features in this feature type!!!
@@ -407,7 +406,7 @@ public Response getFeatureTypes(
 	}
 	return response.build();
 }
-private List<FeatureTypeDescription> getfeatureTypeDescription2(String sourceUrl, String version) throws ClientProtocolException, IOException, SAXException, ParserConfigurationException {
+private List<FeatureTypeDescription> getfeatureTypeDescription2(String sourceUrl, String version) throws Exception {
 
 	WFS2Client mp=new WFS2Client(sourceUrl);
 	mp.getCapabilities();
@@ -415,7 +414,7 @@ private List<FeatureTypeDescription> getfeatureTypeDescription2(String sourceUrl
 
 }
 private boolean convertFeatureTypeToRdf2(URI projectUri, WfsSource s, String destination_title, URI targetGraph,
-		URI baseUri, String targetType, String typeName, int ontologyOption, boolean covertSrs) throws SAXException, ParserConfigurationException {
+		URI baseUri, String targetType, String typeName, int ontologyOption, boolean covertSrs) throws Exception {
 	try {
 		String srs=null;
 		if(covertSrs)

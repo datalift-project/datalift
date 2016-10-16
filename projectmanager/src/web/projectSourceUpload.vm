@@ -303,7 +303,6 @@
 	</form>
 #end
 	</div>
-	/********************SOS***********/
 			<h3><a href="#">Sensor Observation Service (SOS) </a></h3>
 	<div>
 #if( (!$current) || ($current.getType() == $field.SosSource) )

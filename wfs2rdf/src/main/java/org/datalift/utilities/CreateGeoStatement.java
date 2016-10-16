@@ -31,19 +31,22 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 
-package org.datalift.geoutility;
+package org.datalift.utilities;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
-
+import org.datalift.fwk.log.Logger;
 import org.openrdf.model.Statement;
 import org.openrdf.model.URI;
 import org.openrdf.model.ValueFactory;
-
-
 
 import fr.ign.datalift.constants.GeoSPARQL;
 import fr.ign.datalift.constants.Geometrie;
@@ -51,34 +54,58 @@ import fr.ign.datalift.model.GeometryProperty;
 
 public class CreateGeoStatement {
 
+	private final static Logger log = Logger.getLogger();
+	private ValueFactory vf;
+	private Statement geoStatement;
+	private List<Statement> aboutGeometry = new ArrayList<Statement>();
 	public static Map <String,String> CRS = new HashMap<String, String>();
 	static
 	{
-		
-		CRS.put("4326","http://www.opengis.net/def/crs/EPSG/0/4326");
 		CRS.put(null,"http://www.opengis.net/def/crs/EPSG/0/4326");
-		CRS.put("2154", "http://www.opengis.net/def/crs/EPSG/0/2154");
+		InputStream is=null;
+		try {
+			Properties prop = new Properties();
+			String propFileName = "CRS.properties";
+			is = CreateGeoStatement.class.getClassLoader().getResourceAsStream(propFileName);
+			if (is != null) {
+				prop.load(is);
+			} else {
+				throw new FileNotFoundException("property file '" + propFileName + "' not found in the classpath");
+			}
+			Enumeration em = prop.keys();
+			while (em.hasMoreElements()) {
+				String codeEpsg = (String) em.nextElement();
+				CRS.put(codeEpsg,prop.getProperty(codeEpsg));
+			}
+		} catch (Exception e) {
+			log.error("An error has occured while attempting to  load the properties file of CRS " + e);
+		} finally {
+			if(is!=null)
+				{
+					try {
+						is.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+		}
 	}
-	ValueFactory vf;
-	Statement geoStatement;
-	List<Statement> aboutGeometry = new ArrayList<Statement>();
-
-	public void createStatement (GeometryProperty gp, ValueFactory vf, URI feature, URI geomFeature, String geoType, String crs){
-
+	
+	public void createStatement (GeometryProperty gp, ValueFactory vf, 
+			URI feature, URI geomFeature, String geoType, String crs){
 		this.vf = vf;
-		
-		geoStatement = vf.createStatement(feature, Geometrie.GEOMETRIE, geomFeature);
+		geoStatement = vf.createStatement(feature, vf.createURI(Context.nsGeoSparql+"hasGeometry"), geomFeature);
+		Statement geoStatementType= vf.createStatement(geomFeature, vf.createURI(Context.nsRDF2+"type"), vf.createURI(Context.nsGeoSparql+"Geometry"));
 		aboutGeometry.add(geoStatement);
+		aboutGeometry.add(geoStatementType);
 		String crsURI=CRS.get(crs);
 		if(crsURI==null)
 		{
 			crsURI=CRS.get(null); //get default crs: wgs84
 		}
-	
-		geoStatement = vf.createStatement(geomFeature, GeoSPARQL.ASWKT, vf.createLiteral("<"+crsURI + "> " + gp.getValue(),GeoSPARQL.WKTLITERAL));
-		
+		geoStatement = vf.createStatement(geomFeature, GeoSPARQL.ASWKT, 
+				vf.createLiteral("<"+crsURI + "> " + gp.getValue(),GeoSPARQL.WKTLITERAL));
 		aboutGeometry.add(geoStatement);
-
 	}
 
 	public ValueFactory getVf() {
@@ -104,8 +131,6 @@ public class CreateGeoStatement {
 	public void setAboutGeometry(List<Statement> aboutGeometry) {
 		this.aboutGeometry = aboutGeometry;
 	}
-
-
 	protected int getCurrentIndexPoint(GeometryProperty gp, int currentIndexPoint){
 		int indexPoint = 0;
 		for (int i=0; i < currentIndexPoint; i++){
@@ -113,7 +138,4 @@ public class CreateGeoStatement {
 		}
 		return indexPoint;
 	}
-
-
-
 }

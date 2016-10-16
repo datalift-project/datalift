@@ -1,37 +1,28 @@
-package org.datalift.geoutility;
+package org.datalift.utilities;
 
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-
 import java.util.ArrayList;
-
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
+import java.util.Properties;
+import java.util.TreeMap;
 
 import javax.xml.namespace.QName;
 
-
-
-import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-
-import org.apache.http.impl.client.HttpClientBuilder;
+import org.datalift.exceptions.TechnicalException;
 import org.datalift.fwk.Configuration;
-
+import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.rdf.UriCachingValueFactory;
 import org.datalift.fwk.util.Env;
 import org.datalift.fwk.util.UriBuilder;
-import org.datalift.model.Const;
-import org.datalift.wfs.TechnicalException;
 import org.datalift.wfs.wfs2.mapping.AnyURIMapper;
 import org.datalift.wfs.wfs2.mapping.BaseMapper;
 import org.datalift.wfs.wfs2.mapping.GeomMapper;
@@ -46,18 +37,23 @@ import org.openrdf.model.URI;
 import org.openrdf.model.ValueFactory;
 import org.openrdf.model.impl.LinkedHashModel;
 import org.openrdf.model.impl.ValueFactoryImpl;
+import org.openrdf.query.BindingSet;
+import org.openrdf.query.QueryLanguage;
+import org.openrdf.query.TupleQueryResult;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
+import org.openrdf.repository.sail.SailRepository;
 import org.openrdf.rio.RDFFormat;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.Rio;
+import org.openrdf.sail.memory.MemoryStore;
 
 
 
 public class Context {
 
-	//private final static Logger log = Logger.getLogger();
-
+	private final static Logger log = Logger.getLogger();
+	private final String QUDT_UNITS="qudt-units-1.1.ttl";
 	public static URI DefaultSubjectURI = null;
 	public Model model;
 	public ValueFactory vf = new ValueFactoryImpl();
@@ -70,10 +66,11 @@ public class Context {
 	public Map<QName,Mapper> mappers = new HashMap<QName,Mapper>();
 	public static List <String>registredCodeList = new ArrayList<String>();
 	/****handle cross referencing using gml ids*/
-	 public Map<String,String> referenceCatalogue;
-	 public final String baseURI="http://changeMe.org/";
-	 /***utils for sos****/
-	 public Map<QName, String> sosMetaData=new HashMap<QName, String>();
+	public Map<String,String> referenceCatalogue;
+	public final String baseURI="http://changeMe.org/";
+	/***utils for sos****/
+	public Map<QName, String> sosMetaData=new HashMap<QName, String>();
+	public Map<String, String> unitsSymbUri=new TreeMap<String, String>();
 	//*******ns******//
 	public static final String nsDatalift = "http://www.datalift.org/ont/inspire#";
 	public static final String nsSmod = "https://www.w3.org/2015/03/inspire/ef#";
@@ -94,14 +91,41 @@ public class Context {
 	public static final QName referencedCodeListType=new QName(nsDatalift, "ReferencedCodeList");
 	public static final QName observationType=new QName(nsOml, "Observation");
 	public URI rdfTypeURI;
-//	static {
-//		mappers.put(null, new BaseMapper());
-//		mappers.put(new QName("geometry"),new GeomMapper());
-//	}
+	public static List <String> codeList = new ArrayList<String>();
+	static
+	{
+		InputStream is=null;
+		try {
+			Properties prop = new Properties();
+			String propFileName = "codeList.properties";
+			is = CreateGeoStatement.class.getClassLoader().getResourceAsStream(propFileName);
+			if (is != null) {
+				prop.load(is);
+			} else {
+				throw new FileNotFoundException("property file '" + propFileName + "' not found in the classpath");
+			}
+			Enumeration em = prop.keys();
+			while (em.hasMoreElements()) {
+				String code = (String) em.nextElement();
+				codeList.add(prop.getProperty(code));
+			}
+		} catch (Exception e) {
+			log.error("An error has occured while attempting to  load the properties file of predefined code list " + e);
+		} finally {
+			if(is!=null)
+				{
+					try {
+						is.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+		}
+	}
 	public Context()
 	{
 		saver= new StatementSaver();
-		
+
 		hm=new HashMap <QName,Integer>();
 		codeListOccurences=new HashMap <String,Resource>();
 		vf = new ValueFactoryImpl();
@@ -118,6 +142,7 @@ public class Context {
 		model.setNamespace("oml", nsOml);
 		model.setNamespace("tp", nsIsoTP);
 		model.setNamespace("smod", nsSmod);
+		model.setNamespace("w3time", nsw3Time);
 		rdfTypeURI=vf.createURI(nsRDF2+"type");
 		DefaultSubjectURI=vf.createURI(nsProject+"root");
 		/***Initialize default mappers****/
@@ -130,11 +155,46 @@ public class Context {
 		mappers.put(Const.xsdFloat, m);
 		mappers.put(Const.xsdInteger, m);
 		mappers.put(Const.xsdDecimal, m);
-		mappers.put(Const.xsdBoolan,new MobileMapper());
+		mappers.put(Const.xsdBoolean,new MobileMapper());
 		mappers.put(Const.anyURI,new AnyURIMapper());
-		
+
 		this.referenceCatalogue = new HashMap<String, String>();
 		this.referenceCatalogue.put(null, baseURI);
+		//initialize bindings units table
+		try {
+			this.uploadQdut();
+		} catch (Exception e) {
+			log.warn("error downloading QDUT ontology");
+		}
+	}
+	
+
+	private void uploadQdut() throws Exception {
+		org.openrdf.repository.Repository r = new SailRepository(new MemoryStore());
+		r.initialize();
+		RepositoryConnection cnx = r.getConnection();
+		cnx.add(Context.class.getClassLoader().getResourceAsStream(QUDT_UNITS),
+				"", Rio.getParserFormatForFileName(QUDT_UNITS));
+		TupleQueryResult rs = cnx.prepareTupleQuery(QueryLanguage.SPARQL,
+				"PREFIX qudt:    <http://qudt.org/schema/qudt#> " +
+						"PREFIX unit:    <http://qudt.org/vocab/unit#> " +
+						"SELECT DISTINCT ?s ?u WHERE { " +
+						"?u a ?t ; qudt:symbol ?s " +
+						"FILTER(! STRENDS(STR(?t), \"PrefixUnit\"))" +
+				"}").evaluate();
+		while (rs.hasNext()) {
+			BindingSet b = rs.next();
+			String symbol = b.getValue("s").stringValue();
+			String uri    = b.getValue("u").stringValue();
+			unitsSymbUri.put(symbol, uri);
+		}
+		cnx.close();
+		r.shutDown();
+	}
+	public static void main(String[] args) throws Exception
+	{
+		Context c=new Context();
+		c.uploadQdut();
 	}
 
 	public Mapper getMapper(QName type) {
@@ -150,7 +210,6 @@ public class Context {
 			hm.put(name, 1);
 			return 1;
 		}
-
 		count=hm.get(name);
 		count++;
 		hm.remove(name);			
@@ -163,7 +222,7 @@ public class Context {
 		FileOutputStream out = new FileOutputStream(filePath);
 
 		Rio.write(model, out,RDFFormat.TURTLE);
-	}
+	}	
 
 
 	//	public static void main(String[] args) throws Exception {
@@ -202,22 +261,7 @@ public class Context {
 	//			throw new RuntimeException(e);
 	//		}
 	//	}
-	public static InputStream doGet(String getUrl) throws ClientProtocolException, IOException
-	{
-		HttpClient client = HttpClientBuilder.create().build();
-		HttpGet request = new HttpGet(getUrl);
 
-		// add request header
-		//request.addHeader("User-Agent", USER_AGENT);
-		HttpResponse response = client.execute(request);
-
-		System.out.println("Response Code : " 
-				+ response.getStatusLine().getStatusCode());
-
-		return response.getEntity().getContent();
-//			 InputStream in = new FileInputStream("src/main/resources/sos_capabilities.xml");
-//		     return in;
-	}
 
 	public boolean exportTS(Repository target, java.net.URI targetGraph, java.net.URI baseUri, String targetType) {
 		final UriBuilder uriBuilder = Configuration.getDefault()
@@ -292,9 +336,9 @@ public class Context {
 
 			}
 
-//			log.info("Inserted {} RDF triples into <{}> in {} seconds",
-//					wrap(statementCount), targetGraph,
-//					wrap(asSeconds(duration)));
+			//			log.info("Inserted {} RDF triples into <{}> in {} seconds",
+			//					wrap(statementCount), targetGraph,
+			//					wrap(asSeconds(duration)));
 		}
 		catch (TechnicalException e) {
 			throw e;

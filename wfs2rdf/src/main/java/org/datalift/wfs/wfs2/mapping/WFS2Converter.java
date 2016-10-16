@@ -7,14 +7,17 @@ import javax.xml.namespace.QName;
 
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.rdf.UriCachingValueFactory;
-import org.datalift.geoutility.Context;
 import org.datalift.model.Attribute;
 import org.datalift.model.ComplexFeature;
-import org.datalift.model.Const;
 import org.datalift.sos.mapping.FeatureOfInterestMapper;
 import org.datalift.sos.mapping.MeasurmentTimeSeriesMapper;
 import org.datalift.sos.mapping.ObservationCollectionMapper;
+import org.datalift.sos.mapping.ObservedPropertyMapper;
 import org.datalift.sos.mapping.OmResultMapper;
+import org.datalift.sos.mapping.PhenomenonTimeMapper;
+import org.datalift.sos.mapping.ProcedureMapper;
+import org.datalift.utilities.Const;
+import org.datalift.utilities.Context;
 import org.openrdf.model.ValueFactory;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
@@ -40,13 +43,15 @@ public class WFS2Converter {
 			ctx.mappers.put(Const.AbstractMemberType,m2);
 			ctx.mappers.put(Const.OM_ObservationPropertyType,new ObservationPropertyTypeMapper());
 			ctx.mappers.put(Const.inspireCodeList,new CodeListMapper());
+			
 			//to be replaced later by a new bunch of mappers
-			ctx.mappers.put(Const.OM_ObservationPropertyType,new ObservationCollectionMapper());
+			ctx.mappers.put(Const.OM_ObservationType,new ObservationCollectionMapper());
 			ctx.mappers.put(Const.FeaturePropertyType,new FeatureOfInterestMapper());
-			ctx.mappers.put(Const.observedProperty,new ObservationPropertyTypeMapper());
+			ctx.mappers.put(Const.observedProperty,new ObservedPropertyMapper());
 			ctx.mappers.put(Const.MeasurementTimeseriesType,new MeasurmentTimeSeriesMapper());
 			ctx.mappers.put(Const.omResult,new OmResultMapper());
-			
+			ctx.mappers.put(Const.TimeObjectPropertyType,new PhenomenonTimeMapper());
+			ctx.mappers.put(Const.OM_ProcessPropertyType, new ProcedureMapper());
 		}
 	}
 	public boolean ConvertFeaturesToRDF(ComplexFeature fc, org.datalift.fwk.rdf.Repository target , URI targetGraph, URI baseUri, String targetType) throws FileNotFoundException, RDFHandlerException
@@ -70,8 +75,7 @@ public class WFS2Converter {
 							//flush model if needed
 							//ctx.saver.flush(this.ctx.model);		
 							StoreRDF();
-							storeRdfTS(target, targetGraph, baseUri, targetType);
-							
+							storeRdfTS(target, targetGraph, baseUri, targetType);				
 						}
 					}
 				}

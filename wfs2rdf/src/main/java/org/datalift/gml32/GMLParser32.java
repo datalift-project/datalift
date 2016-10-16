@@ -1,25 +1,21 @@
-package org.datalift.wfs.wfs2.parsing;
+package org.datalift.gml32;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
 
 import javax.xml.XMLConstants;
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
-import org.datalift.geoutility.Context;
 import org.datalift.model.ComplexFeature;
-import org.xml.sax.SAXException;
+import org.datalift.utilities.Helper;
 
 public class GMLParser32 {
 
-	public  ComplexFeature doParse(String completeUrl) throws SAXException, ParserConfigurationException, IOException
+	public  ComplexFeature doParse(String completeUrl) throws Exception
 	{
-		InputStream in=Context.doGet(completeUrl);			
+		InputStream in=Helper.doGet(completeUrl);			
 		SchemaFactory sf = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI,"org.apache.xerces.jaxp.validation.XMLSchemaFactory",this.getClass().getClassLoader());
 		Schema s = sf.newSchema();
 		SAXParserFactory saxParserFactory = SAXParserFactory.newInstance("org.apache.xerces.jaxp.SAXParserFactoryImpl", this.getClass().getClassLoader());

@@ -32,7 +32,7 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 
-package org.datalift.wfs;
+package org.datalift.exceptions;
 
 
 import java.text.MessageFormat;
@@ -65,7 +65,7 @@ public class TechnicalException extends org.datalift.fwk.TechnicalException
      * be the detail message of the cause.
      * @param  cause   the cause.
      */
-    protected TechnicalException(Throwable cause) {
+    public TechnicalException(Throwable cause) {
         super(cause);
     }
 

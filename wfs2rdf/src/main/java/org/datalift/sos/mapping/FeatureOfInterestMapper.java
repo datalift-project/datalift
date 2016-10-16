@@ -1,26 +1,62 @@
 package org.datalift.sos.mapping;
 
-import org.datalift.geoutility.Context;
+import org.datalift.model.Attribute;
 import org.datalift.model.ComplexFeature;
+import org.datalift.utilities.Context;
+import org.datalift.utilities.Helper;
 import org.datalift.wfs.wfs2.mapping.BaseMapper;
 import org.openrdf.model.Resource;
-import org.openrdf.model.URI;
 
 public class FeatureOfInterestMapper extends BaseMapper  {
 
 	@Override
-	protected void addParentLinkStatements(ComplexFeature cf, Context ctx) {
-
-		Resource subjectURI;
-		if(cf.getParent()!=null)
+	protected void mapWithParent(ComplexFeature cf, Context ctx) {
+		if(!alreadyLinked)
 		{
-			subjectURI= cf.getParent().getId();
+			if(cf.isSimple())
+			{
+				this.addParentSimpleLinkStatements(cf, ctx);
+				return;
+			}
 		}
-		else 
-		{
-			subjectURI=ctx.DefaultSubjectURI;
-		}
-		/****add the parentlinked statement****/
-	   ctx.model.add(ctx.vf.createStatement(subjectURI, ctx.vf.createURI(ctx.nsOml+cf.name.getLocalPart()), cf.getId()));	
 	}
+	@Override
+	protected void mapFeatureSimpleAttributes(ComplexFeature cf, Context ctx, Resource toLinkWith) {
+		return;
+	}
+	/**
+	 * FOR SHORTCUT MAPPING : the feature's content is directly linked with its parent 
+	 * links the unique value of the  cf with the subject cf.getParent.id using the name of cf as a predicat
+	 * it generates ONE triple
+	 * use case of this is <om:procedure xlink:href="urn:xxx"/>
+	 * @param cf
+	 * @param ctx
+	 */
+	@Override
+	protected void addParentSimpleLinkStatements(ComplexFeature cf, Context ctx) {
+		// first of all, look at the value of the feature. if any then try to create the triple with the value of one attribute 
+		if(Helper.isSet(cf.value))
+		{
+			mapTypedValue(cf.getParent().getId(), cf.value, cf.getTypeName(), cf.name, Context.nsOml+"featureOfInterest", ctx);
+			return;
+		}
+		this.mapFeatureSimpleAttributes(cf, ctx, cf.getParent().getId());		
+	}
+	@Override
+	protected void addRdfTypes(ComplexFeature cf, Context ctx) {
+		return;
+	}
+	@Override
+	protected void mapGeometryIfAny(ComplexFeature cf, Context ctx) {
+		return;
+	}
+	@Override
+	protected void mapComplexChildren(ComplexFeature cf, Context ctx) {
+		return;
+	}
+	@Override
+	protected void mapFeatureSimpleValue(ComplexFeature cf, Context ctx) {
+		return;
+	}
+
 }

@@ -1,13 +1,13 @@
-package org.datalift.wfs.wfs2.parsing;
+package org.datalift.gml32;
 import java.util.Stack;
 
 import javax.xml.parsers.SAXParser;
 
 import org.datalift.model.ComplexFeature;
-import org.datalift.geoutility.Helper;
 import org.datalift.model.Attribute;
-import org.datalift.model.Const;
 import org.datalift.model.MyGeometry;
+import org.datalift.utilities.Const;
+import org.datalift.utilities.Helper;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -36,7 +36,6 @@ public class CurveHandler extends DefaultHandler {
 
 	@Override
 	public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
-
 		currentCoordinateValues.setLength(0);
 		if(localName.equals(pointCf.name.getLocalPart()))
 		{
@@ -69,6 +68,7 @@ public class CurveHandler extends DefaultHandler {
 		if(localName.equals(localNameRetrieved)) //if we have fionished the building of geometric feature, the feature is added to pile and removed from geo_pile, so go back 
 		{
 			String val=currentCoordinateValues.toString().trim().replaceAll("\\s+", " ");
+			currentCoordinateValues.setLength(0);
 			handleCharacters(val);
 			parser.getXMLReader().setContentHandler(fHandler);	
 			fHandler.endElement(uri, localName, qName);

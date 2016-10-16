@@ -1,4 +1,4 @@
-package org.datalift.model;
+package org.datalift.utilities;
 import javax.xml.namespace.QName;
 public class SosConst {
 

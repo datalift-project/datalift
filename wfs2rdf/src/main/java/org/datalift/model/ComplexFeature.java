@@ -1,13 +1,13 @@
 package org.datalift.model;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import javax.xml.namespace.QName;
 
-import org.apache.xerces.xs.XSTypeDefinition;
-import org.geotools.math.Complex;
+import org.datalift.utilities.Const;
+import org.datalift.utilities.Helper;
+import org.datalift.utilities.SosConst;
 import org.openrdf.model.Resource;
 
 import com.vividsolutions.jts.geom.Geometry;
@@ -152,6 +152,11 @@ public class ComplexFeature extends Attribute{
 	 */
 	public boolean isSimple() {
 		int nbrUtilAttri=0;
+		boolean hasValue=false;
+		if(Helper.isSet(this.value))
+		{
+			hasValue=true;
+		}
 		for (Attribute a : this.itsAttr) {
 			if(!a.name.equals(Const.type) && !a.name.equals(Const.owns) && !a.name.equals(SosConst.frame) && !a.name.equals(Const.nil)&& !a.name.equals(Const.nilReason))
 			{
@@ -165,6 +170,10 @@ public class ComplexFeature extends Attribute{
 			{
 				return false;
 			}
+		}
+		if(hasValue && nbrUtilAttri==1)
+		{
+			return false;
 		}
 		return true;
 	}

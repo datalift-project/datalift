@@ -32,7 +32,7 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 
-package org.datalift.wfs;
+package org.datalift.model;
 
 
 import java.io.IOException;
@@ -55,6 +55,8 @@ import org.openrdf.rio.helpers.RDFHandlerWrapper;
 
 import static javax.ws.rs.core.Response.Status.*;
 
+import org.datalift.exceptions.ObjectNotFoundException;
+import org.datalift.exceptions.TechnicalException;
 import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.i18n.PreferredLocales;
@@ -72,7 +74,6 @@ import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.sparql.SparqlEndpoint;
 import org.datalift.fwk.view.TemplateModel;
 import org.datalift.fwk.view.ViewFactory;
-
 
 import static org.datalift.fwk.MediaTypes.*;
 import static org.datalift.fwk.util.PrimitiveUtils.wrap;
