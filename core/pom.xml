@@ -138,15 +138,7 @@
         </exclusion>
         <exclusion>
           <groupId>org.apache.struts</groupId>
-          <artifactId>struts-core</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.struts</groupId>
-          <artifactId>struts-tiles</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.struts</groupId>
-          <artifactId>struts-taglib</artifactId>
+          <artifactId>*</artifactId>
         </exclusion>
         <exclusion>
           <groupId>javax.servlet</groupId>
@@ -174,13 +166,26 @@
     </dependency>
     <!-- WRO4J : Web Resources Optimization -->
     <dependency>
+        <groupId>commons-io</groupId>
+        <artifactId>commons-io</artifactId>
+        <version>${commons-io.version}</version>
+    </dependency>
+    <dependency>
       <groupId>ro.isdc.wro4j</groupId>
       <artifactId>wro4j-extensions</artifactId>
       <version>${wro4j.version}</version>
       <exclusions>
         <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+        <exclusion>
           <groupId>commons-pool</groupId>
           <artifactId>commons-pool</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>commons-io</groupId>
+          <artifactId>commons-io</artifactId>
         </exclusion>
         <exclusion>
           <groupId>com.google.code.gson</groupId>

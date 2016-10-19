@@ -35,7 +35,7 @@
       <exclusions>
         <exclusion>
           <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-api</artifactId>
+          <artifactId>*</artifactId>
         </exclusion>
         <exclusion>
           <groupId>org.openrdf.sesame</groupId>
@@ -94,8 +94,8 @@
       <version>${slf4j.api.version}</version>
       <exclusions>
         <exclusion>
-          <artifactId>log4j</artifactId>
           <groupId>log4j</groupId>
+          <artifactId>*</artifactId>
         </exclusion>
       </exclusions>
     </dependency>

@@ -37,6 +37,7 @@
     <opencsv.version>2.3</opencsv.version>
     <bzip2.version>0.9.1</bzip2.version>
     <gson.version>2.3.1</gson.version>
+    <commons-io.version>2.4</commons-io.version>
     <commons-lang3.version>3.4</commons-lang3.version>
 
     <log4j.version>1.2.17</log4j.version>
