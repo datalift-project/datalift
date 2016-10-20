@@ -1,10 +1,7 @@
 package org.datalift.sos;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.xml.parsers.ParserConfigurationException;
 
 import org.datalift.model.Attribute;
 import org.datalift.model.BaseServiceClient;
@@ -13,7 +10,6 @@ import org.datalift.model.ObservationMetaData;
 import org.datalift.model.Store;
 import org.datalift.utilities.Const;
 import org.datalift.utilities.Helper;
-import org.xml.sax.SAXException;
 
 public class SOS2Client extends BaseServiceClient{
 
@@ -22,7 +18,6 @@ public class SOS2Client extends BaseServiceClient{
 		super(url);
 		serviceType="SOS";
 	}
-
 
 	public List<ObservationMetaData> getObservationOffering() {
 		// 
@@ -92,7 +87,6 @@ public class SOS2Client extends BaseServiceClient{
 						}
 
 					}
-
 				}
 			}
 		}
@@ -114,7 +108,7 @@ public class SOS2Client extends BaseServiceClient{
 		if(ds==null || ds.getFtParsed.size()==0)
 		{ 
 			ComplexFeature root;
-			if(!Helper.isSet(begin) || !Helper.isSet(end) ||!Helper.isSet(format) )
+			if(!Helper.isSet(begin) || !Helper.isSet(end) /*||!Helper.isSet(format)*/ )
 			{
 				return;
 			}

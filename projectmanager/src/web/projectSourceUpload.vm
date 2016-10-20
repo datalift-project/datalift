@@ -319,13 +319,7 @@
 #end
 		<p><label for="version">#i18n("project.upload_service_version"): </label>
 		<select name="version" id="version" title="#i18n("project.source.tooltip.version")">
-			#foreach( $v in $versions )
-			#if( $v == '1.0.0' )  )
-			<option value="$v" selected="true">$esc.html($v)</option>
-			#else
-			<option value="$v">$esc.html($v)</option>
-			#end
-			#end			
+			<option value="$v" selected="true">2.0.0</option>						
 		</select> </p>
 		<p><label for="description">#i18n("project.upload_source.description"): </label>
 		<input type="text" id="description" name="description" value="$!esc.html($current.description)"/></p>

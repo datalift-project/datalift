@@ -1,21 +1,9 @@
 package org.datalift.wfs.wfs2;
 
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import javax.xml.XMLConstants;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
-import javax.xml.validation.Schema;
-import javax.xml.validation.SchemaFactory;
-
-import org.apache.http.client.ClientProtocolException;
 import org.datalift.model.Attribute;
 import org.datalift.model.BaseServiceClient;
 import org.datalift.model.ComplexFeature;
@@ -24,7 +12,6 @@ import org.datalift.model.Store;
 import org.datalift.utilities.Const;
 import org.datalift.utilities.Context;
 import org.datalift.utilities.Helper;
-import org.xml.sax.SAXException;
 
 public class WFS2Client extends BaseServiceClient{
 
@@ -148,15 +135,6 @@ public class WFS2Client extends BaseServiceClient{
 		for (Attribute a : fc.itsAttr) {
 			if(a instanceof ComplexFeature)
 			{
-
-				/* if(a.getTypeName().equals(Const.FeatureArrayPropertyType))
-					 {
-						 ComplexFeature members =(ComplexFeature)a;
-						 processFeatureCollection(members,ctx);
-
-					 }
-					 else
-					 {*/
 				if(!a.getTypeName().equals(Const.BoundingShapeType)) //to ignore general bounding box if any
 				{
 					ComplexFeature member =(ComplexFeature)a;

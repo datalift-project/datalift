@@ -1,23 +1,19 @@
 package org.datalift.wfs;
 
+import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 import static javax.ws.rs.core.MediaType.APPLICATION_XHTML_XML;
 import static javax.ws.rs.core.MediaType.TEXT_HTML;
 
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-
 import java.util.ArrayList;
-
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
@@ -37,7 +33,6 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.UriInfo;
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.apache.http.client.ClientProtocolException;
 import org.datalift.exceptions.TechnicalException;
 //import org.datalift.core.util.SimpleCache;
 import org.datalift.fwk.Configuration;
@@ -143,7 +138,7 @@ public class Wfstordf extends BaseConverterModule{
 		JsonObject o = elements.getAsJsonObject();
 		String project=o.get("project").getAsString();
 		String source=o.get("source").getAsString();
-		int optionGraph= Integer.parseInt(o.get("graphOption").getAsString());
+		//int optionGraph= Integer.parseInt(o.get("graphOption").getAsString());
 		int optionOntology= Integer.parseInt(o.get("ontologyOption").getAsString());
 		boolean optionWGS84= Boolean.valueOf((o.get("convertSrsOption").getAsString()));
 		if(Helper.isSet(project) && Helper.isSet(source))
@@ -155,15 +150,10 @@ public class Wfstordf extends BaseConverterModule{
 			p = this.getProject(projectUri);
 			// Retrieve source.
 			WfsSource s = (WfsSource)(p.getSource(source));
-
 			JsonArray j = o.get("values").getAsJsonArray();
-
 			Iterator<JsonElement> i = j.iterator();
-
 			while ( i.hasNext() ){
-
 				String typeName = i.next().getAsString();
-
 				String potentialtargetGraph=s.getUri()+"/"+typeName;
 				int countGraph=getOccurenceGraph(p, potentialtargetGraph);
 				URI targetGraph = constructTargetGraphURI(p,potentialtargetGraph);
@@ -203,7 +193,6 @@ public class Wfstordf extends BaseConverterModule{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
 		}
 		return response;
 	}
@@ -278,13 +267,13 @@ public class Wfstordf extends BaseConverterModule{
 			WfsParser parser=new WfsParser(s.getSourceUrl(),s.getVersion(),s.getserverTypeStrategy());
 			ArrayList<AbstractFeature> featuresToConvert;
 
-				featuresToConvert=parser.loadFeature(typeName,optionWGS84);
+			featuresToConvert=parser.loadFeature(typeName,optionWGS84);
 
 
 			if (featuresToConvert==null || featuresToConvert.size()==0) 
-				{
-					return false; //in this case, there is no features in this feature type!!!
-				}
+			{
+				return false; //in this case, there is no features in this feature type!!!
+			}
 			WfsConverter converter=new WfsConverter();
 			org.datalift.fwk.rdf.Repository target = Configuration.getDefault().getInternalRepository();
 			converter.ConvertFeaturesToRDF(featuresToConvert,target , targetGraph, baseUri, targetType,parser.getFtCrs());
@@ -298,159 +287,159 @@ public class Wfstordf extends BaseConverterModule{
 
 	}
 
-private URI createBaseUri(URI targetGraph) throws URISyntaxException {
+	private URI createBaseUri(URI targetGraph) throws URISyntaxException {
 
-	String graph=targetGraph.toString();
-	//String graphuri="http://localhost:9091/project/demo/source/geoservice-brgm/availableFT-2";
-	int startproj,startsource;
+		String graph=targetGraph.toString();
+		//String graphuri="http://localhost:9091/project/demo/source/geoservice-brgm/availableFT-2";
+		int startproj,startsource;
 
-	startproj=graph.indexOf("/project");
-	String part1 = graph.substring(0, startproj);
+		startproj=graph.indexOf("/project");
+		String part1 = graph.substring(0, startproj);
 
-	startsource=graph.indexOf("/source");
-	String part2= graph.substring(startproj+8,startsource);
+		startsource=graph.indexOf("/source");
+		String part2= graph.substring(startproj+8,startsource);
 
-	String part3= graph.substring(startsource+7);
+		String part3= graph.substring(startsource+7);
 
-	return new URI(part1+part2+part3);
+		return new URI(part1+part2+part3);
 
-}
-private URI constructTargetGraphURI(Project p,String candidate) throws URISyntaxException
-{
-	int countExistingGraph=getOccurenceGraph(p, candidate);
-
-	countExistingGraph++;
-	return new URI(candidate+"-"+countExistingGraph);
-}
-private int getOccurenceGraph(Project p,String candidate)
-{
-	List<Integer> numberValues=new ArrayList<Integer>();
-	List<String> existingGraph = new ArrayList<String>();
-	for (Source ss : p.getSources()) {
-		if(ss.getUri().startsWith(candidate))
-			existingGraph.add(ss.getUri());
 	}
-	for (String s : existingGraph) {
-		Pattern pp = Pattern.compile("[0-9]+$");
-		Matcher m = pp.matcher(s);
-		if(m.find()) {
-			numberValues.add(Integer.valueOf(m.group()));
+	private URI constructTargetGraphURI(Project p,String candidate) throws URISyntaxException
+	{
+		int countExistingGraph=getOccurenceGraph(p, candidate);
+
+		countExistingGraph++;
+		return new URI(candidate+"-"+countExistingGraph);
+	}
+	private int getOccurenceGraph(Project p,String candidate)
+	{
+		List<Integer> numberValues=new ArrayList<Integer>();
+		List<String> existingGraph = new ArrayList<String>();
+		for (Source ss : p.getSources()) {
+			if(ss.getUri().startsWith(candidate))
+				existingGraph.add(ss.getUri());
 		}
-	}
-	if(numberValues.size()!=0)
-	{
-		return numberValues.get(numberValues.size()-1);
-	}
-	else
-	{
-		return 0;
-	}
-	
-
-}
-
-
-
-
-/**
- * 
- * @param projectId
- * @param sourceId
- * @return the description of available feature types
- */
-@POST
-@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-public Response getFeatureTypes(
-		@FormParam("project") URI projectId,
-		@FormParam("source") URI sourceId)
-
-{	
-	//get the list of featuretypedescription using the source id
-	//put the list into the web page availablewfsSources 
-	//lists of : FeatureType names, titles, count, summury (list for each information type)
-	ResponseBuilder response = null;
-	// Retrieve project.
-	Project p = this.getProject(projectId);
-	// Retrieve source.
-	WfsSource src = (WfsSource)(p.getSource(sourceId));
-	if (src == null) {
-		this.throwInvalidParamError("source", sourceId);
-	}
-	TemplateModel view = this.newView("availableFeatureTypes.vm", p);
-	view.put("source", sourceId);
-	try {
-		List <FeatureTypeDescription> types;
-		if(src.getVersion().equals("2.0.0"))
+		for (String s : existingGraph) {
+			Pattern pp = Pattern.compile("[0-9]+$");
+			Matcher m = pp.matcher(s);
+			if(m.find()) {
+				numberValues.add(Integer.valueOf(m.group()));
+			}
+		}
+		if(numberValues.size()!=0)
 		{
-			types= this.getfeatureTypeDescription2(src.getSourceUrl(),src.getVersion());			
+			return numberValues.get(numberValues.size()-1);
 		}
 		else
 		{
-			types= this.getfeatureTypeDescription(src.getSourceUrl(),src.getVersion(),src.getserverTypeStrategy());
+			return 0;
 		}
-		if(types!=null) 
+
+
+	}
+
+
+
+
+	/**
+	 * 
+	 * @param projectId
+	 * @param sourceId
+	 * @return the description of available feature types
+	 */
+	@POST
+	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+	public Response getFeatureTypes(
+			@FormParam("project") URI projectId,
+			@FormParam("source") URI sourceId)
+
+	{	
+		//get the list of featuretypedescription using the source id
+		//put the list into the web page availablewfsSources 
+		//lists of : FeatureType names, titles, count, summury (list for each information type)
+		ResponseBuilder response = null;
+		// Retrieve project.
+		Project p = this.getProject(projectId);
+		// Retrieve source.
+		WfsSource src = (WfsSource)(p.getSource(sourceId));
+		if (src == null) {
+			this.throwInvalidParamError("source", sourceId);
+		}
+		TemplateModel view = this.newView("availableFeatureTypes.vm", p);
+		view.put("source", sourceId);
+		try {
+			List <FeatureTypeDescription> types;
+			if(src.getVersion().equals("2.0.0"))
+			{
+				types= this.getfeatureTypeDescription2(src.getSourceUrl(),src.getVersion());			
+			}
+			else
+			{
+				types= this.getfeatureTypeDescription(src.getSourceUrl(),src.getVersion(),src.getserverTypeStrategy());
+			}
+			if(types!=null) 
 			{
 				view.put("types", types);
 			}
-		else
+			else
 			{
-			types=new ArrayList<FeatureTypeDescription>();
+				types=new ArrayList<FeatureTypeDescription>();
 			}
-		response = Response.ok(view);
+			response = Response.ok(view);
 
-	} catch (Exception e) {
-		TechnicalException error = new TechnicalException("describeFeatureTypeFailed", e, sourceId);
-		log.error(error.getMessage(), e);
-		response = Response.serverError().entity(error.getLocalizedMessage())
-				.type(MediaTypes.TEXT_PLAIN);
-	}
-	return response.build();
-}
-private List<FeatureTypeDescription> getfeatureTypeDescription2(String sourceUrl, String version) throws Exception {
-
-	WFS2Client mp=new WFS2Client(sourceUrl);
-	mp.getCapabilities();
-	return mp.getFeatureTypeDescription();
-
-}
-private boolean convertFeatureTypeToRdf2(URI projectUri, WfsSource s, String destination_title, URI targetGraph,
-		URI baseUri, String targetType, String typeName, int ontologyOption, boolean covertSrs) throws Exception {
-	try {
-		String srs=null;
-		if(covertSrs)
-		{
-			srs="EPSG:4326";
+		} catch (Exception e) {
+			TechnicalException error = new TechnicalException("describeFeatureTypeFailed", e, sourceId);
+			log.error(error.getMessage(), e);
+			response = Response.serverError().entity(error.getLocalizedMessage())
+					.type(MediaTypes.TEXT_PLAIN);
 		}
-		WFS2Client client=new WFS2Client(s.getSourceUrl());
-		client.getFeatureType(typeName,srs);
-		//return a list of parsed features contained in typeName
-		ComplexFeature featureCollectionToConvert=client.getUtilData(typeName);
+		return response.build();
+	}
+	private List<FeatureTypeDescription> getfeatureTypeDescription2(String sourceUrl, String version) throws Exception {
 
-		if (featureCollectionToConvert==null ) 
-		{
+		WFS2Client mp=new WFS2Client(sourceUrl);
+		mp.getCapabilities();
+		return mp.getFeatureTypeDescription();
+
+	}
+	private boolean convertFeatureTypeToRdf2(URI projectUri, WfsSource s, String destination_title, URI targetGraph,
+			URI baseUri, String targetType, String typeName, int ontologyOption, boolean covertSrs) throws Exception {
+		try {
+			String srs=null;
+			if(covertSrs)
+			{
+				srs="EPSG:4326";
+			}
+			WFS2Client client=new WFS2Client(s.getSourceUrl());
+			client.getFeatureType(typeName,srs);
+			//return a list of parsed features contained in typeName
+			ComplexFeature featureCollectionToConvert=client.getUtilData(typeName);
+
+			if (featureCollectionToConvert==null ) 
+			{
+				return false;
+			}
+			//0: default converter
+			//1: EMF group Converter
+			WFS2Converter converter=new WFS2Converter(ontologyOption);
+
+			org.datalift.fwk.rdf.Repository target = Configuration.getDefault().getInternalRepository();
+			converter.ConvertFeaturesToRDF(featureCollectionToConvert,target , targetGraph, baseUri, targetType);
+			//converter.StoreRDF();
+			//converter.StoreRdfTS(target , targetGraph, baseUri, targetType);
+
+
+
+		} catch (IOException e) {
+			TechnicalException error = new TechnicalException("convertFeatureTypeFailed", e, typeName);
+			log.error(error.getMessage(), e);
 			return false;
+		} catch (RDFHandlerException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		//0: default converter
-		//1: EMF group Converter
-		WFS2Converter converter=new WFS2Converter(ontologyOption);
-		
-		org.datalift.fwk.rdf.Repository target = Configuration.getDefault().getInternalRepository();
-		converter.ConvertFeaturesToRDF(featureCollectionToConvert,target , targetGraph, baseUri, targetType);
-		//converter.StoreRDF();
-		//converter.StoreRdfTS(target , targetGraph, baseUri, targetType);
-
-		
-		
-	} catch (IOException e) {
-		TechnicalException error = new TechnicalException("convertFeatureTypeFailed", e, typeName);
-		log.error(error.getMessage(), e);
-		return false;
-	} catch (RDFHandlerException e) {
-		// TODO Auto-generated catch block
-		e.printStackTrace();
+		return true;
 	}
-	return true;
-}
 	/****
 	 * send a request to wfs, parse the response, 
 	 * retrieves data (feature type description) and insert them into features list 
@@ -470,7 +459,7 @@ private boolean convertFeatureTypeToRdf2(URI projectUri, WfsSource s, String des
 			cacheKey += "/" + serverType;
 		}
 		descriptor = cache.get(cacheKey);
-		
+
 		if(descriptor==null)
 		{	
 			descriptor=new ArrayList<FeatureTypeDescription>();
@@ -485,9 +474,9 @@ private boolean convertFeatureTypeToRdf2(URI projectUri, WfsSource s, String des
 				FeatureTypeDescription ftd=new FeatureTypeDescription();
 				Iterator<ReferenceIdentifier> i = inf.getCRS().getIdentifiers().iterator();
 				if(i.hasNext())
-					{
+				{
 					ftd.setDefaultSrs(Helper.constructSRIDValue(i.next().getCode()));
-					}
+				}
 				ftd.setName(inf.getName()); //name pattern : ns_featuretypename
 				ftd.setSummary(inf.getDescription());
 				ftd.setTitle(inf.getTitle());

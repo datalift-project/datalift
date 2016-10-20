@@ -3,10 +3,7 @@ package org.datalift.wfs.wfs2.mapping;
 import java.io.FileNotFoundException;
 import java.net.URI;
 
-import javax.xml.namespace.QName;
-
 import org.datalift.fwk.rdf.Repository;
-import org.datalift.fwk.rdf.UriCachingValueFactory;
 import org.datalift.model.Attribute;
 import org.datalift.model.ComplexFeature;
 import org.datalift.sos.mapping.FeatureOfInterestMapper;
@@ -18,9 +15,6 @@ import org.datalift.sos.mapping.PhenomenonTimeMapper;
 import org.datalift.sos.mapping.ProcedureMapper;
 import org.datalift.utilities.Const;
 import org.datalift.utilities.Context;
-import org.openrdf.model.ValueFactory;
-import org.openrdf.repository.RepositoryConnection;
-import org.openrdf.repository.RepositoryException;
 import org.openrdf.rio.RDFHandlerException;
 
 public class WFS2Converter {
@@ -34,7 +28,7 @@ public class WFS2Converter {
 		if(i==1) //we assume that 1 is the id to say we should use EMF group mappers
 		{
 			Mapper m=new SimpleTypeMapper();
-			ctx.mappers.put(Const.StringOrRefType, m);
+			//ctx.mappers.put(Const.StringOrRefType, m);
 			ctx.mappers.put(Const.ReferenceType, new ReferenceTypeMapper());
 			ctx.mappers.put(Const.EnvironmentalMonitoringFacilityType, new EmfMapper());
 			ctx.mappers.put(Const.TimePeriodType, new TimePeriodMapper());

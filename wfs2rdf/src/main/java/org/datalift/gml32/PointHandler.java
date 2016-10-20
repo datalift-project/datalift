@@ -69,6 +69,7 @@ public class PointHandler extends DefaultHandler{
 		{
 			String val=currentCoordinateValues.toString();
 			currentCoordinateValues.setLength(0);
+			val=val.trim();
 			handleCharacters(val);
 			parser.getXMLReader().setContentHandler(fHandler);	
 			fHandler.endElement(uri, localName, qName);
@@ -86,7 +87,7 @@ public class PointHandler extends DefaultHandler{
 		currentCoordinateValues.append(ch,start,length);
 		if(currentCoordinateValues.toString().trim().length()==0)
 			{
-				currentCoordinateValues.delete(0, currentCoordinateValues.length());				
+			currentCoordinateValues.setLength(0);
 			}
 	}
 	private void handleCharacters(String val)

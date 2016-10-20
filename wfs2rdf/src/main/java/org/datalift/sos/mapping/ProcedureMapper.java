@@ -2,6 +2,7 @@ package org.datalift.sos.mapping;
 
 import org.datalift.model.ComplexFeature;
 import org.datalift.utilities.Context;
+import org.datalift.utilities.Helper;
 import org.datalift.wfs.wfs2.mapping.BaseMapper;
 import org.openrdf.model.Resource;
 
@@ -26,10 +27,7 @@ public class ProcedureMapper extends BaseMapper {
 			}
 		}
 	}
-	@Override
-	protected void mapFeatureSimpleAttributes(ComplexFeature cf, Context ctx, Resource toLinkWith) {
-		return;
-	}
+
 	/**
 	 * FOR SHORTCUT MAPPING : the feature's content is directly linked with its parent 
 	 * links the unique value of the  cf with the subject cf.getParent.id using the name of cf as a predicat
@@ -40,13 +38,13 @@ public class ProcedureMapper extends BaseMapper {
 	 */
 	@Override
 	protected void addParentSimpleLinkStatements(ComplexFeature cf, Context ctx) {
-		//		// first of all, look at the value of the feature. if any then try to create the triple with the value of one attribute 
-		//		if(Helper.isSet(cf.value))
-		//		{
-		//			mapTypedValue(cf.getParent().getId(), cf.value, cf.getTypeName(), cf.name, Context.nsOml+"procedure", ctx);
-		//			return;
-		//		}
-		//		this.mapFeatureSimpleAttributes(cf, ctx, cf.getParent().getId());	
+		// first of all, look at the value of the feature. if any then try to create the triple with the value of one attribute 
+		if(Helper.isSet(cf.value))
+		{
+			mapTypedValue(cf.getParent().getId(), cf.value, cf.getTypeName(), cf.name, Context.nsOml+"procedure", ctx);
+			return;
+		}
+		this.mapFeatureSimpleAttributes(cf, ctx, cf.getParent().getId());	
 		return;
 	}
 }

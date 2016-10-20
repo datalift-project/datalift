@@ -81,7 +81,7 @@ public class SimpleMeasureMapper extends BaseMapper {
 	@Override
 	protected void addRdfTypes(ComplexFeature cf, Context ctx) {
 		ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(Context.nsOml+"SimpleMesure")));
-		if(isReferencedObject(cf))
+		if(cf.isReferencedObject())
 		{ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(Context.nsDatalift+Helper.capitalize(Context.referencedObjectType.getLocalPart()))));}
 	}
 

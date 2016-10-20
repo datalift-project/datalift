@@ -1,1 +1,2 @@
 org.datalift.sparql2viz.Sparql2VizEndpoint
+org.datalift.sparql2viz.SaveSparqlQuery

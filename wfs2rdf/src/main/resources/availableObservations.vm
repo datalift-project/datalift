@@ -42,7 +42,7 @@
 				<p><label class="control-label" for="ontology">#i18n("ontology_label.option"): </label>				
 				<select name="ontology_option" id="ontology_option">
 					<option value="0"  title="#i18n("default_ontology.option_tooltip")">#i18n("default_ontology.option")</option>
-					<option value="1"  title="#i18n("emf_ontology.option_tooltip")">#i18n("emf_ontology.option")</option>
+					<option value="1"  title="#i18n("SOS_ontology.option_tooltip")">#i18n("SOS_ontology.option")</option>
 				</select>
 				</p>
 			</div>
@@ -125,37 +125,47 @@ $(function() {
 		});
 	function loadGridTypes() {
 		/************************* Observations ******************************/
+		
+		   /**************data needed to fill the grid *****************/
+		var mydata = [
+#foreach($obs in $observationsOffering)
+		{
+			id:"$!esc.javascript($obs.getIdentifier())",
+			Title:"$!esc.javascript($obs.getName())",
+			Description:"$!esc.javascript($obs.getDescription())",
+			begin:"$!esc.javascript($obs.getPhonomenonTimeBegin())",
+			end:"$!esc.javascript($obs.getPhonomenonTimeEnd())"
+		},
+#end
+		];
+		
 		var grid = $("#selectable_types");
 		grid.jqGrid({
+			data:mydata,
 			datatype: "local",
-			colNames:['id','#i18n("grid.availableObservations.name")','#i18n("grid.availableObservations.description")','#i18n("grid.availableObservations.begin")','#i18n("grid.availableObservations.end")','#i18n("grid.availableObservations.format")'],
+			colNames:['id','#i18n("grid.availableObservations.name")','#i18n("grid.availableObservations.description")','#i18n("grid.availableObservations.begin")','#i18n("grid.availableObservations.end")'],
 			colModel:[
 				{name:'id', key:true, index:'id', width:50},
 				{name:'Title', index:'title',  width:100},
 				{name:'Description',  index:'descr',   width:380},
-				{name:'begin', index:'begin', width:140},
-				{name:'end', index:'end',  width:140},
-				{name:'format', index:'format',  width:200, /*editable:true, cellEdit:true,edittype:'select',formatter: 'select',
-                                            editoptions:{value: getAllSelectOptions()}*/}
+				{name:'begin', index:'begin', width:140, cellEdit:true, editable: true},
+				{name:'end', index:'end',  width:140, cellEdit:true,editable: true}
 			],
 			caption: "",
-			rowNum:10, rowList:[10,20,30], pager: '#selectable_sources_toolbar',
+			rowNum:200, rowList:[50,100,500,1000,2000], 
+			pager: '#selectable_sources_toolbar',
 			gridview: true,
 			height: 250,
 			multiselect: true,
 			multiboxonly: true,
 			ignoreCase: true,
             sortname: 'Title',
-            sortorder: "desc"
+            sortorder: "desc",
+            'cellEdit':true,
+            'cellsubmit' : 'clientArray',
+   			editurl: 'clientArray'
 		});
 		
-		function getAllSelectOptions(){
-		 	var states = {};
-	console.log("**********");
-	//console.log($observationsOffering);
-  return states;
-
-}
 		
         console.log(grid.jqGrid("getGridParam", "data"));
         console.log("===========================");
@@ -169,30 +179,64 @@ $(function() {
         console.log("===========================");
         console.log("===========================");
 
-   /**************data needed to fill the grid *****************/
-		var mydata = [
-#foreach($obs in $observationsOffering)
-		{
-			id:"$!esc.javascript($obs.getIdentifier())",
-			Title:"$!esc.javascript($obs.getName())",
-			Description:"$!esc.javascript($obs.getDescription())",
-			begin:"$!esc.javascript($obs.getPhonomenonTimeBegin())",
-			end:"$!esc.javascript($obs.getPhonomenonTimeEnd())",
-			format:"$!esc.javascript($obs.getVailableFormat().get(0))",
-		},
-#end
-		];
+
 		
 		//console.log("observationOffering : ",$observationsOffering);
 		console.log("+++++++++++");
 		console.log("mydata : ",mydata);
 
-		for(var i=0;i<=mydata.length;i++) {
+		/*for(var i=0;i<=mydata.length;i++) {
 			jQuery("#selectable_types").jqGrid('addRowData',i+1,mydata[i]);
-		}
+		}*/
 
 		grid.jqGrid('navGrid', '#selectable_sources_toolbar',
-			{edit:false,add:false,del:false, refresh:false, search:false})
+			{edit:false,add:false,del:false, refresh:false, search:false}/*,
+			// options for the Edit Dialog
+		{
+			editCaption: "Modifier",
+			modal:true,
+			jqModal: true,
+			recreateForm: true,
+			closeOnEscape: true,
+			closeAfterEdit: true,
+			reloadAfterSubmit: false,
+			mtype: 'GET',
+			beforeSubmit: function (postdata, form) {
+				selRowId = $('#selectable_sources').jqGrid('getGridParam', 'selrow');
+				begin= $('#selectable_sources').jqGrid('getCell', selRowId, 'begin');
+				end = $('#selectable_sources').jqGrid('getCell', selRowId, 'end');
+				$.ajax({
+					url: 'http://google.com',
+					type: 'GET',
+					success: function(data,textStatus){
+						console.log("success: ");
+						var selIds = $('#selectable_types').jqGrid('getGridParam', 'selarrrow')
+						for (i = 0, n = selIds.length; i < n; i++) {
+						
+						    console.log({id:$('#selectable_types').jqGrid('getCell', selIds[i], 'id'), begin :$('#selectable_types').jqGrid('getCell', selIds[i], 'begin'), end: $('#selectable_types').jqGrid('getCell', selIds[i], 'end')});
+						}
+					},
+					error: function(XMLHttpRequest, textStatus, errorThrown){
+						console.log("error: ");
+						var selIds = $('#selectable_types').jqGrid('getGridParam', 'selarrrow')
+						for (i = 0, n = selIds.length; i < n; i++) {
+						    console.log({id:$('#selectable_types').jqGrid('getCell', selIds[i], 'id'), begin :$('#selectable_types').jqGrid('getCell', selIds[i], 'begin'), end: $('#selectable_types').jqGrid('getCell', selIds[i], 'end')});
+						}
+					},
+					complete: function(data){
+						console.log("complete: ");
+						var selIds = $('#selectable_types').jqGrid('getGridParam', 'selarrrow')
+						for (i = 0, n = selIds.length; i < n; i++) {
+						    console.log({id:$('#selectable_types').jqGrid('getCell', selIds[i], 'id'), begin :$('#selectable_types').jqGrid('getCell', selIds[i], 'begin'), end: $('#selectable_types').jqGrid('getCell', selIds[i], 'end')});
+						}
+					}
+					});
+				return true;
+			},
+			errorTextFormat: function (data) {
+				return 'Error: ' + data.responseText
+			},
+		}*/)
 			.navButtonAdd(
 				'#selectable_sources_toolbar',	{
 					caption:'#i18n("grid.featureTypes.validate")',
@@ -200,7 +244,7 @@ $(function() {
 						var selIds = $('#selectable_types').jqGrid('getGridParam', 'selarrrow'), i, n;
 						idValues=[];
 						for (i = 0, n = selIds.length; i < n; i++) {
-						    idValues.push({id:$('#selectable_types').jqGrid('getCell', selIds[i], 'id'), begin :$('#selectable_types').jqGrid('getCell', selIds[i], 'begin'), end: $('#selectable_types').jqGrid('getCell', selIds[i], 'end'),format:$('#selectable_types').jqGrid('getCell', selIds[i], 'format')});
+						    idValues.push({id:$('#selectable_types').jqGrid('getCell', selIds[i], 'id'), begin :$('#selectable_types').jqGrid('getCell', selIds[i], 'begin'), end: $('#selectable_types').jqGrid('getCell', selIds[i], 'end')});
 						}
 						var e = $('#typenames_submit');
 						if(n>0){
@@ -213,6 +257,7 @@ $(function() {
 							$('#typenames_submit').attr('disabled','true');
 							$('#typenames_submit').addClass("ui-state-disabled")
 							}
+						console.log("validate",idValues);
 					}	
 				}
 			).navButtonAdd(

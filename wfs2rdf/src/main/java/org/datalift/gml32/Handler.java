@@ -1,7 +1,6 @@
 package org.datalift.gml32;
 
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -11,6 +10,7 @@ import java.util.Stack;
 import javax.xml.namespace.QName;
 import javax.xml.parsers.SAXParser;
 
+import org.apache.xerces.impl.xs.XSComplexTypeDecl;
 import org.apache.xerces.xs.AttributePSVI;
 import org.apache.xerces.xs.ElementPSVI;
 import org.apache.xerces.xs.PSVIProvider;
@@ -21,8 +21,8 @@ import org.datalift.model.Attribute;
 import org.datalift.model.ComplexFeature;
 import org.datalift.model.Feature;
 import org.datalift.utilities.Const;
+import org.datalift.utilities.Helper;
 import org.xml.sax.Attributes;
-import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
  
@@ -64,19 +64,9 @@ public class Handler extends DefaultHandler {
     	tmp.name=new QName(uri, localName);
     	XSElementDeclaration dec= elt.getElementDeclaration();
     	XSTypeDefinition td=null;
-
     	if(dec!=null)
     	{
     		td=dec.getTypeDefinition(); 
-//    		if (td!=null && td.getName()!=null && td.getName().equals("anyType")) {
-//    			String xsiType = attributes.getValue(Const.explicitType.getNamespaceURI(), "type");
-//    			if (xsiType != null) {
-//    				String[] parts = xsiType.split(":");
-//    				//String eltType = this.getNs(parts[0]);
-//    				String eltType = Const.GML_3_2_NS_URI;
-//    				td = elt.getSchemaInformation().getTypeDefinition(parts[1], eltType);
-//    			}
-//    		}
     	}
     	tmp.attrType=td;
     	for (int i=0;i<attributes.getLength();i++)
@@ -96,10 +86,20 @@ public class Handler extends DefaultHandler {
     			explicitType=a.value;
     			explicitType=explicitType.substring(explicitType.indexOf(":")+1);
     		}
-    	} 
+    	}
+    	if(Helper.isSet(explicitType)) //override the type of the feature with the explicite type
+    	{
+    		final String newType = explicitType;
+        	XSTypeDefinition t = new XSComplexTypeDecl() {
+        		@Override
+        		public String getName() { return newType; }
+        	};
+        	tmp.attrType=t;
+    	}
+    	
     	if(!stack.isEmpty()) //ajoute l'élément courant comme ATTRIBUT du dernier élément (encore ouvert ) dans la pile
     	{
-    		if(tmp.getTypeName().equals(Const.GeometryPropertyType)  /*|| explicitType.equals(Const.GeometryPropertyType.getLocalPart())*/ 
+    		if(tmp.getTypeName().equals(Const.GeometryPropertyType)  || tmp.getTypeName().getLocalPart().equals(Const.GeometryPropertyType.getLocalPart())
     				|| tmp.getTypeName().equals(Const.PointPropertyType) || tmp.getTypeName().equals(Const.CurvePropertyType)
     				|| tmp.getTypeName().equals(Const.MultiSurfacePropertyType))    			
     			//create a geometry proprety
@@ -108,10 +108,8 @@ public class Handler extends DefaultHandler {
     			GeoHandler gh=new GeoHandler(parser, this,stack,explicitType );
     			parser.getXMLReader().setContentHandler(gh);
     			gh.startElement(uri, localName, qName, attributes);
-
     		}
     		else {
-    			// stack.peek().itsAttr.add(tmp);
     			ComplexFeature parent = (stack.isEmpty())? null: stack.peek();
     			if (parent != null) {
     				parent.itsAttr.add(tmp);
@@ -122,13 +120,6 @@ public class Handler extends DefaultHandler {
 
     	stack.push(tmp);
     }
-
-    @Override
-	public InputSource resolveEntity(String publicId, String systemId) throws IOException, SAXException {
-		// TODO Auto-generated method stub
-    	System.out.println("publicid: " + publicId + " -> systemid: " + systemId);
-		return super.resolveEntity(publicId, systemId);
-	}
 
 	@Override
     public void endElement(String uri, String localName, String qName) throws SAXException {
@@ -184,10 +175,5 @@ public class Handler extends DefaultHandler {
 				nsMappings.remove(prefix);
 			}
 		}
-	}
-
-	private String getNs(String prefix) {
-		Stack<String> s = nsMappings.get(prefix);
-		return (s != null)? s.peek(): null;
 	}
 }

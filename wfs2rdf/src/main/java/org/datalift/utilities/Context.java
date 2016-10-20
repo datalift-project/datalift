@@ -85,7 +85,10 @@ public class Context {
 	public static final String nsSkos="http://www.w3.org/2008/05/skos#";
 	public static final String nsOml="http://def.seegrid.csiro.au/ontology/om/om-lite#";
 	public static final String nsIsoTP="http://def.seegrid.csiro.au/isotc211/iso19108/2002/temporal#"; //should be replaced by a local version of the ontology
-	public static final String nsw3Time="https://www.w3.org/TR/2016/WD-owl-time-20160712/#";
+	public static final String nsw3Time="http://www.w3.org/2006/time#";
+	public static final String nsXsd="http://www.w3.org/2001/XMLSchema#";
+	public static final String nsgeof="http://www.opengis.net/ont/sf#";
+	public static final String nsUnit= "http://qudt.org/vocab/unit#";
 	/*****new RDF classe definitions ****/
 	public static final QName referencedObjectType=new QName(nsDatalift, "ReferencedObject");
 	public static final QName referencedCodeListType=new QName(nsDatalift, "ReferencedCodeList");
@@ -142,21 +145,24 @@ public class Context {
 		model.setNamespace("oml", nsOml);
 		model.setNamespace("tp", nsIsoTP);
 		model.setNamespace("smod", nsSmod);
-		model.setNamespace("w3time", nsw3Time);
+		model.setNamespace("time", nsw3Time);
+		model.setNamespace("xsd", nsXsd);
+		model.setNamespace("geof", nsgeof);
+		model.setNamespace("unit", nsUnit);
 		rdfTypeURI=vf.createURI(nsRDF2+"type");
 		DefaultSubjectURI=vf.createURI(nsProject+"root");
 		/***Initialize default mappers****/
 		Mapper m=new SimpleTypeMapper();
 		mappers.put(null, new BaseMapper());
 		mappers.put(new QName("geometry"),new GeomMapper());
-		mappers.put(Const.string, m);
-		mappers.put(Const.xsdDate, m);
-		mappers.put(Const.xsdDouble, m);
-		mappers.put(Const.xsdFloat, m);
-		mappers.put(Const.xsdInteger, m);
-		mappers.put(Const.xsdDecimal, m);
-		mappers.put(Const.xsdBoolean,new MobileMapper());
-		mappers.put(Const.anyURI,new AnyURIMapper());
+//		mappers.put(Const.string, m);
+//		mappers.put(Const.xsdDate, m);
+//		mappers.put(Const.xsdDouble, m);
+//		mappers.put(Const.xsdFloat, m);
+//		mappers.put(Const.xsdInteger, m);
+//		mappers.put(Const.xsdDecimal, m);
+//		mappers.put(Const.xsdBoolean,new MobileMapper());
+//		mappers.put(Const.anyURI,new AnyURIMapper());
 
 		this.referenceCatalogue = new HashMap<String, String>();
 		this.referenceCatalogue.put(null, baseURI);

@@ -28,10 +28,10 @@ public class AnyURIMapper extends BaseMapper {
 		}
 		else 
 		{
-			subjectURI=ctx.DefaultSubjectURI;
+			subjectURI=Context.DefaultSubjectURI;
 		}
 		/****add the parentlinked statement****/		
-        ctx.model.add(ctx.vf.createStatement(subjectURI, ctx.vf.createURI(ctx.nsDatalift+cf.name.getLocalPart()), ctx.vf.createURI(cf.value)));
+        ctx.model.add(ctx.vf.createStatement(subjectURI, ctx.vf.createURI(Context.nsDatalift+cf.name.getLocalPart()), ctx.vf.createURI(cf.value)));
 	}
 
 }

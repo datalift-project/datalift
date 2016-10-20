@@ -1,20 +1,18 @@
 package org.datalift.wfs.wfs2.mapping;
 
 import javax.xml.datatype.XMLGregorianCalendar;
-import javax.xml.namespace.QName;
 
-import org.openrdf.model.Resource;
 import org.datalift.model.ComplexFeature;
 import org.datalift.utilities.Const;
 import org.datalift.utilities.Context;
 import org.datalift.utilities.Helper;
-import org.datalift.utilities.SosConst;
-import org.datalift.model.Attribute;
+import org.openrdf.model.Resource;
 /**
  * exemple : description
  * @author a631207
  *
  */
+//expl: additional description
 public class SimpleTypeMapper extends BaseMapper{
 	public void map(ComplexFeature cf, Context ctx) {
 		if(ignore(cf))
@@ -33,45 +31,44 @@ public class SimpleTypeMapper extends BaseMapper{
 		}
 		else 
 		{
-			subjectURI=ctx.DefaultSubjectURI;
+			subjectURI=Context.DefaultSubjectURI;
 		}
 		/****add the parentlinked statement****/
 		//we first check the type value and the add the corresponding statement type object 
 		if(cf.attrType!=null && cf.getTypeName().equals(Const.string))
 		{
-			String object=cf.value;
-			ctx.model.add(ctx.vf.createStatement(subjectURI, ctx.vf.createURI(ctx.nsDatalift+cf.name.getLocalPart()), ctx.vf.createLiteral(cf.value)));
+			ctx.model.add(ctx.vf.createStatement(subjectURI, ctx.vf.createURI(Context.nsDatalift+cf.name.getLocalPart()), ctx.vf.createLiteral(cf.value)));
 		} 
 		//integer
 		if(cf.attrType!=null && cf.getTypeName().equals(Const.xsdInteger))
 		{
 			int object=Integer.parseInt(cf.value);
-			ctx.model.add(ctx.vf.createStatement(subjectURI, ctx.vf.createURI(ctx.nsDatalift+cf.name.getLocalPart()), ctx.vf.createLiteral(cf.value)));
+			ctx.model.add(ctx.vf.createStatement(subjectURI, ctx.vf.createURI(Context.nsDatalift+cf.name.getLocalPart()), ctx.vf.createLiteral(object)));
 		} 
 		//boolean
 		if(cf.attrType!=null && cf.getTypeName().equals(Const.xsdBoolean))
 		{
 			boolean object=Boolean.getBoolean(cf.value);
-			ctx.model.add(ctx.vf.createStatement(subjectURI, ctx.vf.createURI(ctx.nsDatalift+cf.name.getLocalPart()), ctx.vf.createLiteral(cf.value)));
+			ctx.model.add(ctx.vf.createStatement(subjectURI, ctx.vf.createURI(Context.nsDatalift+cf.name.getLocalPart()), ctx.vf.createLiteral(object)));
 		} 
 		//double or decimal
 		if(cf.attrType!=null && cf.getTypeName().equals(Const.xsdDouble) ||  cf.getTypeName().equals(Const.xsdDecimal))
 		{
 			double object=Double.valueOf(cf.value);
-			ctx.model.add(ctx.vf.createStatement(subjectURI, ctx.vf.createURI(ctx.nsDatalift+cf.name.getLocalPart()), ctx.vf.createLiteral(cf.value)));
+			ctx.model.add(ctx.vf.createStatement(subjectURI, ctx.vf.createURI(Context.nsDatalift+cf.name.getLocalPart()), ctx.vf.createLiteral(object)));
 		} 
 		//float 
 		if(cf.attrType!=null && cf.getTypeName().equals(Const.xsdFloat))
 		{
 			float object=Float.valueOf(cf.value);
-			ctx.model.add(ctx.vf.createStatement(subjectURI, ctx.vf.createURI(ctx.nsDatalift+cf.name.getLocalPart()), ctx.vf.createLiteral(cf.value)));
+			ctx.model.add(ctx.vf.createStatement(subjectURI, ctx.vf.createURI(Context.nsDatalift+cf.name.getLocalPart()), ctx.vf.createLiteral(object)));
 		} 
 		
 		//date
 		if(cf.attrType!=null && cf.getTypeName().equals(Const.xsdDate))
 		{
 			XMLGregorianCalendar object=Helper.getDate(cf.value);
-			ctx.model.add(ctx.vf.createStatement(subjectURI, ctx.vf.createURI(ctx.nsDatalift+cf.name.getLocalPart()), ctx.vf.createLiteral(cf.value)));
+			ctx.model.add(ctx.vf.createStatement(subjectURI, ctx.vf.createURI(Context.nsDatalift+cf.name.getLocalPart()), ctx.vf.createLiteral(object)));
 		} 
 	}
 

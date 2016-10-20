@@ -3,12 +3,10 @@ package org.datalift.wfs.wfs2.mapping;
 import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.namespace.QName;
 
-import org.datalift.model.Attribute;
 import org.datalift.model.ComplexFeature;
 import org.datalift.utilities.Const;
 import org.datalift.utilities.Context;
 import org.datalift.utilities.Helper;
-import org.geotools.referencing.wkt.Preprocessor;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
@@ -36,19 +34,18 @@ public class InstantPositionMapper extends BaseMapper{
 		if(d!=null)
 		{
 			Value v5=ctx.vf.createLiteral(d);
-			ctx.model.add(ctx.vf.createStatement(cf.getId(),ctx.vf.createURI(ctx.nsw3Time+"inXSDDateTime"), v5));
+			ctx.model.add(ctx.vf.createStatement(cf.getId(),ctx.vf.createURI(Context.nsw3Time+"inXSDDateTime"), v5));
 		}
 
 	}
 
 	@Override
 	protected void addRdfTypes(ComplexFeature cf, Context ctx) {
-		ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(ctx.nsw3Time+"Instant")));
-		if(isReferencedObject(cf))
+		ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(Context.nsw3Time+"Instant")));
+		if(cf.isReferencedObject())
 		{
-			ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(ctx.nsDatalift+Helper.capitalize(ctx.referencedObjectType.getLocalPart()))));
+			ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(Context.nsDatalift+Helper.capitalize(Context.referencedObjectType.getLocalPart()))));
 		}
-
 	}
 
 	@Override
@@ -68,18 +65,18 @@ public class InstantPositionMapper extends BaseMapper{
 		}
 		else 
 		{
-			subjectURI=ctx.DefaultSubjectURI;
+			subjectURI=Context.DefaultSubjectURI;
 		}
 		/****add the parentlinked statement****/
 		String p=cf.name.getLocalPart();
 		URI preperty=null;
 		if(p.contains("begin"))
 		{
-			preperty=ctx.vf.createURI(ctx.nsw3Time+"begin");
+			preperty=ctx.vf.createURI(Context.nsw3Time+"begin");
 		}
 		if(p.contains("end"))
 		{
-			preperty=ctx.vf.createURI(ctx.nsw3Time+"end");	
+			preperty=ctx.vf.createURI(Context.nsw3Time+"end");	
 		}
 		if(preperty!=null)
 		{
@@ -101,11 +98,11 @@ public class InstantPositionMapper extends BaseMapper{
 		String id=cf.getAttributeValue(Const.identifier);
 		if(id==null)
 		{
-			if(isReferencedObject(cf))
+			if(cf.isReferencedObject())
 			{
-				QName type=ctx.referencedObjectType;//Const.ReferenceType;
+				QName type=Context.referencedObjectType;//Const.ReferenceType;
 				count =ctx.getInstanceOccurences(type);
-				os=ctx.vf.createURI(ctx.nsProject+type.getLocalPart()+"_"+count);
+				os=ctx.vf.createURI(Context.nsProject+type.getLocalPart()+"_"+count);
 			}
 			else
 			{

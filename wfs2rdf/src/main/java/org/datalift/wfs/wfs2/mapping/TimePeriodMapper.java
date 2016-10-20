@@ -1,17 +1,13 @@
 package org.datalift.wfs.wfs2.mapping;
 
-import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.namespace.QName;
 
-import org.openrdf.model.Resource;
-import org.openrdf.model.URI;
-import org.openrdf.model.Value;
+import org.datalift.model.Attribute;
 import org.datalift.model.ComplexFeature;
 import org.datalift.utilities.Const;
 import org.datalift.utilities.Context;
-import org.datalift.utilities.Helper;
-import org.datalift.utilities.SosConst;
-import org.datalift.model.Attribute;
+import org.openrdf.model.Resource;
+import org.openrdf.model.URI;
 
 public class TimePeriodMapper extends BaseMapper{
 
@@ -41,7 +37,7 @@ public class TimePeriodMapper extends BaseMapper{
 	protected void addRdfTypes(ComplexFeature cf, Context ctx) {	
 		//ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(ctx.nsDatalift+Helper.capitalize(cf.name.getLocalPart()))));
 		//ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(ctx.nsIsoTP+"TM_Period")));
-		URI typeIntervalURI = ctx.vf.createURI(ctx.nsw3Time+"ProperInterval");
+		URI typeIntervalURI = ctx.vf.createURI(Context.nsw3Time+"ProperInterval");
 		ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI,typeIntervalURI));
 		}
 	protected void setCfId(ComplexFeature cf, Context ctx) {
@@ -57,11 +53,11 @@ public class TimePeriodMapper extends BaseMapper{
 		String id=cf.getAttributeValue(Const.identifier);
 		if(id==null)
 		{
-			if(isReferencedObject(cf))
+			if(cf.isReferencedObject())
 			{
-				QName type=ctx.referencedObjectType;//Const.ReferenceType;
+				QName type=Context.referencedObjectType;//Const.ReferenceType;
 				count =ctx.getInstanceOccurences(type);
-				os=ctx.vf.createURI(ctx.nsProject+type.getLocalPart()+"_"+count);
+				os=ctx.vf.createURI(Context.nsProject+type.getLocalPart()+"_"+count);
 			}
 			else
 			{

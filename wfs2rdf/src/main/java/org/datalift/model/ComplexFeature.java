@@ -178,7 +178,7 @@ public class ComplexFeature extends Attribute{
 		return true;
 	}
 	public Resource getIdTypedParent(QName parentType) {
-		Resource id=null;
+//		Resource id=null;
 //		while(parent!=null)
 //		{
 //			if(parent.getTypeName().equals(parentType))
@@ -230,5 +230,38 @@ public class ComplexFeature extends Attribute{
 		a.parent=root;
 		ComplexFeature f=c.test(new QName("aaa"));
 		System.out.println(f.name);
+	}
+	
+	/**
+	 * a referenced object is an xml element which contains a reference (URI,
+	 * href) and at least one other "util" attribute (id, title...)
+	 * 
+	 * @param cf
+	 * @return
+	 */
+	public boolean isReferencedObject() {
+		if (!this.containsReference()) {
+			return false;
+		}
+		for (Attribute a : this.itsAttr) {
+			if (!a.getTypeName().equals(Const.hrefType) && !a.getTypeName().equals(Const.anyURI)
+					&& !a.name.equals(Const.type) && !a.name.equals(Const.owns) && !a.name.equals(SosConst.frame)
+					&& !a.name.equals(Const.nil) && !a.name.equals(Const.nilReason)) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	protected boolean containsReference() {
+		for (Attribute a : this.itsAttr) {
+			if (a.getTypeName().equals(
+					Const.hrefType) /*
+					 * || a.getTypeName().equals(Const.anyURI)
+					 */) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

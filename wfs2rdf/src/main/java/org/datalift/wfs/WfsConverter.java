@@ -36,10 +36,6 @@ import static org.datalift.fwk.util.TimeUtils.asSeconds;
 import fr.ign.datalift.model.FeatureProperty;
 import fr.ign.datalift.model.GeometryProperty;
 
-
-
-
-
 public class WfsConverter {
 
 	private final static Logger log = Logger.getLogger();

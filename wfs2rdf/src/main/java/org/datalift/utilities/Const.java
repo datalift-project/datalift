@@ -2,7 +2,6 @@ package org.datalift.utilities;
 
 import static javax.xml.XMLConstants.W3C_XML_SCHEMA_NS_URI;
 
-import javax.xml.XMLConstants;
 import javax.xml.namespace.QName;
 
 public class Const {
@@ -32,6 +31,7 @@ public class Const {
 	public final static  QName PointPropertyType= new QName("http://www.opengis.net/gml/3.2","PointPropertyType");
 	public final static  QName positiveInteger= new QName(W3C_XML_SCHEMA_NS_URI,"positiveInteger");
 	public final static  QName DirectPositionType= new QName("http://www.opengis.net/gml/3.2","DirectPositionType");
+	public final static QName timePosition= new QName("http://www.opengis.net/gml/3.2","timePosition");
 	public final static  QName TimePositionType= new QName("http://www.opengis.net/gml/3.2","TimePositionType");
 	public final static QName PointType= new QName("http://www.opengis.net/gml/3.2","PointType");
 	public final static QName NetworkFacilityType= new QName("http://inspire.ec.europa.eu/schemas/ef/4.0","NetworkFacilityType");
@@ -220,6 +220,9 @@ public class Const {
 	public final static QName wmlValue= new QName("http://www.opengis.net/waterml/2.0","value");
 	public final static QName MeasureType= new QName("http://www.opengis.net/waterml/2.0","MeasureType");
 	public final static QName UomSymbol= new QName("http://www.opengis.net/swe/2.0","UomSymbol");
+	
+	
+
 
 	/******final exception****/
 	public final static QName exception= new QName("http://schemas.opengis.net/ows/1.1.0/owsExceptionReport.xsd","Exception");

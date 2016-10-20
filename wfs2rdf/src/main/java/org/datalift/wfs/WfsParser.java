@@ -36,25 +36,20 @@ import fr.ign.datalift.model.AbstractFeature;
 import fr.ign.datalift.model.FeatureProperty;
 import fr.ign.datalift.model.GeometryProperty;
 
-
-
-
 public class WfsParser {
 
 	private final static Map<String,DataStore> cache = new HashMap<String, DataStore>();	//SimpleCache
 	private final static Logger log = Logger.getLogger();
+	private final String bodyRequest="?service=wfs&request=getCapabilities&version=";
 	private String ftCrs;
 	private DataStore dataStore;
 	private String version;
 	private final Charset UTF8_CHARSET = Charset.forName("UTF-8");
 
-	public WfsParser() {
-	}
-
 	public WfsParser(String url, String version, String serverTypeStrategy )
 	{
 		this.version=version;
-		String getCapabilities = url+"?service=wfs&request=getCapabilities&version="+version;
+		String getCapabilities = url+bodyRequest+version;
 		String cacheKey = getCapabilities;
 		if(!version.equals("2.0.0")) {
 			cacheKey += "/" + serverTypeStrategy;
@@ -63,9 +58,9 @@ public class WfsParser {
 		if (ds == null) {
 			Map<Object, Object> connectionParameters = new HashMap<>();
 			connectionParameters.put("WFSDataStoreFactory:GET_CAPABILITIES_URL", getCapabilities );
-			connectionParameters.put("WFSDataStoreFactory:WFSDataStoreFactory:TIMEOUT",900000000);
+			connectionParameters.put("WFSDataStoreFactory:TIMEOUT",900000000);
 			connectionParameters.put("WFSDataStoreFactory:ENCODING","UTF-8");
-			if(!version.equals("2.0.0") && !serverTypeStrategy.equals("autre"))
+			if(!serverTypeStrategy.equals("autre"))
 				connectionParameters.put("WFSDataStoreFactory:WFS_STRATEGY", serverTypeStrategy); // if not specified for a mapserver => error: noxsdelement declaration found for {http://www.opengis.net/wfs}REM_NAPPE_SEDIM
 			// initialisation - connection
 			try {

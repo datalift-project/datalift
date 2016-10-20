@@ -2,6 +2,7 @@ package org.datalift.wfs.wfs2.mapping;
 
 import javax.xml.namespace.QName;
 
+import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 
 import fr.ign.datalift.constants.GeoSPARQL;
@@ -29,5 +30,45 @@ public class GeomMapper extends BaseMapper{
 
 		ctx.model.add(ctx.vf.createStatement(geomType, ctx.vf.createURI(ctx.nsGeoSparql+"asWKT"), ctx.vf.createLiteral("<" + crs + "> " + cf.vividgeom.toString(),GeoSPARQL.WKTLITERAL)));
 
+	}
+
+	@Override
+	protected void mapGeometryIfAny(ComplexFeature cf, Context ctx) {
+		mapGeometryProperty(cf,ctx);
+	}
+
+	@Override
+	protected void addParentLinkStatements(ComplexFeature cf, Context ctx) {
+		return;
+	}
+
+	@Override
+	protected void addRdfTypes(ComplexFeature cf, Context ctx) {
+		return;
+	}
+
+	@Override
+	protected void mapFeatureSimpleAttributes(ComplexFeature cf, Context ctx, Resource toLinkWith) {
+		return;
+	}
+
+	@Override
+	protected void mapComplexChildren(ComplexFeature cf, Context ctx) {
+		return;
+	}
+
+	@Override
+	protected void mapWithParent(ComplexFeature cf, Context ctx) {
+		return;
+	}
+
+	@Override
+	protected void mapFeatureSimpleValue(ComplexFeature cf, Context ctx) {
+		return;
+	}
+
+	@Override
+	protected void addParentSimpleLinkStatements(ComplexFeature cf, Context ctx) {
+		return;
 	}
 }

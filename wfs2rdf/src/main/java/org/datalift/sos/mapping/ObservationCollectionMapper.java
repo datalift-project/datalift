@@ -32,8 +32,8 @@ public class ObservationCollectionMapper extends BaseMapper {
 				}
 				if(f.name.equals(Const.resultTime))
 				{
-					//map directly just as for observationMember
-					this.mapTimeResult(cf.getId(), cf,ctx);
+					//map directly just like for observationMember
+					this.mapTimeResult(cf.getId(), f,ctx);
 					mapped=true;
 				}
 				if(!mapped)
@@ -65,9 +65,14 @@ public class ObservationCollectionMapper extends BaseMapper {
 	 * @param cf the feature representing the simpleMeasure
 	 * @param ctx the context object
 	 */
-	private void mapTimeResult(Resource subjectURI, ComplexFeature cf, Context ctx) {
+	private void mapTimeResult(Resource subjectURI, ComplexFeature f, Context ctx) {
 		//first of all, let extract the time of the measure
-		String str_time=cf.getAttributeValue(Const.wmlTime);
+		ComplexFeature timePosition=f.findChildByType(Const.TimePositionType);
+		String str_time=null;
+		if(f!=null)
+		{
+			str_time=timePosition.value;
+		}
 		if(Helper.isSet(str_time))
 		{
 			XMLGregorianCalendar v=Helper.getDate(str_time);	

@@ -24,6 +24,7 @@ public class Attribute {
 	public QName getTypeName()
 	{	
 		XSTypeDefinition type=attrType;
+		if(type==null) System.out.println(this.name);
 		
 		if(type.getName()!=null) return new QName(type.getNamespace(),type.getName());
 		while (type.getName()==null)

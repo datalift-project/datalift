@@ -21,10 +21,10 @@ public class ObservationPropertyTypeMapper extends BaseMapper {
 		}
 		else 
 		{
-			subjectURI=ctx.DefaultSubjectURI;
+			subjectURI=Context.DefaultSubjectURI;
 		}
 		/****add the parentlinked statement****/
-	   ctx.model.add(ctx.vf.createStatement(subjectURI, ctx.vf.createURI(ctx.nsDatalift+cf.name.getLocalPart()), cf.getId()));	
+	   ctx.model.add(ctx.vf.createStatement(subjectURI, ctx.vf.createURI(Context.nsDatalift+cf.name.getLocalPart()), cf.getId()));	
 	}
 
 	@Override
@@ -43,8 +43,8 @@ public class ObservationPropertyTypeMapper extends BaseMapper {
 	}
 	@Override
 	protected void addRdfTypes(ComplexFeature cf, Context ctx) {
-		ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(ctx.nsDatalift+Helper.capitalize(ctx.referencedObjectType.getLocalPart()))));
-		ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(ctx.nsOml+ctx.observationType.getLocalPart())));
+		ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(Context.nsDatalift+Helper.capitalize(Context.referencedObjectType.getLocalPart()))));
+		ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(Context.nsOml+Context.observationType.getLocalPart())));
 	}
 	@Override
 	protected void setCfId(ComplexFeature cf, Context ctx) {
@@ -56,16 +56,16 @@ public class ObservationPropertyTypeMapper extends BaseMapper {
 				alreadyLinked=true;
 				return;
 			}
-		if(isReferencedObject(cf))
+		if(cf.isReferencedObject())
 		{
-			QName type=ctx.referencedObjectType;//Const.ReferenceType;
+			QName type=Context.referencedObjectType;//Const.ReferenceType;
 			count =ctx.getInstanceOccurences(type);
-			os=ctx.vf.createURI(ctx.nsProject+type.getLocalPart()+"_"+count);
+			os=ctx.vf.createURI(Context.nsProject+type.getLocalPart()+"_"+count);
 		}
 		else
 		{
 			count=ctx.getInstanceOccurences(new QName("","Observation"));
-			os=ctx.vf.createURI(ctx.nsProject+"Observation_"+count);
+			os=ctx.vf.createURI(Context.nsProject+"Observation_"+count);
 		}
 		
 		cf.setId(os);

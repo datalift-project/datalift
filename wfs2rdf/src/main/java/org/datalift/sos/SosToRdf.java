@@ -68,8 +68,6 @@ import com.google.gson.JsonParser;
 @Path(SosToRdf.MODULE_NAME)
 public class SosToRdf extends BaseConverterModule {
 
-
-
 		//-------------------------------------------------------------------------
 		// Class members
 		//-------------------------------------------------------------------------
@@ -122,6 +120,14 @@ public class SosToRdf extends BaseConverterModule {
 
 		}
 		
+		@GET
+		@Path("/fake")
+		@Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
+		public String getModifyTable(@QueryParam("project") URI projectId) {
+
+			return "ok";
+
+		}
 
 		/**
 		 * 
@@ -148,9 +154,14 @@ public class SosToRdf extends BaseConverterModule {
 			}
 			TemplateModel view = this.newView("availableObservations.vm", p);
 			view.put("source", sourceId);
-			List<ObservationMetaData> observationOffering=null;
+			List<ObservationMetaData> observationOffering=new ArrayList<>();
 			try {
 				observationOffering=this.getObservationOffering(src.getSourceUrl(),src.getVersion());
+				
+//				ObservationMetaData e=new ObservationMetaData();
+//				e.setIdentifier("identifier");
+//				e.setDescription("description");
+//				observationOffering.add(e);
 				if(observationOffering!=null)
 				{
 					view.put("observationsOffering",observationOffering);
@@ -207,7 +218,7 @@ public class SosToRdf extends BaseConverterModule {
 					String id = obj.get("id").getAsString();
 					String begin = obj.get("begin").getAsString();
 					String end = obj.get("end").getAsString();
-					String format = obj.get("format").getAsString();
+					//String format = obj.get("format").getAsString();
 					
 					String potentialtargetGraph=s.getUri()+"/"+id;
 					int countGraph=getOccurenceGraph(p, potentialtargetGraph);
@@ -217,7 +228,7 @@ public class SosToRdf extends BaseConverterModule {
 					String targetType=id+"-sos";
 					String destination_title=id+"(RDF# )"+countGraph; //count to be added later
 					try {
-						boolean done=convertObservations2Rdf(projectUri,s, destination_title, targetGraph, baseUri, targetType,id,begin, end, format, optionOntology);
+						boolean done=convertObservations2Rdf(projectUri,s, destination_title, targetGraph, baseUri, targetType,id,begin, end, null, optionOntology);
 						if(!done)
 						{
 							throw new Exception();
@@ -243,9 +254,7 @@ public class SosToRdf extends BaseConverterModule {
 			} 
 			}
 			return response;
-		}
-
-		
+		}	
 		private boolean convertObservations2Rdf(URI projectUri, SosSource s, String destination_title, URI targetGraph,
 				URI baseUri, String targetType, String id,  String begin, String end, String format, int optionOntology) throws SAXException, ParserConfigurationException {
 			try {
@@ -332,8 +341,6 @@ public class SosToRdf extends BaseConverterModule {
 		{
 			return 0;
 		}
-		
-
 	}
 	private boolean isSet(String s)
 	{
@@ -341,8 +348,4 @@ public class SosToRdf extends BaseConverterModule {
 		return true;
 	}
 
-
-
-	
-	
 }

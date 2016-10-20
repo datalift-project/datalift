@@ -1,10 +1,7 @@
 package org.datalift.sos.mapping;
 
-import javax.xml.namespace.QName;
-
 import org.datalift.model.Attribute;
 import org.datalift.model.ComplexFeature;
-import org.datalift.utilities.Const;
 import org.datalift.utilities.Context;
 import org.datalift.wfs.wfs2.mapping.BaseMapper;
 

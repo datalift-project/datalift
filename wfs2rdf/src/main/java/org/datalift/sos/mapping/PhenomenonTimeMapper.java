@@ -74,7 +74,7 @@ public class PhenomenonTimeMapper extends BaseMapper {
 		String id=cf.getAttributeValue(Const.identifier);
 		if(id==null)
 		{
-			if(isReferencedObject(cf))
+			if(cf.isReferencedObject())
 			{
 				QName type=Context.referencedObjectType;//Const.ReferenceType;
 				count =ctx.getInstanceOccurences(type);

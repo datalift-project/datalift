@@ -14,22 +14,20 @@ import org.openrdf.model.Resource;
 public class ReferenceTypeMapper extends BaseMapper{
 
 	@Override
-	public void map(ComplexFeature cf, Context ctx) {
-		//Here we customize the mapping of some specific features which have as a type : xsd:referenceType
+	protected boolean handleSpecificReferenceType(ComplexFeature cf, Context ctx) {
 		if(isCodeList(cf,ctx))
 		{
-			ctx.getMapper(Const.inspireCodeList).map(cf, ctx);	
+			ctx.getMapper(Const.inspireCodeList).map(cf, ctx);
+			return true;
 		}
 		if(isSosObservedProperty(cf,ctx))
 		{
 			ctx.getMapper(Const.observedProperty).map(cf, ctx);	
-		}
-		else
-		{
-			super.map(cf, ctx);
-		}
+			return true;
+		}	
+		return false;
 	}
-
+	
 	private boolean isSosObservedProperty(ComplexFeature cf, Context ctx) {
 		if(cf.name.equals(Const.observedProperty))
 		{
@@ -54,7 +52,6 @@ public class ReferenceTypeMapper extends BaseMapper{
 
 	@Override
 	protected void addParentLinkStatements(ComplexFeature cf, Context ctx) {
-		// TODO Auto-generated method stub
 		if(cf.getTypeName().equals(Const.OM_ObservationPropertyType))
 		{
 			Resource subjectURI;
@@ -64,10 +61,10 @@ public class ReferenceTypeMapper extends BaseMapper{
 			}
 			else 
 			{
-				subjectURI=ctx.DefaultSubjectURI;
+				subjectURI=Context.DefaultSubjectURI;
 			}
 			/****add the parentlinked statement****/
-			ctx.model.add(ctx.vf.createStatement(subjectURI, ctx.vf.createURI(ctx.nsDatalift+cf.name.getLocalPart()), cf.getId()));
+			ctx.model.add(ctx.vf.createStatement(subjectURI, ctx.vf.createURI(Context.nsDatalift+cf.name.getLocalPart()), cf.getId()));
 		}
 		else
 		{

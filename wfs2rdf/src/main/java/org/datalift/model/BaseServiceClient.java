@@ -15,7 +15,6 @@ public abstract class BaseServiceClient {
 		protected GMLParser32 parser;
 		protected  String serviceType;
 		public BaseServiceClient(String sourceUrl) {
-			// TODO Auto-generated constructor stub	
 			baseUrl=sourceUrl;
 			parser=new GMLParser32();
 		}

@@ -35,7 +35,7 @@ public class BaseMapper implements Mapper {
 		// create a generic id
 		String id = cf.getAttributeValue(Const.identifier);
 		if (id == null) {
-			if (isReferencedObject(cf)) {
+			if (cf.isReferencedObject()) {
 				QName type = Context.referencedObjectType;// Const.ReferenceType;
 				count = ctx.getInstanceOccurences(type);
 				os = ctx.vf.createURI(Context.nsProject + type.getLocalPart() + "_" + count);
@@ -74,7 +74,7 @@ public class BaseMapper implements Mapper {
 	protected void addRdfTypes(ComplexFeature cf, Context ctx) {
 		ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI,
 				ctx.vf.createURI(Context.nsDatalift + Helper.capitalize(cf.name.getLocalPart()))));
-		if (isReferencedObject(cf)) {
+		if (cf.isReferencedObject()) {
 			ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI,
 					ctx.vf.createURI(Context.nsDatalift + Helper.capitalize(Context.referencedObjectType.getLocalPart()))));
 		}
@@ -101,8 +101,8 @@ public class BaseMapper implements Mapper {
 	}
 
 	/**
-	 * an itermidiate feature is a feature with no simple attributes and only
-	 * one complexe feature exp. <toto> <titi>... </toto> is an intermediate
+	 * an intermediate feature is a feature with no simple attributes and only
+	 * one complex feature exp. <toto> <titi>... </toto> is an intermediate
 	 * feature this method is designed' to be used to test if a feature worth to
 	 * be mapped or not
 	 * 
@@ -112,6 +112,10 @@ public class BaseMapper implements Mapper {
 	 */
 	protected boolean isIntermediateFeature(ComplexFeature cf) {
 		int nbr_cf_found = 0;
+		if(Helper.isSet(cf.value))
+		{
+			return false;
+		}
 		for (Attribute a : cf.itsAttr) {
 			if (a instanceof ComplexFeature) {
 				nbr_cf_found++;
@@ -126,48 +130,23 @@ public class BaseMapper implements Mapper {
 		return true;
 	}
 
-	protected boolean containsReference(ComplexFeature cf) {
-		for (Attribute a : cf.itsAttr) {
-			if (a.getTypeName().equals(
-					Const.hrefType) /*
-					 * || a.getTypeName().equals(Const.anyURI)
-					 */) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	/**
-	 * a referenced object is an xml element which contains a reference (URI,
-	 * href) and at least one other "util" attribute (id, title...)
-	 * 
-	 * @param cf
-	 * @return
-	 */
-	protected boolean isReferencedObject(ComplexFeature cf) {
-		if (!containsReference(cf)) {
-			return false;
-		}
-		for (Attribute a : cf.itsAttr) {
-			if (!a.getTypeName().equals(Const.hrefType) && !a.getTypeName().equals(Const.anyURI)
-					&& !a.name.equals(Const.type) && !a.name.equals(Const.owns) && !a.name.equals(SosConst.frame)
-					&& !a.name.equals(Const.nil) && !a.name.equals(Const.nilReason)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
 	public void map(ComplexFeature cf, Context ctx) {
-
 		boolean found=false;
-		if(cf.name.getLocalPart().equals("NamedValue"))
+		if(cf.name.getLocalPart().equals("purpose"))
 			found=true;
 		if (ignore(cf)) {
 			return;
 		}
+		if(this.handleSpecificReferenceType(cf,ctx))
+		{
+			return;
+		}
 		this.setCfId(cf, ctx);
+		if(isIntermediateFeature(cf))
+		{
+			this.mapAsIntermediate(cf,ctx);
+			return;
+		}
 		this.mapWithParent(cf,ctx);
 		this.rememberGmlId(cf, ctx);
 		if(!cf.isSimple())
@@ -180,8 +159,41 @@ public class BaseMapper implements Mapper {
 		{
 			this.mapFeatureSimpleAttributes(cf, ctx, null);
 			this.mapFeatureSimpleValue(cf,ctx);
-
 		}
+	}
+
+	protected boolean handleSpecificReferenceType(ComplexFeature cf, Context ctx) {
+		return false;
+	}
+
+	protected void mapAsIntermediate(ComplexFeature cf, Context ctx) {
+		for (Attribute a : cf.itsAttr) {
+			if (a instanceof ComplexFeature) {
+				ComplexFeature f = (ComplexFeature)a;
+				//exceptionnellement ici!!
+				setCfId(f,ctx);
+				addChildLinkedStatement(cf,f,ctx);		
+				this.rememberGmlId(cf,ctx);
+				//insert type of f if f will not be mappedwith basic mapper
+				if(cf.name.equals(Const.omResult))
+				{
+					ctx.getMapper(Const.omResult).map(cf, ctx);
+				}
+				else
+				{
+					ctx.getMapper(f.getTypeName()).map(f, ctx);
+				}
+			}
+		}
+	}
+	/**
+	 * inserts special predicate whish links directely the current feature with its child : the shortcut
+	 * @param cf : the current feature = behaves like the father
+	 * @param f : the feature son whish will be used to linked to
+	 * @param ctx
+	 */
+	protected void addChildLinkedStatement(ComplexFeature cf, ComplexFeature f, Context ctx) {
+		ctx.model.add(ctx.vf.createStatement(cf.getParent().getId(), ctx.vf.createURI(Context.nsDatalift+cf.name.getLocalPart()), f.getId()));
 	}
 
 	protected void mapGeometryIfAny(ComplexFeature cf, Context ctx) {

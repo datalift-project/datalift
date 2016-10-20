@@ -13,5 +13,6 @@ public class MyGeometry {
 	public MyGeometry()
 	{
 		isEmpty=true;
+		dimension=2;
 	}
 }

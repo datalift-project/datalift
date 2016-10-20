@@ -7,6 +7,7 @@ import java.util.Stack;
 import javax.xml.namespace.QName;
 import javax.xml.parsers.SAXParser;
 
+import org.apache.xerces.impl.xs.XSComplexTypeDecl;
 import org.apache.xerces.xs.AttributePSVI;
 import org.apache.xerces.xs.ElementPSVI;
 import org.apache.xerces.xs.PSVIProvider;
@@ -18,6 +19,7 @@ import org.datalift.model.Feature;
 import org.datalift.model.Attribute;
 import org.datalift.model.MyGeometry;
 import org.datalift.utilities.Const;
+import org.datalift.utilities.Helper;
 import org.geotools.factory.Hints;
 import org.geotools.geometry.jts.JTS;
 import org.geotools.geometry.jts.JTSFactoryFinder;
@@ -82,6 +84,7 @@ public class GeoHandler  extends DefaultHandler{
 			}
 		}
 		tmp.attrType=td;
+		String explicitType="";
 		for (int i=0;i<attributes.getLength();i++)
 		{
 			Attribute a=new Attribute();
@@ -94,10 +97,24 @@ public class GeoHandler  extends DefaultHandler{
 			f.typeTitle=psvia.getAttributeDeclaration().getTypeDefinition().getName();
 			a.attrType=mtd;
 			tmp.itsAttr.add(a);
+    		if(a.name.equals(Const.explicitType))
+    		{			
+    			explicitType=a.value;
+    			explicitType=explicitType.substring(explicitType.indexOf(":")+1);
+    		}
+    		if(Helper.isSet(explicitType)) //override the type of the feature with the explicite type
+        	{
+        		final String newType = explicitType;
+            	XSTypeDefinition t = new XSComplexTypeDecl() {
+            		@Override
+            		public String getName() { return newType; }
+            	};
+            	tmp.attrType=t;
+        	}
 		}
 		if(tmp.attrType.getName()!=null)
 		{
-			if(tmp.getTypeName().equals(Const.GeometryPropertyType) || fExpliciteType.equals(Const.GeometryPropertyType.getLocalPart())
+			if(tmp.getTypeName().equals(Const.GeometryPropertyType) || tmp.getTypeName().getLocalPart().equals(Const.GeometryPropertyType.getLocalPart())
 					||tmp.getTypeName().equals(Const.PointPropertyType) || tmp.getTypeName().equals(Const.CurvePropertyType) 
 					|| tmp.getTypeName().equals(Const.MultiSurfacePropertyType))
 			{
