@@ -655,7 +655,6 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
      *
      * @return the list of persistent classes.
      */
-    @SuppressWarnings("unchecked")
     private Collection<Class<?>> getPersistentClasses() {
         // Use intermediate collection to bypass generics typing issue
         // with the compiler-computed return type of Arrays.asList().
