@@ -1,6 +1,6 @@
 /*
- * Copyright / EURECOM 2013
- * Contributor(s) : G. Atemezing, R. Troncy
+ * Copyright / Copr. 2010-2013  - EURECOM -  for the DataLift project
+ * Contributor(s) : Ghislain Atemezing, Raphaël Troncy
  *
  * Contact: atemezin@eurecom.fr
  *

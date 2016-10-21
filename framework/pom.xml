@@ -8,7 +8,7 @@
   <parent>
     <groupId>org.datalift</groupId>
     <artifactId>datalift-parent</artifactId>
-    <version>0.9.1-beta-1</version>
+    <version>0.9.2-b1</version>
   </parent>
   <artifactId>datalift-framework</artifactId>
   <packaging>jar</packaging>
@@ -35,7 +35,7 @@
       <exclusions>
         <exclusion>
           <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-api</artifactId>
+          <artifactId>*</artifactId>
         </exclusion>
         <exclusion>
           <groupId>org.openrdf.sesame</groupId>
@@ -94,8 +94,8 @@
       <version>${slf4j.api.version}</version>
       <exclusions>
         <exclusion>
-          <artifactId>log4j</artifactId>
           <groupId>log4j</groupId>
+          <artifactId>*</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -121,6 +121,7 @@
 
   <build>
     <sourceDirectory>src/java</sourceDirectory>
+    <!-- Resources in src/web are handled by Core module POM. -->
     <testSourceDirectory>tests/src/java</testSourceDirectory>
   </build>
 

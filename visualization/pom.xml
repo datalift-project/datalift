@@ -10,10 +10,10 @@
     <artifactId>datalift-parent</artifactId>
     <version>0.9.2-b1</version>
   </parent>
-  <artifactId>datalift-simple-converters</artifactId>
+  <artifactId>datalift-visualization</artifactId>
   <packaging>jar</packaging>
 
-  <name>Base RDF Converters</name>
+  <name>Source Visualization module for DataLift</name>
 
   <dependencies>
     <!-- Datalift dependencies -->
@@ -22,39 +22,6 @@
       <artifactId>datalift-framework</artifactId>
       <version>${project.version}</version>
     </dependency>
-    <!-- OpenRDF Sesame dependencies -->
-    <dependency>
-      <groupId>org.openrdf.sesame</groupId>
-      <artifactId>sesame-rio-rdfxml</artifactId>
-      <version>${sesame.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-api</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.openrdf.sesame</groupId>
-          <artifactId>sesame-sail-rdbms</artifactId>
-        </exclusion>
-        <!-- Exclude outdated dependencies for Jackson JSON library. -->
-        <exclusion>
-          <groupId>com.fasterxml.jackson.core</groupId>
-          <artifactId>jackson-core</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <!-- OpenCSV dependencies -->
-    <dependency>
-      <groupId>net.sf.opencsv</groupId>
-      <artifactId>opencsv</artifactId>
-      <version>${opencsv.version}</version>
-    </dependency>
-    <!-- XSLT processor: use Java default processor. -->
-    <!-- dependency>
-      <groupId>saxon</groupId>
-      <artifactId>saxon</artifactId>
-      <version>6.5.3</version>
-    </dependency -->
   </dependencies>
 
   <build>
@@ -81,10 +48,6 @@
           <include>**/*.properties</include>
         </includes>
       </resource>
-      <resource>
-        <directory>src/resources</directory>
-        <filtering>false</filtering>
-      </resource>
     </resources>
 
     <plugins>
@@ -95,7 +58,7 @@
         <executions>
           <execution>
             <id>copy-file</id>
-            <phase>generate-sources</phase>
+            <phase>process-resources</phase>
             <goals>
               <goal>copy</goal>
             </goals>

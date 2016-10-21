@@ -8,7 +8,7 @@
   <parent>
     <groupId>org.datalift</groupId>
     <artifactId>datalift-parent</artifactId>
-    <version>0.9.1-beta-1</version>
+    <version>0.9.2-b1</version>
   </parent>
   <artifactId>datalift-core</artifactId>
   <packaging>war</packaging>
@@ -138,15 +138,7 @@
         </exclusion>
         <exclusion>
           <groupId>org.apache.struts</groupId>
-          <artifactId>struts-core</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.struts</groupId>
-          <artifactId>struts-tiles</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.struts</groupId>
-          <artifactId>struts-taglib</artifactId>
+          <artifactId>*</artifactId>
         </exclusion>
         <exclusion>
           <groupId>javax.servlet</groupId>
@@ -174,13 +166,26 @@
     </dependency>
     <!-- WRO4J : Web Resources Optimization -->
     <dependency>
+        <groupId>commons-io</groupId>
+        <artifactId>commons-io</artifactId>
+        <version>${commons-io.version}</version>
+    </dependency>
+    <dependency>
       <groupId>ro.isdc.wro4j</groupId>
       <artifactId>wro4j-extensions</artifactId>
       <version>${wro4j.version}</version>
       <exclusions>
         <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+        <exclusion>
           <groupId>commons-pool</groupId>
           <artifactId>commons-pool</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>commons-io</groupId>
+          <artifactId>commons-io</artifactId>
         </exclusion>
         <exclusion>
           <groupId>com.google.code.gson</groupId>
@@ -226,27 +231,29 @@
   </dependencies>
 
   <build>
-    <sourceDirectory>${basedir}/src/java</sourceDirectory>
+    <sourceDirectory>src/java</sourceDirectory>
     <resources>
       <resource>
-        <directory>${basedir}/src/java</directory>
+        <directory>src/java</directory>
+        <filtering>false</filtering>
         <excludes>
           <exclude>**/*.java</exclude>
         </excludes>
       </resource>
       <resource>
-        <directory>${basedir}/conf</directory>
+        <directory>conf</directory>
         <excludes>
           <exclude>datalift/**</exclude>
           <exclude>web.xml</exclude>
           <exclude>wro.*</exclude>
         </excludes>
       </resource>
+      <!-- Resources in src/web are handled by Maven WAR plug-in below. -->
     </resources>
-    <testSourceDirectory>${basedir}/tests/src/java</testSourceDirectory>
+    <testSourceDirectory>tests/src/java</testSourceDirectory>
     <testResources>
       <testResource>
-        <directory>${basedir}/tests/conf</directory>
+        <directory>tests/conf</directory>
       </testResource>
     </testResources>
 
@@ -258,13 +265,24 @@
         <executions>
           <execution>
             <id>copy-file</id>
-            <phase>generate-sources</phase>
+            <phase>process-resources</phase>
             <goals>
               <goal>copy</goal>
             </goals>
             <configuration>
               <sourceFile>src/web/WEB-INF/templates/core/resources_${locale.default}.properties</sourceFile>
               <destinationFile>${project.build.directory}/${project.build.finalName}/WEB-INF/templates/core/resources.properties</destinationFile>
+            </configuration>
+          </execution>
+          <execution>
+            <id>rename-war</id>
+            <phase>install</phase>
+            <goals>
+              <goal>copy</goal>
+            </goals>
+            <configuration>
+              <sourceFile>${project.build.directory}/${project.artifactId}-${project.version}.war</sourceFile>
+              <destinationFile>${project.build.directory}/datalift.war</destinationFile>
             </configuration>
           </execution>
         </executions>
@@ -280,7 +298,7 @@
           <fileNameMapping>no-version</fileNameMapping>
           <webResources>
             <resource>
-              <directory>${basedir}/conf</directory>
+              <directory>conf</directory>
               <includes>
                 <include>web.xml</include>
                 <include>wro.*</include>
@@ -289,7 +307,7 @@
               <filtering>true</filtering>
             </resource>
             <resource>
-              <directory>${basedir}/src/web</directory>
+              <directory>src/web</directory>
               <filtering>false</filtering>
             </resource>
             <resource>
@@ -300,27 +318,7 @@
           <failOnMissingWebXml>false</failOnMissingWebXml>
         </configuration>
       </plugin>
-
-      <plugin>
-        <groupId>com.coderplus.maven.plugins</groupId>
-        <artifactId>copy-rename-maven-plugin</artifactId>
-        <version>1.0</version>
-        <executions>
-          <execution>
-            <id>rename-war</id>
-            <phase>install</phase>
-            <goals>
-              <goal>copy</goal>
-            </goals>
-            <configuration>
-              <sourceFile>${project.build.directory}/${project.artifactId}-${project.version}.war</sourceFile>
-              <destinationFile>${project.build.directory}/datalift.war</destinationFile>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
     </plugins>
-
   </build>
 
 </project>

@@ -74,6 +74,7 @@ import static org.datalift.fwk.util.web.Charsets.UTF_8;
  *
  * @author hdevos
  */
+@SuppressWarnings("restriction")
 @Entity
 @RdfsClass("datalift:sqlSource")
 public class SqlQuerySourceImpl extends CachingSourceImpl implements SqlQuerySource
