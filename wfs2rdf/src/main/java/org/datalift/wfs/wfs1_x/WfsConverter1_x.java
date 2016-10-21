@@ -1,26 +1,15 @@
 package org.datalift.wfs.wfs1_x;
 
+import static org.datalift.fwk.util.PrimitiveUtils.wrap;
+import static org.datalift.fwk.util.TimeUtils.asSeconds;
+
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
-
-
-import fr.ign.datalift.model.AbstractFeature;
-
-import org.openrdf.repository.*;
-
-
-
-import org.openrdf.model.Statement;
-import org.openrdf.model.ValueFactory;
-import org.openrdf.model.vocabulary.RDF;
-import org.openrdf.repository.RepositoryConnection;
-import org.openrdf.repository.RepositoryException;
 import org.datalift.exceptions.TechnicalException;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.log.Logger;
-
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.rdf.UriCachingValueFactory;
@@ -28,11 +17,13 @@ import org.datalift.fwk.util.Env;
 import org.datalift.fwk.util.UriBuilder;
 import org.datalift.model.FeatureTypeDescription;
 import org.datalift.utilities.CreateGeoStatement;
+import org.openrdf.model.Statement;
+import org.openrdf.model.ValueFactory;
+import org.openrdf.model.vocabulary.RDF;
+import org.openrdf.repository.RepositoryConnection;
+import org.openrdf.repository.RepositoryException;
 
-import static org.datalift.fwk.util.PrimitiveUtils.wrap;
-import static org.datalift.fwk.util.TimeUtils.asSeconds;
-
-
+import fr.ign.datalift.model.AbstractFeature;
 import fr.ign.datalift.model.FeatureProperty;
 import fr.ign.datalift.model.GeometryProperty;
 
@@ -351,10 +342,4 @@ public class WfsConverter1_x {
 		}	
 
 	}	
-
-	private void saveStatements(List<Statement> aboutAttributes, Repository target, URI targetGraph,
-			URI baseUri, String targetType)
-	{
-
-	}
 }

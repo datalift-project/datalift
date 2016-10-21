@@ -5,6 +5,7 @@ import javax.xml.namespace.QName;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
+import org.openrdf.rio.RDFHandlerException;
 import org.datalift.model.ComplexFeature;
 import org.datalift.utilities.Const;
 import org.datalift.utilities.Context;
@@ -16,18 +17,18 @@ public class CodeListMapper extends BaseMapper{
 	boolean clAlreadyDefined=false;
 	
 	@Override
-	protected void mapWithParent(ComplexFeature cf, Context ctx) {
+	protected void mapWithParent(ComplexFeature cf, Context ctx) throws RDFHandlerException {
 		if(!alreadyLinked)
 		{
 			super.mapWithParent(cf, ctx);
 		}
 	}
 	@Override
-	protected void mapAsIntermediate(ComplexFeature cf, Context ctx) {
-		return;
+	protected boolean mapAsIntermediate(ComplexFeature cf, Context ctx) {
+		return false;
 	}
 	@Override
-	protected void mapFeatureSimpleAttributes(ComplexFeature cf, Context ctx, Resource id) {
+	protected void mapFeatureSimpleAttributes(ComplexFeature cf, Context ctx, Resource id) throws RDFHandlerException {
 		if(!clAlreadyDefined && !cf.isSimple())
 		{
 			for (Attribute a : cf.itsAttr) {
@@ -36,13 +37,13 @@ public class CodeListMapper extends BaseMapper{
 
 					if(a.getTypeName().equals(Const.hrefType) || a.getTypeName().equals(Const.anyURI))
 					{
-						ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.vf.createURI(Context.nsRDFS+"isDefinedBy"), ctx.vf.createURI(a.value)));
+						ctx.model.handleStatement(ctx.vf.createStatement(cf.getId(), ctx.vf.createURI(Context.nsRDFS+"isDefinedBy"), ctx.vf.createURI(a.value)));
 
 					}
 					if(a.getTypeName().equals(Const.titleAttrType))
 					{
 						String value=a.value;
-						ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.vf.createURI(Context.nsSkos+"prefLabel"), ctx.vf.createLiteral(value)));
+						ctx.model.handleStatement(ctx.vf.createStatement(cf.getId(), ctx.vf.createURI(Context.nsSkos+"prefLabel"), ctx.vf.createLiteral(value)));
 					} 
 
 				}
@@ -77,34 +78,34 @@ public class CodeListMapper extends BaseMapper{
 		alreadyLinked=false;		
 	}
 	@Override
-	protected void mapComplexChildren(ComplexFeature cf, Context ctx) {
+	protected void mapComplexChildren(ComplexFeature cf, Context ctx) throws RDFHandlerException {
 		/////add the element as smod property
 		if(cf.name.equals(Const.purpose) || cf.name.equals(Const.specialisedEMFType)) //get litteral value embeded in the feature (especially the litteraal in title)
 		{
 			URI smodPredicate=ctx.vf.createURI(Context.nsSmod+cf.name.getLocalPart());
 			Value v=ctx.vf.createLiteral(cf.getLiteral());
-			ctx.model.add(ctx.vf.createStatement(cf.getParent().getId(), smodPredicate, v));
+			ctx.model.handleStatement(ctx.vf.createStatement(cf.getParent().getId(), smodPredicate, v));
 
 		}
 		if(cf.name.equals(Const.mediaMonitored))
 		{
 			URI smodPredicate=ctx.vf.createURI(Context.nsSmod+cf.name.getLocalPart());
 			Value v=ctx.vf.createURI(cf.getResource());
-			ctx.model.add(ctx.vf.createStatement(cf.getParent().getId(), smodPredicate, v));
+			ctx.model.handleStatement(ctx.vf.createStatement(cf.getParent().getId(), smodPredicate, v));
 		}
 	}
 	@Override
-	protected void mapFeatureSimpleValue(ComplexFeature cf, Context ctx) {
+	protected void mapFeatureSimpleValue(ComplexFeature cf, Context ctx) throws RDFHandlerException {
 		if(!clAlreadyDefined &&!cf.isSimple()){
 			super.mapFeatureSimpleValue(cf, ctx);
 		}
 
 	}
-	protected void addRdfTypes(ComplexFeature cf, Context ctx) {		
+	protected void addRdfTypes(ComplexFeature cf, Context ctx) throws RDFHandlerException {		
 		if(!clAlreadyDefined && !cf.isSimple())
 		{
-			ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(Context.nsDatalift+Helper.capitalize(cf.name.getLocalPart()))));
-			ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(Context.nsSkos+"Concept")));
+			ctx.model.handleStatement(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(Context.nsDatalift+Helper.capitalize(cf.name.getLocalPart()))));
+			ctx.model.handleStatement(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(Context.nsSkos+"Concept")));
 		}
 	}
 }

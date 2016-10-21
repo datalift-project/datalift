@@ -8,11 +8,12 @@ import org.datalift.utilities.Const;
 import org.datalift.utilities.Context;
 import org.datalift.wfs.wfs2.mapping.BaseMapper;
 import org.openrdf.model.Resource;
+import org.openrdf.rio.RDFHandlerException;
 
 public class PhenomenonTimeMapper extends BaseMapper {
 
 	@Override
-	protected void mapComplexChildren(ComplexFeature cf, Context ctx) {
+	protected void mapComplexChildren(ComplexFeature cf, Context ctx) throws RDFHandlerException {
 		for (Attribute a : cf.itsAttr) {
 			if (a instanceof ComplexFeature) {
 				ComplexFeature f = (ComplexFeature)a;
@@ -32,9 +33,10 @@ public class PhenomenonTimeMapper extends BaseMapper {
 	}
 	/**
 	 * link the timeperiod here as we want to skip phenomenonTime which is just an intermediate xml element 
+	 * @throws RDFHandlerException 
 	 */
 	@Override
-	protected void addParentLinkStatements(ComplexFeature cf, Context ctx) {
+	protected void addParentLinkStatements(ComplexFeature cf, Context ctx) throws RDFHandlerException {
 		Resource subjectURI;
 		ComplexFeature parent=cf.getParent();
 		if(parent!=null && parent.getParent()!=null)
@@ -53,7 +55,7 @@ public class PhenomenonTimeMapper extends BaseMapper {
 			subjectURI=Context.DefaultSubjectURI;
 		}
 		/****add the parentlinked statement****/
-		ctx.model.add(ctx.vf.createStatement(subjectURI, ctx.vf.createURI(Context.nsOml+"phenomenonTime"), cf.getId()));	
+		ctx.model.handleStatement(ctx.vf.createStatement(subjectURI, ctx.vf.createURI(Context.nsOml+"phenomenonTime"), cf.getId()));	
 	}
 
 	@Override

@@ -4,6 +4,7 @@ import org.datalift.model.ComplexFeature;
 import org.datalift.utilities.Const;
 import org.datalift.utilities.Context;
 import org.openrdf.model.Resource;
+import org.openrdf.rio.RDFHandlerException;
 /**
  * 
  * @author a631207*
@@ -14,7 +15,7 @@ import org.openrdf.model.Resource;
 public class ReferenceTypeMapper extends BaseMapper{
 
 	@Override
-	protected boolean handleSpecificReferenceType(ComplexFeature cf, Context ctx) {
+	protected boolean handleSpecificReferenceType(ComplexFeature cf, Context ctx) throws RDFHandlerException {
 		if(isCodeList(cf,ctx))
 		{
 			ctx.getMapper(Const.inspireCodeList).map(cf, ctx);
@@ -51,7 +52,7 @@ public class ReferenceTypeMapper extends BaseMapper{
 	}
 
 	@Override
-	protected void addParentLinkStatements(ComplexFeature cf, Context ctx) {
+	protected void addParentLinkStatements(ComplexFeature cf, Context ctx) throws RDFHandlerException {
 		if(cf.getTypeName().equals(Const.OM_ObservationPropertyType))
 		{
 			Resource subjectURI;
@@ -64,7 +65,7 @@ public class ReferenceTypeMapper extends BaseMapper{
 				subjectURI=Context.DefaultSubjectURI;
 			}
 			/****add the parentlinked statement****/
-			ctx.model.add(ctx.vf.createStatement(subjectURI, ctx.vf.createURI(Context.nsDatalift+cf.name.getLocalPart()), cf.getId()));
+			ctx.model.handleStatement(ctx.vf.createStatement(subjectURI, ctx.vf.createURI(Context.nsDatalift+cf.name.getLocalPart()), cf.getId()));
 		}
 		else
 		{

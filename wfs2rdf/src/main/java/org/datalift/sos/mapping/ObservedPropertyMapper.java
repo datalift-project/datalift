@@ -6,6 +6,7 @@ import org.datalift.utilities.Context;
 import org.datalift.utilities.Helper;
 import org.datalift.wfs.wfs2.mapping.BaseMapper;
 import org.openrdf.model.Resource;
+import org.openrdf.rio.RDFHandlerException;
 
 
 public class ObservedPropertyMapper extends BaseMapper {
@@ -26,7 +27,7 @@ public class ObservedPropertyMapper extends BaseMapper {
 	}
 
 	@Override
-	protected void mapWithParent(ComplexFeature cf, Context ctx) {
+	protected void mapWithParent(ComplexFeature cf, Context ctx) throws RDFHandlerException {
 		if(!alreadyLinked)
 		{
 			if(cf.isSimple())
@@ -45,13 +46,14 @@ public class ObservedPropertyMapper extends BaseMapper {
 	 * use case of this is <om:procedure xlink:href="urn:xxx"/>
 	 * @param cf
 	 * @param ctx
+	 * @throws RDFHandlerException 
 	 */
 	@Override
-	protected void addParentSimpleLinkStatements(ComplexFeature cf, Context ctx) {
+	protected void addParentSimpleLinkStatements(ComplexFeature cf, Context ctx) throws RDFHandlerException {
 		// first of all, look at the value of the feature. if any then try to create the triple with the value of one attribute 
 		if(Helper.isSet(cf.value))
 		{
-			mapTypedValue(cf.getParent().getId(), cf.value, cf.getTypeName(), cf.name, ctx.nsOml+"observedProperty", ctx);
+			mapTypedValue(cf.getParent().getId(), cf.value, cf.getTypeName(), cf.name, Context.nsOml+"observedProperty", ctx);
 			return;
 		}
 		this.mapFeatureSimpleAttributes(cf, ctx, cf.getParent().getId());		

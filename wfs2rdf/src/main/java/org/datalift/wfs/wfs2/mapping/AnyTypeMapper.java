@@ -5,11 +5,12 @@ import org.datalift.utilities.Const;
 import org.datalift.utilities.Context;
 import org.datalift.utilities.Helper;
 import org.openrdf.model.Resource;
+import org.openrdf.rio.RDFHandlerException;
 //exemple legal backgroun, broader
 public class AnyTypeMapper extends BaseMapper{
 
 	@Override
-	protected void addParentLinkStatements(ComplexFeature cf, Context ctx) {
+	protected void addParentLinkStatements(ComplexFeature cf, Context ctx) throws RDFHandlerException {
 		/****add the parentlinked statement****/
 		if(cf.name.equals(Const.belongsTo))
 		{
@@ -22,7 +23,7 @@ public class AnyTypeMapper extends BaseMapper{
 			{
 				subjectURI=Context.DefaultSubjectURI;
 			}
-			ctx.model.add(ctx.vf.createStatement(subjectURI, ctx.vf.createURI(Context.nsDatalift+cf.name.getLocalPart()), cf.getId()));			
+			ctx.model.handleStatement(ctx.vf.createStatement(subjectURI, ctx.vf.createURI(Context.nsDatalift+cf.name.getLocalPart()), cf.getId()));			
 		}
 		else
 		{
@@ -31,18 +32,18 @@ public class AnyTypeMapper extends BaseMapper{
 	}
 
 	@Override
-	protected void addRdfTypes(ComplexFeature cf, Context ctx) {
+	protected void addRdfTypes(ComplexFeature cf, Context ctx) throws RDFHandlerException {
 		if(!cf.isSimple())
 			{
 			if(cf.isReferencedObject())
 			{
-				ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(Context.nsDatalift+Helper.capitalize(Context.referencedObjectType.getLocalPart()))));
+				ctx.model.handleStatement(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(Context.nsDatalift+Helper.capitalize(Context.referencedObjectType.getLocalPart()))));
 				if(cf.name.equals(Const.belongsTo))
 				{
 					return;
 				}
 			}
-			ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(Context.nsDatalift+Helper.capitalize(cf.name.getLocalPart()))));
+			ctx.model.handleStatement(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(Context.nsDatalift+Helper.capitalize(cf.name.getLocalPart()))));
 
 			}
 			}

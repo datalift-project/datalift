@@ -1,7 +1,6 @@
 package org.datalift.webServiceConverter2;
 
 import java.io.FileNotFoundException;
-import java.net.URI;
 
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.model.Attribute;
@@ -22,15 +21,15 @@ import org.datalift.wfs.wfs2.mapping.Mapper;
 import org.datalift.wfs.wfs2.mapping.ObservationPropertyTypeMapper;
 import org.datalift.wfs.wfs2.mapping.ReferenceTypeMapper;
 import org.datalift.wfs.wfs2.mapping.TimePeriodMapper;
+import org.openrdf.model.URI;
 import org.openrdf.rio.RDFHandlerException;
 
 public class WFS2Converter {
-	
+
 	private Context ctx;
-	public WFS2Converter(int i)
-	{
-		ctx=new Context();
-		if(i==1) //we assume that 1 is the id to say we should use EMF group mappers
+	public WFS2Converter(int ontologyOption, Repository target, java.net.URI targetGraph) throws RDFHandlerException {
+		ctx=new Context( target, targetGraph);
+		if(ontologyOption==1) //we assume that 1 is the id to say we should use EMF group mappers
 		{
 			//ctx.mappers.put(Const.StringOrRefType, m);
 			ctx.mappers.put(Const.ReferenceType, new ReferenceTypeMapper());
@@ -41,7 +40,7 @@ public class WFS2Converter {
 			ctx.mappers.put(Const.AbstractMemberType,m2);
 			ctx.mappers.put(Const.OM_ObservationPropertyType,new ObservationPropertyTypeMapper());
 			ctx.mappers.put(Const.inspireCodeList,new CodeListMapper());
-			
+
 			//to be replaced later by a new bunch of mappers
 			ctx.mappers.put(Const.OM_ObservationType,new ObservationCollectionMapper());
 			ctx.mappers.put(Const.FeaturePropertyType,new FeatureOfInterestMapper());
@@ -50,15 +49,16 @@ public class WFS2Converter {
 			ctx.mappers.put(Const.omResult,new OmResultMapper());
 			ctx.mappers.put(Const.TimeObjectPropertyType,new PhenomenonTimeMapper());
 			ctx.mappers.put(Const.OM_ProcessPropertyType, new ProcedureMapper());
-		}
+		}	
 	}
-	public boolean ConvertFeaturesToRDF(ComplexFeature fc, org.datalift.fwk.rdf.Repository target , URI targetGraph, URI baseUri, String targetType) throws FileNotFoundException, RDFHandlerException
+	public boolean ConvertFeaturesToRDF(ComplexFeature fc) throws RDFHandlerException
 	{
 		//ctx.saver.initConnexion(target, targetGraph, baseUri, targetType);
 		if(fc.name.equals(Const.exception) || fc.name.equals(Const.exceptionReport))
 		{
 			return false;
 		}
+		ctx.model.startRDF();
 		for (Attribute a : fc.itsAttr) {
 			if(a instanceof ComplexFeature)
 			{
@@ -72,22 +72,23 @@ public class WFS2Converter {
 							ctx.getMapper(ef.getTypeName()).map(ef, ctx);
 							//flush model if needed
 							//ctx.saver.flush(this.ctx.model);		
-							StoreRDF();
-							storeRdfTS(target, targetGraph, baseUri, targetType);				
+							//StoreRDF();
+							//storeRdfTS(target, targetGraph, baseUri, targetType);				
 						}
 					}
 				}
 			}
 		}
+		ctx.model.endRDF();
 		return true;
 		//ctx.saver.close();
 	}
-	public void StoreRDF() throws FileNotFoundException, RDFHandlerException
-	{
-		this.ctx.exportTtl("C:/Users/A631207/Documents/my_resources/emf1.ttl");
-	}
+//	public void StoreRDF() throws FileNotFoundException, RDFHandlerException
+//	{
+//		this.ctx.exportTtl("C:/Users/A631207/Documents/my_resources/emf1.ttl");
+//	}
 	public void storeRdfTS(Repository target, URI targetGraph, URI baseUri, String targetType) throws FileNotFoundException, RDFHandlerException
 	{
-		this.ctx.exportTS(target, targetGraph, baseUri, targetType);
+		//this.ctx.exportTS(target, targetGraph, baseUri, targetType);
 	}
 }

@@ -1,6 +1,7 @@
 package org.datalift.wfs.wfs2.mapping;
 
 import org.openrdf.model.Resource;
+import org.openrdf.rio.RDFHandlerException;
 import org.datalift.model.Attribute;
 import org.datalift.model.ComplexFeature;
 import org.datalift.utilities.Context;
@@ -12,7 +13,7 @@ import javax.xml.namespace.QName;
 public class ObservationPropertyTypeMapper extends BaseMapper {
 
 	@Override
-	protected void addParentLinkStatements(ComplexFeature cf, Context ctx) {
+	protected void addParentLinkStatements(ComplexFeature cf, Context ctx) throws RDFHandlerException {
 
 		Resource subjectURI;
 		if(cf.getParent()!=null)
@@ -24,11 +25,11 @@ public class ObservationPropertyTypeMapper extends BaseMapper {
 			subjectURI=Context.DefaultSubjectURI;
 		}
 		/****add the parentlinked statement****/
-	   ctx.model.add(ctx.vf.createStatement(subjectURI, ctx.vf.createURI(Context.nsDatalift+cf.name.getLocalPart()), cf.getId()));	
+	   ctx.model.handleStatement(ctx.vf.createStatement(subjectURI, ctx.vf.createURI(Context.nsDatalift+cf.name.getLocalPart()), cf.getId()));	
 	}
 
 	@Override
-	protected void mapFeatureSimpleAttributes(ComplexFeature cf, Context ctx, Resource toLinkWith) {
+	protected void mapFeatureSimpleAttributes(ComplexFeature cf, Context ctx, Resource toLinkWith) throws RDFHandlerException {
 		if(!cf.isSimple())
 			{Resource id;
 		if (toLinkWith == null) {
@@ -43,11 +44,11 @@ public class ObservationPropertyTypeMapper extends BaseMapper {
 		}
 	}}
 	@Override
-	protected void addRdfTypes(ComplexFeature cf, Context ctx) {
+	protected void addRdfTypes(ComplexFeature cf, Context ctx) throws RDFHandlerException {
 		if(!cf.isSimple())
 			{
-			ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(Context.nsDatalift+Helper.capitalize(Context.referencedObjectType.getLocalPart()))));
-			ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(Context.nsOml+Context.observationType.getLocalPart())));
+			ctx.model.handleStatement(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(Context.nsDatalift+Helper.capitalize(Context.referencedObjectType.getLocalPart()))));
+			ctx.model.handleStatement(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(Context.nsOml+Context.observationType.getLocalPart())));
 			}
 		
 	}

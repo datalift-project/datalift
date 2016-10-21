@@ -424,17 +424,11 @@ public class Wfstordf extends BaseConverterModule{
 			{
 				return false;
 			}
+			org.datalift.fwk.rdf.Repository target = Configuration.getDefault().getInternalRepository();
 			//0: default converter
 			//1: EMF group Converter
-			WFS2Converter converter=new WFS2Converter(ontologyOption);
-
-			org.datalift.fwk.rdf.Repository target = Configuration.getDefault().getInternalRepository();
-			converter.ConvertFeaturesToRDF(featureCollectionToConvert,target , targetGraph, baseUri, targetType);
-			//converter.StoreRDF();
-			//converter.StoreRdfTS(target , targetGraph, baseUri, targetType);
-
-
-
+			WFS2Converter converter=new WFS2Converter(ontologyOption, target , targetGraph);
+			converter.ConvertFeaturesToRDF(featureCollectionToConvert);
 		} catch (IOException e) {
 			TechnicalException error = new TechnicalException("convertFeatureTypeFailed", e, typeName);
 			log.error(error.getMessage(), e);

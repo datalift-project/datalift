@@ -6,6 +6,7 @@ import org.datalift.utilities.Const;
 import org.datalift.utilities.Context;
 import org.datalift.wfs.wfs2.mapping.BaseMapper;
 import org.datalift.wfs.wfs2.mapping.Mapper;
+import org.openrdf.rio.RDFHandlerException;
 
 public class MeasurmentTimeSeriesMapper extends BaseMapper {
 
@@ -18,7 +19,7 @@ public class MeasurmentTimeSeriesMapper extends BaseMapper {
 		return;
 	}
 	@Override
-	protected void mapComplexChildren(ComplexFeature cf, Context ctx) {
+	protected void mapComplexChildren(ComplexFeature cf, Context ctx) throws RDFHandlerException {
 		for (Attribute a : cf.itsAttr) {
 			if (a instanceof ComplexFeature) {
 				ComplexFeature f = (ComplexFeature)a;
@@ -36,7 +37,6 @@ public class MeasurmentTimeSeriesMapper extends BaseMapper {
 		}
 	}
 	private void mapCommunMetaData(ComplexFeature f, Context ctx) {
-		// TODO Auto-generated method stub
 
 	}
 	/**
@@ -55,5 +55,9 @@ public class MeasurmentTimeSeriesMapper extends BaseMapper {
 				}
 			}
 		}
+	}
+	@Override
+	protected boolean mapAsIntermediate(ComplexFeature cf, Context ctx) throws RDFHandlerException {
+		return false;
 	}
 }

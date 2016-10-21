@@ -9,17 +9,18 @@ import org.datalift.utilities.Context;
 import org.datalift.wfs.wfs2.mapping.BaseMapper;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
+import org.openrdf.rio.RDFHandlerException;
 
 public class ObservationMemberMapper extends BaseMapper {
 	@Override
-	protected void addRdfTypes(ComplexFeature cf, Context ctx) {
+	protected void addRdfTypes(ComplexFeature cf, Context ctx) throws RDFHandlerException {
 		if(!cf.isSimple())
 			{URI typeSmodURI = ctx.vf.createURI(Context.nsOml+"Observation");
-		ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI,typeSmodURI));	
+		ctx.model.handleStatement(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI,typeSmodURI));	
 	}
 	}
 	@Override
-	protected void mapComplexChildren(ComplexFeature cf, Context ctx) {
+	protected void mapComplexChildren(ComplexFeature cf, Context ctx) throws RDFHandlerException {
 		for (Attribute a : cf.itsAttr) {
 			if (a instanceof ComplexFeature) {
 				ComplexFeature f = (ComplexFeature)a;
@@ -31,9 +32,12 @@ public class ObservationMemberMapper extends BaseMapper {
 			}
 		}
 	}
-
 	@Override
-	protected void mapWithParent(ComplexFeature cf, Context ctx) {
+	protected boolean mapAsIntermediate(ComplexFeature cf, Context ctx) throws RDFHandlerException {
+		return false;
+	}
+	@Override
+	protected void mapWithParent(ComplexFeature cf, Context ctx) throws RDFHandlerException {
 		if(!alreadyLinked)
 		{
 			if(cf.isSimple())
@@ -49,14 +53,14 @@ public class ObservationMemberMapper extends BaseMapper {
 
 	//here we want to link the current feature not with the parent but with the observationcollection 
 	@Override
-	protected void addParentLinkStatements(ComplexFeature cf, Context ctx) {
+	protected void addParentLinkStatements(ComplexFeature cf, Context ctx) throws RDFHandlerException {
 		Resource idCollection=cf.getIdTypedParent(Const.OM_ObservationPropertyType);
 		if(idCollection==null)
 		{
 			idCollection=Context.DefaultSubjectURI;
 		}
 		/****add the parentlinked statement****/
-		ctx.model.add(ctx.vf.createStatement(idCollection, ctx.vf.createURI(Context.nsOml+"member"), cf.getId()));
+		ctx.model.handleStatement(ctx.vf.createStatement(idCollection, ctx.vf.createURI(Context.nsOml+"member"), cf.getId()));
 	}
 	@Override
 	protected void setCfId(ComplexFeature cf, Context ctx) {

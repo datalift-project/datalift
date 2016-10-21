@@ -18,6 +18,7 @@ public class ComplexFeature extends Attribute{
 	public List <Attribute> itsAttr;
 	public MyGeometry geom;
 	public Geometry vividgeom;
+	public boolean isIntermediate=false;
 	public Point representativePoint;
 	private Resource id;
 	private ComplexFeature parent;

@@ -7,11 +7,12 @@ import org.datalift.model.ComplexFeature;
 import org.datalift.utilities.Const;
 import org.datalift.utilities.Context;
 import org.openrdf.model.Resource;
+import org.openrdf.rio.RDFHandlerException;
 
 public class TimePeriodMapper extends BaseMapper{
 
 	@Override
-	protected void mapComplexChildren(ComplexFeature cf, Context ctx) {
+	protected void mapComplexChildren(ComplexFeature cf, Context ctx) throws RDFHandlerException {
 		for (Attribute a : cf.itsAttr) {
 			if (a instanceof ComplexFeature) {
 				ComplexFeature position=(ComplexFeature) a;

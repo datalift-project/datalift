@@ -27,7 +27,6 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.UriInfo;
-import javax.xml.parsers.ParserConfigurationException;
 
 import org.datalift.exceptions.TechnicalException;
 //import org.datalift.core.util.SimpleCache;
@@ -44,7 +43,6 @@ import org.datalift.model.BaseConverterModule;
 import org.datalift.model.ComplexFeature;
 import org.datalift.model.ObservationMetaData;
 import org.datalift.webServiceConverter2.WFS2Converter;
-import org.xml.sax.SAXException;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -242,7 +240,7 @@ public class SosToRdf extends BaseConverterModule {
 		return response;
 	}	
 	private boolean convertObservations2Rdf(URI projectUri, SosSource s, String destination_title, URI targetGraph,
-			URI baseUri, String targetType, String id,  String begin, String end, String format, int optionOntology) throws SAXException, ParserConfigurationException {
+			URI baseUri, String targetType, String id,  String begin, String end, String format, int optionOntology)  {
 		try {			
 			SOS2Client client=new SOS2Client(s.getSourceUrl());
 			client.getObservation(id,begin,end,format);
@@ -255,19 +253,15 @@ public class SosToRdf extends BaseConverterModule {
 			}
 			//0: default converter
 			//1: EMF group Converter
-			WFS2Converter converter=new WFS2Converter(optionOntology);
-
 			org.datalift.fwk.rdf.Repository target = Configuration.getDefault().getInternalRepository();
+			WFS2Converter converter=new WFS2Converter(optionOntology, target , targetGraph);
+
+
 			//handle exception
-			if(!converter.ConvertFeaturesToRDF(observationDataToConvert,target , targetGraph, baseUri, targetType))
+			if(!converter.ConvertFeaturesToRDF(observationDataToConvert))
 			{
 				return false;
 			}
-			//converter.StoreRDF();
-			//converter.StoreRdfTS(target , targetGraph, baseUri, targetType);
-
-
-
 		} catch (Exception e) {
 			TechnicalException error = new TechnicalException("convertFeatureTypeFailed", e, id);
 			log.error(error.getMessage(), e);

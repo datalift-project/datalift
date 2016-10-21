@@ -12,6 +12,7 @@ import org.datalift.model.Store;
 import org.datalift.utilities.Const;
 import org.datalift.utilities.Context;
 import org.datalift.utilities.Helper;
+import org.openrdf.rio.RDFHandlerException;
 
 public class WFS2Client extends BaseServiceClient{
 
@@ -121,8 +122,9 @@ public class WFS2Client extends BaseServiceClient{
 		return types;
 	}
 
-	/******to be moved from here later ****/
-	private void buildFeatures(List<ComplexFeature> elements, Context ctx)
+	/******to be moved from here later 
+	 * @throws RDFHandlerException ****/
+	private void buildFeatures(List<ComplexFeature> elements, Context ctx) throws RDFHandlerException
 	{
 		if(elements!=null)
 		{
@@ -130,7 +132,7 @@ public class WFS2Client extends BaseServiceClient{
 			processFeatureCollection(fc, ctx);
 		}
 	}
-	private void processFeatureCollection(ComplexFeature fc, Context ctx)
+	private void processFeatureCollection(ComplexFeature fc, Context ctx) throws RDFHandlerException
 	{
 		for (Attribute a : fc.itsAttr) {
 			if(a instanceof ComplexFeature)

@@ -12,6 +12,7 @@ import org.datalift.utilities.Helper;
 import org.datalift.utilities.SosConst;
 import org.openrdf.model.Resource;
 import org.openrdf.model.Value;
+import org.openrdf.rio.RDFHandlerException;
 
 public class BaseMapper implements Mapper {
 
@@ -55,7 +56,7 @@ public class BaseMapper implements Mapper {
 		alreadyLinked = false;
 	}
 
-	protected void addParentLinkStatements(ComplexFeature cf, Context ctx) {
+	protected void addParentLinkStatements(ComplexFeature cf, Context ctx) throws RDFHandlerException {
 		Resource subjectURI;
 		if (cf.getParent() != null) {
 			if (cf.getParent().getId() != null) {
@@ -67,23 +68,23 @@ public class BaseMapper implements Mapper {
 			subjectURI = Context.DefaultSubjectURI;
 		}
 		/**** add the parentlinked statement ****/
-		ctx.model.add(ctx.vf.createStatement(subjectURI, ctx.vf.createURI(Context.nsDatalift + cf.name.getLocalPart()),
+		ctx.model.handleStatement(ctx.vf.createStatement(subjectURI, ctx.vf.createURI(Context.nsDatalift + cf.name.getLocalPart()),
 				cf.getId()));
 	}
 
-	protected void addRdfTypes(ComplexFeature cf, Context ctx) {
+	protected void addRdfTypes(ComplexFeature cf, Context ctx) throws RDFHandlerException {
 		if(!cf.isSimple())
 		{
-			ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI,
-					ctx.vf.createURI(Context.nsDatalift + Helper.capitalize(cf.name.getLocalPart()))));
+			ctx.model.handleStatement((ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI,
+					ctx.vf.createURI(Context.nsDatalift + Helper.capitalize(cf.name.getLocalPart())))));
 			if (cf.isReferencedObject()) {
-				ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI,
+				ctx.model.handleStatement(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI,
 						ctx.vf.createURI(Context.nsDatalift + Helper.capitalize(Context.referencedObjectType.getLocalPart()))));
 			}			
 		}
 	}
 
-	protected void mapFeatureSimpleAttributes(ComplexFeature cf, Context ctx, Resource toLinkWith) {
+	protected void mapFeatureSimpleAttributes(ComplexFeature cf, Context ctx, Resource toLinkWith) throws RDFHandlerException {
 		if(!cf.isSimple())
 			{Resource id;
 		String predicate=null;
@@ -105,8 +106,8 @@ public class BaseMapper implements Mapper {
 	}
 
 	/**
-	 * an intermediate feature is a feature with no simple attributes and only
-	 * one complex feature exp. <toto> <titi>... </toto> is an intermediate
+	 * an intermediate feature is a feature with no simple attributes and ONLY
+	 * ONE complex feature exp. <toto> <titi>... </toto> is an intermediate
 	 * feature this method is designed' to be used to test if a feature worth to
 	 * be mapped or not
 	 * 
@@ -131,12 +132,13 @@ public class BaseMapper implements Mapper {
 			if (nbr_cf_found > 1)
 				return false;
 		}
+		cf.isIntermediate=true;
 		return true;
 	}
 
-	public final void map(ComplexFeature cf, Context ctx) {
+	public final void map(ComplexFeature cf, Context ctx) throws RDFHandlerException {
 		boolean found=false;
-		if(cf.name.getLocalPart().equals("purpose"))
+		if(cf.name.getLocalPart().equals("procedure"))
 			found=true;
 		if (ignore(cf)) {
 			return;
@@ -148,8 +150,10 @@ public class BaseMapper implements Mapper {
 		this.setCfId(cf, ctx);
 		if(isIntermediateFeature(cf))
 		{
-			this.mapAsIntermediate(cf,ctx);
-			return;
+			if(this.mapAsIntermediate(cf,ctx))
+				{
+					return;
+				}	
 		}
 		this.mapWithParent(cf,ctx);
 		this.rememberGmlId(cf, ctx);
@@ -158,14 +162,22 @@ public class BaseMapper implements Mapper {
 		this.mapComplexChildren(cf,ctx);
 		this.mapFeatureSimpleAttributes(cf, ctx, null);
 		this.mapFeatureSimpleValue(cf,ctx);
-
 	}
 
-	protected boolean handleSpecificReferenceType(ComplexFeature cf, Context ctx) {
+	protected boolean handleSpecificReferenceType(ComplexFeature cf, Context ctx) throws RDFHandlerException {
 		return false;
 	}
-
-	protected void mapAsIntermediate(ComplexFeature cf, Context ctx) {
+	/**
+	 * skip the current feature (cf) and map directly its only child with the parent 
+	 * @param cf
+	 * @param ctx
+	 * @throws RDFHandlerException
+	 */
+	protected boolean mapAsIntermediate(ComplexFeature cf, Context ctx) throws RDFHandlerException {
+		if(cf.getParent()!=null && cf.getParent().isIntermediate)
+		{
+			return false;
+		}
 		for (Attribute a : cf.itsAttr) {
 			if (a instanceof ComplexFeature) {
 				ComplexFeature f = (ComplexFeature)a;
@@ -173,7 +185,6 @@ public class BaseMapper implements Mapper {
 				setCfId(f,ctx);
 				addChildLinkedStatement(cf,f,ctx);		
 				this.rememberGmlId(cf,ctx);
-				//insert type of f if f will not be mappedwith basic mapper
 				if(cf.name.equals(Const.omResult))
 				{
 					ctx.getMapper(Const.omResult).map(cf, ctx);
@@ -184,24 +195,26 @@ public class BaseMapper implements Mapper {
 				}
 			}
 		}
+		return true;
 	}
 	/**
 	 * inserts special predicate whish links directely the current feature with its child : the shortcut
 	 * @param cf : the current feature = behaves like the father
 	 * @param f : the feature son whish will be used to linked to
 	 * @param ctx
+	 * @throws RDFHandlerException 
 	 */
-	protected void addChildLinkedStatement(ComplexFeature cf, ComplexFeature f, Context ctx) {
-		ctx.model.add(ctx.vf.createStatement(cf.getParent().getId(), ctx.vf.createURI(Context.nsDatalift+cf.name.getLocalPart()), f.getId()));
+	protected void addChildLinkedStatement(ComplexFeature cf, ComplexFeature f, Context ctx) throws RDFHandlerException {
+		ctx.model.handleStatement(ctx.vf.createStatement(cf.getParent().getId(), ctx.vf.createURI(Context.nsDatalift+cf.name.getLocalPart()), f.getId()));
 	}
 
-	protected void mapGeometryIfAny(ComplexFeature cf, Context ctx) {
+	protected void mapGeometryIfAny(ComplexFeature cf, Context ctx) throws RDFHandlerException {
 		if (cf.vividgeom != null) {
 			ctx.getMapper(new QName("geometry")).map(cf, ctx);
 		}		
 	}
 
-	protected void mapComplexChildren(ComplexFeature cf, Context ctx) {
+	protected void mapComplexChildren(ComplexFeature cf, Context ctx) throws RDFHandlerException {
 		for (Attribute a : cf.itsAttr) {
 			if (a instanceof ComplexFeature) {
 				ComplexFeature f = (ComplexFeature) a;
@@ -210,7 +223,7 @@ public class BaseMapper implements Mapper {
 		}		
 	}
 
-	protected void mapWithParent(ComplexFeature cf, Context ctx) {
+	protected void mapWithParent(ComplexFeature cf, Context ctx) throws RDFHandlerException {
 		if (!alreadyLinked) {
 			if (cf.isSimple()) {
 				this.addParentSimpleLinkStatements(cf, ctx);
@@ -221,7 +234,7 @@ public class BaseMapper implements Mapper {
 		}		
 	}
 
-	protected void mapFeatureSimpleValue(ComplexFeature cf, Context ctx) {
+	protected void mapFeatureSimpleValue(ComplexFeature cf, Context ctx) throws RDFHandlerException {
 		if(!cf.isSimple())
 			{if (Helper.isSet(cf.value)) {
 			mapTypedValue(cf.getId(), cf.value, cf.getTypeName(), cf.name, null, ctx);
@@ -236,8 +249,9 @@ public class BaseMapper implements Mapper {
 	 * 
 	 * @param cf
 	 * @param ctx
+	 * @throws RDFHandlerException 
 	 */
-	protected void addParentSimpleLinkStatements(ComplexFeature cf, Context ctx) {
+	protected void addParentSimpleLinkStatements(ComplexFeature cf, Context ctx) throws RDFHandlerException {
 		// first of all, look at the value of the feature. if any then try to
 		// create the triple with the value of one attribute
 		if (Helper.isSet(cf.value)) {
@@ -260,14 +274,14 @@ public class BaseMapper implements Mapper {
 		return (id != null) ? id : ctx.referenceCatalogue.get(null) + hrefValue;
 	}
 
-	protected void mapTypedValue(Resource id, String value, QName type, QName attrName, String predicate, Context ctx) {
+	protected void mapTypedValue(Resource id, String value, QName type, QName attrName, String predicate, Context ctx) throws RDFHandlerException {
 		boolean added = false;
 		if (type.equals(Const.xsdBoolean) && !attrName.equals(Const.owns) && !attrName.equals(Const.nil)) {
 			if (predicate == null) {
 				predicate = Context.nsDatalift + attrName.getLocalPart();
 			}
 			boolean bvalue = Boolean.valueOf(value);
-			ctx.model.add(ctx.vf.createStatement(id, ctx.vf.createURI(predicate), ctx.vf.createLiteral(bvalue)));
+			ctx.model.handleStatement(ctx.vf.createStatement(id, ctx.vf.createURI(predicate), ctx.vf.createLiteral(bvalue)));
 			added = true;
 		}
 		if (type.equals(Const.StringOrRefType)) {
@@ -275,7 +289,7 @@ public class BaseMapper implements Mapper {
 				predicate = Context.nsDcTerms + "description";
 			}
 			String svalue = value;
-			ctx.model.add(ctx.vf.createStatement(id, ctx.vf.createURI(predicate), ctx.vf.createLiteral(svalue)));
+			ctx.model.handleStatement(ctx.vf.createStatement(id, ctx.vf.createURI(predicate), ctx.vf.createLiteral(svalue)));
 			added = true;
 		}
 		if (type.equals(Const.string)) {
@@ -283,7 +297,7 @@ public class BaseMapper implements Mapper {
 				predicate = Context.nsFoaf + "name";
 			}
 			String svalue = value;
-			ctx.model.add(ctx.vf.createStatement(id, ctx.vf.createURI(predicate), ctx.vf.createLiteral(svalue)));
+			ctx.model.handleStatement(ctx.vf.createStatement(id, ctx.vf.createURI(predicate), ctx.vf.createLiteral(svalue)));
 			added = true;
 		}
 		if (type.equals(Const.positiveInteger)) {
@@ -291,7 +305,7 @@ public class BaseMapper implements Mapper {
 				predicate = Context.nsDatalift + attrName.getLocalPart();
 			}
 			int ivalue = Integer.valueOf(value);
-			ctx.model.add(ctx.vf.createStatement(id, ctx.vf.createURI(predicate), ctx.vf.createLiteral(ivalue)));
+			ctx.model.handleStatement(ctx.vf.createStatement(id, ctx.vf.createURI(predicate), ctx.vf.createLiteral(ivalue)));
 			added = true;
 		}
 		if (type.equals(Const.xsdDouble) || type.equals(Const.xsdDecimal)) {
@@ -299,7 +313,7 @@ public class BaseMapper implements Mapper {
 				predicate = Context.nsDatalift + attrName.getLocalPart();
 			}
 			double dvalue = Integer.valueOf(value);
-			ctx.model.add(ctx.vf.createStatement(id, ctx.vf.createURI(predicate), ctx.vf.createLiteral(dvalue)));
+			ctx.model.handleStatement(ctx.vf.createStatement(id, ctx.vf.createURI(predicate), ctx.vf.createLiteral(dvalue)));
 			added = true;
 		}
 		if (type.equals(Const.hrefType) || type.equals(Const.anyURI)) {
@@ -307,11 +321,11 @@ public class BaseMapper implements Mapper {
 				if (predicate == null) {
 					predicate = Context.nsDatalift + attrName.getLocalPart();
 				}
-				ctx.model.add(ctx.vf.createStatement(id, ctx.vf.createURI(predicate), ctx.vf.createURI(value)));
+				ctx.model.handleStatement(ctx.vf.createStatement(id, ctx.vf.createURI(predicate), ctx.vf.createURI(value)));
 				added = true;
 			} catch (IllegalArgumentException e) {
 				log.warn(e.getMessage());
-				ctx.model.add(ctx.vf.createStatement(id, ctx.vf.createURI(predicate),
+				ctx.model.handleStatement(ctx.vf.createStatement(id, ctx.vf.createURI(predicate),
 						ctx.vf.createURI(getObjectIdReferencedBy(value, ctx))));
 				added = true;
 			}
@@ -321,7 +335,7 @@ public class BaseMapper implements Mapper {
 				predicate = Context.nsDcTerms + "title";
 			}
 			String svalue = value;
-			ctx.model.add(ctx.vf.createStatement(id, ctx.vf.createURI(predicate), ctx.vf.createLiteral(svalue)));
+			ctx.model.handleStatement(ctx.vf.createStatement(id, ctx.vf.createURI(predicate), ctx.vf.createLiteral(svalue)));
 			added = true;
 		}
 		if (type.equals(Const.TimePositionType) || type.equals(Const.xsdDate)
@@ -332,7 +346,7 @@ public class BaseMapper implements Mapper {
 					predicate = Context.nsDatalift + attrName.getLocalPart();
 				}
 				Value v5 = ctx.vf.createLiteral(d);
-				ctx.model.add(ctx.vf.createStatement(id, ctx.vf.createURI(predicate), v5));
+				ctx.model.handleStatement(ctx.vf.createStatement(id, ctx.vf.createURI(predicate), v5));
 				added = true;
 			}
 		}
@@ -343,13 +357,13 @@ public class BaseMapper implements Mapper {
 				predicate=Context.nsDatalift+attrName.getLocalPart();
 			}
 
-			ctx.model.add(ctx.vf.createStatement(id, ctx.vf.createURI(predicate),
+			ctx.model.handleStatement(ctx.vf.createStatement(id, ctx.vf.createURI(predicate),
 					ctx.vf.createLiteral(value)));
 			added=true;
 		}
 	}
 
-	protected void mapGeometryProperty(ComplexFeature cf, Context ctx) {
+	protected void mapGeometryProperty(ComplexFeature cf, Context ctx) throws RDFHandlerException {
 		return;
 	}
 }

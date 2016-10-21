@@ -10,11 +10,16 @@ import org.datalift.utilities.Context;
 import org.datalift.utilities.Helper;
 import org.datalift.wfs.wfs2.mapping.BaseMapper;
 import org.openrdf.model.Resource;
+import org.openrdf.rio.RDFHandlerException;
 
 public class SimpleMeasureMapper extends BaseMapper {
 
 	@Override
-	protected void mapComplexChildren(ComplexFeature cf, Context ctx) {
+	protected boolean mapAsIntermediate(ComplexFeature cf, Context ctx) throws RDFHandlerException {
+		return false;
+	}
+	@Override
+	protected void mapComplexChildren(ComplexFeature cf, Context ctx) throws RDFHandlerException {
 		for (Attribute a : cf.itsAttr) {
 			if (a instanceof ComplexFeature) {
 				ComplexFeature f = (ComplexFeature)a;
@@ -25,14 +30,14 @@ public class SimpleMeasureMapper extends BaseMapper {
 					if(str_val!=null)
 					{
 						double val=Double.valueOf(str_val);	
-						ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.vf.createURI(Context.nsOml+"amount"), ctx.vf.createLiteral(val)));
+						ctx.model.handleStatement(ctx.vf.createStatement(cf.getId(), ctx.vf.createURI(Context.nsOml+"amount"), ctx.vf.createLiteral(val)));
 						String str_unit =ctx.sosMetaData.get(Const.uom);
 						if(Helper.isSet(str_unit))
 						{
 							String uriUnit=ctx.unitsSymbUri.get(str_unit);
 							if(uriUnit!=null)
 							{
-								ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.vf.createURI(Context.nsOml+"uom"), ctx.vf.createURI(uriUnit)));
+								ctx.model.handleStatement(ctx.vf.createStatement(cf.getId(), ctx.vf.createURI(Context.nsOml+"uom"), ctx.vf.createURI(uriUnit)));
 							}
 
 						}
@@ -42,7 +47,7 @@ public class SimpleMeasureMapper extends BaseMapper {
 		}
 	}
 	@Override
-	protected void mapWithParent(ComplexFeature cf, Context ctx) {
+	protected void mapWithParent(ComplexFeature cf, Context ctx) throws RDFHandlerException {
 		if(!alreadyLinked)
 		{
 			if(cf.isSimple())
@@ -56,7 +61,7 @@ public class SimpleMeasureMapper extends BaseMapper {
 		}
 	}
 	@Override
-	protected void addParentLinkStatements(ComplexFeature cf, Context ctx) {
+	protected void addParentLinkStatements(ComplexFeature cf, Context ctx) throws RDFHandlerException {
 		Resource subjectURI;
 		if(cf.getParent()!=null )
 		{
@@ -74,16 +79,16 @@ public class SimpleMeasureMapper extends BaseMapper {
 			subjectURI=Context.DefaultSubjectURI;
 		}
 		/****add the parentlinked statement****/
-		ctx.model.add(ctx.vf.createStatement(subjectURI, ctx.vf.createURI(Context.nsOml+"result"), cf.getId()));
+		ctx.model.handleStatement(ctx.vf.createStatement(subjectURI, ctx.vf.createURI(Context.nsOml+"result"), cf.getId()));
 		//add time result as well
 		this.mapTimeResult(subjectURI, cf,ctx);		
 	}
 	@Override
-	protected void addRdfTypes(ComplexFeature cf, Context ctx) {
+	protected void addRdfTypes(ComplexFeature cf, Context ctx) throws RDFHandlerException {
 		if(!cf.isSimple())
-			{ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(Context.nsOml+"SimpleMesure")));
+			{ctx.model.handleStatement(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(Context.nsOml+"SimpleMesure")));
 		if(cf.isReferencedObject())
-		{ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(Context.nsDatalift+Helper.capitalize(Context.referencedObjectType.getLocalPart()))));}
+		{ctx.model.handleStatement(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(Context.nsDatalift+Helper.capitalize(Context.referencedObjectType.getLocalPart()))));}
 	}}
 
 	/**
@@ -91,8 +96,9 @@ public class SimpleMeasureMapper extends BaseMapper {
 	 * @param subjectURI the URI of the observation
 	 * @param cf the feature representing the simpleMeasure
 	 * @param ctx the context object
+	 * @throws RDFHandlerException 
 	 */
-	private void mapTimeResult(Resource subjectURI, ComplexFeature cf, Context ctx) {
+	private void mapTimeResult(Resource subjectURI, ComplexFeature cf, Context ctx) throws RDFHandlerException {
 		//first of all, let extract the time of the measure
 		String str_time=cf.getAttributeValue(Const.wmlTime);
 		if(Helper.isSet(str_time))
@@ -100,7 +106,7 @@ public class SimpleMeasureMapper extends BaseMapper {
 			XMLGregorianCalendar v=Helper.getDate(str_time);	
 			if(v!=null)
 			{
-				ctx.model.add(ctx.vf.createStatement(subjectURI, ctx.vf.createURI(Context.nsOml+"timeResult"), ctx.vf.createLiteral(v))); 
+				ctx.model.handleStatement(ctx.vf.createStatement(subjectURI, ctx.vf.createURI(Context.nsOml+"timeResult"), ctx.vf.createLiteral(v))); 
 			}
 		}
 	}

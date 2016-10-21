@@ -1,44 +1,24 @@
 package org.datalift.gml32;
 
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import javax.xml.XMLConstants;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
-import javax.xml.validation.Schema;
-import javax.xml.validation.SchemaFactory;
-
-import org.apache.http.client.ClientProtocolException;
 import org.datalift.model.Attribute;
 import org.datalift.model.BaseServiceClient;
 import org.datalift.model.ComplexFeature;
 import org.datalift.model.FeatureTypeDescription;
 import org.datalift.model.Store;
 import org.datalift.utilities.Const;
-import org.datalift.utilities.Context;
 import org.datalift.utilities.Helper;
-import org.xml.sax.SAXException;
 
 public class WFS2Client extends BaseServiceClient{
 
 	public WFS2Client(String sourceUrl) {
-		// TODO Auto-generated constructor stub	
 		super (sourceUrl);
 		serviceType="WFS";
 	}
 
-	//	public static void main (String[] args) throws SAXException, ParserConfigurationException, IOException
-	//	{
-	//		WFS2Parser mp=new WFS2Parser("http://geoservices.brgm.fr/risques?service=WFS&version=1.1.0&request=getCapabilities");
-	//		mp.doParse(mp.url);
-	//	}
 	public void getFeatureType(String FeatureName, String srs) throws Exception
 	{
 		Store ds=null;
@@ -75,8 +55,6 @@ public class WFS2Client extends BaseServiceClient{
 
 			if(fc!=null)
 			{
-				//QName name= new QName("http://www.opengis.net/wfs/2.0","FeatureTypeList");
-
 				ComplexFeature child=fc.findFirstChild(Const.FeatureTypeList);
 				System.out.println(child);
 				if(child!=null)
@@ -124,55 +102,43 @@ public class WFS2Client extends BaseServiceClient{
 								types.add(ftd);
 							}
 						}
-
 					}
-
 				}
-
 			}
 		}
 		return types;
 	}
 
-	/******to be moved from here later ****/
-	private void buildFeatures(List<ComplexFeature> elements, Context ctx)
-	{
-		if(elements!=null)
-		{
-			ComplexFeature fc=elements.get(0);
-			processFeatureCollection(fc, ctx);
-		}
-	}
-	private void processFeatureCollection(ComplexFeature fc, Context ctx)
-	{
-		for (Attribute a : fc.itsAttr) {
-			if(a instanceof ComplexFeature)
-			{
-
-				/* if(a.getTypeName().equals(Const.FeatureArrayPropertyType))
-					 {
-						 ComplexFeature members =(ComplexFeature)a;
-						 processFeatureCollection(members,ctx);
-
-					 }
-					 else
-					 {*/
-				if(!a.getTypeName().equals(Const.BoundingShapeType)) //to ignore general bounding box if any
-				{
-					ComplexFeature member =(ComplexFeature)a;
-					for (Attribute aa : member.itsAttr) {
-						if(aa instanceof ComplexFeature)
-						{
-							ComplexFeature ef =(ComplexFeature)aa;
-							ctx.getMapper(ef.getTypeName()).map(ef, ctx);
-						}
-					}
-				}
-			}
-		}					
-
-
-	}
+//	private void processFeatureCollection(ComplexFeature fc, Context ctx) throws RDFHandlerException
+//	{
+//		for (Attribute a : fc.itsAttr) {
+//			if(a instanceof ComplexFeature)
+//			{
+//
+//				/* if(a.getTypeName().equals(Const.FeatureArrayPropertyType))
+//					 {
+//						 ComplexFeature members =(ComplexFeature)a;
+//						 processFeatureCollection(members,ctx);
+//
+//					 }
+//					 else
+//					 {*/
+//				if(!a.getTypeName().equals(Const.BoundingShapeType)) //to ignore general bounding box if any
+//				{
+//					ComplexFeature member =(ComplexFeature)a;
+//					for (Attribute aa : member.itsAttr) {
+//						if(aa instanceof ComplexFeature)
+//						{
+//							ComplexFeature ef =(ComplexFeature)aa;
+//							ctx.getMapper(ef.getTypeName()).map(ef, ctx);
+//						}
+//					}
+//				}
+//			}
+//		}					
+//
+//
+//	}
 
 
 }

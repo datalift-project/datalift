@@ -10,17 +10,18 @@ import org.datalift.utilities.Helper;
 import org.datalift.wfs.wfs2.mapping.BaseMapper;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
+import org.openrdf.rio.RDFHandlerException;
 
 public class ObservationCollectionMapper extends BaseMapper {
 	private boolean mapped=false;
 	@Override
-	protected void addRdfTypes(ComplexFeature cf, Context ctx) {
+	protected void addRdfTypes(ComplexFeature cf, Context ctx) throws RDFHandlerException {
 		if(!cf.isSimple())
 			{URI typeSmodURI = ctx.vf.createURI(Context.nsOml+"ObservationCollection");
-		ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI,typeSmodURI));	
+		ctx.model.handleStatement(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI,typeSmodURI));	
 	}}
 	@Override
-	protected void mapComplexChildren(ComplexFeature cf, Context ctx) {
+	protected void mapComplexChildren(ComplexFeature cf, Context ctx) throws RDFHandlerException {
 
 		for (Attribute a : cf.itsAttr) {
 			if (a instanceof ComplexFeature) {
@@ -47,7 +48,7 @@ public class ObservationCollectionMapper extends BaseMapper {
 	}
 
 	@Override
-	protected void mapWithParent(ComplexFeature cf, Context ctx) {
+	protected void mapWithParent(ComplexFeature cf, Context ctx) throws RDFHandlerException {
 		if(!alreadyLinked)
 		{
 			if(cf.isSimple())
@@ -65,8 +66,9 @@ public class ObservationCollectionMapper extends BaseMapper {
 	 * @param subjectURI the URI of the observation
 	 * @param cf the feature representing the simpleMeasure
 	 * @param ctx the context object
+	 * @throws RDFHandlerException 
 	 */
-	private void mapTimeResult(Resource subjectURI, ComplexFeature f, Context ctx) {
+	private void mapTimeResult(Resource subjectURI, ComplexFeature f, Context ctx) throws RDFHandlerException {
 		//first of all, let extract the time of the measure
 		ComplexFeature timePosition=f.findChildByType(Const.TimePositionType);
 		String str_time=null;
@@ -79,8 +81,12 @@ public class ObservationCollectionMapper extends BaseMapper {
 			XMLGregorianCalendar v=Helper.getDate(str_time);	
 			if(v!=null)
 			{
-				ctx.model.add(ctx.vf.createStatement(subjectURI, ctx.vf.createURI(Context.nsOml+"timeResult"), ctx.vf.createLiteral(v))); 
+				ctx.model.handleStatement(ctx.vf.createStatement(subjectURI, ctx.vf.createURI(Context.nsOml+"timeResult"), ctx.vf.createLiteral(v))); 
 			}
 		}
+	}
+	@Override
+	protected boolean mapAsIntermediate(ComplexFeature cf, Context ctx) throws RDFHandlerException {
+		return false;
 	}
 }

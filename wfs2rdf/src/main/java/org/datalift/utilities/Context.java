@@ -6,7 +6,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,32 +15,27 @@ import java.util.TreeMap;
 import javax.xml.namespace.QName;
 
 import org.datalift.exceptions.TechnicalException;
-import org.datalift.fwk.Configuration;
 import org.datalift.fwk.log.Logger;
-import org.datalift.fwk.rdf.RdfUtils;
+import org.datalift.fwk.rdf.BatchStatementAppender;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.rdf.UriCachingValueFactory;
-import org.datalift.fwk.util.Env;
-import org.datalift.fwk.util.UriBuilder;
 import org.datalift.wfs.wfs2.mapping.BaseMapper;
 import org.datalift.wfs.wfs2.mapping.GeomMapper;
 import org.datalift.wfs.wfs2.mapping.Mapper;
-import org.openrdf.model.Model;
 import org.openrdf.model.Resource;
-import org.openrdf.model.Statement;
 import org.openrdf.model.URI;
 import org.openrdf.model.ValueFactory;
-import org.openrdf.model.impl.LinkedHashModel;
-import org.openrdf.model.impl.ValueFactoryImpl;
 import org.openrdf.query.BindingSet;
 import org.openrdf.query.QueryLanguage;
 import org.openrdf.query.TupleQueryResult;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
 import org.openrdf.repository.sail.SailRepository;
-import org.openrdf.rio.RDFFormat;
+import org.openrdf.rio.RDFHandler;
 import org.openrdf.rio.RDFHandlerException;
 import org.openrdf.rio.Rio;
+import org.openrdf.rio.helpers.RDFHandlerWrapper;
+import org.openrdf.rio.turtle.TurtleWriter;
 import org.openrdf.sail.memory.MemoryStore;
 
 
@@ -51,13 +45,13 @@ public class Context {
 	private final static Logger log = Logger.getLogger();
 	private final String QUDT_UNITS="qudt-units-1.1.ttl";
 	public static URI DefaultSubjectURI = null;
-	public Model model;
-	public ValueFactory vf = new ValueFactoryImpl();
+	public RDFHandler model;
+	public ValueFactory vf;
 	//attributes needs to avoid storing statements in memory
-	/*****attributes for counting occurences****/
+	/*****attributes for counting occurrences****/
 	public Map<QName, Integer> hm;
 	public Map<String, Resource> codeListOccurences;
-	/*****registred mappers and code list****/
+	/*****registered mappers and code list****/
 	public Map<QName,Mapper> mappers = new HashMap<QName,Mapper>();
 	public static List <String>registredCodeList = new ArrayList<String>();
 	/****handle cross referencing using gml ids*/
@@ -102,10 +96,11 @@ public class Context {
 			} else {
 				throw new FileNotFoundException("property file '" + propFileName + "' not found in the classpath");
 			}
-			Enumeration em = prop.keys();
-			while (em.hasMoreElements()) {
-				String code = (String) em.nextElement();
-				codeList.add(prop.getProperty(code));
+			for (Object k : prop.keySet()) {
+				if (k instanceof String) {
+					String code = (String)k;
+					codeList.add(prop.getProperty(code));
+				}
 			}
 		} catch (Exception e) {
 			log.error("An error has occured while attempting to  load the properties file of predefined code list " + e);
@@ -120,28 +115,47 @@ public class Context {
 				}
 		}
 	}
-	public Context()
-	{
+	public Context(Repository target, java.net.URI targetGraph)	{
+		try {
 		hm=new HashMap <QName,Integer>();
 		codeListOccurences=new HashMap <String,Resource>();
-		vf = new ValueFactoryImpl();
-		model = new LinkedHashModel();
-		model.setNamespace("dl_ef", nsDatalift);
-		model.setNamespace("pjt", nsProject);
-		model.setNamespace("ign", nsIGN);
-		model.setNamespace("geo", nsGeoSparql);
-		model.setNamespace("rdf", nsRDF2);
-		model.setNamespace("rdfs", nsRDFS);
-		model.setNamespace("foaf", nsFoaf);
-		model.setNamespace("dcterms", nsDcTerms);
-		model.setNamespace("skos", nsSkos);
-		model.setNamespace("oml", nsOml);
-		model.setNamespace("tp", nsIsoTP);
-		model.setNamespace("smod", nsSmod);
-		model.setNamespace("time", nsw3Time);
-		model.setNamespace("xsd", nsXsd);
-		model.setNamespace("geof", nsgeof);
-		model.setNamespace("unit", nsUnit);
+		final RepositoryConnection cnx = target.newConnection();
+		vf = new UriCachingValueFactory(cnx.getValueFactory());
+		URI ctx = null;
+        // Clear target named graph, if any.
+        if (targetGraph != null) {
+            ctx = vf.createURI(targetGraph.toString());
+            cnx.clear(ctx);
+        }
+		model = new RDFHandlerWrapper(new BatchStatementAppender(cnx, ctx),
+									  new TurtleWriter(new FileOutputStream("C:/Users/A631207/Documents/my_resources/emf1.ttl"))){
+			@Override
+			public void endRDF() throws RDFHandlerException {
+				super.endRDF();
+				try {
+					cnx.close();
+				}
+				catch (RepositoryException e) {
+					throw new RDFHandlerException(e);
+				}
+			}
+		};
+		model.handleNamespace("dl_ef", nsDatalift);
+		model.handleNamespace("pjt", nsProject);
+		model.handleNamespace("ign", nsIGN);
+		model.handleNamespace("geo", nsGeoSparql);
+		model.handleNamespace("rdf", nsRDF2);
+		model.handleNamespace("rdfs", nsRDFS);
+		model.handleNamespace("foaf", nsFoaf);
+		model.handleNamespace("dcterms", nsDcTerms);
+		model.handleNamespace("skos", nsSkos);
+		model.handleNamespace("oml", nsOml);
+		model.handleNamespace("tp", nsIsoTP);
+		model.handleNamespace("smod", nsSmod);
+		model.handleNamespace("time", nsw3Time);
+		model.handleNamespace("xsd", nsXsd);
+		model.handleNamespace("geof", nsgeof);
+		model.handleNamespace("unit", nsUnit);
 		rdfTypeURI=vf.createURI(nsRDF2+"type");
 		DefaultSubjectURI=vf.createURI(nsProject+"root");
 		/***Initialize default mappers****/
@@ -154,6 +168,10 @@ public class Context {
 			this.uploadQdut();
 		} catch (Exception e) {
 			log.warn("error downloading QDUT ontology");
+		}
+		}
+		catch (Exception e) {
+			throw new TechnicalException(e);
 		}
 	}
 	
@@ -180,11 +198,6 @@ public class Context {
 		cnx.close();
 		r.shutDown();
 	}
-	public static void main(String[] args) throws Exception
-	{
-		Context c=new Context();
-		c.uploadQdut();
-	}
 
 	public Mapper getMapper(QName type) {
 		Mapper m = mappers.get(type);
@@ -206,156 +219,105 @@ public class Context {
 		return count;
 
 	}
-	public void exportTtl(String filePath) throws FileNotFoundException, RDFHandlerException
-	{
-		FileOutputStream out = new FileOutputStream(filePath);
-
-		Rio.write(model, out,RDFFormat.TURTLE);
-	}	
-
-
-	//	public static void main(String[] args) throws Exception {
-	//		// Default conversion
-	//		String fileExport="C:/Users/A631207/Documents/my_resources/";
-	//		String fileData="src/main/resources/wfs_response.xml";
-	//		
-	//		Map <String,String> piezoToConvert= new HashMap <String,String>();
-	//		piezoToConvert.put("geoservices_rem_napp_socl.ttl"	,"http://ids.craig.fr/wxs/public/wfs?request=getCapabilities&version=2.0.0");
-	////			piezoToConvert.put("geoservices_rem_napp_socl.ttl"	,"http://localhost:8081/geoserver/hanane_workspace/ows?service=WFS&version=2.0.0&request=GetFeature&typeName=hanane_workspace:regions_nouvelles_rest");
-	//	//piezoToConvert.put("geoservices_rem_napp_socl.ttl"	,"http://ids.craig.fr/wxs/public/wfs?request=getfeature&version=2.0.0&typename=public:ARDTA_PNR_2015_GEOFLA");
-	////		piezoToConvert.put("Piezometre/00463X0036/H1/PZ/2.ttl"	,"http://ressource.brgm-rec.fr/data/Piezometre/00463X0036/H1/PZ/2");
-	////		piezoToConvert.put("Piezometre/00487X0015/S1/PZ/2.ttl","http://ressource.brgm-rec.fr/data/Piezometre/00487X0015/S1/PZ/2");
-	////		piezoToConvert.put("Piezometre/00636X0020/P/PZ/2.ttl"	,"http://ressource.brgm-rec.fr/data/Piezometre/00636X0020/P/PZ/2");
-	////		piezoToConvert.put("Piezometre/06288X0096/SB/PZ/2.ttl"	,"http://ressource.brgm-rec.fr/data/Piezometre/06288X0096/SB/PZ/2");
-	////		piezoToConvert.put("Piezometre/06987A0186/S/PZ/2.ttl","http://ressource.brgm-rec.fr/data/Piezometre/06987A0186/S/PZ/2");
-	////		piezoToConvert.put("Piezometre/06993X0087/F6/PZ/2.ttl","http://ressource.brgm-rec.fr/data/Piezometre/06993X0087/F6/PZ/2");
-	//
-	//		try {
-	//			
-	//			for (String piezo : piezoToConvert.keySet()) {
-	//				Map<QName,Mapper> mappers = new HashMap<QName,Mapper>();
-	//				WFS2Parser mp=new WFS2Parser();
-	//				Context ctx=new Context();
-	//
-	//				InputStream in= doGet(piezoToConvert.get(piezo));
-	//				//mp.doParse(in, ctx);
-	//				mp.getCapabilities(piezoToConvert.get(piezo), ctx);
-	//				piezo=piezo.replace("/", "_");
-	//				ctx.exportTtl(fileExport+piezo);				
-	//			}
-	//			
-	//			//System.out.println(in);
-	//		} catch (Exception e) {
-	//			// TODO: handle exception
-	//			throw new RuntimeException(e);
-	//		}
-	//	}
-
-
-	public boolean exportTS(Repository target, java.net.URI targetGraph, java.net.URI baseUri, String targetType) {
-		final UriBuilder uriBuilder = Configuration.getDefault()
-				.getBean(UriBuilder.class);
-		final RepositoryConnection cnx = target.newConnection();
-		org.openrdf.model.URI ctx = null;
-
-		try {
-			final ValueFactory vf =
-					new UriCachingValueFactory(cnx.getValueFactory());
-
-			// Clear target named graph, if any.
-			if (targetGraph != null) {
-				ctx = vf.createURI(targetGraph.toString());
-				cnx.clear(ctx);
-			}
-			// Create URIs for subjects and predicates.
-			if (baseUri == null) {
-				baseUri = targetGraph;
-			}
-			String sbjUri  = RdfUtils.getBaseUri((baseUri != null)? baseUri.toString(): null, '/');
-			//"http://localhost:9091/initkiosques/regions-nouvelles-shp/";
-
-			String typeUri = RdfUtils.getBaseUri((baseUri != null)? baseUri.toString(): null, '#');
-			//"http://localhost:9091/initkiosques/regions-nouvelles-shp#";
-
-
-			org.openrdf.model.URI rdfType = null;
-			try {
-				// Assume target type is an absolute URI.
-				rdfType = vf.createURI(targetType);
-			}
-			catch (Exception e) {
-				// Oops, targetType is a relative URI. => Append namespace URI.
-				rdfType = vf.createURI(typeUri, targetType);
-			}
-
-			long startTime = System.currentTimeMillis();
-			long duration = -1L;
-			long statementCount = 0L;
-			int  batchSize = Env.getRdfBatchSize();
-
-			try {
-				// Prevent transaction commit for each triple inserted.
-				cnx.begin();
-			}
-			catch (RepositoryException e) {
-				throw new RuntimeException("RDF triple insertion failed", e);
-			}
-
-			for (Statement at:model){
-				try {
-					cnx.add(at, ctx);
-
-					// Commit transaction according to the configured batch size.
-					statementCount++;
-					if ((statementCount % batchSize) == 0) {
-						cnx.commit();
-						cnx.begin();
-					}
-				}
-				catch (RepositoryException e) {
-					throw new RuntimeException("RDF triple insertion failed", e);
-				}
-			}
-			try {
-				cnx.commit();
-				duration = System.currentTimeMillis() - startTime;
-			}
-			catch (RepositoryException e) {
-				throw new RuntimeException("RDF triple insertion failed", e);
-
-			}
-
-			//			log.info("Inserted {} RDF triples into <{}> in {} seconds",
-			//					wrap(statementCount), targetGraph,
-			//					wrap(asSeconds(duration)));
-		}
-		catch (TechnicalException e) {
-			throw e;
-
-		}
-
-		catch (Exception e) {
-			try {
-				// Forget pending triples.
-				cnx.rollback();
-				// Clear target named graph, if any.
-				if (ctx != null) {
-					cnx.clear(ctx);
-				}
-			}
-			catch (Exception e2) { /* Ignore... */ }
-
-			throw new TechnicalException("wfs.conversion.failed", e);
-		}
-		finally {
-			// Commit pending data (including graph removal in case of error).
-			try { cnx.commit(); } catch (Exception e) { /* Ignore... */}
-			// Close repository connection.
-			try { cnx.close();  } catch (Exception e) { /* Ignore...  */}
-		}			
-		return true; //other cases to be handled later...
-
-
-	}
-
+//	public void exportTtl(String filePath) throws FileNotFoundException, RDFHandlerException
+//	{
+//		FileOutputStream out = new FileOutputStream(filePath);
+//
+//		Rio.write(model, out,RDFFormat.TURTLE);
+//	}	
+//	public boolean exportTS(Repository target, java.net.URI targetGraph, java.net.URI baseUri, String targetType) {
+//		final RepositoryConnection cnx = target.newConnection();
+//		org.openrdf.model.URI ctx = null;
+//
+//		try {
+//			final ValueFactory vf =
+//					new UriCachingValueFactory(cnx.getValueFactory());
+//
+//			// Clear target named graph, if any.
+//			if (targetGraph != null) {
+//				ctx = vf.createURI(targetGraph.toString());
+//				cnx.clear(ctx);
+//			}
+//			// Create URIs for subjects and predicates.
+//			if (baseUri == null) {
+//				baseUri = targetGraph;
+//			}
+//			String sbjUri  = RdfUtils.getBaseUri((baseUri != null)? baseUri.toString(): null, '/');
+//			//"http://localhost:9091/initkiosques/regions-nouvelles-shp/";
+//
+//			String typeUri = RdfUtils.getBaseUri((baseUri != null)? baseUri.toString(): null, '#');
+//			//"http://localhost:9091/initkiosques/regions-nouvelles-shp#";
+//
+//
+//			org.openrdf.model.URI rdfType = null;
+//			try {
+//				// Assume target type is an absolute URI.
+//				rdfType = vf.createURI(targetType);
+//			}
+//			catch (Exception e) {
+//				// Oops, targetType is a relative URI. => Append namespace URI.
+//				rdfType = vf.createURI(typeUri, targetType);
+//			}
+//
+//			long startTime = System.currentTimeMillis();
+//			long duration = -1L;
+//			long statementCount = 0L;
+//			int  batchSize = Env.getRdfBatchSize();
+//
+//			try {
+//				// Prevent transaction commit for each triple inserted.
+//				cnx.begin();
+//			}
+//			catch (RepositoryException e) {
+//				throw new RuntimeException("RDF triple insertion failed", e);
+//			}
+//
+//			for (Statement at:model){
+//				try {
+//					cnx.add(at, ctx);
+//					// Commit transaction according to the configured batch size.
+//					statementCount++;
+//					if ((statementCount % batchSize) == 0) {
+//						cnx.commit();
+//						cnx.begin();
+//					}
+//				}
+//				catch (RepositoryException e) {
+//					throw new RuntimeException("RDF triple insertion failed", e);
+//				}
+//			}
+//			try {
+//				cnx.commit();
+//				duration = System.currentTimeMillis() - startTime;
+//			}
+//			catch (RepositoryException e) {
+//				throw new RuntimeException("RDF triple insertion failed", e);
+//
+//			}
+//		}
+//		catch (TechnicalException e) {
+//			throw e;
+//
+//		}
+//		catch (Exception e) {
+//			try {
+//				// Forget pending triples.
+//				cnx.rollback();
+//				// Clear target named graph, if any.
+//				if (ctx != null) {
+//					cnx.clear(ctx);
+//				}
+//			}
+//			catch (Exception e2) { /* Ignore... */ }
+//
+//			throw new TechnicalException("wfs.conversion.failed", e);
+//		}
+//		finally {
+//			// Commit pending data (including graph removal in case of error).
+//			try { cnx.commit(); } catch (Exception e) { /* Ignore... */}
+//			// Close repository connection.
+//			try { cnx.close();  } catch (Exception e) { /* Ignore...  */}
+//		}			
+//		return true; //other cases to be handled later...
+//	}
 }

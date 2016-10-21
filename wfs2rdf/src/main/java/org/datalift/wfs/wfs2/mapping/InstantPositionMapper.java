@@ -10,47 +10,31 @@ import org.datalift.utilities.Helper;
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.Value;
+import org.openrdf.rio.RDFHandlerException;
 
 public class InstantPositionMapper extends BaseMapper{
 
-//	@Override
-//	public void map(ComplexFeature cf, Context ctx) {
-//		if(ignore(cf))
-//		{
-//			return;
-//		}
-//		this.setCfId(cf,ctx);
-//		if(!alreadyLinked)
-//		{
-//			this.addParentLinkStatements(cf, ctx);
-//		}
-//		this.rememberGmlId(cf,ctx);
-//		this.addRdfTypes(cf, ctx);
-//		this.addInstantValue(cf,ctx);
-//	}
-
 	@Override
-	protected void mapFeatureSimpleValue(ComplexFeature cf, Context ctx) {
+	protected void mapFeatureSimpleValue(ComplexFeature cf, Context ctx) throws RDFHandlerException {
 		XMLGregorianCalendar d=Helper.getDate(cf.value);
 		if(d!=null)
 		{
 			Value v5=ctx.vf.createLiteral(d);
-			ctx.model.add(ctx.vf.createStatement(cf.getId(),ctx.vf.createURI(Context.nsw3Time+"inXSDDateTime"), v5));
+			ctx.model.handleStatement(ctx.vf.createStatement(cf.getId(),ctx.vf.createURI(Context.nsw3Time+"inXSDDateTime"), v5));
 		}
-
 	}
 
 	@Override
-	protected void addRdfTypes(ComplexFeature cf, Context ctx) {
-		ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(Context.nsw3Time+"Instant")));
+	protected void addRdfTypes(ComplexFeature cf, Context ctx) throws RDFHandlerException {
+		ctx.model.handleStatement(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(Context.nsw3Time+"Instant")));
 		if(cf.isReferencedObject())
 		{
-			ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(Context.nsDatalift+Helper.capitalize(Context.referencedObjectType.getLocalPart()))));
+			ctx.model.handleStatement(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(Context.nsDatalift+Helper.capitalize(Context.referencedObjectType.getLocalPart()))));
 		}
 	}
 
 	@Override
-	protected void addParentSimpleLinkStatements(ComplexFeature cf, Context ctx) {	
+	protected void addParentSimpleLinkStatements(ComplexFeature cf, Context ctx) throws RDFHandlerException {	
 		Resource subjectURI;
 		ComplexFeature parent=cf.getParent();
 		if(parent!=null )
@@ -81,7 +65,7 @@ public class InstantPositionMapper extends BaseMapper{
 		}
 		if(preperty!=null)
 		{
-			ctx.model.add(ctx.vf.createStatement(subjectURI, preperty, cf.getId()));
+			ctx.model.handleStatement(ctx.vf.createStatement(subjectURI, preperty, cf.getId()));
 		}
 	}
 
