@@ -72,16 +72,20 @@ public class BaseMapper implements Mapper {
 	}
 
 	protected void addRdfTypes(ComplexFeature cf, Context ctx) {
-		ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI,
-				ctx.vf.createURI(Context.nsDatalift + Helper.capitalize(cf.name.getLocalPart()))));
-		if (cf.isReferencedObject()) {
+		if(!cf.isSimple())
+		{
 			ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI,
-					ctx.vf.createURI(Context.nsDatalift + Helper.capitalize(Context.referencedObjectType.getLocalPart()))));
+					ctx.vf.createURI(Context.nsDatalift + Helper.capitalize(cf.name.getLocalPart()))));
+			if (cf.isReferencedObject()) {
+				ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI,
+						ctx.vf.createURI(Context.nsDatalift + Helper.capitalize(Context.referencedObjectType.getLocalPart()))));
+			}			
 		}
 	}
 
 	protected void mapFeatureSimpleAttributes(ComplexFeature cf, Context ctx, Resource toLinkWith) {
-		Resource id;
+		if(!cf.isSimple())
+			{Resource id;
 		String predicate=null;
 		if (toLinkWith == null) {
 			id = cf.getId();
@@ -94,7 +98,7 @@ public class BaseMapper implements Mapper {
 				mapTypedValue(id, a.value, a.getTypeName(), a.name, predicate, ctx);
 			}
 		}
-	}
+	}}
 	protected boolean isUsefulAttribute(Attribute a)
 	{
 		return (!a.name.equals(Const.owns) && !a.name.equals(Const.nil) && !a.name.equals(SosConst.frame) && !a.name.equals(Const.type) && !a.name.equals(Const.id) && !a.getTypeName().equals(Const.explicitType))?  true:false;
@@ -130,7 +134,7 @@ public class BaseMapper implements Mapper {
 		return true;
 	}
 
-	public void map(ComplexFeature cf, Context ctx) {
+	public final void map(ComplexFeature cf, Context ctx) {
 		boolean found=false;
 		if(cf.name.getLocalPart().equals("purpose"))
 			found=true;
@@ -149,17 +153,12 @@ public class BaseMapper implements Mapper {
 		}
 		this.mapWithParent(cf,ctx);
 		this.rememberGmlId(cf, ctx);
-		if(!cf.isSimple())
-		{
-			this.addRdfTypes(cf, ctx);
-		}
+		this.addRdfTypes(cf, ctx);
 		this.mapGeometryIfAny(cf,ctx);
 		this.mapComplexChildren(cf,ctx);
-		if(!cf.isSimple())
-		{
-			this.mapFeatureSimpleAttributes(cf, ctx, null);
-			this.mapFeatureSimpleValue(cf,ctx);
-		}
+		this.mapFeatureSimpleAttributes(cf, ctx, null);
+		this.mapFeatureSimpleValue(cf,ctx);
+
 	}
 
 	protected boolean handleSpecificReferenceType(ComplexFeature cf, Context ctx) {
@@ -223,10 +222,11 @@ public class BaseMapper implements Mapper {
 	}
 
 	protected void mapFeatureSimpleValue(ComplexFeature cf, Context ctx) {
-		if (Helper.isSet(cf.value)) {
+		if(!cf.isSimple())
+			{if (Helper.isSet(cf.value)) {
 			mapTypedValue(cf.getId(), cf.value, cf.getTypeName(), cf.name, null, ctx);
 		}	
-	}
+	}}
 
 	/**
 	 * FOR SHORTCUT MAPPING : the feature's content is directly linked with its

@@ -80,10 +80,11 @@ public class SimpleMeasureMapper extends BaseMapper {
 	}
 	@Override
 	protected void addRdfTypes(ComplexFeature cf, Context ctx) {
-		ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(Context.nsOml+"SimpleMesure")));
+		if(!cf.isSimple())
+			{ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(Context.nsOml+"SimpleMesure")));
 		if(cf.isReferencedObject())
 		{ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(Context.nsDatalift+Helper.capitalize(Context.referencedObjectType.getLocalPart()))));}
-	}
+	}}
 
 	/**
 	 * add a triple related to the time of the measure. the triple should be directly linked to the observation (and not to the current simpleMeasure)

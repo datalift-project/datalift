@@ -8,10 +8,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -33,6 +31,7 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.UriInfo;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.datalift.core.util.SimpleCache;
 import org.datalift.exceptions.TechnicalException;
 //import org.datalift.core.util.SimpleCache;
 import org.datalift.fwk.Configuration;
@@ -48,8 +47,10 @@ import org.datalift.model.BaseConverterModule;
 import org.datalift.model.ComplexFeature;
 import org.datalift.model.FeatureTypeDescription;
 import org.datalift.utilities.Helper;
+import org.datalift.webServiceConverter2.WFS2Converter;
+import org.datalift.wfs.wfs1_x.WfsConverter1_x;
+import org.datalift.wfs.wfs1_x.WfsParser1_x;
 import org.datalift.wfs.wfs2.WFS2Client;
-import org.datalift.wfs.wfs2.mapping.WFS2Converter;
 import org.geotools.data.DataStore;
 import org.geotools.data.Query;
 import org.geotools.data.ResourceInfo;
@@ -72,7 +73,10 @@ import fr.ign.datalift.model.AbstractFeature;
 public class Wfstordf extends BaseConverterModule{
 
 
-
+	//-------------------------------------------------------------------------
+	// Constants
+	//-------------------------------------------------------------------------
+	private final static int CACHE_DURATION = 3600 * 3; //3 hours
 	//-------------------------------------------------------------------------
 	// Class members
 	//-------------------------------------------------------------------------
@@ -80,7 +84,8 @@ public class Wfstordf extends BaseConverterModule{
 	private final static Logger log = Logger.getLogger();
 	/** The name of this module in the DataLift configuration. */
 	public final static String MODULE_NAME = "wfs2rdf";
-	private final static Map<String,List<FeatureTypeDescription>> cache = new HashMap<String, List<FeatureTypeDescription>>();
+	private final static SimpleCache<String,List<FeatureTypeDescription>> cache =
+            new SimpleCache<String,List<FeatureTypeDescription>>(1000, CACHE_DURATION);
 	//-------------------------------------------------------------------------
 	// Constructors
 	//-------------------------------------------------------------------------
@@ -255,7 +260,7 @@ public class Wfstordf extends BaseConverterModule{
 		}
 		if(data!=null)
 		{
-			WfsConverter converter=new WfsConverter();
+			WfsConverter1_x converter=new WfsConverter1_x();
 			org.datalift.fwk.rdf.Repository target = Configuration.getDefault().getInternalRepository();
 			converter.ConvertFeatureTypeDescriptionToRDF(data,target , targetGraph, baseUri, targetType);
 
@@ -264,7 +269,7 @@ public class Wfstordf extends BaseConverterModule{
 	private boolean convertFeatureTypeToRdf(URI projectUri, WfsSource s, String destination_title, URI targetGraph,
 			URI baseUri, String targetType, String typeName, boolean optionWGS84) {
 		try {
-			WfsParser parser=new WfsParser(s.getSourceUrl(),s.getVersion(),s.getserverTypeStrategy());
+			WfsParser1_x parser=new WfsParser1_x(s.getSourceUrl(),s.getVersion(),s.getserverTypeStrategy());
 			ArrayList<AbstractFeature> featuresToConvert;
 
 			featuresToConvert=parser.loadFeature(typeName,optionWGS84);
@@ -274,7 +279,7 @@ public class Wfstordf extends BaseConverterModule{
 			{
 				return false; //in this case, there is no features in this feature type!!!
 			}
-			WfsConverter converter=new WfsConverter();
+			WfsConverter1_x converter=new WfsConverter1_x();
 			org.datalift.fwk.rdf.Repository target = Configuration.getDefault().getInternalRepository();
 			converter.ConvertFeaturesToRDF(featuresToConvert,target , targetGraph, baseUri, targetType,parser.getFtCrs());
 
@@ -451,7 +456,7 @@ public class Wfstordf extends BaseConverterModule{
 	{
 		List<FeatureTypeDescription> descriptor=null;
 		String urlcap=url;  
-		WfsParser p=new WfsParser(urlcap,version,serverType);
+		WfsParser1_x p=new WfsParser1_x(urlcap,version,serverType);
 		DataStore dataStore=p.getDataStore();
 		if(dataStore!=null) 
 		{	String cacheKey = urlcap+version;

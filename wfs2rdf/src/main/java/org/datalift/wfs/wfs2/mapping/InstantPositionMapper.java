@@ -13,23 +13,24 @@ import org.openrdf.model.Value;
 
 public class InstantPositionMapper extends BaseMapper{
 
-	@Override
-	public void map(ComplexFeature cf, Context ctx) {
-		if(ignore(cf))
-		{
-			return;
-		}
-		this.setCfId(cf,ctx);
-		if(!alreadyLinked)
-		{
-			this.addParentLinkStatements(cf, ctx);
-		}
-		this.rememberGmlId(cf,ctx);
-		this.addRdfTypes(cf, ctx);
-		this.addInstantValue(cf,ctx);
-	}
+//	@Override
+//	public void map(ComplexFeature cf, Context ctx) {
+//		if(ignore(cf))
+//		{
+//			return;
+//		}
+//		this.setCfId(cf,ctx);
+//		if(!alreadyLinked)
+//		{
+//			this.addParentLinkStatements(cf, ctx);
+//		}
+//		this.rememberGmlId(cf,ctx);
+//		this.addRdfTypes(cf, ctx);
+//		this.addInstantValue(cf,ctx);
+//	}
 
-	private void addInstantValue(ComplexFeature cf, Context ctx) {
+	@Override
+	protected void mapFeatureSimpleValue(ComplexFeature cf, Context ctx) {
 		XMLGregorianCalendar d=Helper.getDate(cf.value);
 		if(d!=null)
 		{
@@ -49,7 +50,7 @@ public class InstantPositionMapper extends BaseMapper{
 	}
 
 	@Override
-	protected void addParentLinkStatements(ComplexFeature cf, Context ctx) {	
+	protected void addParentSimpleLinkStatements(ComplexFeature cf, Context ctx) {	
 		Resource subjectURI;
 		ComplexFeature parent=cf.getParent();
 		if(parent!=null )
@@ -122,7 +123,4 @@ public class InstantPositionMapper extends BaseMapper{
 		}	
 		alreadyLinked=false;	
 	}
-
-
-
 }

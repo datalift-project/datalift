@@ -1,22 +1,15 @@
 package org.datalift.sos;
+import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 import static javax.ws.rs.core.MediaType.APPLICATION_XHTML_XML;
 import static javax.ws.rs.core.MediaType.TEXT_HTML;
 
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-
 import java.util.ArrayList;
-
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
@@ -36,7 +29,6 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.UriInfo;
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.apache.http.client.ClientProtocolException;
 import org.datalift.exceptions.TechnicalException;
 //import org.datalift.core.util.SimpleCache;
 import org.datalift.fwk.Configuration;
@@ -47,15 +39,11 @@ import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.SosSource;
 import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.Source.SourceType;
-import org.datalift.fwk.project.WfsSource;
 import org.datalift.fwk.view.TemplateModel;
 import org.datalift.model.BaseConverterModule;
 import org.datalift.model.ComplexFeature;
-import org.datalift.model.FeatureTypeDescription;
 import org.datalift.model.ObservationMetaData;
-import org.datalift.wfs.wfs2.WFS2Client;
-import org.datalift.wfs.wfs2.mapping.WFS2Converter;
-import org.openrdf.rio.RDFHandlerException;
+import org.datalift.webServiceConverter2.WFS2Converter;
 import org.xml.sax.SAXException;
 
 import com.google.gson.JsonArray;
@@ -68,232 +56,228 @@ import com.google.gson.JsonParser;
 @Path(SosToRdf.MODULE_NAME)
 public class SosToRdf extends BaseConverterModule {
 
-		//-------------------------------------------------------------------------
-		// Class members
-		//-------------------------------------------------------------------------
+	//-------------------------------------------------------------------------
+	// Class members
+	//-------------------------------------------------------------------------
 
-		private final static Logger log = Logger.getLogger();
-		/** The name of this module in the DataLift configuration. */
-		public final static String MODULE_NAME = "sos2rdf";
-		private final static Map<String,List<ObservationMetaData>> cache = new HashMap<String, List<ObservationMetaData>>();
-		
-		//-------------------------------------------------------------------------
-		// Constructors
-		//-------------------------------------------------------------------------
-		public SosToRdf() {
-			super(MODULE_NAME,1400, SourceType.SosSource);
+	private final static Logger log = Logger.getLogger();
+	/** The name of this module in the DataLift configuration. */
+	public final static String MODULE_NAME = "sos2rdf";		
+	//-------------------------------------------------------------------------
+	// Constructors
+	//-------------------------------------------------------------------------
+	public SosToRdf() {
+		super(MODULE_NAME,1400, SourceType.SosSource);
+	}
+	public SosToRdf(String name, int position, SourceType[] inputSources) {
+		super(name, position, inputSources);
+		// TODO Auto-generated constructor stub
+	}
+
+	//-------------------------------------------------------------------------
+	// Web services
+	//-------------------------------------------------------------------------
+	@GET
+	@Path("{path: .*$}")
+	public Response getStaticResource(@PathParam("path") String path,
+			@Context UriInfo uriInfo,
+			@Context Request request,
+			@HeaderParam(ACCEPT) String acceptHdr)
+					throws WebApplicationException {
+		log.trace("Reading static resource: {}", path);
+		return Configuration.getDefault()
+				.getBean(ResourceResolver.class)
+				.resolveModuleResource(this.getName(),
+						uriInfo, request, acceptHdr);
+	}
+
+	/**
+	 * returns the index module page whish shows the list of available sos source registred in the current project
+	 * @param projectId : the current project id 
+	 * @return the index page 
+	 */
+	@GET
+	@Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
+	public Response getIndexPage(@QueryParam("project") URI projectId) {
+
+		// Display available sources page.
+
+		return this.newProjectView("availableSosSources.vm", projectId);
+
+	}
+
+	@GET
+	@Path("/fake")
+	@Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
+	public String getModifyTable(@QueryParam("project") URI projectId) {
+
+		return "ok";
+
+	}
+
+	/**
+	 * 
+	 * @param projectId
+	 * @param sourceId
+	 * @return the description of available feature types
+	 */
+	@POST
+	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+	public Response getAvailableObservations(
+			@FormParam("project") URI projectId,
+			@FormParam("source") URI sourceId)
+	{	
+		//get the list of featuretypedescription using the source id
+		//put the list into the web page availablewfsSources 
+		//lists of : FeatureType names, titles, count, summury (list for each information type)
+		ResponseBuilder response = null;
+		// Retrieve project.
+		Project p = this.getProject(projectId);
+		// Retrieve source.
+		SosSource src = (SosSource)(p.getSource(sourceId));
+		if (src == null) {
+			this.throwInvalidParamError("source", sourceId);
 		}
-		public SosToRdf(String name, int position, SourceType[] inputSources) {
-			super(name, position, inputSources);
-			// TODO Auto-generated constructor stub
+		TemplateModel view = this.newView("availableObservations.vm", p);
+		view.put("source", sourceId);
+		List<ObservationMetaData> observationOffering=new ArrayList<>();
+		try {
+			observationOffering=this.getObservationOffering(src.getSourceUrl(),src.getVersion());
+
+			//				ObservationMetaData e=new ObservationMetaData();
+			//				e.setIdentifier("identifier");
+			//				e.setDescription("description");
+			//				observationOffering.add(e);
+			if(observationOffering!=null)
+			{
+				view.put("observationsOffering",observationOffering);
+			}
+			response = Response.ok(view);
+		} catch (Exception e) {
+			TechnicalException error = new TechnicalException("gettingAvailableObservationsFailed", e, sourceId);
+			log.error(error.getMessage(), e);
+			response = Response.serverError().entity(error.getLocalizedMessage())
+					.type(MediaTypes.TEXT_PLAIN);
 		}
+		return response.build();
+	}
+	private List<ObservationMetaData> getObservationOffering(String sourceUrl, String version) throws Exception {
 
-		//-------------------------------------------------------------------------
-		// Web services
-		//-------------------------------------------------------------------------
-		@GET
-		@Path("{path: .*$}")
-		public Response getStaticResource(@PathParam("path") String path,
-				@Context UriInfo uriInfo,
-				@Context Request request,
-				@HeaderParam(ACCEPT) String acceptHdr)
-						throws WebApplicationException {
-			log.trace("Reading static resource: {}", path);
-			return Configuration.getDefault()
-					.getBean(ResourceResolver.class)
-					.resolveModuleResource(this.getName(),
-							uriInfo, request, acceptHdr);
-		}
-
-		/**
-		 * returns the index module page whish shows the list of available sos source registred in the current project
-		 * @param projectId : the current project id 
-		 * @return the index page 
-		 */
-		@GET
-		@Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
-		public Response getIndexPage(@QueryParam("project") URI projectId) {
-
-			// Display available sources page.
-
-			return this.newProjectView("availableSosSources.vm", projectId);
-
-		}
-		
-		@GET
-		@Path("/fake")
-		@Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
-		public String getModifyTable(@QueryParam("project") URI projectId) {
-
-			return "ok";
-
-		}
-
-		/**
-		 * 
-		 * @param projectId
-		 * @param sourceId
-		 * @return the description of available feature types
-		 */
-		@POST
-		@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-		public Response getAvailableObservations(
-				@FormParam("project") URI projectId,
-				@FormParam("source") URI sourceId)
-		{	
-			//get the list of featuretypedescription using the source id
-			//put the list into the web page availablewfsSources 
-			//lists of : FeatureType names, titles, count, summury (list for each information type)
-			ResponseBuilder response = null;
-			// Retrieve project.
-			Project p = this.getProject(projectId);
+		SOS2Client mp=new SOS2Client(sourceUrl);
+		mp.getCapabilities();
+		return mp.getObservationOffering();
+	}
+	/**
+	 * get the list of selected feature types selected by the user to be converted
+	 * @param json the json representation of the array containing the feeatures to be converted
+	 * @return the URL of the source project's page to be used by ajax to redirect the user
+	 */
+	@POST
+	@Path("TransformSelectedObservations")
+	@Produces(MediaType.TEXT_PLAIN)
+	@Consumes(MediaType.APPLICATION_JSON)
+	public String TransformSelectedObservations(String json)
+	{
+		String response = null;
+		JsonParser parser = new JsonParser();
+		JsonElement elements = parser.parse(json);
+		JsonObject o = elements.getAsJsonObject();
+		String project=o.get("project").getAsString();
+		String source=o.get("source").getAsString();
+		int optionOntology= Integer.parseInt(o.get("ontologyOption").getAsString());
+		if(isSet(project) && isSet(source))
+		{	Project p=null;
+		// Retrieve project
+		URI projectUri;
+		try {
+			projectUri = new URI(project);
+			p = this.getProject(projectUri);
 			// Retrieve source.
-			SosSource src = (SosSource)(p.getSource(sourceId));
-			if (src == null) {
-				this.throwInvalidParamError("source", sourceId);
-			}
-			TemplateModel view = this.newView("availableObservations.vm", p);
-			view.put("source", sourceId);
-			List<ObservationMetaData> observationOffering=new ArrayList<>();
-			try {
-				observationOffering=this.getObservationOffering(src.getSourceUrl(),src.getVersion());
-				
-//				ObservationMetaData e=new ObservationMetaData();
-//				e.setIdentifier("identifier");
-//				e.setDescription("description");
-//				observationOffering.add(e);
-				if(observationOffering!=null)
-				{
-					view.put("observationsOffering",observationOffering);
-				}
-				response = Response.ok(view);
-			} catch (Exception e) {
-				TechnicalException error = new TechnicalException("gettingAvailableObservationsFailed", e, sourceId);
-				log.error(error.getMessage(), e);
-				response = Response.serverError().entity(error.getLocalizedMessage())
-						.type(MediaTypes.TEXT_PLAIN);
-			}
-			return response.build();
-		}
-		private List<ObservationMetaData> getObservationOffering(String sourceUrl, String version) throws Exception {
+			SosSource s = (SosSource)(p.getSource(source));
 
-			SOS2Client mp=new SOS2Client(sourceUrl);
-			mp.getCapabilities();
-			return mp.getObservationOffering();
-		}
-		/**
-		 * get the list of selected feature types selected by the user to be converted
-		 * @param json the json representation of the array containing the feeatures to be converted
-		 * @return the URL of the source project's page to be used by ajax to redirect the user
-		 */
-		@POST
-		@Path("TransformSelectedObservations")
-		@Produces(MediaType.TEXT_PLAIN)
-		@Consumes(MediaType.APPLICATION_JSON)
-		public String TransformSelectedObservations(String json)
-		{
-			String response = null;
-			JsonParser parser = new JsonParser();
-			JsonElement elements = parser.parse(json);
-			JsonObject o = elements.getAsJsonObject();
-			String project=o.get("project").getAsString();
-			String source=o.get("source").getAsString();
-			int optionOntology= Integer.parseInt(o.get("ontologyOption").getAsString());
-			if(isSet(project) && isSet(source))
-			{	Project p=null;
-			// Retrieve project
-			URI projectUri;
-			try {
-				projectUri = new URI(project);
-				p = this.getProject(projectUri);
-				// Retrieve source.
-				SosSource s = (SosSource)(p.getSource(source));
+			JsonArray j = o.get("values").getAsJsonArray();
 
-				JsonArray j = o.get("values").getAsJsonArray();
+			Iterator<JsonElement> i = j.iterator();
 
-				Iterator<JsonElement> i = j.iterator();
+			while ( i.hasNext() ){
+				JsonObject obj= i.next().getAsJsonObject();
+				String id = obj.get("id").getAsString();
+				String begin = obj.get("begin").getAsString();
+				String end = obj.get("end").getAsString();
+				//String format = obj.get("format").getAsString();
 
-				while ( i.hasNext() ){
-					JsonObject obj= i.next().getAsJsonObject();
-					String id = obj.get("id").getAsString();
-					String begin = obj.get("begin").getAsString();
-					String end = obj.get("end").getAsString();
-					//String format = obj.get("format").getAsString();
-					
-					String potentialtargetGraph=s.getUri()+"/"+id;
-					int countGraph=getOccurenceGraph(p, potentialtargetGraph);
-					URI targetGraph = constructTargetGraphURI(p,potentialtargetGraph);	
-					countGraph++;
-					URI baseUri=createBaseUri(targetGraph);
-					String targetType=id+"-sos";
-					String destination_title=id+"(RDF# )"+countGraph; //count to be added later
-					try {
-						boolean done=convertObservations2Rdf(projectUri,s, destination_title, targetGraph, baseUri, targetType,id,begin, end, null, optionOntology);
-						if(!done)
-						{
-							throw new Exception();
-						}
-					
+				String potentialtargetGraph=s.getUri()+"/"+id;
+				int countGraph=getOccurenceGraph(p, potentialtargetGraph);
+				URI targetGraph = constructTargetGraphURI(p,potentialtargetGraph);	
+				countGraph++;
+				URI baseUri=createBaseUri(targetGraph);
+				String targetType=id+"-sos";
+				String destination_title=id+"(RDF# )"+countGraph; //count to be added later
+				try {
+					boolean done=convertObservations2Rdf(projectUri,s, destination_title, targetGraph, baseUri, targetType,id,begin, end, null, optionOntology);
+					if(!done)
+					{
+						throw new Exception();
+					}
+
 					System.out.println("done for "+id);
 					// Register new transformed RDF source.
 					Source out;
-					
-						out = this.addResultSource(p, s,
-								"RDF mapping of " + s.getTitle()+"("+id+")", targetGraph);
-						// Display project source tab, including the newly created source.
-						response = this.created(out);
-					} catch (Exception e) {
-						// TODO Auto-generated catch block
-						log.error(e.getMessage());		
-					}					
-				} 
-			}catch (URISyntaxException e1) {
-				// TODO Auto-generated catch block
-				log.error(e1.getMessage());
 
+					out = this.addResultSource(p, s,
+							"RDF mapping of " + s.getTitle()+"("+id+")", targetGraph);
+					// Display project source tab, including the newly created source.
+					response = this.created(out);
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					log.error(e.getMessage());		
+				}					
 			} 
-			}
-			return response;
-		}	
-		private boolean convertObservations2Rdf(URI projectUri, SosSource s, String destination_title, URI targetGraph,
-				URI baseUri, String targetType, String id,  String begin, String end, String format, int optionOntology) throws SAXException, ParserConfigurationException {
-			try {
-				String srs=null;
-				
-				SOS2Client client=new SOS2Client(s.getSourceUrl());
-				client.getObservation(id,begin,end,format);
-				//return a list of parsed features contained in typeName
-				ComplexFeature observationDataToConvert=client.getUtilData(id);
+		}catch (URISyntaxException e1) {
+			// TODO Auto-generated catch block
+			log.error(e1.getMessage());
 
-				if (observationDataToConvert==null ) 
-				{
-					return false;
-				}
-				//0: default converter
-				//1: EMF group Converter
-				WFS2Converter converter=new WFS2Converter(optionOntology);
-				
-				org.datalift.fwk.rdf.Repository target = Configuration.getDefault().getInternalRepository();
-				//handle exception
-				if(!converter.ConvertFeaturesToRDF(observationDataToConvert,target , targetGraph, baseUri, targetType))
-						{
-							return false;
-						}
-				//converter.StoreRDF();
-				//converter.StoreRdfTS(target , targetGraph, baseUri, targetType);
+		} 
+		}
+		return response;
+	}	
+	private boolean convertObservations2Rdf(URI projectUri, SosSource s, String destination_title, URI targetGraph,
+			URI baseUri, String targetType, String id,  String begin, String end, String format, int optionOntology) throws SAXException, ParserConfigurationException {
+		try {			
+			SOS2Client client=new SOS2Client(s.getSourceUrl());
+			client.getObservation(id,begin,end,format);
+			//return a list of parsed features contained in typeName
+			ComplexFeature observationDataToConvert=client.getUtilData(id);
 
-				
-				
-			} catch (Exception e) {
-				TechnicalException error = new TechnicalException("convertFeatureTypeFailed", e, id);
-				log.error(error.getMessage(), e);
+			if (observationDataToConvert==null ) 
+			{
 				return false;
 			}
-			return true;
-			
+			//0: default converter
+			//1: EMF group Converter
+			WFS2Converter converter=new WFS2Converter(optionOntology);
+
+			org.datalift.fwk.rdf.Repository target = Configuration.getDefault().getInternalRepository();
+			//handle exception
+			if(!converter.ConvertFeaturesToRDF(observationDataToConvert,target , targetGraph, baseUri, targetType))
+			{
+				return false;
+			}
+			//converter.StoreRDF();
+			//converter.StoreRdfTS(target , targetGraph, baseUri, targetType);
+
+
+
+		} catch (Exception e) {
+			TechnicalException error = new TechnicalException("convertFeatureTypeFailed", e, id);
+			log.error(error.getMessage(), e);
+			return false;
 		}
-		/****the end of web services***/
-		
+		return true;
+
+	}
+	/****the end of web services***/
+
 	private URI createBaseUri(URI targetGraph) throws URISyntaxException {
 
 		String graph=targetGraph.toString();

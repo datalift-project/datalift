@@ -14,62 +14,38 @@ import org.datalift.model.Attribute;
 
 public class CodeListMapper extends BaseMapper{
 	boolean clAlreadyDefined=false;
+	
 	@Override
-	public void map(ComplexFeature cf, Context ctx) {
-		boolean found=false;
-		if(cf.name.equals(Const.onlineResource))
-			found=true;
-		if(ignore(cf))
+	protected void mapWithParent(ComplexFeature cf, Context ctx) {
+		if(!alreadyLinked)
 		{
-			return;
-		}
-		this.setCfId(cf,ctx);
-		//if(cf.name.equals(Const.mediaMonitored))
-		{
-			if(!alreadyLinked)
-			{
-				this.addParentLinkStatements(cf, ctx);
-			}
-			this.rememberGmlId(cf,ctx);
-			if(!clAlreadyDefined)
-			{
-				this.addRdfTypes(cf, ctx);
-				this.mapFeatureSimpleAttributes(cf, ctx,null);
-			}
-		}
-		/////add the element as smod property
-		if(cf.name.equals(Const.purpose) || cf.name.equals(Const.specialisedEMFType)) //get litteral value embeded in the feature (especially the litteraal in title)
-		{
-			URI smodPredicate=ctx.vf.createURI(Context.nsSmod+cf.name.getLocalPart());
-			Value v=ctx.vf.createLiteral(cf.getLiteral());
-			ctx.model.add(ctx.vf.createStatement(cf.getParent().getId(), smodPredicate, v));
-
-		}
-		if(cf.name.equals(Const.mediaMonitored))
-		{
-			URI smodPredicate=ctx.vf.createURI(Context.nsSmod+cf.name.getLocalPart());
-			Value v=ctx.vf.createURI(cf.getResource());
-			ctx.model.add(ctx.vf.createStatement(cf.getParent().getId(), smodPredicate, v));
+			super.mapWithParent(cf, ctx);
 		}
 	}
 	@Override
+	protected void mapAsIntermediate(ComplexFeature cf, Context ctx) {
+		return;
+	}
+	@Override
 	protected void mapFeatureSimpleAttributes(ComplexFeature cf, Context ctx, Resource id) {
-		// TODO Auto-generated method stub
-		for (Attribute a : cf.itsAttr) {
-			if(! (a instanceof ComplexFeature) && !a.name.equals(SosConst.frame))
-			{
-
-				if(a.getTypeName().equals(Const.hrefType) || a.getTypeName().equals(Const.anyURI))
+		if(!clAlreadyDefined && !cf.isSimple())
+		{
+			for (Attribute a : cf.itsAttr) {
+				if(! (a instanceof ComplexFeature) && !a.name.equals(SosConst.frame))
 				{
-					ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.vf.createURI(Context.nsRDFS+"isDefinedBy"), ctx.vf.createURI(a.value)));
+
+					if(a.getTypeName().equals(Const.hrefType) || a.getTypeName().equals(Const.anyURI))
+					{
+						ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.vf.createURI(Context.nsRDFS+"isDefinedBy"), ctx.vf.createURI(a.value)));
+
+					}
+					if(a.getTypeName().equals(Const.titleAttrType))
+					{
+						String value=a.value;
+						ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.vf.createURI(Context.nsSkos+"prefLabel"), ctx.vf.createLiteral(value)));
+					} 
 
 				}
-				if(a.getTypeName().equals(Const.titleAttrType))
-				{
-					String value=a.value;
-					ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.vf.createURI(Context.nsSkos+"prefLabel"), ctx.vf.createLiteral(value)));
-				} 
-
 			}
 		}
 	}
@@ -100,8 +76,35 @@ public class CodeListMapper extends BaseMapper{
 		}
 		alreadyLinked=false;		
 	}
+	@Override
+	protected void mapComplexChildren(ComplexFeature cf, Context ctx) {
+		/////add the element as smod property
+		if(cf.name.equals(Const.purpose) || cf.name.equals(Const.specialisedEMFType)) //get litteral value embeded in the feature (especially the litteraal in title)
+		{
+			URI smodPredicate=ctx.vf.createURI(Context.nsSmod+cf.name.getLocalPart());
+			Value v=ctx.vf.createLiteral(cf.getLiteral());
+			ctx.model.add(ctx.vf.createStatement(cf.getParent().getId(), smodPredicate, v));
+
+		}
+		if(cf.name.equals(Const.mediaMonitored))
+		{
+			URI smodPredicate=ctx.vf.createURI(Context.nsSmod+cf.name.getLocalPart());
+			Value v=ctx.vf.createURI(cf.getResource());
+			ctx.model.add(ctx.vf.createStatement(cf.getParent().getId(), smodPredicate, v));
+		}
+	}
+	@Override
+	protected void mapFeatureSimpleValue(ComplexFeature cf, Context ctx) {
+		if(!clAlreadyDefined &&!cf.isSimple()){
+			super.mapFeatureSimpleValue(cf, ctx);
+		}
+
+	}
 	protected void addRdfTypes(ComplexFeature cf, Context ctx) {		
-		ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(Context.nsDatalift+Helper.capitalize(cf.name.getLocalPart()))));
-		ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(Context.nsSkos+"Concept")));
+		if(!clAlreadyDefined && !cf.isSimple())
+		{
+			ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(Context.nsDatalift+Helper.capitalize(cf.name.getLocalPart()))));
+			ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(Context.nsSkos+"Concept")));
+		}
 	}
 }

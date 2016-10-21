@@ -23,13 +23,9 @@ import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.rdf.UriCachingValueFactory;
 import org.datalift.fwk.util.Env;
 import org.datalift.fwk.util.UriBuilder;
-import org.datalift.wfs.wfs2.mapping.AnyURIMapper;
 import org.datalift.wfs.wfs2.mapping.BaseMapper;
 import org.datalift.wfs.wfs2.mapping.GeomMapper;
 import org.datalift.wfs.wfs2.mapping.Mapper;
-import org.datalift.wfs.wfs2.mapping.MobileMapper;
-import org.datalift.wfs.wfs2.mapping.SimpleTypeMapper;
-import org.datalift.wfs.wfs2.mapping.StatementSaver;
 import org.openrdf.model.Model;
 import org.openrdf.model.Resource;
 import org.openrdf.model.Statement;
@@ -58,7 +54,6 @@ public class Context {
 	public Model model;
 	public ValueFactory vf = new ValueFactoryImpl();
 	//attributes needs to avoid storing statements in memory
-	public StatementSaver saver;
 	/*****attributes for counting occurences****/
 	public Map<QName, Integer> hm;
 	public Map<String, Resource> codeListOccurences;
@@ -127,8 +122,6 @@ public class Context {
 	}
 	public Context()
 	{
-		saver= new StatementSaver();
-
 		hm=new HashMap <QName,Integer>();
 		codeListOccurences=new HashMap <String,Resource>();
 		vf = new ValueFactoryImpl();
@@ -152,18 +145,8 @@ public class Context {
 		rdfTypeURI=vf.createURI(nsRDF2+"type");
 		DefaultSubjectURI=vf.createURI(nsProject+"root");
 		/***Initialize default mappers****/
-		Mapper m=new SimpleTypeMapper();
 		mappers.put(null, new BaseMapper());
 		mappers.put(new QName("geometry"),new GeomMapper());
-//		mappers.put(Const.string, m);
-//		mappers.put(Const.xsdDate, m);
-//		mappers.put(Const.xsdDouble, m);
-//		mappers.put(Const.xsdFloat, m);
-//		mappers.put(Const.xsdInteger, m);
-//		mappers.put(Const.xsdDecimal, m);
-//		mappers.put(Const.xsdBoolean,new MobileMapper());
-//		mappers.put(Const.anyURI,new AnyURIMapper());
-
 		this.referenceCatalogue = new HashMap<String, String>();
 		this.referenceCatalogue.put(null, baseURI);
 		//initialize bindings units table

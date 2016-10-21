@@ -4,7 +4,6 @@ import org.datalift.model.ComplexFeature;
 import org.datalift.utilities.Context;
 import org.datalift.utilities.Helper;
 import org.datalift.wfs.wfs2.mapping.BaseMapper;
-import org.openrdf.model.Resource;
 
 public class ProcedureMapper extends BaseMapper {
 

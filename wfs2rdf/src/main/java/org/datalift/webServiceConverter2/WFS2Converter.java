@@ -1,4 +1,4 @@
-package org.datalift.wfs.wfs2.mapping;
+package org.datalift.webServiceConverter2;
 
 import java.io.FileNotFoundException;
 import java.net.URI;
@@ -15,19 +15,23 @@ import org.datalift.sos.mapping.PhenomenonTimeMapper;
 import org.datalift.sos.mapping.ProcedureMapper;
 import org.datalift.utilities.Const;
 import org.datalift.utilities.Context;
+import org.datalift.wfs.wfs2.mapping.AnyTypeMapper;
+import org.datalift.wfs.wfs2.mapping.CodeListMapper;
+import org.datalift.wfs.wfs2.mapping.EmfMapper;
+import org.datalift.wfs.wfs2.mapping.Mapper;
+import org.datalift.wfs.wfs2.mapping.ObservationPropertyTypeMapper;
+import org.datalift.wfs.wfs2.mapping.ReferenceTypeMapper;
+import org.datalift.wfs.wfs2.mapping.TimePeriodMapper;
 import org.openrdf.rio.RDFHandlerException;
 
 public class WFS2Converter {
 	
 	private Context ctx;
-	 
-	
 	public WFS2Converter(int i)
 	{
 		ctx=new Context();
 		if(i==1) //we assume that 1 is the id to say we should use EMF group mappers
 		{
-			Mapper m=new SimpleTypeMapper();
 			//ctx.mappers.put(Const.StringOrRefType, m);
 			ctx.mappers.put(Const.ReferenceType, new ReferenceTypeMapper());
 			ctx.mappers.put(Const.EnvironmentalMonitoringFacilityType, new EmfMapper());

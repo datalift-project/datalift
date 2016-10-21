@@ -13,10 +13,11 @@ import org.openrdf.model.URI;
 public class ObservationMemberMapper extends BaseMapper {
 	@Override
 	protected void addRdfTypes(ComplexFeature cf, Context ctx) {
-		URI typeSmodURI = ctx.vf.createURI(Context.nsOml+"Observation");
+		if(!cf.isSimple())
+			{URI typeSmodURI = ctx.vf.createURI(Context.nsOml+"Observation");
 		ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI,typeSmodURI));	
 	}
-
+	}
 	@Override
 	protected void mapComplexChildren(ComplexFeature cf, Context ctx) {
 		for (Attribute a : cf.itsAttr) {

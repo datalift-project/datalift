@@ -37,11 +37,6 @@ public class ObservedPropertyMapper extends BaseMapper {
 		}
 	}
 
-	@Override
-	protected void mapFeatureSimpleValue(ComplexFeature cf, Context ctx) {
-		// TODO Auto-generated method stub
-		super.mapFeatureSimpleValue(cf, ctx);
-	}
 
 	/**
 	 * FOR SHORTCUT MAPPING : the feature's content is directly linked with its parent 

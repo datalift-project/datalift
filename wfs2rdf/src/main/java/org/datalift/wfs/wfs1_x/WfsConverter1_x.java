@@ -1,4 +1,4 @@
-package org.datalift.wfs;
+package org.datalift.wfs.wfs1_x;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -36,11 +36,11 @@ import static org.datalift.fwk.util.TimeUtils.asSeconds;
 import fr.ign.datalift.model.FeatureProperty;
 import fr.ign.datalift.model.GeometryProperty;
 
-public class WfsConverter {
+public class WfsConverter1_x {
 
 	private final static Logger log = Logger.getLogger();
 
-	public WfsConverter()
+	public WfsConverter1_x()
 	{
 
 	}

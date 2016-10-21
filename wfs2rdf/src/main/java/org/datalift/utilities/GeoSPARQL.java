@@ -31,39 +31,29 @@
  * knowledge of the CeCILL license and that you accept its terms.
  */
 
-package fr.ign.datalift.constants;
+package org.datalift.utilities;
 
 import org.openrdf.model.URI;
 import org.openrdf.model.ValueFactory;
 import org.openrdf.model.impl.ValueFactoryImpl;
 
-public class GML {
-	
-	public static String NS = "http://purl.org/ifgi/gml/0.2#";
-	
-	public static URI ID;
+public class GeoSPARQL {
 
-	public static URI ABSTRACTGEOMETRY;
+	public static String NS = "http://www.opengis.net/ont/geosparql#";
+	public static String NSTYPE = "http://www.opengis.net/ont/sf#"; //http://schemas.opengis.net/sf/1.0/simple_features_geometries.rdf#
+	public static URI ASWKT;
+
+	public static URI ASGML;
 	
-	public static URI HASPROPERTY;
-	
-	public static URI HASGEOMETRY;
-	
-	public static URI FEATURECOLLECTION;
-	
-	public static URI FEATUREMEMBER;
-	
-	public static URI HASVALUE;
-	
+	public static URI WKTLITERAL;
+	public static URI GEOMETRY;
+
 	static {
 		ValueFactory vf = ValueFactoryImpl.getInstance(); 
-		ABSTRACTGEOMETRY = vf.createURI(NS, "AbstractGeometry"); 
-		ID = vf.createURI(NS, "id"); 
-		HASGEOMETRY = vf.createURI(NS, "hasGeometry"); 
-		HASPROPERTY = vf.createURI(NS, "hasProperty");
-		FEATURECOLLECTION = vf.createURI(NS, "FeatureCollection");
-		FEATUREMEMBER = vf.createURI(NS, "featureMember");
-		HASVALUE = vf.createURI(NS, "hasValue");
+		ASWKT = vf.createURI(NS, "asWKT");
+		ASGML = vf.createURI(NS, "asGML");
+		WKTLITERAL = vf.createURI(NSTYPE, "wktLiteral");
+		GEOMETRY=vf.createURI(NSTYPE,"geometry");
 	}
-}
 
+}

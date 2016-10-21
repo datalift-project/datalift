@@ -15,9 +15,10 @@ public class ObservationCollectionMapper extends BaseMapper {
 	private boolean mapped=false;
 	@Override
 	protected void addRdfTypes(ComplexFeature cf, Context ctx) {
-		URI typeSmodURI = ctx.vf.createURI(Context.nsOml+"ObservationCollection");
+		if(!cf.isSimple())
+			{URI typeSmodURI = ctx.vf.createURI(Context.nsOml+"ObservationCollection");
 		ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI,typeSmodURI));	
-	}
+	}}
 	@Override
 	protected void mapComplexChildren(ComplexFeature cf, Context ctx) {
 

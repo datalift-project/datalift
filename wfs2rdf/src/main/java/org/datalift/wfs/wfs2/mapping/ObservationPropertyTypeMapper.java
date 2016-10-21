@@ -29,7 +29,8 @@ public class ObservationPropertyTypeMapper extends BaseMapper {
 
 	@Override
 	protected void mapFeatureSimpleAttributes(ComplexFeature cf, Context ctx, Resource toLinkWith) {
-		Resource id;
+		if(!cf.isSimple())
+			{Resource id;
 		if (toLinkWith == null) {
 			id = cf.getId();
 		} else {
@@ -40,11 +41,15 @@ public class ObservationPropertyTypeMapper extends BaseMapper {
 				mapTypedValue(id, a.value, a.getTypeName(), a.name, Context.nsDatalift+cf.name.getLocalPart(), ctx);
 			}
 		}
-	}
+	}}
 	@Override
 	protected void addRdfTypes(ComplexFeature cf, Context ctx) {
-		ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(Context.nsDatalift+Helper.capitalize(Context.referencedObjectType.getLocalPart()))));
-		ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(Context.nsOml+Context.observationType.getLocalPart())));
+		if(!cf.isSimple())
+			{
+			ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(Context.nsDatalift+Helper.capitalize(Context.referencedObjectType.getLocalPart()))));
+			ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(Context.nsOml+Context.observationType.getLocalPart())));
+			}
+		
 	}
 	@Override
 	protected void setCfId(ComplexFeature cf, Context ctx) {

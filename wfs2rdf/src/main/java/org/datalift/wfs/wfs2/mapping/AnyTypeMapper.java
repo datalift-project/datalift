@@ -32,15 +32,19 @@ public class AnyTypeMapper extends BaseMapper{
 
 	@Override
 	protected void addRdfTypes(ComplexFeature cf, Context ctx) {
-		if(cf.isReferencedObject())
-		{
-			ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(Context.nsDatalift+Helper.capitalize(Context.referencedObjectType.getLocalPart()))));
-			if(cf.name.equals(Const.belongsTo))
+		if(!cf.isSimple())
 			{
-				return;
+			if(cf.isReferencedObject())
+			{
+				ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(Context.nsDatalift+Helper.capitalize(Context.referencedObjectType.getLocalPart()))));
+				if(cf.name.equals(Const.belongsTo))
+				{
+					return;
+				}
 			}
-		}
-		ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(Context.nsDatalift+Helper.capitalize(cf.name.getLocalPart()))));
-	}
+			ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(Context.nsDatalift+Helper.capitalize(cf.name.getLocalPart()))));
+
+			}
+			}
 
 }

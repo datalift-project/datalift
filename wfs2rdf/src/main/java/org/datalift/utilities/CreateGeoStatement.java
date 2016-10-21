@@ -48,8 +48,6 @@ import org.openrdf.model.Statement;
 import org.openrdf.model.URI;
 import org.openrdf.model.ValueFactory;
 
-import fr.ign.datalift.constants.GeoSPARQL;
-import fr.ign.datalift.constants.Geometrie;
 import fr.ign.datalift.model.GeometryProperty;
 
 public class CreateGeoStatement {

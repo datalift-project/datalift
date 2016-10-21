@@ -35,6 +35,14 @@
 package org.datalift.model;
 
 
+import static javax.ws.rs.core.MediaType.TEXT_HTML;
+import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static org.datalift.fwk.MediaTypes.TEXT_HTML_UTF8;
+import static org.datalift.fwk.util.PrimitiveUtils.wrap;
+import static org.datalift.fwk.util.TimeUtils.asSeconds;
+
 import java.io.IOException;
 import java.net.URI;
 import java.util.Arrays;
@@ -45,15 +53,8 @@ import java.util.HashSet;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.core.Response.ResponseBuilder;
-
-import org.openrdf.model.Statement;
-import org.openrdf.rio.RDFHandler;
-import org.openrdf.rio.RDFHandlerException;
-import org.openrdf.rio.helpers.RDFHandlerWrapper;
-
-import static javax.ws.rs.core.Response.Status.*;
+import javax.ws.rs.core.UriInfo;
 
 import org.datalift.exceptions.ObjectNotFoundException;
 import org.datalift.exceptions.TechnicalException;
@@ -64,20 +65,19 @@ import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectManager;
 import org.datalift.fwk.project.ProjectModule;
-import org.datalift.fwk.project.ProjectModule.UriDesc;
-import org.datalift.fwk.project.Source;
-import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.project.ShpSource.Crs;
+import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.Source.SourceType;
+import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.rdf.ElementType;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.sparql.SparqlEndpoint;
 import org.datalift.fwk.view.TemplateModel;
 import org.datalift.fwk.view.ViewFactory;
-
-import static org.datalift.fwk.MediaTypes.*;
-import static org.datalift.fwk.util.PrimitiveUtils.wrap;
-import static org.datalift.fwk.util.TimeUtils.asSeconds;
+import org.openrdf.model.Statement;
+import org.openrdf.rio.RDFHandler;
+import org.openrdf.rio.RDFHandlerException;
+import org.openrdf.rio.helpers.RDFHandlerWrapper;
 
 
 /**

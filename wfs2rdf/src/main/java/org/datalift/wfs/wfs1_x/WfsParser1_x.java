@@ -1,4 +1,4 @@
-package org.datalift.wfs;
+package org.datalift.wfs.wfs1_x;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -36,7 +36,7 @@ import fr.ign.datalift.model.AbstractFeature;
 import fr.ign.datalift.model.FeatureProperty;
 import fr.ign.datalift.model.GeometryProperty;
 
-public class WfsParser {
+public class WfsParser1_x {
 
 	private final static Map<String,DataStore> cache = new HashMap<String, DataStore>();	//SimpleCache
 	private final static Logger log = Logger.getLogger();
@@ -46,7 +46,7 @@ public class WfsParser {
 	private String version;
 	private final Charset UTF8_CHARSET = Charset.forName("UTF-8");
 
-	public WfsParser(String url, String version, String serverTypeStrategy )
+	public WfsParser1_x(String url, String version, String serverTypeStrategy )
 	{
 		this.version=version;
 		String getCapabilities = url+bodyRequest+version;

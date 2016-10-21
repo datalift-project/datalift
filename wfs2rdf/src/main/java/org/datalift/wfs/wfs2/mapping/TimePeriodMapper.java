@@ -7,22 +7,11 @@ import org.datalift.model.ComplexFeature;
 import org.datalift.utilities.Const;
 import org.datalift.utilities.Context;
 import org.openrdf.model.Resource;
-import org.openrdf.model.URI;
 
 public class TimePeriodMapper extends BaseMapper{
 
 	@Override
-	public void map(ComplexFeature cf, Context ctx) {
-		if(ignore(cf))
-			return;
-		this.setCfId(cf,ctx);
-		if(!alreadyLinked)
-		{			
-			this.addParentLinkStatements(cf, ctx);
-		}
-		
-	    this.rememberGmlId(cf,ctx);
-		//this.addRdfTypes(cf, ctx);
+	protected void mapComplexChildren(ComplexFeature cf, Context ctx) {
 		for (Attribute a : cf.itsAttr) {
 			if (a instanceof ComplexFeature) {
 				ComplexFeature position=(ComplexFeature) a;
@@ -31,15 +20,12 @@ public class TimePeriodMapper extends BaseMapper{
 			    this.rememberGmlId(position,ctx);
 			}
 		}
-		this.mapFeatureSimpleAttributes(cf, ctx,null);
 	}
 	@Override
 	protected void addRdfTypes(ComplexFeature cf, Context ctx) {	
-		//ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(ctx.nsDatalift+Helper.capitalize(cf.name.getLocalPart()))));
-		//ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI, ctx.vf.createURI(ctx.nsIsoTP+"TM_Period")));
-		URI typeIntervalURI = ctx.vf.createURI(Context.nsw3Time+"ProperInterval");
-		ctx.model.add(ctx.vf.createStatement(cf.getId(), ctx.rdfTypeURI,typeIntervalURI));
+		return;
 		}
+	@Override
 	protected void setCfId(ComplexFeature cf, Context ctx) {
 		/******give the feature an identifier****/
 		Resource os;

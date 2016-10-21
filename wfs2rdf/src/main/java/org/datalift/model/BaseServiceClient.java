@@ -1,14 +1,23 @@
 package org.datalift.model;
 
-import java.util.HashMap;
-import java.util.Map;
-
+import org.datalift.core.util.SimpleCache;
 import org.datalift.gml32.GMLParser32;
 
 
 public abstract class BaseServiceClient {
 
-		protected final static Map<String,Store> cache = new HashMap<String, Store>();
+	//-------------------------------------------------------------------------
+    // Constants
+    //-------------------------------------------------------------------------
+
+    private final static int CACHE_DURATION = 3600 * 6;         // 6 hours.
+  //-------------------------------------------------------------------------
+    // Class members
+    //-------------------------------------------------------------------------
+
+    /** A cache of loaded i18n resource bundles. */
+    protected final static SimpleCache<String, Store> cache =
+                    new SimpleCache<String,Store>(1000, CACHE_DURATION);
 		//10, 3 * 3600
 		protected Store dataStore;
 		protected String baseUrl;
@@ -42,5 +51,4 @@ public abstract class BaseServiceClient {
 			ComplexFeature root = dataStore.getFtParsed.get(typeName);
 			return root;
 		}
-
 }
