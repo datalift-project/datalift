@@ -54,6 +54,13 @@ import java.util.TimeZone;
  */
 abstract public class ThreadSafeDateFormat extends SimpleDateFormat
 {
+    //------------------------------------------------------------------------
+    // Constants
+    //------------------------------------------------------------------------
+
+    /** Default serialization version id. */
+    private final static long serialVersionUID = 1L;
+
     //-------------------------------------------------------------------------
     // Instance members
     //-------------------------------------------------------------------------

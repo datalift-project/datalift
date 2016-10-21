@@ -119,6 +119,9 @@ public final class UriCachingValueFactory implements ValueFactory
         this.wrappedFactory = wrappedFactory;
         this.uriCache = new LinkedHashMap<String,URI>(cacheSize, 0.75f, true)
             {
+                /** Default serialization version id. */
+                private final static long serialVersionUID = 1L;
+
                 @Override
                 protected boolean removeEldestEntry(
                                                 Map.Entry<String,URI> eldest) {

@@ -297,6 +297,9 @@ public final class BoundedAsyncRdfParser
      */
     private final static class EndOfParse implements Statement
     {
+        /** Default serialization version id. */
+        private final static long serialVersionUID = 1L;
+
         public RuntimeException error = null;
 
         /**

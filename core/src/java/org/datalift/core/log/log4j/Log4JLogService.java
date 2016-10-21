@@ -349,6 +349,9 @@ public final class Log4JLogService extends LogService
      */
     private final static class PromotedLevel extends Level
     {
+        /** Default serialization version id. */
+        private final static long serialVersionUID = 1L;
+
         protected PromotedLevel(int level, String levelStr) {
             super(Level.INFO_INT + (level / 100), levelStr, 7);
         }

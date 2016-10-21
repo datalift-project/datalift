@@ -105,6 +105,9 @@ public final class Iso8601DateFormat extends ThreadSafeDateFormat
     public final static Iso8601DateFormat DATETIME_UTC =
                                 new Iso8601DateFormat(Format.DateTime, true);
 
+    /** Default serialization version id. */
+    private final static long serialVersionUID = 1L;
+
     //-------------------------------------------------------------------------
     // Constructors
     //-------------------------------------------------------------------------

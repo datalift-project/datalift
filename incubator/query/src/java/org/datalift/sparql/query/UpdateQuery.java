@@ -997,6 +997,9 @@ public abstract class UpdateQuery
      */
     private final static class Binding extends GraphPattern
     {
+        /** Default serialization version id. */
+        private final static long serialVersionUID = 1L;
+
         public final Value expr;
         public final Variable v;
 
@@ -1014,6 +1017,9 @@ public abstract class UpdateQuery
 
     protected final static class Filter extends GraphPattern
     {
+        /** Default serialization version id. */
+        private final static long serialVersionUID = 1L;
+
         public final Value expr;
 
         public Filter(Value expr) {
@@ -1032,6 +1038,9 @@ public abstract class UpdateQuery
 
     private final static class FunctionWrapper implements SparqlExpression
     {
+        /** Default serialization version id. */
+        private final static long serialVersionUID = 1L;
+
         public final SparqlFunction fct;
         public final Map<URI,Variable> vars = new HashMap<URI,Variable>();
 

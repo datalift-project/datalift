@@ -43,12 +43,22 @@ import org.openrdf.model.Value;
 
 abstract public class GraphPattern implements Statement
 {
+    //------------------------------------------------------------------------
+    // Constants
+    //------------------------------------------------------------------------
+
+    /** Default serialization version id. */
+    private final static long serialVersionUID = 1L;
+
     //-------------------------------------------------------------------------
     // Constants
     //-------------------------------------------------------------------------
 
     /** An empty URI: no namespace, no name, nothing! */
     private final static URI EMPTY_URI = new URI() {
+        /** Default serialization version id. */
+        private final static long serialVersionUID = 1L;
+
         @Override public String getLocalName() { return ""; }
         @Override public String getNamespace() { return ""; }
         @Override public String stringValue()  { return ""; }
@@ -122,8 +132,11 @@ abstract public class GraphPattern implements Statement
     public final Value getObject() {
         final String v = this.stringValue();
         return new Value() {
+                /** Default serialization version id. */
+                private final static long serialVersionUID = 1L;
+
                 @Override public String stringValue() { return v; }
                 @Override public String toString()    { return v; }
-        };
+            };
     }
 }

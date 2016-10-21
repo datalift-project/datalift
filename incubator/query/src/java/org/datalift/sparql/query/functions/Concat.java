@@ -40,6 +40,9 @@ import org.openrdf.model.Value;
 
 public final class Concat extends SparqlFunction
 {
+    /** Default serialization version id. */
+    private final static long serialVersionUID = 1L;
+
     /* package */ Concat() {
         super("concat", (Value[])null);
     }

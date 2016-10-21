@@ -51,6 +51,13 @@ import org.datalift.fwk.TechnicalException;
  */
 public abstract class RdfQueryException extends TechnicalException
 {
+    //------------------------------------------------------------------------
+    // Constants
+    //------------------------------------------------------------------------
+
+    /** Default serialization version id. */
+    private final static long serialVersionUID = 1L;
+
     //-------------------------------------------------------------------------
     // Instance members
     //-------------------------------------------------------------------------

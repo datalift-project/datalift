@@ -49,6 +49,13 @@ import org.datalift.sparql.query.Variable;
  */
 public final class VariableImpl implements Variable
 {
+    //------------------------------------------------------------------------
+    // Constants
+    //------------------------------------------------------------------------
+
+    /** Default serialization version id. */
+    private final static long serialVersionUID = 1L;
+
     //-------------------------------------------------------------------------
     // Constants
     //-------------------------------------------------------------------------

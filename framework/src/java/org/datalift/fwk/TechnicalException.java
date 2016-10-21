@@ -60,6 +60,9 @@ public abstract class TechnicalException extends RuntimeException
 
     protected final static String DEFAULT_BUNDLE_NAME = "/error-messages";
 
+    /** Default serialization version id. */
+    private final static long serialVersionUID = 1L;
+
     //------------------------------------------------------------------------
     // Instance members definition
     //------------------------------------------------------------------------

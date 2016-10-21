@@ -1554,6 +1554,9 @@ public class DOMConfigurator2 extends DOMConfigurator
      */
     private final static class VariableContext extends Properties
     {
+        /** Default serialization version id. */
+        private final static long serialVersionUID = 1L;
+
         /**
          * Creates an empty property list with the specified parent
          * (defaults) Properties object.

@@ -114,6 +114,9 @@ public class VersatileProperties extends Properties
     private final static char ESCAPE_MARKER = '\\';
     private final static char LENGTH_MARKER = '#';
 
+    /** Default serialization version id. */
+    private final static long serialVersionUID = 1L;
+
     //------------------------------------------------------------------------
     // Instance members
     //------------------------------------------------------------------------

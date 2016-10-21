@@ -46,6 +46,17 @@ import java.text.MessageFormat;
  */
 public class ObjectNotFoundException extends PersistenceException
 {
+    //------------------------------------------------------------------------
+    // Constants
+    //------------------------------------------------------------------------
+
+    /** Default serialization version id. */
+    private final static long serialVersionUID = 1L;
+
+    //------------------------------------------------------------------------
+    // Constructors
+    //------------------------------------------------------------------------
+
     /**
      * Constructs a new exception with the specified cause but no
      * detail message.  The detail message of this exception will

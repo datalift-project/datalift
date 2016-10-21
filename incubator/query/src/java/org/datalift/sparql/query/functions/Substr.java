@@ -44,6 +44,9 @@ import org.datalift.sparql.query.Variable;
 
 public final class Substr extends SparqlFunction
 {
+    /** Default serialization version id. */
+    private final static long serialVersionUID = 1L;
+
     /* package */ Substr() {
         super("substr", (Value[])null);
     }

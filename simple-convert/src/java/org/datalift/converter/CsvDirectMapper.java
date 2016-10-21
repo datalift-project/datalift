@@ -985,6 +985,9 @@ public class CsvDirectMapper extends BaseConverterModule
      */
     private final static class CheckedCalendar extends GregorianCalendar
     {
+        /** Default serialization version id. */
+        private final static long serialVersionUID = 1L;
+
         /** A set of flag indicating which fields have been set by the user. */
         private boolean[] externallySet = new boolean[FIELD_COUNT];
 

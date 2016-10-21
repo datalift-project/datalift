@@ -201,6 +201,9 @@ public final class MongoFileStore extends FileStore
 
     public final class MongoFile extends File
     {
+        /** Default serialization version id. */
+        private final static long serialVersionUID = 1L;
+
         //---------------------------------------------------------------------
         // Instance members
         //---------------------------------------------------------------------

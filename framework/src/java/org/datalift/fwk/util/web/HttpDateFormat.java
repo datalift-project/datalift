@@ -81,6 +81,9 @@ public final class HttpDateFormat extends ThreadSafeDateFormat
     private final static HttpDateFormat formats[] =
                         new HttpDateFormat[] { RFC_1123, RFC_1036, ASCTIME};
 
+    /** Default serialization version id. */
+    private final static long serialVersionUID = 1L;
+
     //-------------------------------------------------------------------------
     // Constructors
     //-------------------------------------------------------------------------

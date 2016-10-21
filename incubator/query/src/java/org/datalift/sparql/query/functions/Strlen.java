@@ -40,6 +40,9 @@ import org.openrdf.model.Value;
 
 public final class Strlen extends SparqlFunction
 {
+    /** Default serialization version id. */
+    private final static long serialVersionUID = 1L;
+
     /* package */ Strlen() {
         super("strlen", (Value[])null);
     }

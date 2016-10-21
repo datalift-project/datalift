@@ -1255,6 +1255,9 @@ public final class SparqlTool
      */
     public final class DescribeResult extends HashMap<String,Collection<Value>>
     {
+        /** Default serialization version id. */
+        private final static long serialVersionUID = 1L;
+
         private String uri;
         private final Map<String, DescribeResult> otherSubjects;
 

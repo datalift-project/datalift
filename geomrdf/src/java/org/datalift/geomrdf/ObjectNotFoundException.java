@@ -40,6 +40,13 @@ import java.text.MessageFormat;
 
 public class ObjectNotFoundException extends TechnicalException
 {
+    //------------------------------------------------------------------------
+    // Constants
+    //------------------------------------------------------------------------
+
+    /** Default serialization version id. */
+    private final static long serialVersionUID = 1L;
+
     //-------------------------------------------------------------------------
     // Constructors
     //-------------------------------------------------------------------------

@@ -53,6 +53,17 @@ import org.datalift.fwk.rdf.Repository;
  */
 public class QueryDoneException extends Exception
 {
+    //------------------------------------------------------------------------
+    // Constants
+    //------------------------------------------------------------------------
+
+    /** Default serialization version id. */
+    private final static long serialVersionUID = 1L;
+
+    //------------------------------------------------------------------------
+    // Constructors
+    //------------------------------------------------------------------------
+
     /** Default constructor. */
     public QueryDoneException() {
         super();

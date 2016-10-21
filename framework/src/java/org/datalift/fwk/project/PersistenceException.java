@@ -50,6 +50,13 @@ import org.datalift.fwk.TechnicalException;
 public class PersistenceException extends TechnicalException
 {
     //------------------------------------------------------------------------
+    // Constants
+    //------------------------------------------------------------------------
+
+    /** Default serialization version id. */
+    private final static long serialVersionUID = 1L;
+
+    //------------------------------------------------------------------------
     // Constructors
     //------------------------------------------------------------------------
 

@@ -58,6 +58,9 @@ public class QueryException extends RdfQueryException
             TechnicalException.class.getPackage().getName().replace('.', '/')
             + DEFAULT_BUNDLE_NAME;
 
+    /** Default serialization version id. */
+    private final static long serialVersionUID = 1L;
+
     //-------------------------------------------------------------------------
     // Constructors
     //-------------------------------------------------------------------------

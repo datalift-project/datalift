@@ -54,6 +54,9 @@ abstract public class SparqlFunction implements SparqlExpression
     private final static Map<String,Class<? extends SparqlFunction>> fcts =
                         new HashMap<String,Class<? extends SparqlFunction>>();
 
+    /** Default serialization version id. */
+    private final static long serialVersionUID = 1L;
+
     public final String name;
     protected final List<Value> args;
 
@@ -106,6 +109,9 @@ abstract public class SparqlFunction implements SparqlExpression
 
     private final static class Expr extends SparqlFunction
     {
+        /** Default serialization version id. */
+        private final static long serialVersionUID = 1L;
+
         private Expr() {
             super("expr", (Value[])null);
         }
