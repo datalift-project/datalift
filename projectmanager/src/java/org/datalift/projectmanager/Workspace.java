@@ -111,6 +111,7 @@ import org.datalift.fwk.project.ObjectNotFoundException;
 import org.datalift.fwk.project.RdfSource;
 import org.datalift.fwk.project.Row;
 import org.datalift.fwk.project.ShpSource;
+import org.datalift.fwk.project.SosSource;
 import org.datalift.fwk.project.SparqlSource;
 import org.datalift.fwk.project.SqlDatabaseSource;
 import org.datalift.fwk.project.SqlQuerySource;
@@ -1701,9 +1702,9 @@ public class Workspace extends BaseModule
         return response;
     }
     @POST
-    @Path("{id}/ogcupload")
+    @Path("{id}/wfsupload")
     @Consumes(MULTIPART_FORM_DATA)
-    public Response uploadOgcSource(
+    public Response uploadWfsSource(
     		@PathParam("id") String projectId,
             @FormDataParam("description") String description,
             @FormDataParam("service_type") String serviceType,
@@ -1713,14 +1714,13 @@ public class Workspace extends BaseModule
             @FormDataParam("service_name") String srcName,
             @Context UriInfo uriInfo){
     	 Response response = null;
-    	 log.info("<<<<<<<"+projectId+description+serviceType+version+"<<<<<<<<<<<<<<");
     	 if (! isSet(srcName)) {
              this.throwInvalidParamError("file_name", srcName);
          }          
        
          // Else: File data have been uploaded.
 
-         log.debug("Processing OGC source creation request for {}", srcName);
+         log.debug("Processing WFS source creation request for {}", srcName);
          
          
              // Build object URIs from request path.
@@ -1735,8 +1735,8 @@ public class Workspace extends BaseModule
 	             Project p = this.loadProject(projectUri);
 	             
 	             // Initialize new source.
-	             if(serviceType.equals("WFS"))
-	             {
+//	             if(serviceType.equals("WFS"))
+//	             {
 	            	 try {
 						WfsSource src = this.projectManager.newWfsSource(p, sourceUri,serviceUrl,
 						         srcName, description, version, serverStrategy);
@@ -1746,7 +1746,7 @@ public class Workspace extends BaseModule
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					} 
-	             }
+//	             }
 
 	             // Persist new source.
 	             this.projectManager.saveProject(p);
@@ -1754,7 +1754,7 @@ public class Workspace extends BaseModule
 	             // (browsers) to the source tab of the project page.
 	             response = this.created(p, sourceUri, ProjectTab.Sources).build();
 
-	             log.info("New OGC source \"{}\" created", sourceUri);
+	             log.info("New WFS source \"{}\" created", sourceUri);
 	             response = this.redirect(p, ProjectTab.Sources).build();
 	        
 			} catch (URISyntaxException e) {
@@ -1766,9 +1766,9 @@ public class Workspace extends BaseModule
     	  
 }
     @POST
-    @Path("{id}/ogcmodify")
+    @Path("{id}/wfsmodify")
     @Consumes(MULTIPART_FORM_DATA)
-    public Response modifyOgcSource(
+    public Response modifyWfsSource(
     		@FormDataParam("current_source") URI sourceUri,
     		@PathParam("id") String projectId,
             @FormDataParam("description") String description,
@@ -1796,6 +1796,99 @@ public class Workspace extends BaseModule
          catch (Exception e) {
              this.handleInternalError(e,
                  "Could not modify WFS source {}", sourceUri);
+         }
+         return response; 
+}
+    @POST
+    @Path("{id}/sosupload")
+    @Consumes(MULTIPART_FORM_DATA)
+    public Response uploadSosSource(
+    		@PathParam("id") String projectId,
+            @FormDataParam("description") String description,
+            @FormDataParam("service_type") String serviceType,
+            @FormDataParam("service_url") String serviceUrl,
+            @FormDataParam("version") String version,
+            @FormDataParam("service_name") String srcName,
+            @Context UriInfo uriInfo){
+    	 Response response = null;
+    	 if (! isSet(srcName)) {
+             this.throwInvalidParamError("file_name", srcName);
+         }          
+       
+         // Else: File data have been uploaded.
+
+         log.debug("Processing SOS source creation request for {}", srcName);
+         
+         
+             // Build object URIs from request path.
+             URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
+             URI sourceUri;
+			try {
+				sourceUri = new URI(projectUri.getScheme(), null,
+				                         projectUri.getHost(), projectUri.getPort(),
+				                         this.newSourceId(projectUri.getPath(), srcName),
+				                         null, null);
+				// Retrieve project.
+	             Project p = this.loadProject(projectUri);
+	             
+	             // Initialize new source.
+
+	            	 try {
+						SosSource src = this.projectManager.newSosSource(p, sourceUri,serviceUrl,
+						         srcName, description, version);
+						if (src==null) //parameters given are bad!! 
+							return response;
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} 
+
+	             // Persist new source.
+	             this.projectManager.saveProject(p);
+	             // Notify user of successful creation, redirecting HTML clients
+	             // (browsers) to the source tab of the project page.
+	             response = this.created(p, sourceUri, ProjectTab.Sources).build();
+
+	             log.info("New SOS source \"{}\" created", sourceUri);
+	             response = this.redirect(p, ProjectTab.Sources).build();
+	        
+			} catch (URISyntaxException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+         return response;
+    	  
+}
+    @POST
+    @Path("{id}/sosmodify")
+    @Consumes(MULTIPART_FORM_DATA)
+    public Response modifySosSource(
+    		@FormDataParam("current_source") URI sourceUri,
+    		@PathParam("id") String projectId,
+            @FormDataParam("description") String description,
+            @FormDataParam("service_type") String serviceType,
+            @FormDataParam("service_url") String serviceUrl,
+            @FormDataParam("version") String version,
+            @FormDataParam("service_name") String srcName,
+            @Context UriInfo uriInfo){
+    	 Response response = null;
+         try {
+             // Retrieve source.
+             Project p = this.loadProject(uriInfo, projectId);
+             WfsSource s = this.loadSource(p, sourceUri, WfsSource.class);
+             // Update source data.
+             s.setVersion(version);
+             s.setDescription(description);
+             // Save updated source.
+             this.projectManager.saveProject(p);
+             // Notify user of successful update, redirecting HTML clients
+             // (browsers) to the source tab of the project page.
+             response = this.redirect(p, ProjectTab.Sources).build();
+         }
+         catch (Exception e) {
+             this.handleInternalError(e,
+                 "Could not modify SOS source {}", sourceUri);
          }
          return response; 
 }

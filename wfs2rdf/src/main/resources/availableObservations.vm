@@ -1,0 +1,279 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+#load("wfs2rdf/resources")
+#load_core_resources
+	<title>#i18n("sos2rdf.title") - DataLift</title>
+#css_links
+	<link rel="stylesheet" type="text/css" href="${baseUri}/project/static/css/validation.css"/>
+	<!--<link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.min.css" rel="stylesheet">-->
+    <link href="http://netdna.bootstrapcdn.com/font-awesome/3.0.2/css/font-awesome.css" rel="stylesheet">
+    <link href="${baseUri}/wfs2rdf/css/style.css" rel="stylesheet">
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+</head>
+<body>
+#banner
+	<div id="main-menu" style="position:absolute;top:15px;right:15px;">
+#foreach( $m in $mainMenu )
+#set( $entryUrl = $m.getUrl(${baseUri}) )
+#if( $m.method.name() == "GET" )
+		<a href="${entryUrl}" class="button">${m.label}</a>
+#else
+		<form method="post" action="${entryUrl}"><input type="submit" class="button" value="${m.label}"/></form>
+#end
+#end
+	</div>
+<div class="ui-widget-content dl-main-panel" id="availableFeatureTypes">
+	<h3 class="ui-widget-header dl-widget-header">#i18n("wfs2rdf.title") - #i18n("project.label") ${it.title}</h3>
+	<div class="dl-panel">
+		<div id="accordion">
+			<h3><a href="#">#i18n("ft.chooseFeatureTypes")</a></h3>
+			<div id="tabs" style="margin:0;">
+				<table id="selectable_types">
+					<tr><td/></tr>
+				</table>
+				<div id="selectable_sources_toolbar"></div>
+			</div>
+			
+			<h3><a href="#"> #i18n("ft.chooseTransformationOption")</a></h3>
+			<div id="tabs" style="margin:0;">
+			
+				<p><label class="control-label" for="ontology">#i18n("ontology_label.option"): </label>				
+				<select name="ontology_option" id="ontology_option">
+					<option value="0"  title="#i18n("default_ontology.option_tooltip")">#i18n("default_ontology.option")</option>
+					<option value="1"  title="#i18n("SOS_ontology.option_tooltip")">#i18n("SOS_ontology.option")</option>
+				</select>
+				</p>
+			</div>
+		</div>
+		
+		<form method="post" action="${baseUri}/wfs2rdf/saveDescription">
+			<input type="hidden" name="project" id="project" value="${it.uri}"/>
+			<input type="hidden" name="source" id="source" value="${source}"/>
+			<input type="button" id="typenames_submit" disabled class="button" value="#i18n("wfs2rdf.transform")" title="#i18n("Transform.tooltip")"/>
+			<input type="submit" id="submit_save_capabilities" class="button" value="#i18n("ft.save")" title="#i18n("SaveCapabilities.tooltip")" style="position: absolute; right: 0px"/>
+		</form>
+	</div>
+
+</div>
+
+#script_links
+
+<script src="${baseUri}/wfs2rdf/js/loading-plugin.js"></script>
+<script type="text/javascript">
+
+$(function() {
+	idValues = [];
+	loadGridTypes();
+	$(window).bind('resize', function() {
+			$("#selectable_types").setGridWidth($("#tabs").width() - 30);
+		}).trigger('resize');
+	});
+	$(".button").button();
+	$("input:submit").button();
+	$("#accordion").accordion({
+			autoHeight: false,
+			navigation: true,
+			collapsible: true,
+			event: ""
+		});
+		$("#typenames_submit").click(function(){		
+		      	defaults = {
+    		    'position': "right",        // right | inside | overlay
+    		    'text': "",                 // Text to display next to the loader
+    		    'class': "icon-refresh",    // loader CSS class
+    		    'tpl': '<span class="isloading-wrapper %wrapper%">%text%<i class="%class% icon-spin"></i></span>',
+    		    'disableSource': true,      // true | false
+    		    'disableOthers': []
+    		};
+    	
+        $.isLoading({ text: "#i18n("converting_service.inProgress")" });
+        
+        // Setup Loading plugin
+        $( "#load-overlay .demo p" ).removeClass("alert-success");
+        
+	      $.ajax({
+			//The URL to process the request
+			  url  : '${baseUri}/sos2rdf/TransformSelectedObservations',
+			  type : 'POST',
+			  data : JSON.stringify({
+				   project : $("#project").val(),
+				   source : $("#source").val(),
+				   values : idValues,
+				   ontologyOption : $('#ontology_option').val()
+				  }),
+			 dataType : 'text',
+			 contentType : 'application/json',
+			 success: function(data,textStatus) {
+			 	  window.location.href=data;
+			 },
+			 error: function(XMLHttpRequest, textStatus, errorThrown){
+			 	alert("#i18n("converting_service.unavailable")");
+			 },
+			 complete: function(data){
+			 		$.isLoading( "hide" );
+            		$( "#load-overlay .demo p" ).html( "Content Loaded" )
+                                        .addClass("alert-success"); 
+			 }		
+				});				
+			});
+
+	$("#accordion h3").click(function() {
+			var idx = $("#accordion h3").index(this);
+				$("#accordion").accordion("activate", idx);		
+		});
+	function loadGridTypes() {
+		/************************* Observations ******************************/
+		
+		   /**************data needed to fill the grid *****************/
+		var mydata = [
+#foreach($obs in $observationsOffering)
+		{
+			id:"$!esc.javascript($obs.getIdentifier())",
+			Title:"$!esc.javascript($obs.getName())",
+			Description:"$!esc.javascript($obs.getDescription())",
+			begin:"$!esc.javascript($obs.getPhonomenonTimeBegin())",
+			end:"$!esc.javascript($obs.getPhonomenonTimeEnd())"
+		},
+#end
+		];
+		
+		var grid = $("#selectable_types");
+		grid.jqGrid({
+			data:mydata,
+			datatype: "local",
+			colNames:['id','#i18n("grid.availableObservations.name")','#i18n("grid.availableObservations.description")','#i18n("grid.availableObservations.begin")','#i18n("grid.availableObservations.end")'],
+			colModel:[
+				{name:'id', key:true, index:'id', width:50},
+				{name:'Title', index:'title',  width:100},
+				{name:'Description',  index:'descr',   width:380},
+				{name:'begin', index:'begin', width:140, cellEdit:true, editable: true},
+				{name:'end', index:'end',  width:140, cellEdit:true,editable: true}
+			],
+			caption: "",
+			rowNum:200, rowList:[50,100,500,1000,2000], 
+			pager: '#selectable_sources_toolbar',
+			gridview: true,
+			height: 250,
+			multiselect: true,
+			multiboxonly: true,
+			ignoreCase: true,
+            sortname: 'Title',
+            sortorder: "desc",
+            'cellEdit':true,
+            'cellsubmit' : 'clientArray',
+   			editurl: 'clientArray'
+		});
+		
+		
+        console.log(grid.jqGrid("getGridParam", "data"));
+        console.log("===========================");
+        console.log("===========================");
+		
+        console.log(grid.jqGrid("getGridParam", "data"));
+        console.log("+++++++++++++++++++++++++");
+        console.log("+++++++++++++++++++++++++");
+		grid.trigger("reloadGrid");
+		console.log(grid.jqGrid("getGridParam", "data"));
+        console.log("===========================");
+        console.log("===========================");
+
+
+		
+		//console.log("observationOffering : ",$observationsOffering);
+		console.log("+++++++++++");
+		console.log("mydata : ",mydata);
+
+		/*for(var i=0;i<=mydata.length;i++) {
+			jQuery("#selectable_types").jqGrid('addRowData',i+1,mydata[i]);
+		}*/
+
+		grid.jqGrid('navGrid', '#selectable_sources_toolbar',
+			{edit:false,add:false,del:false, refresh:false, search:false}/*,
+			// options for the Edit Dialog
+		{
+			editCaption: "Modifier",
+			modal:true,
+			jqModal: true,
+			recreateForm: true,
+			closeOnEscape: true,
+			closeAfterEdit: true,
+			reloadAfterSubmit: false,
+			mtype: 'GET',
+			beforeSubmit: function (postdata, form) {
+				selRowId = $('#selectable_sources').jqGrid('getGridParam', 'selrow');
+				begin= $('#selectable_sources').jqGrid('getCell', selRowId, 'begin');
+				end = $('#selectable_sources').jqGrid('getCell', selRowId, 'end');
+				$.ajax({
+					url: 'http://google.com',
+					type: 'GET',
+					success: function(data,textStatus){
+						console.log("success: ");
+						var selIds = $('#selectable_types').jqGrid('getGridParam', 'selarrrow')
+						for (i = 0, n = selIds.length; i < n; i++) {
+						
+						    console.log({id:$('#selectable_types').jqGrid('getCell', selIds[i], 'id'), begin :$('#selectable_types').jqGrid('getCell', selIds[i], 'begin'), end: $('#selectable_types').jqGrid('getCell', selIds[i], 'end')});
+						}
+					},
+					error: function(XMLHttpRequest, textStatus, errorThrown){
+						console.log("error: ");
+						var selIds = $('#selectable_types').jqGrid('getGridParam', 'selarrrow')
+						for (i = 0, n = selIds.length; i < n; i++) {
+						    console.log({id:$('#selectable_types').jqGrid('getCell', selIds[i], 'id'), begin :$('#selectable_types').jqGrid('getCell', selIds[i], 'begin'), end: $('#selectable_types').jqGrid('getCell', selIds[i], 'end')});
+						}
+					},
+					complete: function(data){
+						console.log("complete: ");
+						var selIds = $('#selectable_types').jqGrid('getGridParam', 'selarrrow')
+						for (i = 0, n = selIds.length; i < n; i++) {
+						    console.log({id:$('#selectable_types').jqGrid('getCell', selIds[i], 'id'), begin :$('#selectable_types').jqGrid('getCell', selIds[i], 'begin'), end: $('#selectable_types').jqGrid('getCell', selIds[i], 'end')});
+						}
+					}
+					});
+				return true;
+			},
+			errorTextFormat: function (data) {
+				return 'Error: ' + data.responseText
+			},
+		}*/)
+			.navButtonAdd(
+				'#selectable_sources_toolbar',	{
+					caption:'#i18n("grid.featureTypes.validate")',
+					onClickButton:function(){
+						var selIds = $('#selectable_types').jqGrid('getGridParam', 'selarrrow'), i, n;
+						idValues=[];
+						for (i = 0, n = selIds.length; i < n; i++) {
+						    idValues.push({id:$('#selectable_types').jqGrid('getCell', selIds[i], 'id'), begin :$('#selectable_types').jqGrid('getCell', selIds[i], 'begin'), end: $('#selectable_types').jqGrid('getCell', selIds[i], 'end')});
+						}
+						var e = $('#typenames_submit');
+						if(n>0){
+							$('#typenames_submit').removeAttr('disabled');
+							$('#typenames_submit').removeClass("ui-state-disabled")
+							
+						}
+						else
+							{
+							$('#typenames_submit').attr('disabled','true');
+							$('#typenames_submit').addClass("ui-state-disabled")
+							}
+						console.log("validate",idValues);
+					}	
+				}
+			).navButtonAdd(
+			'#selectable_sources_toolbar',
+			{
+			caption:'#i18n("grid.featureTypes.cancel")',
+			onClickButton:function() {
+				idValues=[];
+				 $('#selectable_types').jqGrid('resetSelection');
+				 $('#typenames_submit').attr('disabled','true');
+				 $('#typenames_submit').addClass("ui-state-disabled")
+			}
+		});
+		jQuery("#selectable_types").jqGrid('hideCol',["nm"]);
+	}
+	
+</script>
+</body>
+</html>

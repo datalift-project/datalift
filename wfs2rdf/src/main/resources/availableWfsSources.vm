@@ -1,0 +1,46 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+#load("wfs2rdf/resources")
+#load_core_resources
+	<title>#i18n("wfs2rdf.title") - DataLift</title>
+#css_links
+#css_links
+	<link rel="stylesheet" type="text/css" href="${baseUri}/project/static/css/validation.css"/>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+</head>
+<body>
+#banner
+<div class="ui-widget-content converter_main" id="workspace">
+
+	<h3 class="ui-widget-header dl-widget-header">#i18n("wfs2rdf.title") - #i18n("project.label") ${it.title}</h3>
+	<form id="converter_form" method="post" action="${baseUri}/wfs2rdf">
+		<input type="hidden" name="project" id="project" value="${it.uri}"/>
+		<p><label for="source">#i18n("source.to_convert"):</label>
+		<select name="source" id="source">
+#foreach( $curSrc in $it.getSources() )
+	#set( $count = 1 )
+	#if( $converter.canHandle($curSrc) )
+		#foreach( $source in $it.getSources() )
+			#if( $source.getType() == $field.TransformedRdfSource && $source.getParent().uri == $curSrc.uri )
+				#set( $count = $count + 1 )
+			#end
+		#end
+			<option value="${curSrc.uri}" name="${curSrc.title}" count="$count">$esc.html($curSrc.title)</option>
+	#end
+#end
+		</select></p>
+		<input type="submit" id="source_submit" value="#i18n('submit.label')"/>
+	</form>
+</div>
+#script_links
+<script type="text/javascript">
+
+$(function() {
+	$("#source_submit").button();
+	$("input:submit").button();
+	})
+	</script>
+</body>
+</html>

@@ -230,22 +230,42 @@ public interface ProjectManager
                                                             throws IOException;
 
     /**
-     * Creates a new XML source object.
+     * Creates a new Wfs source object.
      * @param  project       the owning project.
      * @param  uri           the source URI.
-     * @param sUrl 
+     * @param sUrl 			 the server url without parameters (without ?service=xxx&request=...)
      * @param  title         the source label.
      * @param  description   the description of the source content or
      *                       intent.
-     * @param  filePath      the XML file path in the public storage.
+     * @param  version       the version of wfs to be requested
+     * @param serverStrategy "mapserver" or "geoserver" or "not specified". needed only if it is a 1.x  wfs
      *
-     * @return a new XML source, associated to the specified project.
+     * @return a new WFS source, associated to the specified project.
      * @throws IOException if any error occurred creating the source
      *         or accessing the specified file.
      */
     public WfsSource newWfsSource(Project project, URI uri, String sUrl, String title,
             String description, String version, String serverStrategy )
                                       throws IOException;
+    
+    /**
+     * Creates a new Sos source object.
+     * @param  project       the owning project.
+     * @param  uri           the source URI.
+     * @param  sUrl 		 the server url without parameters (without ?service=xxx&request=...)
+     * @param  title         the source label.
+     * @param  description   the description of the source content or
+     *                       intent.
+     * @param  version       the version of wfs to be requested
+     *
+     * @return a new SOS source, associated to the specified project.
+     * @throws IOException if any error occurred creating the source
+     *         or accessing the specified file.
+     */
+    public SosSource newSosSource(Project project, URI uri, String sUrl, String title,
+            String description, String version )
+                                      throws IOException;
+    
     /**
      * Creates a new transformed RDF source object.
      * @param  project       the owning project.

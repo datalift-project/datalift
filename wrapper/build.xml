@@ -34,7 +34,7 @@
   <property file="${datalift.root}/build.properties"/>
 
   <property name="datalift.wrapper.modules"
-            value="flint-endpoint,projectmanager,simple-convert,database-directmapper,geomrdf,lov/api,lov/catalogue,data2ontology,virtuoso-connector,allegrograph-connector,stringtouri,silk-interlinker,incubator/ontology-mapper"/>
+            value="sparql2viz-endpoint,projectmanager,simple-convert,database-directmapper,geomrdf,wfs2rdf,lov/api,lov/catalogue,data2ontology,virtuoso-connector,allegrograph-connector,stringtouri,silk-interlinker,incubator/ontology-mapper"/>
   <property name="security.context.class"
             value="org.datalift.core.security.LocalUserSecurityContext"/>
 
