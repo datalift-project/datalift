@@ -1,2 +1,2 @@
-org.datalift.wfs.Wfstordf
-org.datalift.sos.SosToRdf
+org.datalift.ows.wfs.Wfstordf
+org.datalift.ows.sos.SosToRdf
