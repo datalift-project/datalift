@@ -17,7 +17,7 @@
 
   <properties>
     <!-- External dependencies -->
-    <geotools.version>8.4</geotools.version>
+    <geotools.version>14.3</geotools.version>
   </properties>
 
   <dependencies>
