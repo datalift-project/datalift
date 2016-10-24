@@ -34,7 +34,7 @@ public class SimpleMeasureMapper extends BaseMapper {
 					String str_val=f.value;
 					if(str_val!=null)
 					{
-						double val=Double.valueOf(str_val);	
+						double val=Double.parseDouble(str_val);
 						ctx.model.handleStatement(ctx.vf.createStatement(cf.getId(), ctx.vf.createURI(Context.nsOml+"amount"), ctx.vf.createLiteral(val)));
 						String str_unit =ctx.sosMetaData.get(Const.uom);
 						if(Helper.isSet(str_unit))

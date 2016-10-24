@@ -37,7 +37,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -70,10 +69,11 @@ public class CreateGeoStatement {
 			} else {
 				throw new FileNotFoundException("property file '" + propFileName + "' not found in the classpath");
 			}
-			Enumeration em = prop.keys();
-			while (em.hasMoreElements()) {
-				String codeEpsg = (String) em.nextElement();
-				CRS.put(codeEpsg,prop.getProperty(codeEpsg));
+			for (Object k : prop.keySet()) {
+				if (k instanceof String) {
+				    String codeEpsg = (String)k;
+				    CRS.put(codeEpsg, prop.getProperty(codeEpsg));
+				}
 			}
 		} catch (Exception e) {
 			log.error("An error has occured while attempting to  load the properties file of CRS " + e);

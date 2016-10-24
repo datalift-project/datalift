@@ -42,7 +42,7 @@ public class MeasurmentTimeSeriesMapper extends BaseMapper {
 		}
 	}
 	private void mapCommunMetaData(ComplexFeature f, Context ctx) {
-
+	    // NOP
 	}
 	/**
 	 * extract metadata related to the observation. expl : temporal extent, interpolationtype, uom

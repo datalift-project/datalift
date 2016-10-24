@@ -290,7 +290,7 @@ public class SosToRdf extends BaseConverterModule {
 		}
 		if(numberValues.size()!=0)
 		{
-			return numberValues.get(numberValues.size()-1);
+			return numberValues.get(numberValues.size()-1).intValue();
 		}
 		else
 		{

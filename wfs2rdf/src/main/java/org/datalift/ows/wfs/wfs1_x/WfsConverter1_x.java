@@ -8,13 +8,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.datalift.ows.exceptions.TechnicalException;
-import org.datalift.fwk.Configuration;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.rdf.UriCachingValueFactory;
 import org.datalift.fwk.util.Env;
-import org.datalift.fwk.util.UriBuilder;
 import org.datalift.ows.model.FeatureTypeDescription;
 import org.datalift.ows.utilities.CreateGeoStatement;
 import org.openrdf.model.Statement;
@@ -40,8 +38,6 @@ public class WfsConverter1_x {
 			org.datalift.fwk.rdf.Repository target, URI targetGraph, URI baseUri, String targetType, String ftCrs)
 	{
 
-		final UriBuilder uriBuilder = Configuration.getDefault()
-				.getBean(UriBuilder.class);
 		final RepositoryConnection cnx = target.newConnection();
 		org.openrdf.model.URI ctx = null;
 		try {
@@ -205,8 +201,6 @@ public class WfsConverter1_x {
 
 	public void ConvertFeatureTypeDescriptionToRDF(List<FeatureTypeDescription> data, Repository target, URI targetGraph,
 			URI baseUri, String targetType) {
-		final UriBuilder uriBuilder = Configuration.getDefault()
-				.getBean(UriBuilder.class);
 		final RepositoryConnection cnx = target.newConnection();
 		org.openrdf.model.URI ctx = null;
 		try {
@@ -243,8 +237,6 @@ public class WfsConverter1_x {
 
 			// serialize a featureCollection into RDF
 			int count = 0;
-			CreateGeoStatement cgs = new CreateGeoStatement();
-
 			for (int i = 0; i < data.size(); i++) {
 				count = i + 1;
 				org.openrdf.model.URI feature = vf.createURI(sbjUri + count);

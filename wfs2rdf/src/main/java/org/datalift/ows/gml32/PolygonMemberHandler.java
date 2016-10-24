@@ -26,11 +26,8 @@ public class PolygonMemberHandler extends DefaultHandler{
 	boolean goBack=false;
 	private SAXParser parser;
 	private MultiPolygonHandler fHandler;
-	private Stack <ComplexFeature> fpile;
-	private Stack<ComplexFeature> stack = new Stack<ComplexFeature>();
 	private String localNameRetrieved;
 	private List <String> polygoneParts= new ArrayList<String>();
-	private Boolean newPart=true;
 
 	public PolygonMemberHandler(SAXParser parser2, MultiPolygonHandler geoHandler, Stack<ComplexFeature> fpile2, DlGeometry g2,
 			ComplexFeature tmp, String localNameRetrieved2) {
@@ -38,7 +35,6 @@ public class PolygonMemberHandler extends DefaultHandler{
 		this.g=g2;
 		this.parser=parser2;
 		this.fHandler=geoHandler;
-		this.fpile=fpile2;
 		this.localNameRetrieved=localNameRetrieved2;
 	}
 
@@ -48,7 +44,6 @@ public class PolygonMemberHandler extends DefaultHandler{
 		{
 			initPoLygone();
 		}
-		newPart=true;
 	}
 	private boolean initPoLygone()
 	{

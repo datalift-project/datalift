@@ -55,9 +55,6 @@ public class Handler extends DefaultHandler {
     public void startElement(String uri, String localName, String qName, Attributes attributes)
     		throws SAXException {
     	String explicitType="";
-    	boolean foundit;
-    	if(localName.equals("value"))
-    		foundit=true;
     	currentCoordinateValues.setLength(0);
     	ElementPSVI elt=psvi.getElementPSVI();
     	//initialize cmplx object and set its attribute
@@ -124,10 +121,7 @@ public class Handler extends DefaultHandler {
 
 	@Override
     public void endElement(String uri, String localName, String qName) throws SAXException {    
-    	boolean found;
-		if(localName.equals("FeatureCollection")) 
-    		found =true;
-		if(!stack.isEmpty())
+    	if(!stack.isEmpty())
     	{
     		ComplexFeature lastcurrentElt=stack.peek();
     		lastcurrentElt.value=currentCoordinateValues.toString().trim().replaceAll("\\s+"," ");

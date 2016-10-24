@@ -26,8 +26,6 @@ public class PolygoneHandler extends DefaultHandler{
 	boolean goBack=false;
     private SAXParser parser;
     private GeoHandler fHandler;
-    private Stack <ComplexFeature> fpile;
-    private Stack<ComplexFeature> stack = new Stack<ComplexFeature>();
     private String localNameRetrieved;
     private List <String> polygoneParts= new ArrayList<String>();
 	private StringBuilder currentCoordinateValues= new StringBuilder();
@@ -37,7 +35,6 @@ public class PolygoneHandler extends DefaultHandler{
 		this.g=g2;
 		this.parser=parser2;
     	this.fHandler=geoHandler;
-    	this.fpile=fpile2;
     	this.localNameRetrieved=localNameRetrieved2;
 	}
 	@Override

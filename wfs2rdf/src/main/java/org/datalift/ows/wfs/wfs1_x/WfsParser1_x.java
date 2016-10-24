@@ -62,7 +62,7 @@ public class WfsParser1_x {
 		if (ds == null) {
 			Map<Object, Object> connectionParameters = new HashMap<>();
 			connectionParameters.put("WFSDataStoreFactory:GET_CAPABILITIES_URL", getCapabilities );
-			connectionParameters.put("WFSDataStoreFactory:TIMEOUT",900000000);
+			connectionParameters.put("WFSDataStoreFactory:TIMEOUT",Integer.valueOf(900000000));
 			connectionParameters.put("WFSDataStoreFactory:ENCODING","UTF-8");
 			if(!serverTypeStrategy.equals("autre"))
 				connectionParameters.put("WFSDataStoreFactory:WFS_STRATEGY", serverTypeStrategy); // if not specified for a mapserver => error: noxsdelement declaration found for {http://www.opengis.net/wfs}REM_NAPPE_SEDIM

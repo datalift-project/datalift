@@ -155,7 +155,7 @@ public class Wfstordf extends BaseConverterModule{
 		String source=o.get("source").getAsString();
 		//int optionGraph= Integer.parseInt(o.get("graphOption").getAsString());
 		int optionOntology= Integer.parseInt(o.get("ontologyOption").getAsString());
-		boolean optionWGS84= Boolean.valueOf((o.get("convertSrsOption").getAsString()));
+		boolean optionWGS84= Boolean.parseBoolean((o.get("convertSrsOption").getAsString()));
 		if(Helper.isSet(project) && Helper.isSet(source))
 		{	Project p=null;
 		// Retrieve project
@@ -331,7 +331,7 @@ public class Wfstordf extends BaseConverterModule{
 		}
 		if(numberValues.size()!=0)
 		{
-			return numberValues.get(numberValues.size()-1);
+			return numberValues.get(numberValues.size()-1).intValue();
 		}
 		else
 		{

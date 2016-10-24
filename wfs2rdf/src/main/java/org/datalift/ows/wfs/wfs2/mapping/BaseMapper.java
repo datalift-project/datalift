@@ -28,9 +28,6 @@ public class BaseMapper implements Mapper {
 
 	//************* The template method
 	public final void map(ComplexFeature cf, Context ctx) throws RDFHandlerException {
-		boolean found=false;
-		if(cf.name.getLocalPart().equals("hasObservation"))
-			found=true;
 		if (ignore(cf)) {
 			return;
 		}
@@ -320,7 +317,7 @@ public class BaseMapper implements Mapper {
 			if (predicate == null) {
 				predicate = Context.nsDatalift + attrName.getLocalPart();
 			}
-			boolean bvalue = Boolean.valueOf(value);
+			boolean bvalue = Boolean.parseBoolean(value);
 			ctx.model.handleStatement(ctx.vf.createStatement(id, ctx.vf.createURI(predicate), ctx.vf.createLiteral(bvalue)));
 			added = true;
 		}
@@ -344,7 +341,7 @@ public class BaseMapper implements Mapper {
 			if (predicate == null) {
 				predicate = Context.nsDatalift + attrName.getLocalPart();
 			}
-			int ivalue = Integer.valueOf(value);
+			int ivalue = Integer.parseInt(value);
 			ctx.model.handleStatement(ctx.vf.createStatement(id, ctx.vf.createURI(predicate), ctx.vf.createLiteral(ivalue)));
 			added = true;
 		}
@@ -352,7 +349,7 @@ public class BaseMapper implements Mapper {
 			if (predicate == null) {
 				predicate = Context.nsDatalift + attrName.getLocalPart();
 			}
-			double dvalue = Integer.valueOf(value);
+			double dvalue = Double.parseDouble(value);
 			ctx.model.handleStatement(ctx.vf.createStatement(id, ctx.vf.createURI(predicate), ctx.vf.createLiteral(dvalue)));
 			added = true;
 		}
