@@ -1,0 +1,121 @@
+class Parser {
+
+  constructor(xml) {
+    this.xml = xml;
+  }
+
+  transformString(category, name) {
+    return category.toLocaleLowerCase() + name.substr(0, 1) + name.substr(1, name.length).toLowerCase();
+  }
+
+  isLimesConfigurationFile(xmlTagName) {
+    if ((this.xml.find(xmlTagName).text()) !== "") {
+      return true;
+    }
+    return false;
+  }
+
+  loadSingleInput(xmlTagName, htmlInputName) {
+    var elem;
+
+    if ((elem = this.xml.find(xmlTagName).text()) !== "") {
+      $("input[name='" + htmlInputName + "']").val(elem);
+      return (0);
+    }
+    $.notify("XML file not complete", "error");
+    return (-1);
+  }
+
+  loadDropdown(xmlTagName, htmlInputName) {
+    var elem;
+
+    if ((elem = this.xml.find(xmlTagName).text()) !== "") {
+      $("span[name='" + htmlInputName + "']").text(elem);
+      return (0);
+    }
+    $.notify("XML file not complete", "error");
+    return (-1);
+  }
+
+  loadGroup(root, elements) {
+    for (var i in elements)
+      $("input[name='" + this.transformString(root, elements[i]) + "']").val(this.xml.find(root + ">" + elements[i]).text());
+  }
+
+  loadProperties(name) {
+    var elements = [];
+
+    this.xml.find(name.substr(0, 6) + " > PROPERTY").each(function(index, el) {
+      if (index !== 0)
+      $("." + name).click();
+      elements.push($(this).text());
+    });
+
+    $("input[name='" + name + "']").each(function(index, el) {
+      $(this).val(elements[index]);
+    });
+  }
+
+  loadPrefixes() {
+    var namespace = [];
+    var label = [];
+
+    this.xml.find("PREFIX").each(function(index, el) {
+      if (index !== 0)
+      $(".prefix .btn-add").click();
+
+      namespace.push($(this).find('NAMESPACE').text());
+      label.push($(this).find('LABEL').text());
+    });
+
+    $(".prefix").each(function(index, el) {
+      $(this).find('label').text(label[index]);
+      $(this).find('input').val(namespace[index]);
+
+    });
+  }
+}
+
+$("input[name='loadXml']").change(function(event) {
+  var file = this.files[0];
+
+  if (file != null) {
+    if (file.name.substr(file.name.length - 4, file.name.length) === ".xml") {
+      var reader = new FileReader();
+      reader.readAsText(file);
+      reader.onload = function(e) {
+        var input = ["ENDPOINT", "ID", "VAR", "PAGESIZE", "RESTRICTION"];
+        var output = ["THRESHOLD", "FILE", "RELATION"];
+
+        var xmlDoc = $.parseXML(e.target.result);
+        var xml = $(xmlDoc);
+        var p = new Parser(xml);
+
+        if (p.isLimesConfigurationFile("LIMES") === true) {
+          $('#ExportName').text(file.name);
+          $('#ExportNameDiv').show();
+          $('#ModalExportName').text(file.name);
+
+          p.loadGroup("SOURCE", input);
+          p.loadProperties("sourceProperties");
+          p.loadProperties("targetProperties");
+          p.loadGroup("TARGET", input);
+          p.loadGroup("ACCEPTANCE", output);
+          p.loadGroup("REVIEW", output);
+          p.loadSingleInput("METRIC", "metric");
+          p.loadDropdown("EXECUTION", "execution");
+          p.loadDropdown("OUTPUT", "output");
+          p.loadPrefixes();
+          $("input[name='sourceEndpoint']").trigger('blur');
+          $("input[name='targetEndpoint']").trigger('blur');
+        } else {
+          $.notify("Not a valid Limes Configuration file", "error");
+        }
+      };
+    } else {
+      $.notify("Not a XML file", "error");
+    }
+  }
+  // reset file input
+  $(this).replaceWith($(this).val('').clone(true));
+});
