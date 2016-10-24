@@ -102,6 +102,7 @@ import com.google.gson.JsonObject;
 import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.FormDataParam;
 
+import org.datalift.core.util.JsonStringMap;
 import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.FileStore;
@@ -155,7 +156,6 @@ import org.datalift.fwk.util.web.MainMenu;
 import org.datalift.fwk.util.web.Menu;
 import org.datalift.fwk.view.TemplateModel;
 import org.datalift.fwk.view.ViewFactory;
-
 
 import static org.datalift.fwk.MediaTypes.*;
 import static org.datalift.fwk.project.SparqlSource.*;
