@@ -8,7 +8,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.datalift.core.util.JsonStringMap;
+import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.replay.WorkflowStep;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -19,7 +21,9 @@ import org.json.JSONObject;
  * @author rcabaret
  *
  */
-public class WorkflowStepImpl implements WorkflowStep{
+public class WorkflowStepImpl implements WorkflowStep
+{
+    private final static Logger log = Logger.getLogger();
 
     private URI originEvent;
     private URI operation;
@@ -207,7 +211,10 @@ public class WorkflowStepImpl implements WorkflowStep{
             }
             jobj.put(step.getOriginEvent().toString(), jstep);
             return jobj;
-        } catch (Exception e){}
+        }
+        catch (Exception e) {
+            log.error("JSON decoding error", e);
+        }
         return null;
     }
 

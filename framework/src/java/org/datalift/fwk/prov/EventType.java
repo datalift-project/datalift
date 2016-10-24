@@ -4,14 +4,15 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
-public final class EventType {
-    
+public final class EventType
+{
+    private static Map<URI, EventType> instances =
+            new HashMap<URI, EventType>();
+
     private URI uri;
     private String title;
     private String initial;
-    private static Map<URI, EventType> instances =
-            new HashMap<URI, EventType>();
-    
+
     private EventType(URI uri, String title, String initial) {
         this.uri = uri;
         this.title = title;
@@ -29,7 +30,7 @@ public final class EventType {
     public String getInitial() {
         return initial;
     }
-    
+
     @Override
     public boolean equals(Object o){
         if(o == null)
@@ -40,7 +41,12 @@ public final class EventType {
             return true;
         return false;
     }
-    
+
+    @Override
+    public int hashCode() {
+        return this.uri.hashCode();
+    }
+
     public static EventType addNewInstance(URI uri, String title, String initial){
         EventType ret;
         if(EventType.instances.containsKey(uri)){
@@ -53,7 +59,7 @@ public final class EventType {
         }
         return ret;
     }
-    
+
     public static EventType getInstance(URI uri){
         return EventType.instances.get(uri);
     }

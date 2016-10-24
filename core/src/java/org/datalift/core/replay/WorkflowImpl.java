@@ -14,6 +14,7 @@ import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemManager;
 import org.apache.commons.vfs2.FileType;
 import org.apache.commons.vfs2.VFS;
+
 import org.datalift.core.async.TaskContextBase;
 import org.datalift.core.project.BaseRdfEntity;
 import org.datalift.core.util.JsonStringMap;
@@ -34,6 +35,7 @@ import org.datalift.fwk.prov.Event;
 import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.replay.Workflow;
 import org.datalift.fwk.replay.WorkflowStep;
+
 import org.json.JSONException;
 
 import com.clarkparsia.empire.annotation.NamedGraph;
@@ -212,6 +214,7 @@ public class WorkflowImpl extends BaseRdfEntity implements Workflow{
     
     /** {@inheritDoc} */
     @Override
+    @SuppressWarnings("boxing")
     public void replay(Map<String, String> variables){
         this.refreshJsons();
         List<List<IterableInput>> itInput =
@@ -489,13 +492,13 @@ public class WorkflowImpl extends BaseRdfEntity implements Workflow{
                 if(step.getPreviousSteps() != null)
                     for(WorkflowStep prev : step.getPreviousSteps()){
                         if(standBy.containsKey(prev)){
-                            if(standBy.get(prev) ==
-                                    prev.getNextSteps().size() - 1){
+                            int prevStandBy = standBy.get(prev).intValue();
+                            if(prevStandBy == prev.getNextSteps().size() - 1){
                                 steps.get(i + 1).add(prev);
                                 standBy.remove(prev);
                             } else {
                                 standBy.put(prev,
-                                        new Integer(standBy.get(prev) + 1));
+                                        Integer.valueOf(prevStandBy + 1));
                             }
                         } else {
                             if(prev.getNextSteps().size() > 1)

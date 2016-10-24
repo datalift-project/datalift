@@ -49,11 +49,11 @@ public class Parameters {
             // if several parameters have the same label
             if (this.parametersMap.containsKey(param.getLabel())) {
                 if (doubles.containsKey(param.getLabel())) {
-                    doubles.put(param.getLabel(),
-                            new Integer(doubles.get(param.getLabel()) + 1));
+                    int v = doubles.get(param.getLabel()).intValue() + 1;
+                    doubles.put(param.getLabel(), Integer.valueOf(v));
                 }
                 else {
-                    doubles.put(param.getLabel(), new Integer(2));
+                    doubles.put(param.getLabel(), Integer.valueOf(2));
                 }
             }
             // if the parameter is not null

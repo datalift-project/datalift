@@ -157,13 +157,12 @@ public class TaskManagerImpl implements TaskManager{
     private class TaskExecution implements Runnable{
 
         private TaskImpl task;
-        private GenericRdfDao dao = TaskManagerImpl.this.dao;
         private Project project;
         private Event informer;
         
         TaskExecution(Project project, TaskImpl t, Event informer){
-            this.dao.persist(t);
-            this.task = this.dao.save(t);
+            dao.persist(t);
+            this.task = dao.save(t);
             this.project = project;
             this.informer = informer;
         }
@@ -176,18 +175,18 @@ public class TaskManagerImpl implements TaskManager{
                     this.task.getOperation().getOperationId(),
                     this.task.getParmeters());
             this.task.setStatus(TaskStatus.runStatus);
-            this.dao.save(this.task);
+            dao.save(this.task);
             try {
                 Parameters params = this.task.getOperation().getBlankParameters();
                 params.setValues(this.task.getParmeters());
                 this.task.getOperation().execute(params);
                 this.task.setStatus(TaskStatus.doneStatus);
-                this.dao.delete(this.task);
+                dao.delete(this.task);
                 this.task.setRunningEvent(((TaskContextImpl) TaskContext
                         .getCurrent()).endOperation(true));
             } catch (Exception e) {
                 this.task.setStatus(TaskStatus.failStatus);
-                this.dao.save(this.task);
+                dao.save(this.task);
                 ((TaskContextImpl) TaskContext.getCurrent()).endOperation(false);
                 Logger.getLogger().error("the task fail : " +
                         this.task.getUri().toString(), e);

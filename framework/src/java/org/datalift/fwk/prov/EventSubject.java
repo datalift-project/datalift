@@ -3,13 +3,14 @@ package org.datalift.fwk.prov;
 import java.util.HashMap;
 import java.util.Map;
 
-public final class EventSubject {
-    
-    private String title;
-    private String initial;
+public final class EventSubject
+{
     private static Map<String, EventSubject> instances =
             new HashMap<String, EventSubject>();
-    
+
+    private String title;
+    private String initial;
+
     private EventSubject(String title, String initial) {
         this.title = title;
         this.initial = initial;
@@ -22,7 +23,7 @@ public final class EventSubject {
     public String getInitial() {
         return initial;
     }
-    
+
     @Override
     public boolean equals(Object o){
         if(o == null)
@@ -33,7 +34,12 @@ public final class EventSubject {
             return true;
         return false;
     }
-    
+
+    @Override
+    public int hashCode() {
+        return this.title.hashCode();
+    }
+
     public static EventSubject addNewInstance(String title, String initial){
         EventSubject ret;
         if(EventSubject.instances.containsKey(title)){
@@ -45,7 +51,7 @@ public final class EventSubject {
         }
         return ret;
     }
-    
+
     public static EventSubject getInstance(String title){
         return EventSubject.instances.get(title);
     }

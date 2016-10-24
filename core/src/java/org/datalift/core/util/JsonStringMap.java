@@ -13,88 +13,93 @@ import org.json.JSONObject;
 /**
  * this class is a Map implementation with Strings as keys and values.
  * this implementation is based on the json.org library, it provide interactions
- * with JSONObject class and with json strings.
- * 
- * @author rcabaret
+ * with JSONObject class and with JSON strings.
  *
+ * @author rcabaret
  */
-public class JsonStringMap implements Map<String, String> {
-
+public class JsonStringMap implements Map<String, String>
+{
     private JSONObject jobj = null;
-    
+
     /**
      * construct an empty map
      */
-    public JsonStringMap(){
+    public JsonStringMap() {
         this.jobj = new JSONObject();
     }
-    
+
     /**
      * construct a map based on a json formated string
-     * 
+     *
      * @param json  a json as a string
      */
-    public JsonStringMap(String json){
+    public JsonStringMap(String json) {
         try {
             this.jobj = new JSONObject(json);
-        } catch (JSONException e) {
+        }
+        catch (JSONException e) {
             throw new RuntimeException(e);
         }
     }
-    
+
     /**
      * construct a map based on an other one
-     * 
+     *
      * @param map   the map to extract from
      */
-    public JsonStringMap(Map<String, String> map){
+    public JsonStringMap(Map<String, String> map) {
         this.jobj = new JSONObject();
-        for(Map.Entry<String, String> e : map.entrySet())
+        for (Map.Entry<String, String> e : map.entrySet()) {
             this.put(e.getKey(), e.getValue());
+        }
     }
-    
+
     /**
      * construct a map based on a JSONObject, every values are cast as String
-     * 
+     *
      * @param json  a JSONObject to read
      */
-    public JsonStringMap(JSONObject json){
-        if(json == null || json.length() == 0)
+    public JsonStringMap(JSONObject json) {
+        if (json == null || json.length() == 0) {
             this.jobj = new JSONObject();
-        else
+        }
+        else {
             this.jobj = new JSONObject(json, JSONObject.getNames(json));
+        }
     }
-    
+
     /**
      * return a json string with an json object as the key value content
-     * 
+     *
      * @return the json string
      */
-    public String getJson(){
+    public String getJson() {
         return this.jobj.toString();
     }
-    
+
     /**
      * return a json string with an json object as the key value content
-     * 
+     *
      * @return the json string
      */
     @Override
-    public String toString(){
+    public String toString() {
         return this.jobj.toString();
     }
-    
+
     /**
      * return a JSONObject as the key value content
-     * 
+     *
      * @return the JSONObject
      */
-    public JSONObject getJSONObject(){
+    public JSONObject getJSONObject() {
         String[] names = JSONObject.getNames(this.jobj);
-        if(names != null)
+        if (names != null) {
             return new JSONObject(this.jobj, names);
-        else
+        }
+        else {
             return new JSONObject();
+        }
     }
 
     /** {@inheritDoc} */
@@ -127,23 +132,28 @@ public class JsonStringMap implements Map<String, String> {
     @Override
     public String get(Object key) {
         String k = key.toString();
-        if(this.jobj.isNull(k))
+        if (this.jobj.isNull(k)) {
             return null;
-        else
+        }
+        else {
             return this.jobj.optString(k);
+        }
     }
 
     /** {@inheritDoc} */
     @Override
     public String put(String key, String value) {
-        if(key == null)
+        if (key == null) {
             throw new IllegalArgumentException("the key is null");
+        }
         String p = null;
-        if(!this.jobj.isNull(key))
+        if (! this.jobj.isNull(key)) {
             p = this.jobj.optString(key);
+        }
         try {
             this.jobj.put(key, value);
-        } catch (JSONException e) {
+        }
+        catch (JSONException e) {
             throw new IllegalArgumentException(e);
         }
         return p;
@@ -161,7 +171,7 @@ public class JsonStringMap implements Map<String, String> {
     /** {@inheritDoc} */
     @Override
     public void putAll(Map<? extends String, ? extends String> m) {
-        for(Map.Entry<? extends String, ? extends String> e : m.entrySet()){
+        for (Map.Entry<? extends String, ? extends String> e : m.entrySet()) {
             this.put(e.getKey(), e.getValue());
         }
     }
@@ -177,9 +187,11 @@ public class JsonStringMap implements Map<String, String> {
     public Set<String> keySet() {
         Set<String> s = new HashSet<String>();
         String[] names = JSONObject.getNames(this.jobj);
-        if(names != null)
-            for(String k : names)
-                    s.add(k);
+        if (names != null) {
+            for (String k : names) {
+                s.add(k);
+            }
+        }
         return s;
     }
 
@@ -188,47 +200,56 @@ public class JsonStringMap implements Map<String, String> {
     public Collection<String> values() {
         Collection<String> s = new ArrayList<String>();
         String[] names = JSONObject.getNames(this.jobj);
-        if(names != null)
-            for(String k : names)
-                    s.add(this.jobj.optString(k));
+        if (names != null) {
+            for (String k : names) {
+                s.add(this.jobj.optString(k));
+            }
+        }
         return s;
     }
 
     /** {@inheritDoc} */
     @Override
     public Set<Map.Entry<String, String>> entrySet() {
-        Set<Map.Entry<String, String>> s
-                = new HashSet<Map.Entry<String, String>>();
+        Set<Map.Entry<String, String>> s =
+                new HashSet<Map.Entry<String, String>>();
         String[] names = JSONObject.getNames(this.jobj);
-        if(names != null)
-            for(String k : names)
+        if (names != null) {
+            for (String k : names) {
                 s.add(new Couple(k, this.jobj.optString(k)));
+            }
+        }
         return s;
     }
-    
+
     //cast all values of the JSONObject as String
-    private static Map<String, String> getAllAsStringMap(JSONObject json){
+    private static Map<String, String> getAllAsStringMap(JSONObject json) {
         Map<String, String> result = new HashMap<String, String>();
         String[] names = JSONObject.getNames(json);
-        if(names != null)
-            for(String n : names)
+        if (names != null) {
+            for (String n : names) {
                 try {
                     result.put(n, json.get(n).toString());
-                } catch (JSONException e) {}
+                }
+                catch (JSONException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
         return result;
     }
-    
+
     // the entry class for the Map.entrySet method
-    private class Couple implements Map.Entry<String, String>{
-        
+    private class Couple implements Map.Entry<String, String>
+    {
         private String key;
         private String value;
 
-        public Couple(String k, String v){
+        public Couple(String k, String v) {
             this.key = new String(k);
             this.value = new String(v);
         }
-        
+
         @Override
         public String getKey() {
             return this.key;
@@ -245,6 +266,5 @@ public class JsonStringMap implements Map<String, String> {
             this.value = value;
             return v;
         }
-        
     }
 }
