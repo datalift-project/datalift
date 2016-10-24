@@ -34,9 +34,11 @@
     <shiro.version>1.1.0</shiro.version>
     <wro4j.version>1.4.9</wro4j.version>
 
+    <json.version>20160212</json.version>
+    <gson.version>2.3.1</gson.version>
+
     <opencsv.version>2.3</opencsv.version>
     <bzip2.version>0.9.1</bzip2.version>
-    <gson.version>2.3.1</gson.version>
     <commons-io.version>2.4</commons-io.version>
     <commons-lang3.version>3.4</commons-lang3.version>
 

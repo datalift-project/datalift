@@ -14,6 +14,7 @@
   <packaging>war</packaging>
 
   <name>Datalift Core</name>
+
   <profiles>
     <profile>
       <id>dev</id>
@@ -42,15 +43,18 @@
       </properties>
     </profile>
   </profiles>
-  <dependencies>
 
+  <properties>
+    <commons-vfs.version>2.0</commons-vfs.version>
+  </properties>
+
+  <dependencies>
     <!-- Datalift dependencies -->
     <dependency>
       <groupId>org.datalift</groupId>
       <artifactId>datalift-framework</artifactId>
       <version>${project.version}</version>
     </dependency>
-
     <!-- JEE & JAX-RS dependencies -->
     <dependency>
       <groupId>javax.servlet</groupId>
@@ -158,13 +162,24 @@
       <artifactId>opencsv</artifactId>
       <version>${opencsv.version}</version>
     </dependency>
-    <!-- Commons Lang : JSON escaping support -->
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-vfs2</artifactId>
+      <version>${commons-vfs.version}</version>
+    </dependency>
+    <!-- JSON support -->
+    <dependency>
+      <groupId>org.json</groupId>
+      <artifactId>json</artifactId>
+      <version>${json.version}</version>
+    </dependency>
+    <!-- Commons Lang: JSON escaping support -->
     <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-lang3</artifactId>
         <version>${commons-lang3.version}</version>
     </dependency>
-    <!-- WRO4J : Web Resources Optimization -->
+    <!-- WRO4J: Web Resources Optimization -->
     <dependency>
         <groupId>commons-io</groupId>
         <artifactId>commons-io</artifactId>
