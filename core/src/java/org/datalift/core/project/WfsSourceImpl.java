@@ -9,12 +9,12 @@ import com.clarkparsia.empire.annotation.RdfsClass;
 
 @Entity
 @RdfsClass("datalift:wfsSource")
-public class WfsSourceImpl extends BaseServiceSource
-							implements WfsSource{
-
+public class WfsSourceImpl extends BaseServiceSource implements WfsSource
+{
 	public WfsSourceImpl() {
 		super(SourceType.WfsSource);
 	}
+
 	/**
 	 * Creates a new WFS source with the specified identifier and
 	 * owning project.
@@ -32,15 +32,12 @@ public class WfsSourceImpl extends BaseServiceSource
 
 	@Override
 	public boolean isCompliantInspire() {
-		// TODO Auto-generated method stub
+		// TODO Add support...
 		return false;
 	}
 
 	@Override
-	public void setCompliantInspire() {
-		// TODO Auto-generated method stub
-		
+	public void setCompliantInspire(boolean compliant) {
+		// TODO Add support...
 	}
-	
-
 }

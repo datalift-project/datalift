@@ -1,37 +1,13 @@
 package org.datalift.fwk.project;
 
-public interface ServiceSource extends Source{
-	
-	
-	/**
-	 * 
-	 * @return
-	 */
-	public String getVersion();
-	
-	/**
-	 * 
-	 * @return
-	 */
-	public String getPublisher();
-	
-	/**
-	 * 
-	 * @param
-	 */
-	public void setVersion(String version);
-	
-	/**
-	 * 
-	 * @param
-	 */
-	public void setserverTypeStrategy(String s);
-	
-	public String getserverTypeStrategy();
-				  
-	/**
-	 * 
-	 * @param
-	 */
-	public void setPublisher(String publisher);
+public interface ServiceSource extends Source
+{
+    public String getVersion();
+    public void setVersion(String version);
+
+    public String getPublisher();
+    public void setPublisher(String publisher);
+
+    public String getserverTypeStrategy();
+    public void setserverTypeStrategy(String s);
 }
