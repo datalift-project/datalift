@@ -5,15 +5,13 @@
 	<parent>
 		<groupId>org.datalift</groupId>
 		<artifactId>datalift-parent</artifactId>
-		<version>0.9.1-beta-1</version>
+		<version>0.9.2-b1</version>
 	</parent>
 
-	<artifactId>ows2rdf</artifactId>
+	<artifactId>datalift-wfs2rdf</artifactId>
 
 	<properties>
-		<datalift.version>0.9.1-beta-1</datalift.version>
 		<geotools.version>14.3</geotools.version>
-		<gson.version> 1.4</gson.version>
 		<xerces.version>2.11.0 </xerces.version>
 		<apacheHttp.version>4.5.2</apacheHttp.version>
 	</properties>
@@ -25,14 +23,25 @@
 		</repository>
 	</repositories>
 	<dependencies>
-
+		<dependency>
+			<groupId>org.datalift</groupId>
+			<artifactId>datalift-core</artifactId>
+			<version>${project.version}</version>
+			<classifier>classes</classifier>
+			<exclusions>
+				<exclusion>
+					<groupId>com.sun.jersey</groupId>
+					<artifactId>jersey-json</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<!-- XML parser with PSVI support -->
 		<dependency>
 			<groupId>xerces</groupId>
 			<artifactId>xercesImpl</artifactId>
 			<version>${xerces.version}</version>
 		</dependency>
-
-
+		<!-- GeoTools WFS client -->
 		<dependency>
 			<groupId>org.geotools</groupId>
 			<artifactId>gt-wfs-ng</artifactId>
@@ -43,30 +52,12 @@
 			<artifactId>gt-epsg-hsql</artifactId>
 			<version>${geotools.version}</version>
 		</dependency>
-
-		<dependency>
-			<groupId>org.datalift</groupId>
-			<artifactId>datalift-framework</artifactId>
-			<version>${datalift.version}</version>
-		</dependency>
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpclient</artifactId>
 			<version>${apacheHttp.version}</version>
 		</dependency>
 		<!-- JSON support using GSON -->
-		<dependency>
-			<groupId>org.datalift</groupId>
-			<artifactId>datalift-core</artifactId>
-			<version>${datalift.version}</version>
-			<classifier>classes</classifier>
-			<exclusions>
-				<exclusion>
-					<groupId>com.sun.jersey</groupId>
-					<artifactId>jersey-json</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
 		<dependency>
 			<groupId>com.google.code.gson</groupId>
 			<artifactId>gson</artifactId>
