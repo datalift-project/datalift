@@ -48,9 +48,7 @@ import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.regex.Pattern;
 
 import static java.util.Calendar.*;
@@ -77,6 +75,7 @@ import org.openrdf.model.Value;
 import org.openrdf.model.ValueFactory;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.repository.RepositoryConnection;
+
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.async.Operation;
 import org.datalift.fwk.async.Parameter;
@@ -378,7 +377,7 @@ public class CsvDirectMapper extends BaseConverterModule implements Operation
                                 colParams.substring(sep + 1, end));
                         strPt = end + 1;
                     }
-                    paramsMap.put(col, mapp);
+                    paramsMap.put(wrap(col), mapp);
                 }
             }
             Mapping[] typeMappings = new Mapping[nbrCol];
