@@ -7,14 +7,17 @@
 		<artifactId>datalift-parent</artifactId>
 		<version>0.9.2-b1</version>
 	</parent>
-
 	<artifactId>datalift-wfs2rdf</artifactId>
+	<packaging>jar</packaging>
+
+	<name>RDF Converter for WFS and SOS OGC Web Services</name>
 
 	<properties>
 		<geotools.version>14.3</geotools.version>
 		<xerces.version>2.11.0 </xerces.version>
 		<apacheHttp.version>4.5.2</apacheHttp.version>
 	</properties>
+
 	<repositories>
 		<repository>
 			<id>osgeo</id>
