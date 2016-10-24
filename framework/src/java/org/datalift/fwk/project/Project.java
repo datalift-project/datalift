@@ -39,6 +39,9 @@ import java.net.URI;
 import java.util.Collection;
 import java.util.Date;
 
+import org.datalift.fwk.prov.Event;
+import org.datalift.fwk.replay.Workflow;
+
 
 /**
  * A data-lifting project.
@@ -63,8 +66,6 @@ public interface Project
     public Source getSource(String uri);
     public void remove(Source source);
 
-    public Date getCreationDate();
-
     public Date getModificationDate();
     public void setModificationDate(Date date);
 
@@ -75,4 +76,13 @@ public interface Project
     public void addOntology(Ontology ontology);
     public Ontology getOntology(String title);
     public Ontology removeOntology(String title);
+    
+    public void addEvent(Event event);
+    public void removeEvent(Event event);
+    public Collection<Event> getEvents();
+    
+    public void addWorkflow(Workflow workflow);
+    public Collection<Workflow> getWorkflows();
+    public Workflow getWorkflow(URI uri);
+    public void removeWorkflow(URI uri);
 }

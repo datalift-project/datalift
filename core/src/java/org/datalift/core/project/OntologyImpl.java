@@ -35,12 +35,11 @@
 package org.datalift.core.project;
 
 import java.net.URI;
-import java.util.Date;
-
 import javax.persistence.Entity;
 
 import org.datalift.fwk.project.Ontology;
 
+import com.clarkparsia.empire.annotation.NamedGraph;
 import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.RdfsClass;
 
@@ -51,7 +50,8 @@ import com.clarkparsia.empire.annotation.RdfsClass;
  * @author oventura
  */
 @Entity
-@RdfsClass("void:vocabulary")
+@RdfsClass("datalift:Ontology")
+@NamedGraph(type = NamedGraph.NamedGraphType.Static, value="http://www.datalift.org/core/projects")
 public class OntologyImpl extends BaseRdfEntity implements Ontology
 {
     //-------------------------------------------------------------------------
@@ -60,12 +60,8 @@ public class OntologyImpl extends BaseRdfEntity implements Ontology
 
     @RdfProperty("dc:title")
     private String title;
-    @RdfProperty("dcterms:source")
+    @RdfProperty("prov:atLocation")
     private URI source;
-    @RdfProperty("void:dateSubmitted")
-    private Date dateSubmitted;
-    @RdfProperty("dc:publisher")
-    private String operator;
 
     //-------------------------------------------------------------------------
     // Ontology contract support
@@ -97,18 +93,6 @@ public class OntologyImpl extends BaseRdfEntity implements Ontology
 
     /** {@inheritDoc} */
     @Override
-    public Date getDateSubmitted() {
-        return this.dateSubmitted;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public String getOperator() {
-        return this.operator;
-    }
-
-    /** {@inheritDoc} */
-    @Override
     public String getUri() {
         return this.getRdfId().toString();
     }
@@ -127,11 +111,4 @@ public class OntologyImpl extends BaseRdfEntity implements Ontology
     // Specific implementation
     //-------------------------------------------------------------------------
 
-    public void setDateSubmitted(Date dateSubmitted) {
-        this.dateSubmitted = dateSubmitted;
-    }
-
-    public void setOperator(String operator) {
-        this.operator = operator;
-    }
 }

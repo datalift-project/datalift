@@ -37,6 +37,7 @@ package org.datalift.core.project;
 
 import java.net.URI;
 import java.net.URLDecoder;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -48,6 +49,7 @@ import javax.persistence.FetchType;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.OneToMany;
 
+import com.clarkparsia.empire.annotation.NamedGraph;
 import com.clarkparsia.empire.annotation.RdfId;
 import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.RdfsClass;
@@ -56,6 +58,8 @@ import org.datalift.fwk.project.Ontology;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.TransformedRdfSource;
+import org.datalift.fwk.prov.Event;
+import org.datalift.fwk.replay.Workflow;
 import org.datalift.fwk.util.StringUtils;
 import org.datalift.fwk.util.web.Charsets;
 
@@ -84,7 +88,8 @@ import org.datalift.fwk.util.web.Charsets;
  */
 @Entity
 @MappedSuperclass
-@RdfsClass("vdpp:Project")
+@RdfsClass("datalift:Project")
+@NamedGraph(type = NamedGraph.NamedGraphType.Static, value="http://www.datalift.org/core/projects")
 public class ProjectImpl extends BaseRdfEntity implements Project
 {
     //-------------------------------------------------------------------------
@@ -104,16 +109,20 @@ public class ProjectImpl extends BaseRdfEntity implements Project
     @OneToMany(fetch = FetchType.EAGER, cascade = { CascadeType.ALL })
     private Collection<Source> sources = new LinkedList<Source>();
 
-    @RdfProperty("dcterms:issued")
-    private Date dateCreated;
     @RdfProperty("dcterms:modified")
     private Date dateModified;
-    @RdfProperty("dcterms:license")
+    @RdfProperty("dc:license")
     private URI license;
 
-    @RdfProperty("void:vocabulary")
+    @RdfProperty("datalift:ontology")
     @OneToMany(fetch = FetchType.EAGER, cascade = { CascadeType.ALL })
     private Collection<Ontology> ontologies = new LinkedList<Ontology>();
+    
+    @RdfProperty("datalift:workflow")
+    @OneToMany(fetch = FetchType.EAGER, cascade = { CascadeType.ALL })
+    private Collection<Workflow> workflows = new LinkedList<Workflow>();
+    
+    private Collection<Event> events = new ArrayList<Event>();
 
     //-------------------------------------------------------------------------
     // Constructors
@@ -233,12 +242,6 @@ public class ProjectImpl extends BaseRdfEntity implements Project
 
     /** {@inheritDoc} */
     @Override
-    public Date getCreationDate() {
-        return this.copy(this.dateCreated);
-    }
-
-    /** {@inheritDoc} */
-    @Override
     public Date getModificationDate() {
         return this.copy(this.dateModified);
     }
@@ -293,6 +296,52 @@ public class ProjectImpl extends BaseRdfEntity implements Project
         }
         return ontology;
     }
+    
+    /** {@inheritDoc} */
+    @Override
+    public void addEvent(Event event) {
+        this.events.add(event);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void removeEvent(Event event) {
+        this.events.remove(event);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Collection<Event> getEvents() {
+        return this.events;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void addWorkflow(Workflow workflow) {
+        this.workflows.add(workflow);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Collection<Workflow> getWorkflows() {
+        return Collections.unmodifiableCollection(this.workflows);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Workflow getWorkflow(URI uri) {
+        for(Workflow o : this.workflows)
+            if(o.getUri().equals(uri))
+                return o;
+        return null;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void removeWorkflow(URI uri) {
+        Workflow w = this.getWorkflow(uri);
+        this.workflows.remove(w);
+    }
 
     //-------------------------------------------------------------------------
     // BaseRdfEntity contract support
@@ -343,11 +392,4 @@ public class ProjectImpl extends BaseRdfEntity implements Project
         this.owner = o;
     }
 
-    /**
-     * Sets the creation date of this project.
-     * @param  date   the project creation date.
-     */
-    public void setCreationDate(Date date) {
-        this.dateCreated = this.copy(date);
-    }
 }

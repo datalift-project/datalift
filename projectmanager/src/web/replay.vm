@@ -1,0 +1,108 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+#load("project/resources")
+#load_core_resources
+	<title>#i18n("workspace.title") - DataLift</title>
+#css_links
+</head>
+<body>
+#banner
+	<div id="main-menu" style="position:absolute;top:15px;right:15px;">
+#foreach( $m in $mainMenu )
+#set( $entryUrl = $m.getUrl(${baseUri}) )
+#if( $m.method.name() == "GET" )
+		<a href="${entryUrl}" class="button">${m.label}</a>
+#else
+		<form method="post" action="${entryUrl}"><input type="submit" class="button" value="${m.label}"/></form>
+#end
+#end
+	</div>
+
+<div id="workspace">
+	<h3 class="ui-widget-header dl-widget-header">Execution de workflow</h3>
+	<a href="http://localhost:9091/project" style="margin:3px;">Retour à l'espace de travail</a>
+	<div id="accordion">
+		<h3><a href="#"></a></h3>
+		<div class="group">
+			<form class="form_formated">
+				<div style="width:100%;">
+					<p><span style="width:17.5%;font-weight:bold;display:inline-block;">#i18n("project.upload_worflow.title") :</span>$workflow.getTitle()</p>
+					<p><span style="width:17.5%;font-weight:bold;display:inline-block;">Description :</span>
+					   #if ($workflow.getDescription())
+					       $!esc.html($workflow.getDescription())
+					   #end
+					</p>
+				</div>
+				#if ( $workflow.getVariables().isEmpty()==false )			
+				<h3 class="ui-widget-header dl-widget-header">Variables</h3>
+				#end
+				<div id="inputs">
+					#foreach( $cur in $workflow.getVariables().entrySet() )
+						<p><label>$!esc.html($cur.getKey())</label>
+						<input type="hidden" value="$!esc.html($cur.getKey())" name="keys"/>
+						<input type="text" value="$!esc.html($cur.getValue())" name="values"/></p>
+					#end
+				</div>
+				<input type="button" value="#i18n("project.wf_execute")" onClick="valid()"/>
+			</form>
+		</div>
+	</div>
+</div>
+<div style="clear:both"></div>
+#footer
+
+#script_links
+<script type="text/javascript">
+	$("input:submit").button();
+	$("input:button").button();
+	$("#main-menu .button").button();
+	jQuery("#selectable_workflows").jqGrid('hideCol',["uri"]);
+	$("#accordion").accordion({
+		autoHeight: false,
+		navigation: true
+	});
+	function valid(){
+		var sub = getParams();
+		console.log(sub);
+		$.ajax({
+            url: window.location.href,
+            type: 'post',
+            dataType: 'json',
+			contentType : 'text/plain; charset=utf-8',
+            data: JSON.stringify(sub),
+			cache: false,
+			complete : function(){
+				window.location = "${baseUri}/project#workflow";
+			}
+        });
+	}
+	function getKeys(){
+		var obj = document.getElementsByName('keys');
+		var keys = [];
+		$.each(obj, function(key, val){
+			keys.push(val.value);
+		});
+		return keys;
+	}
+	function getValues(){
+		var obj = document.getElementsByName('values');
+		var values = [];
+		$.each(obj, function(key, val){
+			values.push(val.value);
+		});
+		return values;
+	}
+	function getParams(){
+		var params = {};
+		var keys=getKeys();
+		var values=getValues();
+		for(var i=0; i<keys.length; i++){
+			params[keys[i]]=values[i];
+		}
+		return params;
+	}
+</script>
+</body>
+</html>

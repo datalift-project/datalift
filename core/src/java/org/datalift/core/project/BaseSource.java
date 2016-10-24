@@ -36,8 +36,6 @@ package org.datalift.core.project;
 
 
 import java.net.URLDecoder;
-import java.util.Date;
-
 import javax.persistence.MappedSuperclass;
 
 import com.clarkparsia.empire.annotation.RdfId;
@@ -68,14 +66,10 @@ public abstract class BaseSource extends BaseRdfEntity implements Source
     private String title;
     @RdfProperty("dc:description")
     private String description;
-    @RdfProperty("dcterms:source")
+    @RdfProperty("dc:source")
     private String source;
     @RdfProperty("datalift:project")
     private Project project;
-    @RdfProperty("dcterms:issued")
-    private Date creationDate;
-    @RdfProperty("dc:creator")
-    private String operator;
 
     private transient final SourceType type;
 
@@ -173,18 +167,6 @@ public abstract class BaseSource extends BaseRdfEntity implements Source
 
     /** {@inheritDoc} */
     @Override
-    public Date getCreationDate() {
-        return this.copy(this.creationDate);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public String getOperator() {
-        return this.operator;
-    }
-
-    /** {@inheritDoc} */
-    @Override
     public SourceType getType() {
         return this.type;
     }
@@ -232,37 +214,13 @@ public abstract class BaseSource extends BaseRdfEntity implements Source
         b.append(this.getUri())
          .append(" (").append(this.getClass().getSimpleName())
          .append(", \"").append(this.getTitle())
-         .append("\", ");
-        int l = b.length();
-        b = this.toString(b);
-        if (b.length() != l) {
-            b.append(", ");
-        }
-        b.append(this.getOperator())
-         .append(", ").append(this.toString(this.getCreationDate()))
-         .append(')');
+         .append("\")");
         return b.toString();
     }
 
     //-------------------------------------------------------------------------
     // Specific implementation
     //-------------------------------------------------------------------------
-
-    /**
-     * Sets the name of the operator that created this source.
-     * @param  operator   the operator name.
-     */
-    public void setOperator(String operator) {
-        this.operator = operator;
-    }
-
-    /**
-     * Sets the creation date of this source.
-     * @param  date   the source creation date.
-     */
-    public void setCreationDate(final Date date) {
-        this.creationDate = this.copy(date);
-    }
 
     /**
      * Complementary {@link #toString()} method to let subclasses

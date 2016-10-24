@@ -43,6 +43,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Modifier;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -55,6 +56,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.MissingResourceException;
 
 import javax.ws.rs.Consumes;
@@ -81,6 +83,9 @@ import javax.xml.parsers.SAXParserFactory;
 import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 import static javax.ws.rs.core.Response.Status.*;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.openrdf.model.Literal;
 import org.openrdf.model.Value;
 import org.openrdf.model.vocabulary.RDFS;
@@ -101,6 +106,11 @@ import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.FileStore;
 import org.datalift.fwk.ResourceResolver;
+import org.datalift.fwk.async.Operation;
+import org.datalift.fwk.async.Parameter;
+import org.datalift.fwk.async.ParameterType;
+import org.datalift.fwk.async.Parameters;
+import org.datalift.fwk.async.TaskManager;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.CachingSource;
 import org.datalift.fwk.project.CsvSource;
@@ -127,13 +137,17 @@ import org.datalift.fwk.project.WfsSource;
 import org.datalift.fwk.project.XmlSource;
 import org.datalift.fwk.project.CsvSource.Separator;
 import org.datalift.fwk.project.ProjectModule.UriDesc;
+import org.datalift.fwk.prov.Event;
 import org.datalift.fwk.rdf.ElementType;
 import org.datalift.fwk.rdf.RdfFormat;
 import org.datalift.fwk.rdf.RdfNamespace;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
+import org.datalift.fwk.replay.Workflow;
+import org.datalift.fwk.replay.WorkflowStep;
 import org.datalift.fwk.sparql.SparqlEndpoint;
 import org.datalift.fwk.util.CloseableIterator;
+import org.datalift.fwk.util.StringUtils;
 import org.datalift.fwk.util.UriBuilder;
 import org.datalift.fwk.util.io.FileUtils;
 import org.datalift.fwk.util.web.Charsets;
@@ -154,6 +168,7 @@ import static org.datalift.fwk.util.StringUtils.*;
  * data-lifting projects.
  *
  * @author hdevos
+ * @author rcabaret
  */
 @Path(Workspace.PROJECT_URI_PREFIX)
 public class Workspace extends BaseModule
@@ -168,6 +183,7 @@ public class Workspace extends BaseModule
     public enum ProjectTab {
         Description     ("description"),
         Sources         ("source"),
+        Workflows       ("workflow"),
         Ontologies      ("ontology");
 
         public final String anchor;
@@ -204,6 +220,9 @@ public class Workspace extends BaseModule
     public final static String SOURCE_URI_PREFIX  = "source";
     /** The name of this module in the DataLift configuration. */
     public final static String MODULE_NAME = PROJECT_URI_PREFIX;
+    /** The base for all Operations URI of the module */
+    public final static String OPERATION_BASE_URI = "http://www.datalift.org/" +
+            MODULE_NAME + "/operation/";
 
     /** The relative path prefix for project objects and resources. */
     private final static String REL_PROJECT_PATH = PROJECT_URI_PREFIX + '/';
@@ -277,6 +296,17 @@ public class Workspace extends BaseModule
         this.loadLicenses(configuration);
         // Register main menu entry.
         this.registerToMainMenu();
+        // Register Operations
+        for(Class<?> op : this.getClass().getDeclaredClasses())
+            if(!Modifier.isAbstract(op.getModifiers()) &&
+                    !op.isInterface() &&
+                    Operation.class.isAssignableFrom(op))
+                try {
+                    configuration.registerBean(op.getDeclaredConstructor(
+                            this.getClass()).newInstance(this));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
     }
 
     /** {@inheritDoc} */
@@ -666,118 +696,224 @@ public class Workspace extends BaseModule
         if (! isSet(separator)) {
             this.throwInvalidParamError("separator", separator);
         }
-        Charset encoding = null;
         if (isSet(charset)) {
             try {
-                encoding = Charset.forName(charset);
+                Charset.forName(charset);
             }
             catch (Exception e) {
                 this.throwInvalidParamError("charset", charset);
             }
         }
-        Response response = null;
-
-        String fileName = null;
-        URL fileUrl = null;
-        File localFile = null;
-        if (! isBlank(sourceUrl)) {
-            // Not uploaded data. => A file URL must be provided.
+        
+        
+        URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
+        Project p = this.loadProject(projectUri);
+        String filePath = this.getProjectFilePath(projectId,
+                this.toFileName(fileDisposition.getFileName()));
+        boolean stream = ! isBlank(this.toFileName(
+                fileDisposition.getFileName()));
+        if (stream) {
             try {
-                fileUrl = new URL(sourceUrl);
-                fileName = this.extractFileName(fileUrl, "csv");
-                // Reset input stream to force downloading data from URL.
-                fileData = null;
-            }
-            catch (Exception e) {
-                // Conversion of source base URI to URL failed.
-                log.error("Failed to parse URL {}", e, sourceUrl);
-                this.throwInvalidParamError("file_url",
-                                    sourceUrl + " (" + e.getMessage() + ')');
+                FileStore fs = this.getFileStore();
+                File destFile = fs.getFile(filePath);
+                fs.save(fileData, destFile);
+            } catch (IOException e) {
+                this.handleInternalError(e,
+                        "Failed to load xml file {}",
+                        this.toFileName(fileDisposition.getFileName()));
             }
         }
-        else {
-            fileName = this.toFileName(fileDisposition.getFileName());
-            if (isBlank(fileName)) {
-                this.throwInvalidParamError("source", null);
-            }
+        Operation op = new UploadCsvSource();
+        Parameters params = op.getBlankParameters();
+        params.setValue("project", p.getUri());
+        params.setValue("srcName", srcName);
+        params.setValue("description", description);
+        params.setValue("sourceUrl", sourceUrl);
+        if (stream) {
+            params.setValue("filePath", filePath);
         }
-        // Else: File data have been uploaded.
-
-        log.debug("Processing CSV source creation request for {}", srcName);
-        boolean deleteFiles = false;
+        params.setValue("charset", charset);
+        params.setValue("separator", separator);
+        params.setValue("quote", quote);
+        params.setValue("titleRow", Integer.toString(titleRow));
+        params.setValue("firstRow", Integer.toString(firstRow));
+        params.setValue("lastRow", Integer.toString(lastRow));
         try {
-            // Build object URIs from request path.
-            URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
-            URI sourceUri = new URI(projectUri.getScheme(), null,
-                                    projectUri.getHost(), projectUri.getPort(),
-                                    this.newSourceId(projectUri.getPath(), srcName),
-                                    null, null);
-            // Retrieve project.
-            Project p = this.loadProject(projectUri);
-            // Save new source data to public project storage.
-            String filePath = this.getProjectFilePath(projectId, fileName);
-            localFile = this.getFileData(fileData, fileUrl, filePath, uriInfo,
-                             Arrays.asList(TEXT_CSV_TYPE, APPLICATION_CSV_TYPE,
-                                           TEXT_COMMA_SEPARATED_VALUES_TYPE,
-                                           TEXT_PLAIN_TYPE), true);
+            op.execute(params);
+        } catch (Exception e) {
+            this.handleInternalError(e, "error during operation execution");
+        }
+        // (browsers) to the source tab of the project page.
+        return this.redirect(p, ProjectTab.Sources).build();
+    }
+    
+    public class UploadCsvSource extends OperationBase {
 
-            Separator sep = Separator.valueOf(separator);
-            // Initialize new source.
-            CsvSource src = this.projectManager.newCsvSource(p, sourceUri,
-                                                    srcName, description,
-                                                    filePath, sep.getValue());
-            if (fileUrl != null) {
-                src.setSourceUrl(fileUrl.toString());
+        @Override
+        public void execute(Parameters params) throws Exception {
+            Date eventStart = new Date();
+            String projectUriString = params.getProjectValue();
+            String srcName = params.getValue("srcName");
+            if(srcName == null)
+                srcName = Double.toString(Math.random()).replace(".", "");
+            String description = params.getValue("description");
+            String sourceUrl = params.getValue("sourceUrl");
+            String filePath = params.getValue("filePath");
+            InputStream fileData = null;
+            File localFile = null;
+            String fileName = null;
+            if (filePath != null) {
+                FileStore fs = Workspace.this.getFileStore();
+                localFile = fs.getFile(filePath);
+                fileData = new FileInputStream(localFile);
+                fileName = localFile.getName();
             }
-            if (encoding != null) {
-                src.setEncoding(encoding.name());
-            }
-            src.setFirstDataRow(firstRow);
-            src.setLastDataRow(lastRow);
-            src.setTitleRow(titleRow);
-            src.setQuote(quote);
-            // Iterate on source content to validate uploaded file.
-            int n = 0;
-            CloseableIterator<?> i = src.iterator();
-            try {
-                for (; i.hasNext(); ) {
-                    n++;
-                    if (n > 1000) break;        // 1000 lines is enough!
-                    i.next();   // Throws TechnicalException if data is invalid.
+            URL fileUrl = null;
+            String charset = params.getValue("charset");
+            String separator = params.getValue("separator");
+            String quote = params.getValue("quote");
+            int titleRow = Integer.parseInt(params.getValue("titleRow"));
+            int firstRow = Integer.parseInt(params.getValue("firstRow"));
+            int lastRow = Integer.parseInt(params.getValue("lastRow"));
+            Charset encoding = null;
+            if (isSet(charset)) {
+                try {
+                    encoding = Charset.forName(charset);
+                }
+                catch (Exception e) {
+                    Workspace.this.throwInvalidParamError("charset", charset);
                 }
             }
+            if (! isBlank(sourceUrl)) {
+                try {
+                    fileUrl = new URL(sourceUrl);
+                }
+                catch (Exception e) {
+                    log.error("Failed to parse URL {}", e, sourceUrl);
+                    throw new TechnicalException("invalid sourceUrl : ", e);
+                }
+                if (isBlank(fileName)) {
+                    // No data uploaded. => Extract local file name from source URL.
+                    fileName = Workspace.this.extractFileName(fileUrl, "csv");
+                    // Reset input stream to force downloading data from source URL.
+                    fileData = null;
+                    Workspace.this.deleteFileStorage(localFile);
+                    localFile = null;
+                }
+                // Else: Read data from uploaded file but preserve source URL
+                //       to resolve external dependencies (such as DTDs).
+            }
+            else if (isBlank(fileName)) {
+                throw new TechnicalException("invalid source");
+            }
+            // Else: File data have been uploaded.
+            log.debug("Processing CSV source creation request for {}", srcName);
+            boolean deleteFiles = false;
+            try {
+                // Build object URIs from request path.
+                URI projectUri = URI.create(projectUriString);
+                URI sourceUri = new URI(projectUri.getScheme(), null,
+                                        projectUri.getHost(), projectUri.getPort(),
+                                        Workspace.this.newSourceId(projectUri.getPath(), srcName),
+                                        null, null);
+                // Retrieve project.
+                Project p = Workspace.this.loadProject(projectUri);
+                // Save new source data to public project storage.
+                if (fileData == null) {
+                    String projectId = projectUriString
+                            .substring(projectUriString.lastIndexOf("/") + 1);
+                    filePath = Workspace.this.getProjectFilePath(projectId, fileName);
+                    localFile = Workspace.this.getFileData(fileData, fileUrl, filePath,
+                                     Arrays.asList(TEXT_CSV_TYPE, APPLICATION_CSV_TYPE,
+                                                   TEXT_COMMA_SEPARATED_VALUES_TYPE,
+                                                   TEXT_PLAIN_TYPE), true);
+                    fileName = localFile.getName();
+                }
+                Separator sep = Separator.valueOf(separator);
+                // Initialize new source.
+                CsvSource src = Workspace.this.projectManager.newCsvSource(p,
+                        sourceUri, srcName, description, filePath,
+                        sep.getValue(), this.getOperationId(), params.getValues(),
+                        eventStart);
+                if (fileUrl != null) {
+                    src.setSourceUrl(fileUrl.toString());
+                }
+                if (encoding != null) {
+                    src.setEncoding(encoding.name());
+                }
+                src.setFirstDataRow(firstRow);
+                src.setLastDataRow(lastRow);
+                src.setTitleRow(titleRow);
+                src.setQuote(quote);
+                // Iterate on source content to validate uploaded file.
+                int n = 0;
+                CloseableIterator<?> i = src.iterator();
+                try {
+                    for (; i.hasNext(); ) {
+                        n++;
+                        if (n > 1000) break;        // 1000 lines is enough!
+                        i.next();   // Throws TechnicalException if data is invalid.
+                    }
+                }
+                catch (Exception e) {
+                    throw new IOException("Invalid or empty source data", e);
+                }
+                finally {
+                    i.close();
+                }
+                // Persist new source.
+                Workspace.this.projectManager.saveProject(p);
+                // Notify user of successful creation, redirecting HTML clients
+                log.info("New CSV source \"{}\" created", sourceUri);
+            }
+            catch (IOException e) {
+                deleteFiles = true;
+                String src = (fileData != null)? fileName:
+                             (fileUrl != null)? fileUrl.toString(): "file_url";
+                log.fatal("Failed to save source data from {}", e, src);
+                throw new TechnicalException("Failed to save source data from "
+                        + src, e);
+            }
             catch (Exception e) {
-                throw new IOException("Invalid or empty source data", e);
+                deleteFiles = true;
+                throw new TechnicalException("Failed to create CVS source for "
+                        + srcName, e);
             }
             finally {
-                i.close();
+                if ((deleteFiles) && (localFile != null)) {
+                    Workspace.this.deleteFileStorage(localFile);
+                }
             }
-            // Persist new source.
-            this.projectManager.saveProject(p);
-            // Notify user of successful creation, redirecting HTML clients
-            // (browsers) to the source tab of the project page.
-            response = this.created(p, sourceUri, ProjectTab.Sources).build();
+        }
 
-            log.info("New CSV source \"{}\" created", sourceUri);
+        @Override
+        public Parameters getBlankParameters() {
+            Collection<Parameter> paramList = new ArrayList<Parameter>();
+            paramList.add(new Parameter("project",
+                    "ws.param.project", ParameterType.project));
+            paramList.add(new Parameter("srcName",
+                    "ws.param.srcName", ParameterType.hidden));
+            paramList.add(new Parameter("description",
+                    "ws.param.description", ParameterType.hidden));
+            paramList.add(new Parameter("filePath",
+                    "ws.param.fileName", ParameterType.hidden));
+            paramList.add(new Parameter("sourceUrl",
+                    "ws.param.sourceUrl", ParameterType.input));
+            paramList.add(new Parameter("charset",
+                    "ws.param.charset", ParameterType.visible));
+            paramList.add(new Parameter("separator",
+                    "ws.param.separator", ParameterType.visible));
+            paramList.add(new Parameter("quote",
+                    "ws.param.quote", ParameterType.visible));
+            paramList.add(new Parameter("titleRow",
+                    "ws.param.titleRow", ParameterType.visible));
+            paramList.add(new Parameter("firstRow",
+                    "ws.param.firstRow", ParameterType.visible));
+            paramList.add(new Parameter("lastRow",
+                    "ws.param.lastRow", ParameterType.visible));
+            return new Parameters(paramList);
         }
-        catch (IOException e) {
-            deleteFiles = true;
-            String src = (fileData != null)? fileName:
-                         (fileUrl != null)? fileUrl.toString(): "file_url";
-            log.fatal("Failed to save source data from {}", e, src);
-            this.throwInvalidParamError(src, e.getLocalizedMessage());
-        }
-        catch (Exception e) {
-            deleteFiles = true;
-            this.handleInternalError(e,
-                                "Failed to create CVS source for {}", srcName);
-        }
-        finally {
-            if ((deleteFiles) && (localFile != null)) {
-                this.deleteFileStorage(localFile);
-            }
-        }
-        return response;
+        
     }
 
     @POST
@@ -941,7 +1077,7 @@ public class Workspace extends BaseModule
             Project p = this.loadProject(projectUri);
             // Save new source data to public project storage.
             String filePath = this.getProjectFilePath(projectId, fileName);
-            localFile = this.getFileData(fileData, fileUrl, filePath, uriInfo,
+            localFile = this.getFileData(fileData, fileUrl, filePath,
                                          format.getMimeTypes(), false);
             // Initialize new source.
             RdfFileSource src = this.projectManager.newRdfSource(p, sourceUri,
@@ -1187,29 +1323,69 @@ public class Workspace extends BaseModule
                 this.throwInvalidParamError("default_graph_uri", defaultGraph);
             }
         }
-
-        Response response = null;
+        URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
+        Project p = Workspace.this.loadProject(projectUri);
+        Operation op = new UploadSparqlSource();
+        Parameters params = op.getBlankParameters();
+        params.setValue("project", projectUri.toString());
+        params.setValue("title", title);
+        params.setValue("description", description);
+        params.setValue("endpointUrl", endpointUrl);
+        params.setValue("sparqlQuery", sparqlQuery);
+        params.setValue("defaultGraph", defaultGraph);
+        params.setValue("user", user);
+        params.setValue("password", password);
+        params.setValue("cacheDuration", Integer.toString(cacheDuration));
         try {
+            op.execute(params);
+        } catch (Exception e) {
+            this.handleInternalError(e, "error during operation execution");
+        }
+        // (browsers) to the source tab of the project page.
+        return this.redirect(p, ProjectTab.Sources).build();
+    }
+
+    public class UploadSparqlSource extends OperationBase{
+        @Override
+        public void execute(Parameters params) throws Exception {
+            Date eventStart = new Date();
+            String projectUriString = params.getProjectValue();
+            String title = params.getValue("title");
+            if(title == null) {
+                title = Double.toString(Math.random()).replace(".", "");
+            }
+            String description = params.getValue("description");
+            String endpointUrl = params.getValue("endpointUrl");
+            String sparqlQuery = params.getValue("sparqlQuery");
+            String defaultGraph = params.getValue("defaultGraph");
+            String user = params.getValue("user");
+            String password = params.getValue("password");
+            int cacheDuration;
+            if(params.getValue("cacheDuration") == null)
+                cacheDuration = 0;
+            else
+                cacheDuration = Integer.parseInt(params.getValue("cacheDuration"));
             // Check SPARQL query is a CONSTRUCT or DESCRIBE.
             if ((sparqlQuery == null) ||
                 (! CONSTRUCT_VALIDATION_PATTERN.matcher(sparqlQuery).find())) {
-                this.throwInvalidParamError("sparql_query", sparqlQuery);
+                throw new IllegalArgumentException("sparql_query : " + sparqlQuery);
             }
             log.debug("Processing SPARQL source creation request for \"{}\"",
                       title);
             // Build object URIs from request path.
-            URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
+            URI projectUri = URI.create(projectUriString);
             URI sourceUri = new URI(projectUri.getScheme(), null,
                                     projectUri.getHost(), projectUri.getPort(),
-                                    this.newSourceId(projectUri.getPath(), title),
+                                    Workspace.this.newSourceId(projectUri.getPath(), title),
                                     null, null);
             // Retrieve project.
-            Project p = this.loadProject(projectUri);
+            Project p = Workspace.this.loadProject(projectUri);
             // Initialize new source.
-            SparqlSource src = this.projectManager.newSparqlSource(p, sourceUri,
+            SparqlSource src = Workspace.this.projectManager.newSparqlSource(p, sourceUri,
                                         title, description,
                                         endpointUrl, sparqlQuery,
-                                        cacheDuration);
+                                        cacheDuration, this.getOperationId(),
+                                        params.getValues(), eventStart);
             src.setDefaultGraphUri(defaultGraph);
             src.setUser(user);
             src.setPassword(password);
@@ -1218,20 +1394,35 @@ public class Workspace extends BaseModule
             CloseableIterator<?> i = src.iterator();
             i.close();
             // Persist new source.
-            this.projectManager.saveProject(p);
-            // Notify user of successful creation, redirecting HTML clients
-            // (browsers) to the source tab of the project page.
-            response = this.created(p, sourceUri, ProjectTab.Sources).build();
-
+            Workspace.this.projectManager.saveProject(p);
             log.info("New SPARQL source \"{}\" created", sourceUri);
         }
-        catch (Exception e) {
-            this.handleInternalError(e,
-                             "Failed to create SPARQL source for {}", title);
-        }
-        return response;
-    }
 
+        @Override
+        public Parameters getBlankParameters() {
+            Collection<Parameter> paramList = new ArrayList<Parameter>();
+            paramList.add(new Parameter("project",
+                    "ws.param.project", ParameterType.project));
+            paramList.add(new Parameter("title",
+                    "ws.param.srcName", ParameterType.hidden));
+            paramList.add(new Parameter("description",
+                    "ws.param.description", ParameterType.hidden));
+            paramList.add(new Parameter("cacheDuration",
+                    "ws.param.fileName", ParameterType.hidden));
+            paramList.add(new Parameter("endpointUrl",
+                    "ws.param.endpointUrl", ParameterType.visible));
+            paramList.add(new Parameter("sparqlQuery",
+                    "ws.param.sparqlQuery", ParameterType.visible));
+            paramList.add(new Parameter("defaultGraph",
+                    "ws.param.defaultGraph", ParameterType.visible));
+            paramList.add(new Parameter("user",
+                    "ws.param.user", ParameterType.visible));
+            paramList.add(new Parameter("password",
+                    "ws.param.password", ParameterType.visible));
+            return new Parameters(paramList);
+        }
+    }
+    
     @POST
     @Path("{id}/sparqlmodify")
     public Response modifySparqlSource(
@@ -1334,101 +1525,174 @@ public class Workspace extends BaseModule
         if (! isSet(srcName)) {
             this.throwInvalidParamError("file_name", srcName);
         }
-        Response response = null;
-
-        URL fileUrl = null;
-        File localFile = null;
-        String fileName = this.toFileName(fileDisposition.getFileName());
-        if (! isBlank(sourceUrl)) {
+        URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
+        Project p = this.loadProject(projectUri);
+        String filePath = this.getProjectFilePath(projectId,
+                this.toFileName(fileDisposition.getFileName()));
+        boolean stream = ! isBlank(this.toFileName(
+                fileDisposition.getFileName()));
+        if (stream) {
             try {
-                fileUrl = new URL(sourceUrl);
+                FileStore fs = this.getFileStore();
+                File destFile = fs.getFile(filePath);
+                fs.save(fileData, destFile);
+            } catch (IOException e) {
+                this.handleInternalError(e,
+                        "Failed to load xml file {}",
+                        this.toFileName(fileDisposition.getFileName()));
             }
-            catch (Exception e) {
-                log.error("Failed to parse URL {}", e, sourceUrl);
-                this.throwInvalidParamError("file_url",
-                                    sourceUrl + " (" + e.getMessage() + ')');
-            }
-            if (isBlank(fileName)) {
-                // No data uploaded. => Extract local file name from source URL.
-                fileName = this.extractFileName(fileUrl, "xml");
-                // Reset input stream to force downloading data from source URL.
-                fileData = null;
-            }
-            // Else: Read data from uploaded file but preserve source URL
-            //       to resolve external dependencies (such as DTDs).
         }
-        else if (isBlank(fileName)) {
-            this.throwInvalidParamError("source", null);
+        Operation op = new UploadXmlSource();
+        Parameters params = op.getBlankParameters();
+        params.setValue("project", p.getUri());
+        params.setValue("srcName", srcName);
+        params.setValue("description", description);
+        params.setValue("sourceUrl", sourceUrl);
+        if (stream) {
+            params.setValue("filePath", filePath);
         }
-        // Else: File data have been uploaded.
-
-        log.debug("Processing XML source creation request for {}", srcName);
-        boolean deleteFiles = false;
         try {
-            // Build object URIs from request path.
-            URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
-            URI sourceUri = new URI(projectUri.getScheme(), null,
-                                    projectUri.getHost(), projectUri.getPort(),
-                                    this.newSourceId(projectUri.getPath(), srcName),
-                                    null, null);
-            // Retrieve project.
-            Project p = this.loadProject(projectUri);
-            // Save new source data to public project storage.
-            String filePath = this.getProjectFilePath(projectId, fileName);
-            localFile = this.getFileData(fileData, fileUrl, filePath, uriInfo,
-                     Arrays.asList(APPLICATION_XML_TYPE, TEXT_XML_TYPE), false);
-            // Initialize new source.
-            XmlSource src = this.projectManager.newXmlSource(p, sourceUri,
-                                            srcName, description, filePath);
-            if (fileUrl != null) {
-                src.setSourceUrl(fileUrl.toString());
-            }
-            // Parse XML file content to validate well-formedness.
-            try {
-                SAXParserFactory spf = SAXParserFactory.newInstance();
-                spf.setNamespaceAware(true);
-                spf.setValidating(false);   // Prevent DTD or schema validation.
-                XMLReader parser = spf.newSAXParser().getXMLReader();
-                parser.setContentHandler(new DefaultHandler());
-                InputSource is = new InputSource(src.getInputStream());
-                if (! isBlank(src.getSourceUrl())) {
-                    // Set the source URL to resolve DTDs, if any.
-                    is.setSystemId(src.getSourceUrl());
-                }
-                parser.parse(is);
-            }
-            catch (Exception e) {
-                throw new IOException("Invalid or empty source data", e);
-            }
-            // Persist new source.
-            this.projectManager.saveProject(p);
-            // Notify user of successful creation, redirecting HTML clients
-            // (browsers) to the source tab of the project page.
-            response = this.created(p, sourceUri, ProjectTab.Sources).build();
-
-            log.info("New XML source \"{}\" created", sourceUri);
+            op.execute(params);
+        } catch (Exception e) {
+            this.handleInternalError(e, "error during operation execution");
         }
-        catch (IOException e) {
-            deleteFiles = true;
-            String src = (fileData != null)? fileName:
-                        (fileUrl != null)? fileUrl.toString(): "file_url";
-            log.fatal("Failed to save source data from {}", e, src);
-            Throwable error = (e.getCause() != null)? e.getCause(): e;
-            this.throwInvalidParamError(src, error.getLocalizedMessage());
-        }
-        catch (Exception e) {
-            deleteFiles = true;
-            this.handleInternalError(e,
-                                "Failed to create XML source for {}", srcName);
-        }
-        finally {
-            if ((deleteFiles) && (localFile != null)) {
-                this.deleteFileStorage(localFile);
-            }
-        }
-        return response;
+        // (browsers) to the source tab of the project page.
+        return this.redirect(p, ProjectTab.Sources).build();
     }
 
+    public class UploadXmlSource extends OperationBase{
+
+        /** {@inheritDoc} */
+        @Override
+        public void execute(Parameters params) throws Exception {
+            Date eventStart = new Date();
+            String projectUriString = params.getProjectValue();
+            String srcName = params.getValue("srcName");
+            if(srcName == null)
+                srcName = Double.toString(Math.random()).replace(".", "");
+            String description = params.getValue("description");
+            String sourceUrl = params.getValue("sourceUrl");
+            String filePath = params.getValue("filePath");
+            InputStream fileData = null;
+            File localFile = null;
+            String fileName = null;
+            if (filePath != null) {
+                FileStore fs = Workspace.this.getFileStore();
+                localFile = fs.getFile(filePath);
+                fileData = new FileInputStream(localFile);
+                fileName = localFile.getName();
+            }
+            URL fileUrl = null;
+            if (! isBlank(sourceUrl)) {
+                try {
+                    fileUrl = new URL(sourceUrl);
+                }
+                catch (Exception e) {
+                    log.error("Failed to parse URL {}", e, sourceUrl);
+                    throw new TechnicalException("invalid sourceUrl : ", e);
+                }
+                if (isBlank(fileName)) {
+                    // No data uploaded. => Extract local file name from source URL.
+                    fileName = Workspace.this.extractFileName(fileUrl, "xml");
+                    // Reset input stream to force downloading data from source URL.
+                    fileData = null;
+                    Workspace.this.deleteFileStorage(localFile);
+                    localFile = null;
+                }
+                // Else: Read data from uploaded file but preserve source URL
+                //       to resolve external dependencies (such as DTDs).
+            }
+            else if (isBlank(fileName)) {
+                throw new TechnicalException("invalid source");
+            }
+            // Else: File data have been uploaded.
+            log.debug("Processing XML source creation request for {}", srcName);
+            boolean deleteFiles = false;
+            try {
+                // Build object URIs from request path.
+                URI projectUri = URI.create(projectUriString);
+                URI sourceUri = new URI(projectUri.getScheme(), null,
+                                        projectUri.getHost(), projectUri.getPort(),
+                                        Workspace.this.newSourceId(projectUri.getPath(), srcName),
+                                        null, null);
+                // Retrieve project.
+                Project p = Workspace.this.loadProject(projectUri);
+                // Save new source data to public project storage.
+                if(fileData == null){
+                    String projectId = projectUriString
+                            .substring(projectUriString.lastIndexOf("/") + 1);
+                    filePath = Workspace.this.getProjectFilePath(projectId, fileName);
+                    localFile = Workspace.this.getFileData(fileData, fileUrl,
+                            filePath, Arrays
+                            .asList(APPLICATION_XML_TYPE, TEXT_XML_TYPE), false);
+                    fileName = localFile.getName();
+                }
+                // Initialize new source.
+                XmlSource src = Workspace.this.projectManager.newXmlSource(p,
+                        sourceUri, srcName, description, filePath,
+                        this.getOperationId(), params.getValues(), eventStart);
+                if (fileUrl != null) {
+                    src.setSourceUrl(fileUrl.toString());
+                }
+                // Parse XML file content to validate well-formedness.
+                try {
+                    SAXParserFactory spf = SAXParserFactory.newInstance();
+                    spf.setNamespaceAware(true);
+                    spf.setValidating(false);   // Prevent DTD or schema validation.
+                    XMLReader parser = spf.newSAXParser().getXMLReader();
+                    parser.setContentHandler(new DefaultHandler());
+                    InputSource is = new InputSource(src.getInputStream());
+                    if (! isBlank(src.getSourceUrl())) {
+                        // Set the source URL to resolve DTDs, if any.
+                        is.setSystemId(src.getSourceUrl());
+                    }
+                    parser.parse(is);
+                }
+                catch (Exception e) {
+                    throw new IOException("Invalid or empty source data", e);
+                }
+                // Persist new source.
+                Workspace.this.projectManager.saveProject(p);
+                log.info("New XML source \"{}\" created", sourceUri);
+            }
+            catch (IOException e) {
+                deleteFiles = true;
+                String src = (fileData != null)? fileName:
+                            (fileUrl != null)? fileUrl.toString(): "file_url";
+                log.fatal("Failed to save source data from {}", e, src);
+                Throwable error = (e.getCause() != null)? e.getCause(): e;
+                throw new TechnicalException("invalid source : " + src, error);
+            }
+            catch (Exception e) {
+                deleteFiles = true;
+                throw new TechnicalException(
+                        "Failed to create XML source for " + srcName, e);
+            }
+            finally {
+                if ((deleteFiles) && (localFile != null)) {
+                    Workspace.this.deleteFileStorage(localFile);
+                }
+            }
+        }
+
+        @Override
+        public Parameters getBlankParameters() {
+            Collection<Parameter> paramList = new ArrayList<Parameter>();
+            paramList.add(new Parameter("project",
+                    "ws.param.project", ParameterType.project));
+            paramList.add(new Parameter("srcName",
+                    "ws.param.srcName", ParameterType.hidden));
+            paramList.add(new Parameter("description",
+                    "ws.param.description", ParameterType.hidden));
+            paramList.add(new Parameter("filePath",
+                    "ws.param.fileName", ParameterType.hidden));
+            paramList.add(new Parameter("sourceUrl",
+                    "ws.param.sourceUrl", ParameterType.input));
+            return new Parameters(paramList);
+        }
+        
+    }
+    
     @POST
     @Path("{id}/xmlmodify")
     @Consumes(MULTIPART_FORM_DATA)
@@ -2209,6 +2473,247 @@ public class Workspace extends BaseModule
         }
         return response;
     }
+    
+    @GET
+    @Path("{pid}/workflow/new")
+    public Response getWorkflowCreationPage(
+                    @PathParam("pid") String projectId,
+                    @Context UriInfo uriInfo){
+        Response response = null;
+        URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
+        Project project = this.loadProject(projectUri);
+        Collection<Event> outputs =
+                this.projectManager.getOutputEvents(project).values();
+        TemplateModel view = this.newView("workflowModify.vm", project);
+        view.put("current", null);
+        view.put("outputs", outputs);
+        view.put("posturl", projectUri.toString() + "/workflow/new");
+        response = Response.ok(view, TEXT_HTML).build();
+        return response;
+    }
+    
+    @GET
+    @Path("{pid}/workflow/{wid}")
+    public Response getWorkflowModificationPage(
+                    @PathParam("pid") String projectId,
+                    @PathParam("wid") String workflowId,
+                    @Context UriInfo uriInfo){
+        Response response = null;
+        URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
+        Project project = this.loadProject(projectUri);
+        URI workflowUri = URI.create(projectUri.toString() +
+                "/workflow/" + workflowId);
+        Workflow workflow = project.getWorkflow(workflowUri);
+        if(workflow == null)
+            throw new RuntimeException("this project is unknown : " +
+                    workflowUri.toString());
+        Collection<Event> outputs =
+                this.projectManager.getOutputEvents(project).values();
+        TemplateModel view = this.newView("workflowModify.vm", project);
+        view.put("current", workflow);
+        view.put("outputs", outputs);
+        view.put("posturl", projectUri.toString() + "/workflow/" + workflowId);
+        response = Response.ok(view, TEXT_HTML).build();
+        return response;
+    }
+    
+    @GET
+    @Path("{pid}/output/{oinitials}/{otime}/{orand}/parameters")
+    @Produces(TEXT_PLAIN)
+    public String getOutputParameters(
+                    @PathParam("pid") String projectId,
+                    @PathParam("oinitials") String outputInitials,
+                    @PathParam("otime") String outputTime,
+                    @PathParam("orand") String outputRandom,
+                    @Context UriInfo uriInfo) throws JSONException{
+        URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
+        URI outputUri = URI.create(projectUri.toString() + "/event/" +
+                    outputInitials + "/" + outputTime + "/" + outputRandom);
+        Project project = this.loadProject(projectUri);
+        Map<URI, Event> events = this.projectManager.getEvents(project);
+        final Map<URI, Event> creationByInfluenced = new HashMap<URI, Event>();
+        for(Event e : events.values()){
+            if(e.getEventType() == Event.CREATION_EVENT_TYPE){
+                Event informer = events.get(e.getInformer());
+                if(informer != null){
+                    if(informer.getEventType() != Event.CREATION_EVENT_TYPE ||
+                            !informer.getInfluenced().equals(e.getInfluenced()))
+                        creationByInfluenced.put(e.getInfluenced(), e);
+                } else {
+                    creationByInfluenced.put(e.getInfluenced(), e);
+                }
+            }
+        }
+        class paramExtractor{
+            private Map<URI, Event> crs = creationByInfluenced;
+            JSONObject extract(Event e, JSONObject json) throws JSONException{
+                TaskManager taskManager =
+                        Configuration.getDefault().getBean(TaskManager.class);
+                JSONObject jobj;
+                if(json == null)
+                    jobj = new JSONObject();
+                else
+                    jobj = json;
+                JSONObject jstep = new JSONObject();
+                jstep.put("operation", e.getOperation().toString());
+                Parameters params = taskManager.getOperation(
+                        e.getOperation()).getBlankParameters();
+                params.setValues(e.getParameters());
+                jstep.put("parameters", new JsonStringMap(
+                        params.getVisibleValues()).getJSONObject());
+                JSONArray prev = new JSONArray();
+                for(URI usedUri : e.getUsed()){
+                    Event previous = this.crs.get(usedUri);
+                    if(previous != null &&
+                            jobj.optJSONObject(usedUri.toString()) == null)
+                        this.extract(previous, jobj);
+                    prev.put(previous.getUri().toString());
+                }
+                if(prev.length() > 0)
+                    jstep.put("previous", prev);
+                jobj.put(e.getUri().toString(), jstep);
+                return jobj;
+            }
+        }
+        Event output = events.get(outputUri);
+        JSONObject json = new paramExtractor().extract(output, null);
+        return json.toString();
+    }
+    
+    @GET
+    @Path("{pid}/workflow/{wid}/replay/new")
+    public Response getReplayConfigurationPage(
+                    @PathParam("pid") String projectId,
+                    @PathParam("wid") String workflowId,
+                    @Context UriInfo uriInfo){
+        Response response = null;
+        URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
+        Project project = this.loadProject(projectUri);
+        URI workflowUri = URI.create(projectUri.toString() +
+                "/workflow/" + workflowId);
+        Workflow workflow = project.getWorkflow(workflowUri);
+        TemplateModel view = this.newView("replay.vm", project);
+        view.put("workflow", workflow);
+        response = Response.ok(view, TEXT_HTML).build();
+        return response;
+    }
+    
+    @GET
+    @Path("{pid}/workflow/{wid}/delete")
+    public Response deleteWorkflow(
+                    @PathParam("pid") String projectId,
+                    @PathParam("wid") String workflowId,
+                    @Context UriInfo uriInfo){
+        Response response = null;
+        URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
+        Project project = this.loadProject(projectUri);
+        URI workflowUri = URI.create(projectUri.toString() +
+                "/workflow/" + workflowId);
+        Workflow workflow = project.getWorkflow(workflowUri);
+        this.projectManager.deleteWorkflow(project, workflow);
+        response = this.redirect(project, ProjectTab.Workflows).build();
+        return response;
+    }
+    
+    @POST
+    @Path("{pid}/workflow/new")
+    @Consumes(TEXT_PLAIN)
+    public Response newWorkflow(
+                    @PathParam("pid") String projectId,
+                    String json,
+                    @Context UriInfo uriInfo){
+        Response response = null;
+        try {
+            // Retrieve project.
+            URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
+            Project p = this.loadProject(projectUri);
+            // Extract workflow from the json
+            JSONObject jsonWorkflow = new JSONObject(json);
+            String wTitle = jsonWorkflow.getString("title");
+            if(wTitle.trim().toLowerCase().equals("new"))
+                throw new IllegalArgumentException("title cant be \"new\"");
+            String wDescription = jsonWorkflow.getString("description");
+            URI wUri = URI.create(p.getUri() + "/workflow/" + StringUtils
+                    .urlify(wTitle));
+            JSONObject jsonVariables = jsonWorkflow.optJSONObject("variables");
+            Map<String, String> wVariables;
+            if(jsonVariables == null)
+                wVariables = new JsonStringMap();
+            else
+                wVariables = new JsonStringMap(jsonVariables);
+            WorkflowStep wOutput = this.extractWorkflowStepsFromJson(
+                    jsonWorkflow.getJSONObject("output"));
+            // add workflow to the project
+            Workflow workflow = this.projectManager.newWorkflow(p, wUri, wTitle,
+                    wDescription, wVariables, wOutput);
+            p.addWorkflow(workflow);
+            // Persist new workflow
+            this.projectManager.saveProject(p);
+            response = this.redirect(p, ProjectTab.Workflows).build();
+        } catch (Exception e) {
+            this.handleInternalError(e, "Failed to add workflow");
+        }
+        return response;
+    }
+    
+    @POST
+    @Path("{pid}/workflow/{wid}")
+    @Consumes(TEXT_PLAIN)
+    public Response updateWorkflow(
+                    @PathParam("pid") String projectId,
+                    @PathParam("wid") String workflowId,
+                    String json,
+                    @Context UriInfo uriInfo){
+        Response response = null;
+        try{
+            URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
+            Project p = this.loadProject(projectUri);
+            URI workflowUri = URI.create(p.getUri() + "/workflow/" + workflowId);
+            Workflow w = p.getWorkflow(workflowUri);
+            JSONObject jsonWorkflow = new JSONObject(json);
+            String wTitle = jsonWorkflow.getString("title");
+            String wDescription = jsonWorkflow.getString("description");
+            Map<String, String> wVariables = new JsonStringMap(
+                    jsonWorkflow.optJSONObject("variables"));
+            WorkflowStep wOutput = this.extractWorkflowStepsFromJson(
+                    jsonWorkflow.getJSONObject("output"));
+            // detect and save changes
+            if(!w.getTitle().equals(wTitle))
+                w.setTitle(wTitle);
+            if(w.getDescription() != null && !w.getDescription().equals(wDescription))
+                w.setDescription(wDescription);
+            if(w.getVariables() != null && !w.getVariables().equals(wVariables)){
+                w.removeAllVariables();
+                for(Entry<String, String> v : wVariables.entrySet())
+                    w.addVariable(v.getKey(), v.getValue());
+            }
+            if(!w.getOutputStep().toString().equals(wOutput.toString()))
+                w.setSteps(wOutput);
+            // Persist workflow changes
+            this.projectManager.saveProject(p);
+            response = this.redirect(p, ProjectTab.Workflows).build();
+        } catch (Exception e){
+            this.handleInternalError(e, "Failed to udate workflow");
+        }
+        return response;
+    }
+    
+    @POST
+    @Path("{pid}/workflow/{wid}/replay/new")
+    @Consumes(TEXT_PLAIN)
+    public Response executeWorflow(
+                    @PathParam("pid") String projectId,
+                    @PathParam("wid") String workflowId,
+                    @Context UriInfo uriInfo,
+                    String json) throws Exception{
+        URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
+        Project p = this.loadProject(projectUri);
+        URI workflowUri = URI.create(p.getUri() + "/workflow/" + workflowId);
+        Workflow w = p.getWorkflow(workflowUri);
+        Map<String, String> variables = new JsonStringMap(json);
+        this.projectManager.executeWorkflow(p, w, variables);
+        return this.redirect(p, ProjectTab.Workflows).build();
+    }
 
     @GET
     @Path("{id}/ontology/{ontologyTitle}/modify")
@@ -2747,7 +3252,7 @@ public class Workspace extends BaseModule
     private File getFileData(InputStream in, URL u, String destPath,
                              UriInfo uriInfo, MediaType mimeType)
                                                         throws IOException {
-        return this.getFileData(in, u, destPath, uriInfo,
+        return this.getFileData(in, u, destPath,
                      (mimeType != null)? Arrays.asList(mimeType): null, false);
     }
 
@@ -2776,7 +3281,7 @@ public class Workspace extends BaseModule
      *                     the file data.
      */
     private File getFileData(InputStream in, URL u, String destPath,
-                             UriInfo uriInfo, Collection<MediaType> mimeTypes,
+                             Collection<MediaType> mimeTypes,
                              boolean allowAny) throws IOException {
         Configuration cfg = Configuration.getDefault();
         FileStore fs = this.getFileStore();
@@ -2918,5 +3423,49 @@ public class Workspace extends BaseModule
             }
             this.sendError(INTERNAL_SERVER_ERROR, error.getLocalizedMessage());
         }
+    }
+    
+    private WorkflowStep extractWorkflowStepsFromJson(JSONObject json)
+            throws JSONException{
+        WorkflowStep rootStep = null;
+        Map<String, WorkflowStep> steps = new HashMap<String, WorkflowStep>();
+        // extract all steps
+        for(String e : JSONObject.getNames(json)){
+            JSONObject jstep = json.getJSONObject(e);
+            WorkflowStep step = this.projectManager.NewWorkflowStep(
+                    URI.create(jstep.getString("operation")),
+                    new JsonStringMap(jstep.getJSONObject("parameters")),
+                    URI.create(e));
+            steps.put(e, step);
+        }
+        // link steps
+        for(String e : steps.keySet()){
+            WorkflowStep step = steps.get(e);
+            JSONObject jstep = json.getJSONObject(e);
+            JSONArray prevs = jstep.optJSONArray("previous");
+            if(prevs != null && prevs.length() > 0){
+                for(int i = prevs.length() - 1; i >= 0; i--){
+                    step.addPreviousStep(steps.get(prevs.getString(i)));
+                }
+            }
+        }
+        // search for the root step
+        for(String e : steps.keySet()){
+            if(steps.get(e).getNextSteps() == null ||
+                    steps.get(e).getNextSteps().isEmpty()){
+                rootStep = steps.get(e);
+                break;
+            }
+        }
+        return rootStep;
+    }
+    
+    public abstract class OperationBase implements Operation{
+
+        @Override
+        public URI getOperationId() {
+            return URI.create(OPERATION_BASE_URI + this.getClass().getSimpleName());
+        }
+
     }
 }

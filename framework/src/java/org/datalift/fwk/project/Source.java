@@ -216,18 +216,6 @@ public interface Source
     public void setSourceUrl(String url);
 
     /**
-     * Returns the creation date of this source.
-     * @return the creation date.
-     */
-    public Date getCreationDate();
-
-    /**
-     * Returns the operator that created this source.
-     * @return the operator name.
-     */
-    public String getOperator();
-
-    /**
      * Returns the {@link SourceType source type}.
      * @return the source type.
      */

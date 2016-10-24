@@ -44,6 +44,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -109,6 +110,9 @@ public class CsvExporter extends BaseConverterModule
 
     /** The name of this module in the DataLift configuration. */
     public final static String MODULE_NAME = "csvexporter";
+    
+    public final static String OPERATION_ID =
+            "http://www.datalift.org/core/converter/operation/" + MODULE_NAME;
 
     private final static String SOURCE_PREDICATES_QUERY =
                 "SELECT DISTINCT ?p WHERE { GRAPH ?g { ?s ?p ?o . } }";
@@ -158,6 +162,7 @@ public class CsvExporter extends BaseConverterModule
                             @FormParam(CHARSET_PARAM)    String charset,
                             @FormParam(SEPARATOR_PARAM)  String separator)
                                                 throws WebApplicationException {
+        Date eventStart = new Date();
         if (! UriParam.isSet(projectId)) {
             this.throwInvalidParamError(PROJECT_ID_PARAM, null);
         }
@@ -202,6 +207,15 @@ public class CsvExporter extends BaseConverterModule
                                        "attachment; filename=" + name)
                                .header("Refresh", "0.1; " + p.getUri())
                                .build();
+            //save event
+            Map<String, String> parameters = new HashMap<String, String>();
+            parameters.put("projectId", projectId.toUri().toString());
+            parameters.put("sourceId", sourceId.toUri().toString());
+            parameters.put("charset", charset);
+            parameters.put("separator", separator);
+            URI operation = URI.create(OPERATION_ID);
+            this.projectManager.saveOutputEvent(p, operation, parameters,
+                    eventStart, new Date(), null, sourceId.toUri());
         }
         catch (Exception e) {
             this.handleInternalError(e);

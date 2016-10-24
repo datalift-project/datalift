@@ -22,6 +22,7 @@ import org.datalift.fwk.util.CloseableIterator;
 
 import static org.datalift.fwk.util.StringUtils.isSet;
 
+import com.clarkparsia.empire.annotation.NamedGraph;
 import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.RdfsClass;
 
@@ -31,7 +32,8 @@ import com.clarkparsia.empire.annotation.RdfsClass;
  * @author csuglia
  */
 @Entity
-@RdfsClass("datalift:databaseSource")
+@RdfsClass("datalift:SqlDatabaseSource")
+@NamedGraph(type = NamedGraph.NamedGraphType.Static, value="http://www.datalift.org/core/projects")
 public class SqlDatabaseSourceImpl extends BaseSource implements SqlDatabaseSource {
     //-------------------------------------------------------------------------
     // Constants
@@ -49,7 +51,7 @@ public class SqlDatabaseSourceImpl extends BaseSource implements SqlDatabaseSour
     // Instance members
     //-------------------------------------------------------------------------
 
-    @RdfProperty("datalift:user")
+    @RdfProperty("datalift:userName")
     private String user;
     @RdfProperty("datalift:password")
     private String password;

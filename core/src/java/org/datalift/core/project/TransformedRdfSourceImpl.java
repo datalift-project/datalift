@@ -42,6 +42,7 @@ import org.openrdf.model.impl.URIImpl;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryResult;
 
+import com.clarkparsia.empire.annotation.NamedGraph;
 import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.RdfsClass;
 
@@ -60,6 +61,7 @@ import org.datalift.fwk.util.CloseableIterator;
  */
 @Entity
 @RdfsClass("datalift:TransformedRdfSource")
+@NamedGraph(type = NamedGraph.NamedGraphType.Static, value="http://www.datalift.org/core/projects")
 public class TransformedRdfSourceImpl extends BaseSource
                                       implements TransformedRdfSource
 {
@@ -69,7 +71,7 @@ public class TransformedRdfSourceImpl extends BaseSource
 
     @RdfProperty("datalift:targetGraph")
     private String targetGraph;
-    @RdfProperty("datalift:parentSource")
+    @RdfProperty("prov:wasDerivedFrom")
     private Source parent;
     @RdfProperty("datalift:baseUri")
     private String baseUri;

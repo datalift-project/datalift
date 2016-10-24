@@ -36,7 +36,9 @@ package org.datalift.converter;
 
 
 import java.net.URI;
-
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -54,6 +56,10 @@ import javax.ws.rs.core.UriInfo;
 import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 
 import org.datalift.fwk.Configuration;
+import org.datalift.fwk.async.Operation;
+import org.datalift.fwk.async.Parameter;
+import org.datalift.fwk.async.ParameterType;
+import org.datalift.fwk.async.Parameters;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectModule;
 import org.datalift.fwk.project.Source;
@@ -76,7 +82,7 @@ import static org.datalift.fwk.util.StringUtils.isSet;
  * @author lbihanic
  */
 @Path(SimplePublisher.MODULE_NAME)
-public class SimplePublisher extends BaseConverterModule
+public class SimplePublisher extends BaseConverterModule implements Operation
 {
     //-------------------------------------------------------------------------
     // Constants
@@ -84,6 +90,9 @@ public class SimplePublisher extends BaseConverterModule
 
     /** The name of this module in the DataLift configuration. */
     public final static String MODULE_NAME = "simple-publisher";
+    
+    public final static String OPERATION_ID =
+            "http://www.datalift.org/core/converter/operation/" + MODULE_NAME;
 
     /* Web service parameter names. */
     protected final static String REPOSITORY_PARAM      = "store";
@@ -128,6 +137,38 @@ public class SimplePublisher extends BaseConverterModule
         if (! UriParam.isSet(sourceId)) {
             this.throwInvalidParamError(SOURCE_ID_PARAM, null);
         }
+        Project p = this.getProject(projectId.toUri(PROJECT_ID_PARAM));
+        Parameters params = this.getBlankParameters();
+        params.setValue("project", projectId.toUri().toString());
+        params.setValue("source", sourceId.toUri().toString());
+        params.setValue("targetGraph", targetGraphParam.toUri().toString());
+        params.setValue("repository", repository);
+        params.setValue("overwrite", Boolean.toString(overwrite));
+        try {
+            this.execute(params);
+        } catch (Exception e) {
+            this.handleInternalError(e);
+        }
+        return Response.seeOther(URI.create(p.getUri() + "#source")).build();
+    }
+
+    //-------------------------------------------------------------------------
+    // Operation contract support
+    //-------------------------------------------------------------------------
+    
+    @Override
+    public URI getOperationId() {
+        return URI.create(OPERATION_ID);
+    }
+
+    @Override
+    public void execute(Parameters params) throws Exception {
+        Date start = new Date();
+        URI projectId = URI.create(params.getProjectValue());
+        URI sourceId = URI.create(params.getValue("source"));
+        URI targetGraph = URI.create(params.getValue("targetGraph"));
+        String repository = params.getValue("repository");
+        boolean overwrite = Boolean.parseBoolean(params.getValue("overwrite"));
         Configuration cfg = Configuration.getDefault();
         Repository pub = null;
         try {
@@ -137,19 +178,16 @@ public class SimplePublisher extends BaseConverterModule
         catch (Exception e) {
             this.throwInvalidParamError(REPOSITORY_PARAM, repository);
         }
-        Response response = null;
-
         try {
             // Retrieve project.
-            Project p = this.getProject(projectId.toUri(PROJECT_ID_PARAM));
+            Project p = this.getProject(projectId);
             // Load input source.
             TransformedRdfSource in = (TransformedRdfSource)
-                            (p.getSource(sourceId.toUri(SOURCE_ID_PARAM)));
+                            (p.getSource(sourceId));
             if (in == null) {
                 throw new ObjectNotFoundException("project.source.not.found",
                                                   projectId, sourceId);
             }
-            URI targetGraph = targetGraphParam.toUri(GRAPH_URI_PARAM);
             if (targetGraph == null) {
                 // Get the source (CSV, RDF/XML, database...) at the origin of
                 // the transformations and use its name as target named graph.
@@ -161,7 +199,7 @@ public class SimplePublisher extends BaseConverterModule
                                                 (TransformedRdfSource)origin: null;
                 }
                 targetGraph = (origin != null)? new URI(origin.getUri()):
-                                                projectId.toUri();
+                                                projectId;
             }
             // Publish input source triples in target repository.
             RdfUtils.upload(in, pub, targetGraph, null, overwrite);
@@ -172,13 +210,29 @@ public class SimplePublisher extends BaseConverterModule
                 }
                 catch (Exception e) { /* Ignore... */ }
             }
-            // Display generated triples.
-            response = this.displayGraph(pub, targetGraph,
-                                         uriInfo, request, acceptHdr);
+            Date end = new Date();
+            // Declare event
+            this.projectManager.saveOutputEvent(p, this.getOperationId(),
+                    params.getValues(), start, end, null, sourceId);
         }
         catch (Exception e) {
-            this.handleInternalError(e);
+            throw new TechnicalException(e);
         }
-        return response;
+    }
+    
+    @Override
+    public Parameters getBlankParameters() {
+        Collection<Parameter> paramList = new ArrayList<Parameter>();
+        paramList.add(new Parameter("project",
+                "ws.param.project", ParameterType.project));
+        paramList.add(new Parameter("source",
+                "ws.param.source", ParameterType.input_source));
+        paramList.add(new Parameter("repository",
+                "ws.param.repository", ParameterType.visible));
+        paramList.add(new Parameter("targetGraph",
+                "ws.param.targetGraph", ParameterType.visible));
+        paramList.add(new Parameter("overwrite",
+                "ws.param.overwrite", ParameterType.visible));
+        return new Parameters(paramList);
     }
 }

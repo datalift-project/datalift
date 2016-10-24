@@ -73,7 +73,7 @@ public abstract class BaseFileSource extends BaseSource
     private String mimeType;
     @RdfProperty("cnt:characterEncoding")
     private String encoding;
-    @RdfProperty("datalift:path")
+    @RdfProperty("datalift:localFilePath")
     private String filePath;
 
     private transient File storage = null;

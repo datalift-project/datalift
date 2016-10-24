@@ -40,6 +40,7 @@ import java.io.InputStream;
 
 import javax.persistence.Entity;
 
+import com.clarkparsia.empire.annotation.NamedGraph;
 import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.RdfsClass;
 
@@ -54,6 +55,7 @@ import org.datalift.fwk.project.Project;
  */
 @Entity
 @RdfsClass("datalift:gmlSource")
+@NamedGraph(type = NamedGraph.NamedGraphType.Static, value="http://www.datalift.org/core/projects")
 public class GmlSourceImpl extends BaseFileSource
 implements GmlSource
 {

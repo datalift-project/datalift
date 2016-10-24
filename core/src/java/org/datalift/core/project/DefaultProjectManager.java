@@ -40,20 +40,29 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 
+import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.Query;
 import javax.persistence.spi.PersistenceProvider;
 
 import com.clarkparsia.empire.Empire;
+import com.clarkparsia.empire.annotation.RdfsClass;
 import com.clarkparsia.empire.config.ConfigKeys;
 import com.clarkparsia.empire.config.EmpireConfiguration;
+import com.clarkparsia.empire.impl.RdfQuery;
 import com.clarkparsia.empire.sesame.OpenRdfEmpireModule;
 import com.clarkparsia.empire.sesame.RepositoryFactoryKeys;
 import com.complexible.common.util.PrefixMapping;
@@ -61,12 +70,20 @@ import com.complexible.common.util.PrefixMapping;
 import javassist.ClassPool;
 import javassist.LoaderClassPath;
 
+import org.datalift.core.async.TaskContextBase;
+import org.datalift.core.prov.EventImpl;
+import org.datalift.core.replay.WorkflowImpl;
+import org.datalift.core.replay.WorkflowStepImpl;
+import org.datalift.core.util.JsonStringMap;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.FileStore;
 import org.datalift.fwk.LifeCycle;
 import org.datalift.fwk.MediaTypes;
+import org.datalift.fwk.async.TaskContext;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.CsvSource;
+import org.datalift.fwk.project.GenericRdfDao;
+import org.datalift.fwk.project.PersistenceException;
 import org.datalift.fwk.project.SparqlSource;
 import org.datalift.fwk.project.SqlDatabaseSource;
 import org.datalift.fwk.project.SqlQuerySource;
@@ -82,7 +99,12 @@ import org.datalift.fwk.project.TransformedRdfSource;
 import org.datalift.fwk.project.WfsSource;
 import org.datalift.fwk.project.XmlSource;
 import org.datalift.fwk.project.CsvSource.Separator;
+import org.datalift.fwk.prov.Event;
+import org.datalift.fwk.prov.EventSubject;
+import org.datalift.fwk.prov.EventType;
 import org.datalift.fwk.rdf.RdfNamespace;
+import org.datalift.fwk.replay.Workflow;
+import org.datalift.fwk.replay.WorkflowStep;
 import org.datalift.fwk.security.SecurityContext;
 
 
@@ -101,6 +123,8 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     //-------------------------------------------------------------------------
 
     /* package */ final static String PROJECT_DIRECTORY_NAME = "project";
+    final static String DEFAULT_OPERATIONS_BASE_URI =
+            "http://www.datalift.org/core/ProjectManager/operation/";
 
     //-------------------------------------------------------------------------
     // Class members
@@ -194,6 +218,16 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     public CsvSource newCsvSource(Project project, URI uri, String title,
                                   String description, String filePath,
                                   char separator) throws IOException {
+        return this.newCsvSource(project, uri, title, description, filePath,
+                separator, null, null, new Date());
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public CsvSource newCsvSource(Project project, URI uri, String title,
+            String description, String filePath, char separator, URI operation,
+            Map<String, String> parameters, Date start)
+            throws IOException{
         // Create new CSV source.
         CsvSourceImpl src = new CsvSourceImpl(uri.toString(), project);
         // Set source parameters.
@@ -215,15 +249,42 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         project.add(src);
         log.debug("New CSV source <{}> added to project \"{}\"",
                                                     uri, project.getTitle());
+        //add the event
+        URI operationE = operation;
+        if(operation == null)
+            operationE = this.createDefaultMethodOperationId();
+        Map<String, String> parametersE = parameters;
+        if(parameters == null){
+            parametersE = new HashMap<String, String>();
+            parametersE.put("project", project.getUri());
+            parametersE.put("title", title);
+            parametersE.put("description", description);
+            parametersE.put("filePath", filePath);
+            parametersE.put("separator", "" + separator);
+            parametersE.put("uri", uri.toString());
+        }
+        this.addEvent(project, operationE, parametersE, Event.CREATION_EVENT_TYPE,
+                Event.SOURCE_EVENT_SUBJECT, start, new Date(), null,
+                URI.create(src.getUri()));
         return src;
     }
-
+    
     /** {@inheritDoc} */
     @Override
     public RdfFileSource newRdfSource(Project project, URI uri, String title,
                                       String description, URI baseUri,
                                       String filePath, String mimeType)
                                                             throws IOException {
+        return this.newRdfSource(project, uri, title, description, baseUri,
+                filePath, mimeType, null, null, new Date());
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public RdfFileSource newRdfSource(Project project, URI uri, String title,
+            String description, URI baseUri, String filePath, String mimeType, 
+            URI operation, Map<String, String> parameters, Date start)
+            throws IOException{
         // Create new RDF file source.
         RdfFileSourceImpl src = new RdfFileSourceImpl(uri.toString(), project);
         // Set source parameters.
@@ -241,9 +302,30 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         project.add(src);
         log.debug("New RDF file source <{}> added to project \"{}\"",
                                                     uri, project.getTitle());
+        //add the event
+        URI operationE = operation;
+        if(operation == null)
+            operationE = this.createDefaultMethodOperationId();
+        Map<String, String> parametersE = parameters;
+        if(parameters == null){
+            parametersE = new HashMap<String, String>();
+            parametersE.put("project", project.getUri());
+            parametersE.put("uri", uri.toString());
+            parametersE.put("title", title);
+            parametersE.put("description", description);
+            if(baseUri != null)
+                parametersE.put("baseUri", baseUri.toString());
+            else
+                parametersE.put("baseUri", null);
+            parametersE.put("filePath", filePath);
+            parametersE.put("mimeType", mimeType);
+        }
+        this.addEvent(project, operationE, parametersE, Event.CREATION_EVENT_TYPE,
+                Event.SOURCE_EVENT_SUBJECT, start, new Date(), null,
+                URI.create(src.getUri()));
         return src;
     }
-
+    
     /** {@inheritDoc} */
     @Override
     public SqlQuerySource newSqlQuerySource(Project project, URI uri,
@@ -251,7 +333,19 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
                                   String srcUrl, String user, String password,
                                   String request, int cacheDuration)
                                                             throws IOException {
-        // Create new SQL source.
+        return this.newSqlQuerySource(project, uri, title, description, srcUrl,
+                user, password, request, cacheDuration, null, null, new Date());
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public SqlQuerySource newSqlQuerySource(Project project, URI uri,
+            String title, String description,
+            String srcUrl, String user, String password,
+            String request, int cacheDuration,
+            URI operation, Map<String, String> parameters,
+            Date start) throws IOException{
+     // Create new SQL source.
         SqlQuerySourceImpl src = new SqlQuerySourceImpl(uri.toString(), project);
         // Set source parameters.
         this.initSource(src, title, description);
@@ -264,6 +358,26 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         project.add(src);
         log.debug("New SQL source <{}> added to project \"{}\"",
                                                     uri, project.getTitle());
+        //add the event
+        URI operationE = operation;
+        if(operation == null)
+            operationE = this.createDefaultMethodOperationId();
+        Map<String, String> parametersE = parameters;
+        if(parameters == null){
+            parametersE = new HashMap<String, String>();
+            parametersE.put("project", project.getUri());
+            parametersE.put("uri", uri.toString());
+            parametersE.put("title", title);
+            parametersE.put("description", description);
+            parametersE.put("srcUrl", srcUrl);
+            parametersE.put("password", password);
+            parametersE.put("user", user);
+            parametersE.put("request", request);
+            parametersE.put("cacheDuration", Integer.toString(cacheDuration));
+        }
+        this.addEvent(project, operationE, parametersE, Event.CREATION_EVENT_TYPE,
+                Event.SOURCE_EVENT_SUBJECT, start, new Date(), null,
+                URI.create(src.getUri()));
         return src;
     }
 
@@ -273,6 +387,16 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
             					String title, String description,
             					String srcUrl, String user, String password)
             							throws IOException{
+        return this.newSqlDatabaseSource(project, uri, title, description,
+                srcUrl, user, password, null, null, new Date());
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public SqlDatabaseSource newSqlDatabaseSource(Project project, URI uri,
+            String title, String description, String srcUrl, String user,
+            String password, URI operation, Map<String, String> parameters,
+            Date start) throws IOException{
         // Create new SQL Database source.
         SqlDatabaseSourceImpl src = new SqlDatabaseSourceImpl(uri.toString(), project);
         // Set source parameters.
@@ -284,7 +408,25 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         project.add(src);
         log.debug("New Database source <{}> added to project \"{}\"",
                                                     uri, project.getTitle());
-    	return src;
+        //add the event
+        URI operationE = operation;
+        if(operation == null)
+            operationE = this.createDefaultMethodOperationId();
+        Map<String, String> parametersE = parameters;
+        if(parameters == null){
+            parametersE = new HashMap<String, String>();
+            parametersE.put("project", project.getUri());
+            parametersE.put("uri", uri.toString());
+            parametersE.put("title", title);
+            parametersE.put("description", description);
+            parametersE.put("srcUrl", srcUrl);
+            parametersE.put("password", password);
+            parametersE.put("user", user);
+        }
+        this.addEvent(project, operationE, parametersE, Event.CREATION_EVENT_TYPE,
+                Event.SOURCE_EVENT_SUBJECT, start, new Date(), null,
+                URI.create(src.getUri()));
+        return src;
     }
     
     /** {@inheritDoc} */
@@ -293,6 +435,16 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
                                         String description, String endpointUrl,
                                         String sparqlQuery, int cacheDuration)
                                                             throws IOException {
+        return this.newSparqlSource(project, uri, title, description,
+                endpointUrl, sparqlQuery, cacheDuration, null, null, new Date());
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public SparqlSource newSparqlSource(Project project, URI uri, String title,
+            String description, String endpointUrl, String sparqlQuery,
+            int cacheDuration, URI operation, Map<String, String> parameters,
+            Date start) throws IOException{
         // Create new RDF SPARQL source.
         SparqlSourceImpl src = new SparqlSourceImpl(uri.toString(), project);
         // Set source parameters.
@@ -304,6 +456,24 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         project.add(src);
         log.debug("New SPARQL source <{}> added to project \"{}\"",
                                                     uri, project.getTitle());
+      //add the event
+        URI operationE = operation;
+        if(operation == null)
+            operationE = this.createDefaultMethodOperationId();
+        Map<String, String> parametersE = parameters;
+        if(parameters == null){
+            parametersE = new HashMap<String, String>();
+            parametersE.put("project", project.getUri());
+            parametersE.put("uri", uri.toString());
+            parametersE.put("title", title);
+            parametersE.put("description", description);
+            parametersE.put("endpointUrl", endpointUrl);
+            parametersE.put("sparqlQuery", sparqlQuery);
+            parametersE.put("cacheDuration", Integer.toString(cacheDuration));
+        }
+        this.addEvent(project, operationE, parametersE, Event.CREATION_EVENT_TYPE,
+                Event.SOURCE_EVENT_SUBJECT, start, new Date(), null,
+                URI.create(src.getUri()));
         return src;
     }
 
@@ -312,6 +482,15 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     public XmlSource newXmlSource(Project project, URI uri, String title,
                                   String description, String filePath)
                                                             throws IOException {
+        return this.newXmlSource(project, uri, title, description, filePath,
+                null, null, new Date());
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public XmlSource newXmlSource(Project project, URI uri, String title,
+            String description, String filePath, URI operation,
+            Map<String, String> parameters, Date start) throws IOException{
         // Create new XML source.
         XmlSourceImpl src = new XmlSourceImpl(uri.toString(), project);
         // Set source parameters.
@@ -326,6 +505,22 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         project.add(src);
         log.debug("New XML source <{}> added to project \"{}\"",
                                                     uri, project.getTitle());
+        //add the event
+        URI operationE = operation;
+        if(operation == null)
+            operationE = this.createDefaultMethodOperationId();
+        Map<String, String> parametersE = parameters;
+        if(parameters == null){
+            parametersE = new HashMap<String, String>();
+            parametersE.put("project", project.getUri());
+            parametersE.put("uri", uri.toString());
+            parametersE.put("title", title);
+            parametersE.put("description", description);
+            parametersE.put("filePath", filePath);
+        }
+        this.addEvent(project, operationE, parametersE, Event.CREATION_EVENT_TYPE,
+                Event.SOURCE_EVENT_SUBJECT, start, new Date(), null,
+                URI.create(src.getUri()));
         return src;
     }
     
@@ -346,6 +541,17 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
                                     URI uri, String title, String description,
                                     URI targetGraph, URI baseUri, Source parent)
                                                             throws IOException {
+        return this.newTransformedRdfSource(project, uri, title, description,
+                targetGraph, baseUri, parent, null, null, new Date());
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public TransformedRdfSource newTransformedRdfSource(Project project,
+            URI uri, String title, String description,
+            URI targetGraph, URI baseUri, Source parent,
+            URI operation, Map<String, String> parameters,
+            Date start) throws IOException{
         if (targetGraph == null) {
             throw new IllegalArgumentException("targetGraph");
         }
@@ -363,6 +569,28 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         project.add(src);
         log.debug("New transformed RDF source <{}> added to project \"{}\"",
                                                     uri, project.getTitle());
+      //add the event
+        URI operationE = operation;
+        if(operation == null)
+            operationE = this.createDefaultMethodOperationId();
+        Map<String, String> parametersE = parameters;
+        if(parameters == null){
+            parametersE = new HashMap<String, String>();
+            parametersE.put("project", project.getUri());
+            parametersE.put("uri", uri.toString());
+            parametersE.put("title", title);
+            parametersE.put("description", description);
+            if(targetGraph != null)
+                parametersE.put("targetGraph", targetGraph.toString());
+            if(baseUri != null)
+                parametersE.put("baseUri", baseUri.toString());
+            else
+                parametersE.put("baseUri", null);
+            parametersE.put("parent", parent.getUri());
+        }
+        this.addEvent(project, operationE, parametersE, Event.CREATION_EVENT_TYPE,
+                Event.SOURCE_EVENT_SUBJECT, start, new Date(), null,
+                URI.create(src.getUri()), URI.create(parent.getUri()));
         return src;
     }
 
@@ -373,6 +601,16 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
                                   String shxFilePath, String dbfFilePath,
                                   String prjFilePath)
                                                             throws IOException {
+        return this.newShpSource(project, uri, title, description, shpFilePath,
+                shxFilePath, dbfFilePath, prjFilePath, null, null, new Date());
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public ShpSource newShpSource(Project project, URI uri, String title,
+            String description, String shpFilePath, String shxFilePath,
+            String dbfFilePath, String prjFilePath, URI operation,
+            Map<String, String> parameters, Date start) throws IOException{
         // Create new Shapefile source.
         ShpSourceImpl src = new ShpSourceImpl(uri.toString(), project);
         // Set source parameters.
@@ -405,6 +643,25 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         project.add(src);
         log.debug("New ShapeFile source <{}> added to project \"{}\"",
                                                     uri, project.getTitle());
+        //add the event
+        URI operationE = operation;
+        if(operation == null)
+            operationE = this.createDefaultMethodOperationId();
+        Map<String, String> parametersE = parameters;
+        if(parameters == null){
+            parametersE = new HashMap<String, String>();
+            parametersE.put("project", project.getUri());
+            parametersE.put("uri", uri.toString());
+            parametersE.put("title", title);
+            parametersE.put("description", description);
+            parametersE.put("shpFilePath", shpFilePath);
+            parametersE.put("shxFilePath", shxFilePath);
+            parametersE.put("dbfFilePath", dbfFilePath);
+            parametersE.put("prjFilePath", prjFilePath);
+        }
+        this.addEvent(project, operationE, parametersE, Event.CREATION_EVENT_TYPE,
+                Event.SOURCE_EVENT_SUBJECT, start, new Date(), null,
+                URI.create(src.getUri()));
         return src;
     }
 
@@ -414,6 +671,16 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
                                   String description, String gmlFilePath,
                                   String xsdFilePath)
                                                             throws IOException {
+        return this.newGmlSource(project, uri, title, description, gmlFilePath,
+                xsdFilePath, null, null, new Date());
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public GmlSource newGmlSource(Project project, URI uri, String title,
+            String description, String gmlFilePath, String xsdFilePath,
+            URI operation, Map<String, String> parameters, Date start)
+                                                        throws IOException{
         // Create new Gmlfile source.
         GmlSourceImpl src = new GmlSourceImpl(uri.toString(), project);
         // Set source parameters.
@@ -434,6 +701,23 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         project.add(src);
         log.debug("New GML source <{}> added to project \"{}\"",
                                                     uri, project.getTitle());
+      //add the event
+        URI operationE = operation;
+        if(operation == null)
+            operationE = this.createDefaultMethodOperationId();
+        Map<String, String> parametersE = parameters;
+        if(parameters == null){
+            parametersE = new HashMap<String, String>();
+            parametersE.put("project", project.getUri());
+            parametersE.put("uri", uri.toString());
+            parametersE.put("title", title);
+            parametersE.put("description", description);
+            parametersE.put("gmlFilePath", gmlFilePath);
+            parametersE.put("xsdFilePath", xsdFilePath);
+        }
+        this.addEvent(project, operationE, parametersE, Event.CREATION_EVENT_TYPE,
+                Event.SOURCE_EVENT_SUBJECT, start, new Date(), null,
+                URI.create(src.getUri()));
         return src;
     }
     
@@ -492,6 +776,14 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     /** {@inheritDoc} */
     @Override
     public void delete(Source source, boolean deleteResources) {
+        this.delete(source, deleteResources, null, null);
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public void delete(Source source, boolean deleteResources, URI operation,
+            Map<String, String> parameters){
+        Date eventStart = new Date();
         this.checkAvailable();
         if (source == null) {
             throw new IllegalArgumentException("source");
@@ -504,6 +796,19 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
             log.debug("Releasing resources for source <{}>", source.getUri());
             source.delete();
         }
+        //add the event
+        URI operationE = operation;
+        if(operation == null)
+            operationE = this.createDefaultMethodOperationId();
+        Map<String, String> parametersE = parameters;
+        if(parameters == null){
+            parametersE = new HashMap<String, String>();
+            parametersE.put("source", source.getUri());
+            parametersE.put("deleteResources", Boolean.toString(deleteResources));
+        }
+        this.addEvent(p, operationE, parametersE, Event.DESTRUCTION_EVENT_TYPE,
+                Event.SOURCE_EVENT_SUBJECT, eventStart, new Date(), null,
+                URI.create(source.getUri()));
         // Persist changes.
         this.saveProject(p);
         this.projectDao.delete(source);
@@ -516,23 +821,51 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     /** {@inheritDoc} */
     @Override
     public Ontology newOntology(Project project, URI url, String title) {
+        return this.newOntology(project, url, title, null, null);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Ontology newOntology(Project project, URI url, String title,
+            URI operation, Map<String, String> parameters){
+        Date eventStart = new Date();
         // Create new ontology.
         OntologyImpl ontology = new OntologyImpl();
         // Set ontology parameters.
         ontology.setTitle(title);
         ontology.setSource(url);
-        ontology.setDateSubmitted(new Date());
-        ontology.setOperator(SecurityContext.getUserPrincipal());
         // Add ontology to project.
         project.addOntology(ontology);
         log.debug("New ontology <{}> added to project \"{}\"",
                                                     url, project.getTitle());
+        //add the event
+        URI operationE = operation;
+        if(operation == null)
+            operationE = this.createDefaultMethodOperationId();
+        Map<String, String> parametersE = parameters;
+        if(parameters == null){
+            parametersE = new HashMap<String, String>();
+            parametersE.put("project", project.getUri());
+            parametersE.put("ontology", ontology.getUri());
+            parametersE.put("title", title);
+        }
+        this.addEvent(project, operationE, parametersE, Event.CREATION_EVENT_TYPE,
+                Event.ONTOLOGY_EVENT_SUBJECT, eventStart, new Date(), null,
+                URI.create(ontology.getUri()));
         return ontology;
     }
-
+    
     /** {@inheritDoc} */
     @Override
     public void deleteOntology(Project project, Ontology ontology) {
+        this.deleteOntology(project, ontology, null, null);
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public void deleteOntology(Project project, Ontology ontology,
+            URI operation, Map<String, String> parameters){
+        Date eventStart = new Date();
         this.checkAvailable();
         if (project == null) {
             throw new IllegalArgumentException("project");
@@ -542,6 +875,19 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         }
         // Remove ontology from project.
         ontology = project.removeOntology(ontology.getTitle());
+        //add the event
+        URI operationE = operation;
+        if(operation == null)
+            operationE = this.createDefaultMethodOperationId();
+        Map<String, String> parametersE = parameters;
+        if(parameters == null){
+            parametersE = new HashMap<String, String>();
+            parametersE.put("project", project.getUri());
+            parametersE.put("ontology", ontology.getUri());
+        }
+        this.addEvent(project, operationE, parametersE, Event.DESTRUCTION_EVENT_TYPE,
+                Event.ONTOLOGY_EVENT_SUBJECT, eventStart, new Date(), null,
+                URI.create(ontology.getUri()));
         // Persist changes.
         this.saveProject(project);
         this.projectDao.delete(ontology);
@@ -553,6 +899,16 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     @Override
     public Project newProject(URI projectId, String title,
                               String description, URI license) {
+        return this.newProject(projectId, title, description, license, null,
+                null);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Project newProject(URI projectId, String title,
+            String description, URI license,
+            URI operation, Map<String, String> parameters){
+        Date eventStart = new Date();
         // Check that no project with the same URI already exists.
         if (this.findProject(projectId) != null) {
             throw new DuplicateUriException("duplicate.project.uri",
@@ -565,13 +921,27 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         p.setLicense(license);
 
         Date date = new Date();
-        p.setCreationDate(date);
         p.setModificationDate(date);
         p.setOwner(SecurityContext.getUserPrincipal());
         log.debug("New project <{}> created", p.getUri());
+        //add the event
+        URI operationE = operation;
+        if(operation == null)
+            operationE = this.createDefaultMethodOperationId();
+        Map<String, String> parametersE = parameters;
+        if(parameters == null){
+            parametersE = new HashMap<String, String>();
+            parametersE.put("projectId", projectId.toString());
+            parametersE.put("title", title);
+            parametersE.put("description", description);
+            parametersE.put("license", license.toString());
+        }
+        this.addEvent(p, operationE, parametersE, Event.CREATION_EVENT_TYPE,
+                Event.PROJECT_EVENT_SUBJECT, eventStart, new Date(), null,
+                URI.create(p.getUri()));
         return p;
     }
-
+    
     /** {@inheritDoc} */
     @Override
     public String getProjectFilePath(String projectId, String fileName) {
@@ -585,6 +955,14 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     /** {@inheritDoc} */
     @Override
     public void deleteProject(Project p) {
+        this.deleteProject(p, null, null);
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public void deleteProject(Project p, URI operation,
+            Map<String, String> parameters){
+        Date eventStart = new Date();
         this.checkAvailable();
         // Delete server-side resources attached to sources.
         for (Source s : p.getSources()) {
@@ -593,6 +971,18 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         // Delete project (and dependent objects: sources, ontologies...)
         this.projectDao.delete(p);
         log.debug("Project <{}> deleted", p.getUri());
+        //save the event
+        URI operationE = operation;
+        if(operation == null)
+            operationE = this.createDefaultMethodOperationId();
+        Map<String, String> parametersE = parameters;
+        if(parameters == null){
+            parametersE = new HashMap<String, String>();
+            parametersE.put("project", p.getUri());
+        }
+        this.saveEvent(p, operationE, parametersE, Event.DESTRUCTION_EVENT_TYPE,
+                Event.PROJECT_EVENT_SUBJECT, eventStart, new Date(), null,
+                URI.create(p.getUri()));
     }
 
     /** {@inheritDoc} */
@@ -615,10 +1005,49 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
                 this.projectDao.save(p);
             }
             log.debug("Project <{}> saved to RDF store", p.getUri());
+            //save events
+            if(p.getEvents().isEmpty()){
+                Map<String, String> parameters = new HashMap<String, String>();
+                parameters.put("project", p.getUri());
+                this.addEvent(p, this.createDefaultMethodOperationId(),
+                        parameters, Event.UPDATE_EVENT_TYPE,
+                        Event.PROJECT_EVENT_SUBJECT, null, null, null,
+                        URI.create(p.getUri()));
+            }
+            while(!p.getEvents().isEmpty())
+                this.saveEvent((Event) p.getEvents().toArray()[0]);
         }
         catch (Exception e) {
             throw new RuntimeException("Invalid project URI: " + p.getUri(), e);
         }
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public void saveProject(Project p, URI operation,
+            Map<String, String> parameters, EventType eventType,
+            EventSubject eventSubject, Date start, URI influenced){
+      //add the event
+        URI operationE = operation;
+        if(operation == null)
+            operationE = this.createDefaultMethodOperationId();
+        Map<String, String> parametersE = parameters;
+        if(parameters == null){
+            parametersE = new HashMap<String, String>();
+            parametersE.put("project", p.getUri());
+        }
+        EventType eventTypeE = eventType;
+        if(eventType == null)
+            eventTypeE = Event.UPDATE_EVENT_TYPE;
+        EventSubject eventSubjectE = eventSubject;
+        if(eventSubject == null)
+            eventSubjectE = Event.PROJECT_EVENT_SUBJECT;
+        URI influencedE = influenced;
+        if(influenced == null)
+            influencedE = URI.create(p.getUri());
+        this.addEvent(p, operationE, parametersE, eventTypeE,
+                eventSubjectE, start, new Date(), null, influencedE);
+        this.saveProject(p);
     }
 
     /** {@inheritDoc} */
@@ -630,7 +1059,426 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         }
         this.classes.addAll(classes);
     }
+    
+    /** {@inheritDoc} */
+    @Override
+    public Event addEvent(Project project, URI operation,
+            Map<String, String> parameters, EventType eventType,
+            EventSubject eventSubject, Date start, Date end, URI agent,
+            URI influenced, URI... used){
+        //control parameters values, put the default one if absent
+        URI operationE = operation;
+        if(operation == null)
+            operationE = URI
+            .create("http://www.datalift.org/core/operation/DefaultOperation");
+        EventType eventTypeE = eventType;
+        if(eventType == null)
+            eventTypeE = Event.INFORMATION_EVENT_TYPE;
+        Date startE = start;
+        if(start == null)
+            startE = new Date();
+        Date endE = end;
+        if(end == null)
+            endE = startE;
+        URI agentE = agent;
+        if(agent == null)
+            agentE = TaskContext.getCurrent().getCurrentAgent();
+        //build event uri
+        StringBuilder str;
+        if(project == null)
+            str = new StringBuilder("http://www.datalift.org/core");
+        else
+            str = new StringBuilder(project.getUri());
+        str.append("/event/").append(eventTypeE.getInitial());
+        if(eventSubject != null)
+            str.append(eventSubject.getInitial());
+        DateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm.SSS'Z'");
+        format.setTimeZone(TimeZone.getTimeZone("UTC"));
+        str.append("/").append(format.format(startE)).append("/");
+        str.append(Double.toString(Math.random()).substring(2, 6));
+        URI id = URI.create(str.toString());
+        URI informerE = null;
+        if(TaskContext.getCurrent().getCurrentEvent() != null)
+            informerE = TaskContext.getCurrent().getCurrentEvent().getUri();
+        //create event and put it on the project
+        EventImpl event = new EventImpl(id, project, operationE, parameters,
+                eventTypeE, startE, endE, agentE, influenced, informerE, used);
+        if(project != null)
+            project.addEvent(event);
+        return event;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public Event saveEvent(Project project, URI operation,
+            Map<String, String> parameters, EventType eventType,
+            EventSubject eventSubject, Date start, Date end, URI agent,
+            URI influenced, URI... used){
+        if(parameters == null)
+            throw new IllegalArgumentException("the event need parameters");
+        if(operation == null)
+            throw new IllegalArgumentException("the event need operation");
+        Event ret = this.addEvent(project, operation, parameters, eventType,
+                eventSubject, start, end, agent, influenced, used);
+        return this.saveEvent(ret);
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public Event saveOutputEvent(Project project, URI operation,
+            Map<String, String> parameters, Date start, Date end, URI agent,
+            URI... used){
+        URI operationE = operation;
+        if(operation == null)
+            operationE = this.createDefaultMethodOperationId();
+        Map<String, String> parametersE = parameters;
+        if(parameters == null){
+            parametersE = new HashMap<String, String>();
+            for(int i = 0; i < used.length; i++)
+                parametersE.put("used " + (i + 1), used[i].toString());
+        }
+        return this.saveEvent(project, operationE, parametersE,
+                Event.OUTPUT_EVENT_TYPE, Event.SOURCE_EVENT_SUBJECT, start, end,
+                agent, null, used);
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public Event saveEvent(Event event){
+        this.checkAvailable();
+        Event ret = this.projectDao.save(event);
+        if(event.getProject() != null)
+            event.getProject().removeEvent(event);
+        ((TaskContextBase) TaskContext.getCurrent())
+                .declareHappeningEvent((EventImpl) ret);
+        return ret;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public GenericRdfDao getRdfDao(){
+        return this.projectDao;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public Workflow newWorkflow(Project project, URI url, String title,
+            String description, Map<String, String> variables,
+            WorkflowStep outputStep) {
+        return this.newWorkflow(project, url, title, description, variables,
+                outputStep, null, null, new Date());
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public Workflow newWorkflow(Project project, URI url, String title,
+            String description, Map<String, String> variables,
+            WorkflowStep outputStep, URI eventOperation,
+            Map<String, String> eventParameters, Date eventStart){
+        Date eventStartE = eventStart;
+        if(eventStart == null)
+            eventStartE = new Date();
+        // Create the workflow
+        WorkflowImpl wfl = new WorkflowImpl(url, title, description, variables,
+                (WorkflowStepImpl) outputStep);
+        // Add it to the project
+        project.addWorkflow(wfl);
+        log.debug("New workflow <{}> added to project \"{}\"",
+                                                    url, project.getTitle());
+      //add the event
+        URI operationE = eventOperation;
+        if(eventOperation == null)
+            operationE = this.createDefaultMethodOperationId();
+        Map<String, String> parametersE = eventParameters;
+        if(eventParameters == null){
+            parametersE = new HashMap<String, String>();
+            parametersE.put("project", project.getUri());
+            parametersE.put("workflow", wfl.getUri().toString());
+            parametersE.put("title", title);
+            parametersE.put("description", description);
+            parametersE.put("variables", new JsonStringMap(variables)
+                                                                .toString());
+            parametersE.put("outputStep", outputStep.toString());
+        }
+        this.addEvent(project, operationE, parametersE, Event.CREATION_EVENT_TYPE,
+                Event.WORKFLOW_EVENT_SUBJECT, eventStartE, new Date(), null,
+                wfl.getUri());
+        return wfl;
+    }
 
+    /** {@inheritDoc} */
+    @Override
+    public void deleteWorkflow(Project project, Workflow workflow) {
+        this.deleteWorkflow(project, workflow, null, null);
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public void deleteWorkflow(Project project, Workflow workflow,
+            URI eventOperation, Map<String, String> eventParameters){
+        Date eventStart = new Date();
+        this.checkAvailable();
+        if (project == null) {
+            throw new IllegalArgumentException("project");
+        }
+        if (workflow == null) {
+            throw new IllegalArgumentException("workflow");
+        }
+        project.removeWorkflow(workflow.getUri());
+        //add the event
+        URI operationE = eventOperation;
+        if(eventOperation == null)
+            operationE = this.createDefaultMethodOperationId();
+        Map<String, String> parametersE = eventParameters;
+        if(eventParameters == null){
+            parametersE = new HashMap<String, String>();
+            parametersE.put("project", project.getUri());
+            parametersE.put("workflow", workflow.getUri().toString());
+        }
+        this.addEvent(project, operationE, parametersE, Event.DESTRUCTION_EVENT_TYPE,
+                Event.WORKFLOW_EVENT_SUBJECT, eventStart, new Date(), null,
+                workflow.getUri());
+        // Persist changes.
+        this.saveProject(project);
+        this.projectDao.delete(workflow);
+        log.debug("Workflow <{}> removed form project \"{}\"",
+                                    workflow.getTitle(), project.getTitle());
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public WorkflowStep NewWorkflowStep(URI operation,
+            Map<String, String> parameters, URI originEvent) {
+        return new WorkflowStepImpl(operation, parameters, originEvent);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void executeWorkflow(Project project, Workflow workflow,
+            Map<String, String> variables) throws Exception {
+        this.executeWorkflow(project, workflow, variables, null);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void executeWorkflow(Project project, Workflow workflow,
+            Map<String, String> variables, URI eventOperation) throws Exception {
+        URI operationE = eventOperation;
+        if(eventOperation == null)
+            operationE = this.createDefaultMethodOperationId();
+        workflow.replay(variables);
+        this.saveEvent(project, operationE, variables, Event.REPLAY_EVENT_TYPE,
+                Event.WORKFLOW_EVENT_SUBJECT, new Date(), new Date(), null,
+                workflow.getUri());
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public Event getEvent(URI uri) {
+        return this.projectDao.find(EventImpl.class, uri);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Map<URI, Event> getEventsAbout(URI uri) {
+        RdfsClass rdfsClass = EventImpl.class.getAnnotation(RdfsClass.class);
+        if (rdfsClass == null) {
+            throw new IllegalArgumentException(EventImpl.class.getName());
+        }
+        String rdfType = rdfsClass.value();
+        if(this.getQnamePrefix(rdfType) == null)
+            rdfType = "<" + rdfType + ">";
+        Map<URI, Event> results = new HashMap<URI, Event>();
+        EntityManager em = this.emf.createEntityManager();
+        try {
+            Query query = em.createQuery(
+                                "where { ?result rdf:type " + rdfType +
+                                        " . ?result prov:influenced " +
+                                        uri.toString() + "}");
+            query.setHint(RdfQuery.HINT_ENTITY_CLASS, EventImpl.class);
+            for (Object p : query.getResultList()) {
+                results.put(((Event)p).getUri(), (Event)p);
+            }
+        }
+        catch (javax.persistence.PersistenceException e) {
+            throw new PersistenceException(e);
+        }
+        return results;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Map<URI, Event> getEvents() {
+        RdfsClass rdfsClass = EventImpl.class.getAnnotation(RdfsClass.class);
+        if (rdfsClass == null) {
+            throw new IllegalArgumentException(EventImpl.class.getName());
+        }
+        String rdfType = rdfsClass.value();
+        if(this.getQnamePrefix(rdfType) == null)
+            rdfType = "<" + rdfType + ">";
+        Map<URI, Event> results = new HashMap<URI, Event>();
+        EntityManager em = this.emf.createEntityManager();
+        try {
+            Query query = em.createQuery(
+                                "where { ?result rdf:type " + rdfType + "}");
+            query.setHint(RdfQuery.HINT_ENTITY_CLASS, EventImpl.class);
+            for (Object p : query.getResultList()) {
+                results.put(((Event)p).getUri(), (Event)p);
+            }
+        }
+        catch (javax.persistence.PersistenceException e) {
+            throw new PersistenceException(e);
+        }
+        return results;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Map<URI, Event> getEvents(Project project) {
+        RdfsClass rdfsClass = EventImpl.class.getAnnotation(RdfsClass.class);
+        if (rdfsClass == null) {
+            throw new IllegalArgumentException(EventImpl.class.getName());
+        }
+        String rdfType = rdfsClass.value();
+        if(this.getQnamePrefix(rdfType) == null)
+            rdfType = "<" + rdfType + ">";
+        Map<URI, Event> results = new HashMap<URI, Event>();
+        EntityManager em = this.emf.createEntityManager();
+        try {
+            Query query;
+            if(project == null){
+                query = em.createQuery(
+                        "where { ?result rdf:type " + rdfType +
+                        " . FILTER NOT EXISTS { ?result datalift:project ?p }");
+            } else {
+                String pUri = project.getUri().toString();
+                if(this.getQnamePrefix(pUri) == null)
+                    pUri = "<" + pUri + ">";
+                query = em.createQuery(
+                        "where { ?result rdf:type " + rdfType +
+                        " . ?result datalift:project " + pUri + "}");
+            }
+            query.setHint(RdfQuery.HINT_ENTITY_CLASS, EventImpl.class);
+            for (Object p : query.getResultList()) {
+                results.put(((Event)p).getUri(), (Event)p);
+            }
+        }
+        catch (javax.persistence.PersistenceException e) {
+            throw new PersistenceException(e);
+        }
+        return results;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public Map<URI, Event> getOutputEvents(Project project) {
+        RdfsClass rdfsClass = EventImpl.class.getAnnotation(RdfsClass.class);
+        if (rdfsClass == null) {
+            throw new IllegalArgumentException(EventImpl.class.getName());
+        }
+        if (project == null) {
+            throw new IllegalArgumentException("project");
+        }
+        String rdfType = rdfsClass.value();
+        if(this.getQnamePrefix(rdfType) == null)
+            rdfType = "<" + rdfType + ">";
+        Map<URI, Event> results = new HashMap<URI, Event>();
+        EntityManager em = this.emf.createEntityManager();
+        try {
+            String pUri = project.getUri().toString();
+            if(this.getQnamePrefix(pUri) == null)
+                pUri = "<" + pUri + ">";
+            Query query = em.createQuery(
+                    "where { ?result rdf:type " + rdfType +
+                    " . ?result datalift:project " + pUri +
+                    " . ?result datalift:eventType <" +
+                    Event.OUTPUT_EVENT_TYPE.getUri().toString() + ">}");
+            query.setHint(RdfQuery.HINT_ENTITY_CLASS, EventImpl.class);
+            for (Object p : query.getResultList()) {
+                results.put(((Event)p).getUri(), (Event)p);
+            }
+        }
+        catch (javax.persistence.PersistenceException e) {
+            throw new PersistenceException(e);
+        }
+        return results;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public void purgeEventChildrens(Event parent, boolean purgeEntity) {
+        if(parent != null){
+            Project project =
+                    this.findProject(URI.create(parent.getProject().getUri()));
+            ((TaskContextBase) TaskContextBase.getCurrent())
+                    .startOperation(project, URI.create(
+                    "http://www.datalift.org/core/projectManager/operation/purge"),
+                    null);
+            Event root = TaskContext.getCurrent().beginAsEvent(Event.INFORMATION_EVENT_TYPE,
+                    Event.PROJECT_EVENT_SUBJECT);
+            TaskContext context = TaskContext.getCurrent();
+            Collection<Source> sourcesToDel = new ArrayList<Source>();
+            Collection<URI> ToDel = new ArrayList<URI>();
+            Collection<Workflow> workflowsToDel = new ArrayList<Workflow>();
+            Collection<Event> allEvents = this.findAllInformatedEvent(
+                    this.getEvents(project).values(), parent);
+            for(Event e : allEvents){
+                if(e.getEventType() == Event.CREATION_EVENT_TYPE){
+                    if(e.getInfluenced() != null)
+                        try{
+                            if(ToDel.contains(e.getInfluenced())){
+                                this.projectDao.delete(e);
+                                continue;
+                            }
+                            Source s = project.getSource(e.getInfluenced());
+                            if(sourcesToDel.contains(s)){
+                                this.projectDao.delete(e);
+                                continue;
+                            }
+                            Workflow w = project.getWorkflow(e.getInfluenced());
+                            if(workflowsToDel.contains(w)){
+                                this.projectDao.delete(e);
+                                continue;
+                            }
+                            if(s != null)
+                                sourcesToDel.add(s);
+                            else if(w != null)
+                                workflowsToDel.add(w);
+                            else
+                                ToDel.add(e.getInfluenced());
+                        } catch (Exception ex){
+                            Logger.getLogger().debug(
+                                    "the influenced entity {} does not exist",
+                                    e.getInfluenced());
+                        }
+                }
+                this.projectDao.delete(e);
+            }
+            if(purgeEntity){
+                for(Source s : sourcesToDel)
+                    project.remove(s);
+                for(Workflow w : workflowsToDel)
+                    project.removeWorkflow(w.getUri());
+                for(URI o : ToDel){
+                    Ontology onto = null;
+                    for(Ontology ponto : project.getOntologies())
+                        if(ponto.getUri().equals(o.toString()))
+                            onto = ponto;
+                    if(onto != null)
+                        project.removeOntology(onto.getTitle());
+                }
+                this.saveProject(project);
+                project = this.findProject(URI.create(project.getUri()));
+                allEvents = this.findAllInformatedEvent(
+                        this.getEvents(project).values(), root);
+                for(Event e : allEvents)
+                    this.projectDao.delete(e);
+            }
+            ((TaskContextBase) context).endOperation(true);
+            this.projectDao.delete(root);
+        }
+    }
+    
     //-------------------------------------------------------------------------
     // Object contract support
     //-------------------------------------------------------------------------
@@ -645,7 +1493,55 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     //-------------------------------------------------------------------------
     // Specific implementation
     //-------------------------------------------------------------------------
-
+    
+    /**
+     * return all events of the list which is directly or transitively informed by the given event
+     * 
+     * @param events    the Collection of Event to search in
+     * @param informer  informer Event
+     * @return  the Collection of informed Events
+     */
+    private Collection<Event> findAllInformatedEvent(Collection<Event> events,
+            Event informer){
+        List<URI> informers = new ArrayList<URI>();
+        List<Event> informed = new ArrayList<Event>();
+        List<Event> rejected = new ArrayList<Event>();
+        for(Event e : events)
+            if(e.getInformer() != null)
+                rejected.add(e);
+        informers.add(informer.getUri());
+        boolean found = true;
+        while(found){
+            found = false;
+            int i = 0;
+            while(i < rejected.size()){
+                Event e = rejected.get(i);
+                if(informers.contains(e.getInformer())){
+                    found = true;
+                    informers.add(e.getUri());
+                    informed.add(e);
+                    rejected.remove(i);
+                } else {
+                    i++;
+                }
+            }
+        }
+        return informed;
+    }
+    
+    /**
+     * return the namespace used
+     * @param qname the qname or URI
+     * @return  the namespace used as a prefix on the qname or null if qname is
+     * an URI without prefix or if the namespace is unknown
+     */
+    private RdfNamespace getQnamePrefix(String qname){
+        for(RdfNamespace ns : RdfNamespace.values())
+            if(qname.startsWith(ns.prefix + ":"))
+                return ns;
+        return null;
+    }
+    
     /**
      * Adds the specified namespace to the list of RDF namespaces
      * known of Empire persistence manager.
@@ -669,7 +1565,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
             this.registerRdfNamespace(ns);
         }
     }
-
+    
     /**
      * Returns the list of persistent classes to be handled by Empire JPA
      * provider.
@@ -682,10 +1578,12 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         Collection<Class<?>> classes = new HashSet<Class<?>>();
         classes.addAll(Arrays.asList(
                     ProjectImpl.class, OntologyImpl.class,
+                    EventImpl.class, WorkflowImpl.class,
                     CsvSourceImpl.class, RdfFileSourceImpl.class,
-                    SqlQuerySourceImpl.class, SqlDatabaseSourceImpl.class, SparqlSourceImpl.class,
-                    XmlSourceImpl.class,
-                    TransformedRdfSourceImpl.class, ShpSourceImpl.class, GmlSourceImpl.class, 
+                    SqlQuerySourceImpl.class, SqlDatabaseSourceImpl.class,
+                    SparqlSourceImpl.class, XmlSourceImpl.class,
+                    TransformedRdfSourceImpl.class,
+                    ShpSourceImpl.class, GmlSourceImpl.class,
                     WfsSourceImpl.class, SosSourceImpl.class));
         return classes;
     }
@@ -761,8 +1659,6 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         }
         src.setTitle(title);
         src.setDescription(description);
-        src.setCreationDate(new Date());
-        src.setOperator(SecurityContext.getUserPrincipal());
     }
 
     private void checkAvailable() {
@@ -771,6 +1667,10 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         }
     }
 
-	
-
+    private URI createDefaultMethodOperationId() {
+        StringBuilder str = new StringBuilder(DEFAULT_OPERATIONS_BASE_URI);
+        StackTraceElement[] st = Thread.currentThread().getStackTrace();
+        str.append(st[2].getMethodName());
+        return URI.create(str.toString());
+    }
 }

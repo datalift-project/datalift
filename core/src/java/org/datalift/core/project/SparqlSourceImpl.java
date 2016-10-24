@@ -56,6 +56,7 @@ import org.openrdf.model.Statement;
 import org.openrdf.rio.ParserConfig;
 import org.openrdf.rio.RDFParser;
 
+import com.clarkparsia.empire.annotation.NamedGraph;
 import com.clarkparsia.empire.annotation.RdfProperty;
 import com.clarkparsia.empire.annotation.RdfsClass;
 
@@ -82,7 +83,8 @@ import static org.datalift.fwk.util.io.FileUtils.*;
  * @author hdevos
  */
 @Entity
-@RdfsClass("datalift:sparqlSource")
+@RdfsClass("datalift:SparqlSource")
+@NamedGraph(type = NamedGraph.NamedGraphType.Static, value="http://www.datalift.org/core/projects")
 public class SparqlSourceImpl extends CachingSourceImpl implements SparqlSource
 {
     //-------------------------------------------------------------------------
@@ -104,11 +106,11 @@ public class SparqlSourceImpl extends CachingSourceImpl implements SparqlSource
     // Instance members
     //-------------------------------------------------------------------------
 
-    @RdfProperty("datalift:request")
+    @RdfProperty("datalift:query")
     private String query;
-    @RdfProperty("datalift:default-graph-uri")
+    @RdfProperty("datalift:defaultNamedGraph")
     private String defaultGraphUri;
-    @RdfProperty("datalift:user")
+    @RdfProperty("datalift:userName")
     private String user;
     @RdfProperty("datalift:password")
     private String password;
