@@ -15,6 +15,7 @@ import java.util.TreeMap;
 import javax.xml.namespace.QName;
 
 import org.datalift.ows.exceptions.TechnicalException;
+import org.datalift.fwk.Configuration;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.rdf.BatchStatementAppender;
 import org.datalift.fwk.rdf.Repository;
@@ -22,6 +23,9 @@ import org.datalift.fwk.rdf.UriCachingValueFactory;
 import org.datalift.ows.wfs.wfs2.mapping.BaseMapper;
 import org.datalift.ows.wfs.wfs2.mapping.GeomMapper;
 import org.datalift.ows.wfs.wfs2.mapping.Mapper;
+
+import static org.datalift.fwk.util.PrimitiveUtils.*;
+
 import org.openrdf.model.Resource;
 import org.openrdf.model.URI;
 import org.openrdf.model.ValueFactory;
@@ -47,7 +51,7 @@ public class Context {
 
 	private final static Logger log = Logger.getLogger();
 	private final String QUDT_UNITS="qudt-units-1.1.ttl";
-	private final String debugOutputFile="C:/Users/A631207/Documents/my_resources/emf1.ttl";
+	private final String debugOutputFile="target/out/debugOutput.ttl";
 	public static URI DefaultSubjectURI = null;
 	public RDFHandler model;
 	public ValueFactory vf;
@@ -132,8 +136,16 @@ public class Context {
 				cnx.clear(ctx);
 			}
 			try {
-				model = new RDFHandlerWrapper(new BatchStatementAppender(cnx, ctx),
-						new TurtleWriter(new FileOutputStream(debugOutputFile))){
+				Configuration cfg = Configuration.getDefault();
+				boolean debugOutput = Boolean.parseBoolean(
+				        cfg.getProperty("ows2rdf.debug.output", "false"));
+				List<RDFHandler> handlers = new ArrayList<>(2);
+				handlers.add(new BatchStatementAppender(cnx, ctx));
+				if (debugOutput) {
+				    handlers.add(new TurtleWriter(
+				            new FileOutputStream(debugOutputFile)));
+				}
+				model = new RDFHandlerWrapper(handlers.toArray(new RDFHandler[handlers.size()])) {
 					@Override
 					public void endRDF() throws RDFHandlerException {
 						super.endRDF();
@@ -145,8 +157,9 @@ public class Context {
 						}
 					}
 				};
-			} catch (Exception e) {
-				log.warn("could not find the debug ttl output file");		}
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
 			model.handleNamespace("dl_ef", nsDatalift);
 			model.handleNamespace("pjt", nsProject);
 			model.handleNamespace("ign", nsIGN);
@@ -214,17 +227,9 @@ public class Context {
 
 	public int getInstanceOccurences(QName name)
 	{
-		int count=0;
-		if(hm.get(name)==null)
-		{
-			hm.put(name, 1);
-			return 1;
-		}
-		count=hm.get(name);
+		int count = (hm.containsKey(name))? unwrap(hm.get(name)): 0;
 		count++;
-		hm.remove(name);			
-		hm.put(name, count);
+		hm.put(name, wrap(count));
 		return count;
-
 	}
 }
