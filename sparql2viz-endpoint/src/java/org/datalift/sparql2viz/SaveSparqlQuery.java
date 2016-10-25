@@ -30,9 +30,6 @@
  *
  * The fact that you are presently reading this means that you have had
  * knowledge of the CeCILL license and that you accept its terms.
- * 
- * Created by Zakaria Khattabi
- * Date of creation : 14 April 2015
  */
 
 package org.datalift.sparql2viz;
@@ -78,16 +75,18 @@ import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
  * @author zkhattabi
  */
 @Path(AbstractSparqlEndpoint.MODULE_NAME + "/save-request")
-public class SaveSparqlQuery extends BaseModule {
-	private final static Logger log = Logger.getLogger();
+public class SaveSparqlQuery extends BaseModule
+{
+    private final static Logger log = Logger.getLogger();
+
     /** The default configuration file for visualization */
     private final static String DEFAULT_JSON_CONF = "sparql-visualizations.json";
 	
-	public SaveSparqlQuery() {
-		super("save-request");
-	}
+    public SaveSparqlQuery() {
+        super("save-request");
+    }
 	
-	//-------------------------------------------------------------------------
+    //-------------------------------------------------------------------------
     // Web service utility methods
     //-------------------------------------------------------------------------
 
@@ -137,7 +136,7 @@ public class SaveSparqlQuery extends BaseModule {
                 // No query definition file specified. => Use default.
                 log.info("No visualization configuration file specified, using default");
                 in = this.getClass().getClassLoader().getResourceAsStream(path);
-                
+
                 FileOutputStream fos = new FileOutputStream(f);
                 try {
                 	byte[] buffer = new byte[4096];
@@ -145,11 +144,9 @@ public class SaveSparqlQuery extends BaseModule {
                 	while ((bytesRead = in.read(buffer)) != -1) {
                 		fos.write(buffer, 0, bytesRead);
                 	}
-                } catch (IOException e) {
-                	e.printStackTrace();
                 } finally {
                 	if (fos != null) {
-                		try { fos.close(); } catch (Exception e) { /* Ignore... */ }
+                		fos.close();
                 	}
                 }
             }
