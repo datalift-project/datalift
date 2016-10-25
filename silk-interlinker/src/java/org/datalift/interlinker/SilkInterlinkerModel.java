@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -58,29 +57,29 @@ import fr.inrialpes.exmo.align.impl.renderer.SILKRendererVisitor;
 import fr.inrialpes.exmo.align.parser.AlignmentParser;
 
 public class SilkInterlinkerModel extends Model{
-	
-	/** The default fallback max number of links created per RDF entity. */
+
+    /** The default fallback max number of links created per RDF entity. */
     public static final int DEFAULT_MAX_LINKS = 0;
 
     /** The default fallback number of threads to use when executing Silk. */
     public static final int DEFAULT_NB_THREADS = 1;
     /** The default fallback way to manage cache to use when executing Silk. */
     public static final boolean DEFAULT_RELOAD_CACHE = true;
-    
+
     //-------------------------------------------------------------------------
     // Sources management.
     //-------------------------------------------------------------------------
-    
+
     /**
      * Checks if a given {@link Source} contains valid RDF-structured data.
      * @param src The source to check.
      * @return True if src is {@link TransformedRdfSource} or {@link SparqlSource}.
      */
     protected boolean isValidSource(Source src) {
-    	return src.getType().equals(SourceType.TransformedRdfSource) 
+    	return src.getType().equals(SourceType.TransformedRdfSource)
         	|| src.getType().equals(SourceType.SparqlSource);
     }
-	
+
     public String getJsonSources(Project proj){
     	HashMap<String, String> mapSources = this.getSources(proj);
 		Set<String> sourcesUrl = mapSources.keySet();
@@ -89,7 +88,7 @@ public class SilkInterlinkerModel extends Model{
 	    try{
 			JsonGenerator jsonGenerator = jsonFactory.createJsonGenerator(outputStream, JsonEncoding.UTF8);
 			jsonGenerator.writeStartArray();
-			for(String url : sourcesUrl){		    	
+			for(String url : sourcesUrl){
 				jsonGenerator.writeStartObject();
 			    jsonGenerator.writeStringField("uri", url);
 			    jsonGenerator.writeStringField("name", mapSources.get(url));
@@ -104,9 +103,8 @@ public class SilkInterlinkerModel extends Model{
 		} catch (IOException e) {
 			throw new TechnicalException(e);
 		}
-	    
     }
-    
+
     public String getSimpleJsonArray(List<String> array){
     	ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     	JsonFactory jsonFactory = new JsonFactory();
@@ -126,7 +124,7 @@ public class SilkInterlinkerModel extends Model{
 		}
 
     }
-    
+
     /**
      * Launches the Silk engine with a given configuration.
      * @param proj current project;
@@ -137,22 +135,19 @@ public class SilkInterlinkerModel extends Model{
      * @param validateFile tells if we have to check if the parameters are usable.
      * @return A list which contains the newly created triples.
      */
-    public final LinkedList<LinkedList<String>> launchSilk(Project proj, File config, String targetContext, String newSourceContext, String newSourceName, 
+    public final LinkedList<LinkedList<String>> launchSilk(Project proj, File config, String targetContext, String newSourceContext, String newSourceName,
     		String linkID, int threads, boolean reload, boolean validateFile) {
     	LinkedList<LinkedList<String>> ret = new LinkedList<LinkedList<String>>();
     	if (!validateFile || getErrorMessages(config, linkID).isEmpty()) {
-    		
     		LOG.info("Launching Silk on " + config.getAbsolutePath() + " - " + linkID);
-	    	
 			try {
 					if(targetContext!=null){
 						Source parent = proj.getSource(targetContext);
-						addResultSource(proj, parent, newSourceName, new URI(newSourceContext));
+						addResultSource(proj, parent, newSourceName, URI.create(newSourceContext));
 					}
-			} 
-			catch (IOException e) { LOG.fatal("Silk Configuration file execution failed - " + e); } 
-			catch (URISyntaxException e) { LOG.fatal("Silk Configuration file execution failed - " + e); }
-	    	
+			}
+			catch (Exception e) { LOG.fatal("Silk Configuration file execution failed - " + e); }
+
 			Silk.executeFile(config, linkID, threads, reload);
     	}else {
     		// Should never happen.
@@ -161,13 +156,11 @@ public class SilkInterlinkerModel extends Model{
     		error.add(getTranslatedResource("error.label"));
     		error.add(getTranslatedResource("error.label"));
     		ret.add(error);
-    		
     		LOG.info("Silk interlinking KO.");
     	}
-    	
     	return ret;
     }
-    
+
     /**
      * Launches the Silk engine with a given configuration.
      * @param proj current project
@@ -187,7 +180,7 @@ public class SilkInterlinkerModel extends Model{
 			DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
 			Document doc = dBuilder.parse(config);
 			doc.getDocumentElement().normalize();
-			
+
 			interlinkId = doc.getElementsByTagName("Interlink").item(0).getAttributes().getNamedItem("id").getTextContent();
     	}
     	catch (IOException e) {
@@ -197,8 +190,7 @@ public class SilkInterlinkerModel extends Model{
 		} catch (ParserConfigurationException e) {
 			LOG.fatal("Silk Configuration file DOM parsing failed - " + e);
 		}
-    	
-    	return interlinkId != null ? launchSilk(proj, config,targetContext, newSourceContext, newSourceName,  interlinkId, 
+    	return interlinkId != null ? launchSilk(proj, config,targetContext, newSourceContext, newSourceName,  interlinkId,
     			threads, reload, validateFile) : null;
     }
     /**
@@ -209,7 +201,6 @@ public class SilkInterlinkerModel extends Model{
      */
     public final LinkedList<String> getErrorMessages(File configFile, String linkSpecId) {
 		LinkedList<String> errors = new LinkedList<String>();
-				
 		if (configFile == null || !configFile.exists() || !configFile.canRead()) {
 			errors.add(getTranslatedResource("error.filenotfound"));
 		}
@@ -219,7 +210,7 @@ public class SilkInterlinkerModel extends Model{
 				DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
 				Document doc = dBuilder.parse(configFile);
 				doc.getDocumentElement().normalize();
-				
+
 				// Retrieve all the <Interlink> elements.
 				NodeList interlinks = doc.getElementsByTagName("Interlink");
 				if (interlinks.item(0) == null) {
@@ -251,10 +242,9 @@ public class SilkInterlinkerModel extends Model{
 				LOG.fatal("Silk Configuration file DOM parsing failed - " + e);
 			}
 		}
-		
 		return errors;
 	}
-    
+
     /**
      * Imports a configuration file from the data fetched by a form.
      * @param name Name of the temp file to write on disc.
@@ -263,9 +253,8 @@ public class SilkInterlinkerModel extends Model{
      */
     public final File importConfigFile(String name, InputStream data) {
     	File ret = null;
-    	
+
     	LOG.debug("Uploading new Silk config file - " + name);
-	    
 		try {
 			ret = File.createTempFile(name, ".xml");
 			ret.deleteOnExit();
@@ -273,23 +262,20 @@ public class SilkInterlinkerModel extends Model{
 			FileOutputStream fos = new FileOutputStream(ret);
 			// To read from our form file data.
 			BufferedInputStream bis = new BufferedInputStream(data);
-			
+
 			int size = 0;
 			byte[] buf = new byte[1024];
 			while ((size = bis.read(buf)) != -1) {
 				fos.write(buf, 0, size);
 			}
-			
 			fos.close();
 			bis.close();
-			
 		} catch (IOException e) {
 			LOG.fatal("Error while uploading Silk file - " + e);
 		}
-		
 		return ret;
     }
-    
+
     public final void convertEdoalScript(InputStream edoalStream, String source, String target, String measure, String thresold){
 		LOG.debug("Convert and EDOAL File to a Silk Script and run it");
     	try {
@@ -302,38 +288,35 @@ public class SilkInterlinkerModel extends Model{
 	        IOUtils.copy(edoalStream, edoalFos);
 	        LOG.debug("Copied an edoal uploaded file to {}", edoalFile.getAbsolutePath());
 	        edoalFos.close();
-	        
+
 	        AlignmentParser alParser = new AlignmentParser(0);
 			alParser.setEmbedded(false);
 			Alignment aligner = alParser.parse(edoalFile.toURI());
-			
+
 			File silkScript = File.createTempFile("converted_silk" + randomizer.nextInt(randomNameMax), ".xml");
 			silkScript.deleteOnExit();
 			PrintWriter silkWriter = new PrintWriter(silkScript);
 			SILKRendererVisitor visitor = new SILKRendererVisitor(silkWriter);
 			Properties renderProp = new Properties();
 			visitor.init(renderProp);
-			
 			visitor.visit(aligner);
 			LOG.debug("Converted the edoal file {} to a silk Script in {}",edoalFile.getName(), silkScript.getAbsolutePath());
 			silkWriter.close();
-			
+
 			//------------------------------------------------------------------------------------------------
 			//NOW WE START TO EDIT THE XML FILE
 			LOG.debug("The silk script will be now updated with the entered parameters.");
 			DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
 			DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
 			Document silkDoc = docBuilder.parse(silkScript);
-			
+
 			//rename the main node
 			silkDoc.renameNode(silkDoc.getFirstChild(), null, "Silk");
-			
 			//rename the source and target dataset:
 			renameNodes(silkDoc,"SourceDataSet", "SourceDataset");
-			
 			renameNodes(silkDoc, "TargetDataSet", "TargetDataset");
-			
-			Element prefixesElement = (Element) silkDoc.getElementsByTagName("Prefixes").item(0); 
+
+			Element prefixesElement = (Element) silkDoc.getElementsByTagName("Prefixes").item(0);
 			//add the prefix:
 			List<String> prefixNamespaces = getPrefixes(edoalFile);
 			for(int i = 0;i<prefixNamespaces.size();i++){
@@ -342,15 +325,12 @@ public class SilkInterlinkerModel extends Model{
 				prefixElem.setAttribute("namespace", prefixNamespaces.get(i));
 				prefixesElement.appendChild(prefixElem);
 			}
-			
 			//add the right datasource:
 			Node datasourcesNode = silkDoc.getElementsByTagName("DataSources").item(0);
 			cleanNode(datasourcesNode);
-			
 			//add the proper nodes:
 			addDataSource(datasourcesNode, silkDoc, "source", source);
 			addDataSource(datasourcesNode, silkDoc, "target", target);
-			
 			//edit the comparison metrics and threshold
 			NodeList comparisons = silkDoc.getElementsByTagName("Compare");
 			for(int index = 0; index<comparisons.getLength(); index++){
@@ -360,30 +340,27 @@ public class SilkInterlinkerModel extends Model{
 				Node thresholdNode = compElem.getAttributeNode("threshold");
 				thresholdNode.setNodeValue(thresold);
 			}
-			
 			//change the first iterlink id:
 			Element interlinkNode = (Element) silkDoc.getElementsByTagName("Interlink").item(0);
 			interlinkNode.getAttributeNode("id").setNodeValue("silk-interlink");
-			
 			//change the output:
 			NodeList outputsNodes = silkDoc.getElementsByTagName("Outputs");
 			for(int i = 0;i<outputsNodes.getLength();i++){
-				Node outputsNode = outputsNodes.item(i); 
+				Node outputsNode = outputsNodes.item(i);
 				cleanNode(outputsNode);
 				Element outputNode = silkDoc.createElement("Output");
 				outputNode.setAttribute("type", "sparul");
 				Element uriParam = silkDoc.createElement("Param");
 				uriParam.setAttribute("name", "uri");
 				uriParam.setAttribute("value", Configuration.getDefault().getInternalRepository().getUrl());
-				
+
 				Element paramParam = silkDoc.createElement("Param");
 				paramParam.setAttribute("name", "parameter");
 				paramParam.setAttribute("value", "update");
-				
+
 				outputNode.appendChild(uriParam);
 				outputNode.appendChild(paramParam);
 				((Element)outputsNode).appendChild(outputNode);
-				
 			}
 			TransformerFactory transformerFactory = TransformerFactory.newInstance();
 			Transformer transformer = transformerFactory.newTransformer();
@@ -393,10 +370,9 @@ public class SilkInterlinkerModel extends Model{
 			updatedSilkScript.deleteOnExit();
 			StreamResult result = new StreamResult(updatedSilkScript);
 			transformer.transform(domSource, result);
-			
+
 			LOG.debug("The silk script file in {} has been updated to run properly. The new file is located in {} and will now run", silkScript.getAbsolutePath(), updatedSilkScript.getAbsolutePath());
-			Silk.executeFile(updatedSilkScript,"silk-interlink" , 1, true); 
-			
+			Silk.executeFile(updatedSilkScript,"silk-interlink" , 1, true);
 		} catch (IOException e) {
 			LOG.fatal("Edoal file copy failed - " + e);
 		} catch (AlignmentException e) {
@@ -410,9 +386,8 @@ public class SilkInterlinkerModel extends Model{
 		} catch (TransformerException e) {
 			LOG.fatal("Edoal file convertion to Silk failed - " + e);
 		}
-        
     }
-    
+
     private void cleanNode(Node node){
     	NodeList oldSourceList = node.getChildNodes();
 		//clean the old node
@@ -423,23 +398,23 @@ public class SilkInterlinkerModel extends Model{
 			}
 		}
     }
-    
+
     private void addDataSource(Node datasourcesNode, Document doc, String id, String graphUri){
     	Element dataSource = doc.createElement("DataSource");
 		dataSource.setAttribute("type", "sparqlEndpoint");
 		dataSource.setAttribute("id", id);
-		
+
 		Element paramEndPoint = doc.createElement("Param");
 		paramEndPoint.setAttribute("name", "endpointURI");
 		paramEndPoint.setAttribute("value", Configuration.getDefault().getInternalRepository().getUrl());
-		
+
 		Element paramGraph = doc.createElement("Param");
 		paramGraph.setAttribute("name", "graph");
 		paramGraph.setAttribute("value", graphUri);
-		
+
 		dataSource.appendChild(paramEndPoint);
 		dataSource.appendChild(paramGraph);
-		
+
 		datasourcesNode.appendChild(dataSource);
     }
 
@@ -450,7 +425,7 @@ public class SilkInterlinkerModel extends Model{
 			doc.renameNode(nodeSource, null, newName);
 		}
     }
-    
+
     private List<String> getPrefixes(File edoalFile) throws ParserConfigurationException, SAXException, IOException{
     	DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder docBuilder;
@@ -466,7 +441,6 @@ public class SilkInterlinkerModel extends Model{
 			}else{
 				entityIds.add(aboutProp.substring(0, aboutProp.lastIndexOf("/")));
 			}
-				
 		}
 		return new ArrayList<String>(entityIds);
     }

@@ -1,6 +1,5 @@
 package org.datalift.interlinker;
 
-import java.io.ObjectStreamException;
 import java.net.URI;
 import java.util.ResourceBundle;
 
@@ -89,11 +88,14 @@ public abstract class ModuleController extends BaseModule implements ProjectModu
      * @param projuri the project URI.
      *
      * @return the project.
-     * @throws ObjectStreamException if the project does not exist.
+     * @throws ObjectNotFoundException if the project does not exist.
      */
-    protected final Project getProject(URI projuri) throws ObjectStreamException {
+    protected final Project getProject(URI projuri) throws ObjectNotFoundException {
         ProjectManager pm = Configuration.getDefault().getBean(ProjectManager.class);
         Project p = pm.findProject(projuri);
+        if (p == null) {
+            throw new ObjectNotFoundException("project.not.found", projuri);
+        }
         return p;
     }
 
@@ -184,7 +186,7 @@ public abstract class ModuleController extends BaseModule implements ProjectModu
    	     	view.put("it", p);
    	     	view.put("module", this);  
             response = Response.ok(view, TEXT_HTML_UTF8).build();
-        }catch(ObjectStreamException e){
+        }catch(ObjectNotFoundException e){
         	log.fatal(e);
         	throw new RuntimeException(e);
         }
