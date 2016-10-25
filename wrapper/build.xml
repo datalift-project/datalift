@@ -247,6 +247,7 @@
 
   <!-- ================ Distribution Target =============================== -->
 
+<!-- Ant build of modules is no longer supported
   <target name="build-core">
     <subant target="dist">
       <property name="security.context.class"
@@ -260,6 +261,7 @@
       <filelist refid="build.modules"/>
     </subant>
   </target>
+ -->
 
   <target name="production-deployment" unless="${datalift.test.mode}">
     <!-- Production mode: cache static resources for a week -->
@@ -312,6 +314,7 @@
     </jar>
     <delete dir="${tmp.build.dir}" quiet="true"/>
     <!-- Copy default Datalift modules (Ant) -->
+<!-- Ant build of modules is no longer supported
     <pathconvert property="ant.modules.jars" refid="build.modules" pathsep=",">
       <mapper>
         <chainedmapper>
@@ -325,6 +328,7 @@
                                           preservelastmodified="true">
       <fileset dir="${datalift.root}" includes="${ant.modules.jars}"/>
     </copy>
+ -->
     <!-- Copy default Datalift modules (Maven) -->
     <pathconvert property="mvn.modules.jars" refid="build.modules" pathsep=",">
       <mapper>
