@@ -1,6 +1,7 @@
 package org.datalift.ows.utilities;
 
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -49,10 +50,13 @@ import org.openrdf.sail.memory.MemoryStore;
  */
 public class Context {
 
+	private final static String QUDT_UNITS="qudt-units-1.1.ttl";
+	private final static String debugOutputFile="wfs2rdf/debugOutput.ttl";
+
 	private final static Logger log = Logger.getLogger();
-	private final String QUDT_UNITS="qudt-units-1.1.ttl";
-	private final String debugOutputFile="target/out/debugOutput.ttl";
+
 	public static URI DefaultSubjectURI = null;
+
 	public RDFHandler model;
 	public ValueFactory vf;
 	//attributes needs to avoid storing statements in memory
@@ -68,6 +72,8 @@ public class Context {
 	/***utils for sos****/
 	public Map<QName, String> sosMetaData=new HashMap<QName, String>();
 	public Map<String, String> unitsSymbUri=new TreeMap<String, String>();
+	public URI rdfTypeURI;
+
 	//*******ns******//
 	public static final String nsDatalift = "http://www.datalift.org/ont/inspire#";
 	public static final String nsSmod = "https://www.w3.org/2015/03/inspire/ef#";
@@ -78,7 +84,7 @@ public class Context {
 	public static final String nsRDF2="http://www.w3.org/1999/02/22-rdf-syntax-ns#";
 	public static final String nsRDFS="http://www.w3.org/2000/01/rdf-schema#";
 	public static final String nsFoaf="http://xmlns.com/foaf/0.1/";
-	public static final String  nsDcTerms ="http://purl.org/dc/terms/";
+	public static final String nsDcTerms ="http://purl.org/dc/terms/";
 	public static final String nsSkos="http://www.w3.org/2008/05/skos#";
 	public static final String nsOml="http://def.seegrid.csiro.au/ontology/om/om-lite#";
 	public static final String nsIsoTP="http://def.seegrid.csiro.au/isotc211/iso19108/2002/temporal#"; //should be replaced by a local version of the ontology
@@ -90,7 +96,7 @@ public class Context {
 	public static final QName referencedObjectType=new QName(nsDatalift, "ReferencedObject");
 	public static final QName referencedCodeListType=new QName(nsDatalift, "ReferencedCodeList");
 	public static final QName observationType=new QName(nsOml, "Observation");
-	public URI rdfTypeURI;
+
 	public static List <String> codeList = new ArrayList<String>();
 	static
 	{
@@ -120,7 +126,8 @@ public class Context {
 			}
 		}
 	}
-	public Context(Repository target, java.net.URI targetGraph)	{
+
+	public Context(Repository target, java.net.URI targetGraph) {
 		try {
 			hm=new HashMap <QName,Integer>();
 			codeListOccurences=new HashMap <String,Resource>();
@@ -139,8 +146,10 @@ public class Context {
 				List<RDFHandler> handlers = new ArrayList<>(2);
 				handlers.add(new BatchStatementAppender(cnx, ctx));
 				if (debugOutput) {
-				    handlers.add(new TurtleWriter(
-				            new FileOutputStream(debugOutputFile)));
+				    File tmpOut = new File(cfg.getTempStorage(), debugOutputFile);
+				    tmpOut.getParentFile().mkdirs();
+				    tmpOut.deleteOnExit();
+				    handlers.add(new TurtleWriter(new FileOutputStream(tmpOut)));
 				}
 				model = new RDFHandlerWrapper(handlers.toArray(new RDFHandler[handlers.size()])) {
 					@Override
@@ -222,8 +231,7 @@ public class Context {
 		return (m != null)? m: mappers.get(null);
 	}
 
-	public int getInstanceOccurences(QName name)
-	{
+	public int getInstanceOccurences(QName name) {
 		int count = (hm.containsKey(name))? unwrap(hm.get(name)): 0;
 		count++;
 		hm.put(name, wrap(count));
