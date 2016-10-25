@@ -60,7 +60,6 @@ public class WFS2Client extends BaseServiceClient{
 			if(fc!=null)
 			{
 				ComplexFeature child=fc.findFirstChild(Const.FeatureTypeList);
-				System.out.println(child);
 				if(child!=null)
 				{
 					for (Attribute a : child.itsAttr) {

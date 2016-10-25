@@ -12,12 +12,15 @@ import org.apache.xerces.xs.PSVIProvider;
 import org.apache.xerces.xs.XSElementDeclaration;
 import org.apache.xerces.xs.XSSimpleTypeDefinition;
 import org.apache.xerces.xs.XSTypeDefinition;
+
+import org.datalift.fwk.log.Logger;
 import org.datalift.ows.model.Attribute;
 import org.datalift.ows.model.ComplexFeature;
 import org.datalift.ows.model.Feature;
 import org.datalift.ows.model.DlGeometry;
 import org.datalift.ows.utilities.Const;
 import org.datalift.ows.utilities.Helper;
+
 import org.geotools.geometry.jts.JTSFactoryFinder;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
@@ -34,6 +37,8 @@ import com.vividsolutions.jts.io.WKTReader;
  *
  */
 public class GeoHandler  extends DefaultHandler{
+	private final static Logger log = Logger.getLogger();
+
 	public DlGeometry g = null;
 	private Geometry vg;
 	private ComplexFeature tmp=null;
@@ -149,7 +154,7 @@ public class GeoHandler  extends DefaultHandler{
 			WKTReader reader = new WKTReader( geometryFactory );
 			int index=fpile.size()-2;
 			try {
-				vg =  reader.read(g.WKT);
+				vg = reader.read(g.WKT);
 				String code  = "4326"; //default srs
 				if(g.SRS!=null) 
 				{
@@ -158,20 +163,16 @@ public class GeoHandler  extends DefaultHandler{
 				vg.setSRID(Integer.parseInt(code));
 
 				fpile.get(index).geom=g;
-				if(fpile.peek().vividgeom==null)
-				{
+				if (fpile.peek().vividgeom==null) {
 					fpile.get(index).vividgeom=vg;
 				}
-				else
-				{
-					if(vg.getGeometryType().equals("Point"))
-					{
+				else {
+					if(vg.getGeometryType().equals("Point")) {
 						fpile.get(index).representativePoint=(Point) vg;
 					}
 				}
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				log.error("Failed to parse WTK: {}", e, g.WKT);
 				fpile.get(index).vividgeom=null;
 			}
 			if(isRepPoint)

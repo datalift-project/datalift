@@ -1,10 +1,10 @@
 package org.datalift.ows.sos;
+
 import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 import static javax.ws.rs.core.MediaType.APPLICATION_XHTML_XML;
 import static javax.ws.rs.core.MediaType.TEXT_HTML;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -51,10 +51,10 @@ import com.google.gson.JsonParser;
 
 /**
  * The main class of the module sos2rdf.
- * the module enables the transformation of a SOS response to RDF. 
+ * the module enables the transformation of a SOS response to RDF.
  * The SOS version supported is : 2.0.0.
  * The RDF created could be compliant to either a generic ontology or a specific one.
- * Besides the generic ontology, this module also implements a customized version of om-lite ontology 
+ * Besides the generic ontology, this module also implements a customized version of om-lite ontology.
  *
  * @author Hanane Eljabiri
  *
@@ -77,7 +77,6 @@ public class SosToRdf extends BaseConverterModule {
 	}
 	public SosToRdf(String name, int position, SourceType[] inputSources) {
 		super(name, position, inputSources);
-		// TODO Auto-generated constructor stub
 	}
 
 	//-------------------------------------------------------------------------
@@ -98,9 +97,9 @@ public class SosToRdf extends BaseConverterModule {
 	}
 
 	/**
-	 * returns the index module page whish shows the list of available sos source registred in the current project
-	 * @param projectId : the current project id 
-	 * @return the index page 
+	 * returns the index module page which shows the list of available sos source registered in the current project
+	 * @param projectId : the current project id
+	 * @return the index page
 	 */
 	@GET
 	@Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
@@ -120,7 +119,7 @@ public class SosToRdf extends BaseConverterModule {
 			@FormParam("source") URI sourceId)
 	{	
 		//get the list of featuretypedescription using the source id
-		//put the list into the web page availablewfsSources 
+		//put the list into the web page availablewfsSources
 		//lists of : FeatureType names, titles, count, summury (list for each information type)
 		ResponseBuilder response = null;
 		// Retrieve project.
@@ -200,28 +199,22 @@ public class SosToRdf extends BaseConverterModule {
 				URI baseUri=createBaseUri(targetGraph);
 				String targetType=id+"-sos";
 				String destination_title=id+"(RDF# )"+countGraph; //count to be added later
-				try {
-					boolean done=convertObservations2Rdf(projectUri,s, destination_title, targetGraph, baseUri, targetType,id,begin, end, null, optionOntology);
-					if(!done)
-					{
-						throw new Exception();
-					}
-
-					System.out.println("done for "+id);
+				boolean done=convertObservations2Rdf(projectUri,s, destination_title, targetGraph, baseUri, targetType,id,begin, end, null, optionOntology);
+				if (done) {
 					// Register new transformed RDF source.
-					Source out;
-
-					out = this.addResultSource(p, s,
+					Source out = this.addResultSource(p, s,
 							"RDF mapping of " + s.getTitle()+"("+id+")", targetGraph);
 					// Display project source tab, including the newly created source.
 					response = this.created(out);
-				} catch (Exception e) {
-					log.error(e.getMessage());		
-				}					
-			} 
-		}catch (URISyntaxException e1) {
-			log.error(e1.getMessage());
-		} 
+				}
+				else {
+					// No data retrieved of service error.
+					throw new TechnicalException("gettingAvailableObservationsFailed", id);
+				}
+			}
+		} catch (Exception e) {
+			this.handleInternalError(e);
+		}
 		}
 		return response;
 	}	
@@ -232,9 +225,7 @@ public class SosToRdf extends BaseConverterModule {
 			client.getObservation(id,begin,end,format);
 			//return a list of parsed features contained in typeName
 			ComplexFeature observationDataToConvert=client.getUtilData(id);
-
-			if (observationDataToConvert==null ) 
-			{
+			if (observationDataToConvert == null) {
 				return false;
 			}
 			//0: default converter
@@ -247,15 +238,13 @@ public class SosToRdf extends BaseConverterModule {
 				return false;
 			}
 		} catch (Exception e) {
-			TechnicalException error = new TechnicalException("convertFeatureTypeFailed", e, id);
-			log.error(error.getMessage(), e);
-			return false;
+			throw new TechnicalException("convertFeatureTypeFailed", e, id);
 		}
 		return true;
 	}
 	/****the end of web services***/
 
-	private URI createBaseUri(URI targetGraph) throws URISyntaxException {
+	private URI createBaseUri(URI targetGraph) {
 
 		String graph=targetGraph.toString();
 		//String graphuri="http://localhost:9091/project/demo/source/geoservice-brgm/availableFT-2";
@@ -265,16 +254,16 @@ public class SosToRdf extends BaseConverterModule {
 		startsource=graph.indexOf("/source");
 		String part2= graph.substring(startproj+8,startsource);
 		String part3= graph.substring(startsource+7);
-		return new URI(part1+part2+part3);
+		return URI.create(part1+part2+part3);
 	}
-	private URI constructTargetGraphURI(Project p,String candidate) throws URISyntaxException
-	{
+
+	private URI constructTargetGraphURI(Project p,String candidate) {
 		int countExistingGraph=getOccurenceGraph(p, candidate);
 		countExistingGraph++;
-		return new URI(candidate+"-"+countExistingGraph);
+		return URI.create(candidate+"-"+countExistingGraph);
 	}
-	private int getOccurenceGraph(Project p,String candidate)
-	{
+
+	private int getOccurenceGraph(Project p,String candidate) {
 		List<Integer> numberValues=new ArrayList<Integer>();
 		List<String> existingGraph = new ArrayList<String>();
 		for (Source ss : p.getSources()) {
@@ -297,10 +286,9 @@ public class SosToRdf extends BaseConverterModule {
 			return 0;
 		}
 	}
-	private boolean isSet(String s)
-	{
+
+	private boolean isSet(String s) {
 		if (s==null || s.equals("")) return false;
 		return true;
 	}
-
 }

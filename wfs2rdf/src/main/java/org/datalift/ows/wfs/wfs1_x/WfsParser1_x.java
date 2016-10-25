@@ -70,9 +70,7 @@ public class WfsParser1_x {
 			try {
 				ds = DataStoreFinder.getDataStore( connectionParameters );
 			} catch (IOException e) {
-				log.error("failed to create parser for : {} {} {}", url,version,serverTypeStrategy);
-
-				e.printStackTrace();
+				log.error("Failed to create parser for: {} ({}, {})", e, url, version, serverTypeStrategy);
 			}
 			cache.put(cacheKey, ds);
 		}
