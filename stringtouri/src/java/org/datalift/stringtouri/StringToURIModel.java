@@ -35,11 +35,9 @@ package org.datalift.stringtouri;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-
 
 import me.assembla.stringtouri.SesameApp;
 
@@ -50,13 +48,10 @@ import org.datalift.fwk.project.Source;
 import org.datalift.fwk.project.Source.SourceType;
 import org.datalift.fwk.project.TransformedRdfSource;
 
-import org.openrdf.query.MalformedQueryException;
-import org.openrdf.query.QueryEvaluationException;
+import org.openrdf.OpenRDFException;
 import org.openrdf.query.QueryLanguage;
 import org.openrdf.query.Update;
-import org.openrdf.query.UpdateExecutionException;
 import org.openrdf.repository.RepositoryConnection;
-import org.openrdf.repository.RepositoryException;
 
 
 
@@ -239,17 +234,11 @@ public class StringToURIModel extends InterlinkingModel
 			upInsert.execute();
 			//now link the new graph to a datalift source, so it can be referenced easily
 			Source parent = proj.getSource(targetContext);
-			addResultSource(proj,parent,newSourceName, newSourceDescription, new URI(newSourceContext));
+			addResultSource(proj,parent,newSourceName, newSourceDescription, URI.create(newSourceContext));
 			LOG.info("{} - Interconnection OK.", this.moduleName);
-		} catch (RepositoryException e) {
-			LOG.fatal("{} - Update failed:", e, this.moduleName);
-		} catch (MalformedQueryException e) {
-			LOG.fatal("{} - Update failed:", e, this.moduleName);
-		} catch (UpdateExecutionException e) {
+		} catch (OpenRDFException e) {
 			LOG.fatal("{} - Update failed:", e, this.moduleName);
 		} catch (IOException e) {
-			LOG.fatal("{} - Update failed:", e, this.moduleName);
-		} catch (URISyntaxException e) {
 			LOG.fatal("{} - Update failed:", e, this.moduleName);
 		}
 	
@@ -267,7 +256,7 @@ public class StringToURIModel extends InterlinkingModel
      * @param targetPredicate predicate in target data.
      * @param linkingPredicate predicate of the new triples
      * @param newContext target URL of the new source
-     * @return the Sasame Application object to perform interlinking
+     * @return the Sesame Application object to perform interlinking
      */
     private SesameApp getLinkingApp(
     		Project proj,
@@ -289,11 +278,7 @@ public class StringToURIModel extends InterlinkingModel
 					stu.useTypedLinkage(sourcePredicate, targetPredicate, sourceClass, targetClass);
 				}	
 				stu.useSPARQLOutput(linkingPredicate, true);
-			} catch (RepositoryException e) {
-				LOG.fatal("{} - Update failed:", e, this.moduleName);
-			} catch (MalformedQueryException e) {
-				LOG.fatal("{} - Update failed:", e, this.moduleName);
-			} catch (QueryEvaluationException e) {
+			} catch (OpenRDFException e) {
 				LOG.fatal("{} - Update failed:", e, this.moduleName);
 			} 
     	}else{

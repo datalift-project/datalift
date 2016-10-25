@@ -35,7 +35,6 @@ package org.datalift.stringtouri;
 
 import java.io.ObjectStreamException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -139,7 +138,7 @@ public class StringToURIController extends InterlinkingController
                 LOG.trace("Project {} can not use StringToURI", p.getTitle());
             }
         }
-        catch (URISyntaxException e) {
+        catch (Exception e) {
             LOG.fatal("Uh!", e);
             throw new RuntimeException(e);
         }
