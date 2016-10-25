@@ -268,7 +268,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
                 URI.create(src.getUri()));
         return src;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public RdfFileSource newRdfSource(Project project, URI uri, String title,
@@ -282,7 +282,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     /** {@inheritDoc} */
     @Override
     public RdfFileSource newRdfSource(Project project, URI uri, String title,
-            String description, URI baseUri, String filePath, String mimeType, 
+            String description, URI baseUri, String filePath, String mimeType,
             URI operation, Map<String, String> parameters, Date start)
             throws IOException{
         // Create new RDF file source.
@@ -325,7 +325,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
                 URI.create(src.getUri()));
         return src;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public SqlQuerySource newSqlQuerySource(Project project, URI uri,
@@ -336,7 +336,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         return this.newSqlQuerySource(project, uri, title, description, srcUrl,
                 user, password, request, cacheDuration, null, null, new Date());
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public SqlQuerySource newSqlQuerySource(Project project, URI uri,
@@ -384,13 +384,13 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     /** {@inheritDoc} */
     @Override
     public SqlDatabaseSource newSqlDatabaseSource(Project project, URI uri,
-            					String title, String description,
-            					String srcUrl, String user, String password)
-            							throws IOException{
+                            String title,  String description,
+                            String srcUrl, String user, String password)
+                                                            throws IOException{
         return this.newSqlDatabaseSource(project, uri, title, description,
                 srcUrl, user, password, null, null, new Date());
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public SqlDatabaseSource newSqlDatabaseSource(Project project, URI uri,
@@ -428,7 +428,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
                 URI.create(src.getUri()));
         return src;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public SparqlSource newSparqlSource(Project project, URI uri, String title,
@@ -438,7 +438,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         return this.newSparqlSource(project, uri, title, description,
                 endpointUrl, sparqlQuery, cacheDuration, null, null, new Date());
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public SparqlSource newSparqlSource(Project project, URI uri, String title,
@@ -485,7 +485,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         return this.newXmlSource(project, uri, title, description, filePath,
                 null, null, new Date());
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public XmlSource newXmlSource(Project project, URI uri, String title,
@@ -523,7 +523,6 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
                 URI.create(src.getUri()));
         return src;
     }
-    
 
     /** {@inheritDoc} */
     @Override
@@ -544,7 +543,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         return this.newTransformedRdfSource(project, uri, title, description,
                 targetGraph, baseUri, parent, null, null, new Date());
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public TransformedRdfSource newTransformedRdfSource(Project project,
@@ -604,7 +603,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         return this.newShpSource(project, uri, title, description, shpFilePath,
                 shxFilePath, dbfFilePath, prjFilePath, null, null, new Date());
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public ShpSource newShpSource(Project project, URI uri, String title,
@@ -674,7 +673,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         return this.newGmlSource(project, uri, title, description, gmlFilePath,
                 xsdFilePath, null, null, new Date());
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public GmlSource newGmlSource(Project project, URI uri, String title,
@@ -701,7 +700,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         project.add(src);
         log.debug("New GML source <{}> added to project \"{}\"",
                                                     uri, project.getTitle());
-      //add the event
+        // Add the event
         URI operationE = operation;
         if(operation == null)
             operationE = this.createDefaultMethodOperationId();
@@ -720,54 +719,57 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
                 URI.create(src.getUri()));
         return src;
     }
-    
+
+    /** {@inheritDoc} */
     @Override
-	public WfsSource newWfsSource(Project project, URI uri, String serviceUrl, String title,
-            String description, String version, String serverStrategy  ) throws IOException {
-		// TODO Auto-generated method stub
-    	// TODOcheck if parameters entered (url, version, strategy) are valide before creating the source 
-    //	if(validService(serviceUrl,version,serverStrategy))
-    	{
-    		// Create new WFS source.
-    		WfsSourceImpl src = new WfsSourceImpl(uri.toString(), project);
+    public WfsSource newWfsSource(Project project, URI uri, String serviceUrl,
+                                  String title, String description,
+                                  String version, String serverStrategy)
+                                                          throws IOException {
+        // TODO: Check if parameters (url, version, strategy) are valid
+        // before creating the source
+        // if (validService(serviceUrl,version,serverStrategy)) {
+            // Create new WFS source.
+            WfsSourceImpl src = new WfsSourceImpl(uri.toString(), project);
             // Set source parameters.
             this.initSource(src, title, description);
-            
+
             src.setSourceUrl(serviceUrl);
             src.setVersion(version);
             src.setserverTypeStrategy(serverStrategy);
             // Add source to project.
             project.add(src);
             log.debug("New WFS source <{}> added to project \"{}\"",
-                                                        uri, project.getTitle());
+                                                    uri, project.getTitle());
             return src;
-    	}
-//    	else
-//    		return null;
-//		
-       
-	}
-    @Override
-	public SosSource newSosSource(Project project, URI uri, String serviceUrl, String title,
-            String description, String version ) throws IOException {
+        // }
+        // else throw exception...
+    }
 
-    	{
-    		// Create new WFS source.
-    		SosSourceImpl src = new SosSourceImpl(uri.toString(), project);
+    /** {@inheritDoc} */
+    @Override
+    public SosSource newSosSource(Project project, URI uri, String serviceUrl,
+                                  String title, String description,
+                                  String version) throws IOException {
+        // TODO: Check if parameters (url, version, strategy) are valid
+        // before creating the source
+        // if (validService(serviceUrl,version,serverStrategy)) {
+            // Create new SOS source.
+            SosSourceImpl src = new SosSourceImpl(uri.toString(), project);
             // Set source parameters.
             this.initSource(src, title, description);
-            
             src.setSourceUrl(serviceUrl);
             src.setVersion(version);
             // Add source to project.
             project.add(src);
             log.debug("New SOS source <{}> added to project \"{}\"",
-                                                        uri, project.getTitle());
+                                                    uri, project.getTitle());
             return src;
-    	}
-      
-	}
-      /** {@inheritDoc} */
+        // }
+        // else throw exception...
+    }
+
+    /** {@inheritDoc} */
     @Override
     public void delete(Source source) {
         this.delete(source, true);
@@ -778,7 +780,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     public void delete(Source source, boolean deleteResources) {
         this.delete(source, deleteResources, null, null);
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public void delete(Source source, boolean deleteResources, URI operation,
@@ -816,8 +818,6 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
                                                 source.getUri(), p.getTitle());
     }
 
-	
-
     /** {@inheritDoc} */
     @Override
     public Ontology newOntology(Project project, URI url, String title) {
@@ -854,13 +854,13 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
                 URI.create(ontology.getUri()));
         return ontology;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public void deleteOntology(Project project, Ontology ontology) {
         this.deleteOntology(project, ontology, null, null);
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public void deleteOntology(Project project, Ontology ontology,
@@ -941,7 +941,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
                 URI.create(p.getUri()));
         return p;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public String getProjectFilePath(String projectId, String fileName) {
@@ -957,7 +957,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     public void deleteProject(Project p) {
         this.deleteProject(p, null, null);
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public void deleteProject(Project p, URI operation,
@@ -1021,7 +1021,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
             throw new RuntimeException("Invalid project URI: " + p.getUri(), e);
         }
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public void saveProject(Project p, URI operation,
@@ -1059,7 +1059,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         }
         this.classes.addAll(classes);
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public Event addEvent(Project project, URI operation,
@@ -1107,7 +1107,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
             project.addEvent(event);
         return event;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public Event saveEvent(Project project, URI operation,
@@ -1122,7 +1122,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
                 eventSubject, start, end, agent, influenced, used);
         return this.saveEvent(ret);
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public Event saveOutputEvent(Project project, URI operation,
@@ -1141,7 +1141,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
                 Event.OUTPUT_EVENT_TYPE, Event.SOURCE_EVENT_SUBJECT, start, end,
                 agent, null, used);
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public Event saveEvent(Event event){
@@ -1153,13 +1153,13 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
                 .declareHappeningEvent((EventImpl) ret);
         return ret;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public GenericRdfDao getRdfDao(){
         return this.projectDao;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public Workflow newWorkflow(Project project, URI url, String title,
@@ -1168,7 +1168,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         return this.newWorkflow(project, url, title, description, variables,
                 outputStep, null, null, new Date());
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public Workflow newWorkflow(Project project, URI url, String title,
@@ -1211,7 +1211,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     public void deleteWorkflow(Project project, Workflow workflow) {
         this.deleteWorkflow(project, workflow, null, null);
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public void deleteWorkflow(Project project, Workflow workflow,
@@ -1271,7 +1271,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
                 Event.WORKFLOW_EVENT_SUBJECT, new Date(), new Date(), null,
                 workflow.getUri());
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public Event getEvent(URI uri) {
@@ -1368,7 +1368,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         }
         return results;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public Map<URI, Event> getOutputEvents(Project project) {
@@ -1403,7 +1403,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         }
         return results;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public void purgeEventChildrens(Event parent, boolean purgeEntity) {
@@ -1478,7 +1478,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
             this.projectDao.delete(root);
         }
     }
-    
+
     //-------------------------------------------------------------------------
     // Object contract support
     //-------------------------------------------------------------------------
@@ -1493,10 +1493,10 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     //-------------------------------------------------------------------------
     // Specific implementation
     //-------------------------------------------------------------------------
-    
+
     /**
      * return all events of the list which is directly or transitively informed by the given event
-     * 
+     *
      * @param events    the Collection of Event to search in
      * @param informer  informer Event
      * @return  the Collection of informed Events
@@ -1528,9 +1528,9 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         }
         return informed;
     }
-    
+
     /**
-     * return the namespace used
+     * Returns the namespace used
      * @param qname the qname or URI
      * @return  the namespace used as a prefix on the qname or null if qname is
      * an URI without prefix or if the namespace is unknown
@@ -1541,7 +1541,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
                 return ns;
         return null;
     }
-    
+
     /**
      * Adds the specified namespace to the list of RDF namespaces
      * known of Empire persistence manager.
@@ -1565,7 +1565,7 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
             this.registerRdfNamespace(ns);
         }
     }
-    
+
     /**
      * Returns the list of persistent classes to be handled by Empire JPA
      * provider.
