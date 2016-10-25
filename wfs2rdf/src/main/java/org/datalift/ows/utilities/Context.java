@@ -113,13 +113,10 @@ public class Context {
 		} catch (Exception e) {
 			log.error("An error has occured while attempting to  load the properties file of predefined code list " + e);
 		} finally {
-			if(is!=null)
-			{
+			if (is!=null) {
 				try {
 					is.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+				} catch (IOException e) { /* Ignore... */ }
 			}
 		}
 	}

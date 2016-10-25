@@ -76,16 +76,13 @@ public class CreateGeoStatement {
 				}
 			}
 		} catch (Exception e) {
-			log.error("An error has occured while attempting to  load the properties file of CRS " + e);
+			log.error("An error has occurred while attempting to load the properties file of CRS " + e);
 		} finally {
-			if(is!=null)
-				{
-					try {
-						is.close();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}
+			if (is!=null) {
+				try {
+					is.close();
+				} catch (IOException e) { /* Ignore... */ }
+			}
 		}
 	}
 	

@@ -1,6 +1,7 @@
 package org.datalift.ows.webServiceConverter2;
 
 import org.datalift.fwk.rdf.Repository;
+import org.datalift.ows.exceptions.TechnicalException;
 import org.datalift.ows.model.Attribute;
 import org.datalift.ows.model.ComplexFeature;
 import org.datalift.ows.sos.mapping.FeatureOfInterestMapper;
@@ -19,6 +20,7 @@ import org.datalift.ows.wfs.wfs2.mapping.Mapper;
 import org.datalift.ows.wfs.wfs2.mapping.ObservationPropertyTypeMapper;
 import org.datalift.ows.wfs.wfs2.mapping.ReferenceTypeMapper;
 import org.datalift.ows.wfs.wfs2.mapping.TimePeriodMapper;
+
 import org.openrdf.rio.RDFHandlerException;
 
 public class WfsSos2Converter {
@@ -53,7 +55,8 @@ public class WfsSos2Converter {
 		//ctx.saver.initConnexion(target, targetGraph, baseUri, targetType);
 		if(fc.name.equals(Const.exception) || fc.name.equals(Const.exceptionReport))
 		{
-			return false;
+			// return false;
+			throw new TechnicalException("gettingAvailableObservationsFailed");
 		}
 		ctx.model.startRDF();
 		for (Attribute a : fc.itsAttr) {

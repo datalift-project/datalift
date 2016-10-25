@@ -6,7 +6,6 @@ import static javax.ws.rs.core.MediaType.TEXT_HTML;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -29,7 +28,6 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.UriInfo;
-import javax.xml.parsers.ParserConfigurationException;
 
 import org.datalift.core.util.SimpleCache;
 import org.datalift.ows.exceptions.TechnicalException;
@@ -56,8 +54,6 @@ import org.geotools.data.Query;
 import org.geotools.data.ResourceInfo;
 import org.geotools.data.simple.SimpleFeatureSource;
 import org.opengis.referencing.ReferenceIdentifier;
-import org.openrdf.rio.RDFHandlerException;
-import org.xml.sax.SAXException;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -80,36 +76,42 @@ import fr.ign.datalift.model.AbstractFeature;
  */
 
 @Path(Wfstordf.MODULE_NAME)
-public class Wfstordf extends BaseConverterModule{
-
-
+public class Wfstordf extends BaseConverterModule
+{
 	//-------------------------------------------------------------------------
 	// Constants
 	//-------------------------------------------------------------------------
+
 	private final static int CACHE_DURATION = 3600 * 3; //3 hours
+
 	//-------------------------------------------------------------------------
 	// Class members
 	//-------------------------------------------------------------------------
 
-	private final static Logger log = Logger.getLogger();
 	/** The name of this module in the DataLift configuration. */
 	public final static String MODULE_NAME = "wfs2rdf";
+
 	private final static SimpleCache<String,List<FeatureTypeDescription>> cache =
 			new SimpleCache<String,List<FeatureTypeDescription>>(1000, CACHE_DURATION);
+
+	private final static Logger log = Logger.getLogger();
+
 	//-------------------------------------------------------------------------
 	// Constructors
 	//-------------------------------------------------------------------------
+
 	public Wfstordf() {
 		super(MODULE_NAME,1200, SourceType.WfsSource);
 	}
+
 	public Wfstordf(String name, int position, SourceType[] inputSources) {
 		super(name, position, inputSources);
-		// TODO Auto-generated constructor stub
 	}
 
 	//-------------------------------------------------------------------------
 	// Web services
 	//-------------------------------------------------------------------------
+
 	@GET
 	@Path("{path: .*$}")
 	public Response getStaticResource(@PathParam("path") String path,
@@ -124,7 +126,6 @@ public class Wfstordf extends BaseConverterModule{
 						uriInfo, request, acceptHdr);
 	}
 
-
 	@GET
 	@Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
 	public Response getIndexPage(@QueryParam("project") URI projectId) {
@@ -134,6 +135,7 @@ public class Wfstordf extends BaseConverterModule{
 		return this.newProjectView("availableWfsSources.vm", projectId);
 
 	}
+
 	/**
 	 * get the list of selected feature types selected by the user to be converted
 	 * @param json the json representation of the array containing the features to be converted
@@ -176,33 +178,20 @@ public class Wfstordf extends BaseConverterModule{
 				URI baseUri=createBaseUri(targetGraph);
 				String targetType=typeName+"-wfs";
 				String destination_title=typeName+"(RDF# )"+countGraph; //count to be added later
-				if(s.getVersion().equals("2.0.0"))
-				{
+				if(s.getVersion().equals("2.0.0")) {
 					convertFeatureTypeToRdf2(projectUri,s, destination_title, targetGraph, baseUri, targetType,typeName,optionOntology, optionWGS84 );
 				}
-				else
-				{
+				else {
 					convertFeatureTypeToRdf(projectUri,s, destination_title, targetGraph, baseUri, targetType,typeName,optionWGS84 );
 				}
-				System.out.println("done for "+typeName);
 				// Register new transformed RDF source.
-				Source out;
-				try {
-					out = this.addResultSource(p, s,
+				Source out = this.addResultSource(p, s,
 							"RDF mapping of " + s.getTitle()+"("+typeName+")", targetGraph);
-					// Display project source tab, including the newly created source.
-					response = this.created(out);
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();		
-				}					
+				// Display project source tab, including the newly created source.
+				response = this.created(out);
 			} 
-		}catch (URISyntaxException e1) {
-			log.error(e1.getMessage());
-		} catch (SAXException e) {
-			e.printStackTrace();
-		} catch (ParserConfigurationException e) {
-			e.printStackTrace();
+		} catch (Exception e) {
+			this.handleInternalError(e);
 		}
 		}
 		return response;
@@ -237,17 +226,12 @@ public class Wfstordf extends BaseConverterModule{
 			convertFeatureTypeDescriptionToRdf(src, targetGraph, baseUri, targetType);
 
 			// Register new transformed RDF source.
-			Source out;
-			try {
-				out = this.addResultSource(project, src,
+			Source out = this.addResultSource(project, src,
 						"RDF mapping of " + src.getTitle()+"("+targetType+"#"+countExistingGraph+")", targetGraph);
-				// Display project source tab, including the newly created source.
-				response = this.createdRedirect(out).build();
-			} catch (IOException e) {
-				e.printStackTrace();		
-			}	
-		} catch (URISyntaxException e1) {
-			e1.printStackTrace();
+			// Display project source tab, including the newly created source.
+			response = this.createdRedirect(out).build();
+		} catch (Exception e) {
+			this.handleInternalError(e);
 		}
 		return response;
 	}
@@ -269,6 +253,7 @@ public class Wfstordf extends BaseConverterModule{
 			converter.ConvertFeatureTypeDescriptionToRDF(data,target , targetGraph, baseUri, targetType);
 		}
 	}
+
 	private boolean convertFeatureTypeToRdf(URI projectUri, WfsSource s, String destination_title, URI targetGraph,
 			URI baseUri, String targetType, String typeName, boolean optionWGS84) {
 		try {
@@ -291,29 +276,25 @@ public class Wfstordf extends BaseConverterModule{
 		return true;
 	}
 
-	private URI createBaseUri(URI targetGraph) throws URISyntaxException {
+	private URI createBaseUri(URI targetGraph) {
 		String graph=targetGraph.toString();
 		//String graphuri="http://localhost:9091/project/demo/source/geoservice-brgm/availableFT-2";
 		int startproj,startsource;
-
 		startproj=graph.indexOf("/project");
 		String part1 = graph.substring(0, startproj);
-
 		startsource=graph.indexOf("/source");
 		String part2= graph.substring(startproj+8,startsource);
-
 		String part3= graph.substring(startsource+7);
-
-		return new URI(part1+part2+part3);
+		return URI.create(part1+part2+part3);
 
 	}
-	private URI constructTargetGraphURI(Project p,String candidate) throws URISyntaxException
-	{
+
+	private URI constructTargetGraphURI(Project p,String candidate) {
 		int countExistingGraph=getOccurenceGraph(p, candidate);
-
 		countExistingGraph++;
-		return new URI(candidate+"-"+countExistingGraph);
+		return URI.create(candidate+"-"+countExistingGraph);
 	}
+
 	private int getOccurenceGraph(Project p,String candidate)
 	{
 		List<Integer> numberValues=new ArrayList<Integer>();
@@ -392,13 +373,14 @@ public class Wfstordf extends BaseConverterModule{
 		}
 		return response.build();
 	}
-	private List<FeatureTypeDescription> getfeatureTypeDescription2(String sourceUrl, String version) throws Exception {
 
+	private List<FeatureTypeDescription> getfeatureTypeDescription2(String sourceUrl, String version) throws Exception {
 		WFS2Client mp=new WFS2Client(sourceUrl);
 		mp.getCapabilities();
 		return mp.getFeatureTypeDescription();
 
 	}
+
 	private boolean convertFeatureTypeToRdf2(URI projectUri, WfsSource s, String destination_title, URI targetGraph,
 			URI baseUri, String targetType, String typeName, int ontologyOption, boolean covertSrs) throws Exception {
 		try {
@@ -421,22 +403,20 @@ public class Wfstordf extends BaseConverterModule{
 			//1: EMF group Converter
 			WfsSos2Converter converter=new WfsSos2Converter(ontologyOption, target , targetGraph);
 			converter.ConvertFeaturesToRDF(featureCollectionToConvert);
-		} catch (IOException e) {
+		} catch (Exception e) {
 			TechnicalException error = new TechnicalException("convertFeatureTypeFailed", e, typeName);
 			log.error(error.getMessage(), e);
 			return false;
-		} catch (RDFHandlerException e) {
-			e.printStackTrace();
 		}
 		return true;
 	}
-	/****
+
+	/**
 	 * send a request to wfs, parse the response, 
 	 * retrieves data (feature type description) and insert them into features list 
 	 * @param wfsUrl
 	 * @throws IOException 
 	 */
-
 	private List<FeatureTypeDescription> getfeatureTypeDescription(String url, String version, String serverType) throws IOException
 	{
 		List<FeatureTypeDescription> descriptor=null;
