@@ -4,7 +4,6 @@ import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 import static javax.ws.rs.core.MediaType.TEXT_HTML;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -37,12 +36,12 @@ import org.datalift.fwk.project.ProjectManager;
 import org.datalift.fwk.util.StringUtils;
 import org.datalift.fwk.view.TemplateModel;
 import org.datalift.fwk.view.ViewFactory;
-import org.datalift.lov.exception.LovCatalogueException;
+
+import org.openrdf.OpenRDFException;
 import org.openrdf.model.Statement;
 import org.openrdf.query.BindingSet;
 import org.openrdf.query.GraphQuery;
 import org.openrdf.query.GraphQueryResult;
-import org.openrdf.query.MalformedQueryException;
 import org.openrdf.query.QueryLanguage;
 import org.openrdf.query.TupleQuery;
 import org.openrdf.query.TupleQueryResult;
@@ -332,12 +331,9 @@ public class LovCatalogue extends BaseModule {
 
 	/**
 	 * Caches a copy of the LOV catalog from the internal store
-	 * @throws MalformedQueryException 
-	 * @throws Exception 
-	 * @throws LovCatalogueException
-	 * @throws URISyntaxException
+	 * @throws OpenRDFException
 	 */
-	private void cacheLov() throws Exception{
+	private void cacheLov() throws OpenRDFException {
 		log.trace("Caching LOV ontology catalog from the internal repository...");
 
 		cache = new HashSet<OntologyDesc>();
@@ -435,7 +431,7 @@ public class LovCatalogue extends BaseModule {
 			//throw new LovModuleException("Error querying the SPARQL endpoint", e);
 		}
 		finally {
-			Util.CloseQuietly(lovRepositoryConnection);
+			closeQuietly(lovRepositoryConnection);
 		}
 
 		log.trace("Finished querying the SPARQL endpoint. Adding result data to the internal repository.");
@@ -452,9 +448,11 @@ public class LovCatalogue extends BaseModule {
 			log.info("Internal repository size for context <{}>: {}", ctx, wrap(internalRepositoryConnection.size(ctx)));
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			log.fatal("Failed to insert LOV catalog data into internal repository", e);
+			isSuccessful = false;
+			//throw new LovModuleException("Failed to insert LOV catalog data into internal repository", e);
 		} finally {
-			Util.CloseQuietly(internalRepositoryConnection);
+			closeQuietly(internalRepositoryConnection);
 		}
 		return isSuccessful;
 	}
@@ -515,5 +513,13 @@ public class LovCatalogue extends BaseModule {
 	//Remove quotes and language information from literals
 	private String formatLiteral(String name) {
 		return name.substring(1, name.length() - 1);
+	}
+
+	private static void closeQuietly(Object connection){
+		if(connection != null && connection instanceof RepositoryConnection){
+			try {
+				((RepositoryConnection) connection).close();
+			} catch (Exception e) { /* Ignore... */ }
+		}
 	}
 }

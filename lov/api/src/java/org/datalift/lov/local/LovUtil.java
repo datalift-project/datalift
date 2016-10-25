@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.datalift.lov.local.objects.JSONSerializable;
 import org.openrdf.repository.RepositoryConnection;
-import org.openrdf.repository.RepositoryException;
 
 public class LovUtil {
 	
@@ -12,24 +11,15 @@ public class LovUtil {
 	public final static String LOV_CONTEXT_SPARQL = "<" + LOV_CONTEXT + ">";
 	
 	public static void closeQuietly(Object connection) {
-		
 		if(connection != null && connection instanceof RepositoryConnection){
 			try {
 				((RepositoryConnection) connection).close();
-			} catch (RepositoryException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			} catch (Exception e) { /* Ignore... */ }
 		}
-		
 	}
 	
 	public static String toJSON(String attribute) {
-		
-//		return attribute == null ? "null" : attribute.replace("\"", "&quote;");
-//		return attribute == null ? "null" : StringEscapeUtils.escapeJavaScript(attribute);
 		return attribute == null ? "null" : encodeJSON(attribute);
-
 	}
 	
 	public static String toJSON(JSONSerializable serializable) {

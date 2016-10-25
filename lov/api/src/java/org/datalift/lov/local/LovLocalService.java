@@ -38,7 +38,6 @@ public class LovLocalService {
 			String filter_Type, String filter_Domain, String filter_vocabulary) {
 		
 		RepositoryConnection conn = null;
-		
 		try {
 			ResultsHandler resultsHandler = ResultsHandler.getInstance();
 
@@ -47,7 +46,7 @@ public class LovLocalService {
 					|| !resultsHandler.getResult_Filtered().getSearch_query()
 							.equals(searchWords)) {
 				log.info("Search request for : {}.", searchWords);
-//				logSearch(searchWords);
+				// logSearch(searchWords);
 				conn = this.configuration.getInternalRepository().newConnection();
 
 				SearchResult searchResult = new SearchResult();
@@ -61,12 +60,6 @@ public class LovLocalService {
 				TaxoNode vocabList = new TaxoNode("AllVocabularies",
 						"All Vocabularies");
 				TaxoNode typesList = buildTypes();
-				// Map<String, String> elemURI_LOVNbOcc =
-				// fetchLOVNbOccMetrics();
-				// Map<String, String> elemURI_LOVNbVoc =
-				// fetchLOVNbVocMetrics();
-				// Map<String, String> elemURI_LODNbOcc =
-				// fetchLODNbOccMetrics();
 
 				searchResult.setFacet_vocSpaces(vocabularySpaceRoot);
 				searchResult.setFacet_types(typesList);
@@ -145,8 +138,6 @@ public class LovLocalService {
 //								"reusedByDatasets").getValue()).stringValue()
 //								.toString();
 
-					// System.out.println(uri+"\t"+label);
-
 					boolean firstTime = false;
 					ResultItem resultItem = getResultItem(uri, resultItems);
 
@@ -177,11 +168,8 @@ public class LovLocalService {
 
 						firstTime = true;
 					}
-
-					// System.out.println("URI: "+resultItem.getUri());
 					resultItem.setUriPrefixed(prefixMachine(uri,
 							vocabulariesList));
-					// System.out.println("URI pref: "+resultItem.getUriPrefixed());
 
 					// test pour exclure des doublons
 					if (!resultItem.hasPropertyValue(p,
@@ -192,7 +180,6 @@ public class LovLocalService {
 								vocabulariesList));
 
 						match.setValue(addLangToValue(label, labelLang));
-						// System.out.println("value: "+label);
 						String[] valueSmallOcc = getValueSmall(label,
 								label.toLowerCase(), searchWords.toLowerCase());
 						match.setValueShort(addLangToValue(valueSmallOcc[0],
@@ -204,7 +191,6 @@ public class LovLocalService {
 								/ Float.parseFloat(label.length() + "");
 						if (resultItem.getBestRatioSearchWordsInLabels() < ratio)
 							resultItem.setBestRatioSearchWordsInLabels(ratio);
-						// System.out.println("value small: "+resultItem.getValueSmall());
 						resultItem.getMatches().add(match);
 					}
 
@@ -231,7 +217,6 @@ public class LovLocalService {
 						List<String[]> list = getStringsHierarchy(vocabSpace,
 								vocabularySpaceRoot);
 						for (int i = 0; i < list.size(); i++) {
-							// System.out.println("vocabSpaceType= "+i+"\t"+list.get(i)[0]+"\t"+list.get(i)[1]);
 							ResultItemVocSpace vocSpace = new ResultItemVocSpace();
 							vocSpace.setUri(list.get(i)[0]);
 							vocSpace.setLovLink("http://lov.okfn.org/dataset/lov/details/vocabularySpace_"
@@ -250,13 +235,11 @@ public class LovLocalService {
 							type.setUri(uriType);
 							type.setUriPrefixed(prefixMachine(uriType,
 									vocabulariesList));
-							// System.out.println("type: "+uriType);
 							resultItem.getTypes().add(type);
 						} else {
 							List<String[]> list = getStringsHierarchy(uriType,
 									typesList);
 							for (int i = 0; i < list.size(); i++) {
-								// System.out.println("type: "+list.get(i)[0]);
 								if (!resultItem.hasType(list.get(i)[0])) {
 									ResultItemType type = new ResultItemType();
 									type.setUri(list.get(i)[0]);
@@ -266,42 +249,18 @@ public class LovLocalService {
 							}
 						}
 					}
-					// if(firstTime){
-					// if(vocabSpace!=null){
-					// resultItem.getVocabularySpaces().add(vocabSpace);
-					// TaxoNode node =
-					// getTaxoNodePresent(vocabSpace,vocabularySpaceRoot);
-					// if(node!=null){
-					// resultItem.getVocabularySpacesTitle().add(node.getTitle());
-					// }
-					// }
-					// }
 				}
-
-				// System.out.println("traitement des resultats terminé");
-
 				// classer les propriétés et les types par ordre d'importance et
 				// calculer les max des metriques
 				orderPropAndClassesAndComputeMetricsMax(resultItems,
 						searchWords, params);
-
-				// System.out.println("order intra élément terminé");
-
 				// classer par importance et ajouter
 				searchResult.setResults(ranking(resultItems, params));
-				searchResult
-						.setFacet_vocs(orderVocabulariesInTaxoNode(vocabList));
-				// System.out.println("ranking des résultat terminé");
+				searchResult.setFacet_vocs(orderVocabulariesInTaxoNode(vocabList));
 
 //				log.info("Found {} result(s).", searchResult.getCount());
 				resultsHandler.setResult_All(searchResult, new TaxoNode(
 						vocabularySpaceRoot), buildTypes());
-//				log.info("Results are set.");
-//				SearchResult results = resultsHandler.getResult(0, filter_Type, filter_Domain,
-//						filter_vocabulary);
-//				log.info("Starting JSON serialization.");
-//				String json = results.toJSON();
-//				log.info("JSON result : {} ", json);
 
 				return resultsHandler.getResult(0, filter_Type, filter_Domain,
 						filter_vocabulary);
@@ -316,8 +275,7 @@ public class LovLocalService {
 			}
 
 		} catch (Exception e) {
-			e.printStackTrace();
-			log.error("An error occured when searching. {}", e);
+			log.error("An error occurred while searching into LOV catalog.", e);
 		} finally {
 			LovUtil.closeQuietly(conn);
 		}
@@ -337,18 +295,14 @@ public class LovLocalService {
 		// calcul du score les résultats selon l'ordre d'importance
 		for (ResultItem res : searchResult) {
 			res.computeScore(params);
-			// System.out.println("res score: "+res.getScore());
 		}
-
 		// trier
 		List<ResultItem> list = new ArrayList<ResultItem>(searchResult.size());
 		float bestScore = -1;
 		int bestIndex = -1;
 		while (searchResult.size() > 0) {
-			// System.out.println(searchResult.size());
 			for (int i = 0; i < searchResult.size(); i++) {
 				float score = searchResult.get(i).getScore();
-				// System.out.println("score "+new Float(score).toString());
 				if (score > bestScore) {
 					bestScore = score;
 					bestIndex = i;
@@ -358,7 +312,6 @@ public class LovLocalService {
 			searchResult.remove(bestIndex);
 			bestScore = -1;
 		}
-		// System.out.println("scoring ok");
 		return list;
 	}
 
@@ -533,7 +486,6 @@ public class LovLocalService {
 		int lastend = 0;
 		while (valueLow.indexOf(searchWordsLow, lastend) > -1) {
 			nbOccurence++;
-			// System.out.println("lastEnd: "+lastend);
 			begin = valueLow.indexOf(searchWordsLow, lastend);
 			end = begin + searchWordsLow.length();
 			if ((begin - windowSize) <= lastend) {
@@ -753,9 +705,6 @@ public class LovLocalService {
 						"vocNamespace").getValue()).stringValue().toString();
 				String vocabSpace = bindingSet.getBinding("vocabSpace")
 						.getValue().toString();
-//				if (vocUri.equals("http://purl.org/dc/terms/")) {
-//					System.out.println("this is DC");
-//				}
 				Vocabulary v = new Vocabulary();
 				v.setUri(vocUri);
 				v.setPrefix(vocPrefix);
@@ -883,7 +832,6 @@ public class LovLocalService {
 
 	private List<String[]> getStringsHierarchy(String uri, TaxoNode root) {
 		if (root.getUri().equals(uri)) {
-			// System.out.println(uri);
 			List<String[]> list = new ArrayList<String[]>();
 			String[] s = { root.getUri(), root.getLabel() };
 			list.add(s);
@@ -898,7 +846,6 @@ public class LovLocalService {
 		}
 		if (list.size() > 0) {
 			String[] s = { root.getUri(), root.getLabel() };
-			// System.out.println(root.getUri());
 			list.add(s);
 			return list;
 		}

@@ -111,12 +111,10 @@ public class ResultsHandler {
 				if (match == 3) {
 					resultsFilteredItem.add(res);
 					if (res.getVocSpaces().size() > 0) {
-						// System.out.println("increment domain");
 						LovLocalService.incrementTaxoNode(res.getVocSpaces()
 								.get(0).getUri(), vocabSpaceList);
 					}
 					if (res.getTypes().size() > 0) {
-						// System.out.println("increment type");
 						if (!LovLocalService.incrementTaxoNode(res.getTypes()
 								.get(0).getUri(), typeList)) {
 							LovLocalService
@@ -135,9 +133,6 @@ public class ResultsHandler {
 		} else {
 			resultsFilteredItem = resultsAllItem;
 		}
-
-		// System.out.println("filterDomain:"+filterDomain+" - filterType:"+filterType+" - filterVocab:"+filterVocabulary);
-
 		// modifier les taxos domains et types selon les filtres
 		if (filterDomain == null && filterType == null
 				&& filterVocabulary == null) {
@@ -150,7 +145,6 @@ public class ResultsHandler {
 			result_Filtered.setFacet_vocs(LovLocalService
 					.orderVocabulariesInTaxoNode(vocabList));
 		}
-
 		result_Filtered.setResults(resultsFilteredItem);
 		result_Filtered.setCount(resultsFilteredItem.size());
 
