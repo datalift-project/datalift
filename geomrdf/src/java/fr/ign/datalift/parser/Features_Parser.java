@@ -110,8 +110,7 @@ public class Features_Parser {
 				reprojectCRS(sourceCRS, targetCRS);
 			} 
 			catch (FactoryException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				throw new RuntimeException(e);
 			}
 		}
 	}
@@ -140,7 +139,6 @@ public class Features_Parser {
 		}
 	}
 
-
 	protected void reprojectCRS(CoordinateReferenceSystem sourceCRS, String targetCRS){
 		try {
 			Hints hints = new Hints(Hints.FORCE_LONGITUDE_FIRST_AXIS_ORDER, Boolean.TRUE);
@@ -150,16 +148,11 @@ public class Features_Parser {
 			this.transform = CRS.findMathTransform(sourceCRS, tmpCRS, lenient);
 			this.crs = CRS.toSRS(tmpCRS);
 		} catch (NoSuchAuthorityCodeException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new RuntimeException(e);
 		} catch (FactoryException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new RuntimeException(e);
 		}
 	}
-
-
-
 
 	public ArrayList<AbstractFeature> readFeatureCollection() {
 
@@ -196,11 +189,9 @@ public class Features_Parser {
 								try {
 									geom = JTS.transform((Geometry) f.getDefaultGeometry(), transform);
 								} catch (MismatchedDimensionException e) {
-									// TODO Auto-generated catch block
-									e.printStackTrace();
+									throw new RuntimeException(e);
 								} catch (TransformException e) {
-									// TODO Auto-generated catch block
-									e.printStackTrace();
+									throw new RuntimeException(e);
 								}
 							}
 

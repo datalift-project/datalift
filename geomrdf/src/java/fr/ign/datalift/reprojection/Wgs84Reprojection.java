@@ -1,7 +1,6 @@
 package fr.ign.datalift.reprojection;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
@@ -21,8 +20,6 @@ import org.geotools.geometry.jts.JTS;
 import org.geotools.referencing.CRS;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
-import org.opengis.referencing.FactoryException;
-import org.opengis.referencing.NoSuchAuthorityCodeException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.MathTransform;
 
@@ -90,29 +87,23 @@ public class Wgs84Reprojection {
 				transaction.commit();
 
 			} catch (Exception problem) {
-				problem.printStackTrace();
 				transaction.rollback();
+				throw problem;
 			} finally {
 				iterator.close();
 				transaction.close();
 			}
-
 			String[] typeNames = dataStore.getTypeNames();
 			String typeName = typeNames[0];
 
 			this.featureSource = dataStore.getFeatureSource(typeName);
 
-		} catch (NoSuchAuthorityCodeException e) {
-			// TODO Auto-generated catch block
-			log.error(e.getLocalizedMessage());
-		} catch (FactoryException e) {
-			// TODO Auto-generated catch block
-			log.error(e.getLocalizedMessage());
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			log.error(e.getLocalizedMessage());
+		} catch (RuntimeException e) {
+			log.error(e.getLocalizedMessage(), e);
+			throw e;
+		} catch (Exception e) {
+			log.error(e.getLocalizedMessage(), e);
+			throw new RuntimeException(e);
 		}
-
 	}
-
 }

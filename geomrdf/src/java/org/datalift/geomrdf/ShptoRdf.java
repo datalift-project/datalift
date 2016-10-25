@@ -61,7 +61,6 @@ import org.openrdf.model.ValueFactory;
 import org.openrdf.model.vocabulary.RDF;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
-import org.openrdf.repository.RepositoryResult;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.FileSource;
@@ -362,7 +361,6 @@ public class ShptoRdf extends BaseConverterModule
 		catch (TechnicalException e) {
 			throw e;
 		}
-
 		catch (Exception e) {
 			try {
 				// Forget pending triples.
@@ -380,29 +378,13 @@ public class ShptoRdf extends BaseConverterModule
 			// Commit pending data (including graph removal in case of error).
 			try { cnx.commit(); } catch (Exception e) { /* Ignore... */ }
 			// Close repository connection.
-			try { cnx.close();  view();} catch (Exception e) { /* Ignore... */ }
+			try { cnx.close(); } catch (Exception e) { /* Ignore... */ }
 		}
-
 	}
 	
-	 public static void view() throws Exception {
-	        RepositoryConnection cnx = Configuration.getDefault().getDefaultRepository().newConnection();
-	        try {
-                    RepositoryResult<Statement> i = cnx.getStatements(null, null, null, false);
-	                
-	                for (; i.hasNext(); ) {
-	                        System.out.println(i.next());
-	                }
-	        }
-	        finally {
-	                cnx.close();
-	        }
-	    }
-
 	protected String cleanUpString(String str) {
 		if (str.contains(":"))
 			str = str.substring(str.lastIndexOf(':') + 1);
 		return WordUtils.capitalizeFully(str, new char[] { ' ' }).replaceAll(" ", "").trim();
 	}
-
 }
