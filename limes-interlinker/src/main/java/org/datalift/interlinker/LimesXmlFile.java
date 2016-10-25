@@ -84,9 +84,9 @@ public class LimesXmlFile {
 			transformer.setOutputProperty(javax.xml.transform.OutputKeys.DOCTYPE_SYSTEM, "limes.dtd");
 
 		} catch (ParserConfigurationException e) {
-			e.printStackTrace();
+			throw new RuntimeException("Document creation failed", e);
 		} catch (TransformerConfigurationException e) {
-			e.printStackTrace();
+			throw new RuntimeException("Document creation failed", e);
 		}
 	}
 
@@ -100,7 +100,7 @@ public class LimesXmlFile {
 		try {
 			transformer.transform(src, result);
 		} catch (TransformerException e) {
-			e.printStackTrace();
+			throw new RuntimeException("Document transformation failed", e);
 		}
 	}
 	public void deleteDocument(String name) {
@@ -169,7 +169,7 @@ public class LimesXmlFile {
 		try {
 			this.transformer.transform(src, consoleResult);
 		} catch (TransformerException e) {
-			e.printStackTrace();
+			throw new RuntimeException("Document transformation failed", e);
 		}
 		return null;
 	}

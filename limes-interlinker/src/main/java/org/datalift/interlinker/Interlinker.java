@@ -2,6 +2,7 @@ package org.datalift.interlinker;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_XHTML_XML;
 import static javax.ws.rs.core.MediaType.TEXT_HTML;
+
 import static org.datalift.fwk.MediaTypes.TEXT_HTML_UTF8;
 
 import java.io.File;
@@ -16,6 +17,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
+import org.datalift.fwk.log.Logger;
 import org.datalift.fwk.project.Project;
 import org.datalift.fwk.project.ProjectModule;
 import org.datalift.fwk.view.TemplateModel;
@@ -27,7 +29,10 @@ import com.google.gson.Gson;
  *
  */
 @Path(Interlinker.MODULE_PATH)
-public class Interlinker extends BaseModule implements ProjectModule {
+public class Interlinker extends BaseModule implements ProjectModule
+{
+	private final static Logger log = Logger.getLogger();
+
 	private LimesXmlFile file;
 	private Form form;
 
@@ -63,7 +68,7 @@ public class Interlinker extends BaseModule implements ProjectModule {
 		try {
 			de.uni_leipzig.simba.controller.PPJoinController.main(arg);
 		} catch (Exception e) {
-			e.printStackTrace();
+			log.error("Limes execution failed", e);
 			throw new WebApplicationException(Response.Status.NOT_ACCEPTABLE);
 		}
 		file.deleteDocument(LimesXmlFile.FILENAME);
