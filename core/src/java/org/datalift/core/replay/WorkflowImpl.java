@@ -36,6 +36,8 @@ import org.datalift.fwk.rdf.Repository;
 import org.datalift.fwk.replay.Workflow;
 import org.datalift.fwk.replay.WorkflowStep;
 
+import static org.datalift.fwk.util.PrimitiveUtils.*;
+
 import org.json.JSONException;
 
 import com.clarkparsia.empire.annotation.NamedGraph;
@@ -214,7 +216,6 @@ public class WorkflowImpl extends BaseRdfEntity implements Workflow{
     
     /** {@inheritDoc} */
     @Override
-    @SuppressWarnings("boxing")
     public void replay(Map<String, String> variables){
         this.refreshJsons();
         List<List<IterableInput>> itInput =
@@ -258,19 +259,19 @@ public class WorkflowImpl extends BaseRdfEntity implements Workflow{
             while (i != inputs.size()) {
                 // rebuild iteration configuration
                 int j = inputs.size() - 1;
-                while (inputs.get(j) == itInput.get(j).size()) {
-                    inputs.set(j, new Integer(0));
+                while (unwrap(inputs.get(j)) == itInput.get(j).size()) {
+                    inputs.set(j, wrap(0));
                     j--;
-                    inputs.set(j, inputs.get(j) + 1);
+                    inputs.set(j, wrap(unwrap(inputs.get(j)) + 1));
                 }
                 // detect the last fully executed input
-                if ((i == j) && (inputs.get(j) == itInput.get(j).size() - 1)) {
+                if ((i == j) && (unwrap(inputs.get(j)) == itInput.get(j).size() - 1)) {
                     i++;
                 }
                 // replay
                 IterableInput[] iteration = new IterableInput[inputs.size()];
                 for (int k = 0; k < inputs.size(); k++) {
-                    iteration[k] = itInput.get(j).get(inputs.get(k));
+                    iteration[k] = itInput.get(j).get(unwrap(inputs.get(k)));
                 }
                 try {
                     this.replay(variables, iteration);
@@ -280,7 +281,8 @@ public class WorkflowImpl extends BaseRdfEntity implements Workflow{
                 }
                 nbrIt++;
                 // go to the next iteration
-                inputs.set(inputs.size() - 1, inputs.get(inputs.size() - 1) + 1);
+                inputs.set(inputs.size() - 1,
+                           wrap(unwrap(inputs.get(inputs.size() - 1)) + 1));
             }
             if (except.size() == nbrIt) {
                 throw new RuntimeException(except.entrySet().iterator().next().getKey());
