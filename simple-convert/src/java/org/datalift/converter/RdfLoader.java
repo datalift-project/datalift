@@ -252,7 +252,6 @@ public class RdfLoader extends BaseConverterModule implements Operation
                                                         sourceId, targetGraph);
         }
         catch (Exception e) {
-            e.printStackTrace();
             throw new TechnicalException(e);
         }
     }
