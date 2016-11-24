@@ -1,0 +1,90 @@
+#**
+Velocity template for SKOS ConceptScheme display page.
+@param  it          the SKOS ConceptScheme URI
+@param  uriMapper   mapping tool to translate RDF URIs into local URLs
+*#
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML+RDFa 1.0//EN" "http://www.w3.org/MarkUp/DTD/xhtml-rdfa-1.dtd">
+#load("skos/resources")
+## Lists the top SKOS Concepts associated to a given ConceptScheme.
+## @param  uri   the ConceptScheme URI
+#set( $queryTopConcepts = "
+	SELECT DISTINCT ?concept ?label
+	WHERE {
+		{ ?uri skos:hasTopConcept ?concept . } UNION
+		{ ?concept skos:topConceptOf ?uri  . }
+		?concept skos:prefLabel ?label .
+	}" )
+## Bind RDF namespace prefixes
+$sparql.prefix('skos', 'http://www.w3.org/2004/02/skos/core#')
+$sparql.prefix('dc',   'http://purl.org/dc/elements/1.1/')
+$sparql.prefix('dct',  'http://purl.org/dc/terms/')
+$sparql.prefix('pav',  'http://purl.org/pav/')
+## Bind SKOS resource URI
+$sparql.bind('uri', $it)
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:skos="http://www.w3.org/2004/02/skos/core#"
+      xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+      xmlns:dct="http://purl.org/dc/terms/"
+      xmlns:dc="http://purl.org/dc/elements/1.1/"
+      xmlns:foaf="http://xmlns.com/foaf/0.1/" xml:lang="fr">
+  <head>
+#set( $conceptScheme = $sparql.describe($it) )
+#set( $title = $conceptScheme.valueOf('dc:title') )
+#if( $title == "" )
+#set( $title = $conceptScheme.valueOf('dct:title') )
+#end
+    <title>$esc.html($title)</title>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/>
+    <link rel="stylesheet" type="text/css" href="${baseUri}/skos/css/principal.css">
+    <link rel="alternate" type="application/rdf+xml" href="?rdf=true"
+          title="$i18n.html("rdf.data.link.desc")"/>
+  </head>
+  <body>
+    <h1>$esc.html($title)</h1>
+    <div id="subheader">
+      <a href="${baseUri}/skos">$i18n.msg("welcome.page.link.label")</a>
+      | $i18n.msg("item.uri.label"): <span id="uri"><a href="">$it</a></span>
+      | $i18n.msg("item.type.label"): <span><a href="http://www.w3.org/2004/02/skos/core#ConceptScheme">$i18n.msg("skos.ConceptScheme.type")</a></span>
+    </div>
+    <div id="metadata">
+#set( $creator = $conceptScheme.valueOf('dc:creator') )
+#if( $creator )
+      <h2 class="first">$i18n.msg("scheme.author.label")</h2>
+      <p>$esc.html($creator)</p>
+#end
+#set( $lastModified = $conceptScheme.valueOf('dct:modified') )
+#if( $lastModified == "" )
+#set( $lastModified = $conceptScheme.valueOf('pav:lastRefreshedOn') )
+#end
+#if( $lastModified )
+      <h2>$i18n.msg("last.modified.label")</h2>
+      <p>$esc.html($lastModified)</p>
+#end
+    </div>
+#set( $description = $conceptScheme.valueOf('dc:description') )
+#if( $description == "" )
+#set( $description = $conceptScheme.valueOf('skos:prefLabel') )
+#end
+#if( $description )
+    <h2>$i18n.msg("scheme.prefLabel.label")</h2>
+    <p>$esc.html($description.toString())</p>
+#end
+    <h2 class="clear">$i18n.msg("scheme.top.concepts.list")</h2>
+    <ul id="topConceptList">
+#set( $topConcepts = $sparql.select($queryTopConcepts).sort('label') )
+#foreach( $item in $topConcepts )
+      <li class="vedette">
+        <a href="$uriMapper.toUrl($item['concept'])">$esc.html($item['label'].stringValue())</a>
+      </li>
+#end
+    </ul>
+    <div id="footer">
+      <ul>
+        <li><a href="?rdf=true">$i18n.msg("rdf.data.link.label")</a></li>
+        <li><a href="${baseUri}/skos/help_${i18n.language}.html">$i18n.msg("help.page.link.label")</a></li>
+        <li><a href="${baseUri}/sparql">$i18n.msg("sparql.endpoint.link.label")</a></li>
+      </ul>
+    </div>
+  </body>
+</html>

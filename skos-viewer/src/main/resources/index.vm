@@ -1,0 +1,43 @@
+#**
+Velocity template for SKOS ConceptScheme listing page.
+@param  uriMapper   mapping tool to translate RDF URIs into local URLs
+*#
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML+RDFa 1.0//EN" "http://www.w3.org/MarkUp/DTD/xhtml-rdfa-1.dtd">
+#load("skos/resources")
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:skos="http://www.w3.org/2004/02/skos/core#"
+      xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+      xmlns:dct="http://purl.org/dc/terms/"
+      xmlns:dc="http://purl.org/dc/elements/1.1/"
+      xmlns:foaf="http://xmlns.com/foaf/0.1/" xml:lang="fr">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/>
+    <title>$i18n.msg("site.window.title")</title>
+    <link rel="stylesheet" type="text/css" href="${baseUri}/skos/css/principal.css">
+  </head>
+  <body>
+    <h1 id="webSiteTitle">$i18n.msg("site.desc.title")</h1>
+    <p>$i18n.msg("concept.schemes.description"):</p>
+    <ul>
+## Lists the SKOS ConceptSchemes present in repository.
+#set( $query = "PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+        PREFIX dc: <http://purl.org/dc/elements/1.1/>
+        PREFIX dct: <http://purl.org/dc/terms/>
+        SELECT DISTINCT ?uri ?label
+        WHERE {
+          ?uri a skos:ConceptScheme ;
+               skos:prefLabel | dc:title | dct:title ?label .
+        }" )
+#foreach( $i in $sparql.select($query).sort('label') )
+      <li><a href="$uriMapper.toUrl($i['uri'])">$esc.html($i['label'].stringValue())</a></li>
+#end
+    </ul>
+    <p>$i18n.msg("help.page.description", "${baseUri}/skos/help_${i18n.language}.html", $i18n.msg("help.page.link.label"))</p>
+    <div id="footer">
+      <ul>
+        <li><a href="${baseUri}/skos/help_${i18n.language}.html">$i18n.msg("help.page.link.label")</a></li>
+        <li><a href="${baseUri}/sparql">SPARQL endpoint</a></li>
+      </ul>
+    </div>
+  </body>
+</html>

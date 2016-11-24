@@ -1,0 +1,235 @@
+#**
+Velocity template for SKOS Concept display page.
+@param  it          the SKOS Concept URI
+@param  uriMapper   mapping tool to translate RDF URIs into local URLs
+
+*#
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML+RDFa 1.0//EN" "http://www.w3.org/MarkUp/DTD/xhtml-rdfa-1.dtd">
+#load("skos/resources")
+## Loads Concept data.
+## @param  uri   the Concept URI
+#set( $queryConcept = "
+	SELECT DISTINCT ?label ?schemeUri ?schemeTitle ?definition
+	                ?changeNote ?scopeNote ?lastModified ?lastUpdate
+	WHERE {
+		?uri skos:prefLabel ?label ;
+		     skos:inScheme  ?schemeUri .
+		?schemeUri dc:title|dct:title ?schemeTitle .
+		OPTIONAL { 
+			?uri skos:definition ?definition .
+		} 
+		OPTIONAL { 
+			?uri skos:changeNote ?changeNote .
+		} 
+		OPTIONAL { 
+			?uri skos:scopeNote ?scopeNote . 
+		} 
+		OPTIONAL { 
+			?uri dct:modified ?lastModified . 
+		} 
+		OPTIONAL { 
+			?schemeUri rdf:date ?lastUpdate . 
+		} 
+	} LIMIT 1" )
+## Retrieves the first Dbpedia entry w/ abstract associated to a given Concept.
+## @param  uri   the Concept URI
+#set( $queryFirstDBpedia = "
+	SELECT DISTINCT ?focus ?abstract
+	WHERE {
+		?uri foaf:focus ?focus .
+		?focus rdfs:comment ?abstract .
+	} LIMIT 1" )
+## Retrieves Dbpedia entries associated to a given Concept.
+## @param  uri   the Concept URI
+#set( $queryDBpedia = "
+	SELECT DISTINCT ?focus ?label
+	WHERE {
+		?uri foaf:focus ?focus .
+		OPTIONAL { 
+			?focus rdfs:label ?label .
+		}
+	}" )
+## Loads the alternate labels associated to a given Concept.
+## @param  uri   the Concept URI
+#set( $queryAltLabels = "
+	SELECT DISTINCT ?altLabel
+	WHERE {
+		?uri skos:altLabel ?altLabel .
+	}" )
+## Lists the SKOS Concepts associated to a given Concept.
+## @param  uri    the Concept URI
+## @param  link   the URI of the predicate bearing the relationship
+#set( $queryRelatedLabels = "
+	SELECT DISTINCT ?concept ?label
+	WHERE {
+		?uri ?link ?concept .
+		?concept skos:prefLabel ?label .
+	}" )
+## Retrieves the first associated entry for a given Concept.
+## @param  uri   the Concept URI
+#set( $queryMatching = "
+	SELECT DISTINCT ?exactMatch ?closeMatch ?label
+	WHERE {
+		{
+			?uri skos:exactMatch ?exactMatch .
+			?exactMatch skos:prefLabel ?label .
+		}
+		UNION 
+		{
+			?uri skos:closeMatch ?closeMatch .
+			?closeMatch skos:prefLabel ?label .
+		}
+		FILTER (lang(?label)='fr')
+	} LIMIT 1" )
+## Bind RDF namespace prefixes
+$sparql.prefix('skos', 'http://www.w3.org/2004/02/skos/core#')
+$sparql.prefix('dc',   'http://purl.org/dc/elements/1.1/') 
+$sparql.prefix('dct',  'http://purl.org/dc/terms/')
+$sparql.prefix('foaf', 'http://xmlns.com/foaf/0.1/')
+$sparql.prefix('rdfs', 'http://www.w3.org/2000/01/rdf-schema#')
+## Bind SKOS resource URI
+$sparql.bind('uri', $it)
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:skos="http://www.w3.org/2004/02/skos/core#"
+      xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+      xmlns:dct="http://purl.org/dc/terms/"
+      xmlns:dc="http://purl.org/dc/elements/1.1/"
+      xmlns:foaf="http://xmlns.com/foaf/0.1/" xml:lang="fr">
+  <head>
+#set( $concept = $sparql.select($queryConcept).next() )
+#set( $prefLabel = $concept['label'].stringValue() )
+#set( $schemeTitle = $concept['schemeTitle'].stringValue() )
+    <title>$esc.html($prefLabel) | $esc.html($schemeTitle)</title>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/>
+    <link rel="stylesheet" type="text/css" href="${baseUri}/skos/css/principal.css">
+    <link rel="alternate" type="application/rdf+xml" href="?rdf=true"
+          title="$i18n.html("rdf.data.link.desc")"/>
+  </head>
+  <body>
+    <h1>$esc.html($prefLabel)</h1>
+    <div id="subheader">
+      <a href="${baseUri}/skos">$i18n.msg("welcome.page.link.label")</a>
+      | $i18n.msg("item.uri.label"): <span id="uri"><a href="">$it</a></span>
+      | $i18n.msg("item.type.label"): <span><a href="http://www.w3.org/2004/02/skos/core#Concept">$i18n.msg("skos.Concept.type")</a></span>
+    </div>
+    <div id="metadata">
+      <h2>$i18n.msg("conceptscheme.link.label")</h2>
+      <p><a href="$uriMapper.toUrl($concept['schemeUri'])">$esc.html($schemeTitle)</a></p>
+#set( $lastModified = $concept['lastModified'].stringValue() )
+#if( $lastModified )
+      <h2>$i18n.msg("last.modified.label")</h2>
+      <p>$esc.html($lastModified)</p>
+#end
+#set( $scopeNote = $concept['scopeNote'].stringValue() )
+#if( $scopeNote )
+      <h2>$i18n.msg("scope.note.label")</h2>
+      <p class="note">$esc.html($scopeNote)</p>
+#end
+#set( $changeNote = $concept['changeNote'].stringValue() )
+#if( $changeNote )
+      <h2>$i18n.msg("change.note.label")</h2>
+      <p class="note">$esc.html($changeNote)</p>
+#end
+#if( $queryFirstDBpedia.hasNext() )
+#set( $entry = $queryFirstDBpedia.next() )
+      <h2>$i18n.msg("first.focus.desc.label")</h2>
+      <p class="note">
+        $esc.html($entry['abstract'])
+        <br />
+        <a href="$uriMapper.toUrl($entry['focus'])">$i18n.msg("focus.link.label")</a>
+      </p>
+#end
+    </div>
+#set( $definition = $concept['definition'].stringValue() )
+#if( $definition )
+    <h2>$i18n.msg("concept.definition.label")</h2>
+    <p class="note">$definition</p>
+#end
+    <div class="keys-values">
+      <div class="key-value">
+        <h2 class="key">$i18n.msg("concept.prefLabel.label")</h2>
+        <ul class="value">
+          <li class="vedette">$esc.html($prefLabel)</li>
+        </ul>
+      </div>
+#set( $altLabels = $sparql.select($queryAltLabels).sort('altLabel') )
+#if( $altLabels.hasNext() )
+      <div class="key-value">
+        <h2 class="key">$i18n.msg("concept.altLabel.label")</h2>
+        <ul class="value">
+#foreach( $item in $altLabels )
+          <li>$esc.html($item['altLabel'].stringValue())</li>
+#end
+        </ul>
+      </div>
+#end
+##
+## MACRO linked_entries
+#macro( linked_entries $name $entries )
+## Assign local variable to prevent multiple evaluation of entries argument.
+#set( $l = $entries )
+#if( $l.hasNext() )
+      <div class="key-value">
+        <h2 class="key">$esc.html($name)</h2>
+        <ul class="value">
+#foreach( $item in $l )
+          <li class="vedette">
+            <a href="$uriMapper.toUrl($item['concept'])">$esc.html($item['label'].stringValue())</a>
+          </li>
+#end
+        </ul>
+      </div>
+#end
+#end
+$sparql.bindUri('link', 'skos:broader')
+#linked_entries( $i18n.msg("broader.concepts.label") $sparql.select($queryRelatedLabels).sort('label') )
+$sparql.bindUri('link', 'skos:narrower')
+#linked_entries( $i18n.msg("narrower.concepts.label") $sparql.select($queryRelatedLabels).sort('label') )
+$sparql.bindUri('link', 'skos:related')
+#linked_entries( $i18n.msg("related.concepts.label") $sparql.select($queryRelatedLabels).sort('label') )
+##
+#set( $matching = $sparql.select($queryMatching).sort('label') )
+#if( $matching.hasNext() )
+      <div class="key-value">
+#foreach( $item in $matching )
+#if( $item['exactMatch'] )
+        <h2 class="key">$i18n.msg("exactMatch.concept.label")</h2>
+        <ul class="value">
+          <li><a href="$uriMapper.toUrl($item['exactMatch'])">$esc.html($item['label'])</a></li>
+        </ul>
+#else
+        <h2 class="key">$i18n.msg("closeMatch.concept.label")</h2>
+        <ul class="value">
+          <li><a href="$uriMapper.toUrl($item['closeMatch'])">$esc.html($item['label'])</a></li>
+        </ul>
+#end
+#end
+      </div>
+#end
+#set( $dbpediaEntries = $sparql.select($queryDBpedia).sort('label') )
+#if( $dbpediaEntries.hasNext() )
+      <div class="key-value">
+#foreach( $item in $dbpediaEntries )
+        <h2 class="key">$i18n.msg("focus.list.desc.label")</h2>
+        <ul class="value">
+#if( $item['label'] )
+          <li><a href="$uriMapper.toUrl($item['focus'])">$esc.html($item['label'])</a></li>
+#else
+          <li><a href="$uriMapper.toUrl($item['focus'])">$item['focus'])</a></li>
+#end
+        </ul>
+#end
+      </div>
+#end
+    </div>
+    <div id="footer">
+      <ul>
+        <li><a href="?rdf=true">$i18n.msg("rdf.data.link.label")</a></li>
+        <li><a href="${baseUri}/skos/help_${i18n.language}.html">$i18n.msg("help.page.link.label")</a></li>
+        <li><a href="${baseUri}/sparql">$i18n.msg("sparql.endpoint.link.label")</a></li>
+      </ul>
+    </div>
+
+  </body>
+</html>
