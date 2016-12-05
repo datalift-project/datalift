@@ -12,24 +12,26 @@ Velocity template for SKOS Concept display page.
 	SELECT DISTINCT ?label ?schemeUri ?schemeTitle ?definition
 	                ?changeNote ?scopeNote ?lastModified ?lastUpdate
 	WHERE {
-		?uri skos:prefLabel ?label ;
-		     skos:inScheme  ?schemeUri .
-		?schemeUri dc:title|dct:title ?schemeTitle .
-		OPTIONAL { 
+		?uri skos:prefLabel ?label .
+		OPTIONAL {
+			?uri skos:inScheme ?schemeUri .
+			?schemeUri dc:title|dct:title ?schemeTitle .
+		}
+		OPTIONAL {
 			?uri skos:definition ?definition .
-		} 
-		OPTIONAL { 
+		}
+		OPTIONAL {
 			?uri skos:changeNote ?changeNote .
-		} 
-		OPTIONAL { 
-			?uri skos:scopeNote ?scopeNote . 
-		} 
-		OPTIONAL { 
-			?uri dct:modified ?lastModified . 
-		} 
-		OPTIONAL { 
-			?schemeUri rdf:date ?lastUpdate . 
-		} 
+		}
+		OPTIONAL {
+			?uri skos:scopeNote ?scopeNote .
+		}
+		OPTIONAL {
+			?uri dct:modified ?lastModified .
+		}
+		OPTIONAL {
+			?schemeUri rdf:date ?lastUpdate .
+		}
 	} LIMIT 1" )
 ## Retrieves the first Dbpedia entry w/ abstract associated to a given Concept.
 ## @param  uri   the Concept URI
@@ -45,7 +47,7 @@ Velocity template for SKOS Concept display page.
 	SELECT DISTINCT ?focus ?label
 	WHERE {
 		?uri foaf:focus ?focus .
-		OPTIONAL { 
+		OPTIONAL {
 			?focus rdfs:label ?label .
 		}
 	}" )
@@ -74,7 +76,7 @@ Velocity template for SKOS Concept display page.
 			?uri skos:exactMatch ?exactMatch .
 			?exactMatch skos:prefLabel ?label .
 		}
-		UNION 
+		UNION
 		{
 			?uri skos:closeMatch ?closeMatch .
 			?closeMatch skos:prefLabel ?label .
@@ -83,7 +85,7 @@ Velocity template for SKOS Concept display page.
 	} LIMIT 1" )
 ## Bind RDF namespace prefixes
 $sparql.prefix('skos', 'http://www.w3.org/2004/02/skos/core#')
-$sparql.prefix('dc',   'http://purl.org/dc/elements/1.1/') 
+$sparql.prefix('dc',   'http://purl.org/dc/elements/1.1/')
 $sparql.prefix('dct',  'http://purl.org/dc/terms/')
 $sparql.prefix('foaf', 'http://xmlns.com/foaf/0.1/')
 $sparql.prefix('rdfs', 'http://www.w3.org/2000/01/rdf-schema#')
@@ -97,7 +99,7 @@ $sparql.bind('uri', $it)
       xmlns:dc="http://purl.org/dc/elements/1.1/"
       xmlns:foaf="http://xmlns.com/foaf/0.1/" xml:lang="fr">
   <head>
-#set( $concept = $sparql.select($queryConcept).next() )
+#set( $concept = $sparql.select($queryConcept).nextResult() )
 #set( $prefLabel = $concept['label'].stringValue() )
 #set( $schemeTitle = $concept['schemeTitle'].stringValue() )
     <title>$esc.html($prefLabel) | $esc.html($schemeTitle)</title>
@@ -114,8 +116,10 @@ $sparql.bind('uri', $it)
       | $i18n.msg("item.type.label"): <span><a href="http://www.w3.org/2004/02/skos/core#Concept">$i18n.msg("skos.Concept.type")</a></span>
     </div>
     <div id="metadata">
+#if( $schemeTitle )
       <h2>$i18n.msg("conceptscheme.link.label")</h2>
       <p><a href="$uriMapper.toUrl($concept['schemeUri'])">$esc.html($schemeTitle)</a></p>
+#end
 #set( $lastModified = $concept['lastModified'].stringValue() )
 #if( $lastModified )
       <h2>$i18n.msg("last.modified.label")</h2>
