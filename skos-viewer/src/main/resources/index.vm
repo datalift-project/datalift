@@ -21,13 +21,22 @@ Velocity template for SKOS ConceptScheme listing page.
     <ul>
 ## Lists the SKOS ConceptSchemes present in repository.
 #set( $query = "PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
-        PREFIX dc: <http://purl.org/dc/elements/1.1/>
-        PREFIX dct: <http://purl.org/dc/terms/>
-        SELECT DISTINCT ?uri ?label
-        WHERE {
-          ?uri a skos:ConceptScheme ;
-               skos:prefLabel | dc:title | dct:title ?label .
-        }" )
+	PREFIX dc: <http://purl.org/dc/elements/1.1/>
+	PREFIX dct: <http://purl.org/dc/terms/>
+	SELECT DISTINCT ?uri ?label
+	WHERE {
+	  ?uri a skos:ConceptScheme .
+	  OPTIONAL { ?uri dc:title | dct:title ?titleLg  . FILTER(langMatches(?titleLg, ?lang)) }
+	  OPTIONAL { ?uri dc:title | dct:title ?titleEn  . FILTER(langMatches(?titleEn, 'en')) }
+	  OPTIONAL { ?uri dc:title | dct:title ?titleAny . FILTER(lang(?titleAny) = '') }
+	  OPTIONAL { ?uri skos:prefLabel ?labelLg  . FILTER(langMatches(?labelLg, ?lang)) }
+	  OPTIONAL { ?uri skos:prefLabel ?labelEn  . FILTER(langMatches(?labelEn, 'en')) }
+	  OPTIONAL { ?uri skos:prefLabel ?labelAny . FILTER(lang(?labelAny) = '') }
+	  BIND(COALESCE(?titleLg,  COALESCE(?labelLg,
+	       COALESCE(?titleAny, COALESCE(?labelAny,
+	       COALESCE(?titleEn,  ?labelEn))))) AS ?label)
+	}" )
+$sparql.bind('lang', $i18n.language)
 #foreach( $i in $sparql.select($query).sort('label') )
       <li><a href="$uriMapper.toUrl($i['uri'])">$esc.html($i['label'].stringValue())</a></li>
 #end

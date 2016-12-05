@@ -184,7 +184,7 @@ public class SkosViewer extends BaseModule
             if (rscDesc == null) {
                 throw new WebApplicationException(NOT_FOUND);
             }
-            Value uri  = rscDesc.get("uri");
+            Value  uri  = rscDesc.get("uri");
             String type = rscDesc.get("type").stringValue();
             // Perform content negotiation.
             SparqlEndpoint sparql = Configuration.getDefault()
