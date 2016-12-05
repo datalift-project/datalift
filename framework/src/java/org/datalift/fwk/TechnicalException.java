@@ -330,10 +330,11 @@ public abstract class TechnicalException extends RuntimeException
                 locale = Locale.getDefault();
             }
             try {
-                ClassLoader cl = Thread.currentThread().getContextClassLoader();
-                if (cl == null) {
-                    cl = this.getClass().getClassLoader();
-                }
+                // ClassLoader cl = Thread.currentThread().getContextClassLoader();
+                // if (cl == null) {
+                //     cl = this.getClass().getClassLoader();
+                // }
+                ClassLoader cl = this.getClass().getClassLoader();
                 ResourceBundle bundle = ResourceBundle.getBundle(
                                                         bundleName, locale, cl);
                 try {
