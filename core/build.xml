@@ -483,10 +483,10 @@
       <group title="Datalift Core Packages"
           packages="org.datalift.core*"/>
 
-      <link href="http://java.sun.com/javase/6/docs/api/"/>
-      <link href="http://java.sun.com/javaee/5/docs/api/"/>
-      <link href="http://www.openrdf.org/doc/sesame2/api/"/>
-      <link href="http://jersey.java.net/nonav/apidocs/latest/jersey/"/>
+      <link href="https://docs.oracle.com/javase/7/docs/api/"/>
+      <link href="https://docs.oracle.com/javaee/5/api/"/>
+      <link href="http://archive.rdf4j.org/javadoc/sesame-2.7.16/"/>
+      <link href="https://jersey.java.net/apidocs/1.9.1/jersey/"/>
     </javadoc>
   </target>
 
