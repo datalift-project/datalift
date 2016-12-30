@@ -34,7 +34,7 @@
   <property file="${datalift.root}/build.properties"/>
 
   <property name="datalift.wrapper.modules"
-            value="sparql2viz-endpoint,projectmanager,simple-convert,database-directmapper,geomrdf,wfs2rdf,lov/api,lov/catalogue,data2ontology,virtuoso-connector,allegrograph-connector,stringtouri,silk-interlinker,incubator/ontology-mapper"/>
+            value="sparql2viz-endpoint,projectmanager,simple-convert,database-directmapper,geomrdf,wfs2rdf,lov/api,lov/catalogue,data2ontology,virtuoso-connector,stringtouri,silk-interlinker,limes-interlinker,incubator/ontology-mapper"/>
   <property name="security.context.class"
             value="org.datalift.core.security.LocalUserSecurityContext"/>
 
@@ -372,23 +372,24 @@
   <target name="dist-mac" depends="prepare-dist"
                       description="Builds a Mac OS X binary distribution">
     <taskdef name="jarbundler"
-        classname="net.sourceforge.jarbundler.JarBundler">
+        classname="com.ultramixer.jarbundler.JarBundler">
       <classpath refid="build.classpath"/>
     </taskdef>
 
     <!-- java.library.path system propery should also include
          "$USER_HOME/Library/Application Support/DataLift/lib" but no
          operational way to escape space character in path was found. -->
+    <!-- infostring="Datalift ${app.version} Beta" -->
     <jarbundler name="Datalift" version="${full.app.version}"
                  dir="${dist.home}"
            mainclass="org.datalift.wrapper.Wrapper"
             bundleid="org.datalift.wrapper.Wrapper"
-          infostring="Datalift ${app.version} Beta"
                 icon="${mac.conf}/Contents/Resources/datalift.icns"
-          jvmversion="1.6+"
+          jvmversion="1.7+"
            vmoptions="-Xms256M -Xmx3G -Xverify:all -Xshare:off -Djava.library.path=$JAVAROOT/lib -Dsun.net.inetaddr.ttl=60"
     workingdirectory="$APP_PACKAGE/Contents/Resources"
-            stubfile="${mac.conf}/Contents/MacOS/universalJavaApplicationStub">
+            stubfile="${mac.conf}/Contents/MacOS/universalJavaApplicationStub"
+         useJavaXKey="true">
       <jarfileset dir="${gen.dist.dir}/bin">
         <include name="**/*.jar"/>
       </jarfileset>
