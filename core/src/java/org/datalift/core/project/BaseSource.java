@@ -35,6 +35,7 @@
 package org.datalift.core.project;
 
 
+import java.net.URI;
 import java.net.URLDecoder;
 import java.util.Date;
 
@@ -116,6 +117,13 @@ public abstract class BaseSource extends BaseRdfEntity implements Source
             if (uri.length() == 0) {
                 throw new IllegalArgumentException("uri");
             }
+            // Ensure URI is valid and compliant with Empire constraints.
+            // Note: Empire strictly enforces usage of ASCII chars only in URIs
+            // of Empire objects (RDF subjects) but not in references to these
+            // objects (i.e. RDF objects). Hence, we must ensure to store all
+            // URIs in an Empire-compatible way for, for example, source
+            // references in project to match actual source object URIs.
+            uri = URI.create(uri).toASCIIString();
         }
         if ((StringUtils.isSet(uri)) && (project == null)) {
             throw new IllegalArgumentException("project");
