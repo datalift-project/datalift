@@ -65,6 +65,8 @@ import static org.datalift.fwk.util.StringUtils.*;
  *  <dt>SAIL</dt>
  *  <dd>Local, JVM-embedded, in-memory or file-based Sesame
  *   repositories</dd>
+ *  <dt>SPARQL</dt>
+ *  <dd>Remote SPARQL 1.1 repositories</dd>
  * </dl>
  *
  * @author lbihanic
