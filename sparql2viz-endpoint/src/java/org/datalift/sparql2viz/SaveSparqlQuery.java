@@ -251,8 +251,8 @@ public class SaveSparqlQuery extends BaseModule {
 	public void deleteRequest(@PathParam("requestName") String requestName) throws IOException {
 		FileStore fs = Configuration.getDefault().getPrivateStorage();
 		File dir = new File("sparql/requests");
-		//File f = fs.getFile(new File(dir, requestName + ".txt").getPath());
 		File f = fs.getFile(new File(dir, requestName).getPath());
+		log.info("Deleting file \"{}\" .", f.getName());
 		f.delete();
 	}
 	
