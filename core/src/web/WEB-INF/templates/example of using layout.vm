@@ -1,0 +1,8 @@
+#set( $layout = "layout.vm" )
+#set( $module_ressource = "sparql/resources")
+#load("sparql/resources")
+#set( $page_title = "#i18n('sparql.query.results') - #i18n('sparql.endpoint.title') - Datalift")
+
+<!-- Begin of body of page -->
+test
+<!-- end of body of page -->
