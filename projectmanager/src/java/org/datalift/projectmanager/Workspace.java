@@ -52,6 +52,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -76,6 +77,7 @@ import javax.ws.rs.core.Request;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.core.Response.ResponseBuilder;
+import javax.ws.rs.core.Response.Status;
 import javax.xml.parsers.SAXParserFactory;
 
 import static javax.ws.rs.core.HttpHeaders.ACCEPT;
@@ -83,10 +85,15 @@ import static javax.ws.rs.core.Response.Status.*;
 
 import org.openrdf.model.Literal;
 import org.openrdf.model.Value;
+import org.openrdf.model.ValueFactory;
 import org.openrdf.model.vocabulary.RDFS;
 import org.openrdf.query.BindingSet;
+import org.openrdf.query.MalformedQueryException;
 import org.openrdf.query.TupleQueryResultHandlerBase;
+import org.openrdf.query.Update;
+import org.openrdf.query.UpdateExecutionException;
 import org.openrdf.repository.RepositoryConnection;
+import org.openrdf.repository.RepositoryException;
 import org.xml.sax.InputSource;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
@@ -97,6 +104,8 @@ import com.google.gson.JsonObject;
 import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.FormDataParam;
 
+import org.codehaus.jettison.json.JSONArray;
+import org.codehaus.jettison.json.JSONException;
 import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.FileStore;
@@ -132,6 +141,7 @@ import org.datalift.fwk.rdf.RdfFormat;
 import org.datalift.fwk.rdf.RdfNamespace;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
+import org.datalift.fwk.security.SecurityContext;
 import org.datalift.fwk.sparql.SparqlEndpoint;
 import org.datalift.fwk.util.CloseableIterator;
 import org.datalift.fwk.util.UriBuilder;
@@ -147,6 +157,7 @@ import static org.datalift.fwk.MediaTypes.*;
 import static org.datalift.fwk.project.SparqlSource.*;
 import static org.datalift.fwk.util.PrimitiveUtils.wrap;
 import static org.datalift.fwk.util.StringUtils.*;
+import static org.openrdf.query.QueryLanguage.SPARQL;
 
 
 /**
@@ -298,7 +309,25 @@ public class Workspace extends BaseModule
     public Response displayIndexPage() throws WebApplicationException {
         Response response = null;
         try {
-            response = this.displayIndexPage(Response.ok(), null).build();
+        	//TODO
+        	Collection<Project> projects = this.projectManager.listProjects();
+            TemplateModel view = this.newView("workspaceHomePage.vm", null);
+            view.put("projects", projects);
+            Iterator<Project> i = projects.iterator();
+            Map<URI,String> projectLicenses = new HashMap<URI,String>();
+            while(i.hasNext()) {
+            	Project p = i.next();
+            	License l = licenses.get(p.getLicense());
+                if (l == null) {
+                    l = new License(p.getLicense(), null);  // Unknown license.
+                }
+            	if ( projectLicenses.get(p.getLicense()) == null ) {
+            		projectLicenses.put(p.getLicense(), l.getLabel());
+            	}
+            }
+            view.put("licenses", projectLicenses);
+            return Response.ok(view, TEXT_HTML_UTF8).build();
+//            response = this.displayIndexPage(Response.ok(), null).build();
         }
         catch (Exception e) {
             this.handleInternalError(e, null);
@@ -2074,21 +2103,62 @@ public class Workspace extends BaseModule
         return response;
     }
 
-    @GET
+    @POST
     @Path("{id}/source/delete")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
     public Response deleteSource(@PathParam("id") String projectId,
-                                 @QueryParam("uri") URI srcUri,
+//                                 @QueryParam("uri") URI srcUri,
+                                 String json,
                                  @Context UriInfo uriInfo)
-                                                throws WebApplicationException {
-        Response response = null;
-        try {
-            log.debug("Processing source deletion request for {}", srcUri);
-            // Retrieve source.
-            // As we can't infer the source type (CSV, SPARQL...), we have
-            // to load the whole project and search it using its URI.
-            URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
-            Project p = this.loadProject(projectUri);
+                                                throws WebApplicationException, JSONException {
+//        Response response = null;
+//        try {
+//            log.debug("Processing source deletion request for {}", srcUri);
+//            // Retrieve source.
+//            // As we can't infer the source type (CSV, SPARQL...), we have
+//            // to load the whole project and search it using its URI.
+//            URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
+//            Project p = this.loadProject(projectUri);
+//            // Search for requested source in project.
+//            Source s = p.getSource(srcUri);
+//            if (s == null) {
+//                // Not found.
+//                this.sendError(NOT_FOUND, srcUri.toString());
+//            }
+//            // Delete source.
+//            this.projectManager.delete(s);
+//            // Notify user of successful update, redirecting HTML clients
+//            // (browsers) to the source tab of the project page.
+//            response = this.redirect(p, ProjectTab.Sources).build();
+//
+//            log.info("Source \"{}\" deleted", srcUri);
+//        }
+//        catch (Exception e) {
+//            this.handleInternalError(e, "Failed to delete source {}", srcUri);
+//        }
+    	//TODO
+    	Response response = null;
+    	// Retrieve source.
+    	// As we can't infer the source type (CSV, SPARQL...), we have
+    	// to load the whole project and search it using its URI.
+    	URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
+    	Project p = this.loadProject(projectUri);
+    	// Notify user of successful update, redirecting HTML clients
+    	// (browsers) to the source tab of the project page.
+    	response = this.redirect(p, ProjectTab.Sources).build();
+    	JSONArray ja = new JSONArray(json);
+    	int i = 0;
+        while ( i < ja.length() ) {
+        	log.debug("Processing source deletion request for {}", ja.get(i).toString());
+        	this.deleteSource(p, URI.create(ja.get(i).toString()));
+        	i++;
+        }
+        return response;
+    }
+    
+    private void deleteSource(Project p, URI srcUri) {
+    	try {
             // Search for requested source in project.
             Source s = p.getSource(srcUri);
             if (s == null) {
@@ -2097,16 +2167,12 @@ public class Workspace extends BaseModule
             }
             // Delete source.
             this.projectManager.delete(s);
-            // Notify user of successful update, redirecting HTML clients
-            // (browsers) to the source tab of the project page.
-            response = this.redirect(p, ProjectTab.Sources).build();
 
             log.info("Source \"{}\" deleted", srcUri);
         }
         catch (Exception e) {
             this.handleInternalError(e, "Failed to delete source {}", srcUri);
         }
-        return response;
     }
 
     @GET
@@ -2274,19 +2340,56 @@ public class Workspace extends BaseModule
         return response;
     }
 
-    @GET
-    @Path("{id}/ontology/{ontologyTitle}/delete")
+    @POST
+//    @Path("{id}/ontology/{ontologyTitle}/delete")
+    @Path("{id}/ontology/delete")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
     public Response deleteOntology(
                             @PathParam("id") String projectId,
-                            @PathParam("ontologyTitle") String ontologyTitle,
+//                            @PathParam("ontologyTitle") String ontologyTitle,
+                            String json,
                             @Context UriInfo uriInfo)
-                                                throws WebApplicationException {
-        Response response = null;
-        try {
+                                                throws WebApplicationException, JSONException {
+//        Response response = null;
+//        try {
+//            // Retrieve ontology.
+//            URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
+//            Project p = this.loadProject(projectUri);
+//            Ontology o = p.getOntology(ontologyTitle);
+//            if (o == null) {
+//                // Not found.
+//                this.sendError(NOT_FOUND, ontologyTitle);
+//            }
+//            // Delete ontology.
+//            this.projectManager.deleteOntology(p, o);
+//            // Notify user of successful update, redirecting HTML clients
+//            // (browsers) to the ontology tab of the project page.
+//            response = this.redirect(p, ProjectTab.Ontologies).build();
+//        }
+//        catch (Exception e) {
+//            this.handleInternalError(e, "Failed to delete ontology \"{}\"",
+//                                        ontologyTitle);
+//        }
+//        return response;
+    	//TODO
+    	Response response = null;
+    	URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
+    	Project p = this.loadProject(projectUri);
+    	response = this.redirect(p, ProjectTab.Ontologies).build();
+    	JSONArray ja = new JSONArray(json);
+    	int i = 0;
+        while ( i < ja.length() ) {
+        	log.debug("Processing ontology deletion request for {}", ja.get(i).toString());
+        	this.deleteOntology(p, ja.get(i).toString());
+        	i++;
+        }
+        return response;
+    }
+    
+    private void deleteOntology(Project p, String ontologyTitle) {
+    	try {
             // Retrieve ontology.
-            URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
-            Project p = this.loadProject(projectUri);
             Ontology o = p.getOntology(ontologyTitle);
             if (o == null) {
                 // Not found.
@@ -2296,13 +2399,11 @@ public class Workspace extends BaseModule
             this.projectManager.deleteOntology(p, o);
             // Notify user of successful update, redirecting HTML clients
             // (browsers) to the ontology tab of the project page.
-            response = this.redirect(p, ProjectTab.Ontologies).build();
         }
         catch (Exception e) {
             this.handleInternalError(e, "Failed to delete ontology \"{}\"",
                                         ontologyTitle);
         }
-        return response;
     }
 
     /**
@@ -2917,6 +3018,95 @@ public class Workspace extends BaseModule
                             "ws.internal.error", e, e.getLocalizedMessage());
             }
             this.sendError(INTERNAL_SERVER_ERROR, error.getLocalizedMessage());
+        }
+    }
+
+    /**
+     * <i>[Resource method]</i> Show list of 
+     * public repositories on the workspace
+     */
+    @GET
+    @Path("published-repos")
+    @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
+    public Response publishedSources() {
+        Response response = null;
+        TemplateModel view = this.newView("publishedRepos.vm", null);
+        view.put("repositories", Configuration.getDefault().getRepositories(true).iterator());
+        view.put("size", Configuration.getDefault().getRepositories(true).size());
+        response = Response.ok(view, TEXT_HTML).build();
+        return response;
+    }
+    
+    /**
+     * <i>[Resource method]</i> Show list of 
+     * graph on the public repository on the workspace
+     *
+     * @param repository : name of public repository
+     */
+    @GET
+    @Path("published")
+    @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
+    public Response publishedSource(@QueryParam("repository") String repository) {
+        Response response = null;
+        TemplateModel view = this.newView("publishedSources.vm", null);
+        view.put("repository", repository);
+        response = Response.ok(view, TEXT_HTML).build();
+        return response;
+    }
+    
+    /**
+     * <i>[Resource method]</i> receive Json Array
+     * string containing the list of graph URIs.
+     *
+     * @param json Json Array of graph URIs
+     */
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Path("published")
+    @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
+    public Response deleteSource(String json, 
+    		@QueryParam("repo") String repository) throws RepositoryException {
+        String delete_query = "delete { graph ?g { ?s ?p ?o } } where { graph ?g { ?s ?p ?o } }";
+        try {
+			this.deletePublishedSources(json, delete_query, repository);
+		} catch (JSONException e) {}
+        return Response.ok().status(Status.NO_CONTENT).build();
+    }
+    
+    /**
+     * Delete published graph
+     * 
+     * @param json           Json Array
+     * @param delete_query   SPARQL UPDATE query
+     * @param repository     public repository destination
+     * 
+     * @throws JSONException
+     * @throws RepositoryException
+     */
+    private void deletePublishedSources(String json, 
+    		String delete_query, String repository) 
+    		throws JSONException, RepositoryException {
+    	RepositoryConnection cnx = Configuration.getDefault()
+    			.getRepository(repository).newConnection();
+    	JSONArray ja = new JSONArray(json);
+    	int i = 0;
+        while ( i < ja.length() ) {
+        	try {
+    			Update upd = cnx.prepareUpdate(SPARQL, delete_query);
+    			ValueFactory vf = cnx.getValueFactory();
+    	        upd.setBinding("g", vf.createURI(ja.get(i).toString()));
+    	        try {
+    				upd.execute();
+    				upd = null;
+    			} catch (UpdateExecutionException e) {
+    				e.printStackTrace();
+    			}
+    		} catch (RepositoryException | MalformedQueryException e) {
+    			e.printStackTrace();
+    		} finally {
+    			cnx.close();
+    		}
+        	i++;
         }
     }
 }

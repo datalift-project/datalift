@@ -1,0 +1,36 @@
+.project {
+	width: 30%;
+	display: inline-block;
+	border: 1px solid #a6c9e2;
+	margin: 5px;
+}
+.project-button {
+	width: 100%;
+	display: inline-block !important;
+	margin: 5px auto;
+	border: 1px solid #a6c9e2;
+}
+.projectInfo h2{
+	color: #2e6e9e;
+	font-family: 'Roboto', sans-serif;
+	font-size: 24px;
+	font-weight: 700;
+}
+.projectInfo p{
+	font-family: 'Roboto', sans-serif;
+	font-size: 14px;
+	font-weight: 400;
+	color: #696763;
+}
+.projectInfo{
+	position:relative;
+}
+.single-project {
+	position: relative;
+	margin: 10px;
+}
+.add {
+	margin: auto;
+	width: 128px;
+	display: block;
+}

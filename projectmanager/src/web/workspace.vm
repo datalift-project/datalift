@@ -26,18 +26,9 @@
 #else
 	<h3 class="ui-widget-header dl-widget-header">#i18n("workspace.title")</h3>
 #end
-	<div id="projects_panel" class="ui-widget-content">
-		<div id="project_scroll">
-			<h3 class="ui-widget-header dl-widget-header">#i18n("project.title.available")</h3>
-#foreach( $item in $it )
-			<a class="ui-state-default dl-project-button" onclick="makeFocus(this);" href="${item.uri}">$!esc.html($item.title)</a><br />
-#end
 
-		</div>
-			<a href="${baseUri}/project/add" id="add_project" class="button">#i18n("project.title.new_project")</a>
-	</div>
-
-	<div id="workspace-main-panel" class="ui-widget-content">
+	<!-- <div id="workspace-main-panel" class="ui-widget-content"> -->
+	<div class="ui-widget-content dl-main-panel">
 #if( $current )
 		<div id="tabs" style="margin:0;">
 			<ul>
@@ -116,20 +107,20 @@
 		var currentForm;
 		$("#delete").click(function() {
 			$("#dialog-confirm").dialog({
-            			resizable: false,
-            			modal: true,
-            			autoOpen: false,
+				resizable: false,
+				modal: true,
+				autoOpen: false,
 				title: "#i18n('source.dialog.dialog_box.title')",
-            			buttons: {
-                			'#i18n("source.dialog.confirmation_button")': function() {
-                    				currentForm.submit();
+				buttons: {
+					'#i18n("source.dialog.confirmation_button")': function() {
+						currentForm.submit();
 						$(this).dialog('close');
-                			},
-                			'#i18n("source.dialog.cancel_button")': function() {
-                 				$(this).dialog('close');
-      					}
-            			}
-        		});
+					},
+					'#i18n("source.dialog.cancel_button")': function() {
+						$(this).dialog('close');
+					}
+				}
+			});
 			currentForm = $(this).closest('form');
 			$("#dialog-confirm").text("#i18n("source.dialog.dialog_box.project_text")");
 			$("#dialog-confirm").dialog('open');
@@ -160,10 +151,10 @@
 			$("#selectable_ontologies").setGridWidth($("#tabs").width() - 30);
 		}).trigger('resize');
 
-		$(".delete").click(function(e) {
-			e.preventDefault();
-			alert("test click");
-		});
+		// $(".delete").click(function(e) {
+			// e.preventDefault();
+			// alert("test click");
+		// });
 	});
 
 	function makeFocus(projectUrl) {
@@ -210,7 +201,9 @@
 			caption: "",
 			rowNum:10, rowList:[10,20,30], pager: '#selectable_sources_toolbar',
 			gridview: true,
-			height: 250
+			multiselect: true,
+			multiboxonly: true,
+			height: 500
 		});
 
 		var mydata = [
@@ -274,6 +267,11 @@
 			onClickButton:function(){
 				var id = jQuery("#selectable_sources").getGridParam('selrow');
 				if (id) {
+					var ids = jQuery("#selectable_sources").jqGrid('getGridParam','selarrrow');
+					if (ids.length > 1) {
+						alert("#i18n('source.dialog.dialog_box.error_text')");
+						throw "#i18n('source.dialog.dialog_box.error_text')";
+					}
 					var ret = jQuery("#selectable_sources").getRowData(id);
 					window.location = currentProject + "/source/modify?uri=" + encodeURIComponent(ret.uri);
 				}
@@ -287,25 +285,71 @@
 			caption:"",
 			buttonicon:"ui-icon-trash",
 			onClickButton:function() {
+				var grid = jQuery("#selectable_sources");
+				var ids = grid.jqGrid('getGridParam','selarrrow');
+				var uris = [];
+				if (ids.length > 0) {
+					$("#dialog-confirm").dialog({
+						resizable: false,
+						modal: true,
+						autoOpen: true,
+						title: "#i18n('source.dialog.dialog_box.title')",
+						buttons: {
+							'Yes': function() {
+								$(this).dialog('close');
+								for( var i=0; i < ids.length; i++) {
+									var uri = jQuery("#selectable_sources").jqGrid("getCell", ids[i], "uri");
+									uris.push(uri);
+								}
+								$.ajax({
+									url: currentProject + "/source/delete",
+									type: 'post',
+									data: JSON.stringify(uris),
+									contentType: 'application/json; charset=utf-8',
+									dataType: 'json',
+									async: false,
+									success: function(response, status){
+										location.reload(true);
+									}
+								});
+							},
+							'No': function() {
+								$(this).dialog('close');
+							}
+						}
+					});
+				} else {
+					alert('#i18n("project.msg.select_row")');
+				}
+			}
+		}).navButtonAdd(
+			'#selectable_sources_toolbar',
+			{
+			caption:"",
+			buttonicon:"ui-icon-copy",
+			onClickButton:function(){
 				var id = jQuery("#selectable_sources").getGridParam('selrow');
 				if (id) {
-					$("#dialog-confirm").dialog({
-            					resizable: false,
-            					modal: true,
-            					autoOpen: true,
-						title: "#i18n('source.dialog.dialog_box.title')",
-            					buttons: {
-                					'#i18n("source.dialog.confirmation_button")': function() {
-                    						$(this).dialog('close');
-                    						var ret = jQuery("#selectable_sources").getRowData(id);
-								window.location = currentProject + "/source/delete?uri=" + encodeURIComponent(ret.uri);
-                					},
-                					'#i18n("source.dialog.cancel_button")': function() {
-                    						$(this).dialog('close');
-                					}
-            					}
-        				});
-        			}
+					var ids = jQuery("#selectable_sources").jqGrid('getGridParam','selarrrow');
+					if (ids.length > 1) {
+						alert("#i18n('source.dialog.dialog_box.error_text')");
+						throw "#i18n('source.dialog.dialog_box.error_text')";
+					}
+					var ret = jQuery("#selectable_sources").getRowData(id);
+					var prefixName = ret.uri.replace(currentProject + '/source/','');
+					var prefixUri = ret.uri.replace(/-[0-9]{1,}/g, '');
+					prefixUri = prefixUri.replace('/source','');
+					prefixUri = prefixUri.replace('/project','');
+					var prefix = "prefix " + prefixName + ": <" + prefixUri + "#>";
+					var range = document.createRange();
+					var selection = window.getSelection();
+					range = selection.getRangeAt(0);
+					range.insertNode( document.createTextNode(prefix) );
+					console.log(range.toString());
+					selection.removeAllRanges();
+					selection.addRange(range);
+					document.execCommand ("copy", false, null);
+				}
 				else {
 					alert('#i18n("project.msg.select_row")');
 				}
@@ -331,7 +375,9 @@
 			rowList: [10,20,30],
 			pager: '#selectable_ontologies_toolbar',
 			gridview: true,
-			height: 250
+			multiselect: true,
+			multiboxonly: true,
+			height: 500
 		});
 
 		var mydataOntology = [
@@ -365,6 +411,11 @@
 				onClickButton:function(){
 					var id = jQuery("#selectable_ontologies").getGridParam('selrow');
 					if(id){
+						var ids = jQuery("#selectable_ontologies").jqGrid('getGridParam','selarrrow');
+						if (ids.length > 1) {
+							alert("#i18n('ontology.dialog.dialog_box.error_text')");
+							throw "#i18n('ontology.dialog.dialog_box.error_text')";
+						}
 						var ret = jQuery("#selectable_ontologies").getRowData(id);
 						window.location = currentProject + "/ontology/"+ret.title+"/modify";
 					} else {
@@ -377,12 +428,26 @@
 			caption:"",
 			buttonicon:"ui-icon-trash",
 			onClickButton:function() {
-				var id = jQuery("#selectable_ontologies").getGridParam('selrow');
-				if (id) {
-					var ret = jQuery("#selectable_ontologies").getRowData(id);
-					window.location = currentProject + "/ontology/"+ret.title+"/delete";
-				}
-				else {
+				var grid = jQuery("#selectable_ontologies");
+				var titles = [];
+				var ids = grid.jqGrid('getGridParam','selarrrow');
+				if (ids.length > 0) {
+					for( var i=0; i < ids.length; i++) {
+						var title = grid.jqGrid("getCell", ids[i], "title");
+						titles.push(title);
+					}
+					$.ajax({
+						url: currentProject + "/ontology/delete",
+						type: 'post',
+						data: JSON.stringify(titles),
+						contentType: 'application/json; charset=utf-8',
+						dataType: 'json',
+						async: false,
+						success: function(response, status){
+							location.reload(true);
+						}
+					});
+				} else {
 					alert('#i18n("project.msg.select_row")');
 				}
 			}

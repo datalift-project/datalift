@@ -1,0 +1,83 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+#load("project/resources")
+#load_core_resources
+	<title>#i18n("workspace.title") - DataLift</title>
+#css_links
+	<link href="${baseUri}/project/static/css/project.css" rel="stylesheet"/>
+</head>
+<body>
+#banner
+	<div id="main-menu" style="position:absolute;top:15px;right:15px;">
+		<a href="${baseUri}/project/published-repos" class="button">#i18n("workspace.externalSources")</a>
+#foreach( $m in $mainMenu )
+#set( $entryUrl = $m.getUrl(${baseUri}) )
+#if( $m.method.name() == "GET" )
+		<a href="${entryUrl}" class="button">${m.label}</a>
+#else
+		<form method="post" action="${entryUrl}"><input type="submit" class="button" value="${m.label}"/></form>
+#end
+#end
+	</div>
+
+<!-- new project button -->
+<div class="btn-chat" id="livechat-compact-container" style="visibility: visible; opacity: 1;">
+	<div class="btn-holder">
+		<a href="${baseUri}/project/add" id="link">#i18n("project.title.new_project")</a>
+	</div>
+</div>
+<!-- /new project button -->
+<div id="workspace" class="ui-widget-content" style="min-height:200px;">
+	<h3 class="ui-widget-header dl-widget-header">#i18n("workspace.title")</h3>
+	<section>
+		<div>
+			<div><!--projects-->
+#foreach( $project in $projects )
+				<div class="project">
+					<div class="single-project">
+						<div class="projectInfo">
+							<h2>
+								<a href="$!esc.html($project.getUri())">$!esc.html($project.getTitle())</a>
+							</h2>
+							<p>#i18n("project.description"): $!esc.html($project.description)</p> 
+							<p>
+								#i18n("project.license"): 
+								<a href="$!esc.html($project.getLicense())">$!esc.html($licenses.get($project.getLicense()))</a>
+							</p>
+							<p>#i18n("project.modification_s") $!esc.html($project.modificationDate)</p>
+							<p>#i18n("project.creation_s") $!esc.html($project.creationDate) #i18n("project.owner_s") $!esc.html($project.getOwner())</p>
+						</div>
+					</div>
+				</div>
+#end
+			</div>
+			<!--<div>
+				<div class="project-button">
+					<div class="single-project">
+						<div class="projectInfo">
+							<a href="${baseUri}/project/add">
+								<img src="${baseUri}/project/static/images/add.png"
+								class="add"
+								title="#i18n("project.title.new_project")"/>
+							</a>
+						</div>
+					</div>
+				</div>
+			</div>-->
+			<!--projects-->
+		</div>
+	</section>
+</div>
+#footer
+
+#script_links
+<script type="text/javascript">
+	$(function() {
+		$("#main-menu .button").button();
+		$("input:submit, .button").button();
+	});
+</script>
+</body>
+</html>

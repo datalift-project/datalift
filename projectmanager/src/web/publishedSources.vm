@@ -1,0 +1,145 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+#load("project/resources")
+#load_core_resources
+	<title>#i18n("workspace.title") - DataLift</title>
+#css_links
+</head>
+<body>
+#banner
+	<div id="main-menu" style="position:absolute;top:15px;right:15px;">
+#foreach( $m in $mainMenu )
+#set( $entryUrl = $m.getUrl(${baseUri}) )
+#if( $m.method.name() == "GET" )
+		<a href="${entryUrl}" class="button">${m.label}</a>
+#else
+		<form method="post" action="${entryUrl}"><input type="submit" class="button" value="${m.label}"/></form>
+#end
+#end
+	</div>
+
+<div id="workspace" class="ui-widget-content">
+	<h3 class="ui-widget-header dl-widget-header">#i18n("workspace.externalSources")</h3>
+	<div id="source">
+		<form class="grid_form">
+			<table id="selectable_sources">
+				<tr><td/></tr>
+			</table>
+			<div id="selectable_sources_toolbar"></div>
+		</form>
+	</div>
+	<div style="display:none;">
+		<div id="dialog-confirm" title="#i18n('source.dialog.dialog_box.title')">
+			<p>#i18n("source.dialog.dialog_box.source_text")</p>
+		</div>
+	</div>
+</div>
+#footer
+
+#script_links
+<script type="text/javascript">
+	$(function() {
+		$("#main-menu .button").button();
+		$("input:submit, .button").button();
+		loadGridSources();
+		$(window).bind('resize', function() {
+			$("#selectable_sources").setGridWidth($("#tabs").width() - 30);
+		}).trigger('resize');
+	});
+
+	function loadGridSources() {
+		/* Sources */
+		jQuery("#selectable_sources").jqGrid({
+			datatype: "local",
+			colNames:['#i18n("project.p_uri")','$repository'],
+			colModel:[
+				{name:'uri',   index:'uri',   sorttype:"text"},
+				{name:'title', index:'title', sorttype:"text"}
+			],
+			caption: "",
+			rowNum:10, rowList:[10,20,30], pager: '#selectable_sources_toolbar',
+			gridview: true,
+			multiselect: true,
+			multiboxonly: true,
+			height: 450
+		});
+
+## --------- get published sources ---------##
+#set( $sourcesSelect = "
+SELECT DISTINCT ?graph WHERE {
+  GRAPH ?graph {
+    ?s ?p ?o .
+  }
+}" )
+#set( $sources = $sparql.select($sourcesSelect) )
+		
+		var mydata = [
+#if( $sources.hasNext() )
+	#foreach($s in $sources)
+		{
+			uri:   "$!{esc.javascript(${s['graph'].stringValue()})}",
+			title: "$!{esc.javascript(${s['graph'].stringValue()})}",
+		},
+	#end
+#end
+		];
+
+		for(var i=0;i<=mydata.length;i++) {
+			jQuery("#selectable_sources").jqGrid('addRowData',i+1,mydata[i]);
+		}
+		
+		jQuery("#selectable_sources").jqGrid('navGrid', '#selectable_sources_toolbar',
+			{edit:false,add:false,del:false, refresh:false, search:false})
+		.navButtonAdd(
+			'#selectable_sources_toolbar',
+			{
+			caption:"",
+			buttonicon:"ui-icon-trash",
+			onClickButton:function() {
+				var grid = jQuery("#selectable_sources");
+				var ids = grid.jqGrid('getGridParam','selarrrow');
+				var uris = [];
+				if (ids.length > 0) {
+					$("#dialog-confirm").dialog({
+						resizable: false,
+						modal: true,
+						autoOpen: true,
+						title: "#i18n('source.dialog.dialog_box.title')",
+						buttons: {
+							'Yes': function() {
+								$(this).dialog('close');
+								for( var i=0; i < ids.length; i++) {
+									var uri = jQuery("#selectable_sources").jqGrid("getCell", ids[i], "uri");
+									uris.push(uri);
+								}
+								$.ajax({
+									url: "${baseUri}/project/published?repo=$repository",
+									type: 'post',
+									data: JSON.stringify(uris),
+									contentType: 'application/json; charset=utf-8',
+									dataType: 'json',
+									async: false,
+									success: function(response, status){
+										window.location = "${baseUri}/project/published?repository=$repository";
+									}
+								});
+							},
+							'No': function() {
+								$(this).dialog('close');
+							}
+						}
+					});
+				} else {
+					alert('#i18n("project.msg.select_row")');
+				}
+			}
+		});
+
+		jQuery("#selectable_sources").jqGrid('hideCol',["uri"]);
+		jQuery("#selectable_sources").setGridWidth($("#source").width() - 2);
+	}
+</script>
+</body>
+</html>
