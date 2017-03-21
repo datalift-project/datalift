@@ -4,75 +4,88 @@
 function execute(data){
 	(function(){
 		var WKT = []; // Array contains lists of all WKT polygons extrated from SPARQL request
+		var labels = []; // Array contains lists of all labels polygons extrated from SPARQL request
 		var colorSelect = "#4ff7f7";
-		var raster = new ol.layer.Tile({
-						source: new ol.source.OSM()
-					});
-		var dynamicLayers = []; // Array contains all dynamics layers
-		var layers = []; // Array contains all layers
-		layers[0] = raster;	//First layer the default OSM map
 		var varNames = [];
 		if(data.results.bindings.length==0) {
 			alert("no results to show");
 		} else {
 			varNames = data.head.vars;
 			$.each(data.results.bindings, function(key, val) {	
-				WKT.push(val['poly']['value']);
+				WKT.push(val[varNames[0]]['value']);
+				labels.push(val[varNames[1]]['value']);
 			});
 		}
-
-		// Define default style for polygons
-		var style = new ol.style.Style({ 
-			fill: new ol.style.Fill({
-				color: colorSelect+"",
-			}),
-			stroke: new ol.style.Stroke({
-				width: 5,
-				color: "#0094ff"
-			})
-		});
-
-		//Iterate dynamicly in all present polygons
-		$.each(WKT,function(index,value){
-			var feature = transformOP(value);
-			var vector = createVector(feature, style);
-			//on ajoute chaque couche de polygones dans le tableau des couches
-			dynamicLayers.push(vector);
-			layers.push(vector);
-		});
 		
 		// Map configuration
-		var map = new ol.Map({
-			layers: layers,
-			target: 'map',
-			view: new ol.View({
-				center: ol.proj.transform([0,0],'EPSG:4326','EPSG:3857'),
-			zoom:4 
-			})
+		var map = L.map('map').setView([0, 0], 10);
+		// Add map box tile
+		L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
+			attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
+			maxZoom: 18,
+			id: 'dlift.b4e0fe33',
+			accessToken: 'pk.eyJ1IjoiZGxpZnQiLCJhIjoiMGRhOTQyM2NmNjkyN2E5ZDliYjdlYjhmZjk0MmRkMzQifQ.Jr2TI6X6zPRjpQAsYhX_PQ'
+		}).addTo(map);
+		
+		//Create feature group
+		var fGroup = new L.featureGroup();
+		//Iterate dynamicly in all present polygons
+		$.each(WKT,function(index,value){
+			var feature = transformToGeoJson(value, fGroup, map);
+			feature.bindPopup(labels[index]);
 		});
-		// center the map in the existing vector
-		var extent = ol.extent.createEmpty();
-		dynamicLayers.forEach(function(layer) {
-			ol.extent.extend(extent, layer.getSource().getExtent());
-		});
-		map.getView().fitExtent(extent, map.getSize());
-		//Function to transformate WKT geometries to the good referentiel
-		function transformOP(WKT) {
-			var format = new ol.format.WKT();
-			var feature = format.readFeature(WKT);
-			feature.getGeometry().transform('EPSG:4326', 'EPSG:3857');
-			return feature;
-		}
-		//Function to create vector for each polygon
-		function createVector(feature, style){
-			var vector = new ol.layer.Vector({
-				style:style,
-				source: new ol.source.Vector({
-					features: [feature] 
-				})
-			});
-			vector.setOpacity(0.5);
-			return vector;
+		fGroup.addTo(map); // Add it to the map
+		
+		// bounds map on layers
+		map.fitBounds(fGroup.getBounds(), {padding: [0,0]});
+		//Function to transformate WKT geometries to GeoJson
+		function transformToGeoJson(WKT, fGroup, map) {
+			var wkt = new Wkt.Wkt();
+			// Read wkt
+			try { // Catch any malformed WKT strings
+                wkt.read(WKT);
+            } catch (e1) {
+                try {
+                    wkt.read(WKT.replace('\n', '').replace('\r', '').replace('\t', ''));
+                } catch (e2) {
+                    if (e2.name === 'WKTError') {
+                        console.log('Could not understand the WKT string. Check that you have parentheses balanced, and try removing tabs and newline characters.');
+                        return;
+                    }
+                }
+            }
+			// Convert to object
+			var obj = wkt.toObject({
+                icon: new L.Icon({
+                    iconUrl: 'red_dot.png',
+                    iconSize: [16, 16],
+                    iconAnchor: [8, 8],
+                    shadowUrl: 'dot_shadow.png',
+                    shadowSize: [16, 16],
+                    shadowAnchor: [8, 8]
+                }),
+                editable: true,
+                color: '#AA0000',
+                weight: 3,
+                opacity: 1.0,
+                editable: true,
+                fillColor: '#AA0000',
+                fillOpacity: 0.2
+            });
+			
+			// Draw geometries
+            if (Wkt.isArray(obj)) { // Distinguish multigeometries (Arrays) from objects
+                for (i in obj) {
+                    if (obj.hasOwnProperty(i) && !Wkt.isArray(obj[i])) {
+						obj[i].addTo(map);
+						fGroup.addLayer(obj[i]);
+                    }
+                }
+            } else {
+				obj.addTo(map);
+				fGroup.addLayer(obj);
+            }
+			return obj;
 		}
 	})();
 }

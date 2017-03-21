@@ -408,6 +408,9 @@
 	<script language="javascript" src="${baseUri}/sparql/viz/js/executeContextMenu.js"></script>
 	<!-- Library Leaflet javascript -->
 	<script language="javascript" src="${baseUri}/sparql/viz/js/leaflet/leaflet.js"></script>
+	<!-- Library Wicket (transorm WKT) javascript -->
+	<script language="javascript" src="${baseUri}/sparql/viz/js/wicket/wicket.js"></script>
+	<script language="javascript" src="${baseUri}/sparql/viz/js/wicket/wicket-leaflet.js"></script>
 	<!-- Library codemirror javascript -->
 	<script language="javascript" src="${baseUri}/sparql/viz/js/codeMirror/codemirror.js"></script>
 	<script language="javascript" src="${baseUri}/sparql/viz/js/codeMirror/matchbrackets.js"></script>
@@ -1169,9 +1172,10 @@
 			q = q.split("limit");
 			qq = q[0].split("LIMIT");
 			qq[0] = qq[0] + " limit 1";
+			// add limit after # Datalift version ......
 			$.ajax({
 				url : '${baseUri}/sparql',
-				type : 'GET',
+				type : 'post',
 				data : {
 					'default-graph-uri' : sel,
 					'query' : q[0], /////////////////////////////////////////////////---------------------------------------------to resee --------------------///////////////////////
@@ -1182,8 +1186,11 @@
 					//alert("#i18n("sparql.endpoint.alert.message4")");
 				},
 				success : function(json, status){
-					nVars = json.head.vars.length;
-					$("#nVars").val(nVars);
+					try {
+						$("#nVars").val(json.head.vars.length);
+					} catch(e) {
+						$("#nVars").val(0);
+					}
 				},
 			});
 

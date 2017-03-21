@@ -4084,7 +4084,8 @@
                                             pointRadius: 2,
                                             //pointerEvents: "visiblePainted",
 
-                                            label : "${name}",
+                                            label : "",
+                                            //label : "${name}",
                                             fontSize: "10px",
                                             fontFamily: "Arial",
                                             labelAlign: "l",
@@ -4138,6 +4139,8 @@
                     wktFeature = addWKT(resultLayer, data.getValue(r, 0));
 
                     // add Label
+					console.log(wktFeature[0]);
+					console.log(wktFeature[0].geometry.getCentroid());
                     labelFeature = new OpenLayers.Feature.Vector(wktFeature[0].geometry.getCentroid());
 
                     labelFeature.attributes.name =
@@ -4164,6 +4167,7 @@
             {
                 'google.maps.Map': 'google.maps.Map',
                 'OpenLayers': '//cdnjs.cloudflare.com/ajax/libs/openlayers/2.12/OpenLayers.min.js'
+                // 'OpenLayers': 'openLayers2.12.min.js'
                 //'GDouglasPeucker': 'http://www.bdcc.co.uk/Gmaps/GDouglasPeuker.js',
                 //'Proj4js': 'http://localhost/sgvizler/trunk/lib/proj4js-compressed.js'
             }
