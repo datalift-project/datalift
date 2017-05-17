@@ -73,7 +73,7 @@ SELECT DISTINCT ?graph WHERE {
     ?s ?p ?o .
   }
 }" )
-#set( $sources = $sparql.select($sourcesSelect) )
+#set( $sources = $sparql.select($repository, $sourcesSelect) )
 		
 		var mydata = [
 #if( $sources.hasNext() )

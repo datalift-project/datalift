@@ -106,6 +106,7 @@ import com.sun.jersey.multipart.FormDataParam;
 
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
+import org.datalift.core.velocity.sparql.SparqlTool;
 import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.FileStore;
