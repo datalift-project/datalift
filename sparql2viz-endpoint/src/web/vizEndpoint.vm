@@ -100,6 +100,8 @@
 				<div style="height:30px;float:left;margin:auto;">
 				</div>
 				<div style="height:30px;float:right;margin:auto;">
+					<input type="button" onclick="window.open('http://prefix.cc','popUpWindow','height=400,width=600,left=10,top=10,,scrollbars=yes,menubar=no'); return false;"
+					id="prefix" class="button" style="background-image:url('${baseUri}/sparql/viz/images/icons/more.png');background-repeat:no-repeat;margin:2px;width:40px;height:40px;" title="prefix.cc"/>
 					<input type="button" id="delete" class="button" style="background-image:url('${baseUri}/sparql/viz/images/icons/delete.png');background-repeat:no-repeat;margin:2px;width:40px;height:40px;" title="#i18n("sparql.endpoint.delete")"/>
 					<span id="dialog1"></span>
 					<input type="button" id="predef" class="button" style="background-image:url('${baseUri}/sparql/viz/images/icons/list.png');background-repeat:no-repeat;margin:2px;width:40px;height:40px;" title="#i18n("sparql.predef.queries")"/>
