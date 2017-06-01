@@ -23,31 +23,56 @@
 	</div>
 
 <!-- new project button -->
-<div class="btn-chat" id="livechat-compact-container" style="visibility: visible; opacity: 1;">
+<!-- <div class="btn-chat" id="livechat-compact-container" style="visibility: visible; opacity: 1;">
 	<div class="btn-holder">
 		<a href="${baseUri}/project/add" id="link">#i18n("project.title.new_project")</a>
 	</div>
-</div>
+</div> -->
 <!-- /new project button -->
 <div id="workspace" class="ui-widget-content" style="min-height:200px;">
 	<h3 class="ui-widget-header dl-widget-header">#i18n("workspace.title")</h3>
 	<section>
 		<div>
-			<div><!--projects-->
+			<!-- new project button -->
+<div id="topButtons" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only">
+	<div id="pg_selectable_sources_toolbar" class="ui-pager-control" role="group">
+		<table cellspacing="0" cellpadding="0" border="0" class="ui-pg-table" style="width:100%;table-layout:fixed;height:100%;" role="row">
+			<tbody>
+				<tr>
+					<td id="selectable_sources_toolbar_left" align="left">
+						<table cellspacing="0" cellpadding="0" border="0" class="ui-pg-table navtable" style="float:left;table-layout:auto;">
+							<tbody>
+								<tr>
+									<td class="ui-pg-button ui-corner-all" title="#i18n("project.title.new_project")">
+										<div class="ui-pg-div">
+											<span class="ui-icon ui-icon-plus" id="pAdd"></span>
+										</div>
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+</div>
+			<div>
+			<!--projects-->
 #foreach( $project in $projects )
 				<div class="project">
 					<div class="single-project">
 						<div class="projectInfo">
-							<h2>
+							<h2 class="ui-widget-header dl-widget-header">
 								<a href="$!esc.html($project.getUri())">$!esc.html($project.getTitle())</a>
 							</h2>
-							<p>#i18n("project.description"): $!esc.html($project.description)</p> 
 							<p>
+								#i18n("project.description"): $!esc.html($project.description)<br/>
 								#i18n("project.license"): 
-								<a href="$!esc.html($project.getLicense())">$!esc.html($licenses.get($project.getLicense()))</a>
+								<a href="$!esc.html($project.getLicense())">$!esc.html($licenses.get($project.getLicense()))</a><br/>
+								#i18n("project.modification_s") $!esc.html($project.modificationDate)
+								#i18n("project.creation_s") $!esc.html($project.creationDate) #i18n("project.owner_s") $!esc.html($project.getOwner())
 							</p>
-							<p>#i18n("project.modification_s") $!esc.html($project.modificationDate)</p>
-							<p>#i18n("project.creation_s") $!esc.html($project.creationDate) #i18n("project.owner_s") $!esc.html($project.getOwner())</p>
 						</div>
 					</div>
 				</div>
@@ -77,6 +102,9 @@
 	$(function() {
 		$("#main-menu .button").button();
 		$("input:submit, .button").button();
+		$("#pAdd").click(function(){
+			window.location = "${baseUri}/project/add";
+		});
 	});
 </script>
 </body>

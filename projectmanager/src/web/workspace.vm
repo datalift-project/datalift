@@ -68,7 +68,45 @@
 			</div>
 
 			<div id="source">
-				<form class="grid_form">
+				<form class="grid_form">	
+<div id="topButtons" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only">
+<div id="pg_selectable_sources_toolbar" class="ui-pager-control" role="group">
+	<table cellspacing="0" cellpadding="0" border="0" class="ui-pg-table" style="width:100%;table-layout:fixed;height:100%;" role="row">
+		<tbody>
+			<tr>
+				<td id="selectable_sources_toolbar_left" align="left">
+					<table cellspacing="0" cellpadding="0" border="0" class="ui-pg-table navtable" style="float:left;table-layout:auto;">
+						<tbody>
+							<tr>
+								<td class="ui-pg-button ui-corner-all" title="#i18n("source.add")">
+									<div class="ui-pg-div">
+										<span class="ui-icon ui-icon-plus" id="srcAdd"></span>
+									</div>
+								</td>
+								<td class="ui-pg-button ui-corner-all" title="#i18n("source.edit")">
+									<div class="ui-pg-div">
+										<span class="ui-icon ui-icon-pencil" id="srcEdt"></span>
+									</div>
+								</td>
+								<td class="ui-pg-button ui-corner-all" title="#i18n("source.del")">
+									<div class="ui-pg-div">
+										<span class="ui-icon ui-icon-trash" id="srcRmv"></span>
+									</div>
+								</td>
+								<td class="ui-pg-button ui-corner-all" title="Copy source">
+									<div class="ui-pg-div">
+										<span class="ui-icon ui-icon-copy" id="srcCpy"></span>
+									</div>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</td>
+			</tr>
+		</tbody>
+	</table>
+</div>
+</div>
 					<table id="selectable_sources">
 						<tr><td/></tr>
 					</table>
@@ -357,6 +395,7 @@
 		});
 
 		jQuery("#selectable_sources").jqGrid('hideCol',["uri"]);
+		$("#topButtons").width($("#tabs").width() - 30);
 	}
 
 	function loadGridOntologies() {
@@ -454,6 +493,66 @@
 		});
 		jQuery("#selectable_ontologies").jqGrid('hideCol',["uri"]);
 	}
+	// Add listeners
+	$("#srcAdd").click(function(){
+		window.location = currentProject + "/srcupload";
+	});
+	$("#srcEdt").click(function(){
+		// var gr = jQuery("#selectable_sources").jqGrid('getGridParam','selrow');
+		// if( gr != null ) jQuery("#selectable_sources").jqGrid('editGridRow',gr,{height:500,reloadAfterSubmit:false});
+		// else alert("Please Select Row");
+		var id = jQuery("#selectable_sources").getGridParam('selrow');
+		if (id) {
+			var ids = jQuery("#selectable_sources").jqGrid('getGridParam','selarrrow');
+			if (ids.length > 1) {
+				alert("Please select one source.");
+				throw "Please select one source.";
+			}
+			var ret = jQuery("#selectable_sources").getRowData(id);
+			window.location = currentProject + "/source/modify?uri=" + encodeURIComponent(ret.uri);
+		}
+		else {
+			alert('Please select a source');
+		}
+	});
+	$("#srcRmv").click(function(){
+		var grid = jQuery("#selectable_sources");
+		var ids = grid.jqGrid('getGridParam','selarrrow');
+		var uris = [];
+		if (ids.length > 0) {
+			$("#dialog-confirm").dialog({
+				resizable: false,
+				modal: true,
+				autoOpen: true,
+				title: "Confirmation",
+				buttons: {
+					'Yes': function() {
+						$(this).dialog('close');
+						for( var i=0; i < ids.length; i++) {
+							var uri = jQuery("#selectable_sources").jqGrid("getCell", ids[i], "uri");
+							uris.push(uri);
+						}
+						$.ajax({
+							url: currentProject + "/source/delete",
+							type: 'post',
+							data: JSON.stringify(uris),
+							contentType: 'application/json; charset=utf-8',
+							dataType: 'json',
+							async: false,
+							success: function(response, status){
+								location.reload(true);
+							}
+						});
+					},
+					'No': function() {
+						$(this).dialog('close');
+					}
+				}
+			});
+		} else {
+			alert('Please select a source');
+		}
+	});
 </script>
 </body>
 </html>
