@@ -35,3 +35,6 @@
 	width: 128px;
 	display: block;
 }
+.inline {
+	display: inline-block !important;
+}

@@ -6,6 +6,7 @@
 #load_core_resources
 	<title>#i18n("workspace.title") - DataLift</title>
 #css_links
+	<link href="${baseUri}/project/static/css/project.css" rel="stylesheet"/>
 </head>
 <body>
 #banner
@@ -116,6 +117,74 @@
 
 			<div id="ontology">
 				<form class="grid_form">
+<div id="topButtons" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only">
+<div id="pg_selectable_ontologies_toolbar" class="ui-pager-control" role="group">
+	<table cellspacing="0" cellpadding="0" border="0" class="ui-pg-table" style="width:100%;table-layout:fixed;height:100%;" role="row">
+		<tbody>
+			<tr>
+				<td id="selectable_sources_toolbar_left" align="left">
+					<table cellspacing="0" cellpadding="0" border="0" class="ui-pg-table navtable" style="float:left;table-layout:auto;">
+						<tbody>
+							<tr>
+								<td class="ui-pg-button ui-corner-all" title="#i18n("source.add")">
+									<div class="ui-pg-div">
+										<span class="ui-icon ui-icon-plus" id="ontoAdd"></span>
+									</div>
+								</td>
+								<td class="ui-pg-button ui-corner-all" title="#i18n("source.edit")">
+									<div class="ui-pg-div">
+										<span class="ui-icon ui-icon-pencil" id="ontoEdt"></span>
+									</div>
+								</td>
+								<td class="ui-pg-button ui-corner-all" title="#i18n("source.del")">
+									<div class="ui-pg-div">
+										<span class="ui-icon ui-icon-trash" id="ontoRmv"></span>
+									</div>
+								</td>
+								<td class="ui-pg-button ui-corner-all" title="WebVOWL">
+									<div class="ui-pg-div">
+										<span id="webvowl">
+											<span class="ui-icon ui-icon-calculator inline"></span>WebVOWL
+										</span>
+									</div>
+								</td>
+								<td class="ui-pg-button ui-corner-all" title="OOPS!">
+									<div class="ui-pg-div">
+										<span id="oops">
+											<span class="ui-icon ui-icon-calculator inline"></span>OOPS!
+										</span>
+									</div>
+								</td>
+								<td class="ui-pg-button ui-corner-all" title="Vapour">
+									<div class="ui-pg-div">
+										<span id="vapour">
+											<span class="ui-icon ui-icon-calculator inline"></span>Vapour
+										</span>
+									</div>
+								</td>
+								<td class="ui-pg-button ui-corner-all" title="Parrot">
+									<div class="ui-pg-div">
+										<span id="parrot">
+											<span class="ui-icon ui-icon-calculator inline"></span>Parrot
+										</span>
+									</div>
+								</td>
+								<td class="ui-pg-button ui-corner-all" title="RDF Triple-Checker">
+									<div class="ui-pg-div">
+										<span id="rdfchecker">
+											<span class="ui-icon ui-icon-calculator inline"></span>RDF Triple-Checker
+										</span>
+									</div>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</td>
+			</tr>
+		</tbody>
+	</table>
+</div>
+</div>
 					<table id="selectable_ontologies">
 						<tr><td/></tr>
 					</table>
@@ -295,7 +364,7 @@
 			caption:"",
 			buttonicon:"ui-icon-plus",
 			onClickButton:function(){
-				window.location = currentProject + "/srcupload"
+				addSource();
 			}
 		}).navButtonAdd(
 			'#selectable_sources_toolbar',
@@ -303,19 +372,7 @@
 			caption:"",
 			buttonicon:"ui-icon-pencil",
 			onClickButton:function(){
-				var id = jQuery("#selectable_sources").getGridParam('selrow');
-				if (id) {
-					var ids = jQuery("#selectable_sources").jqGrid('getGridParam','selarrrow');
-					if (ids.length > 1) {
-						alert("#i18n('source.dialog.dialog_box.error_text')");
-						throw "#i18n('source.dialog.dialog_box.error_text')";
-					}
-					var ret = jQuery("#selectable_sources").getRowData(id);
-					window.location = currentProject + "/source/modify?uri=" + encodeURIComponent(ret.uri);
-				}
-				else {
-					alert('#i18n("project.msg.select_row")');
-				}
+				editSource();
 			}
 		}).navButtonAdd(
 			'#selectable_sources_toolbar',
@@ -323,42 +380,7 @@
 			caption:"",
 			buttonicon:"ui-icon-trash",
 			onClickButton:function() {
-				var grid = jQuery("#selectable_sources");
-				var ids = grid.jqGrid('getGridParam','selarrrow');
-				var uris = [];
-				if (ids.length > 0) {
-					$("#dialog-confirm").dialog({
-						resizable: false,
-						modal: true,
-						autoOpen: true,
-						title: "#i18n('source.dialog.dialog_box.title')",
-						buttons: {
-							'Yes': function() {
-								$(this).dialog('close');
-								for( var i=0; i < ids.length; i++) {
-									var uri = jQuery("#selectable_sources").jqGrid("getCell", ids[i], "uri");
-									uris.push(uri);
-								}
-								$.ajax({
-									url: currentProject + "/source/delete",
-									type: 'post',
-									data: JSON.stringify(uris),
-									contentType: 'application/json; charset=utf-8',
-									dataType: 'json',
-									async: false,
-									success: function(response, status){
-										location.reload(true);
-									}
-								});
-							},
-							'No': function() {
-								$(this).dialog('close');
-							}
-						}
-					});
-				} else {
-					alert('#i18n("project.msg.select_row")');
-				}
+				deleteSource();
 			}
 		}).navButtonAdd(
 			'#selectable_sources_toolbar',
@@ -442,24 +464,13 @@
 				caption:"",
 				buttonicon:"ui-icon-plus",
 				onClickButton:function() {
-					window.location = currentProject + "/ontologyupload"
+					addOntologie();
 				}
 			}).navButtonAdd('#selectable_ontologies_toolbar',
 				{caption:"",
 				buttonicon:"ui-icon-pencil",
 				onClickButton:function(){
-					var id = jQuery("#selectable_ontologies").getGridParam('selrow');
-					if(id){
-						var ids = jQuery("#selectable_ontologies").jqGrid('getGridParam','selarrrow');
-						if (ids.length > 1) {
-							alert("#i18n('ontology.dialog.dialog_box.error_text')");
-							throw "#i18n('ontology.dialog.dialog_box.error_text')";
-						}
-						var ret = jQuery("#selectable_ontologies").getRowData(id);
-						window.location = currentProject + "/ontology/"+ret.title+"/modify";
-					} else {
-						alert('#i18n("project.msg.select_row")');
-					}
+					editOntologie();
 				}
 			}).navButtonAdd(
 			'#selectable_ontologies_toolbar',
@@ -467,40 +478,104 @@
 			caption:"",
 			buttonicon:"ui-icon-trash",
 			onClickButton:function() {
-				var grid = jQuery("#selectable_ontologies");
-				var titles = [];
-				var ids = grid.jqGrid('getGridParam','selarrrow');
-				if (ids.length > 0) {
-					for( var i=0; i < ids.length; i++) {
-						var title = grid.jqGrid("getCell", ids[i], "title");
-						titles.push(title);
-					}
-					$.ajax({
-						url: currentProject + "/ontology/delete",
-						type: 'post',
-						data: JSON.stringify(titles),
-						contentType: 'application/json; charset=utf-8',
-						dataType: 'json',
-						async: false,
-						success: function(response, status){
-							location.reload(true);
-						}
-					});
-				} else {
-					alert('#i18n("project.msg.select_row")');
-				}
+				deleteOntologie();
 			}
-		});
+		}).navButtonAdd(
+			'#selectable_ontologies_toolbar',
+			{
+				caption:"WebVOWL",
+				buttonicon:"ui-icon-calculator",
+				onClickButton:function() {
+					webvowl();
+				}
+			}).navButtonAdd(
+			'#selectable_ontologies_toolbar',
+			{
+				caption:"OOPS!",
+				buttonicon:"ui-icon-calculator",
+				onClickButton:function() {
+					oops();
+				}
+			}).navButtonAdd(
+			'#selectable_ontologies_toolbar',
+			{
+				caption:"Vapour",
+				buttonicon:"ui-icon-calculator",
+				onClickButton:function() {
+					vapour();
+				}
+			}).navButtonAdd(
+			'#selectable_ontologies_toolbar',
+			{
+				caption:"Parrot",
+				buttonicon:"ui-icon-calculator",
+				onClickButton:function() {
+					parot();
+				}
+			}).navButtonAdd(
+			'#selectable_ontologies_toolbar',
+			{
+				caption:"RDF Triple-Checker",
+				buttonicon:"ui-icon-calculator",
+				onClickButton:function() {
+					RDFChecker();
+				}
+			});
 		jQuery("#selectable_ontologies").jqGrid('hideCol',["uri"]);
 	}
 	// Add listeners
 	$("#srcAdd").click(function(){
-		window.location = currentProject + "/srcupload";
+		addSource();
 	});
 	$("#srcEdt").click(function(){
-		// var gr = jQuery("#selectable_sources").jqGrid('getGridParam','selrow');
-		// if( gr != null ) jQuery("#selectable_sources").jqGrid('editGridRow',gr,{height:500,reloadAfterSubmit:false});
-		// else alert("Please Select Row");
+		editSource();
+	});
+	$("#srcRmv").click(function(){
+		deleteSource();
+	});
+	$("#ontoAdd").click(function(){
+		addOntologie();
+	});
+	$("#ontoEdt").click(function(){
+		editOntologie();
+	});
+	$("#ontoRmv").click(function(){
+		deleteOntologie();
+	});
+	$("#webvowl").click(function(){
+		webvowl();
+	});
+	$("#oops").click(function(){
+		oops();
+	});
+	$("#vapour").click(function(){
+		vapour();
+	});
+	$("#parrot").click(function(){
+		parot();
+	});
+	$("#rdfchecker").click(function(){
+		RDFChecker();
+	});
+	function navigate(url){
+		// $.ajax({
+			// url: url,
+			// success: function(response, status){
+				// location.reload(status);
+			// }
+		// });
+		$.ajax( url )
+		.done(function() {
+			alert( "success" );
+		})
+		.fail(function() {
+			alert( "error" );
+		});
+	}
+	function addSource(){
+		window.location = currentProject + "/srcupload";
+	}
+	function editSource(){
 		var id = jQuery("#selectable_sources").getGridParam('selrow');
 		if (id) {
 			var ids = jQuery("#selectable_sources").jqGrid('getGridParam','selarrrow');
@@ -514,8 +589,8 @@
 		else {
 			alert('Please select a source');
 		}
-	});
-	$("#srcRmv").click(function(){
+	}
+	function deleteSource(){
 		var grid = jQuery("#selectable_sources");
 		var ids = grid.jqGrid('getGridParam','selarrrow');
 		var uris = [];
@@ -552,7 +627,129 @@
 		} else {
 			alert('Please select a source');
 		}
-	});
+	}
+	function addOntologie(){
+		window.location = currentProject + "/ontologyupload"
+	}
+	function editOntologie(){
+		var id = jQuery("#selectable_ontologies").getGridParam('selrow');
+		if(id){
+			var ids = jQuery("#selectable_ontologies").jqGrid('getGridParam','selarrrow');
+			if (ids.length > 1) {
+				alert("#i18n('ontology.dialog.dialog_box.error_text')");
+				throw "#i18n('ontology.dialog.dialog_box.error_text')";
+			}
+			var ret = jQuery("#selectable_ontologies").getRowData(id);
+			window.location = currentProject + "/ontology/"+ret.title+"/modify";
+		} else {
+			alert('#i18n("project.msg.select_row")');
+		}
+	}
+	function deleteOntologie(){
+		var grid = jQuery("#selectable_ontologies");
+		var titles = [];
+		var ids = grid.jqGrid('getGridParam','selarrrow');
+		if (ids.length > 0) {
+			for( var i=0; i < ids.length; i++) {
+				var title = grid.jqGrid("getCell", ids[i], "title");
+				titles.push(title);
+			}
+			$.ajax({
+				url: currentProject + "/ontology/delete",
+				type: 'post',
+				data: JSON.stringify(titles),
+				contentType: 'application/json; charset=utf-8',
+				dataType: 'json',
+				async: false,
+				success: function(response, status){
+					location.reload(true);
+				}
+			});
+		} else {
+			alert('#i18n("project.msg.select_row")');
+		}
+	}
+	function webvowl(){
+		var id = jQuery("#selectable_ontologies").getGridParam('selrow');
+		if(id){
+			var ids = jQuery("#selectable_ontologies").jqGrid('getGridParam','selarrrow');
+			if (ids.length > 1) {
+				alert("#i18n('ontology.dialog.dialog_box.error_text')");
+				throw "#i18n('ontology.dialog.dialog_box.error_text')";
+			}
+			var ret = jQuery("#selectable_ontologies").getRowData(id);
+			var url = "http://visualdataweb.de/webvowl/#iri=" + ret.source;
+			var win = window.open(url, '_blank');
+			win.focus();
+		} else {
+			alert('#i18n("project.msg.select_row")');
+		}
+	}
+	function oops(){
+		var id = jQuery("#selectable_ontologies").getGridParam('selrow');
+		if(id){
+			var ids = jQuery("#selectable_ontologies").jqGrid('getGridParam','selarrrow');
+			if (ids.length > 1) {
+				alert("#i18n('ontology.dialog.dialog_box.error_text')");
+				throw "#i18n('ontology.dialog.dialog_box.error_text')";
+			}
+			var ret = jQuery("#selectable_ontologies").getRowData(id);
+			var url = "http://oops.linkeddata.es/response.jsp?uri=" + ret.source;
+			var win = window.open(url, '_blank');
+			win.focus();
+		} else {
+			alert('#i18n("project.msg.select_row")');
+		}
+	}
+	function vapour(){
+		var id = jQuery("#selectable_ontologies").getGridParam('selrow');
+		if(id){
+			var ids = jQuery("#selectable_ontologies").jqGrid('getGridParam','selarrrow');
+			if (ids.length > 1) {
+				alert("#i18n('ontology.dialog.dialog_box.error_text')");
+				throw "#i18n('ontology.dialog.dialog_box.error_text')";
+			}
+			var ret = jQuery("#selectable_ontologies").getRowData(id);
+			var url = "http://linkeddata.uriburner.com:8000/vapour?uri=" + ret.source;
+			// navigate(url);
+			var win = window.open(url, '_blank');
+			win.focus();
+		} else {
+			alert('#i18n("project.msg.select_row")');
+		}
+	}
+	function parot(){
+		var id = jQuery("#selectable_ontologies").getGridParam('selrow');
+		if(id){
+			var ids = jQuery("#selectable_ontologies").jqGrid('getGridParam','selarrrow');
+			if (ids.length > 1) {
+				alert("#i18n('ontology.dialog.dialog_box.error_text')");
+				throw "#i18n('ontology.dialog.dialog_box.error_text')";
+			}
+			var ret = jQuery("#selectable_ontologies").getRowData(id);
+			var url = "http://ontorule-project.eu/parrot/parrot?&mimetype=default&profile=technical&language=en&documentUri=" + ret.source;
+			var win = window.open(url, '_blank');
+			win.focus();
+		} else {
+			alert('#i18n("project.msg.select_row")');
+		}
+	}
+	function RDFChecker(){
+		var id = jQuery("#selectable_ontologies").getGridParam('selrow');
+		if(id){
+			var ids = jQuery("#selectable_ontologies").jqGrid('getGridParam','selarrrow');
+			if (ids.length > 1) {
+				alert("#i18n('ontology.dialog.dialog_box.error_text')");
+				throw "#i18n('ontology.dialog.dialog_box.error_text')";
+			}
+			var ret = jQuery("#selectable_ontologies").getRowData(id);
+			var url = "http://graphite.ecs.soton.ac.uk/checker/?uri=" + ret.source;
+			var win = window.open(url, '_blank');
+			win.focus();
+		} else {
+			alert('#i18n("project.msg.select_row")');
+		}
+	}
 </script>
 </body>
 </html>
