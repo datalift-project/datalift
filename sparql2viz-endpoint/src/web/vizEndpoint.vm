@@ -108,8 +108,8 @@
 					<span id="predefList"></span>
 					<input type="button" id="saved_request" class="button" style="background-image:url('${baseUri}/sparql/viz/images/icons/folder.png');background-repeat:no-repeat;margin:2px;width:40px;height:40px;" title="#i18n("sparql.endpoint.open")"/>
 					<span id="dialog"></span>
-					<input type="button" id="resave" class="button" style="display:none;background-image:url('${baseUri}/sparql/viz/images/icons/saveAs.png');background-repeat:no-repeat;margin:2px;width:40px;height:40px;" title="#i18n("sparql.endpoint.resave")"/>
-					<input type="button" id="save" class="button" style="background-image:url('${baseUri}/sparql/viz/images/icons/save.png');background-repeat:no-repeat;margin:2px;width:40px;height:40px;" title="#i18n("sparql.endpoint.save")"/>
+					<input type="button" id="resave" class="button" style="display:none;background-image:url('${baseUri}/sparql/viz/images/icons/save.png');background-repeat:no-repeat;margin:2px;width:40px;height:40px;" title="#i18n("sparql.endpoint.resave")"/>
+					<input type="button" id="save" class="button" style="background-image:url('${baseUri}/sparql/viz/images/icons/saveAs.png');background-repeat:no-repeat;margin:2px;width:40px;height:40px;" title="#i18n("sparql.endpoint.save")"/>
 					<input type="button" id="print" class="button" style="background-image:url('${baseUri}/sparql/viz/images/icons/print.png');background-repeat:no-repeat;margin:2px;width:40px;height:40px;" title="#i18n("sparql.endpoint.print")"/>
 					<input type="button" id="clear" class="button" style="background-image:url('${baseUri}/sparql/viz/images/icons/erase.png');background-repeat:no-repeat;margin:2px;width:40px;height:40px;" title="#i18n("sparql.endpoint.clear")"/>
 					<input type="button" id="graphs" class="button" style="background-image:url('${baseUri}/sparql/viz/images/icons/chart.png');background-repeat:no-repeat;margin:2px;width:40px;height:40px;" title="#i18n("sparql.endpoint.visualize")"/>
