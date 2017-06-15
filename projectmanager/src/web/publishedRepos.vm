@@ -34,8 +34,12 @@
 				<div class="project">
 					<div class="single-project">
 						<div class="projectInfo">
-							<a href="${baseUri}/project/published?repository=$!esc.html($repository.name)"><h2>$!esc.html($repository.name)</a></h2>
-							<p>URL: $!esc.html($repository.getUrl())</p>
+							<h2 class="ui-widget-header dl-widget-header">
+								<a href="${baseUri}/project/published?repository=$!esc.html($repository.name)">$!esc.html($repository.name)</a>
+							</h2>
+							<p>
+								URL: $!esc.html($repository.getUrl())
+							</p>
 						</div>
 					</div>
 				</div>

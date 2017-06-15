@@ -5,7 +5,7 @@
 	margin: 5px;
 	overflow: scroll;
     overflow-x: hidden;
-    height: 178px;
+    height: 128px;
 }
 .project-button {
 	width: 100%;
@@ -37,4 +37,7 @@
 }
 .inline {
 	display: inline-block !important;
+}
+.topbar {
+	min-height: 20px !important;
 }

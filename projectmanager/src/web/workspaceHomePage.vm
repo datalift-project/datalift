@@ -69,7 +69,7 @@
 							<p>
 								#i18n("project.description"): $!esc.html($project.description)<br/>
 								#i18n("project.license"): 
-								<a href="$!esc.html($project.getLicense())">$!esc.html($licenses.get($project.getLicense()))</a><br/>
+								<a href="$!esc.html($project.getLicense())" target="_blank">$!esc.html($licenses.get($project.getLicense()))</a><br/>
 								#i18n("project.modification_s") $!esc.html($project.modificationDate)
 								#i18n("project.creation_s") $!esc.html($project.creationDate) #i18n("project.owner_s") $!esc.html($project.getOwner())
 							</p>
