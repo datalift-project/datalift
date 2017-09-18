@@ -132,7 +132,7 @@ SELECT DISTINCT ?graph WHERE {
 						}
 					});
 				} else {
-					alert('#i18n("project.msg.select_row")');
+					alert("#i18n("project.msg.select_row")");
 				}
 			}
 		});
