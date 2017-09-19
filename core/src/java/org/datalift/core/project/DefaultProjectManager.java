@@ -515,11 +515,13 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
 
     /** {@inheritDoc} */
     @Override
-    public Ontology newOntology(Project project, URI url, String title) {
+    public Ontology newOntology(Project project, URI url, String title,
+    		String prefix) {
         // Create new ontology.
         OntologyImpl ontology = new OntologyImpl();
         // Set ontology parameters.
         ontology.setTitle(title);
+        ontology.setPrefix(prefix);
         ontology.setSource(url);
         ontology.setDateSubmitted(new Date());
         ontology.setOperator(SecurityContext.getUserPrincipal());

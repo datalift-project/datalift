@@ -60,6 +60,8 @@ public class OntologyImpl extends BaseRdfEntity implements Ontology
 
     @RdfProperty("dc:title")
     private String title;
+    @RdfProperty("dc:identifier")
+    private String prefix;
     @RdfProperty("dcterms:source")
     private URI source;
     @RdfProperty("void:dateSubmitted")
@@ -81,6 +83,18 @@ public class OntologyImpl extends BaseRdfEntity implements Ontology
     @Override
     public String getTitle() {
         return this.title;
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public void setPrefix(String prefix) {
+        this.prefix = prefix;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public String getPrefix() {
+        return this.prefix;
     }
 
     /** {@inheritDoc} */

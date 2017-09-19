@@ -45,6 +45,9 @@ public interface Ontology
 
     public String getTitle();
     public void setTitle(String title);
+    
+    public String getPrefix();
+    public void setPrefix(String prefix);
 
     public URI getSource();
     public void setSource(URI source);

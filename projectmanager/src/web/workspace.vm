@@ -183,6 +183,13 @@
 										</span>
 									</div>
 								</td>
+								<td class="ui-pg-button ui-corner-all" title="#i18n("source.prefix")">
+									<div class="ui-pg-div">
+										<span id="prefix">
+											<span class="ui-icon ui-icon-calculator inline"></span>prefix
+										</span>
+									</div>
+								</td>
 							</tr>
 						</tbody>
 					</table>
@@ -400,17 +407,18 @@
 		});
 
 		jQuery("#selectable_sources").jqGrid('hideCol',["uri"]);
-		$("#topButtons").width($("#tabs").width() - 30);
+		$("#topButtons").width($("#tabs").width() - 10);
 	}
 
 	function loadGridOntologies() {
 		/* Ontologies */
 		jQuery("#selectable_ontologies").jqGrid({
 			datatype: "local",
-			colNames:['#i18n("project.p_uri")','#i18n("project.p_title")','#i18n("project.p_source")',"#i18n("project.p_dateSubmitted")", '#i18n("project.p_operator")'],
+			colNames:['#i18n("project.p_uri")','#i18n("project.p_title")','#i18n("project.p_prefix")','#i18n("project.p_source")',"#i18n("project.p_dateSubmitted")", '#i18n("project.p_operator")'],
 			colModel:[
 				{name:'uri',index:'uri',sorttype:"text",editable:true,editoptions:{size:10}},
 				{name:'title',index:'title',sorttype:"text",editable:true,editoptions:{size:50}},
+				{name:'prefix',index:'prefix',sorttype:"text",editable:true,editoptions:{size:50}},
 				{name:'source',index:'source',sorttype:"text",editable:true,editoptions:{size:50}},
 				{name:'dateSubmitted',index:'dateSubmitted',sorttype:"text",editable:true,editoptions:{size:50}},
 				{name:'operator',index:'operator',sorttype:"text",editable:true,editoptions:{size:50}} ],
@@ -429,6 +437,7 @@
 		{
 			uri:"$!esc.javascript($curOnto.uri)",
 			title:"$!esc.javascript($curOnto.title)",
+			prefix:"$!esc.javascript($curOnto.prefix)",
 			source:"$!esc.javascript($curOnto.source)",
 			dateSubmitted:"$!date.format('medium', $curOnto.dateSubmitted)",
 			operator:"$!esc.javascript($curOnto.operator)"
@@ -511,8 +520,17 @@
 				onClickButton:function() {
 					lov();
 				}
+			}).navButtonAdd(
+			'#selectable_ontologies_toolbar',
+			{
+				caption:"Prefix",
+				buttonicon:"ui-icon-calculator",
+				onClickButton:function() {
+					prefix();
+				}
 			});
 		jQuery("#selectable_ontologies").jqGrid('hideCol',["uri"]);
+		$("#topButtons").width($("#tabs").width() - 30);
 	}
 	// Add listeners
 	$("#srcAdd").click(function(){
@@ -553,6 +571,9 @@
 	});
 	$("#lov").click(function(){
 		lov();
+	});
+	$("#prefix").click(function(){
+		prefix();
 	});
 	function navigate(url){
 		// $.ajax({
@@ -783,7 +804,23 @@
 				throw "#i18n('ontology.dialog.dialog_box.error_text')";
 			}
 			var ret = jQuery("#selectable_ontologies").getRowData(id);
-			var url = "http://lov.okfn.org/dataset/lov/vocabs/" + ret.source;
+			var url = "http://lov.okfn.org/dataset/lov/vocabs/" + ret.prefix;
+			var win = window.open(url, '_blank');
+			win.focus();
+		} else {
+			alert("#i18n("project.msg.select_row")");
+		}
+	}
+	function prefix(){
+		var id = jQuery("#selectable_ontologies").getGridParam('selrow');
+		if(id){
+			var ids = jQuery("#selectable_ontologies").jqGrid('getGridParam','selarrrow');
+			if (ids.length > 1) {
+				alert("#i18n('ontology.dialog.dialog_box.error_text')");
+				throw "#i18n('ontology.dialog.dialog_box.error_text')";
+			}
+			var ret = jQuery("#selectable_ontologies").getRowData(id);
+			var url = "https://prefix.cc/" + ret.prefix;
 			var win = window.open(url, '_blank');
 			win.focus();
 		} else {

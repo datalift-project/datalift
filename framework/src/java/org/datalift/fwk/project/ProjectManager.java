@@ -367,12 +367,14 @@ public interface ProjectManager
      * Create a new ontology description.
      * @param  srcUrl   the ontology URL.
      * @param  title    the ontology name or description.
+     * @param  prefix   The prefix of the ontology.
      *
      * @return a new ontology description, ready to be
      *         {@link Project#addOntology(Ontology) associated} to a
      *         project.
      */
-    public Ontology newOntology(Project project, URI srcUrl, String title);
+    public Ontology newOntology(Project project, URI srcUrl, String title,
+    		String prefix);
 
     /**
      * Deletes the specified ontology from the project.

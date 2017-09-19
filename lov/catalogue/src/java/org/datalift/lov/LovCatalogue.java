@@ -214,6 +214,7 @@ public class LovCatalogue extends BaseModule {
 	//@Consumes("application/x-www-form-urlencoded")
 	public Response ontologyBrowseUpload(@PathParam("id") String projectId,
 	                                     @FormParam("source_url") List<URL> srcUrl,
+	                                     @FormParam("source_prefix") List<String> prefix,
 	                                     @FormParam("title") List<String> title,
 	                                     @Context UriInfo uriInfo)
 							 throws WebApplicationException {
@@ -229,17 +230,19 @@ public class LovCatalogue extends BaseModule {
 			
 			Iterator<URL> urlIt = srcUrl.iterator();
 			Iterator<String> titleIt = title.iterator();
+			Iterator<String> prefixIt = prefix.iterator();
 			
 			//Let's just hope that they are still in the same order...
 			while(urlIt.hasNext() && titleIt.hasNext()) {
 				
 				URL url = urlIt.next();
 				String t = titleIt.next();
+				String pf = prefixIt.next();
 				
 				// If it does not already exist
 				if(p.getOntology(t) == null) {
 					// Add ontology to project.
-					p.addOntology(this.projectManager.newOntology(p, url.toURI(), t));
+					p.addOntology(this.projectManager.newOntology(p, url.toURI(), t, pf));
 				}
 			}
 			

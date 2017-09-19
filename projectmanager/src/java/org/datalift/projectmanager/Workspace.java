@@ -2253,8 +2253,9 @@ public class Workspace extends BaseModule
     @POST
     @Path("{id}/ontologyupload")
     public Response uploadOntology(@PathParam("id") String projectId,
-                                   @FormParam("source_url") URL srcUrl,
-                                   @FormParam("title") String title,
+  					    		   @FormParam("source_url") URL srcUrl,
+  					    		   @FormParam("source_prefix") String prefix,
+  					    		   @FormParam("title") String title,
                                    @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
         Response response = null;
@@ -2264,7 +2265,7 @@ public class Workspace extends BaseModule
             Project p = this.loadProject(projectUri);
             // Add ontology to project.
             p.addOntology(this.projectManager.newOntology(p,
-                                                        srcUrl.toURI(), title));
+                                                        srcUrl.toURI(), title, prefix));
             // Persist new ontology.
             this.projectManager.saveProject(p);
             // Notify user of successful update, redirecting HTML clients
@@ -2311,7 +2312,7 @@ public class Workspace extends BaseModule
     @Path("{id}/ontology/{ontologyTitle}/modify")
     public Response modifyOntology(@PathParam("id") String projectId,
             @Context UriInfo uriInfo, @FormParam("title") String title,
-            @FormParam("source_url") URI source,
+            @FormParam("source_url") URI source, @FormParam("source_prefix") String prefix,
             @FormParam("oldTitle") String currentOntologyTitle)
             throws WebApplicationException {
         Response response = null;
@@ -2327,6 +2328,7 @@ public class Workspace extends BaseModule
             }
             // Update ontology data.
             ontology.setTitle(title);
+            ontology.setPrefix(prefix);
             ontology.setSource(source);
             // Save updated ontology.
             this.projectManager.saveProject(p);

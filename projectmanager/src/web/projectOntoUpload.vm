@@ -39,9 +39,11 @@
 		<input type="hidden" name="oldTitle" id="oldTitle" value="$!{current.title}"/>
 		<p>#i18n("project.upload_ontology"): $!esc.html($it.getTitle())</p>
 		<p><label for="title">#i18n("project.upload_ontology.title"):</label>
-		<input type="text" id="title" name="title" value="$!esc.html($current.title)" autofocus="true"/></p>
+		<input type="text" id="title" name="title" value="$!esc.html($current.title)" autofocus="true"required /></p>
+		<p><label for="source_prefix">#i18n("project.upload_ontology.prefix"):</label>
+		<input type="text" id="source_prefix" name="source_prefix" value="$!esc.html($current.prefix)" required/></p>
 		<p><label for="source_url">#i18n("project.upload_ontology.source"):</label>
-		<input type="text" id="source_url" name="source_url" value="$!esc.html($current.source)"/></p>
+		<input type="text" id="source_url" name="source_url" value="$!esc.html($current.source)" required/></p>
 		<p><input type="submit" value="#i18n("$submit")"/></p>
 	  </form>
 	</div>
