@@ -44,7 +44,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -83,17 +82,15 @@ import javax.xml.parsers.SAXParserFactory;
 import static javax.ws.rs.core.HttpHeaders.ACCEPT;
 import static javax.ws.rs.core.Response.Status.*;
 
+import org.openrdf.OpenRDFException;
 import org.openrdf.model.Literal;
 import org.openrdf.model.Value;
 import org.openrdf.model.ValueFactory;
 import org.openrdf.model.vocabulary.RDFS;
 import org.openrdf.query.BindingSet;
-import org.openrdf.query.MalformedQueryException;
 import org.openrdf.query.TupleQueryResultHandlerBase;
 import org.openrdf.query.Update;
-import org.openrdf.query.UpdateExecutionException;
 import org.openrdf.repository.RepositoryConnection;
-import org.openrdf.repository.RepositoryException;
 import org.xml.sax.InputSource;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
@@ -106,7 +103,7 @@ import com.sun.jersey.multipart.FormDataParam;
 
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
-import org.datalift.core.velocity.sparql.SparqlTool;
+
 import org.datalift.fwk.BaseModule;
 import org.datalift.fwk.Configuration;
 import org.datalift.fwk.FileStore;
@@ -142,7 +139,6 @@ import org.datalift.fwk.rdf.RdfFormat;
 import org.datalift.fwk.rdf.RdfNamespace;
 import org.datalift.fwk.rdf.RdfUtils;
 import org.datalift.fwk.rdf.Repository;
-import org.datalift.fwk.security.SecurityContext;
 import org.datalift.fwk.sparql.SparqlEndpoint;
 import org.datalift.fwk.util.CloseableIterator;
 import org.datalift.fwk.util.UriBuilder;
@@ -153,11 +149,11 @@ import org.datalift.fwk.util.web.Menu;
 import org.datalift.fwk.view.TemplateModel;
 import org.datalift.fwk.view.ViewFactory;
 
-
 import static org.datalift.fwk.MediaTypes.*;
 import static org.datalift.fwk.project.SparqlSource.*;
 import static org.datalift.fwk.util.PrimitiveUtils.wrap;
 import static org.datalift.fwk.util.StringUtils.*;
+
 import static org.openrdf.query.QueryLanguage.SPARQL;
 
 
@@ -223,29 +219,29 @@ public class Workspace extends BaseModule
     private final static String SOURCE_PATH = "/" + SOURCE_URI_PREFIX  + '/';
     /** The path prefix for HTML page Velocity templates. */
     private final static String TEMPLATE_PATH = "/" + MODULE_NAME  + '/';
-    
+
     /***temporary declaration****/
     public final static List<String> availableServerStrategy;
     public final static List<String> availableWfsVersion;
     public final static List<String>  supportedServices;
 
     static {
-    	availableServerStrategy=new ArrayList<String>();
-    	availableServerStrategy.add("geoserver");
-    	availableServerStrategy.add("mapserver");
-    	availableServerStrategy.add("autre");
-    	
-    	availableWfsVersion=new ArrayList<String>();
-    	availableWfsVersion.add("1.0.0");
-    	availableWfsVersion.add("1.1.0");
-    	availableWfsVersion.add("2.0.0");
-    	
-    	supportedServices=new ArrayList<String>();
-    	supportedServices.add("WFS");
-    	supportedServices.add("SOS");
-    	supportedServices.add("WCS");
-    	
+        availableServerStrategy=new ArrayList<String>();
+        availableServerStrategy.add("geoserver");
+        availableServerStrategy.add("mapserver");
+        availableServerStrategy.add("autre");
+
+        availableWfsVersion=new ArrayList<String>();
+        availableWfsVersion.add("1.0.0");
+        availableWfsVersion.add("1.1.0");
+        availableWfsVersion.add("2.0.0");
+
+        supportedServices=new ArrayList<String>();
+        supportedServices.add("WFS");
+        supportedServices.add("SOS");
+        supportedServices.add("WCS");
     }
+
     //-------------------------------------------------------------------------
     // Class members
     //-------------------------------------------------------------------------
@@ -310,25 +306,23 @@ public class Workspace extends BaseModule
     public Response displayIndexPage() throws WebApplicationException {
         Response response = null;
         try {
-        	//TODO
-        	Collection<Project> projects = this.projectManager.listProjects();
+            Collection<Project> projects = this.projectManager.listProjects();
             TemplateModel view = this.newView("workspaceHomePage.vm", null);
             view.put("projects", projects);
             Iterator<Project> i = projects.iterator();
             Map<URI,String> projectLicenses = new HashMap<URI,String>();
             while(i.hasNext()) {
-            	Project p = i.next();
-            	License l = licenses.get(p.getLicense());
+                Project p = i.next();
+                License l = licenses.get(p.getLicense());
                 if (l == null) {
                     l = new License(p.getLicense(), null);  // Unknown license.
                 }
-            	if ( projectLicenses.get(p.getLicense()) == null ) {
-            		projectLicenses.put(p.getLicense(), l.getLabel());
-            	}
+                if ( projectLicenses.get(p.getLicense()) == null ) {
+                    projectLicenses.put(p.getLicense(), l.getLabel());
+                }
             }
             view.put("licenses", projectLicenses);
             return Response.ok(view, TEXT_HTML_UTF8).build();
-//            response = this.displayIndexPage(Response.ok(), null).build();
         }
         catch (Exception e) {
             this.handleInternalError(e, null);
@@ -635,41 +629,40 @@ public class Workspace extends BaseModule
                                            @QueryParam("uri") URI srcUri,
                                            @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
-    	Response response = null;
+        Response response = null;
 
-
-    	        URI prjUri = this.getProjectId(uriInfo.getBaseUri(), id);
-    	        Project p = null;
-    	        try {
-    	            p = this.loadProject(prjUri);
-    	        }
-    	        catch (Exception e) {
-    	            this.handleInternalError(e, "Failed to load project {}", prjUri);
-    	        }
-    	        try {
-    	            // Prepare model for building view.
-    	            TemplateModel view = this.newView("projectSourceUpload.vm", p);
-    	            view.put("charsets", Charsets.availableCharsets);
-    	            view.put("rdfFormats", RdfFormat.values());
-    	            view.put("sep", Separator.values());
-    	            view.put("versions", availableWfsVersion);
-    	            view.put("servers", availableServerStrategy);
-    	            view.put("services", supportedServices);
-    	            // Search for requested source in project (if specified).
-    	            if (srcUri != null) {
-    	                Source src = p.getSource(srcUri);
-    	                if (src == null) {
-    	                    // Not found.
-    	                    this.sendError(NOT_FOUND, srcUri.toString());
-    	                }
-    	                view.put("current", src);
-    	            }
-    	            response = Response.ok(view, TEXT_HTML + ";charset=utf-8").build();
-    	        }
-    	        catch (Exception e) {
-    	           this.handleInternalError(e, "Failed to load source {}", srcUri);
-    	        }
-    	return response;
+        URI prjUri = this.getProjectId(uriInfo.getBaseUri(), id);
+        Project p = null;
+        try {
+            p = this.loadProject(prjUri);
+        }
+        catch (Exception e) {
+            this.handleInternalError(e, "Failed to load project {}", prjUri);
+        }
+        try {
+            // Prepare model for building view.
+            TemplateModel view = this.newView("projectSourceUpload.vm", p);
+            view.put("charsets", Charsets.availableCharsets);
+            view.put("rdfFormats", RdfFormat.values());
+            view.put("sep", Separator.values());
+            view.put("versions", availableWfsVersion);
+            view.put("servers", availableServerStrategy);
+            view.put("services", supportedServices);
+            // Search for requested source in project (if specified).
+            if (srcUri != null) {
+                Source src = p.getSource(srcUri);
+                if (src == null) {
+                    // Not found.
+                    this.sendError(NOT_FOUND, srcUri.toString());
+                }
+                view.put("current", src);
+            }
+            response = Response.ok(view, TEXT_HTML + ";charset=utf-8").build();
+        }
+        catch (Exception e) {
+            this.handleInternalError(e, "Failed to load source {}", srcUri);
+        }
+        return response;
     }
 
     @POST
@@ -1008,7 +1001,7 @@ public class Workspace extends BaseModule
         catch (IOException e) {
             deleteFiles = true;
             String src = (fileData != null)? fileName:
-                        (fileUrl != null)? fileUrl.toString(): "file_url";
+                         (fileUrl  != null)? fileUrl.toString(): "file_url";
             log.fatal("Failed to save source data from {}", e, src);
             this.throwInvalidParamError(src, e.getLocalizedMessage());
         }
@@ -1684,12 +1677,12 @@ public class Workspace extends BaseModule
             // Notify user of successful creation, redirecting HTML clients
             response = this.created(p, srcUri, ProjectTab.Sources)
                            .build();
-            log.info("New Gmlfile source \"{}\" created", title);
+            log.info("New GML source \"{}\" created", title);
         }
         catch (Exception e) {
             deleteFiles = true;
-            this.handleInternalError(e,
-                    "Failed to create Gmlfile source for {}", title);
+            this.handleInternalError(e, "Failed to create GML source for {}",
+                                        title);
         }
         finally {
             if (deleteFiles) {
@@ -1735,193 +1728,162 @@ public class Workspace extends BaseModule
     @Path("{id}/wfsupload")
     @Consumes(MULTIPART_FORM_DATA)
     public Response uploadWfsSource(
-    		@PathParam("id") String projectId,
-            @FormDataParam("description") String description,
-            @FormDataParam("service_type") String serviceType,
-            @FormDataParam("service_url") String serviceUrl,
-            @FormDataParam("version") String version,
-            @FormDataParam("server") String serverStrategy,
-            @FormDataParam("service_name") String srcName,
-            @Context UriInfo uriInfo){
-    	 Response response = null;
-    	 if (! isSet(srcName)) {
-             this.throwInvalidParamError("file_name", srcName);
-         }          
-       
-         // Else: File data have been uploaded.
+                        @PathParam("id") String projectId,
+                        @FormDataParam("description") String description,
+                        @FormDataParam("service_type") String serviceType,
+                        @FormDataParam("service_url") String serviceUrl,
+                        @FormDataParam("version") String version,
+                        @FormDataParam("server") String serverStrategy,
+                        @FormDataParam("service_name") String srcName,
+                        @Context UriInfo uriInfo)
+                                            throws WebApplicationException {
+        Response response = null;
+        if (! isSet(srcName)) {
+            this.throwInvalidParamError("service_name", srcName);
+        }
+        // Else: File data have been uploaded.
+        log.debug("Processing WFS source creation request for {}", srcName);
+        // Build object URIs from request path.
+        URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
+        URI sourceUri;
+        try {
+            sourceUri = new URI(projectUri.getScheme(), null,
+                                projectUri.getHost(), projectUri.getPort(),
+                                this.newSourceId(projectUri.getPath(), srcName),
+                                null, null);
+            // Retrieve project.
+            Project p = this.loadProject(projectUri);
+            // Initialize new source.
+            this.projectManager.newWfsSource(p, sourceUri, serviceUrl, srcName,
+                                        description, version, serverStrategy);
+            // Persist new source.
+            this.projectManager.saveProject(p);
+            // Notify user of successful creation, redirecting HTML clients
+            // (browsers) to the source tab of the project page.
+            response = this.created(p, sourceUri, ProjectTab.Sources).build();
+            log.info("New WFS source \"{}\" created", srcName);
+        }
+        catch (Exception e) {
+            this.handleInternalError(e, "Failed to create WFS source for {}",
+                                        srcName);
+        }
+        return response;
+    }
 
-         log.debug("Processing WFS source creation request for {}", srcName);
-         
-         
-             // Build object URIs from request path.
-             URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
-             URI sourceUri;
-			try {
-				sourceUri = new URI(projectUri.getScheme(), null,
-				                         projectUri.getHost(), projectUri.getPort(),
-				                         this.newSourceId(projectUri.getPath(), srcName),
-				                         null, null);
-				// Retrieve project.
-	             Project p = this.loadProject(projectUri);
-	             
-	             // Initialize new source.
-//	             if(serviceType.equals("WFS"))
-//	             {
-	            	 try {
-						WfsSource src = this.projectManager.newWfsSource(p, sourceUri,serviceUrl,
-						         srcName, description, version, serverStrategy);
-						if (src==null) //parameters given are bad!! 
-							return response;
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} 
-//	             }
-
-	             // Persist new source.
-	             this.projectManager.saveProject(p);
-	             // Notify user of successful creation, redirecting HTML clients
-	             // (browsers) to the source tab of the project page.
-	             response = this.created(p, sourceUri, ProjectTab.Sources).build();
-
-	             log.info("New WFS source \"{}\" created", sourceUri);
-	             response = this.redirect(p, ProjectTab.Sources).build();
-	        
-			} catch (URISyntaxException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-
-         return response;
-    	  
-}
     @POST
     @Path("{id}/wfsmodify")
     @Consumes(MULTIPART_FORM_DATA)
     public Response modifyWfsSource(
-    		@FormDataParam("current_source") URI sourceUri,
-    		@PathParam("id") String projectId,
-            @FormDataParam("description") String description,
-            @FormDataParam("service_type") String serviceType,
-            @FormDataParam("service_url") String serviceUrl,
-            @FormDataParam("version") String version,
-            @FormDataParam("server") String serverStrategy,
-            @FormDataParam("service_name") String srcName,
-            @Context UriInfo uriInfo){
-    	 Response response = null;
-         try {
-             // Retrieve source.
-             Project p = this.loadProject(uriInfo, projectId);
-             WfsSource s = this.loadSource(p, sourceUri, WfsSource.class);
-             // Update source data.
-             s.setserverTypeStrategy(serverStrategy);
-             s.setVersion(version);
-             s.setDescription(description);
-             // Save updated source.
-             this.projectManager.saveProject(p);
-             // Notify user of successful update, redirecting HTML clients
-             // (browsers) to the source tab of the project page.
-             response = this.redirect(p, ProjectTab.Sources).build();
-         }
-         catch (Exception e) {
-             this.handleInternalError(e,
-                 "Could not modify WFS source {}", sourceUri);
-         }
-         return response; 
-}
+                        @FormDataParam("current_source") URI sourceUri,
+                        @PathParam("id") String projectId,
+                        @FormDataParam("description") String description,
+                        @FormDataParam("service_type") String serviceType,
+                        @FormDataParam("service_url") String serviceUrl,
+                        @FormDataParam("version") String version,
+                        @FormDataParam("server") String serverStrategy,
+                        @FormDataParam("service_name") String srcName,
+                        @Context UriInfo uriInfo)
+                                                throws WebApplicationException {
+        Response response = null;
+        try {
+            // Retrieve source.
+            Project p = this.loadProject(uriInfo, projectId);
+            WfsSource s = this.loadSource(p, sourceUri, WfsSource.class);
+            // Update source data.
+            s.setServerTypeStrategy(serverStrategy);
+            s.setVersion(version);
+            s.setDescription(description);
+            // Save updated source.
+            this.projectManager.saveProject(p);
+            // Notify user of successful update, redirecting HTML clients
+            // (browsers) to the source tab of the project page.
+            response = this.redirect(p, ProjectTab.Sources).build();
+        }
+        catch (Exception e) {
+            this.handleInternalError(e,
+                            "Could not modify WFS source {}", sourceUri);
+        }
+        return response;
+    }
+
     @POST
     @Path("{id}/sosupload")
     @Consumes(MULTIPART_FORM_DATA)
     public Response uploadSosSource(
-    		@PathParam("id") String projectId,
-            @FormDataParam("description") String description,
-            @FormDataParam("service_type") String serviceType,
-            @FormDataParam("service_url") String serviceUrl,
-            @FormDataParam("version") String version,
-            @FormDataParam("service_name") String srcName,
-            @Context UriInfo uriInfo){
-    	 Response response = null;
-    	 if (! isSet(srcName)) {
-             this.throwInvalidParamError("file_name", srcName);
-         }          
-       
-         // Else: File data have been uploaded.
+                        @PathParam("id") String projectId,
+                        @FormDataParam("description") String description,
+                        @FormDataParam("service_type") String serviceType,
+                        @FormDataParam("service_url") String serviceUrl,
+                        @FormDataParam("version") String version,
+                        @FormDataParam("service_name") String srcName,
+                        @Context UriInfo uriInfo)
+                                                throws WebApplicationException {
+        Response response = null;
+        if (! isSet(srcName)) {
+            this.throwInvalidParamError("file_name", srcName);
+        }
+        // Else: File data have been uploaded.
+        log.debug("Processing SOS source creation request for {}", srcName);
+        // Build object URIs from request path.
+        URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
+        URI sourceUri;
+        try {
+            sourceUri = new URI(projectUri.getScheme(), null,
+                                projectUri.getHost(), projectUri.getPort(),
+                                this.newSourceId(projectUri.getPath(), srcName),
+                                null, null);
+            // Retrieve project.
+            Project p = this.loadProject(projectUri);
+            // Initialize new source.
+            this.projectManager.newSosSource(p, sourceUri,serviceUrl,
+                                                srcName, description, version);
+            // Persist new source.
+            this.projectManager.saveProject(p);
+            // Notify user of successful creation, redirecting HTML clients
+            // (browsers) to the source tab of the project page.
+            response = this.created(p, sourceUri, ProjectTab.Sources).build();
+            log.info("New SOS source \"{}\" created", srcName);
+        }
+        catch (Exception e) {
+            this.handleInternalError(e, "Failed to create SOS source for {}",
+                                        srcName);
+        }
+        return response;
+    }
 
-         log.debug("Processing SOS source creation request for {}", srcName);
-         
-         
-             // Build object URIs from request path.
-             URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
-             URI sourceUri;
-			try {
-				sourceUri = new URI(projectUri.getScheme(), null,
-				                         projectUri.getHost(), projectUri.getPort(),
-				                         this.newSourceId(projectUri.getPath(), srcName),
-				                         null, null);
-				// Retrieve project.
-	             Project p = this.loadProject(projectUri);
-	             
-	             // Initialize new source.
-
-	            	 try {
-						SosSource src = this.projectManager.newSosSource(p, sourceUri,serviceUrl,
-						         srcName, description, version);
-						if (src==null) //parameters given are bad!! 
-							return response;
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} 
-
-	             // Persist new source.
-	             this.projectManager.saveProject(p);
-	             // Notify user of successful creation, redirecting HTML clients
-	             // (browsers) to the source tab of the project page.
-	             response = this.created(p, sourceUri, ProjectTab.Sources).build();
-
-	             log.info("New SOS source \"{}\" created", sourceUri);
-	             response = this.redirect(p, ProjectTab.Sources).build();
-	        
-			} catch (URISyntaxException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-
-         return response;
-    	  
-}
     @POST
     @Path("{id}/sosmodify")
     @Consumes(MULTIPART_FORM_DATA)
     public Response modifySosSource(
-    		@FormDataParam("current_source") URI sourceUri,
-    		@PathParam("id") String projectId,
-            @FormDataParam("description") String description,
-            @FormDataParam("service_type") String serviceType,
-            @FormDataParam("service_url") String serviceUrl,
-            @FormDataParam("version") String version,
-            @FormDataParam("service_name") String srcName,
-            @Context UriInfo uriInfo){
-    	 Response response = null;
-         try {
-             // Retrieve source.
-             Project p = this.loadProject(uriInfo, projectId);
-             WfsSource s = this.loadSource(p, sourceUri, WfsSource.class);
-             // Update source data.
-             s.setVersion(version);
-             s.setDescription(description);
-             // Save updated source.
-             this.projectManager.saveProject(p);
-             // Notify user of successful update, redirecting HTML clients
-             // (browsers) to the source tab of the project page.
-             response = this.redirect(p, ProjectTab.Sources).build();
-         }
-         catch (Exception e) {
+                        @FormDataParam("current_source") URI sourceUri,
+                        @PathParam("id") String projectId,
+                        @FormDataParam("description") String description,
+                        @FormDataParam("service_type") String serviceType,
+                        @FormDataParam("service_url") String serviceUrl,
+                        @FormDataParam("version") String version,
+                        @FormDataParam("service_name") String srcName,
+                        @Context UriInfo uriInfo){
+        Response response = null;
+        try {
+            // Retrieve source.
+            Project p = this.loadProject(uriInfo, projectId);
+            SosSource s = this.loadSource(p, sourceUri, SosSource.class);
+            // Update source data.
+            s.setVersion(version);
+            s.setDescription(description);
+            // Save updated source.
+            this.projectManager.saveProject(p);
+            // Notify user of successful update, redirecting HTML clients
+            // (browsers) to the source tab of the project page.
+            response = this.redirect(p, ProjectTab.Sources).build();
+        }
+        catch (Exception e) {
              this.handleInternalError(e,
-                 "Could not modify SOS source {}", sourceUri);
-         }
-         return response; 
-}
+                             "Could not modify SOS source {}", sourceUri);
+        }
+        return response;
+    }
+
     @GET
     @Path("{id}/{filename}")
     public Response getSourceData(@PathParam("id") String projectId,
@@ -2138,28 +2100,26 @@ public class Workspace extends BaseModule
 //        catch (Exception e) {
 //            this.handleInternalError(e, "Failed to delete source {}", srcUri);
 //        }
-    	//TODO
-    	Response response = null;
-    	// Retrieve source.
-    	// As we can't infer the source type (CSV, SPARQL...), we have
-    	// to load the whole project and search it using its URI.
-    	URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
-    	Project p = this.loadProject(projectUri);
-    	// Notify user of successful update, redirecting HTML clients
-    	// (browsers) to the source tab of the project page.
-    	response = this.redirect(p, ProjectTab.Sources).build();
-    	JSONArray ja = new JSONArray(json);
-    	int i = 0;
+        //TODO
+        // Retrieve source.
+        // As we can't infer the source type (CSV, SPARQL...), we have
+        // to load the whole project and search it using its URI.
+        URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
+        Project p = this.loadProject(projectUri);
+        JSONArray ja = new JSONArray(json);
+        int i = 0;
         while ( i < ja.length() ) {
-        	log.debug("Processing source deletion request for {}", ja.get(i).toString());
-        	this.deleteSource(p, URI.create(ja.get(i).toString()));
-        	i++;
+            log.debug("Processing source deletion request for {}", ja.get(i).toString());
+            this.deleteSource(p, URI.create(ja.get(i).toString()));
+            i++;
         }
-        return response;
+        // Notify user of successful update, redirecting HTML clients
+        // (browsers) to the source tab of the project page.
+        return this.redirect(p, ProjectTab.Sources).build();
     }
-    
+
     private void deleteSource(Project p, URI srcUri) {
-    	try {
+        try {
             // Search for requested source in project.
             Source s = p.getSource(srcUri);
             if (s == null) {
@@ -2253,9 +2213,9 @@ public class Workspace extends BaseModule
     @POST
     @Path("{id}/ontologyupload")
     public Response uploadOntology(@PathParam("id") String projectId,
-  					    		   @FormParam("source_url") URL srcUrl,
-  					    		   @FormParam("source_prefix") String prefix,
-  					    		   @FormParam("title") String title,
+                                   @FormParam("source_url") URL srcUrl,
+                                   @FormParam("source_prefix") String prefix,
+                                   @FormParam("title") String title,
                                    @Context UriInfo uriInfo)
                                                 throws WebApplicationException {
         Response response = null;
@@ -2375,23 +2335,23 @@ public class Workspace extends BaseModule
 //                                        ontologyTitle);
 //        }
 //        return response;
-    	//TODO
-    	Response response = null;
-    	URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
-    	Project p = this.loadProject(projectUri);
-    	response = this.redirect(p, ProjectTab.Ontologies).build();
-    	JSONArray ja = new JSONArray(json);
-    	int i = 0;
+        //TODO
+        Response response = null;
+        URI projectUri = this.getProjectId(uriInfo.getBaseUri(), projectId);
+        Project p = this.loadProject(projectUri);
+        response = this.redirect(p, ProjectTab.Ontologies).build();
+        JSONArray ja = new JSONArray(json);
+        int i = 0;
         while ( i < ja.length() ) {
-        	log.debug("Processing ontology deletion request for {}", ja.get(i).toString());
-        	this.deleteOntology(p, ja.get(i).toString());
-        	i++;
+            log.debug("Processing ontology deletion request for {}", ja.get(i).toString());
+            this.deleteOntology(p, ja.get(i).toString());
+            i++;
         }
         return response;
     }
-    
+
     private void deleteOntology(Project p, String ontologyTitle) {
-    	try {
+        try {
             // Retrieve ontology.
             Ontology o = p.getOntology(ontologyTitle);
             if (o == null) {
@@ -2981,7 +2941,8 @@ public class Workspace extends BaseModule
         }
     }
 
-    private void throwInvalidParamError(String name, Object value) {
+    private void throwInvalidParamError(String name, Object value)
+                                                throws WebApplicationException {
         if (value instanceof String) {
             // Special case for Strings: Jersey passes empty strings to
             // web service methods for missing request parameters.
@@ -3025,38 +2986,35 @@ public class Workspace extends BaseModule
     }
 
     /**
-     * <i>[Resource method]</i> Show list of 
-     * public repositories on the workspace
+     * <i>[Resource method]</i> Show list of public repositories in
+     * the workspace.
      */
     @GET
     @Path("published-repos")
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
     public Response publishedSources() {
-        Response response = null;
+        Collection<Repository> repos = Configuration.getDefault()
+                                                    .getRepositories(true);
         TemplateModel view = this.newView("publishedRepos.vm", null);
-        view.put("repositories", Configuration.getDefault().getRepositories(true).iterator());
-        view.put("size", Configuration.getDefault().getRepositories(true).size());
-        response = Response.ok(view, TEXT_HTML).build();
-        return response;
+        view.put("repositories", repos.iterator());
+        view.put("size", wrap(repos.size()));
+        return Response.ok(view, TEXT_HTML).build();
     }
-    
+
     /**
-     * <i>[Resource method]</i> Show list of 
-     * graph on the public repository on the workspace
-     *
-     * @param repository : name of public repository
+     * <i>[Resource method]</i> Show list of graphs in a public
+     * repository of the workspace.
+     * @param repository   name of public repository
      */
     @GET
     @Path("published")
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
     public Response publishedSource(@QueryParam("repository") String repository) {
-        Response response = null;
         TemplateModel view = this.newView("publishedSources.vm", null);
         view.put("repository", repository);
-        response = Response.ok(view, TEXT_HTML).build();
-        return response;
+        return Response.ok(view, TEXT_HTML).build();
     }
-    
+
     /**
      * <i>[Resource method]</i> receive Json Array
      * string containing the list of graph URIs.
@@ -3067,49 +3025,48 @@ public class Workspace extends BaseModule
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("published")
     @Produces({ TEXT_HTML, APPLICATION_XHTML_XML })
-    public Response deleteSource(String json, 
-    		@QueryParam("repo") String repository) throws RepositoryException {
-        String delete_query = "delete { graph ?g { ?s ?p ?o } } where { graph ?g { ?s ?p ?o } }";
-        try {
-			this.deletePublishedSources(json, delete_query, repository);
-		} catch (JSONException e) {}
+    public Response deleteSource(String json,
+                                 @QueryParam("repo") String repository)
+                                             throws WebApplicationException {
+        this.deletePublishedSources(repository, json,
+                                    "delete { graph ?g { ?s ?p ?o } }" +
+                                    " where { graph ?g { ?s ?p ?o } }");
         return Response.ok().status(Status.NO_CONTENT).build();
     }
-    
+
     /**
-     * Delete published graph
-     * 
+     * Delete published graph.
      * @param json           Json Array
      * @param delete_query   SPARQL UPDATE query
      * @param repository     public repository destination
-     * 
-     * @throws JSONException
-     * @throws RepositoryException
      */
-    private void deletePublishedSources(String json, 
-    		String delete_query, String repository) 
-    		throws JSONException, RepositoryException {
-    	RepositoryConnection cnx = Configuration.getDefault()
-    			.getRepository(repository).newConnection();
-    	JSONArray ja = new JSONArray(json);
-    	int i = 0;
-        while ( i < ja.length() ) {
-        	try {
-    			Update upd = cnx.prepareUpdate(SPARQL, delete_query);
-    			ValueFactory vf = cnx.getValueFactory();
-    	        upd.setBinding("g", vf.createURI(ja.get(i).toString()));
-    	        try {
-    				upd.execute();
-    				upd = null;
-    			} catch (UpdateExecutionException e) {
-    				e.printStackTrace();
-    			}
-    		} catch (RepositoryException | MalformedQueryException e) {
-    			e.printStackTrace();
-    		} finally {
-    			cnx.close();
-    		}
-        	i++;
+    private void deletePublishedSources(String repository, String json,
+                                        String delete_query)
+                                             throws WebApplicationException {
+        RepositoryConnection cnx = null;
+        try {
+            JSONArray ja = new JSONArray(json);
+            cnx = Configuration.getDefault().getRepository(repository)
+                                            .newConnection();
+            ValueFactory vf = cnx.getValueFactory();
+            for (int i=0; i<ja.length(); i++) {
+                String src = ja.get(i).toString();
+                try {
+                    Update upd = cnx.prepareUpdate(SPARQL, delete_query);
+                    upd.setBinding("g", vf.createURI(src));
+                    upd.execute();
+                }
+                catch (OpenRDFException e) {
+                    this.handleInternalError(e,
+                                    "Error deleting published source: {}", src);
+                }
+            }
+        }
+        catch (JSONException e) {
+            this.throwInvalidParamError("json", json);
+        }
+        finally {
+            Repository.closeQuietly(cnx);
         }
     }
 }

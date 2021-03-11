@@ -270,9 +270,9 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
     /** {@inheritDoc} */
     @Override
     public SqlDatabaseSource newSqlDatabaseSource(Project project, URI uri,
-            					String title, String description,
-            					String srcUrl, String user, String password)
-            							throws IOException{
+                                String title, String description,
+                                String srcUrl, String user, String password)
+                                                        throws IOException {
         // Create new SQL Database source.
         SqlDatabaseSourceImpl src = new SqlDatabaseSourceImpl(uri.toString(), project);
         // Set source parameters.
@@ -284,9 +284,9 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         project.add(src);
         log.debug("New Database source <{}> added to project \"{}\"",
                                                     uri, project.getTitle());
-    	return src;
+        return src;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public SparqlSource newSparqlSource(Project project, URI uri, String title,
@@ -328,7 +328,6 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
                                                     uri, project.getTitle());
         return src;
     }
-    
 
     /** {@inheritDoc} */
     @Override
@@ -436,54 +435,45 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
                                                     uri, project.getTitle());
         return src;
     }
-    
-    @Override
-	public WfsSource newWfsSource(Project project, URI uri, String serviceUrl, String title,
-            String description, String version, String serverStrategy  ) throws IOException {
-		// TODO Auto-generated method stub
-    	// TODOcheck if parameters entered (url, version, strategy) are valide before creating the source 
-    //	if(validService(serviceUrl,version,serverStrategy))
-    	{
-    		// Create new WFS source.
-    		WfsSourceImpl src = new WfsSourceImpl(uri.toString(), project);
-            // Set source parameters.
-            this.initSource(src, title, description);
-            
-            src.setSourceUrl(serviceUrl);
-            src.setVersion(version);
-            src.setserverTypeStrategy(serverStrategy);
-            // Add source to project.
-            project.add(src);
-            log.debug("New WFS source <{}> added to project \"{}\"",
-                                                        uri, project.getTitle());
-            return src;
-    	}
-//    	else
-//    		return null;
-//		
-       
-	}
-    @Override
-	public SosSource newSosSource(Project project, URI uri, String serviceUrl, String title,
-            String description, String version ) throws IOException {
 
-    	{
-    		// Create new WFS source.
-    		SosSourceImpl src = new SosSourceImpl(uri.toString(), project);
-            // Set source parameters.
-            this.initSource(src, title, description);
-            
-            src.setSourceUrl(serviceUrl);
-            src.setVersion(version);
-            // Add source to project.
-            project.add(src);
-            log.debug("New SOS source <{}> added to project \"{}\"",
-                                                        uri, project.getTitle());
-            return src;
-    	}
-      
-	}
-      /** {@inheritDoc} */
+    @Override
+    public WfsSource newWfsSource(Project project, URI uri, String serviceUrl,
+                                  String title, String description,
+                                  String version, String serverStrategy)
+                                                          throws IOException {
+        // TODO: Check parameters (url, version, strategy) are valid...
+        // Create new WFS source.
+        WfsSourceImpl src = new WfsSourceImpl(uri.toString(), project);
+        // Set source parameters.
+        this.initSource(src, title, description);
+        src.setSourceUrl(serviceUrl);
+        src.setVersion(version);
+        src.setServerTypeStrategy(serverStrategy);
+        // Add source to project.
+        project.add(src);
+        log.debug("New WFS source <{}> added to project \"{}\"",
+                                                    uri, project.getTitle());
+        return src;
+    }
+
+    @Override
+    public SosSource newSosSource(Project project, URI uri, String serviceUrl,
+                                  String title, String description,
+                                  String version) throws IOException {
+        // Create new WFS source.
+        SosSourceImpl src = new SosSourceImpl(uri.toString(), project);
+        // Set source parameters.
+        this.initSource(src, title, description);
+        src.setSourceUrl(serviceUrl);
+        src.setVersion(version);
+        // Add source to project.
+        project.add(src);
+        log.debug("New SOS source <{}> added to project \"{}\"",
+                                                    uri, project.getTitle());
+        return src;
+    }
+
+    /** {@inheritDoc} */
     @Override
     public void delete(Source source) {
         this.delete(source, true);
@@ -511,12 +501,10 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
                                                 source.getUri(), p.getTitle());
     }
 
-	
-
     /** {@inheritDoc} */
     @Override
     public Ontology newOntology(Project project, URI url, String title,
-    		String prefix) {
+                                String prefix) {
         // Create new ontology.
         OntologyImpl ontology = new OntologyImpl();
         // Set ontology parameters.
@@ -683,12 +671,12 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
         // with the compiler-computed return type of Arrays.asList().
         Collection<Class<?>> classes = new HashSet<Class<?>>();
         classes.addAll(Arrays.asList(
-                    ProjectImpl.class, OntologyImpl.class,
-                    CsvSourceImpl.class, RdfFileSourceImpl.class,
-                    SqlQuerySourceImpl.class, SqlDatabaseSourceImpl.class, SparqlSourceImpl.class,
-                    XmlSourceImpl.class,
-                    TransformedRdfSourceImpl.class, ShpSourceImpl.class, GmlSourceImpl.class, 
-                    WfsSourceImpl.class, SosSourceImpl.class));
+                ProjectImpl.class, OntologyImpl.class,
+                CsvSourceImpl.class, RdfFileSourceImpl.class,
+                SqlQuerySourceImpl.class, SqlDatabaseSourceImpl.class,
+                SparqlSourceImpl.class, XmlSourceImpl.class,
+                TransformedRdfSourceImpl.class, ShpSourceImpl.class,
+                GmlSourceImpl.class, WfsSourceImpl.class, SosSourceImpl.class));
         return classes;
     }
 
@@ -772,7 +760,4 @@ public class DefaultProjectManager implements ProjectManager, LifeCycle
             throw new IllegalStateException("Not available");
         }
     }
-
-	
-
 }

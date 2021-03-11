@@ -72,9 +72,7 @@ import fr.ign.datalift.model.AbstractFeature;
  * monitoring facilities is also implemented by the module.
  *
  * @author Hanane Eljabiri
- *
  */
-
 @Path(Wfstordf.MODULE_NAME)
 public class Wfstordf extends BaseConverterModule
 {
@@ -244,7 +242,7 @@ public class Wfstordf extends BaseConverterModule
 		}
 		else
 		{
-			data=cache.get(src.getSourceUrl()+src.getVersion()+"/"+src.getserverTypeStrategy());
+			data=cache.get(src.getSourceUrl()+src.getVersion()+"/"+src.getServerTypeStrategy());
 		}
 		if(data!=null)
 		{
@@ -257,7 +255,7 @@ public class Wfstordf extends BaseConverterModule
 	private boolean convertFeatureTypeToRdf(URI projectUri, WfsSource s, String destination_title, URI targetGraph,
 			URI baseUri, String targetType, String typeName, boolean optionWGS84) {
 		try {
-			WfsParser1_x parser=new WfsParser1_x(s.getSourceUrl(),s.getVersion(),s.getserverTypeStrategy());
+			WfsParser1_x parser=new WfsParser1_x(s.getSourceUrl(),s.getVersion(),s.getServerTypeStrategy());
 			ArrayList<AbstractFeature> featuresToConvert;
 			featuresToConvert=parser.loadFeature(typeName,optionWGS84);
 			if (featuresToConvert==null || featuresToConvert.size()==0) 
@@ -353,7 +351,7 @@ public class Wfstordf extends BaseConverterModule
 			}
 			else
 			{
-				types= this.getfeatureTypeDescription(src.getSourceUrl(),src.getVersion(),src.getserverTypeStrategy());
+				types= this.getfeatureTypeDescription(src.getSourceUrl(),src.getVersion(),src.getServerTypeStrategy());
 			}
 			if(types!=null) 
 			{
