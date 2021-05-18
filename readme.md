@@ -15,4 +15,5 @@ The project goal is reached: develop a platform to publish and interlink dataset
 
 ## _License_
 
-* CC (à compléter)
+* See Licence_CeCILL-B_V1-en.txt
+* See Licence_CeCILL-B_V1-fr.txt 
